@@ -54,7 +54,7 @@ public class SimpleDRCatalogueTest {
         instance.registerResourceEntry(entry);
         IDataResourceEntry loadedEntry = instance.getResourceEntryByLDRI(path);
 
-        System.out.println("loadedEntry: "+loadedEntry.getUID()+" entry: "+entry.getUID());
+//        System.out.println("loadedEntry: "+loadedEntry.getUID()+" entry: "+entry.getUID());
 
 //        assertTrue(theSame);
 

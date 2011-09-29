@@ -8,7 +8,6 @@ import com.bradmcevoy.common.Path;
 import java.io.Serializable;
 
 import java.util.ArrayList;
-import javax.jdo.annotations.IdGeneratorStrategy;
 import javax.jdo.annotations.PersistenceCapable;
 import javax.jdo.annotations.Persistent;
 import javax.jdo.annotations.PrimaryKey;
@@ -21,16 +20,20 @@ public class DataResourceEntry implements IDataResourceEntry, Serializable {
      */
     private static final long serialVersionUID = -1529997963561059214L;
     @PrimaryKey
+    @Persistent
     private String uid;
+    @Persistent(serialized = "true")
     private Path ldri;
+    @Persistent
     private Metadata metadata;
+    @Persistent
     private ArrayList<IDataResourceEntry> children;
+    @Persistent
     private ArrayList<StorageResource> storageResource;
 
     public DataResourceEntry(Path ldri) {
         this.ldri = ldri;
         uid = java.util.UUID.randomUUID().toString();
-
     }
 
     @Override
@@ -39,7 +42,7 @@ public class DataResourceEntry implements IDataResourceEntry, Serializable {
     }
 
     @Override
-    public ArrayList<IDataResourceEntry> getChildren() {        
+    public ArrayList<IDataResourceEntry> getChildren() {
         return children;
     }
 
@@ -57,7 +60,7 @@ public class DataResourceEntry implements IDataResourceEntry, Serializable {
     public void setMetadata(Metadata metadata) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
-    
+
     @Override
     public String getUID() {
         return this.uid;
@@ -86,6 +89,6 @@ public class DataResourceEntry implements IDataResourceEntry, Serializable {
     }
 
     private void debug(String msg) {
-        System.err.println(this.getClass().getSimpleName() +": "+msg);
+        System.err.println(this.getClass().getSimpleName() + ": " + msg);
     }
 }
