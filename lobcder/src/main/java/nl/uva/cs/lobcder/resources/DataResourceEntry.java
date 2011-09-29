@@ -22,7 +22,7 @@ public class DataResourceEntry implements IDataResourceEntry, Serializable {
     @PrimaryKey
     @Persistent
     private String uid;
-    @Persistent(serialized = "true")
+    @Persistent
     private Path ldri;
     @Persistent
     private Metadata metadata;

@@ -13,6 +13,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import static org.junit.Assert.*;
 
 /**
  *
@@ -45,18 +46,32 @@ public class SimpleDRCatalogueTest {
     @Test
     public void testRegisterResourceEntry() throws Exception {
         System.out.println("registerResourceEntry");
-
-        //Register one resource 
-        Path path = Path.path("/resource1");
+        //Register one resource
+        String ldri = "/resource1";
+        Path path = Path.path(ldri);
         IDataResourceEntry entry = new DataResourceEntry(path);
+        System.out.println("entry:          " + entry.getLDRI());
         
         SimpleDRCatalogue instance = new SimpleDRCatalogue();
-        instance.registerResourceEntry(entry);
+        try {
+            instance.registerResourceEntry(entry);
+        } catch (Exception ex) {
+            if (!ex.getMessage().equals("mkdir: cannot register resource " + ldri + " resource exists")) {
+                fail(ex.getMessage());
+            }
+        }
+        
         IDataResourceEntry loadedEntry = instance.getResourceEntryByLDRI(path);
+        assertNotNull(loadedEntry);
 
-//        System.out.println("loadedEntry: "+loadedEntry.getUID()+" entry: "+entry.getUID());
-
-//        assertTrue(theSame);
+        System.out.println("entry:          " + entry.getLDRI());
+        System.out.println("loadedEntry:    " + loadedEntry.getLDRI());
+        
+        boolean theSame = compareEntries(entry,loadedEntry);
+        
+        assertTrue(theSame);
+        
+        instance.unregisterResourceEntry(entry);
 
         //Add children to that resource
 //        path = Path.path("/resource1/child1");
@@ -66,9 +81,20 @@ public class SimpleDRCatalogueTest {
 //
 //        instance.printFSTree();
     }
-//    /**
-//     * Test of getResourceEntryByLDRI method, of class SimpleDRCatalogue.
-//     */
+
+    private boolean compareEntries(IDataResourceEntry entry, IDataResourceEntry loadedEntry) {
+        System.out.println("entry:          "+entry.getUID()+" "+entry.getLDRI());
+        System.out.println("loadedEntry:    "+loadedEntry.getUID()+" "+loadedEntry.getLDRI());
+        if(entry.getLDRI().getName().equals(loadedEntry.getLDRI().getName())){
+            if(entry.getUID().equals(loadedEntry.getUID())){
+                return true;
+            }
+        }
+        return false;
+    }
+    /**
+     * Test of getResourceEntryByLDRI method, of class SimpleDRCatalogue.
+     */
 //    @Test
 //    public void testGetResourceEntryByLDRI() throws Exception {
 //        System.out.println("getResourceEntryByLDRI");
