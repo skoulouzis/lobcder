@@ -39,10 +39,10 @@ public class SimpleDRCatalogue implements IDRCatalogue {
     @Override
     public void registerResourceEntry(IDataResourceEntry entry) throws Exception {
         IDataResourceEntry loaded = queryEntry(entry.getLDRI());
-
         if (loaded != null && loaded.getLDRI().getName().equals(entry.getLDRI().getName())) {
             throw new Exception("mkdir: cannot register resource " + entry.getLDRI() + " resource exists");
         }
+
         persistEntry(entry);
     }
 
@@ -57,7 +57,7 @@ public class SimpleDRCatalogue implements IDRCatalogue {
 //    }
     @Override
     public void unregisterResourceEntry(IDataResourceEntry entry) throws Exception {
-        deleteEntry(entry);
+        deleteEntry(entry.getLDRI());
     }
 
     @Override
@@ -91,15 +91,16 @@ public class SimpleDRCatalogue implements IDRCatalogue {
             tx.begin();
 
             pm.makePersistent(entry);
-            Object id = pm.getObjectId(entry);
-            debug("persistEntry. DB UID class: " + id.getClass().getName() + " UID: " + id);
+//            Object id = pm.getObjectId(entry);
+//            debug("persistEntry. DB UID class: " + id.getClass().getName() + " UID: " + id);
             tx.commit();
 
         } finally {
             if (tx.isActive()) {
                 tx.rollback();
-                debug("persistEntry. ROLLBACK!!!!!!!");
             }
+            //!?!?!?! if this is not here, the entry's LDRI gets to null???
+            entry.getLDRI();
             pm.close();
         }
     }
@@ -125,21 +126,19 @@ public class SimpleDRCatalogue implements IDRCatalogue {
             if (!results.isEmpty()) {
                 entry = results.iterator().next();
 
-                debug("queryEntry. Num of res: " + results.size());
-                for (DataResourceEntry e : results) {
-                    debug("queryEntry. LDRI: " + e.getLDRI() + " UID: " + e.getUID());
-                }
+//                debug("queryEntry. Num of res: " + results.size());
+//                for (DataResourceEntry e : results) {
+//                    debug("queryEntry. LDRI: " + e.getLDRI() + " UID: " + e.getUID());
+//                }
                 Object id = pm.getObjectId(entry);
-                debug("queryEntry. DB UID class: " + id.getClass().getName() + " UID: " + id);
+//                debug("queryEntry. DB UID class: " + id.getClass().getName() + " UID: " + id);
             }
-
+            
             tx.commit();
 
         } finally {
             if (tx.isActive()) {
                 tx.rollback();
-
-                debug("queryEntry. ROLLBACK!!!!!!!");
             }
 
             pm.close();
@@ -147,25 +146,22 @@ public class SimpleDRCatalogue implements IDRCatalogue {
         return entry;
     }
 
-    private void deleteEntry(IDataResourceEntry entry) {
+    private void deleteEntry(Path logicalResourceName) {
 
         PersistenceManager pm = pmf.getPersistenceManager();
         Transaction tx = pm.currentTransaction();
         try {
             tx.begin();
 
-
-
             Query q = pm.newQuery(DataResourceEntry.class);
-
             //restrict to instances which have the field ldri equal to some logicalResourceName
             q.setFilter("ldri.getName == logicalResourceName.getName");
             //We then import the type of our logicalResourceName parameter
-            q.declareImports("import " + entry.getLDRI().getClass().getName());
+            q.declareImports("import " + logicalResourceName.getClass().getName());
             //and the parameter itself
             q.declareParameters("Path logicalResourceName");
-            q.deletePersistentAll();
-
+            q.deletePersistentAll(logicalResourceName);
+            
             tx.commit();
 
         } finally {

@@ -50,27 +50,30 @@ public class SimpleDRCatalogueTest {
         String ldri = "/resource1";
         Path path = Path.path(ldri);
         IDataResourceEntry entry = new DataResourceEntry(path);
-        System.out.println("entry:          " + entry.getLDRI());
-        
+
         SimpleDRCatalogue instance = new SimpleDRCatalogue();
         try {
+
             instance.registerResourceEntry(entry);
+            System.out.println("entry:          " + entry.getLDRI());
         } catch (Exception ex) {
             if (!ex.getMessage().equals("mkdir: cannot register resource " + ldri + " resource exists")) {
                 fail(ex.getMessage());
+            }else{
+                ex.printStackTrace();
             }
         }
-        
+
         IDataResourceEntry loadedEntry = instance.getResourceEntryByLDRI(path);
         assertNotNull(loadedEntry);
 
-        System.out.println("entry:          " + entry.getLDRI());
-        System.out.println("loadedEntry:    " + loadedEntry.getLDRI());
-        
-        boolean theSame = compareEntries(entry,loadedEntry);
-        
+//        System.out.println("entry:          " + entry.getLDRI());
+//        System.out.println("loadedEntry:    " + loadedEntry.getLDRI());
+
+        boolean theSame = compareEntries(entry, loadedEntry);
+
         assertTrue(theSame);
-        
+
         instance.unregisterResourceEntry(entry);
 
         //Add children to that resource
@@ -83,10 +86,10 @@ public class SimpleDRCatalogueTest {
     }
 
     private boolean compareEntries(IDataResourceEntry entry, IDataResourceEntry loadedEntry) {
-        System.out.println("entry:          "+entry.getUID()+" "+entry.getLDRI());
-        System.out.println("loadedEntry:    "+loadedEntry.getUID()+" "+loadedEntry.getLDRI());
-        if(entry.getLDRI().getName().equals(loadedEntry.getLDRI().getName())){
-            if(entry.getUID().equals(loadedEntry.getUID())){
+//        System.out.println("entry:          " + entry.getUID() + " " + entry.getLDRI());
+//        System.out.println("loadedEntry:    " + loadedEntry.getUID() + " " + loadedEntry.getLDRI());
+        if (entry.getLDRI().getName().equals(loadedEntry.getLDRI().getName())) {
+            if (entry.getUID().equals(loadedEntry.getUID())) {
                 return true;
             }
         }
