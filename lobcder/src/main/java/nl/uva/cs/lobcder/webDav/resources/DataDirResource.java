@@ -29,7 +29,7 @@ import nl.uva.cs.lobcder.resources.ResourceFolderEntry;
 public class DataDirResource extends DataResource implements
         com.bradmcevoy.http.FolderResource {
 
-    public DataDirResource( IDataResourceEntry entry) {
+    public DataDirResource(IDataResourceEntry entry) {
         super(entry);
     }
 
@@ -41,34 +41,12 @@ public class DataDirResource extends DataResource implements
 
     @Override
     public Resource child(String name) {
-        IDataResourceEntry child = ((ResourceFolderEntry) getNodeEntry()).getChildByLRN(name);
-        if (child instanceof ResourceFolderEntry) {
-            return new DataDirResource( child);
-        }
-        if (child instanceof ResourceFileEntry) {
-            return new DataFileResource(child);
-        }
-        return new DataResource(child);
+        throw new RuntimeException("Not Implemented yet");
     }
 
     @Override
     public List<? extends Resource> getChildren() {
-        List<IDataResourceEntry> children = ((ResourceFolderEntry) getNodeEntry()).getChildren();
-        List<Resource> list = new ArrayList<Resource>();
-        debug("Children len "+children.size());
-        for (IDataResourceEntry r : children) {
-            if(r.getMetadata() == null){
-                debug("Child "+r.getLDRI()+" has no metadata ");
-            }
-            if (r instanceof ResourceFileEntry) {
-                list.add(new DataFileResource( r));
-            } else if (r instanceof ResourceFolderEntry) {
-                list.add(new DataFileResource( r));
-            } else {
-                list.add(new DataResource( r));
-            }
-        }
-        return list;
+        throw new RuntimeException("Not Implemented yet");
     }
 
     @Override

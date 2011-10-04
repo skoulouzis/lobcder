@@ -43,51 +43,80 @@ public class SimpleDRCatalogueTest {
     /**
      * Test of registerResourceEntry method, of class SimpleDRCatalogue.
      */
+//    @Test
+//    public void testRegisterResourceEntry() throws Exception {
+//        System.out.println("registerResourceEntry");
+//        //Register one resource
+//        String ldri = "/resource1";
+//        Path path = Path.path(ldri);
+//        IDataResourceEntry entry = new DataResourceEntry(path);
+//
+//        SimpleDRCatalogue instance = new SimpleDRCatalogue();
+//        try {
+//            instance.registerResourceEntry(entry);
+//            System.out.println("entry:          " + entry.getLDRI());
+//        } catch (Exception ex) {
+//            if (!ex.getMessage().equals("registerResourceEntry: cannot register resource " + ldri + " resource exists")) {
+//                fail(ex.getMessage());
+//            } else {
+//                ex.printStackTrace();
+//            }
+//        }
+//
+//        IDataResourceEntry loadedEntry = instance.getResourceEntryByLDRI(path);
+//        assertNotNull(loadedEntry);
+//
+//        boolean theSame = compareEntries(entry, loadedEntry);
+//
+//        assertTrue(theSame);
+//
+//        instance.unregisterResourceEntry(entry);
+//        IDataResourceEntry result = instance.getResourceEntryByLDRI(path);
+//
+//        assertNull(result);
+//    }
     @Test
-    public void testRegisterResourceEntry() throws Exception {
-        System.out.println("registerResourceEntry");
-        //Register one resource
-        String ldri = "/resource1";
-        Path path = Path.path(ldri);
-        IDataResourceEntry entry = new DataResourceEntry(path);
+    public void testRegisterMultipleResourceEntry() throws Exception {
+        System.out.println("testRegisterMultipleResourceEntry");
+        String ldri = "/resource2";
+        Path parentPath = Path.path(ldri);
+        IDataResourceEntry parent = new DataResourceEntry(parentPath);
 
         SimpleDRCatalogue instance = new SimpleDRCatalogue();
         try {
-
-            instance.registerResourceEntry(entry);
-            System.out.println("entry:          " + entry.getLDRI());
+            instance.registerResourceEntry(parent);
         } catch (Exception ex) {
-            if (!ex.getMessage().equals("mkdir: cannot register resource " + ldri + " resource exists")) {
+            if (!ex.getMessage().equals("registerResourceEntry: cannot register resource " + ldri + " resource exists")) {
                 fail(ex.getMessage());
-            }else{
+            } else {
                 ex.printStackTrace();
             }
         }
 
-        IDataResourceEntry loadedEntry = instance.getResourceEntryByLDRI(path);
-        assertNotNull(loadedEntry);
-
-//        System.out.println("entry:          " + entry.getLDRI());
-//        System.out.println("loadedEntry:    " + loadedEntry.getLDRI());
-
-        boolean theSame = compareEntries(entry, loadedEntry);
-
-        assertTrue(theSame);
-
-        instance.unregisterResourceEntry(entry);
-
         //Add children to that resource
-//        path = Path.path("/resource1/child1");
-//        entry = new DataResourceEntry(path);
-//        instance.registerResourceEntry(entry);
-//        loadedEntry = instance.getResourceEntryByLDRI(path);
-//
-//        instance.printFSTree();
+        String childLdri = "/child1";
+        Path childPath = Path.path(ldri + childLdri);
+        DataResourceEntry child = new DataResourceEntry(childPath);
+        System.out.println("child: " + child.getUID() + " " + child.getLDRI());
+        instance.registerResourceEntry(child);
+
+        IDataResourceEntry loadedChildEntry = instance.getResourceEntryByLDRI(childPath);
+        boolean theSame = compareEntries(child, loadedChildEntry);
+        assertTrue(theSame);
+        
+        System.out.println("Unregister: "+child.getLDRI()+" "+child.getUID());
+        instance.unregisterResourceEntry(child);
+        IDataResourceEntry result = instance.getResourceEntryByLDRI(childPath);
+        assertNull(result);
+
+        instance.unregisterResourceEntry(parent);
+        result = instance.getResourceEntryByLDRI(parentPath);
+        assertNull(result);
     }
 
     private boolean compareEntries(IDataResourceEntry entry, IDataResourceEntry loadedEntry) {
-//        System.out.println("entry:          " + entry.getUID() + " " + entry.getLDRI());
-//        System.out.println("loadedEntry:    " + loadedEntry.getUID() + " " + loadedEntry.getLDRI());
+        System.out.println("entry:          " + entry.getUID() + " " + entry.getLDRI());
+        System.out.println("loadedEntry:    " + loadedEntry.getUID() + " " + loadedEntry.getLDRI());
         if (entry.getLDRI().getName().equals(loadedEntry.getLDRI().getName())) {
             if (entry.getUID().equals(loadedEntry.getUID())) {
                 return true;

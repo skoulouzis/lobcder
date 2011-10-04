@@ -14,15 +14,15 @@ import java.util.ArrayList;
 public interface IDataResourceEntry {
 
     public Path getLDRI();
-        
-    public ArrayList<IDataResourceEntry> getChildren();
-    
-    public void addChildren( ArrayList<IDataResourceEntry> children);
-    
-    public void addChild(IDataResourceEntry child);
-    
+
+    public ArrayList<Path> getChildren();
+
+    public void addChildren(ArrayList<Path> children);
+
+    public void addChild(Path child);
+
     public ArrayList<StorageResource> getStorageResources();
-    
+
     public void setStorageResource(ArrayList<StorageResource> storageResources);
 
     public Metadata getMetadata();
@@ -30,4 +30,8 @@ public interface IDataResourceEntry {
     public void setMetadata(Metadata metadata);
 
     public String getUID();
+
+    public boolean hasChildren();
+
+    public void removeChild(Path childPath);
 }

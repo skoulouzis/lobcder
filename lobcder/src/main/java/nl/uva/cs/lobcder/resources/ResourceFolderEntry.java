@@ -24,30 +24,4 @@ public class ResourceFolderEntry extends DataResourceEntry {
     public ResourceFolderEntry(Path logicalResourceName) throws IOException {
         super(logicalResourceName);
     }
-
-    public IDataResourceEntry getChildByLRN(String name) {
-        for (IDataResourceEntry r : getChildren()) {
-            if (r.getLDRI().equals(name)) {
-                return r;
-            }
-        }
-        return null;
-    }
-
-    public IDataResourceEntry getChildByUID(String uid1) {
-        for (IDataResourceEntry r : getChildren()) {
-            if (r.getUID().equals(uid1)) {
-                return r;
-            }
-        }
-        return null;
-    }
-
-    public Boolean hasChildren() {
-        if (this.getChildren() == null || this.getChildren().isEmpty()
-                || getChildren().size() <= 0) {
-            return false;
-        }
-        return true;
-    }
 }

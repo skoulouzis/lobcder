@@ -74,12 +74,14 @@ there are no implementations to enhance
             <groupId>nl.uva.vlet</groupId>
             <artifactId>nl.uva.vlet.lbl.srm</artifactId>
             <version>0.3</version>
+            <scope>runtime</scope>
         </dependency>
         
         <dependency>
             <groupId>nl.uva.vlet</groupId>
             <artifactId>nl.uva.vlet.vfs.gftp</artifactId>
             <version>1</version>
+            <scope>runtime</scope>
         </dependency>
 
         
@@ -87,18 +89,21 @@ there are no implementations to enhance
             <groupId>nl.uva.vlet</groupId>
             <artifactId>nl.uva.vlet.vfs.lfc</artifactId>
             <version>1</version>
+            <scope>runtime</scope>
         </dependency>
 
         <dependency>
             <groupId>nl.uva.vlet</groupId>
             <artifactId>nl.uva.vlet.vfs.srm</artifactId>
             <version>1</version>
+            <scope>runtime</scope>
         </dependency>
 
         <dependency>
             <groupId>nl.uva.vlet</groupId>
             <artifactId>vlet-grid-globus-4.1</artifactId>
             <version>4.1</version>
+            <scope>runtime</scope>
         </dependency>
 
         <dependency>
@@ -111,12 +116,14 @@ there are no implementations to enhance
             <groupId>org.jglobus</groupId>
             <artifactId>JGlobus-Core</artifactId>
             <version>2.0.2</version>
+            <scope>runtime</scope>
         </dependency>
 
         <dependency>
             <groupId>org.jglobus</groupId>
             <artifactId>cog-jglobus</artifactId>
             <version>1.8.0</version>
+            <scope>runtime</scope>
         </dependency>
         
         <dependency>
@@ -173,15 +180,14 @@ there are no implementations to enhance
         <dependency>
             <groupId>org.datanucleus</groupId>
             <artifactId>datanucleus-api-jdo</artifactId>
-            <version>3.0.1</version>
+            <version>3.0.2</version>
         </dependency>
 
 
         <dependency>
             <groupId>org.datanucleus</groupId>
             <artifactId>datanucleus-core</artifactId>
-            <version>3.0.1</version>
-            <type>jar</type>
+            <version>3.0.2</version>
         </dependency>
 
 
@@ -189,8 +195,10 @@ there are no implementations to enhance
             <groupId>org.datanucleus</groupId>
             <artifactId>datanucleus-neodatis</artifactId>
             <version>3.0.1</version>
-            <scope>runtime</scope>
         </dependency>
+
+
+
        
     </dependencies>
     

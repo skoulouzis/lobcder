@@ -27,7 +27,7 @@ public class DataResourceEntry implements IDataResourceEntry, Serializable {
     @Persistent
     private Metadata metadata;
     @Persistent
-    private ArrayList<IDataResourceEntry> children;
+    private ArrayList<Path> children;
     @Persistent
     private ArrayList<StorageResource> storageResource;
 
@@ -42,7 +42,7 @@ public class DataResourceEntry implements IDataResourceEntry, Serializable {
     }
 
     @Override
-    public ArrayList<IDataResourceEntry> getChildren() {
+    public ArrayList<Path> getChildren() {
         return children;
     }
 
@@ -67,7 +67,7 @@ public class DataResourceEntry implements IDataResourceEntry, Serializable {
     }
 
     @Override
-    public void addChildren(ArrayList<IDataResourceEntry> children) {
+    public void addChildren(ArrayList<Path> children) {
         if (this.children == null) {
             this.children = children;
         } else {
@@ -81,14 +81,27 @@ public class DataResourceEntry implements IDataResourceEntry, Serializable {
     }
 
     @Override
-    public void addChild(IDataResourceEntry child) {
+    public void addChild(Path child) {
         if (this.children == null) {
-            this.children = new ArrayList<IDataResourceEntry>();
+            this.children = new ArrayList<Path>();
         }
         this.children.add(child);
     }
 
     private void debug(String msg) {
         System.err.println(this.getClass().getSimpleName() + ": " + msg);
+    }
+
+    @Override
+    public boolean hasChildren() {
+        if (children != null && !children.isEmpty()) {
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public void removeChild(Path childPath) {
+        children.remove(childPath);
     }
 }
