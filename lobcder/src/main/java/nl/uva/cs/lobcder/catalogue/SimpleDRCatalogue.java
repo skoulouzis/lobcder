@@ -9,6 +9,7 @@ package nl.uva.cs.lobcder.catalogue;
  * @author S. Koulouzis
  */
 import com.bradmcevoy.common.Path;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import javax.jdo.JDOHelper;
@@ -60,17 +61,12 @@ public class SimpleDRCatalogue implements IDRCatalogue {
 
     @Override
     public Boolean resourceEntryExists(IDataResourceEntry entry) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return queryEntry(entry.getLDRI()) != null ? true : false;
     }
 
     @Override
-    public IDataResourceEntry getRoot() throws Exception {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public List<IDataResourceEntry> getTopLevelResourceEntries() throws Exception {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public Collection<IDataResourceEntry> getTopLevelResourceEntries() throws Exception {
+        return queryTopLevelResources();
     }
 
     private void debug(String msg) {
@@ -259,5 +255,45 @@ public class SimpleDRCatalogue implements IDRCatalogue {
             }
             pm.close();
         }
+    }
+
+    private Collection<IDataResourceEntry> queryTopLevelResources() {
+
+        //TODO Fix all the queris!
+        PersistenceManager pm = pmf.getPersistenceManager();
+        Transaction tx = pm.currentTransaction();
+        Collection<IDataResourceEntry> results;
+        Path p = Path.path("/");
+        Collection topLevel = new ArrayList<IDataResourceEntry>();
+
+
+        try {
+            tx.begin();
+            //This query, will return objects of type DataResourceEntry
+            Query q = pm.newQuery(DataResourceEntry.class);
+
+            //restrict to instances which have the field ldri equal to some logicalResourceName
+            q.setFilter("ldri.getLength == p.getLength");
+            //We then import the type of our logicalResourceName parameter
+            q.declareImports("import " + p.getClass().getName());
+            //and the parameter itself
+            q.declareParameters("Path p");
+            results = (Collection<IDataResourceEntry>) q.execute(p);
+
+            for (IDataResourceEntry e : results) {
+                if (e.getLDRI().getLength() == 1) {
+                    topLevel.add(e);
+                }
+            }
+            tx.commit();
+
+        } finally {
+            if (tx.isActive()) {
+                tx.rollback();
+            }
+
+            pm.close();
+        }
+        return topLevel;
     }
 }

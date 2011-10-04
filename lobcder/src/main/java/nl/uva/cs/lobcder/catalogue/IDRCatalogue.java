@@ -5,6 +5,7 @@
 package nl.uva.cs.lobcder.catalogue;
 
 import com.bradmcevoy.common.Path;
+import java.util.Collection;
 import java.util.List;
 import nl.uva.cs.lobcder.resources.IDataResourceEntry;
 
@@ -26,7 +27,5 @@ public interface IDRCatalogue {
 
     public Boolean resourceEntryExists(IDataResourceEntry entry) throws Exception;
 
-    public IDataResourceEntry getRoot() throws Exception;
-
-    public List<IDataResourceEntry> getTopLevelResourceEntries() throws Exception;
+    public Collection<IDataResourceEntry> getTopLevelResourceEntries() throws Exception;
 }

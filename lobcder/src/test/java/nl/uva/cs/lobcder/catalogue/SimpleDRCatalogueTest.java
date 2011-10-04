@@ -5,6 +5,8 @@
 package nl.uva.cs.lobcder.catalogue;
 
 import com.bradmcevoy.common.Path;
+import java.util.ArrayList;
+import java.util.Collection;
 import nl.uva.cs.lobcder.resources.DataResourceEntry;
 import nl.uva.cs.lobcder.resources.IDataResourceEntry;
 import org.globus.util.TestUtil;
@@ -43,38 +45,39 @@ public class SimpleDRCatalogueTest {
     /**
      * Test of registerResourceEntry method, of class SimpleDRCatalogue.
      */
-//    @Test
-//    public void testRegisterResourceEntry() throws Exception {
-//        System.out.println("registerResourceEntry");
-//        //Register one resource
-//        String ldri = "/resource1";
-//        Path path = Path.path(ldri);
-//        IDataResourceEntry entry = new DataResourceEntry(path);
-//
-//        SimpleDRCatalogue instance = new SimpleDRCatalogue();
-//        try {
-//            instance.registerResourceEntry(entry);
-//            System.out.println("entry:          " + entry.getLDRI());
-//        } catch (Exception ex) {
-//            if (!ex.getMessage().equals("registerResourceEntry: cannot register resource " + ldri + " resource exists")) {
-//                fail(ex.getMessage());
-//            } else {
-//                ex.printStackTrace();
-//            }
-//        }
-//
-//        IDataResourceEntry loadedEntry = instance.getResourceEntryByLDRI(path);
-//        assertNotNull(loadedEntry);
-//
-//        boolean theSame = compareEntries(entry, loadedEntry);
-//
-//        assertTrue(theSame);
-//
-//        instance.unregisterResourceEntry(entry);
-//        IDataResourceEntry result = instance.getResourceEntryByLDRI(path);
-//
-//        assertNull(result);
-//    }
+    @Test
+    public void testRegisterResourceEntry() throws Exception {
+        System.out.println("registerResourceEntry");
+        //Register one resource
+        String ldri = "/resource1";
+        Path path = Path.path(ldri);
+        IDataResourceEntry entry = new DataResourceEntry(path);
+
+        SimpleDRCatalogue instance = new SimpleDRCatalogue();
+        try {
+            instance.registerResourceEntry(entry);
+            System.out.println("entry:          " + entry.getLDRI());
+        } catch (Exception ex) {
+            if (!ex.getMessage().equals("registerResourceEntry: cannot register resource " + ldri + " resource exists")) {
+                fail(ex.getMessage());
+            } else {
+                ex.printStackTrace();
+            }
+        }
+
+        IDataResourceEntry loadedEntry = instance.getResourceEntryByLDRI(path);
+        assertNotNull(loadedEntry);
+
+        boolean theSame = compareEntries(entry, loadedEntry);
+
+        assertTrue(theSame);
+
+        instance.unregisterResourceEntry(entry);
+        IDataResourceEntry result = instance.getResourceEntryByLDRI(path);
+
+        assertNull(result);
+    }
+
     @Test
     public void testRegisterMultipleResourceEntry() throws Exception {
         System.out.println("testRegisterMultipleResourceEntry");
@@ -103,8 +106,8 @@ public class SimpleDRCatalogueTest {
         IDataResourceEntry loadedChildEntry = instance.getResourceEntryByLDRI(childPath);
         boolean theSame = compareEntries(child, loadedChildEntry);
         assertTrue(theSame);
-        
-        System.out.println("Unregister: "+child.getLDRI()+" "+child.getUID());
+
+        System.out.println("Unregister: " + child.getLDRI() + " " + child.getUID());
         instance.unregisterResourceEntry(child);
         IDataResourceEntry result = instance.getResourceEntryByLDRI(childPath);
         assertNull(result);
@@ -124,74 +127,70 @@ public class SimpleDRCatalogueTest {
         }
         return false;
     }
+
     /**
-     * Test of getResourceEntryByLDRI method, of class SimpleDRCatalogue.
+     * Test of resourceEntryExists method, of class SimpleDRCatalogue.
      */
-//    @Test
-//    public void testGetResourceEntryByLDRI() throws Exception {
-//        System.out.println("getResourceEntryByLDRI");
-//        Path logicalResourceName = null;
-//        SimpleDRCatalogue instance = new SimpleDRCatalogue();
-//        IDataResourceEntry expResult = null;
-//        IDataResourceEntry result = instance.getResourceEntryByLDRI(logicalResourceName);
-//        assertEquals(expResult, result);
-//        // TODO review the generated test code and remove the default call to fail.
-//        fail("The test case is a prototype.");
-//    }
-//
-//    /**
-//     * Test of unregisterResourceEntry method, of class SimpleDRCatalogue.
-//     */
-//    @Test
-//    public void testUnregisterResourceEntry() throws Exception {
-//        System.out.println("unregisterResourceEntry");
-//        IDataResourceEntry entry = null;
-//        SimpleDRCatalogue instance = new SimpleDRCatalogue();
-//        instance.unregisterResourceEntry(entry);
-//        // TODO review the generated test code and remove the default call to fail.
-//        fail("The test case is a prototype.");
-//    }
-//
-//    /**
-//     * Test of resourceEntryExists method, of class SimpleDRCatalogue.
-//     */
-//    @Test
-//    public void testResourceEntryExists() throws Exception {
-//        System.out.println("resourceEntryExists");
-//        IDataResourceEntry entry = null;
-//        SimpleDRCatalogue instance = new SimpleDRCatalogue();
-//        Boolean expResult = null;
-//        Boolean result = instance.resourceEntryExists(entry);
-//        assertEquals(expResult, result);
-//        // TODO review the generated test code and remove the default call to fail.
-//        fail("The test case is a prototype.");
-//    }
-//
-//    /**
-//     * Test of getRoot method, of class SimpleDRCatalogue.
-//     */
-//    @Test
-//    public void testGetRoot() throws Exception {
-//        System.out.println("getRoot");
-//        SimpleDRCatalogue instance = new SimpleDRCatalogue();
-//        IDataResourceEntry expResult = null;
-//        IDataResourceEntry result = instance.getRoot();
-//        assertEquals(expResult, result);
-//        // TODO review the generated test code and remove the default call to fail.
-//        fail("The test case is a prototype.");
-//    }
-//
-//    /**
-//     * Test of getTopLevelResourceEntries method, of class SimpleDRCatalogue.
-//     */
-//    @Test
-//    public void testGetTopLevelResourceEntries() throws Exception {
-//        System.out.println("getTopLevelResourceEntries");
-//        SimpleDRCatalogue instance = new SimpleDRCatalogue();
-//        List expResult = null;
-//        List result = instance.getTopLevelResourceEntries();
-//        assertEquals(expResult, result);
-//        // TODO review the generated test code and remove the default call to fail.
-//        fail("The test case is a prototype.");
-//    }
+    @Test
+    public void testResourceEntryExists() throws Exception {
+        System.out.println("resourceEntryExists");
+        String ldri = "/resource";
+        Path path = Path.path(ldri);
+        IDataResourceEntry entry = new DataResourceEntry(path);
+        SimpleDRCatalogue instance = new SimpleDRCatalogue();
+
+        Boolean expResult = false;
+        Boolean result = instance.resourceEntryExists(entry);
+        assertEquals(expResult, result);
+
+
+        instance.registerResourceEntry(entry);
+        expResult = true;
+        result = instance.resourceEntryExists(entry);
+        assertEquals(expResult, result);
+
+        instance.unregisterResourceEntry(entry);
+    }
+
+    /**
+     * Test of getTopLevelResourceEntries method, of class SimpleDRCatalogue.
+     */
+    @Test
+    public void testGetTopLevelResourceEntries() throws Exception {
+        System.out.println("getTopLevelResourceEntries");
+        //        ArrayList<DataResourceEntry> topLevel = new ArrayList<DataResourceEntry>();
+        DataResourceEntry topEntry1 = new DataResourceEntry(Path.path("/r1"));
+        DataResourceEntry topEntry2 = new DataResourceEntry(Path.path("/r2"));
+        DataResourceEntry topEntry3 = new DataResourceEntry(Path.path("/r3"));
+
+        DataResourceEntry entry11 = new DataResourceEntry(Path.path("/r1/r11"));
+        DataResourceEntry entry21 = new DataResourceEntry(Path.path("/r2/r21"));
+
+
+        SimpleDRCatalogue instance = new SimpleDRCatalogue();
+        instance.registerResourceEntry(topEntry1);
+        instance.registerResourceEntry(topEntry2);
+        instance.registerResourceEntry(topEntry3);
+        instance.registerResourceEntry(entry11);
+        instance.registerResourceEntry(entry21);
+
+        Collection<IDataResourceEntry> result = instance.getTopLevelResourceEntries();
+        assertEquals(result.size(), 3);
+
+        for (IDataResourceEntry e : result) {
+            if (e.getLDRI().getLength() > 1) {
+                fail("Resource " + e.getLDRI() + " is not a top level");
+            }
+        }
+
+        instance.unregisterResourceEntry(entry21);
+        instance.unregisterResourceEntry(entry11);
+        instance.unregisterResourceEntry(topEntry3);
+        instance.unregisterResourceEntry(topEntry2);
+        instance.unregisterResourceEntry(topEntry1);
+
+        result = instance.getTopLevelResourceEntries();
+        
+        assertTrue(result.isEmpty());
+    }
 }
