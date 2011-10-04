@@ -1,6 +1,7 @@
 package nl.uva.cs.lobcder.webDav.resources;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.logging.Level;
 
@@ -32,10 +33,29 @@ public class DataResourceFactory implements ResourceFactory {
 
     @Override
     public Resource getResource(String host, String strPath) {
+        IDataResourceEntry rootEntry;
+        Collection<IDataResourceEntry> topLevelEntries;
+
         try {
             //Gets the root path. If instead we called :'ldri = Path.path(strPath);' we get back '/lobcder-1.0-SNAPSHOT'
             Path ldri = Path.path(strPath).getStripFirst();
-            debug("getResource:  host: " + host + " path: "+ldri);
+
+            debug("-------------getResource:  host: " + host + " path: " + ldri);
+
+            if (ldri.isRoot() || ldri.toString().equals("")) {
+                rootEntry = catalogue.getResourceEntryByLDRI(ldri);
+                if (rootEntry == null) {
+                    rootEntry = new DataResourceEntry(ldri);
+                    topLevelEntries = catalogue.getTopLevelResourceEntries();
+                    for (IDataResourceEntry e : topLevelEntries) {
+                        debug("Root elements: "+e.getUID()+" "+e.getLDRI());
+                        rootEntry.addChild(e.getLDRI());
+                    }
+
+                }
+                
+                return new DataDirResource(new ResourceFolderEntry(Path.path("/hello")));
+            }
 
             return getResource(ldri);
         } catch (IOException ex) {
@@ -53,9 +73,7 @@ public class DataResourceFactory implements ResourceFactory {
         log.debug(msg);
     }
 
-    private Resource getResource(Path path) throws IOException,
-            ClassNotFoundException,
-            Exception {
+    private Resource getResource(Path path) throws Exception {
         DataResourceEntry entry = (DataResourceEntry) catalogue.getResourceEntryByLDRI(path);
         if (entry == null) {
             throw new NullPointerException("Path " + path + " doesn't exist");
