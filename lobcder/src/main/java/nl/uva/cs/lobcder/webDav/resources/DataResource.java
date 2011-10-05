@@ -1,15 +1,11 @@
 package nl.uva.cs.lobcder.webDav.resources;
 
-import com.bradmcevoy.http.CustomProperty;
 import java.util.Date;
 
 import com.bradmcevoy.http.Auth;
-import com.bradmcevoy.http.CustomPropertyResource;
 import com.bradmcevoy.http.PropFindableResource;
 import com.bradmcevoy.http.Request;
 import com.bradmcevoy.http.Request.Method;
-import java.util.Set;
-import nl.uva.cs.lobcder.catalogue.IDRCatalogue;
 import nl.uva.cs.lobcder.resources.IDataResourceEntry;
 
 import org.slf4j.Logger;
@@ -18,63 +14,70 @@ import org.slf4j.LoggerFactory;
 public class DataResource implements PropFindableResource {
 
     private IDataResourceEntry nodeEntry;
-//    private IDRCatalogue catalogue;
     private Logger log = LoggerFactory.getLogger(DataResource.class);
+    private boolean debug = false;
 
     public DataResource(IDataResourceEntry entry) {
+        debug("Init: " + entry.getUID() + " " + entry.getLDRI());
         this.setNodeEntry(entry);
-//        this.setCatalogue(catalogue);
-        if (entry.getMetadata() == null) {
-//            throw new RuntimeException(entry.getLDRI() + " has no metadata!");
-        }
     }
 
     @Override
     public Object authenticate(String user, String pwd) {
-        debug("User: " + user + " Password: " + pwd);
-        throw new UnsupportedOperationException("Not supported yet.");
+        debug("authenticate. User: " + user + " Password: " + pwd);
+        debug("Returning: " + user);
+        return user;
     }
 
     @Override
     public boolean authorise(Request arg0, Method arg1, Auth arg2) {
-        debug("Request: " + arg0 + " Method: " + arg1 + " Auth: " + arg2);
+        debug("authorise. Request: " + arg0 + " Method: " + arg1 + " Auth: " + arg2);
+        debug("Returning true");
         return true;
     }
 
     @Override
     public String checkRedirect(Request arg0) {
-        debug("Request: " + arg0);
-        return null;
+        debug("checkRedirect. Request: " + arg0);
+        throw new RuntimeException("Not supported yet.");
     }
 
     @Override
     public Date getModifiedDate() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        Long longDate = getNodeEntry().getMetadata().getModifiedDate();
+        return new Date(longDate);
     }
 
     @Override
     public String getName() {
-        return getNodeEntry().getLDRI().toString();
+        debug("getName.");
+        return getNodeEntry().getLDRI().getName();
     }
 
     @Override
     public String getRealm() {
-        return "relm";
+        debug("getRealm.");
+        throw new RuntimeException("Not supported yet.");
     }
 
     @Override
     public String getUniqueId() {
-        return "" + getNodeEntry().getUID();
+        debug("getUniqueId.");
+        return getNodeEntry().getUID();
     }
 
     @Override
     public Date getCreateDate() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        debug("getCreateDate.");
+        Long longDate = getNodeEntry().getMetadata().getCreateDate();
+        return new Date(longDate);
     }
 
-    private void debug(String msg) {
+    protected void debug(String msg) {
+        if(debug){
         System.err.println(this.getClass().getSimpleName() + ": " + msg);
-        log.debug(msg);
+//        log.debug(msg);
+        }
     }
 
     protected void setNodeEntry(IDataResourceEntry nodeEntry) {

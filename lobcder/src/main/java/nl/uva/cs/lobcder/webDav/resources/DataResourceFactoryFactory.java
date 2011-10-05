@@ -1,7 +1,6 @@
 package nl.uva.cs.lobcder.webDav.resources;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.logging.Level;
 
 import org.slf4j.Logger;
@@ -12,10 +11,7 @@ import com.bradmcevoy.http.ResourceFactory;
 import com.bradmcevoy.http.ResourceFactoryFactory;
 import com.bradmcevoy.http.webdav.DefaultWebDavResponseHandler;
 import com.bradmcevoy.http.webdav.WebDavResponseHandler;
-import java.io.File;
-import java.net.MalformedURLException;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
 import nl.uva.vlet.exception.VlException;
 
 public class DataResourceFactoryFactory implements ResourceFactoryFactory {
@@ -23,6 +19,7 @@ public class DataResourceFactoryFactory implements ResourceFactoryFactory {
     private Logger log = LoggerFactory.getLogger(DataResourceFactoryFactory.class);
     private static AuthenticationService authenticationService;
     private static DataResourceFactory resourceFactory;
+    private boolean debug = false;
 
     @Override
     public ResourceFactory createResourceFactory() {
@@ -36,7 +33,7 @@ public class DataResourceFactoryFactory implements ResourceFactoryFactory {
 
     @Override
     public void init() {
-        log.debug("init");
+        debug("init");
         if (authenticationService == null) {
             try {
                 authenticationService = new AuthenticationService();
@@ -53,7 +50,10 @@ public class DataResourceFactoryFactory implements ResourceFactoryFactory {
     }
 
     private void debug(String msg) {
-        System.err.println(this.getClass().getSimpleName() + ": " + msg);
-        log.debug(msg);
+        if (debug) {
+            System.err.println(this.getClass().getSimpleName() + ": " + msg);
+//        log.debug(msg);
+        }
+
     }
 }

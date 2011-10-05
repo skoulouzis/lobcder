@@ -35,17 +35,18 @@ public class WebDavServlet implements Servlet {
     private static final ThreadLocal<HttpServletResponse> originalResponse = new ThreadLocal<HttpServletResponse>();
     protected com.bradmcevoy.http.ServletHttpManager httpManager;
     private ServletConfig config;
-    private Logger log = LoggerFactory.getLogger(this.getClass());
+//    private Logger log = LoggerFactory.getLogger(this.getClass());
     private static final boolean debug = false;
 
     @Override
-    public void service(javax.servlet.ServletRequest servletRequest, javax.servlet.ServletResponse servletResponse) throws ServletException, IOException {
+    public void service(javax.servlet.ServletRequest servletRequest,
+            javax.servlet.ServletResponse servletResponse) throws ServletException, IOException {
         HttpServletRequest req = (HttpServletRequest) servletRequest;
         HttpServletResponse resp = (HttpServletResponse) servletResponse;
 
-        debug("Mehod: " + req.getMethod() + " AuthType:" + req.getAuthType() + " ContextPath:" + req.getContextPath() + " PathInfo:" + req.getPathInfo());
-
-
+        debug("Mehod: " + req.getMethod() + " AuthType:" + req.getAuthType() +
+                " ContextPath:" + req.getContextPath() + " PathInfo:" + req.getPathInfo());
+        
         try {
             originalRequest.set(req);
             originalResponse.set(resp);
@@ -168,7 +169,7 @@ public class WebDavServlet implements Servlet {
     private void debug(String msg) {
         if(debug){
         System.err.println(this.getClass().getSimpleName() + ": " + msg);
-        log.debug(msg);
+//        log.debug(msg);
         }
     }
 

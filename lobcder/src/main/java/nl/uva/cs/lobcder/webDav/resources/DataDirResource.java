@@ -125,8 +125,4 @@ public class DataDirResource extends DataResource implements
             throws ConflictException {
         throw new RuntimeException("Not Implemented yet");
     }
-
-    private void debug(String msg) {
-        System.err.println(this.getClass().getSimpleName() + ": " + msg);
-    }
 }

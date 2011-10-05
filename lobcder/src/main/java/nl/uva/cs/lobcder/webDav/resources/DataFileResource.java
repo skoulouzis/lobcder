@@ -26,8 +26,8 @@ import nl.uva.cs.lobcder.resources.Metadata;
 public class DataFileResource extends DataResource implements
         com.bradmcevoy.http.FileResource {
 
-    public DataFileResource( IDataResourceEntry entry) {
-        super( entry);
+    public DataFileResource(IDataResourceEntry entry) {
+        super(entry);
     }
 
     @Override
@@ -63,17 +63,13 @@ public class DataFileResource extends DataResource implements
             if (accepts != null && !accepts.equals("")) {
                 type = ContentTypeUtils.findAcceptableContentType(mime, accepts);
             }
-        }else{
+        } else {
             debug("Metadata is NULL!!!");
         }
 
         debug("getContentType: type: " + type);
 
         return type;
-    }
-
-    private void debug(String msg) {
-        System.err.println(this.getClass().getSimpleName() + "."+this.getName()+": "+ msg);
     }
 
     @Override

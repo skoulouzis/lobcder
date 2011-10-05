@@ -30,6 +30,7 @@ public class DataResourceEntry implements IDataResourceEntry, Serializable {
     private ArrayList<Path> children;
     @Persistent
     private ArrayList<StorageResource> storageResource;
+    private boolean debug = false;
 
     public DataResourceEntry(Path ldri) {
         this.ldri = ldri;
@@ -89,7 +90,9 @@ public class DataResourceEntry implements IDataResourceEntry, Serializable {
     }
 
     private void debug(String msg) {
-        System.err.println(this.getClass().getSimpleName() + ": " + msg);
+        if (debug) {
+            System.err.println(this.getClass().getSimpleName() + ": " + msg);
+        }
     }
 
     @Override
