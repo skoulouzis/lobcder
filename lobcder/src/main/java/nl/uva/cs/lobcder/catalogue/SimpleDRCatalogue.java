@@ -36,12 +36,14 @@ public class SimpleDRCatalogue implements IDRCatalogue {
         if (loaded != null && loaded.getLDRI().getName().equals(entry.getLDRI().getName())) {
             throw new Exception("registerResourceEntry: cannot register resource " + entry.getLDRI() + " resource exists");
         }
-
+        
         Path parentPath = entry.getLDRI().getParent();
         if (!parentPath.isRoot()) {
             addChild(parentPath, entry.getLDRI());
         }
         persistEntry(entry);
+
+        return ;
     }
 
     @Override

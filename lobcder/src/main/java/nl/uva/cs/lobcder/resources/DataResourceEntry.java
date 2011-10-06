@@ -107,4 +107,17 @@ public class DataResourceEntry implements IDataResourceEntry, Serializable {
     public void removeChild(Path childPath) {
         children.remove(childPath);
     }
+
+    @Override
+    public Path getChild(Path path) {
+        
+        if (children != null && !children.isEmpty()) {
+            for (Path p : children) {
+                if (p.getName().equals(path.getName())) {
+                    return p;
+                }
+            }
+        }
+        return null;
+    }
 }

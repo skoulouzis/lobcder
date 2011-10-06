@@ -32,29 +32,27 @@ public class DataResourceFactory implements ResourceFactory {
 
     @Override
     public Resource getResource(String host, String strPath) {
-        IDataResourceEntry rootEntry;
-        Collection<IDataResourceEntry> topLevelEntries;
 
+        Collection<IDataResourceEntry> topLevelEntries;
+        Path ldri = Path.path(strPath).getStripFirst();
         try {
             //Gets the root path. If instead we called :'ldri = Path.path(strPath);' we get back '/lobcder-1.0-SNAPSHOT'
-            Path ldri = Path.path(strPath).getStripFirst();
             debug("getResource:  host: " + host + " path: " + ldri);
-//            if (ldri.isRoot() || ldri.toString().equals("")) {
-//                rootEntry = catalogue.getResourceEntryByLDRI(ldri);
-//                if (rootEntry == null) {
-//                    rootEntry = new DataResourceEntry(ldri);
-//                    topLevelEntries = catalogue.getTopLevelResourceEntries();
-//                    for (IDataResourceEntry e : topLevelEntries) {
-//                        debug("Root elements: "+e.getUID()+" "+e.getLDRI());
-//                        rootEntry.addChild(e.getLDRI());
-//                    }
-//
-//                }
-//            }
+            if (ldri.isRoot() || ldri.toString().equals("")) {
+//                return new DummyResource( catalogue, new ResourceFolderEntry(ldri) );
+                return new DataDirResource(catalogue, new DataResourceEntry(ldri));
+            }
+            IDataResourceEntry entry = catalogue.getResourceEntryByLDRI(ldri);
+            if (entry instanceof ResourceFolderEntry) {
+            }
+            if (entry instanceof ResourceFileEntry) {
+            }
+
+            return null;
         } catch (Exception ex) {
             java.util.logging.Logger.getLogger(DataResourceFactory.class.getName()).log(Level.SEVERE, null, ex);
         }
-        return new DummyResource();
+        return null;
     }
 
     private void debug(String msg) {
@@ -62,21 +60,5 @@ public class DataResourceFactory implements ResourceFactory {
             System.err.println(this.getClass().getSimpleName() + ": " + msg);
 //        log.debug(msg);
         }
-    }
-
-    private Resource getResource(Path path) throws Exception {
-        DataResourceEntry entry = (DataResourceEntry) catalogue.getResourceEntryByLDRI(path);
-        if (entry == null) {
-            throw new NullPointerException("Path " + path + " doesn't exist");
-        }
-
-        if (entry instanceof ResourceFolderEntry) {
-            return new DataDirResource(entry);
-        }
-        if (entry instanceof ResourceFileEntry) {
-            return new DataFileResource(entry);
-        }
-        debug("Unknown Type: " + entry.getLDRI());
-        return new DataResource(entry);
     }
 }

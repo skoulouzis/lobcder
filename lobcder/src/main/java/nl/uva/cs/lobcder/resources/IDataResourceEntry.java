@@ -14,7 +14,7 @@ import java.util.ArrayList;
 public interface IDataResourceEntry {
 
     public Path getLDRI();
-
+    
     public ArrayList<Path> getChildren();
 
     public void addChildren(ArrayList<Path> children);
@@ -34,4 +34,6 @@ public interface IDataResourceEntry {
     public boolean hasChildren();
 
     public void removeChild(Path childPath);
+
+    public Path getChild(Path path);
 }
