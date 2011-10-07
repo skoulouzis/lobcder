@@ -4,7 +4,6 @@
  */
 package nl.uva.cs.lobcder.webDav.resources;
 
-import com.bradmcevoy.common.ContentTypeUtils;
 import com.bradmcevoy.http.Auth;
 import com.bradmcevoy.http.CollectionResource;
 import com.bradmcevoy.http.FileItem;
@@ -16,8 +15,11 @@ import com.bradmcevoy.http.exceptions.ConflictException;
 import com.bradmcevoy.http.exceptions.NotAuthorizedException;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import nl.uva.cs.lobcder.catalogue.IDRCatalogue;
 import nl.uva.cs.lobcder.resources.IDataResourceEntry;
 import nl.uva.cs.lobcder.resources.Metadata;
@@ -46,6 +48,11 @@ public class DataFileResource implements
 
     @Override
     public void delete() {
+        try {
+            catalogue.unregisterResourceEntry(entry);
+        } catch (Exception ex) {
+            Logger.getLogger(DataFileResource.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     @Override
@@ -60,27 +67,26 @@ public class DataFileResource implements
     @Override
     public String getContentType(String accepts) {
         debug("getContentType. accepts: " + accepts);
-        String type = null;
-        Metadata meta = entry.getMetadata();
-        if (meta != null) {
-            String mime = meta.getMimeType();
-            debug("getContentType: mime: " + mime);
-            type = mime;
-            if (accepts != null && !accepts.equals("")) {
-                type = ContentTypeUtils.findAcceptableContentType(mime, accepts);
+        if (accepts != null) {
+            String[] acceptsTypes = accepts.split(",");
+            if (entry.getMetadata() != null) {
+                ArrayList<String> mimeTypes = entry.getMetadata().getMimeTypes();
+                for (String accessType : acceptsTypes) {
+                    for (String mimeType : mimeTypes) {
+                        if (accessType.equals(mimeType)) {
+                            return mimeType;
+                        }
+                    }
+                }
+                return mimeTypes.get(0);
             }
-        } else {
-            debug("Metadata is NULL!!!");
         }
 
-        debug("getContentType: type: " + type);
-
-        return type;
+        return null;
     }
 
     @Override
     public Long getMaxAgeSeconds(Auth auth) {
-//        throw new RuntimeException("Not Implemented yet: Args: auth: " + auth);
         return null;
     }
 
@@ -88,22 +94,29 @@ public class DataFileResource implements
     public void sendContent(OutputStream out, Range range,
             Map<String, String> params, String contentType) throws IOException,
             NotAuthorizedException, BadRequestException {
-        throw new RuntimeException("Not Implemented yet");
+        debug("sendContent.");
+        debug("\t range: " + range);
+        debug("\t params: " + params);
+        debug("\t contentType: " + contentType);
+
     }
 
     @Override
     public void moveTo(CollectionResource rDest, String name)
             throws ConflictException {
-        // catalogue.renameEntry();
-        throw new RuntimeException("Not Implemented yet. Args, DestName: "
-                + rDest.getName() + " fileName?:" + name);
+        debug("moveTo.");
+        debug("\t rDest: " + rDest);
+        debug("\t name: " + name);
     }
 
     @Override
     public String processForm(Map<String, String> arg0,
             Map<String, FileItem> arg1) throws BadRequestException,
             NotAuthorizedException {
-        throw new RuntimeException("Not Implemented yet");
+        debug("processForm.");
+        debug("\t arg0: " + arg0);
+        debug("\t arg1: " + arg1);
+        return null;
     }
 
     protected void debug(String msg) {
@@ -123,11 +136,15 @@ public class DataFileResource implements
 
     @Override
     public Object authenticate(String user, String password) {
-        return null;
+        debug("authenticate.");
+        debug("\t user: " + user);
+        debug("\t password: " + password);
+        return user;
     }
 
     @Override
     public boolean authorise(Request request, Method method, Auth auth) {
+        debug("authorise.");
         return true;
     }
 
@@ -138,16 +155,25 @@ public class DataFileResource implements
 
     @Override
     public Date getModifiedDate() {
+        debug("getModifiedDate.");
+        if (entry.getMetadata() != null && entry.getMetadata().getModifiedDate() != null) {
+            return new Date(entry.getMetadata().getModifiedDate());
+        }
         return null;
     }
 
     @Override
     public String checkRedirect(Request request) {
+        debug("checkRedirect.");
         return null;
     }
 
     @Override
     public Date getCreateDate() {
+        debug("getCreateDate.");
+        if (entry.getMetadata() != null && entry.getMetadata().getCreateDate() != null) {
+            return new Date(entry.getMetadata().getCreateDate());
+        }
         return null;
     }
 }

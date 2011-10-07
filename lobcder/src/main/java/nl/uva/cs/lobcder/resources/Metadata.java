@@ -5,13 +5,14 @@
 package nl.uva.cs.lobcder.resources;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import javax.jdo.annotations.PersistenceCapable;
+import javax.jdo.annotations.Persistent;
 
 /**
  *
  * @author S. Koulouzis
  */
-
 @PersistenceCapable
 public class Metadata implements Serializable {
 
@@ -19,10 +20,14 @@ public class Metadata implements Serializable {
      * 
      */
     private static final long serialVersionUID = -7617145607817495167L;
+    @Persistent
     private Long createDate = null;
+    @Persistent
     private Long modifiedDate;
+    @Persistent
     private Long length;
-    private String mimeType;
+    @Persistent
+    private ArrayList<String> mimeTypes;
 
     public Long getCreateDate() {
         return this.createDate;
@@ -48,11 +53,17 @@ public class Metadata implements Serializable {
         this.length = length;
     }
 
-    public String getMimeType() {
-        return this.mimeType;
+    public ArrayList<String> getMimeTypes() {
+        return this.mimeTypes;
     }
 
-    public void setMimeType(String mimeType) {
-        this.mimeType = mimeType;
+    public void addMimeType(String mimeType) {
+        if (mimeTypes == null) {
+            mimeTypes = new ArrayList<String>();
+        }
+        if (mimeType != null && mimeTypes.contains(mimeType)) {
+            this.mimeTypes.add(mimeType);
+        }
+
     }
 }

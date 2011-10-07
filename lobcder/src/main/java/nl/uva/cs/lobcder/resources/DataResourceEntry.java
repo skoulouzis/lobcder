@@ -120,4 +120,9 @@ public class DataResourceEntry implements IDataResourceEntry, Serializable {
         }
         return null;
     }
+
+    @Override
+    public void setLDRI(Path path) {
+        this.ldri = path;
+    }
 }

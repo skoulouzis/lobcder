@@ -32,22 +32,21 @@ public class DataResourceFactory implements ResourceFactory {
 
     @Override
     public Resource getResource(String host, String strPath) {
-
-        Collection<IDataResourceEntry> topLevelEntries;
+        
         Path ldri = Path.path(strPath).getStripFirst();
         try {
             //Gets the root path. If instead we called :'ldri = Path.path(strPath);' we get back '/lobcder-1.0-SNAPSHOT'
             debug("getResource:  host: " + host + " path: " + ldri);
             if (ldri.isRoot() || ldri.toString().equals("")) {
-//                return new DummyResource( catalogue, new ResourceFolderEntry(ldri) );
                 return new DataDirResource(catalogue, new DataResourceEntry(ldri));
             }
             IDataResourceEntry entry = catalogue.getResourceEntryByLDRI(ldri);
             if (entry instanceof ResourceFolderEntry) {
+                return new DataDirResource(catalogue, entry);
             }
             if (entry instanceof ResourceFileEntry) {
+                return new DataFileResource(catalogue, entry);
             }
-
             return null;
         } catch (Exception ex) {
             java.util.logging.Logger.getLogger(DataResourceFactory.class.getName()).log(Level.SEVERE, null, ex);

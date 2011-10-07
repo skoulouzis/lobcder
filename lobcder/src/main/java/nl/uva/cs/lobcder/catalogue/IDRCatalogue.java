@@ -28,4 +28,6 @@ public interface IDRCatalogue {
     public Boolean resourceEntryExists(IDataResourceEntry entry) throws Exception;
 
     public Collection<IDataResourceEntry> getTopLevelResourceEntries() throws Exception;
+
+    public void renameEntry(IDataResourceEntry entry, Path newName);
 }

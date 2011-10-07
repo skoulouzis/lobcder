@@ -36,4 +36,6 @@ public interface IDataResourceEntry {
     public void removeChild(Path childPath);
 
     public Path getChild(Path path);
+
+    public void setLDRI(Path path);
 }

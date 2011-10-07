@@ -26,7 +26,6 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import nl.uva.cs.lobcder.catalogue.IDRCatalogue;
-import nl.uva.cs.lobcder.resources.DataResourceEntry;
 import nl.uva.cs.lobcder.resources.IDataResourceEntry;
 import nl.uva.cs.lobcder.resources.ResourceFileEntry;
 import nl.uva.cs.lobcder.resources.ResourceFolderEntry;
@@ -86,9 +85,7 @@ class DataDirResource implements FolderResource {
         ArrayList<? extends Resource> children = null;
         try {
             if (entry.getLDRI().isRoot()) {
-
                 children = getTopLevelChildren();
-
             } else {
                 children = getEntriesChildren();
             }
@@ -132,6 +129,9 @@ class DataDirResource implements FolderResource {
     @Override
     public Date getModifiedDate() {
         debug("getModifiedDate.");
+        if (entry.getMetadata() != null && entry.getMetadata().getModifiedDate() != null) {
+            return new Date(entry.getMetadata().getModifiedDate());
+        }
         return null;
     }
 
@@ -143,18 +143,42 @@ class DataDirResource implements FolderResource {
 
     @Override
     public Resource createNew(String newName, InputStream inputStream, Long length, String contentType) throws IOException, ConflictException, NotAuthorizedException, BadRequestException {
-        debug("createNew.");
+        try {
+            debug("createNew.");
+            debug("\t newName: " + newName);
+            debug("\t length: " + length);
+            debug("\t contentType: " + contentType);
+            ResourceFileEntry newResource = new ResourceFileEntry(Path.path(entry.getLDRI(), newName));
+            newResource.getMetadata().setLength(length);
+            newResource.getMetadata().addMimeType(contentType);
+
+            catalogue.registerResourceEntry(newResource);
+            DataFileResource file = new DataFileResource(catalogue, newResource);
+            debug("returning createNew. " + file.getName());
+            return file;
+        } catch (Exception ex) {
+            Logger.getLogger(DataDirResource.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        debug("returning createNew. null");
         return null;
     }
 
     @Override
     public void copyTo(CollectionResource toCollection, String name) throws NotAuthorizedException, BadRequestException, ConflictException {
         debug("copyTo.");
+        debug("\t toCollection: " + toCollection);
+        debug("\t name: " + name);
     }
 
     @Override
     public void delete() throws NotAuthorizedException, ConflictException, BadRequestException {
         debug("delete.");
+        try {
+            catalogue.unregisterResourceEntry(entry);
+        } catch (Exception ex) {
+            Logger.getLogger(DataDirResource.class.getName()).log(Level.SEVERE, null, ex);
+            debug("Exception: " + ex.getMessage());
+        }
     }
 
     @Override
@@ -170,13 +194,31 @@ class DataDirResource implements FolderResource {
 
     @Override
     public String getContentType(String accepts) {
-        debug("getContentType.");
+        debug("getContentType. accepts: " + accepts);
+        ArrayList<String> mimeTypes;
+        if (accepts != null) {
+            String[] acceptsTypes = accepts.split(",");
+            if (entry.getMetadata() != null) {
+                mimeTypes = entry.getMetadata().getMimeTypes();
+                for (String accessType : acceptsTypes) {
+                    for (String mimeType : mimeTypes) {
+                        if (accessType.equals(mimeType)) {
+                            return mimeType;
+                        }
+                    }
+                }
+                return mimeTypes.get(0);
+            }
+        }
         return null;
     }
 
     @Override
     public Long getContentLength() {
         debug("getContentLength.");
+        if (entry.getMetadata() != null) {
+            return entry.getMetadata().getLength();
+        }
         return null;
     }
 
@@ -188,6 +230,13 @@ class DataDirResource implements FolderResource {
     @Override
     public Date getCreateDate() {
         debug("getCreateDate.");
+        debug("\t entry.getMetadata(): " + entry.getMetadata());
+        debug("\t entry.getMetadata().getCreateDate(): " + entry.getMetadata().getCreateDate());
+        if (entry.getMetadata() != null && entry.getMetadata().getCreateDate() != null) {
+            debug("getCreateDate. returning");
+            return new Date(entry.getMetadata().getCreateDate());
+        }
+        debug("getCreateDate. returning");
         return null;
     }
 
@@ -213,17 +262,20 @@ class DataDirResource implements FolderResource {
     private ArrayList<? extends Resource> getEntriesChildren() throws Exception {
         ArrayList<Path> childrenPaths = entry.getChildren();
         ArrayList<Resource> children = new ArrayList<Resource>();
-        for (Path p : childrenPaths) {
-            debug("Adding children: " + p);
-            IDataResourceEntry ch = catalogue.getResourceEntryByLDRI(p);
-            if (ch instanceof ResourceFolderEntry) {
-                children.add(new DataDirResource(catalogue, ch));
-            } else if (ch instanceof ResourceFileEntry) {
-                children.add(new DataFileResource(catalogue, ch));
-            } else {
-                children.add(new DataResource(catalogue, ch));
+        if (childrenPaths != null) {
+            for (Path p : childrenPaths) {
+                debug("Adding children: " + p);
+                IDataResourceEntry ch = catalogue.getResourceEntryByLDRI(p);
+                if (ch instanceof ResourceFolderEntry) {
+                    children.add(new DataDirResource(catalogue, ch));
+                } else if (ch instanceof ResourceFileEntry) {
+                    children.add(new DataFileResource(catalogue, ch));
+                } else {
+                    children.add(new DataResource(catalogue, ch));
+                }
             }
         }
+
         return children;
     }
 }

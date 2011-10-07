@@ -11,7 +11,6 @@ package nl.uva.cs.lobcder.catalogue;
 import com.bradmcevoy.common.Path;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import javax.jdo.JDOHelper;
 import javax.jdo.PersistenceManager;
 import javax.jdo.PersistenceManagerFactory;
@@ -36,14 +35,14 @@ public class SimpleDRCatalogue implements IDRCatalogue {
         if (loaded != null && loaded.getLDRI().getName().equals(entry.getLDRI().getName())) {
             throw new Exception("registerResourceEntry: cannot register resource " + entry.getLDRI() + " resource exists");
         }
-        
+
         Path parentPath = entry.getLDRI().getParent();
         if (!parentPath.isRoot()) {
             addChild(parentPath, entry.getLDRI());
         }
         persistEntry(entry);
 
-        return ;
+        return;
     }
 
     @Override
@@ -175,6 +174,7 @@ public class SimpleDRCatalogue implements IDRCatalogue {
                             throw new Exception("deleteEntry: cannot remove " + e.getLDRI() + " Is a collection");
                         }
                         pm.deletePersistent(e);
+                        break;
                     }
                 }
             }
@@ -211,6 +211,7 @@ public class SimpleDRCatalogue implements IDRCatalogue {
                 for (DataResourceEntry e : results) {
                     if (e.getLDRI().getName().equals(parent.getName())) {
                         e.addChild(child);
+                        break;
                     }
                 }
             }
@@ -246,6 +247,7 @@ public class SimpleDRCatalogue implements IDRCatalogue {
                 for (DataResourceEntry e : results) {
                     if (e.getLDRI().getName().equals(parent.getName())) {
                         e.removeChild(child);
+                        break;
                     }
                 }
             }
@@ -297,5 +299,42 @@ public class SimpleDRCatalogue implements IDRCatalogue {
             pm.close();
         }
         return topLevel;
+    }
+
+    @Override
+    public void renameEntry(IDataResourceEntry entry, Path newName) {
+        PersistenceManager pm = pmf.getPersistenceManager();
+        Transaction tx = pm.currentTransaction();
+        Collection<DataResourceEntry> results;
+        Path oldLdri = entry.getLDRI();
+
+        try {
+            tx.begin();
+            //This query, will return objects of type DataResourceEntry
+            Query q = pm.newQuery(DataResourceEntry.class);
+
+            //restrict to instances which have the field ldri equal to some logicalResourceName
+            q.setFilter("ldri.getName == oldLdri.getName");
+            //We then import the type of our logicalResourceName parameter
+            q.declareImports("import " + oldLdri.getClass().getName());
+            //and the parameter itself
+            q.declareParameters("Path oldLdri");
+            results = (Collection<DataResourceEntry>) q.execute(oldLdri);
+            if (!results.isEmpty()) {
+                for (DataResourceEntry e : results) {
+                    if (e.getLDRI().getName().equals(oldLdri.getName())) {
+                        e.setLDRI(newName);
+                        break;
+                    }
+                }
+            }
+            tx.commit();
+
+        } finally {
+            if (tx.isActive()) {
+                tx.rollback();
+            }
+            pm.close();
+        }
     }
 }
