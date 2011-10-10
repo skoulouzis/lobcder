@@ -22,12 +22,11 @@ public interface IDRCatalogue {
 
 //    public IResourceEntry getResourceEntryByUID(String UID)
 //            throws Exception;
-
     public void unregisterResourceEntry(IDataResourceEntry entry) throws Exception;
 
     public Boolean resourceEntryExists(IDataResourceEntry entry) throws Exception;
 
     public Collection<IDataResourceEntry> getTopLevelResourceEntries() throws Exception;
 
-    public void renameEntry(IDataResourceEntry entry, Path newName) throws Exception;
+    public void renameEntry(Path oldPath, Path newPath) throws Exception;
 }

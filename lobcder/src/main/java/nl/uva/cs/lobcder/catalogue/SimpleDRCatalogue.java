@@ -301,38 +301,36 @@ public class SimpleDRCatalogue implements IDRCatalogue {
     }
 
     @Override
-    public void renameEntry(IDataResourceEntry entry, Path newName) throws Exception {
+    public void renameEntry(Path oldPath, Path newPath) throws Exception {
         debug("renameEntry.");
-        debug("\t entry: " + entry.getLDRI() + " newName: " + newName);
+        debug("\t entry: " + oldPath + " newName: " + newPath);
 
-
-        IDataResourceEntry loaded = queryEntry(entry.getLDRI());
         
-        if (loaded != null && comparePaths(loaded.getLDRI(), entry.getLDRI()) ) {
-            throw new Exception("renameEntry: cannot rename resource " + entry.getLDRI() + " resource exists");
+        IDataResourceEntry loaded = queryEntry(oldPath);
+
+        if (loaded == null) {
+            throw new Exception("renameEntry: cannot rename resource " + oldPath + " resource doesn't exists");
         }
 
         PersistenceManager pm = pmf.getPersistenceManager();
         Transaction tx = pm.currentTransaction();
         Collection<DataResourceEntry> results;
-        Path oldLdri = entry.getLDRI();
-
         try {
             tx.begin();
             //This query, will return objects of type DataResourceEntry
             Query q = pm.newQuery(DataResourceEntry.class);
 
             //restrict to instances which have the field ldri equal to some logicalResourceName
-            q.setFilter("ldri.getName == oldLdri.getName");
+            q.setFilter("ldri.getName == oldPath.getName");
             //We then import the type of our logicalResourceName parameter
-            q.declareImports("import " + oldLdri.getClass().getName());
+            q.declareImports("import " + oldPath.getClass().getName());
             //and the parameter itself
             q.declareParameters("Path oldLdri");
-            results = (Collection<DataResourceEntry>) q.execute(oldLdri);
+            results = (Collection<DataResourceEntry>) q.execute(oldPath);
             if (!results.isEmpty()) {
                 for (DataResourceEntry e : results) {
-                    if (comparePaths(e.getLDRI(), oldLdri)) {
-                        e.setLDRI(newName);
+                    if (comparePaths(e.getLDRI(), oldPath)) {
+                        e.setLDRI(newPath);
                         break;
                     }
                 }

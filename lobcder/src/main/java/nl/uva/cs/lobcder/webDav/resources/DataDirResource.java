@@ -184,7 +184,6 @@ class DataDirResource implements FolderResource {
                 throw  new ConflictException(this, ex.getMessage());
             }
             Logger.getLogger(DataDirResource.class.getName()).log(Level.SEVERE, null, ex);
-
         }
     }
 
@@ -247,7 +246,7 @@ class DataDirResource implements FolderResource {
             debug("moveTo.");
             debug("\t rDestgetName: " + rDest.getName() + " name: " + name);
             debug("\t rDestgetUniqueId: " + rDest.getUniqueId());
-            catalogue.renameEntry(entry, Path.path(name));
+            catalogue.renameEntry(entry.getLDRI(), Path.path(name));
         } catch (Exception ex) {
             Logger.getLogger(DataDirResource.class.getName()).log(Level.SEVERE, null, ex);
             if(ex.getMessage().contains("resource exists")){

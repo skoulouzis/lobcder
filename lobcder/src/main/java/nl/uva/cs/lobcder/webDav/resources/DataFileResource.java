@@ -4,6 +4,7 @@
  */
 package nl.uva.cs.lobcder.webDav.resources;
 
+import com.bradmcevoy.common.Path;
 import com.bradmcevoy.http.Auth;
 import com.bradmcevoy.http.CollectionResource;
 import com.bradmcevoy.http.FileItem;
@@ -23,6 +24,7 @@ import java.util.logging.Logger;
 import nl.uva.cs.lobcder.catalogue.IDRCatalogue;
 import nl.uva.cs.lobcder.resources.IDataResourceEntry;
 import nl.uva.cs.lobcder.resources.Metadata;
+import nl.uva.cs.lobcder.resources.ResourceFileEntry;
 
 /**
  *
@@ -41,9 +43,19 @@ public class DataFileResource implements
 
     @Override
     public void copyTo(CollectionResource collectionResource, String name) {
-        throw new RuntimeException(
-                "Not Implemented yet. Args: CollectionResource: "
-                + collectionResource + ", name: " + name);
+        try {
+            debug("copyTo.");
+            debug("\t toCollection: " + collectionResource.getName());
+            debug("\t name: " + name);
+            Path toCollectionLDRI = Path.path(collectionResource.getName());
+            Path newLDRI = Path.path(toCollectionLDRI, name);
+            ResourceFileEntry newFolderEntry = new ResourceFileEntry(newLDRI);
+            newFolderEntry.getMetadata().setModifiedDate(System.currentTimeMillis());
+            catalogue.registerResourceEntry(newFolderEntry);
+
+        } catch (Exception ex) {
+            Logger.getLogger(DataDirResource.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     @Override
@@ -98,7 +110,6 @@ public class DataFileResource implements
         debug("\t range: " + range);
         debug("\t params: " + params);
         debug("\t contentType: " + contentType);
-
     }
 
     @Override
@@ -107,6 +118,18 @@ public class DataFileResource implements
         debug("moveTo.");
         debug("\t rDest: " + rDest);
         debug("\t name: " + name);
+
+        try {
+            debug("moveTo.");
+            debug("\t rDestgetName: " + rDest.getName() + " name: " + name);
+            debug("\t rDestgetUniqueId: " + rDest.getUniqueId());
+            catalogue.renameEntry(entry.getLDRI(), Path.path(name));
+        } catch (Exception ex) {
+            Logger.getLogger(DataDirResource.class.getName()).log(Level.SEVERE, null, ex);
+            if (ex.getMessage().contains("resource exists")) {
+                throw new ConflictException(rDest, ex.getMessage());
+            }
+        }
     }
 
     @Override
