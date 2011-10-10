@@ -29,5 +29,5 @@ public interface IDRCatalogue {
 
     public Collection<IDataResourceEntry> getTopLevelResourceEntries() throws Exception;
 
-    public void renameEntry(IDataResourceEntry entry, Path newName);
+    public void renameEntry(IDataResourceEntry entry, Path newName) throws Exception;
 }

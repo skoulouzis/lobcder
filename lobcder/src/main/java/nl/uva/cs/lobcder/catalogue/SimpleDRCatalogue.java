@@ -32,7 +32,7 @@ public class SimpleDRCatalogue implements IDRCatalogue {
     @Override
     public void registerResourceEntry(IDataResourceEntry entry) throws Exception {
         IDataResourceEntry loaded = queryEntry(entry.getLDRI());
-        if (loaded != null && loaded.getLDRI().getName().equals(entry.getLDRI().getName())) {
+        if (loaded != null && comparePaths(loaded.getLDRI(), entry.getLDRI())) {
             throw new Exception("registerResourceEntry: cannot register resource " + entry.getLDRI() + " resource exists");
         }
 
@@ -121,9 +121,8 @@ public class SimpleDRCatalogue implements IDRCatalogue {
                 //TODO fix query 
                 for (DataResourceEntry e : results) {
 //                    debug("queryEntry. LDRI: " + e.getLDRI() + " UID: " + e.getUID());
-
-                    if (e.getLDRI().getName().equals(logicalResourceName.getName())) {
-//                        debug("Returning: "+e.getLDRI()+" "+e.getUID());
+                    if (comparePaths(e.getLDRI(), logicalResourceName)) {
+//                        debug("Returning: " + e.getLDRI() + " " + e.getUID());
                         entry = e;
                         break;
                     }
@@ -169,7 +168,7 @@ public class SimpleDRCatalogue implements IDRCatalogue {
             if (!results.isEmpty()) {
 
                 for (DataResourceEntry e : results) {
-                    if (e.getLDRI().getName().equals(logicalResourceName.getName())) {
+                    if (comparePaths(e.getLDRI(), logicalResourceName)) {
                         if (e.hasChildren()) {
                             throw new Exception("deleteEntry: cannot remove " + e.getLDRI() + " Is a collection");
                         }
@@ -209,7 +208,7 @@ public class SimpleDRCatalogue implements IDRCatalogue {
             results = (Collection<DataResourceEntry>) q.execute(parent);
             if (!results.isEmpty()) {
                 for (DataResourceEntry e : results) {
-                    if (e.getLDRI().getName().equals(parent.getName())) {
+                    if (comparePaths(e.getLDRI(), parent)) {
                         e.addChild(child);
                         break;
                     }
@@ -245,7 +244,7 @@ public class SimpleDRCatalogue implements IDRCatalogue {
             results = (Collection<DataResourceEntry>) q.execute(parent);
             if (!results.isEmpty()) {
                 for (DataResourceEntry e : results) {
-                    if (e.getLDRI().getName().equals(parent.getName())) {
+                    if (comparePaths(e.getLDRI(), parent)) {
                         e.removeChild(child);
                         break;
                     }
@@ -302,7 +301,17 @@ public class SimpleDRCatalogue implements IDRCatalogue {
     }
 
     @Override
-    public void renameEntry(IDataResourceEntry entry, Path newName) {
+    public void renameEntry(IDataResourceEntry entry, Path newName) throws Exception {
+        debug("renameEntry.");
+        debug("\t entry: " + entry.getLDRI() + " newName: " + newName);
+
+
+        IDataResourceEntry loaded = queryEntry(entry.getLDRI());
+        
+        if (loaded != null && comparePaths(loaded.getLDRI(), entry.getLDRI()) ) {
+            throw new Exception("renameEntry: cannot rename resource " + entry.getLDRI() + " resource exists");
+        }
+
         PersistenceManager pm = pmf.getPersistenceManager();
         Transaction tx = pm.currentTransaction();
         Collection<DataResourceEntry> results;
@@ -322,7 +331,7 @@ public class SimpleDRCatalogue implements IDRCatalogue {
             results = (Collection<DataResourceEntry>) q.execute(oldLdri);
             if (!results.isEmpty()) {
                 for (DataResourceEntry e : results) {
-                    if (e.getLDRI().getName().equals(oldLdri.getName())) {
+                    if (comparePaths(e.getLDRI(), oldLdri)) {
                         e.setLDRI(newName);
                         break;
                     }
@@ -336,5 +345,12 @@ public class SimpleDRCatalogue implements IDRCatalogue {
             }
             pm.close();
         }
+    }
+
+    private boolean comparePaths(Path path1, Path path2) {
+        if (path1.toString().equals(path2.toString())) {
+            return true;
+        }
+        return false;
     }
 }

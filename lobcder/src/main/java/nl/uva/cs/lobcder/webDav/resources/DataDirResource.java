@@ -52,13 +52,17 @@ class DataDirResource implements FolderResource {
 
             Path newCollectionPath = Path.path(entry.getLDRI(), newName);
             debug("\t newCollectionPath: " + newCollectionPath);
-            ResourceFolderEntry newCollection = new ResourceFolderEntry(newCollectionPath);
-            catalogue.registerResourceEntry(newCollection);
-            debug("\t newCollection: " + newCollection.getLDRI() + " getLDRI().getName():" + newCollection.getLDRI().getName());
+            ResourceFolderEntry newFolderEntry = new ResourceFolderEntry(newCollectionPath);
+            newFolderEntry.getMetadata().setCreateDate(System.currentTimeMillis());
+            catalogue.registerResourceEntry(newFolderEntry);
+            debug("\t newCollection: " + newFolderEntry.getLDRI() + " getLDRI().getName():" + newFolderEntry.getLDRI().getName());
 
-            return new DataDirResource(catalogue, newCollection);
+            return new DataDirResource(catalogue, newFolderEntry);
         } catch (Exception ex) {
             Logger.getLogger(DataDirResource.class.getName()).log(Level.SEVERE, null, ex);
+            if(ex.getMessage().contains("resource exists")){
+                throw  new ConflictException(this, newName);
+            }
         }
         return null;
     }
@@ -151,7 +155,7 @@ class DataDirResource implements FolderResource {
             ResourceFileEntry newResource = new ResourceFileEntry(Path.path(entry.getLDRI(), newName));
             newResource.getMetadata().setLength(length);
             newResource.getMetadata().addMimeType(contentType);
-
+            newResource.getMetadata().setCreateDate(System.currentTimeMillis());
             catalogue.registerResourceEntry(newResource);
             DataFileResource file = new DataFileResource(catalogue, newResource);
             debug("returning createNew. " + file.getName());
@@ -165,9 +169,23 @@ class DataDirResource implements FolderResource {
 
     @Override
     public void copyTo(CollectionResource toCollection, String name) throws NotAuthorizedException, BadRequestException, ConflictException {
-        debug("copyTo.");
-        debug("\t toCollection: " + toCollection);
-        debug("\t name: " + name);
+        try {
+            debug("copyTo.");
+            debug("\t toCollection: " + toCollection.getName());
+            debug("\t name: " + name);
+            Path toCollectionLDRI = Path.path(toCollection.getName());
+            Path newLDRI = Path.path(toCollectionLDRI, name);
+            ResourceFolderEntry newFolderEntry = new ResourceFolderEntry(newLDRI);
+            newFolderEntry.getMetadata().setModifiedDate(System.currentTimeMillis());
+            catalogue.registerResourceEntry(newFolderEntry);
+
+        } catch (Exception ex) {
+            if(ex.getMessage().contains("resource exists")){
+                throw  new ConflictException(this, ex.getMessage());
+            }
+            Logger.getLogger(DataDirResource.class.getName()).log(Level.SEVERE, null, ex);
+
+        }
     }
 
     @Override
@@ -183,6 +201,7 @@ class DataDirResource implements FolderResource {
 
     @Override
     public void sendContent(OutputStream out, Range range, Map<String, String> params, String contentType) throws IOException, NotAuthorizedException, BadRequestException {
+        //Not sure what is does
         debug("sendContent.");
     }
 
@@ -224,7 +243,17 @@ class DataDirResource implements FolderResource {
 
     @Override
     public void moveTo(CollectionResource rDest, String name) throws ConflictException, NotAuthorizedException, BadRequestException {
-        debug("moveTo.");
+        try {
+            debug("moveTo.");
+            debug("\t rDestgetName: " + rDest.getName() + " name: " + name);
+            debug("\t rDestgetUniqueId: " + rDest.getUniqueId());
+            catalogue.renameEntry(entry, Path.path(name));
+        } catch (Exception ex) {
+            Logger.getLogger(DataDirResource.class.getName()).log(Level.SEVERE, null, ex);
+            if(ex.getMessage().contains("resource exists")){
+                throw new ConflictException(rDest, ex.getMessage());
+            }
+        }
     }
 
     @Override
