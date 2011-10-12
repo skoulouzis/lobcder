@@ -34,7 +34,7 @@ import nl.uva.cs.lobcder.resources.ResourceFolderEntry;
  *
  * @author S. Koulouzis
  */
-class DataDirResource implements FolderResource {
+class DataDirResource implements FolderResource, CollectionResource {
 
     private final IDataResourceEntry entry;
     private final IDRCatalogue catalogue;

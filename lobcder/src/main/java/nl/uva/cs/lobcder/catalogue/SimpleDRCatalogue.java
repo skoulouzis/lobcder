@@ -312,6 +312,9 @@ public class SimpleDRCatalogue implements IDRCatalogue {
             throw new Exception("renameEntry: cannot rename resource " + oldPath + " resource doesn't exists");
         }
 
+        removeChild(oldPath.getParent(), oldPath);
+        
+
         PersistenceManager pm = pmf.getPersistenceManager();
         Transaction tx = pm.currentTransaction();
         Collection<DataResourceEntry> results;
@@ -343,6 +346,8 @@ public class SimpleDRCatalogue implements IDRCatalogue {
             }
             pm.close();
         }
+
+        addChild(newPath.getParent(), newPath);
     }
 
     private boolean comparePaths(Path path1, Path path2) {

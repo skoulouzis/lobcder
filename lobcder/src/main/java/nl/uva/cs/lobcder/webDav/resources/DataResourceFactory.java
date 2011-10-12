@@ -47,7 +47,8 @@ public class DataResourceFactory implements ResourceFactory {
             if (entry instanceof ResourceFileEntry) {
                 return new DataFileResource(catalogue, entry);
             }
-            return null;
+
+            return new DataResource(catalogue, entry);
         } catch (Exception ex) {
             java.util.logging.Logger.getLogger(DataResourceFactory.class.getName()).log(Level.SEVERE, null, ex);
         }

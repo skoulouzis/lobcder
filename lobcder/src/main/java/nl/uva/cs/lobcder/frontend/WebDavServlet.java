@@ -36,7 +36,7 @@ public class WebDavServlet implements Servlet {
     protected com.bradmcevoy.http.ServletHttpManager httpManager;
     private ServletConfig config;
 //    private Logger log = LoggerFactory.getLogger(this.getClass());
-    private static final boolean debug = false;
+    private static final boolean debug = true;
 
     @Override
     public void service(javax.servlet.ServletRequest servletRequest,
@@ -54,6 +54,7 @@ public class WebDavServlet implements Servlet {
             com.bradmcevoy.http.Response response = new com.bradmcevoy.http.ServletResponse(resp);
             
             httpManager.process(request, response);
+
         } finally {
             originalRequest.remove();
             originalResponse.remove();

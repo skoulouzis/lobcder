@@ -116,14 +116,21 @@ public class DataFileResource implements
     public void moveTo(CollectionResource rDest, String name)
             throws ConflictException {
         debug("moveTo.");
-        debug("\t rDest: " + rDest);
         debug("\t name: " + name);
+        Path parent;
+        Path tmpPath;
 
         try {
-            debug("moveTo.");
             debug("\t rDestgetName: " + rDest.getName() + " name: " + name);
             debug("\t rDestgetUniqueId: " + rDest.getUniqueId());
-            catalogue.renameEntry(entry.getLDRI(), Path.path(name));
+            Path newPath = Path.path(Path.path(rDest.getName()), name);
+            if (newPath.isRelative()) {
+                parent = entry.getLDRI().getParent();
+                tmpPath = Path.path(parent, name);
+                newPath = tmpPath;
+            }
+            debug("\t rename: " + entry.getLDRI() + " to " + newPath);
+            catalogue.renameEntry(entry.getLDRI(), newPath);
         } catch (Exception ex) {
             Logger.getLogger(DataDirResource.class.getName()).log(Level.SEVERE, null, ex);
             if (ex.getMessage().contains("resource exists")) {
