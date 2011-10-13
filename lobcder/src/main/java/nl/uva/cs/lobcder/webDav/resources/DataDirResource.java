@@ -245,7 +245,6 @@ class DataDirResource implements FolderResource, CollectionResource {
         try {
             debug("moveTo.");
             debug("\t rDestgetName: " + rDest.getName() + " name: " + name);
-            debug("\t rDestgetUniqueId: " + rDest.getUniqueId());
             catalogue.renameEntry(entry.getLDRI(), Path.path(name));
         } catch (Exception ex) {
             Logger.getLogger(DataDirResource.class.getName()).log(Level.SEVERE, null, ex);

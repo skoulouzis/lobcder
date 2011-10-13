@@ -44,8 +44,19 @@ public class WebDavServlet implements Servlet {
         HttpServletRequest req = (HttpServletRequest) servletRequest;
         HttpServletResponse resp = (HttpServletResponse) servletResponse;
 
-        debug("Mehod: " + req.getMethod() + " AuthType:" + req.getAuthType() +
-                " ContextPath:" + req.getContextPath() + " PathInfo:" + req.getPathInfo());
+        debug("HttpServletRequest \n" +
+                "\t getAuthType: "+req.getAuthType()+"\n"+
+                "\t getContentType: "+req.getContentType()+"\n"+
+                "\t getContextPath: "+req.getContextPath()+"\n"+
+                "\t getMethod: "+req.getMethod()+"\n"+
+                "\t getPathInfo: "+req.getPathInfo()+"\n"+
+                "\t getPathTranslated: "+req.getPathTranslated()+"\n"+
+                "\t getQueryString: "+req.getQueryString()+"\n"+
+                "\t getRemoteUser: "+req.getRemoteUser()+"\n"+
+                "\t getRequestURI: "+req.getRequestURI()+"\n"+
+                "\t getRequestedSessionId: "+req.getRequestedSessionId());
+
+
         
         try {
             originalRequest.set(req);

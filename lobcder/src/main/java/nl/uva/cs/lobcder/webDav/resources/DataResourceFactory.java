@@ -36,7 +36,13 @@ public class DataResourceFactory implements ResourceFactory {
         Path ldri = Path.path(strPath).getStripFirst();
         try {
             //Gets the root path. If instead we called :'ldri = Path.path(strPath);' we get back '/lobcder-1.0-SNAPSHOT'
+            debug("getResource:  strPath: " + strPath + " path: " + Path.path(strPath));
             debug("getResource:  host: " + host + " path: " + ldri);
+            if(host == null &&  Path.path(strPath).toString().equals("")){
+//                return null;
+                throw new Exception(strPath);
+            }
+            
             if (ldri.isRoot() || ldri.toString().equals("")) {
                 return new DataDirResource(catalogue, new DataResourceEntry(ldri));
             }
@@ -47,7 +53,7 @@ public class DataResourceFactory implements ResourceFactory {
             if (entry instanceof ResourceFileEntry) {
                 return new DataFileResource(catalogue, entry);
             }
-
+            
             return new DataResource(catalogue, entry);
         } catch (Exception ex) {
             java.util.logging.Logger.getLogger(DataResourceFactory.class.getName()).log(Level.SEVERE, null, ex);
