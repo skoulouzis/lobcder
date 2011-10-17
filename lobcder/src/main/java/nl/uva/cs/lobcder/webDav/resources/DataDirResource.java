@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import netscape.security.ForbiddenTargetException;
 import nl.uva.cs.lobcder.catalogue.IDRCatalogue;
 import nl.uva.cs.lobcder.resources.IDataResourceEntry;
 import nl.uva.cs.lobcder.resources.ResourceFileEntry;
@@ -245,6 +246,10 @@ class DataDirResource implements FolderResource, CollectionResource {
         try {
             debug("moveTo.");
             debug("\t rDestgetName: " + rDest.getName() + " name: " + name);
+//            if(rDest == null || rDest.getName() == null){
+//                debug("----------------Will throw forbidden ");
+//                throw new com.bradmcevoy.http.exceptions.BadRequestException(this);
+//            }
             catalogue.renameEntry(entry.getLDRI(), Path.path(name));
         } catch (Exception ex) {
             Logger.getLogger(DataDirResource.class.getName()).log(Level.SEVERE, null, ex);

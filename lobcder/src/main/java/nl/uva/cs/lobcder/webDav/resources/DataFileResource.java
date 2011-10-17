@@ -13,6 +13,7 @@ import com.bradmcevoy.http.Request;
 import com.bradmcevoy.http.Request.Method;
 import com.bradmcevoy.http.exceptions.BadRequestException;
 import com.bradmcevoy.http.exceptions.ConflictException;
+import com.bradmcevoy.http.exceptions.MiltonException;
 import com.bradmcevoy.http.exceptions.NotAuthorizedException;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -114,21 +115,26 @@ public class DataFileResource implements
 
     @Override
     public void moveTo(CollectionResource rDest, String name)
-            throws ConflictException {
+            throws ConflictException, NotAuthorizedException, BadRequestException {
         debug("moveTo.");
         debug("\t name: " + name);
         Path parent;
         Path tmpPath;
 
+
+        debug("\t rDestgetName: " + rDest.getName() + " name: " + name);
+//        if (rDest == null || rDest.getName() == null) {
+//            debug("----------------Will throw forbidden ");
+//            throw new com.bradmcevoy.http.exceptions.BadRequestException(this);
+//        }
+        debug("\t rDestgetUniqueId: " + rDest.getUniqueId());
+        Path newPath = Path.path(Path.path(rDest.getName()), name);
+        if (newPath.isRelative()) {
+            parent = entry.getLDRI().getParent();
+            tmpPath = Path.path(parent, name);
+            newPath = tmpPath;
+        }
         try {
-            debug("\t rDestgetName: " + rDest.getName() + " name: " + name);
-            debug("\t rDestgetUniqueId: " + rDest.getUniqueId());
-            Path newPath = Path.path(Path.path(rDest.getName()), name);
-            if (newPath.isRelative()) {
-                parent = entry.getLDRI().getParent();
-                tmpPath = Path.path(parent, name);
-                newPath = tmpPath;
-            }
             debug("\t rename: " + entry.getLDRI() + " to " + newPath);
             catalogue.renameEntry(entry.getLDRI(), newPath);
         } catch (Exception ex) {

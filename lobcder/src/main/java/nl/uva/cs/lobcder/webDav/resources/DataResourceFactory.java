@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import com.bradmcevoy.common.Path;
 import com.bradmcevoy.http.Resource;
 import com.bradmcevoy.http.ResourceFactory;
+import com.bradmcevoy.http.exceptions.BadRequestException;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import nl.uva.vlet.exception.VlException;
@@ -32,28 +33,32 @@ public class DataResourceFactory implements ResourceFactory {
 
     @Override
     public Resource getResource(String host, String strPath) {
-        
+
         Path ldri = Path.path(strPath).getStripFirst();
         try {
             //Gets the root path. If instead we called :'ldri = Path.path(strPath);' we get back '/lobcder-1.0-SNAPSHOT'
             debug("getResource:  strPath: " + strPath + " path: " + Path.path(strPath));
             debug("getResource:  host: " + host + " path: " + ldri);
-            if(host == null &&  Path.path(strPath).toString().equals("")){
-//                return null;
-                throw new Exception(strPath);
+            if (host == null && Path.path(strPath).toString().equals("")) {
+                return null;
             }
-            
+
             if (ldri.isRoot() || ldri.toString().equals("")) {
                 return new DataDirResource(catalogue, new DataResourceEntry(ldri));
             }
+
             IDataResourceEntry entry = catalogue.getResourceEntryByLDRI(ldri);
+            if (entry == null) {
+                debug("Didn't find " + ldri + ". returning null");
+                return null;
+            }
             if (entry instanceof ResourceFolderEntry) {
                 return new DataDirResource(catalogue, entry);
             }
             if (entry instanceof ResourceFileEntry) {
                 return new DataFileResource(catalogue, entry);
             }
-            
+
             return new DataResource(catalogue, entry);
         } catch (Exception ex) {
             java.util.logging.Logger.getLogger(DataResourceFactory.class.getName()).log(Level.SEVERE, null, ex);

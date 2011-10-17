@@ -63,13 +63,13 @@ there are no implementations to enhance
         <dependency>
             <groupId>com.ettrema</groupId>
             <artifactId>milton-api</artifactId>
-            <version>1.6.3</version>
+            <version>1.6.5</version>
         </dependency>
         
         <dependency>
             <groupId>com.ettrema</groupId>
             <artifactId>milton-servlet</artifactId>
-            <version>1.6.3</version>
+            <version>1.6.5</version>
         </dependency>
         
         
