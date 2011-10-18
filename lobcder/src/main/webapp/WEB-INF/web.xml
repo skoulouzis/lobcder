@@ -7,9 +7,6 @@
         <init-param>
             <param-name>authentication.handler.classes</param-name>
             <param-value>com.bradmcevoy.http.http11.auth.BasicAuthHandler</param-value>
-            
-            <param-name>dispatch.filter</param-name>
-            <param-value>com.bradmcevoy.http.http11.auth.BasicAuthHandler</param-value>
         </init-param>
     </servlet>
     <servlet-mapping>
