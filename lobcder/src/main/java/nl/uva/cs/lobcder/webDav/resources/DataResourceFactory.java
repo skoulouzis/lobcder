@@ -39,10 +39,10 @@ public class DataResourceFactory implements ResourceFactory {
             //Gets the root path. If instead we called :'ldri = Path.path(strPath);' we get back '/lobcder-1.0-SNAPSHOT'
             debug("getResource:  strPath: " + strPath + " path: " + Path.path(strPath));
             debug("getResource:  host: " + host + " path: " + ldri);
-            if (host == null && Path.path(strPath).toString().equals("")) {
-                debug(">>>>>>>>>>>>>>> Host null and path is empty");
-//                return null;
-            }
+            
+//            if (host == null && Path.path(strPath).toString().equals("")) {
+//                debug(">>>>>>>>>>>>>>> Host null and path is empty");
+//            }
 
             if (ldri.isRoot() || ldri.toString().equals("")) {
                 return new DataDirResource(catalogue, new DataResourceEntry(ldri));

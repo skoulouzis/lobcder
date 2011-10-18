@@ -124,10 +124,11 @@ public class DataFileResource implements
 
 
         debug("\t rDestgetName: " + rDest.getName() + " name: " + name);
-        if (rDest == null || rDest.getName() == null) {
-            debug("----------------Have to throw forbidden ");
-            throw new ForbiddenException(this);
-        }
+//        if (rDest == null || rDest.getName() == null) {
+//            debug("----------------Have to throw forbidden ");
+//            throw new ForbiddenException(this);
+//        }
+        
         debug("\t rDestgetUniqueId: " + rDest.getUniqueId());
         Path newPath = Path.path(Path.path(rDest.getName()), name);
         if (newPath.isRelative()) {
