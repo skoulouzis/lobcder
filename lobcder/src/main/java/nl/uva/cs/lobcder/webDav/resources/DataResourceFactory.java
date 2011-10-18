@@ -40,7 +40,8 @@ public class DataResourceFactory implements ResourceFactory {
             debug("getResource:  strPath: " + strPath + " path: " + Path.path(strPath));
             debug("getResource:  host: " + host + " path: " + ldri);
             if (host == null && Path.path(strPath).toString().equals("")) {
-                return null;
+                debug(">>>>>>>>>>>>>>> Host null and path is empty");
+//                return null;
             }
 
             if (ldri.isRoot() || ldri.toString().equals("")) {

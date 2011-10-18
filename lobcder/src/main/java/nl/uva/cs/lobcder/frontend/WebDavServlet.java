@@ -147,6 +147,8 @@ public class WebDavServlet implements Servlet {
         } else {
             httpManager = new com.bradmcevoy.http.ServletHttpManager(rf, responseHandler, authService);
         }
+        
+        httpManager.addFilter(0, new WebDavFilter());
     }
 
     protected <T> T instantiate(String className) throws ServletException {

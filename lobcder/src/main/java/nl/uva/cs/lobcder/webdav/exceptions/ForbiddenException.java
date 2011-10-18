@@ -2,16 +2,16 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package nl.uva.cs.lobcder.webDav.resources;
+package nl.uva.cs.lobcder.webdav.exceptions;
 
 import com.bradmcevoy.http.Resource;
 import com.bradmcevoy.http.exceptions.MiltonException;
 
 /**
  *
- * @author S. Koulouzis
+ * source from: http://svn.dcache.org/dCache/trunk/modules/dCache/
  */
-class ForbiddenException extends MiltonException {
+public class ForbiddenException extends WebDavException {
     private final String message;
 
     public ForbiddenException(Resource resource) {

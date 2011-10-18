@@ -26,6 +26,7 @@ import nl.uva.cs.lobcder.catalogue.IDRCatalogue;
 import nl.uva.cs.lobcder.resources.IDataResourceEntry;
 import nl.uva.cs.lobcder.resources.Metadata;
 import nl.uva.cs.lobcder.resources.ResourceFileEntry;
+import nl.uva.cs.lobcder.webdav.exceptions.ForbiddenException;
 
 /**
  *
@@ -112,7 +113,7 @@ public class DataFileResource implements
         debug("\t params: " + params);
         debug("\t contentType: " + contentType);
     }
-
+    
     @Override
     public void moveTo(CollectionResource rDest, String name)
             throws ConflictException, NotAuthorizedException, BadRequestException {
@@ -123,10 +124,10 @@ public class DataFileResource implements
 
 
         debug("\t rDestgetName: " + rDest.getName() + " name: " + name);
-//        if (rDest == null || rDest.getName() == null) {
-//            debug("----------------Will throw forbidden ");
-//            throw new com.bradmcevoy.http.exceptions.BadRequestException(this);
-//        }
+        if (rDest == null || rDest.getName() == null) {
+            debug("----------------Have to throw forbidden ");
+            throw new ForbiddenException(this);
+        }
         debug("\t rDestgetUniqueId: " + rDest.getUniqueId());
         Path newPath = Path.path(Path.path(rDest.getName()), name);
         if (newPath.isRelative()) {

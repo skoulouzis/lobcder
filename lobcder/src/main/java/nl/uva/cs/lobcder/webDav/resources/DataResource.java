@@ -2,13 +2,13 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package nl.uva.cs.lobcder.webDav.resources;
 
 import com.bradmcevoy.http.Auth;
 import com.bradmcevoy.http.PropFindableResource;
 import com.bradmcevoy.http.Request;
 import com.bradmcevoy.http.Request.Method;
+import com.bradmcevoy.http.Resource;
 import java.util.Date;
 import nl.uva.cs.lobcder.catalogue.IDRCatalogue;
 import nl.uva.cs.lobcder.resources.IDataResourceEntry;
@@ -17,7 +17,7 @@ import nl.uva.cs.lobcder.resources.IDataResourceEntry;
  *
  * @author S. Koulouzis
  */
-class DataResource implements PropFindableResource{
+public class DataResource implements PropFindableResource, Resource {
 
     public DataResource(IDRCatalogue catalogue, IDataResourceEntry ch) {
     }
@@ -61,5 +61,4 @@ class DataResource implements PropFindableResource{
     public String checkRedirect(Request request) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
-
 }
