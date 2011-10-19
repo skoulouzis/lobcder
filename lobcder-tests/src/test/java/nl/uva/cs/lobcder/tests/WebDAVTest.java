@@ -726,7 +726,6 @@ public class WebDAVTest {
 //            assertTrue("status: " + status, status == 400 );
 //
             move = new MoveMethod(testuri, destinationpath, true);
-            debug("Move from " + testuri + " to " + destinationpath);
             status = this.client.executeMethod(move);
             assertTrue("status: " + status, status == 200 || status == 201 || status == 204);
 
