@@ -8,6 +8,7 @@ import com.bradmcevoy.common.Path;
 import java.util.Collection;
 import java.util.List;
 import nl.uva.cs.lobcder.resources.IDataResourceEntry;
+import nl.uva.cs.lobcder.webDav.resources.DataFileResource;
 
 /**
  *
@@ -29,4 +30,5 @@ public interface IDRCatalogue {
     public Collection<IDataResourceEntry> getTopLevelResourceEntries() throws Exception;
 
     public void renameEntry(Path oldPath, Path newPath) throws Exception;
+    
 }

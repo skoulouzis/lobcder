@@ -7,7 +7,11 @@ package nl.uva.cs.lobcder.resources;
 import com.bradmcevoy.common.Path;
 import java.io.Serializable;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.jdo.annotations.PersistenceCapable;
 import javax.jdo.annotations.Persistent;
 import javax.jdo.annotations.PrimaryKey;
@@ -124,5 +128,11 @@ public class DataResourceEntry implements IDataResourceEntry, Serializable {
     @Override
     public void setLDRI(Path path) {
         this.ldri = path;
+    }
+
+    @Override
+    public boolean isRedirectAllowed() {
+        //Read policy and decide....
+        return false;
     }
 }

@@ -17,9 +17,11 @@ import com.bradmcevoy.http.exceptions.MiltonException;
 import com.bradmcevoy.http.exceptions.NotAuthorizedException;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Map;
+import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import nl.uva.cs.lobcder.catalogue.IDRCatalogue;
@@ -113,7 +115,7 @@ public class DataFileResource implements
         debug("\t params: " + params);
         debug("\t contentType: " + contentType);
     }
-    
+
     @Override
     public void moveTo(CollectionResource rDest, String name)
             throws ConflictException, NotAuthorizedException, BadRequestException {
@@ -128,7 +130,7 @@ public class DataFileResource implements
 //            debug("----------------Have to throw forbidden ");
 //            throw new ForbiddenException(this);
 //        }
-        
+
         debug("\t rDestgetUniqueId: " + rDest.getUniqueId());
         Path newPath = Path.path(Path.path(rDest.getName()), name);
         if (newPath.isRelative()) {
@@ -203,7 +205,21 @@ public class DataFileResource implements
     @Override
     public String checkRedirect(Request request) {
         debug("checkRedirect.");
-        return null;
+        switch (request.getMethod()) {
+            case GET:
+                if (entry.isRedirectAllowed()) {
+                    try {
+                        //Replica selection algorithm 
+                        return entry.getStorageResources().get(0).getStorageLocation().toURL().toString();
+                    } catch (MalformedURLException ex) {
+                        Logger.getLogger(DataFileResource.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+                return null;
+
+            default:
+                return null;
+        }
     }
 
     @Override

@@ -38,4 +38,7 @@ public interface IDataResourceEntry {
     public Path getChild(Path path);
 
     public void setLDRI(Path path);
+
+    public boolean isRedirectAllowed();
+    
 }
