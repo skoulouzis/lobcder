@@ -25,22 +25,22 @@ import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import nl.uva.cs.lobcder.catalogue.IDRCatalogue;
-import nl.uva.cs.lobcder.resources.IDataResourceEntry;
+import nl.uva.cs.lobcder.resources.ILogicalData;
 import nl.uva.cs.lobcder.resources.Metadata;
-import nl.uva.cs.lobcder.resources.ResourceFileEntry;
+import nl.uva.cs.lobcder.resources.LogicalFile;
 import nl.uva.cs.lobcder.webdav.exceptions.ForbiddenException;
 
 /**
  *
  * @author S. Koulouzis
  */
-public class DataFileResource implements
+public class WebDataFileResource implements
         com.bradmcevoy.http.FileResource {
 
     private final IDRCatalogue catalogue;
-    private final IDataResourceEntry entry;
+    private final ILogicalData entry;
 
-    public DataFileResource(IDRCatalogue catalogue, IDataResourceEntry entry) {
+    public WebDataFileResource(IDRCatalogue catalogue, ILogicalData entry) {
         this.catalogue = catalogue;
         this.entry = entry;
     }
@@ -53,12 +53,12 @@ public class DataFileResource implements
             debug("\t name: " + name);
             Path toCollectionLDRI = Path.path(collectionResource.getName());
             Path newLDRI = Path.path(toCollectionLDRI, name);
-            ResourceFileEntry newFolderEntry = new ResourceFileEntry(newLDRI);
+            LogicalFile newFolderEntry = new LogicalFile(newLDRI);
             newFolderEntry.getMetadata().setModifiedDate(System.currentTimeMillis());
             catalogue.registerResourceEntry(newFolderEntry);
 
         } catch (Exception ex) {
-            Logger.getLogger(DataDirResource.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -67,7 +67,7 @@ public class DataFileResource implements
         try {
             catalogue.unregisterResourceEntry(entry);
         } catch (Exception ex) {
-            Logger.getLogger(DataFileResource.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -142,7 +142,7 @@ public class DataFileResource implements
             debug("\t rename: " + entry.getLDRI() + " to " + newPath);
             catalogue.renameEntry(entry.getLDRI(), newPath);
         } catch (Exception ex) {
-            Logger.getLogger(DataDirResource.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, ex);
             if (ex.getMessage().contains("resource exists")) {
                 throw new ConflictException(rDest, ex.getMessage());
             }
@@ -212,7 +212,7 @@ public class DataFileResource implements
                         //Replica selection algorithm 
                         return entry.getStorageResources().get(0).getStorageLocation().toURL().toString();
                     } catch (MalformedURLException ex) {
-                        Logger.getLogger(DataFileResource.class.getName()).log(Level.SEVERE, null, ex);
+                        Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, ex);
                     }
                 }
                 return null;

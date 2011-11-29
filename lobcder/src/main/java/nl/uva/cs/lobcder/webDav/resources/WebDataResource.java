@@ -11,15 +11,15 @@ import com.bradmcevoy.http.Request.Method;
 import com.bradmcevoy.http.Resource;
 import java.util.Date;
 import nl.uva.cs.lobcder.catalogue.IDRCatalogue;
-import nl.uva.cs.lobcder.resources.IDataResourceEntry;
+import nl.uva.cs.lobcder.resources.ILogicalData;
 
 /**
  *
  * @author S. Koulouzis
  */
-public class DataResource implements PropFindableResource, Resource {
+public class WebDataResource implements PropFindableResource, Resource {
 
-    public DataResource(IDRCatalogue catalogue, IDataResourceEntry ch) {
+    public WebDataResource(IDRCatalogue catalogue, ILogicalData ch) {
     }
 
     @Override

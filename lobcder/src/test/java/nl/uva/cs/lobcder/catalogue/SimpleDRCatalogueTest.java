@@ -6,8 +6,8 @@ package nl.uva.cs.lobcder.catalogue;
 
 import com.bradmcevoy.common.Path;
 import java.util.Collection;
-import nl.uva.cs.lobcder.resources.DataResourceEntry;
-import nl.uva.cs.lobcder.resources.IDataResourceEntry;
+import nl.uva.cs.lobcder.resources.LogicalData;
+import nl.uva.cs.lobcder.resources.ILogicalData;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -49,7 +49,7 @@ public class SimpleDRCatalogueTest {
         //Register one resource
         String ldri = "/resource1";
         Path path = Path.path(ldri);
-        IDataResourceEntry entry = new DataResourceEntry(path);
+        ILogicalData entry = new LogicalData(path);
 
         SimpleDRCatalogue instance = new SimpleDRCatalogue();
         try {
@@ -63,7 +63,7 @@ public class SimpleDRCatalogueTest {
             }
         }
 
-        IDataResourceEntry loadedEntry = instance.getResourceEntryByLDRI(path);
+        ILogicalData loadedEntry = instance.getResourceEntryByLDRI(path);
         assertNotNull(loadedEntry);
 
         boolean theSame = compareEntries(entry, loadedEntry);
@@ -71,7 +71,7 @@ public class SimpleDRCatalogueTest {
         assertTrue(theSame);
 
         instance.unregisterResourceEntry(entry);
-        IDataResourceEntry result = instance.getResourceEntryByLDRI(path);
+        ILogicalData result = instance.getResourceEntryByLDRI(path);
         
         assertNull(result);
     }
@@ -81,7 +81,7 @@ public class SimpleDRCatalogueTest {
         System.out.println("testRegisterMultipleResourceEntry");
         String ldri = "/resource2";
         Path parentPath = Path.path(ldri);
-        IDataResourceEntry parent = new DataResourceEntry(parentPath);
+        ILogicalData parent = new LogicalData(parentPath);
         
         SimpleDRCatalogue instance = new SimpleDRCatalogue();
         try {
@@ -97,17 +97,17 @@ public class SimpleDRCatalogueTest {
         //Add children to that resource
         String childLdri = "/child1";
         Path childPath = Path.path(ldri + childLdri);
-        DataResourceEntry child = new DataResourceEntry(childPath);
+        LogicalData child = new LogicalData(childPath);
         System.out.println("child: " + child.getUID() + " " + child.getLDRI());
         instance.registerResourceEntry(child);
 
-        IDataResourceEntry loadedChildEntry = instance.getResourceEntryByLDRI(childPath);
+        ILogicalData loadedChildEntry = instance.getResourceEntryByLDRI(childPath);
         boolean theSame = compareEntries(child, loadedChildEntry);
         assertTrue(theSame);
 
         System.out.println("Unregister: " + child.getLDRI() + " " + child.getUID());
         instance.unregisterResourceEntry(child);
-        IDataResourceEntry result = instance.getResourceEntryByLDRI(childPath);
+        ILogicalData result = instance.getResourceEntryByLDRI(childPath);
         assertNull(result);
 
         instance.unregisterResourceEntry(parent);
@@ -115,7 +115,7 @@ public class SimpleDRCatalogueTest {
         assertNull(result);
     }
 
-    private boolean compareEntries(IDataResourceEntry entry, IDataResourceEntry loadedEntry) {
+    private boolean compareEntries(ILogicalData entry, ILogicalData loadedEntry) {
         System.out.println("entry:          " + entry.getUID() + " " + entry.getLDRI());
         System.out.println("loadedEntry:    " + loadedEntry.getUID() + " " + loadedEntry.getLDRI());
         if (entry.getLDRI().getName().equals(loadedEntry.getLDRI().getName())) {
@@ -134,7 +134,7 @@ public class SimpleDRCatalogueTest {
         System.out.println("resourceEntryExists");
         String ldri = "/resource";
         Path path = Path.path(ldri);
-        IDataResourceEntry entry = new DataResourceEntry(path);
+        ILogicalData entry = new LogicalData(path);
         SimpleDRCatalogue instance = new SimpleDRCatalogue();
 
         Boolean expResult = false;
@@ -157,12 +157,12 @@ public class SimpleDRCatalogueTest {
     public void testGetTopLevelResourceEntries() throws Exception {
         System.out.println("getTopLevelResourceEntries");
         //        ArrayList<DataResourceEntry> topLevel = new ArrayList<DataResourceEntry>();
-        DataResourceEntry topEntry1 = new DataResourceEntry(Path.path("/r1"));
-        DataResourceEntry topEntry2 = new DataResourceEntry(Path.path("/r2"));
-        DataResourceEntry topEntry3 = new DataResourceEntry(Path.path("/r3"));
+        LogicalData topEntry1 = new LogicalData(Path.path("/r1"));
+        LogicalData topEntry2 = new LogicalData(Path.path("/r2"));
+        LogicalData topEntry3 = new LogicalData(Path.path("/r3"));
 
-        DataResourceEntry entry11 = new DataResourceEntry(Path.path("/r1/r11"));
-        DataResourceEntry entry21 = new DataResourceEntry(Path.path("/r2/r21"));
+        LogicalData entry11 = new LogicalData(Path.path("/r1/r11"));
+        LogicalData entry21 = new LogicalData(Path.path("/r2/r21"));
 
 
         SimpleDRCatalogue instance = new SimpleDRCatalogue();
@@ -172,10 +172,10 @@ public class SimpleDRCatalogueTest {
         instance.registerResourceEntry(entry11);
         instance.registerResourceEntry(entry21);
 
-        Collection<IDataResourceEntry> result = instance.getTopLevelResourceEntries();
+        Collection<ILogicalData> result = instance.getTopLevelResourceEntries();
         assertEquals(result.size(), 3);
 
-        for (IDataResourceEntry e : result) {
+        for (ILogicalData e : result) {
             if (e.getLDRI().getLength() > 1) {
                 fail("Resource " + e.getLDRI() + " is not a top level");
             }
@@ -197,12 +197,12 @@ public class SimpleDRCatalogueTest {
         System.out.println("testRenameEntry");
         SimpleDRCatalogue instance = new SimpleDRCatalogue();
         Path originalPath = Path.path("/oldResourceName");
-        DataResourceEntry e = new DataResourceEntry(originalPath);
+        LogicalData e = new LogicalData(originalPath);
         
         instance.registerResourceEntry(e);
         Path newPath = Path.path("/newResourceName");
         instance.renameEntry(originalPath, newPath );
-        IDataResourceEntry loaded = instance.getResourceEntryByLDRI(newPath);
+        ILogicalData loaded = instance.getResourceEntryByLDRI(newPath);
 
         assertNotNull(loaded);
 

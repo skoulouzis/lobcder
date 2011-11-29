@@ -15,7 +15,7 @@ import javax.jdo.annotations.PersistenceCapable;
  */
 
 @PersistenceCapable
-public class StorageResource implements Serializable, IStorageResource {
+public class StorageSite implements Serializable, IStorageSite {
 
     /**
      * 
@@ -26,7 +26,7 @@ public class StorageResource implements Serializable, IStorageResource {
     private Permissions perm;
     private Properties prop;
 
-    public StorageResource(URI storageLocation, Credential cred) {
+    public StorageSite(URI storageLocation, Credential cred) {
         this.storageLocation = storageLocation;
         this.cred = cred;
     }

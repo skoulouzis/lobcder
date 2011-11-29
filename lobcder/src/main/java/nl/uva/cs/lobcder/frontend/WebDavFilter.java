@@ -14,7 +14,7 @@ import com.bradmcevoy.http.exceptions.BadRequestException;
 import com.bradmcevoy.http.exceptions.ConflictException;
 import com.bradmcevoy.http.exceptions.NotAuthorizedException;
 import com.bradmcevoy.http.http11.Http11ResponseHandler;
-import nl.uva.cs.lobcder.webDav.resources.DataResource;
+import nl.uva.cs.lobcder.webDav.resources.WebDataResource;
 import nl.uva.cs.lobcder.webdav.exceptions.ForbiddenException;
 import nl.uva.cs.lobcder.webdav.exceptions.UnauthorizedException;
 import nl.uva.cs.lobcder.webdav.exceptions.WebDavException;
@@ -36,7 +36,7 @@ class WebDavFilter implements Filter {
             Handler handler = manager.getMethodHandler(method);
             if (handler == null) {
 //                responseHandler.respondMethodNotImplemented(new EmptyResource(request), response, request);
-                responseHandler.respondMethodNotImplemented(new DataResource(null, null), response, request);
+                responseHandler.respondMethodNotImplemented(new WebDataResource(null, null), response, request);
                 return;
             }
 

@@ -16,8 +16,8 @@ import javax.jdo.PersistenceManager;
 import javax.jdo.PersistenceManagerFactory;
 import javax.jdo.Query;
 import javax.jdo.Transaction;
-import nl.uva.cs.lobcder.resources.DataResourceEntry;
-import nl.uva.cs.lobcder.resources.IDataResourceEntry;
+import nl.uva.cs.lobcder.resources.LogicalData;
+import nl.uva.cs.lobcder.resources.ILogicalData;
 
 public class SimpleDRCatalogue implements IDRCatalogue {
 
@@ -30,8 +30,8 @@ public class SimpleDRCatalogue implements IDRCatalogue {
     }
 
     @Override
-    public void registerResourceEntry(IDataResourceEntry entry) throws Exception {
-        IDataResourceEntry loaded = queryEntry(entry.getLDRI());
+    public void registerResourceEntry(ILogicalData entry) throws Exception {
+        ILogicalData loaded = queryEntry(entry.getLDRI());
         if (loaded != null && comparePaths(loaded.getLDRI(), entry.getLDRI())) {
             throw new Exception("registerResourceEntry: cannot register resource " + entry.getLDRI() + " resource exists");
         }
@@ -46,7 +46,7 @@ public class SimpleDRCatalogue implements IDRCatalogue {
     }
 
     @Override
-    public IDataResourceEntry getResourceEntryByLDRI(Path logicalResourceName) throws Exception {
+    public ILogicalData getResourceEntryByLDRI(Path logicalResourceName) throws Exception {
         debug("Quering " + logicalResourceName);
         return queryEntry(logicalResourceName);
     }
@@ -56,17 +56,17 @@ public class SimpleDRCatalogue implements IDRCatalogue {
 //        return loadEntryByUID(uid);
 //    }
     @Override
-    public void unregisterResourceEntry(IDataResourceEntry entry) throws Exception {
+    public void unregisterResourceEntry(ILogicalData entry) throws Exception {
         deleteEntry(entry.getLDRI());
     }
 
     @Override
-    public Boolean resourceEntryExists(IDataResourceEntry entry) throws Exception {
+    public Boolean resourceEntryExists(ILogicalData entry) throws Exception {
         return queryEntry(entry.getLDRI()) != null ? true : false;
     }
 
     @Override
-    public Collection<IDataResourceEntry> getTopLevelResourceEntries() throws Exception {
+    public Collection<ILogicalData> getTopLevelResourceEntries() throws Exception {
         return queryTopLevelResources();
     }
 
@@ -76,7 +76,7 @@ public class SimpleDRCatalogue implements IDRCatalogue {
         }
     }
 
-    private void persistEntry(IDataResourceEntry entry) {
+    private void persistEntry(ILogicalData entry) {
         PersistenceManager pm = pmf.getPersistenceManager();
         Transaction tx = pm.currentTransaction();
         try {
@@ -97,16 +97,16 @@ public class SimpleDRCatalogue implements IDRCatalogue {
         }
     }
 
-    private IDataResourceEntry queryEntry(Path logicalResourceName) {
+    private ILogicalData queryEntry(Path logicalResourceName) {
         PersistenceManager pm = pmf.getPersistenceManager();
         Transaction tx = pm.currentTransaction();
-        Collection<DataResourceEntry> results;
-        IDataResourceEntry entry = null;
+        Collection<LogicalData> results;
+        ILogicalData entry = null;
 
         try {
             tx.begin();
             //This query, will return objects of type DataResourceEntry
-            Query q = pm.newQuery(DataResourceEntry.class);
+            Query q = pm.newQuery(LogicalData.class);
 
             //restrict to instances which have the field ldri equal to some logicalResourceName
             q.setFilter("ldri.getName == logicalResourceName.getName");
@@ -114,12 +114,12 @@ public class SimpleDRCatalogue implements IDRCatalogue {
             q.declareImports("import " + logicalResourceName.getClass().getName());
             //and the parameter itself
             q.declareParameters("Path logicalResourceName");
-            results = (Collection<DataResourceEntry>) q.execute(logicalResourceName);
+            results = (Collection<LogicalData>) q.execute(logicalResourceName);
             if (!results.isEmpty()) {
 //                debug("queryEntry. Num of res: " + results.size());
 
                 //TODO fix query 
-                for (DataResourceEntry e : results) {
+                for (LogicalData e : results) {
 //                    debug("queryEntry. LDRI: " + e.getLDRI() + " UID: " + e.getUID());
                     if (comparePaths(e.getLDRI(), logicalResourceName)) {
 //                        debug("Returning: " + e.getLDRI() + " " + e.getUID());
@@ -157,17 +157,17 @@ public class SimpleDRCatalogue implements IDRCatalogue {
         try {
             tx.begin();
 
-            Query q = pm.newQuery(DataResourceEntry.class);
+            Query q = pm.newQuery(LogicalData.class);
             //restrict to instances which have the field ldri equal to some logicalResourceName
             q.setFilter("ldri.getName == logicalResourceName.getName");
             //We then import the type of our logicalResourceName parameter
             q.declareImports("import " + logicalResourceName.getClass().getName());
             //and the parameter itself
             q.declareParameters("Path logicalResourceName");
-            Collection<DataResourceEntry> results = (Collection<DataResourceEntry>) q.execute(logicalResourceName);
+            Collection<LogicalData> results = (Collection<LogicalData>) q.execute(logicalResourceName);
             if (!results.isEmpty()) {
 
-                for (DataResourceEntry e : results) {
+                for (LogicalData e : results) {
                     if (comparePaths(e.getLDRI(), logicalResourceName)) {
                         if (e.hasChildren()) {
                             throw new Exception("deleteEntry: cannot remove " + e.getLDRI() + " Is a collection");
@@ -191,13 +191,13 @@ public class SimpleDRCatalogue implements IDRCatalogue {
         debug("Will add to " + parent + " " + child);
         PersistenceManager pm = pmf.getPersistenceManager();
         Transaction tx = pm.currentTransaction();
-        Collection<DataResourceEntry> results;
-        IDataResourceEntry entry = null;
+        Collection<LogicalData> results;
+        ILogicalData entry = null;
 
         try {
             tx.begin();
             //This query, will return objects of type DataResourceEntry
-            Query q = pm.newQuery(DataResourceEntry.class);
+            Query q = pm.newQuery(LogicalData.class);
 
             //restrict to instances which have the field ldri equal to some logicalResourceName
             q.setFilter("ldri.getName == parent.getName");
@@ -205,9 +205,9 @@ public class SimpleDRCatalogue implements IDRCatalogue {
             q.declareImports("import " + parent.getClass().getName());
             //and the parameter itself
             q.declareParameters("Path parent");
-            results = (Collection<DataResourceEntry>) q.execute(parent);
+            results = (Collection<LogicalData>) q.execute(parent);
             if (!results.isEmpty()) {
-                for (DataResourceEntry e : results) {
+                for (LogicalData e : results) {
                     if (comparePaths(e.getLDRI(), parent)) {
                         e.addChild(child);
                         break;
@@ -228,12 +228,12 @@ public class SimpleDRCatalogue implements IDRCatalogue {
         debug("Will remove from " + parent + " " + child);
         PersistenceManager pm = pmf.getPersistenceManager();
         Transaction tx = pm.currentTransaction();
-        Collection<DataResourceEntry> results;
+        Collection<LogicalData> results;
 
         try {
             tx.begin();
             //This query, will return objects of type DataResourceEntry
-            Query q = pm.newQuery(DataResourceEntry.class);
+            Query q = pm.newQuery(LogicalData.class);
 
             //restrict to instances which have the field ldri equal to some logicalResourceName
             q.setFilter("ldri.getName == parent.getName");
@@ -241,9 +241,9 @@ public class SimpleDRCatalogue implements IDRCatalogue {
             q.declareImports("import " + parent.getClass().getName());
             //and the parameter itself
             q.declareParameters("Path parent");
-            results = (Collection<DataResourceEntry>) q.execute(parent);
+            results = (Collection<LogicalData>) q.execute(parent);
             if (!results.isEmpty()) {
-                for (DataResourceEntry e : results) {
+                for (LogicalData e : results) {
                     if (comparePaths(e.getLDRI(), parent)) {
                         e.removeChild(child);
                         break;
@@ -260,20 +260,20 @@ public class SimpleDRCatalogue implements IDRCatalogue {
         }
     }
 
-    private Collection<IDataResourceEntry> queryTopLevelResources() {
+    private Collection<ILogicalData> queryTopLevelResources() {
 
         //TODO Fix all the queris!
         PersistenceManager pm = pmf.getPersistenceManager();
         Transaction tx = pm.currentTransaction();
-        Collection<IDataResourceEntry> results;
+        Collection<ILogicalData> results;
         Path p = Path.path("/");
-        Collection topLevel = new ArrayList<IDataResourceEntry>();
+        Collection topLevel = new ArrayList<ILogicalData>();
 
 
         try {
             tx.begin();
             //This query, will return objects of type DataResourceEntry
-            Query q = pm.newQuery(DataResourceEntry.class);
+            Query q = pm.newQuery(LogicalData.class);
 
             //restrict to instances which have the field ldri equal to some logicalResourceName
             q.setFilter("ldri.getLength == p.getLength");
@@ -281,9 +281,9 @@ public class SimpleDRCatalogue implements IDRCatalogue {
             q.declareImports("import " + p.getClass().getName());
             //and the parameter itself
             q.declareParameters("Path p");
-            results = (Collection<IDataResourceEntry>) q.execute(p);
+            results = (Collection<ILogicalData>) q.execute(p);
 
-            for (IDataResourceEntry e : results) {
+            for (ILogicalData e : results) {
                 if (e.getLDRI().getLength() == 1) {
                     topLevel.add(e);
                 }
@@ -306,7 +306,7 @@ public class SimpleDRCatalogue implements IDRCatalogue {
         debug("\t entry: " + oldPath + " newName: " + newPath);
 
         
-        IDataResourceEntry loaded = queryEntry(oldPath);
+        ILogicalData loaded = queryEntry(oldPath);
 
         if (loaded == null) {
             throw new Exception("renameEntry: cannot rename resource " + oldPath + " resource doesn't exists");
@@ -317,11 +317,11 @@ public class SimpleDRCatalogue implements IDRCatalogue {
 
         PersistenceManager pm = pmf.getPersistenceManager();
         Transaction tx = pm.currentTransaction();
-        Collection<DataResourceEntry> results;
+        Collection<LogicalData> results;
         try {
             tx.begin();
             //This query, will return objects of type DataResourceEntry
-            Query q = pm.newQuery(DataResourceEntry.class);
+            Query q = pm.newQuery(LogicalData.class);
 
             //restrict to instances which have the field ldri equal to some logicalResourceName
             q.setFilter("ldri.getName == oldPath.getName");
@@ -329,9 +329,9 @@ public class SimpleDRCatalogue implements IDRCatalogue {
             q.declareImports("import " + oldPath.getClass().getName());
             //and the parameter itself
             q.declareParameters("Path oldLdri");
-            results = (Collection<DataResourceEntry>) q.execute(oldPath);
+            results = (Collection<LogicalData>) q.execute(oldPath);
             if (!results.isEmpty()) {
-                for (DataResourceEntry e : results) {
+                for (LogicalData e : results) {
                     if (comparePaths(e.getLDRI(), oldPath)) {
                         e.setLDRI(newPath);
                         break;

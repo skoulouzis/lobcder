@@ -16,26 +16,26 @@ import javax.jdo.annotations.PersistenceCapable;
  */
 
 @PersistenceCapable
-public class ResourceFileEntry extends DataResourceEntry {
+public class LogicalFile extends LogicalData {
 
     /**
      * 
      */
     private static final long serialVersionUID = 6019657958412257303L;
-    private List<StorageResource> accessLocations;
+    private List<StorageSite> accessLocations;
 
-    public ResourceFileEntry(Path logicalResourceName) throws IOException {
+    public LogicalFile(Path logicalResourceName) throws IOException {
         super(logicalResourceName);
     }
 
-    public void addAccessLocations(List<StorageResource> accessLocations) {
+    public void addAccessLocations(List<StorageSite> accessLocations) {
         if (this.accessLocations == null) {
-            this.accessLocations = new ArrayList<StorageResource>();
+            this.accessLocations = new ArrayList<StorageSite>();
         }
         this.accessLocations.addAll(accessLocations);
     }
 
-    public void removeAccessLocations(List<StorageResource> accessLocations) {
+    public void removeAccessLocations(List<StorageSite> accessLocations) {
         if (this.accessLocations != null && !this.accessLocations.isEmpty()) {
             this.accessLocations.removeAll(accessLocations);
         }
@@ -47,13 +47,13 @@ public class ResourceFileEntry extends DataResourceEntry {
         }
     }
 
-    public List<StorageResource> getAccessLocations() {
+    public List<StorageSite> getAccessLocations() {
         return accessLocations;
     }
 
-    public void addAccessLocation(StorageResource accessLocation) {
+    public void addAccessLocation(StorageSite accessLocation) {
         if (this.accessLocations == null) {
-            this.accessLocations = new ArrayList<StorageResource>();
+            this.accessLocations = new ArrayList<StorageSite>();
         }
         this.accessLocations.add(accessLocation);
     }

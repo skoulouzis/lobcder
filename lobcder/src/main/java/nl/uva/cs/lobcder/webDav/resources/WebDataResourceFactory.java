@@ -15,19 +15,19 @@ import java.net.URISyntaxException;
 import nl.uva.vlet.exception.VlException;
 import nl.uva.cs.lobcder.catalogue.IDRCatalogue;
 import nl.uva.cs.lobcder.catalogue.SimpleDRCatalogue;
-import nl.uva.cs.lobcder.resources.IDataResourceEntry;
-import nl.uva.cs.lobcder.resources.DataResourceEntry;
-import nl.uva.cs.lobcder.resources.ResourceFileEntry;
-import nl.uva.cs.lobcder.resources.ResourceFolderEntry;
+import nl.uva.cs.lobcder.resources.ILogicalData;
+import nl.uva.cs.lobcder.resources.LogicalData;
+import nl.uva.cs.lobcder.resources.LogicalFile;
+import nl.uva.cs.lobcder.resources.LogicalFolder;
 
-public class DataResourceFactory implements ResourceFactory {
+public class WebDataResourceFactory implements ResourceFactory {
 
-    private Logger log = LoggerFactory.getLogger(DataResourceFactory.class);
+    private Logger log = LoggerFactory.getLogger(WebDataResourceFactory.class);
     public static final String REALM = "vph-share";
     private IDRCatalogue catalogue;
     private boolean debug = true;
 
-    public DataResourceFactory() throws URISyntaxException, VlException, IOException {
+    public WebDataResourceFactory() throws URISyntaxException, VlException, IOException {
         catalogue = new SimpleDRCatalogue();
     }
 
@@ -45,24 +45,24 @@ public class DataResourceFactory implements ResourceFactory {
 //            }
 
             if (ldri.isRoot() || ldri.toString().equals("")) {
-                return new DataDirResource(catalogue, new DataResourceEntry(ldri));
+                return new WebDataDirResource(catalogue, new LogicalData(ldri));
             }
 
-            IDataResourceEntry entry = catalogue.getResourceEntryByLDRI(ldri);
+            ILogicalData entry = catalogue.getResourceEntryByLDRI(ldri);
             if (entry == null) {
                 debug("Didn't find " + ldri + ". returning null");
                 return null;
             }
-            if (entry instanceof ResourceFolderEntry) {
-                return new DataDirResource(catalogue, entry);
+            if (entry instanceof LogicalFolder) {
+                return new WebDataDirResource(catalogue, entry);
             }
-            if (entry instanceof ResourceFileEntry) {
-                return new DataFileResource(catalogue, entry);
+            if (entry instanceof LogicalFile) {
+                return new WebDataFileResource(catalogue, entry);
             }
 
-            return new DataResource(catalogue, entry);
+            return new WebDataResource(catalogue, entry);
         } catch (Exception ex) {
-            java.util.logging.Logger.getLogger(DataResourceFactory.class.getName()).log(Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(WebDataResourceFactory.class.getName()).log(Level.SEVERE, null, ex);
         }
         return null;
     }

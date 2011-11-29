@@ -14,14 +14,14 @@ import javax.jdo.annotations.PersistenceCapable;
  */
 
 @PersistenceCapable
-public class ResourceFolderEntry extends DataResourceEntry {
+public class LogicalFolder extends LogicalData {
 
     /**
      * 
      */
     private static final long serialVersionUID = -2765285570381475790L;
 
-    public ResourceFolderEntry(Path logicalResourceName) throws IOException {
+    public LogicalFolder(Path logicalResourceName) throws IOException {
         super(logicalResourceName);
     }
 }

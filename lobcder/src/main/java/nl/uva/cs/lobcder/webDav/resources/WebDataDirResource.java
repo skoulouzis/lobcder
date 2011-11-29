@@ -27,20 +27,20 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import netscape.security.ForbiddenTargetException;
 import nl.uva.cs.lobcder.catalogue.IDRCatalogue;
-import nl.uva.cs.lobcder.resources.IDataResourceEntry;
-import nl.uva.cs.lobcder.resources.ResourceFileEntry;
-import nl.uva.cs.lobcder.resources.ResourceFolderEntry;
+import nl.uva.cs.lobcder.resources.ILogicalData;
+import nl.uva.cs.lobcder.resources.LogicalFile;
+import nl.uva.cs.lobcder.resources.LogicalFolder;
 
 /**
  *
  * @author S. Koulouzis
  */
-class DataDirResource implements FolderResource, CollectionResource {
+class WebDataDirResource implements FolderResource, CollectionResource {
 
-    private final IDataResourceEntry entry;
+    private final ILogicalData entry;
     private final IDRCatalogue catalogue;
 
-    public DataDirResource(IDRCatalogue catalogue, IDataResourceEntry entry) {
+    public WebDataDirResource(IDRCatalogue catalogue, ILogicalData entry) {
         this.entry = entry;
         this.catalogue = catalogue;
         debug("Init. entry: " + entry.getLDRI());
@@ -53,14 +53,14 @@ class DataDirResource implements FolderResource, CollectionResource {
 
             Path newCollectionPath = Path.path(entry.getLDRI(), newName);
             debug("\t newCollectionPath: " + newCollectionPath);
-            ResourceFolderEntry newFolderEntry = new ResourceFolderEntry(newCollectionPath);
+            LogicalFolder newFolderEntry = new LogicalFolder(newCollectionPath);
             newFolderEntry.getMetadata().setCreateDate(System.currentTimeMillis());
             catalogue.registerResourceEntry(newFolderEntry);
             debug("\t newCollection: " + newFolderEntry.getLDRI() + " getLDRI().getName():" + newFolderEntry.getLDRI().getName());
 
-            return new DataDirResource(catalogue, newFolderEntry);
+            return new WebDataDirResource(catalogue, newFolderEntry);
         } catch (Exception ex) {
-            Logger.getLogger(DataDirResource.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, ex);
             if(ex.getMessage().contains("resource exists")){
                 throw  new ConflictException(this, newName);
             }
@@ -73,13 +73,13 @@ class DataDirResource implements FolderResource, CollectionResource {
         try {
             debug("child.");
             Path childPath = Path.path(entry.getLDRI(), childName);
-            IDataResourceEntry child = catalogue.getResourceEntryByLDRI(childPath);
+            ILogicalData child = catalogue.getResourceEntryByLDRI(childPath);
 
             if (child != null) {
-                return new DataDirResource(catalogue, child);
+                return new WebDataDirResource(catalogue, child);
             }
         } catch (Exception ex) {
-            Logger.getLogger(DataDirResource.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, ex);
         }
         return null;
     }
@@ -95,7 +95,7 @@ class DataDirResource implements FolderResource, CollectionResource {
                 children = getEntriesChildren();
             }
         } catch (Exception ex) {
-            Logger.getLogger(DataDirResource.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, ex);
         }
         debug("Returning children: " + children);
         return children;
@@ -153,16 +153,16 @@ class DataDirResource implements FolderResource, CollectionResource {
             debug("\t newName: " + newName);
             debug("\t length: " + length);
             debug("\t contentType: " + contentType);
-            ResourceFileEntry newResource = new ResourceFileEntry(Path.path(entry.getLDRI(), newName));
+            LogicalFile newResource = new LogicalFile(Path.path(entry.getLDRI(), newName));
             newResource.getMetadata().setLength(length);
             newResource.getMetadata().addMimeType(contentType);
             newResource.getMetadata().setCreateDate(System.currentTimeMillis());
             catalogue.registerResourceEntry(newResource);
-            DataFileResource file = new DataFileResource(catalogue, newResource);
+            WebDataFileResource file = new WebDataFileResource(catalogue, newResource);
             debug("returning createNew. " + file.getName());
             return file;
         } catch (Exception ex) {
-            Logger.getLogger(DataDirResource.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, ex);
         }
         debug("returning createNew. null");
         return null;
@@ -176,7 +176,7 @@ class DataDirResource implements FolderResource, CollectionResource {
             debug("\t name: " + name);
             Path toCollectionLDRI = Path.path(toCollection.getName());
             Path newLDRI = Path.path(toCollectionLDRI, name);
-            ResourceFolderEntry newFolderEntry = new ResourceFolderEntry(newLDRI);
+            LogicalFolder newFolderEntry = new LogicalFolder(newLDRI);
             newFolderEntry.getMetadata().setModifiedDate(System.currentTimeMillis());
             catalogue.registerResourceEntry(newFolderEntry);
 
@@ -184,7 +184,7 @@ class DataDirResource implements FolderResource, CollectionResource {
             if(ex.getMessage().contains("resource exists")){
                 throw  new ConflictException(this, ex.getMessage());
             }
-            Logger.getLogger(DataDirResource.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -194,7 +194,7 @@ class DataDirResource implements FolderResource, CollectionResource {
         try {
             catalogue.unregisterResourceEntry(entry);
         } catch (Exception ex) {
-            Logger.getLogger(DataDirResource.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, ex);
             debug("Exception: " + ex.getMessage());
         }
     }
@@ -252,7 +252,7 @@ class DataDirResource implements FolderResource, CollectionResource {
 //            }
             catalogue.renameEntry(entry.getLDRI(), Path.path(name));
         } catch (Exception ex) {
-            Logger.getLogger(DataDirResource.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, ex);
             if(ex.getMessage().contains("resource exists")){
                 throw new ConflictException(rDest, ex.getMessage());
             }
@@ -277,15 +277,15 @@ class DataDirResource implements FolderResource, CollectionResource {
     }
 
     private ArrayList<? extends Resource> getTopLevelChildren() throws Exception {
-        Collection<IDataResourceEntry> topEntries = catalogue.getTopLevelResourceEntries();
+        Collection<ILogicalData> topEntries = catalogue.getTopLevelResourceEntries();
         ArrayList<Resource> children = new ArrayList<Resource>();
-        for (IDataResourceEntry e : topEntries) {
-            if (e instanceof ResourceFolderEntry) {
-                children.add(new DataDirResource(catalogue, e));
-            } else if (e instanceof ResourceFileEntry) {
-                children.add(new DataFileResource(catalogue, e));
+        for (ILogicalData e : topEntries) {
+            if (e instanceof LogicalFolder) {
+                children.add(new WebDataDirResource(catalogue, e));
+            } else if (e instanceof LogicalFile) {
+                children.add(new WebDataFileResource(catalogue, e));
             } else {
-                children.add(new DataResource(catalogue, e));
+                children.add(new WebDataResource(catalogue, e));
             }
         }
         return children;
@@ -297,13 +297,13 @@ class DataDirResource implements FolderResource, CollectionResource {
         if (childrenPaths != null) {
             for (Path p : childrenPaths) {
                 debug("Adding children: " + p);
-                IDataResourceEntry ch = catalogue.getResourceEntryByLDRI(p);
-                if (ch instanceof ResourceFolderEntry) {
-                    children.add(new DataDirResource(catalogue, ch));
-                } else if (ch instanceof ResourceFileEntry) {
-                    children.add(new DataFileResource(catalogue, ch));
+                ILogicalData ch = catalogue.getResourceEntryByLDRI(p);
+                if (ch instanceof LogicalFolder) {
+                    children.add(new WebDataDirResource(catalogue, ch));
+                } else if (ch instanceof LogicalFile) {
+                    children.add(new WebDataFileResource(catalogue, ch));
                 } else {
-                    children.add(new DataResource(catalogue, ch));
+                    children.add(new WebDataResource(catalogue, ch));
                 }
             }
         }

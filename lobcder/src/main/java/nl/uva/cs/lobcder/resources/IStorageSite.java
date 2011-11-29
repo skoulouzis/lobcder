@@ -11,7 +11,7 @@ import java.net.URI;
  *
  * @author skoulouz
  */
-public interface IStorageResource {
+public interface IStorageSite {
 
     public URI getStorageLocation();
 }

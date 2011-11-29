@@ -17,7 +17,7 @@ import javax.jdo.annotations.Persistent;
 import javax.jdo.annotations.PrimaryKey;
 
 @PersistenceCapable
-public class DataResourceEntry implements IDataResourceEntry, Serializable {
+public class LogicalData implements ILogicalData, Serializable {
 
     /**
      * 
@@ -33,10 +33,10 @@ public class DataResourceEntry implements IDataResourceEntry, Serializable {
     @Persistent
     private ArrayList<Path> children;
     @Persistent
-    private ArrayList<StorageResource> storageResource;
+    private ArrayList<StorageSite> storageResource;
     private boolean debug = false;
 
-    public DataResourceEntry(Path ldri) {
+    public LogicalData(Path ldri) {
         this.ldri = ldri;
         uid = java.util.UUID.randomUUID().toString();
     }
@@ -52,7 +52,7 @@ public class DataResourceEntry implements IDataResourceEntry, Serializable {
     }
 
     @Override
-    public ArrayList<StorageResource> getStorageResources() {
+    public ArrayList<StorageSite> getStorageResources() {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
@@ -81,7 +81,7 @@ public class DataResourceEntry implements IDataResourceEntry, Serializable {
     }
 
     @Override
-    public void setStorageResource(ArrayList<StorageResource> storageResource) {
+    public void setStorageResource(ArrayList<StorageSite> storageResource) {
         this.storageResource = storageResource;
     }
 

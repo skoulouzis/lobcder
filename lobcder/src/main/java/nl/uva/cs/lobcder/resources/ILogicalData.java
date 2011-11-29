@@ -11,7 +11,7 @@ import java.util.ArrayList;
  *
  * @author S. Koulouzis
  */
-public interface IDataResourceEntry {
+public interface ILogicalData {
 
     public Path getLDRI();
     
@@ -21,9 +21,9 @@ public interface IDataResourceEntry {
 
     public void addChild(Path child);
 
-    public ArrayList<StorageResource> getStorageResources();
+    public ArrayList<StorageSite> getStorageResources();
 
-    public void setStorageResource(ArrayList<StorageResource> storageResources);
+    public void setStorageResource(ArrayList<StorageSite> storageResources);
 
     public Metadata getMetadata();
 

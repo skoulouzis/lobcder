@@ -14,11 +14,11 @@ import com.bradmcevoy.http.webdav.WebDavResponseHandler;
 import java.net.URISyntaxException;
 import nl.uva.vlet.exception.VlException;
 
-public class DataResourceFactoryFactory implements ResourceFactoryFactory {
+public class WebDataResourceFactoryFactory implements ResourceFactoryFactory {
 
-    private Logger log = LoggerFactory.getLogger(DataResourceFactoryFactory.class);
+    private Logger log = LoggerFactory.getLogger(WebDataResourceFactoryFactory.class);
     private static AuthenticationService authenticationService;
-    private static DataResourceFactory resourceFactory;
+    private static WebDataResourceFactory resourceFactory;
     private boolean debug = false;
 
     @Override
@@ -37,13 +37,13 @@ public class DataResourceFactoryFactory implements ResourceFactoryFactory {
         if (authenticationService == null) {
             try {
                 authenticationService = new AuthenticationService();
-                resourceFactory = new DataResourceFactory();
+                resourceFactory = new WebDataResourceFactory();
             } catch (VlException ex) {
-                java.util.logging.Logger.getLogger(DataResourceFactoryFactory.class.getName()).log(Level.SEVERE, null, ex);
+                java.util.logging.Logger.getLogger(WebDataResourceFactoryFactory.class.getName()).log(Level.SEVERE, null, ex);
             } catch (URISyntaxException ex) {
-                java.util.logging.Logger.getLogger(DataResourceFactoryFactory.class.getName()).log(Level.SEVERE, null, ex);
+                java.util.logging.Logger.getLogger(WebDataResourceFactoryFactory.class.getName()).log(Level.SEVERE, null, ex);
             } catch (IOException ex) {
-                java.util.logging.Logger.getLogger(DataResourceFactoryFactory.class.getName()).log(Level.SEVERE, null, ex);
+                java.util.logging.Logger.getLogger(WebDataResourceFactoryFactory.class.getName()).log(Level.SEVERE, null, ex);
             }
 
         }

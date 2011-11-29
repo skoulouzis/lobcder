@@ -22,8 +22,8 @@ import nl.uva.vlet.exception.VlException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import nl.uva.cs.lobcder.webDav.resources.DataResourceFactory;
-import nl.uva.cs.lobcder.webDav.resources.DataResourceFactoryFactory;
+import nl.uva.cs.lobcder.webDav.resources.WebDataResourceFactory;
+import nl.uva.cs.lobcder.webDav.resources.WebDataResourceFactoryFactory;
 
 /**
  *
@@ -102,7 +102,7 @@ public class WebDavServlet implements Servlet {
 
     protected void init(String responseHandlerClassName, List<String> authHandlers) throws ServletException, URISyntaxException, VlException, IOException {
 
-        ResourceFactory rf = new DataResourceFactory();
+        ResourceFactory rf = new WebDataResourceFactory();
 
         WebDavResponseHandler responseHandler;
         if (responseHandlerClassName == null) {
@@ -209,7 +209,7 @@ public class WebDavServlet implements Servlet {
     }
 
     protected void initFromFactoryFactory(List<String> authHandlers) throws ServletException {
-        com.bradmcevoy.http.ResourceFactoryFactory rff = new DataResourceFactoryFactory();
+        com.bradmcevoy.http.ResourceFactoryFactory rff = new WebDataResourceFactoryFactory();
         rff.init();
         ResourceFactory rf = rff.createResourceFactory();
         WebDavResponseHandler responseHandler = rff.createResponseHandler();
