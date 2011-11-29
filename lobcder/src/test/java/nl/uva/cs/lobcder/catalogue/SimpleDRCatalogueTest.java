@@ -51,7 +51,7 @@ public class SimpleDRCatalogueTest {
         Path path = Path.path(ldri);
         ILogicalData entry = new LogicalData(path);
 
-        SimpleDRCatalogue instance = new SimpleDRCatalogue();
+        SimpleDLCatalogue instance = new SimpleDLCatalogue();
         try {
             instance.registerResourceEntry(entry);
             System.out.println("entry:          " + entry.getLDRI());
@@ -83,7 +83,7 @@ public class SimpleDRCatalogueTest {
         Path parentPath = Path.path(ldri);
         ILogicalData parent = new LogicalData(parentPath);
         
-        SimpleDRCatalogue instance = new SimpleDRCatalogue();
+        SimpleDLCatalogue instance = new SimpleDLCatalogue();
         try {
             instance.registerResourceEntry(parent);
         } catch (Exception ex) {
@@ -135,7 +135,7 @@ public class SimpleDRCatalogueTest {
         String ldri = "/resource";
         Path path = Path.path(ldri);
         ILogicalData entry = new LogicalData(path);
-        SimpleDRCatalogue instance = new SimpleDRCatalogue();
+        SimpleDLCatalogue instance = new SimpleDLCatalogue();
 
         Boolean expResult = false;
         Boolean result = instance.resourceEntryExists(entry);
@@ -165,7 +165,7 @@ public class SimpleDRCatalogueTest {
         LogicalData entry21 = new LogicalData(Path.path("/r2/r21"));
 
 
-        SimpleDRCatalogue instance = new SimpleDRCatalogue();
+        SimpleDLCatalogue instance = new SimpleDLCatalogue();
         instance.registerResourceEntry(topEntry1);
         instance.registerResourceEntry(topEntry2);
         instance.registerResourceEntry(topEntry3);
@@ -195,7 +195,7 @@ public class SimpleDRCatalogueTest {
     @Test
     public void testRenameEntry() throws Exception {
         System.out.println("testRenameEntry");
-        SimpleDRCatalogue instance = new SimpleDRCatalogue();
+        SimpleDLCatalogue instance = new SimpleDLCatalogue();
         Path originalPath = Path.path("/oldResourceName");
         LogicalData e = new LogicalData(originalPath);
         

@@ -13,7 +13,6 @@ import com.bradmcevoy.http.Request;
 import com.bradmcevoy.http.Request.Method;
 import com.bradmcevoy.http.exceptions.BadRequestException;
 import com.bradmcevoy.http.exceptions.ConflictException;
-import com.bradmcevoy.http.exceptions.MiltonException;
 import com.bradmcevoy.http.exceptions.NotAuthorizedException;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -21,14 +20,12 @@ import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Map;
-import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import nl.uva.cs.lobcder.catalogue.IDRCatalogue;
+import nl.uva.cs.lobcder.catalogue.IDLCatalogue;
 import nl.uva.cs.lobcder.resources.ILogicalData;
 import nl.uva.cs.lobcder.resources.Metadata;
 import nl.uva.cs.lobcder.resources.LogicalFile;
-import nl.uva.cs.lobcder.webdav.exceptions.ForbiddenException;
 
 /**
  *
@@ -37,12 +34,12 @@ import nl.uva.cs.lobcder.webdav.exceptions.ForbiddenException;
 public class WebDataFileResource implements
         com.bradmcevoy.http.FileResource {
 
-    private final IDRCatalogue catalogue;
-    private final ILogicalData entry;
+    private final IDLCatalogue catalogue;
+    private final ILogicalData logicalData;
 
-    public WebDataFileResource(IDRCatalogue catalogue, ILogicalData entry) {
+    public WebDataFileResource(IDLCatalogue catalogue, ILogicalData logicalData) {
         this.catalogue = catalogue;
-        this.entry = entry;
+        this.logicalData = logicalData;
     }
 
     @Override
@@ -65,7 +62,7 @@ public class WebDataFileResource implements
     @Override
     public void delete() {
         try {
-            catalogue.unregisterResourceEntry(entry);
+            catalogue.unregisterResourceEntry(logicalData);
         } catch (Exception ex) {
             Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -73,7 +70,7 @@ public class WebDataFileResource implements
 
     @Override
     public Long getContentLength() {
-        Metadata meta = entry.getMetadata();
+        Metadata meta = logicalData.getMetadata();
         if (meta != null) {
             return meta.getLength();
         }
@@ -85,8 +82,8 @@ public class WebDataFileResource implements
         debug("getContentType. accepts: " + accepts);
         if (accepts != null) {
             String[] acceptsTypes = accepts.split(",");
-            if (entry.getMetadata() != null) {
-                ArrayList<String> mimeTypes = entry.getMetadata().getMimeTypes();
+            if (logicalData.getMetadata() != null) {
+                ArrayList<String> mimeTypes = logicalData.getMetadata().getMimeTypes();
                 for (String accessType : acceptsTypes) {
                     for (String mimeType : mimeTypes) {
                         if (accessType.equals(mimeType)) {
@@ -134,13 +131,13 @@ public class WebDataFileResource implements
         debug("\t rDestgetUniqueId: " + rDest.getUniqueId());
         Path newPath = Path.path(Path.path(rDest.getName()), name);
         if (newPath.isRelative()) {
-            parent = entry.getLDRI().getParent();
+            parent = logicalData.getLDRI().getParent();
             tmpPath = Path.path(parent, name);
             newPath = tmpPath;
         }
         try {
-            debug("\t rename: " + entry.getLDRI() + " to " + newPath);
-            catalogue.renameEntry(entry.getLDRI(), newPath);
+            debug("\t rename: " + logicalData.getLDRI() + " to " + newPath);
+            catalogue.renameEntry(logicalData.getLDRI(), newPath);
         } catch (Exception ex) {
             Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, ex);
             if (ex.getMessage().contains("resource exists")) {
@@ -160,18 +157,18 @@ public class WebDataFileResource implements
     }
 
     protected void debug(String msg) {
-        System.err.println(this.getClass().getSimpleName() + "." + entry.getLDRI() + ": " + msg);
+        System.err.println(this.getClass().getSimpleName() + "." + logicalData.getLDRI() + ": " + msg);
 //        log.debug(msg);
     }
 
     @Override
     public String getUniqueId() {
-        return entry.getUID();
+        return logicalData.getUID();
     }
 
     @Override
     public String getName() {
-        return entry.getLDRI().getName();
+        return logicalData.getLDRI().getName();
     }
 
     @Override
@@ -196,8 +193,8 @@ public class WebDataFileResource implements
     @Override
     public Date getModifiedDate() {
         debug("getModifiedDate.");
-        if (entry.getMetadata() != null && entry.getMetadata().getModifiedDate() != null) {
-            return new Date(entry.getMetadata().getModifiedDate());
+        if (logicalData.getMetadata() != null && logicalData.getMetadata().getModifiedDate() != null) {
+            return new Date(logicalData.getMetadata().getModifiedDate());
         }
         return null;
     }
@@ -207,10 +204,10 @@ public class WebDataFileResource implements
         debug("checkRedirect.");
         switch (request.getMethod()) {
             case GET:
-                if (entry.isRedirectAllowed()) {
+                if (logicalData.isRedirectAllowed()) {
                     try {
                         //Replica selection algorithm 
-                        return entry.getStorageResources().get(0).getStorageLocation().toURL().toString();
+                        return logicalData.getStorageSites().get(0).getStorageLocation().toURL().toString();
                     } catch (MalformedURLException ex) {
                         Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, ex);
                     }
@@ -225,8 +222,8 @@ public class WebDataFileResource implements
     @Override
     public Date getCreateDate() {
         debug("getCreateDate.");
-        if (entry.getMetadata() != null && entry.getMetadata().getCreateDate() != null) {
-            return new Date(entry.getMetadata().getCreateDate());
+        if (logicalData.getMetadata() != null && logicalData.getMetadata().getCreateDate() != null) {
+            return new Date(logicalData.getMetadata().getCreateDate());
         }
         return null;
     }

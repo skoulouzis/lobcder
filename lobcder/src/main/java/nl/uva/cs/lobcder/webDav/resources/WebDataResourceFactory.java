@@ -13,8 +13,8 @@ import com.bradmcevoy.http.exceptions.BadRequestException;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import nl.uva.vlet.exception.VlException;
-import nl.uva.cs.lobcder.catalogue.IDRCatalogue;
-import nl.uva.cs.lobcder.catalogue.SimpleDRCatalogue;
+import nl.uva.cs.lobcder.catalogue.IDLCatalogue;
+import nl.uva.cs.lobcder.catalogue.SimpleDLCatalogue;
 import nl.uva.cs.lobcder.resources.ILogicalData;
 import nl.uva.cs.lobcder.resources.LogicalData;
 import nl.uva.cs.lobcder.resources.LogicalFile;
@@ -24,11 +24,11 @@ public class WebDataResourceFactory implements ResourceFactory {
 
     private Logger log = LoggerFactory.getLogger(WebDataResourceFactory.class);
     public static final String REALM = "vph-share";
-    private IDRCatalogue catalogue;
+    private IDLCatalogue catalogue;
     private boolean debug = true;
 
     public WebDataResourceFactory() throws URISyntaxException, VlException, IOException {
-        catalogue = new SimpleDRCatalogue();
+        catalogue = new SimpleDLCatalogue();
     }
 
     @Override

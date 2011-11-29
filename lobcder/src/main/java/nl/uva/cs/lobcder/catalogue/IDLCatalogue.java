@@ -14,7 +14,7 @@ import nl.uva.cs.lobcder.webDav.resources.WebDataFileResource;
  *
  * @author S. Koulouzis
  */
-public interface IDRCatalogue {
+public interface IDLCatalogue {
 
     public void registerResourceEntry(ILogicalData entry) throws Exception;
 

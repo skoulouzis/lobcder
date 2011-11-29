@@ -10,7 +10,7 @@ import com.bradmcevoy.http.Request;
 import com.bradmcevoy.http.Request.Method;
 import com.bradmcevoy.http.Resource;
 import java.util.Date;
-import nl.uva.cs.lobcder.catalogue.IDRCatalogue;
+import nl.uva.cs.lobcder.catalogue.IDLCatalogue;
 import nl.uva.cs.lobcder.resources.ILogicalData;
 
 /**
@@ -19,7 +19,7 @@ import nl.uva.cs.lobcder.resources.ILogicalData;
  */
 public class WebDataResource implements PropFindableResource, Resource {
 
-    public WebDataResource(IDRCatalogue catalogue, ILogicalData ch) {
+    public WebDataResource(IDLCatalogue catalogue, ILogicalData ch) {
     }
 
     @Override

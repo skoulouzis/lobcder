@@ -19,12 +19,12 @@ import javax.jdo.Transaction;
 import nl.uva.cs.lobcder.resources.LogicalData;
 import nl.uva.cs.lobcder.resources.ILogicalData;
 
-public class SimpleDRCatalogue implements IDRCatalogue {
+public class SimpleDLCatalogue implements IDLCatalogue {
 
     private static boolean debug = true;
     private final PersistenceManagerFactory pmf;
 
-    public SimpleDRCatalogue() {
+    public SimpleDLCatalogue() {
         pmf = JDOHelper.getPersistenceManagerFactory("datanucleus.properties");
 
     }

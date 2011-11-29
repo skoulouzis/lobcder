@@ -26,7 +26,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import netscape.security.ForbiddenTargetException;
-import nl.uva.cs.lobcder.catalogue.IDRCatalogue;
+import nl.uva.cs.lobcder.catalogue.IDLCatalogue;
 import nl.uva.cs.lobcder.resources.ILogicalData;
 import nl.uva.cs.lobcder.resources.LogicalFile;
 import nl.uva.cs.lobcder.resources.LogicalFolder;
@@ -38,9 +38,9 @@ import nl.uva.cs.lobcder.resources.LogicalFolder;
 class WebDataDirResource implements FolderResource, CollectionResource {
 
     private final ILogicalData entry;
-    private final IDRCatalogue catalogue;
+    private final IDLCatalogue catalogue;
 
-    public WebDataDirResource(IDRCatalogue catalogue, ILogicalData entry) {
+    public WebDataDirResource(IDLCatalogue catalogue, ILogicalData entry) {
         this.entry = entry;
         this.catalogue = catalogue;
         debug("Init. entry: " + entry.getLDRI());

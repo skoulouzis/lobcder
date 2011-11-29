@@ -52,7 +52,7 @@ public class LogicalData implements ILogicalData, Serializable {
     }
 
     @Override
-    public ArrayList<StorageSite> getStorageResources() {
+    public ArrayList<StorageSite> getStorageSites() {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
@@ -81,7 +81,7 @@ public class LogicalData implements ILogicalData, Serializable {
     }
 
     @Override
-    public void setStorageResource(ArrayList<StorageSite> storageResource) {
+    public void setStorageSites(ArrayList<StorageSite> storageResource) {
         this.storageResource = storageResource;
     }
 
