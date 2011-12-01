@@ -6,6 +6,9 @@ package nl.uva.cs.lobcder.resources;
 
 import com.bradmcevoy.common.Path;
 import java.util.ArrayList;
+import nl.uva.vlet.exception.VlException;
+import nl.uva.vlet.vfs.VFSNode;
+import nl.uva.vlet.vfs.VFile;
 
 /**
  *
@@ -40,5 +43,7 @@ public interface ILogicalData {
     public void setLDRI(Path path);
 
     public boolean isRedirectAllowed();
+
+    public VFSNode getVNode() throws VlException;
     
 }

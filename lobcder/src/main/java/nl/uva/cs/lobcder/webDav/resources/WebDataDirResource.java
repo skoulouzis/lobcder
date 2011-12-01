@@ -30,6 +30,7 @@ import nl.uva.cs.lobcder.catalogue.IDLCatalogue;
 import nl.uva.cs.lobcder.resources.ILogicalData;
 import nl.uva.cs.lobcder.resources.LogicalFile;
 import nl.uva.cs.lobcder.resources.LogicalFolder;
+import nl.uva.cs.lobcder.resources.Metadata;
 
 /**
  *
@@ -57,7 +58,7 @@ class WebDataDirResource implements FolderResource, CollectionResource {
             newFolderEntry.getMetadata().setCreateDate(System.currentTimeMillis());
             catalogue.registerResourceEntry(newFolderEntry);
             debug("\t newCollection: " + newFolderEntry.getLDRI() + " getLDRI().getName():" + newFolderEntry.getLDRI().getName());
-
+            
             return new WebDataDirResource(catalogue, newFolderEntry);
         } catch (Exception ex) {
             Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, ex);
@@ -154,9 +155,13 @@ class WebDataDirResource implements FolderResource, CollectionResource {
             debug("\t length: " + length);
             debug("\t contentType: " + contentType);
             LogicalFile newResource = new LogicalFile(Path.path(entry.getLDRI(), newName));
-            newResource.getMetadata().setLength(length);
-            newResource.getMetadata().addMimeType(contentType);
-            newResource.getMetadata().setCreateDate(System.currentTimeMillis());
+            
+            Metadata meta = new Metadata();
+            meta.setLength(length);
+            meta.addMimeType(contentType);
+            meta.setCreateDate(System.currentTimeMillis());
+            newResource.setMetadata(meta);
+                    
             catalogue.registerResourceEntry(newResource);
             WebDataFileResource file = new WebDataFileResource(catalogue, newResource);
             debug("returning createNew. " + file.getName());

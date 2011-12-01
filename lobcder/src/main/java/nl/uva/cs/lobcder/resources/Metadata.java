@@ -61,7 +61,7 @@ public class Metadata implements Serializable {
         if (mimeTypes == null) {
             mimeTypes = new ArrayList<String>();
         }
-        if (mimeType != null && mimeTypes.contains(mimeType)) {
+        if (mimeType != null && !mimeTypes.contains(mimeType)) {
             this.mimeTypes.add(mimeType);
         }
 

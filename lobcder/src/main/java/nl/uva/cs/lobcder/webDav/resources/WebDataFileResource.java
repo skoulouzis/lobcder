@@ -14,7 +14,9 @@ import com.bradmcevoy.http.Request.Method;
 import com.bradmcevoy.http.exceptions.BadRequestException;
 import com.bradmcevoy.http.exceptions.ConflictException;
 import com.bradmcevoy.http.exceptions.NotAuthorizedException;
+import com.bradmcevoy.http.http11.PartialGetHelper;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
@@ -26,6 +28,12 @@ import nl.uva.cs.lobcder.catalogue.IDLCatalogue;
 import nl.uva.cs.lobcder.resources.ILogicalData;
 import nl.uva.cs.lobcder.resources.Metadata;
 import nl.uva.cs.lobcder.resources.LogicalFile;
+import nl.uva.cs.lobcder.resources.StorageSite;
+import nl.uva.vlet.exception.VlException;
+import nl.uva.vlet.vfs.VFSClient;
+import nl.uva.vlet.vfs.VFile;
+import nl.uva.vlet.vrl.VRL;
+import org.apache.commons.io.IOUtils;
 
 /**
  *
@@ -53,7 +61,6 @@ public class WebDataFileResource implements
             LogicalFile newFolderEntry = new LogicalFile(newLDRI);
             newFolderEntry.getMetadata().setModifiedDate(System.currentTimeMillis());
             catalogue.registerResourceEntry(newFolderEntry);
-
         } catch (Exception ex) {
             Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -82,9 +89,15 @@ public class WebDataFileResource implements
         debug("getContentType. accepts: " + accepts);
         if (accepts != null) {
             String[] acceptsTypes = accepts.split(",");
+
+            debug("\t acceptsTypes: " + acceptsTypes);
+
             if (logicalData.getMetadata() != null) {
                 ArrayList<String> mimeTypes = logicalData.getMetadata().getMimeTypes();
+                debug("\t mimeTypes: " + mimeTypes);
+
                 for (String accessType : acceptsTypes) {
+                    debug("\taccessType: " + accessType);
                     for (String mimeType : mimeTypes) {
                         if (accessType.equals(mimeType)) {
                             return mimeType;
@@ -107,10 +120,33 @@ public class WebDataFileResource implements
     public void sendContent(OutputStream out, Range range,
             Map<String, String> params, String contentType) throws IOException,
             NotAuthorizedException, BadRequestException {
-        debug("sendContent.");
-        debug("\t range: " + range);
-        debug("\t params: " + params);
-        debug("\t contentType: " + contentType);
+        InputStream in = null;
+        try {
+            debug("sendContent.");
+            debug("\t range: " + range);
+            debug("\t params: " + params);
+            debug("\t contentType: " + contentType);
+
+
+            VFile vFile = (VFile) logicalData.getVNode();
+
+            in = vFile.getInputStream();
+
+            if (range != null) {
+                debug("sendContent: ranged content: " + vFile.getVRL());
+                PartialGetHelper.writeRange(in, range, out);
+            } else {
+                debug("sendContent: send whole file " + vFile.getVRL());
+                IOUtils.copy(in, out);
+            }
+            out.flush();
+
+        } catch (VlException ex) {
+            throw new IOException(ex);
+        } finally {
+            in.close();
+        }
+
     }
 
     @Override
@@ -205,12 +241,8 @@ public class WebDataFileResource implements
         switch (request.getMethod()) {
             case GET:
                 if (logicalData.isRedirectAllowed()) {
-                    try {
-                        //Replica selection algorithm 
-                        return logicalData.getStorageSites().get(0).getStorageLocation().toURL().toString();
-                    } catch (MalformedURLException ex) {
-                        Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, ex);
-                    }
+                    //Replica selection algorithm 
+                    return null;
                 }
                 return null;
 

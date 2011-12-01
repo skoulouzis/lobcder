@@ -83,6 +83,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
             tx.begin();
 
             pm.makePersistent(entry);
+//            pm.makePersistent(entry.getMetadata());
 //            Object id = pm.getObjectId(entry);
 //            debug("persistEntry. DB UID class: " + id.getClass().getName() + " UID: " + id);
             tx.commit();

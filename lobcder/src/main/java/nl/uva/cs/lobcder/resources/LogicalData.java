@@ -7,14 +7,16 @@ package nl.uva.cs.lobcder.resources;
 import com.bradmcevoy.common.Path;
 import java.io.Serializable;
 
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.jdo.annotations.PersistenceCapable;
 import javax.jdo.annotations.Persistent;
 import javax.jdo.annotations.PrimaryKey;
+import nl.uva.vlet.exception.VlException;
+import nl.uva.vlet.vfs.VFSClient;
+import nl.uva.vlet.vfs.VFSNode;
+import nl.uva.vlet.vfs.VFile;
+import nl.uva.vlet.vrs.ServerInfo;
+import nl.uva.vlet.vrs.VRSContext;
 
 @PersistenceCapable
 public class LogicalData implements ILogicalData, Serializable {
@@ -33,7 +35,7 @@ public class LogicalData implements ILogicalData, Serializable {
     @Persistent
     private ArrayList<Path> children;
     @Persistent
-    private ArrayList<StorageSite> storageResource;
+    private ArrayList<StorageSite> storageSite;
     private boolean debug = false;
 
     public LogicalData(Path ldri) {
@@ -58,12 +60,17 @@ public class LogicalData implements ILogicalData, Serializable {
 
     @Override
     public Metadata getMetadata() {
-        return new Metadata();
+        if(this.metadata == null){
+            Metadata meta = new Metadata();
+            meta.setCreateDate(System.currentTimeMillis());
+            return meta;
+        }
+        return this.metadata;
     }
 
     @Override
     public void setMetadata(Metadata metadata) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        this.metadata = metadata;
     }
 
     @Override
@@ -82,7 +89,7 @@ public class LogicalData implements ILogicalData, Serializable {
 
     @Override
     public void setStorageSites(ArrayList<StorageSite> storageResource) {
-        this.storageResource = storageResource;
+        this.storageSite = storageResource;
     }
 
     @Override
@@ -134,5 +141,18 @@ public class LogicalData implements ILogicalData, Serializable {
     public boolean isRedirectAllowed() {
         //Read policy and decide....
         return false;
+    }
+
+    @Override
+    public VFSNode getVNode() throws VlException {
+        
+        StorageSite site = null;
+        for(StorageSite s : this.storageSite){
+            if(s != null){
+                site =s;
+                break;
+            }
+        }
+       return site.getVNode();
     }
 }

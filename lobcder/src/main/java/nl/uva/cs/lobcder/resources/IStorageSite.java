@@ -5,13 +5,10 @@
 
 package nl.uva.cs.lobcder.resources;
 
-import java.net.URI;
-
 /**
  *
  * @author skoulouz
  */
 public interface IStorageSite {
-
-    public URI getStorageLocation();
+    
 }

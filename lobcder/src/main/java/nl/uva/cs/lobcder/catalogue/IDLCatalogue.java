@@ -6,9 +6,7 @@ package nl.uva.cs.lobcder.catalogue;
 
 import com.bradmcevoy.common.Path;
 import java.util.Collection;
-import java.util.List;
 import nl.uva.cs.lobcder.resources.ILogicalData;
-import nl.uva.cs.lobcder.webDav.resources.WebDataFileResource;
 
 /**
  *
