@@ -1,0 +1,5 @@
+vph.username=uname1
+storage.site.username=vph_dev:admin 
+storage.site.password=non
+storage.site.grid.proxy=notyet
+storage.site.endpoint=file:///home/user/deleteMe/

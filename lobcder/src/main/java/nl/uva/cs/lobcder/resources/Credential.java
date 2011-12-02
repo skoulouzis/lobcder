@@ -15,9 +15,10 @@ public class Credential {
     private String vphUsername;
     private String storageSiteUname;
     private String passwd;
+    private GridProxy gridProxy;
 
     public GridProxy getStorageSiteGridProxy() {
-        throw new UnsupportedOperationException("Not yet implemented");
+        return this.gridProxy;
     }
 
     String getStorageSiteUsername() {

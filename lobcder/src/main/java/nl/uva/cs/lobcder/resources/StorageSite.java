@@ -6,10 +6,13 @@ package nl.uva.cs.lobcder.resources;
 
 import com.bradmcevoy.common.Path;
 import java.io.Serializable;
+import java.net.MalformedURLException;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.Properties;
 import javax.jdo.annotations.PersistenceCapable;
 import javax.jdo.annotations.Persistent;
+import nl.uva.vlet.GlobalConfig;
 import nl.uva.vlet.exception.VRLSyntaxException;
 import nl.uva.vlet.exception.VlException;
 import nl.uva.vlet.vfs.VFSClient;
@@ -31,10 +34,11 @@ public class StorageSite implements Serializable, IStorageSite {
     @Persistent
     private String endpoint;
     private ServerInfo info;
-    private final VRSContext context;
-    private final VFSClient vfsClient;
+    private VRSContext context;
+    private VFSClient vfsClient;
     @Persistent
     private String vphUsername;
+    private final Credential credentials;
 
     public StorageSite(String endpoint, Credential cred) throws Exception {
         try {
@@ -43,21 +47,11 @@ public class StorageSite implements Serializable, IStorageSite {
             vrl = new VRL(endpoint);
 
             prop = new Properties();
-            context = new VRSContext();
 
-            if (cred.getStorageSiteGridProxy() != null) {
-                context.setGridProxy(cred.getStorageSiteGridProxy());
-            }
-            info = context.getServerInfoFor(vrl, true);
+            this.credentials = cred;
 
-            if (info.getAuthScheme().equals(ServerInfo.PASSWORD_AUTH)
-                    || info.getAuthScheme().equals(ServerInfo.PASSWORD_OR_PASSPHRASE_AUTH)
-                    || info.getAuthScheme().equals(ServerInfo.PASSPHRASE_AUTH)) {
-                info.setUsername(cred.getStorageSiteUsername());
-                info.setPassword(cred.getStorageSitePassword());
-            }
+            initVFS();
 
-            vfsClient = new VFSClient(context);
 
         } catch (VRLSyntaxException ex) {
             throw new URISyntaxException(endpoint, ex.getMessage());
@@ -84,5 +78,31 @@ public class StorageSite implements Serializable, IStorageSite {
     @Override
     public String getVPHUsername() {
         return vphUsername;
+    }
+
+    private void initVFS() throws VlException, MalformedURLException {
+        GlobalConfig.setAllowUserInteraction(false);
+        GlobalConfig.setBaseLocation(new URL("http://dummy/url"));
+        GlobalConfig.setHasUI(false);
+        GlobalConfig.setIsApplet(true);
+        GlobalConfig.setPassiveMode(true);
+        GlobalConfig.setUsePersistantUserConfiguration(false);
+
+        context = new VRSContext(false);
+
+        info = context.getServerInfoFor(vrl, true);
+        
+        if (info.getAuthScheme().equals(ServerInfo.GSI_AUTH) && credentials.getStorageSiteGridProxy() != null) {
+            context.setGridProxy(credentials.getStorageSiteGridProxy());
+        }
+        
+        if (info.getAuthScheme().equals(ServerInfo.PASSWORD_AUTH)
+                || info.getAuthScheme().equals(ServerInfo.PASSWORD_OR_PASSPHRASE_AUTH)
+                || info.getAuthScheme().equals(ServerInfo.PASSPHRASE_AUTH)) {
+            info.setUsername(credentials.getStorageSiteUsername());
+            info.setPassword(credentials.getStorageSitePassword());
+        }
+
+        vfsClient = new VFSClient(context);
     }
 }

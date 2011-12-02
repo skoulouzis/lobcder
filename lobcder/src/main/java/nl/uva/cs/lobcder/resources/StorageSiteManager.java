@@ -68,25 +68,24 @@ public class StorageSiteManager {
         cred.setStorageSitePassword(prop.getProperty(Constants.STORAGE_SITE_PASSWORD));
         cred.setVPHUsernname(prop.getProperty(Constants.VPH_USERNAME));
         String endpoint = prop.getProperty(Constants.STORAGE_SITE_ENDPOINT);
-
+        
         StorageSite site = new StorageSite(endpoint, cred);
-
-
-        PersistenceManager pm = pmf.getPersistenceManager();
-        Transaction tx = pm.currentTransaction();
-        try {
-            tx.begin();
-
-            pm.makePersistent(site);
-            tx.commit();
-
-        } finally {
-            if (tx.isActive()) {
-                tx.rollback();
-            }
-            site.getEndpoint();
-            pm.close();
-        }
+        
+//        PersistenceManager pm = pmf.getPersistenceManager();
+//        Transaction tx = pm.currentTransaction();
+//        try {
+//            tx.begin();
+//            
+//            pm.makePersistent(site);
+//            tx.commit();
+//
+//        } finally {
+//            if (tx.isActive()) {
+//                tx.rollback();
+//            }
+//            site.getEndpoint();
+//            pm.close();
+//        }
     }
 
     private void debug(String msg) {
