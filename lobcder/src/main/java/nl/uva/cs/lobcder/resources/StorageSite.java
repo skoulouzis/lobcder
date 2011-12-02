@@ -4,22 +4,18 @@
  */
 package nl.uva.cs.lobcder.resources;
 
+import com.bradmcevoy.common.Path;
 import java.io.Serializable;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Properties;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.jdo.annotations.PersistenceCapable;
+import javax.jdo.annotations.Persistent;
 import nl.uva.vlet.exception.VRLSyntaxException;
 import nl.uva.vlet.exception.VlException;
-import nl.uva.vlet.util.cog.GridProxy;
 import nl.uva.vlet.vfs.VFSClient;
 import nl.uva.vlet.vfs.VFSNode;
-import nl.uva.vlet.vfs.VFile;
 import nl.uva.vlet.vrl.VRL;
 import nl.uva.vlet.vrs.ServerInfo;
-import nl.uva.vlet.vrs.VNode;
 import nl.uva.vlet.vrs.VRSContext;
 
 /**
@@ -30,34 +26,38 @@ import nl.uva.vlet.vrs.VRSContext;
 public class StorageSite implements Serializable, IStorageSite {
 
     private static final long serialVersionUID = -2552461454620784560L;
-    private String endpoint;
-    private Credential cred;
     private Properties prop;
     private final VRL vrl;
+    @Persistent
+    private String endpoint;
     private ServerInfo info;
     private final VRSContext context;
+    private final VFSClient vfsClient;
+    @Persistent
+    private String vphUsername;
 
     public StorageSite(String endpoint, Credential cred) throws Exception {
         try {
             this.endpoint = endpoint;
+            vphUsername = cred.getVPHUsername();
             vrl = new VRL(endpoint);
-            this.cred = cred;
 
             prop = new Properties();
             context = new VRSContext();
 
-            if (cred.getGridProxy() != null) {
-                context.setGridProxy(cred.getGridProxy());
+            if (cred.getStorageSiteGridProxy() != null) {
+                context.setGridProxy(cred.getStorageSiteGridProxy());
             }
             info = context.getServerInfoFor(vrl, true);
-
 
             if (info.getAuthScheme().equals(ServerInfo.PASSWORD_AUTH)
                     || info.getAuthScheme().equals(ServerInfo.PASSWORD_OR_PASSPHRASE_AUTH)
                     || info.getAuthScheme().equals(ServerInfo.PASSPHRASE_AUTH)) {
-                info.setUsername(cred.getUsername());
-                info.setPassword(cred.getPassword());
+                info.setUsername(cred.getStorageSiteUsername());
+                info.setPassword(cred.getStorageSitePassword());
             }
+
+            vfsClient = new VFSClient(context);
 
         } catch (VRLSyntaxException ex) {
             throw new URISyntaxException(endpoint, ex.getMessage());
@@ -66,8 +66,23 @@ public class StorageSite implements Serializable, IStorageSite {
         }
     }
 
-    VFSNode getVNode() throws VlException {
-        VFSClient c = new VFSClient(context);
-        return c.openLocation(vrl);
+    VFSNode getVNode(Path path) throws VlException {
+        return vfsClient.openLocation(vrl.append(path.toPath()));
+
+    }
+
+    VFSNode createVFSNode(Path path) throws VlException {
+        return vfsClient.newFile(vrl.append(path.toPath()));
+
+    }
+
+    @Override
+    public String getEndpoint() {
+        return endpoint;
+    }
+
+    @Override
+    public String getVPHUsername() {
+        return vphUsername;
     }
 }

@@ -12,11 +12,7 @@ import javax.jdo.annotations.PersistenceCapable;
 import javax.jdo.annotations.Persistent;
 import javax.jdo.annotations.PrimaryKey;
 import nl.uva.vlet.exception.VlException;
-import nl.uva.vlet.vfs.VFSClient;
 import nl.uva.vlet.vfs.VFSNode;
-import nl.uva.vlet.vfs.VFile;
-import nl.uva.vlet.vrs.ServerInfo;
-import nl.uva.vlet.vrs.VRSContext;
 
 @PersistenceCapable
 public class LogicalData implements ILogicalData, Serializable {
@@ -60,7 +56,7 @@ public class LogicalData implements ILogicalData, Serializable {
 
     @Override
     public Metadata getMetadata() {
-        if(this.metadata == null){
+        if (this.metadata == null) {
             Metadata meta = new Metadata();
             meta.setCreateDate(System.currentTimeMillis());
             return meta;
@@ -121,7 +117,7 @@ public class LogicalData implements ILogicalData, Serializable {
 
     @Override
     public Path getChild(Path path) {
-        
+
         if (children != null && !children.isEmpty()) {
             for (Path p : children) {
                 if (p.getName().equals(path.getName())) {
@@ -145,14 +141,30 @@ public class LogicalData implements ILogicalData, Serializable {
 
     @Override
     public VFSNode getVNode() throws VlException {
-        
         StorageSite site = null;
-        for(StorageSite s : this.storageSite){
-            if(s != null){
-                site =s;
+        for (StorageSite s : this.storageSite) {
+            if (s != null) {
+                site = s;
                 break;
             }
         }
-       return site.getVNode();
+        return site.getVNode(this.getLDRI());
+    }
+
+    @Override
+    public boolean hasPhysicalData() {
+        return !storageSite.isEmpty();
+    }
+
+    @Override
+    public VFSNode createPhysicalData() throws VlException {
+        StorageSite site = null;
+        for (StorageSite s : this.storageSite) {
+            if (s != null) {
+                site = s;
+                break;
+            }
+        }
+        return site.createVFSNode(getLDRI());
     }
 }

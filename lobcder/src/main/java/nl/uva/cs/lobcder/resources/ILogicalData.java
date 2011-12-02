@@ -45,5 +45,9 @@ public interface ILogicalData {
     public boolean isRedirectAllowed();
 
     public VFSNode getVNode() throws VlException;
+
+    public boolean hasPhysicalData();
+
+    public VFSNode createPhysicalData()throws VlException;
     
 }

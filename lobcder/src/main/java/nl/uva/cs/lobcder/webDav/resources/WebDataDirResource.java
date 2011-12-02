@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import netscape.security.ForbiddenTargetException;
 import nl.uva.cs.lobcder.catalogue.IDLCatalogue;
 import nl.uva.cs.lobcder.resources.ILogicalData;
 import nl.uva.cs.lobcder.resources.LogicalFile;

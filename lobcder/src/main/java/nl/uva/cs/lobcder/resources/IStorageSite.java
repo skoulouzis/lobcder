@@ -10,5 +10,6 @@ package nl.uva.cs.lobcder.resources;
  * @author skoulouz
  */
 public interface IStorageSite {
-    
+    String getEndpoint();
+    String getVPHUsername();
 }

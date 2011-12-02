@@ -18,7 +18,6 @@ import com.bradmcevoy.http.http11.PartialGetHelper;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Map;
@@ -28,11 +27,8 @@ import nl.uva.cs.lobcder.catalogue.IDLCatalogue;
 import nl.uva.cs.lobcder.resources.ILogicalData;
 import nl.uva.cs.lobcder.resources.Metadata;
 import nl.uva.cs.lobcder.resources.LogicalFile;
-import nl.uva.cs.lobcder.resources.StorageSite;
 import nl.uva.vlet.exception.VlException;
-import nl.uva.vlet.vfs.VFSClient;
 import nl.uva.vlet.vfs.VFile;
-import nl.uva.vlet.vrl.VRL;
 import org.apache.commons.io.IOUtils;
 
 /**
@@ -128,8 +124,13 @@ public class WebDataFileResource implements
             debug("\t contentType: " + contentType);
 
 
-            VFile vFile = (VFile) logicalData.getVNode();
-
+            VFile vFile;
+            if (!logicalData.hasPhysicalData()) {
+                vFile = (VFile) logicalData.createPhysicalData();
+            } else {
+                vFile = (VFile) logicalData.getVNode();
+            }
+            
             in = vFile.getInputStream();
 
             if (range != null) {

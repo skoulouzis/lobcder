@@ -6,8 +6,6 @@ package nl.uva.cs.lobcder.resources;
 
 import com.bradmcevoy.common.Path;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import javax.jdo.annotations.PersistenceCapable;
 
 /**
