@@ -37,6 +37,8 @@ public class LogicalData implements ILogicalData, Serializable {
     public LogicalData(Path ldri) {
         this.ldri = ldri;
         uid = java.util.UUID.randomUUID().toString();
+        
+        
     }
 
     @Override

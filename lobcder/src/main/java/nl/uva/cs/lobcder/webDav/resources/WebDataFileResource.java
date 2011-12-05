@@ -122,7 +122,7 @@ public class WebDataFileResource implements
             debug("\t params: " + params);
             debug("\t contentType: " + contentType);
 
-
+            
             VFile vFile;
             if (!logicalData.hasPhysicalData()) {
                 vFile = (VFile) logicalData.createPhysicalData();

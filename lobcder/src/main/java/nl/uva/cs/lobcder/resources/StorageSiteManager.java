@@ -4,6 +4,7 @@
  */
 package nl.uva.cs.lobcder.resources;
 
+import com.bradmcevoy.common.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Properties;
@@ -21,14 +22,12 @@ import nl.uva.cs.lobcder.webdav.Constants.Constants;
 public class StorageSiteManager {
 
     private final PersistenceManagerFactory pmf;
-    private final String vphUsername;
 
-    public StorageSiteManager(String vphUsername) {
+    public StorageSiteManager() {
         pmf = JDOHelper.getPersistenceManagerFactory("datanucleus.properties");
-        this.vphUsername = vphUsername;
     }
 
-    public ArrayList<StorageSite> getSites() {
+    public ArrayList<StorageSite> getSitesByUname(String vphUsername) {
         PersistenceManager pm = pmf.getPersistenceManager();
         Transaction tx = pm.currentTransaction();
 
@@ -40,7 +39,7 @@ public class StorageSiteManager {
             //restrict to instances which have the field ldri equal to some logicalResourceName
             q.setFilter("vphUsername == vphUsername");
             Collection<StorageSite> results = (Collection<StorageSite>) q.execute(vphUsername);
-            
+
             if (!results.isEmpty()) {
                 for (StorageSite s : results) {
                     debug("getSites. endpoint: " + s.getEndpoint());
@@ -65,14 +64,14 @@ public class StorageSiteManager {
         cred.setStorageSitePassword(prop.getProperty(Constants.STORAGE_SITE_PASSWORD));
         cred.setVPHUsernname(prop.getProperty(Constants.VPH_USERNAME));
         String endpoint = prop.getProperty(Constants.STORAGE_SITE_ENDPOINT);
-        
+
         StorageSite site = new StorageSite(endpoint, cred);
-        
+
         PersistenceManager pm = pmf.getPersistenceManager();
         Transaction tx = pm.currentTransaction();
         try {
             tx.begin();
-            
+
             pm.makePersistent(site);
             tx.commit();
 
@@ -87,5 +86,42 @@ public class StorageSiteManager {
 
     private void debug(String msg) {
         System.err.println(this.getClass().getName() + ": " + msg);
+    }
+
+    public ArrayList<StorageSite> getSitesByLPath(Path lDRI) {
+        throw new UnsupportedOperationException("Not yet implemented");
+    }
+
+    void cleaSites(String endpoint) {
+
+        //Next the node 
+        PersistenceManager pm = pmf.getPersistenceManager();
+        Transaction tx = pm.currentTransaction();
+        try {
+            tx.begin();
+
+            Query q = pm.newQuery(StorageSite.class);
+            //restrict to instances which have the field ldri equal to some logicalResourceName
+            q.setFilter("endpoint == endpoint");
+            Collection<StorageSite> results = (Collection<StorageSite>) q.execute(endpoint);
+            if (!results.isEmpty()) {
+
+
+                for (StorageSite s : results) {
+                    if (endpoint.equals(s.getEndpoint())) {
+                        pm.deletePersistent(s);
+                        break;
+                    }
+                }
+
+            }
+            tx.commit();
+
+        } finally {
+            if (tx.isActive()) {
+                tx.rollback();
+            }
+            pm.close();
+        }
     }
 }

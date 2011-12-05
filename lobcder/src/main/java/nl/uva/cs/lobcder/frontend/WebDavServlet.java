@@ -55,8 +55,6 @@ public class WebDavServlet implements Servlet {
                 "\t getRemoteUser: "+req.getRemoteUser()+"\n"+
                 "\t getRequestURI: "+req.getRequestURI()+"\n"+
                 "\t getRequestedSessionId: "+req.getRequestedSessionId());
-
-
         
         try {
             originalRequest.set(req);

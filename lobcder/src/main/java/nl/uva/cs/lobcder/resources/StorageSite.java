@@ -9,6 +9,7 @@ import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Properties;
 import javax.jdo.annotations.PersistenceCapable;
 import javax.jdo.annotations.Persistent;
@@ -19,6 +20,7 @@ import nl.uva.vlet.exception.VlException;
 import nl.uva.vlet.util.cog.GridProxy;
 import nl.uva.vlet.vfs.VFSClient;
 import nl.uva.vlet.vfs.VFSNode;
+import nl.uva.vlet.vfs.VFile;
 import nl.uva.vlet.vrl.VRL;
 import nl.uva.vlet.vrs.ServerInfo;
 import nl.uva.vlet.vrs.VRSContext;
@@ -35,6 +37,8 @@ public class StorageSite implements Serializable, IStorageSite {
     private final VRL vrl;
     @Persistent
     private String endpoint;
+    @Persistent
+    private ArrayList<String> logicalPaths = new ArrayList<String>();
     private ServerInfo info;
     private VRSContext context;
     private VFSClient vfsClient;
@@ -63,13 +67,17 @@ public class StorageSite implements Serializable, IStorageSite {
     }
 
     VFSNode getVNode(Path path) throws VlException {
-        return vfsClient.openLocation(vrl.append(path.toPath()));
-
+        if (logicalPaths.contains(path.toString())) {
+            return vfsClient.openLocation(vrl.append(path.toPath()));
+        } else {
+            return null;
+        }
     }
 
     VFSNode createVFSNode(Path path) throws VlException {
-        return vfsClient.newFile(vrl.append(path.toPath()));
-
+        VFile node = vfsClient.newFile(vrl.append(path.toPath()));
+        logicalPaths.add(path.toString());
+        return node;
     }
 
     @Override
@@ -90,7 +98,7 @@ public class StorageSite implements Serializable, IStorageSite {
         GlobalConfig.setPassiveMode(true);
         GlobalConfig.setUsePersistantUserConfiguration(false);
         GlobalConfig.setInitURLStreamFactory(false);
-        
+
         context = new VRSContext(false);
 
         info = context.getServerInfoFor(vrl, true);
@@ -101,9 +109,9 @@ public class StorageSite implements Serializable, IStorageSite {
             context.setGridProxy(proxy);
         }
 
-        if (StringUtil.equals(authScheme,ServerInfo.PASSWORD_AUTH)
-                || StringUtil.equals(authScheme,ServerInfo.PASSWORD_OR_PASSPHRASE_AUTH)
-                || StringUtil.equals(authScheme,ServerInfo.PASSPHRASE_AUTH)) {
+        if (StringUtil.equals(authScheme, ServerInfo.PASSWORD_AUTH)
+                || StringUtil.equals(authScheme, ServerInfo.PASSWORD_OR_PASSPHRASE_AUTH)
+                || StringUtil.equals(authScheme, ServerInfo.PASSPHRASE_AUTH)) {
             info.setUsername(credentials.getStorageSiteUsername());
             info.setPassword(credentials.getStorageSitePassword());
         }

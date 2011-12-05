@@ -19,7 +19,7 @@ import nl.uva.vlet.vrs.VRS;
 public class PopulateStorageSites {
 
     public static void main(String args[]) throws FileNotFoundException, IOException, Exception {
-        StorageSiteManager s;
+        StorageSiteManager s = new StorageSiteManager();
         String[] names = new String[]{"storage2.prop", "storage3.prop"};
 
         String propBasePath = System.getProperty("user.home") + File.separator
@@ -28,8 +28,8 @@ public class PopulateStorageSites {
         
         for (String name : names) {
             Properties prop = getCloudProperties(propBasePath + name);
-            String vphUname = prop.getProperty(nl.uva.cs.lobcder.webdav.Constants.Constants.VPH_USERNAME);
-            s = new StorageSiteManager(vphUname);
+//            String vphUname = prop.getProperty(nl.uva.cs.lobcder.webdav.Constants.Constants.VPH_USERNAME);
+           
             s.registerStorageSite(prop);
         }
         

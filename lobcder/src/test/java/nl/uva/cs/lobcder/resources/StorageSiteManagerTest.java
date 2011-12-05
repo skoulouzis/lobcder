@@ -4,6 +4,7 @@
  */
 package nl.uva.cs.lobcder.resources;
 
+import com.bradmcevoy.common.Path;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.FileNotFoundException;
@@ -49,19 +50,34 @@ public class StorageSiteManagerTest {
      * Test of getSites method, of class StorageSiteManager.
      */
     @Test
-    public void testGetSites() throws Exception {
+    public void testGetSitesByUnames() throws Exception {
         System.out.println("getSites");
         populateStorageSites();
 
-        StorageSiteManager instance = new StorageSiteManager(vphUname);
-        
-        ArrayList result = instance.getSites();
+        StorageSiteManager instance = new StorageSiteManager();
+        try {
+            ArrayList result = instance.getSitesByUname(vphUname);
+            assertNotNull(result);
+        } finally {
+            clearSites();
+        }
+    }
+
+    /**
+     * Test of getSites method, of class StorageSiteManager.
+     */
+    @Test
+    public void testGetSitesByLPath() throws Exception {
+        System.out.println("getSites");
+        populateStorageSites();
+
+        StorageSiteManager instance = new StorageSiteManager();
+
+        ArrayList result = instance.getSitesByLPath(Path.root);
         assertNotNull(result);
     }
 
     private void populateStorageSites() throws FileNotFoundException, IOException, Exception {
-
-
         String propBasePath = System.getProperty("user.home") + File.separator
                 + "workspace" + File.separator + "lobcder"
                 + File.separator + "etc" + File.separator;
@@ -69,7 +85,7 @@ public class StorageSiteManagerTest {
         for (String name : names) {
             Properties prop = getCloudProperties(propBasePath + name);
             vphUname = prop.getProperty(nl.uva.cs.lobcder.webdav.Constants.Constants.VPH_USERNAME);
-            StorageSiteManager instance = new StorageSiteManager(vphUname);
+            StorageSiteManager instance = new StorageSiteManager();
             instance.registerStorageSite(prop);
         }
     }
@@ -82,5 +98,11 @@ public class StorageSiteManagerTest {
         properties.load(new FileInputStream(f));
 
         return properties;
+    }
+
+    private void clearSites() {
+        StorageSiteManager instance = new StorageSiteManager();
+        instance.getAllSites();
+        instance.cleaSite();
     }
 }
