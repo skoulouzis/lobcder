@@ -10,10 +10,6 @@ import java.util.Properties;
 import javax.jdo.JDOHelper;
 import javax.jdo.PersistenceManager;
 import javax.jdo.PersistenceManagerFactory;
-import javax.jdo.Transaction;
-import javax.jdo.JDOHelper;
-import javax.jdo.PersistenceManager;
-import javax.jdo.PersistenceManagerFactory;
 import javax.jdo.Query;
 import javax.jdo.Transaction;
 import nl.uva.cs.lobcder.webdav.Constants.Constants;
@@ -44,6 +40,7 @@ public class StorageSiteManager {
             //restrict to instances which have the field ldri equal to some logicalResourceName
             q.setFilter("vphUsername == vphUsername");
             Collection<StorageSite> results = (Collection<StorageSite>) q.execute(vphUsername);
+            
             if (!results.isEmpty()) {
                 for (StorageSite s : results) {
                     debug("getSites. endpoint: " + s.getEndpoint());

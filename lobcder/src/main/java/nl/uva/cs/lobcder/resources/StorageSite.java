@@ -89,6 +89,7 @@ public class StorageSite implements Serializable, IStorageSite {
         GlobalConfig.setIsApplet(true);
         GlobalConfig.setPassiveMode(true);
         GlobalConfig.setUsePersistantUserConfiguration(false);
+        GlobalConfig.setInitURLStreamFactory(false);
         
         context = new VRSContext(false);
 

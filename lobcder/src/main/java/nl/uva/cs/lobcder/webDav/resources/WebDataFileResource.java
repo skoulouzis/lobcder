@@ -45,7 +45,7 @@ public class WebDataFileResource implements
         this.catalogue = catalogue;
         this.logicalData = logicalData;
     }
-
+    
     @Override
     public void copyTo(CollectionResource collectionResource, String name) {
         try {
@@ -61,7 +61,7 @@ public class WebDataFileResource implements
             Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-
+    
     @Override
     public void delete() {
         try {
@@ -70,7 +70,7 @@ public class WebDataFileResource implements
             Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-
+    
     @Override
     public Long getContentLength() {
         Metadata meta = logicalData.getMetadata();
@@ -103,7 +103,6 @@ public class WebDataFileResource implements
                 return mimeTypes.get(0);
             }
         }
-
         return null;
     }
 
@@ -132,7 +131,7 @@ public class WebDataFileResource implements
             }
             
             in = vFile.getInputStream();
-
+            
             if (range != null) {
                 debug("sendContent: ranged content: " + vFile.getVRL());
                 PartialGetHelper.writeRange(in, range, out);
