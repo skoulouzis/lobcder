@@ -71,21 +71,21 @@ public class StorageSiteManager {
         
         StorageSite site = new StorageSite(endpoint, cred);
         
-//        PersistenceManager pm = pmf.getPersistenceManager();
-//        Transaction tx = pm.currentTransaction();
-//        try {
-//            tx.begin();
-//            
-//            pm.makePersistent(site);
-//            tx.commit();
-//
-//        } finally {
-//            if (tx.isActive()) {
-//                tx.rollback();
-//            }
-//            site.getEndpoint();
-//            pm.close();
-//        }
+        PersistenceManager pm = pmf.getPersistenceManager();
+        Transaction tx = pm.currentTransaction();
+        try {
+            tx.begin();
+            
+            pm.makePersistent(site);
+            tx.commit();
+
+        } finally {
+            if (tx.isActive()) {
+                tx.rollback();
+            }
+            site.getEndpoint();
+            pm.close();
+        }
     }
 
     private void debug(String msg) {

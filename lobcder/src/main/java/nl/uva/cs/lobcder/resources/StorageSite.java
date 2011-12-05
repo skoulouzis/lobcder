@@ -13,8 +13,10 @@ import java.util.Properties;
 import javax.jdo.annotations.PersistenceCapable;
 import javax.jdo.annotations.Persistent;
 import nl.uva.vlet.GlobalConfig;
+import nl.uva.vlet.data.StringUtil;
 import nl.uva.vlet.exception.VRLSyntaxException;
 import nl.uva.vlet.exception.VlException;
+import nl.uva.vlet.util.cog.GridProxy;
 import nl.uva.vlet.vfs.VFSClient;
 import nl.uva.vlet.vfs.VFSNode;
 import nl.uva.vlet.vrl.VRL;
@@ -87,18 +89,20 @@ public class StorageSite implements Serializable, IStorageSite {
         GlobalConfig.setIsApplet(true);
         GlobalConfig.setPassiveMode(true);
         GlobalConfig.setUsePersistantUserConfiguration(false);
-
+        
         context = new VRSContext(false);
 
         info = context.getServerInfoFor(vrl, true);
-        
-        if (info.getAuthScheme().equals(ServerInfo.GSI_AUTH) && credentials.getStorageSiteGridProxy() != null) {
-            context.setGridProxy(credentials.getStorageSiteGridProxy());
+        String authScheme = info.getAuthScheme();
+        GridProxy proxy = credentials.getStorageSiteGridProxy();
+
+        if (StringUtil.equals(authScheme, ServerInfo.GSI_AUTH) && proxy != null) {
+            context.setGridProxy(proxy);
         }
-        
-        if (info.getAuthScheme().equals(ServerInfo.PASSWORD_AUTH)
-                || info.getAuthScheme().equals(ServerInfo.PASSWORD_OR_PASSPHRASE_AUTH)
-                || info.getAuthScheme().equals(ServerInfo.PASSPHRASE_AUTH)) {
+
+        if (StringUtil.equals(authScheme,ServerInfo.PASSWORD_AUTH)
+                || StringUtil.equals(authScheme,ServerInfo.PASSWORD_OR_PASSPHRASE_AUTH)
+                || StringUtil.equals(authScheme,ServerInfo.PASSPHRASE_AUTH)) {
             info.setUsername(credentials.getStorageSiteUsername());
             info.setPassword(credentials.getStorageSitePassword());
         }

@@ -10,6 +10,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Properties;
 import nl.uva.cs.lobcder.resources.StorageSiteManager;
+import nl.uva.vlet.vrs.VRS;
 
 /**
  *
@@ -31,6 +32,8 @@ public class PopulateStorageSites {
             s = new StorageSiteManager(vphUname);
             s.registerStorageSite(prop);
         }
+        
+        VRS.exit();
     }
 
     private static Properties getCloudProperties(String propPath)

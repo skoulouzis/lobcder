@@ -22,11 +22,11 @@ public class Credential {
     }
 
     String getStorageSiteUsername() {
-        throw new UnsupportedOperationException("Not yet implemented");
+        return storageSiteUname;
     }
 
     String getStorageSitePassword() {
-        throw new UnsupportedOperationException("Not yet implemented");
+        return passwd;
     }
 
     String getVPHUsername() {
