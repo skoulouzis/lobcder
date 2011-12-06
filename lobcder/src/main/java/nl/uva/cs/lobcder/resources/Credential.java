@@ -16,6 +16,10 @@ public class Credential {
     private String storageSiteUname;
     private String passwd;
     private GridProxy gridProxy;
+    
+    public Credential(String vphUsername){
+        this.vphUsername = vphUsername;
+    }
 
     public GridProxy getStorageSiteGridProxy() {
         return this.gridProxy;
@@ -39,10 +43,6 @@ public class Credential {
 
     void setStorageSitePassword(String passwd) {
         this.passwd = passwd;
-    }
-
-    void setVPHUsernname(String vphUsername) {
-        this.vphUsername = vphUsername;
     }
 
 }

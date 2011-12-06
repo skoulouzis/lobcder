@@ -10,7 +10,11 @@ import java.io.FileNotFoundException;
 import java.util.Properties;
 import java.io.File;
 import com.bradmcevoy.common.Path;
+import java.util.AbstractList;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
+import nl.uva.vlet.vfs.VChecksum;
 import nl.uva.vlet.vfs.VFSNode;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -25,9 +29,10 @@ import static org.junit.Assert.*;
  */
 public class StorageSiteTest {
 
-    private static String name = "storage3.prop";
+    private static String name = "storage2.prop";
     private final String testEndpoint;
     private final Credential testCred;
+    private final String vphUser;
 
     public StorageSiteTest() throws FileNotFoundException, IOException {
         String propBasePath = System.getProperty("user.home") + File.separator
@@ -37,8 +42,9 @@ public class StorageSiteTest {
 
         Properties prop = getCloudProperties(propBasePath + name);
         testEndpoint = prop.getProperty(nl.uva.cs.lobcder.webdav.Constants.Constants.STORAGE_SITE_ENDPOINT);
-        
-        testCred = new Credential();
+        vphUser = prop.getProperty(nl.uva.cs.lobcder.webdav.Constants.Constants.STORAGE_SITE_USERNAME);
+
+        testCred = new Credential(vphUser);
         String siteUname = prop.getProperty(nl.uva.cs.lobcder.webdav.Constants.Constants.STORAGE_SITE_USERNAME);
         testCred.setStorageSiteUsername(siteUname);
         String passwd = prop.getProperty(nl.uva.cs.lobcder.webdav.Constants.Constants.STORAGE_SITE_PASSWORD);
@@ -71,61 +77,90 @@ public class StorageSiteTest {
     public void tearDown() {
     }
 
-
     /**
      * Test of createVFSNode method, of class StorageSite.
      */
     @Test
     public void testCreateAndGetVFSNode() throws Exception {
         System.out.println("createVFSNode");
-        Path path = Path.path("file1]");
+        String strPath = "file1";
+        Path path = Path.path(strPath);
         StorageSite instance = new StorageSite(testEndpoint, testCred);
-//        VFSNode expResult = null;
         VFSNode result = instance.createVFSNode(path);
-//        assertEquals(expResult, result);
-        // TODO review the generated test code and remove the default call to fail.
-//        fail("The test case is a prototype.");
+        assertNotNull(result);
+        VFSNode node = instance.getVNode(Path.path(strPath));
+        assertNotNull(node);
+
+        assertEquals(node.getVRL(), result.getVRL());
+    }
+    /**
+     * Test of getEndpoint method, of class StorageSite.
+     */
+    @Test
+    public void testGetEndpoint() throws Exception {
+        System.out.println("getEndpoint");
+        StorageSite instance = new StorageSite(testEndpoint, testCred);
+        String result = instance.getEndpoint();
+        System.out.println("endpoint: "+result);
+        assertEquals(testEndpoint, result);
     }
 
-//    /**
-//     * Test of getEndpoint method, of class StorageSite.
-//     */
-//    @Test
-//    public void testGetEndpoint() {
-//        System.out.println("getEndpoint");
-//        StorageSite instance = null;
-//        String expResult = "";
-//        String result = instance.getEndpoint();
-//        assertEquals(expResult, result);
-//        // TODO review the generated test code and remove the default call to fail.
-//        fail("The test case is a prototype.");
-//    }
-//
-//    /**
-//     * Test of getVPHUsername method, of class StorageSite.
-//     */
-//    @Test
-//    public void testGetVPHUsername() {
-//        System.out.println("getVPHUsername");
-//        StorageSite instance = null;
-//        String expResult = "";
-//        String result = instance.getVPHUsername();
-//        assertEquals(expResult, result);
-//        // TODO review the generated test code and remove the default call to fail.
-//        fail("The test case is a prototype.");
-//    }
-//
-//    /**
-//     * Test of getLogicalPaths method, of class StorageSite.
-//     */
-//    @Test
-//    public void testGetLogicalPaths() {
-//        System.out.println("getLogicalPaths");
-//        StorageSite instance = null;
-//        Collection expResult = null;
-//        Collection result = instance.getLogicalPaths();
-//        assertEquals(expResult, result);
-//        // TODO review the generated test code and remove the default call to fail.
-//        fail("The test case is a prototype.");
-//    }
+    /**
+     * Test of getVPHUsername method, of class StorageSite.
+     */
+    @Test
+    public void testGetVPHUsername() throws Exception {
+        System.out.println("getVPHUsername");
+        StorageSite instance = new StorageSite(testEndpoint, testCred);
+        String result = instance.getVPHUsername();
+        assertEquals(vphUser, result);
+    }
+
+    /**
+     * Test of getLogicalPaths method, of class StorageSite.
+     */
+    @Test
+    public void testGetLogicalPaths() throws Exception {
+        System.out.println("getLogicalPaths");
+        StorageSite instance = new StorageSite(testEndpoint, testCred);
+        String strPath1 = "file1";
+        Path path1 = Path.path(strPath1);
+        String strPath2 = "file2";
+        Path path2 = Path.path(strPath2);
+        
+        instance.createVFSNode(path1);
+        instance.createVFSNode(path2);
+        
+        Collection<String> result = instance.getLogicalPaths();
+        assertNotNull(result);
+        
+        assertTrue(result.contains(strPath1));
+        assertTrue(result.contains(strPath2));
+    }
+    
+    
+    /**
+     * Test of createVFSNode method, of class StorageSite.
+     */
+    @Test
+    public void testCreateAndGetVFSFolder() throws Exception {
+        System.out.println("testCreateAndGetVFSFolder");
+        String strPath = "file1";
+        Path path = Path.path(strPath);
+        StorageSite instance = new StorageSite(testEndpoint, testCred);
+        VFSNode result = instance.createVFSNode(path);
+        assertNotNull(result);
+        VFSNode node = instance.getVNode(Path.path(strPath));
+        assertNotNull(node);
+        assertEquals(node.getVRL(), result.getVRL());
+        
+        
+        strPath = "file3/file4";
+        path = Path.path(strPath);
+        
+        result = instance.createVFSNode(path);
+        assertNotNull(result);
+        node = instance.getVNode(Path.path(strPath));
+        assertNotNull(node);
+    }
 }

@@ -66,16 +66,17 @@ public class StorageSite implements Serializable, IStorageSite {
     }
 
     VFSNode getVNode(Path path) throws VlException {
-        if (logicalPaths.contains(path.toString())) {
-            return vfsClient.openLocation(vrl.append(path.toPath()));
+        if (logicalPaths.contains(path.getName())) {
+            return vfsClient.openLocation(vrl.append(path.getName()));
         } else {
             return null;
         }
     }
 
     VFSNode createVFSNode(Path path) throws VlException {
-        VFile node = vfsClient.newFile(vrl.append(path.toPath()));
-        logicalPaths.add(path.toString());
+        VFile node = vfsClient.newFile(vrl.append(path.getName()));
+        node.create();
+        logicalPaths.add(path.getName());
         return node;
     }
 

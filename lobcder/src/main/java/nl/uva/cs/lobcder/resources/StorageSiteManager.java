@@ -59,10 +59,9 @@ public class StorageSiteManager {
     }
 
     public void registerStorageSite(Properties prop) throws Exception {
-        Credential cred = new Credential();
+        Credential cred = new Credential(prop.getProperty(Constants.VPH_USERNAME));
         cred.setStorageSiteUsername(prop.getProperty(Constants.STORAGE_SITE_USERNAME));
         cred.setStorageSitePassword(prop.getProperty(Constants.STORAGE_SITE_PASSWORD));
-        cred.setVPHUsernname(prop.getProperty(Constants.VPH_USERNAME));
         String endpoint = prop.getProperty(Constants.STORAGE_SITE_ENDPOINT);
 
         StorageSite site = new StorageSite(endpoint, cred);
