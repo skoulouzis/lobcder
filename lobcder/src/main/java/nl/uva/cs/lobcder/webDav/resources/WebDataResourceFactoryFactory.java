@@ -38,11 +38,7 @@ public class WebDataResourceFactoryFactory implements ResourceFactoryFactory {
             try {
                 authenticationService = new AuthenticationService();
                 resourceFactory = new WebDataResourceFactory();
-            } catch (VlException ex) {
-                java.util.logging.Logger.getLogger(WebDataResourceFactoryFactory.class.getName()).log(Level.SEVERE, null, ex);
-            } catch (URISyntaxException ex) {
-                java.util.logging.Logger.getLogger(WebDataResourceFactoryFactory.class.getName()).log(Level.SEVERE, null, ex);
-            } catch (IOException ex) {
+            } catch (Exception ex) {
                 java.util.logging.Logger.getLogger(WebDataResourceFactoryFactory.class.getName()).log(Level.SEVERE, null, ex);
             }
 

@@ -98,7 +98,7 @@ public class WebDavServlet implements Servlet {
         }
     }
 
-    protected void init(String responseHandlerClassName, List<String> authHandlers) throws ServletException, URISyntaxException, VlException, IOException {
+    protected void init(String responseHandlerClassName, List<String> authHandlers) throws Exception {
 
         ResourceFactory rf = new WebDataResourceFactory();
 

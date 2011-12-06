@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.FileNotFoundException;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Properties;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -50,16 +51,43 @@ public class StorageSiteManagerTest {
      * Test of getSites method, of class StorageSiteManager.
      */
     @Test
+    public void testGetAllSites() throws Exception {
+        System.out.println("testGetAllSites");
+        populateStorageSites();
+        
+        StorageSiteManager instance = new StorageSiteManager();
+        try {
+            Collection<StorageSite> result = instance.getAllSites();
+            assertNotNull(result);
+
+            assertEquals(names.length, result.size());
+//            for (StorageSite s : result) {
+//                System.out.println("Site: " + s.getEndpoint());
+//            }
+
+        } finally {
+            instance.clearAllSites();
+            Collection<StorageSite> allSites = instance.getAllSites();
+            assertEquals(allSites.size(), 0);
+        }
+    }
+
+    /**
+     * Test of getSites method, of class StorageSiteManager.
+     */
+    @Test
     public void testGetSitesByUnames() throws Exception {
-        System.out.println("getSites");
+        System.out.println("testGetSitesByUnames");
         populateStorageSites();
 
         StorageSiteManager instance = new StorageSiteManager();
         try {
-            ArrayList result = instance.getSitesByUname(vphUname);
+            Collection<StorageSite> result = instance.getSitesByUname(vphUname);
             assertNotNull(result);
         } finally {
-            clearSites();
+            instance.clearAllSites();
+            Collection<StorageSite> allSites = instance.getAllSites();
+            assertEquals(allSites.size(), 0);
         }
     }
 
@@ -68,13 +96,32 @@ public class StorageSiteManagerTest {
      */
     @Test
     public void testGetSitesByLPath() throws Exception {
-        System.out.println("getSites");
+        System.out.println("testGetSitesByLPath");
         populateStorageSites();
 
         StorageSiteManager instance = new StorageSiteManager();
-
-        ArrayList result = instance.getSitesByLPath(Path.root);
-        assertNotNull(result);
+        Collection<String> paths;
+        try {
+            
+            
+            //            Collection<StorageSite> result = instance.getSitesByLPath(Path.root);
+            //            assertNotNull(result);
+            Collection<StorageSite> allSites = instance.getAllSites();
+            for (StorageSite s : allSites) {
+                System.out.println("Site: " + s.getEndpoint());
+                s.createVFSNode(Path.path("path1"));
+                s.createVFSNode(Path.path("path2"));
+                s.createVFSNode(Path.path("path2/path3"));
+                paths = s.getLogicalPaths();
+                for (String path : paths) {
+                    System.out.println("\t path: " + path);
+                }
+            }
+        } finally {
+            instance.clearAllSites();
+            Collection<StorageSite> allSites = instance.getAllSites();
+            assertEquals(allSites.size(), 0);
+        }
     }
 
     private void populateStorageSites() throws FileNotFoundException, IOException, Exception {
@@ -98,11 +145,5 @@ public class StorageSiteManagerTest {
         properties.load(new FileInputStream(f));
 
         return properties;
-    }
-
-    private void clearSites() {
-        StorageSiteManager instance = new StorageSiteManager();
-        instance.getAllSites();
-        instance.cleaSite();
     }
 }

@@ -7,22 +7,25 @@ package nl.uva.cs.lobcder.resources;
 import com.bradmcevoy.common.Path;
 import java.io.Serializable;
 import java.net.MalformedURLException;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Properties;
 import javax.jdo.annotations.PersistenceCapable;
 import javax.jdo.annotations.Persistent;
+import nl.uva.vlet.Global;
 import nl.uva.vlet.GlobalConfig;
 import nl.uva.vlet.data.StringUtil;
-import nl.uva.vlet.exception.VRLSyntaxException;
 import nl.uva.vlet.exception.VlException;
 import nl.uva.vlet.util.cog.GridProxy;
+import nl.uva.vlet.vfs.VFS;
 import nl.uva.vlet.vfs.VFSClient;
 import nl.uva.vlet.vfs.VFSNode;
 import nl.uva.vlet.vfs.VFile;
 import nl.uva.vlet.vrl.VRL;
 import nl.uva.vlet.vrs.ServerInfo;
+import nl.uva.vlet.vrs.VNode;
+import nl.uva.vlet.vrs.VRS;
 import nl.uva.vlet.vrs.VRSContext;
 
 /**
@@ -57,10 +60,6 @@ public class StorageSite implements Serializable, IStorageSite {
             this.credentials = cred;
 
             initVFS();
-
-
-        } catch (VRLSyntaxException ex) {
-            throw new URISyntaxException(endpoint, ex.getMessage());
         } catch (VlException ex) {
             throw new Exception(ex);
         }
@@ -96,10 +95,22 @@ public class StorageSite implements Serializable, IStorageSite {
         GlobalConfig.setHasUI(false);
         GlobalConfig.setIsApplet(true);
         GlobalConfig.setPassiveMode(true);
-        GlobalConfig.setUsePersistantUserConfiguration(false);
+//        GlobalConfig.setUsePersistantUserConfiguration(false);
         GlobalConfig.setInitURLStreamFactory(false);
+//        GlobalConfig.setUserHomeLocation(new URL("file:///tmp"));
 
-        context = new VRSContext(false);
+        Global.init();
+
+
+//        context = new VRSContext(false);
+        context = VRSContext.getDefault();
+
+//        context.setUserHomeLocation(new VRL("file:///tmp"));
+//        context.setVirtualRoot(VFS.newVDir(context, new VRL("file:///tmp")));
+
+        String userHome = context.getLocalUserHome();
+
+        debug(">>>>>The user home: " + userHome);
 
         info = context.getServerInfoFor(vrl, true);
         String authScheme = info.getAuthScheme();
@@ -117,5 +128,14 @@ public class StorageSite implements Serializable, IStorageSite {
         }
 
         vfsClient = new VFSClient(context);
+    }
+
+    @Override
+    public Collection<String> getLogicalPaths() {
+        return logicalPaths;
+    }
+
+    private void debug(String msg) {
+        System.err.println(this.getClass().getSimpleName() + ": " + msg);
     }
 }
