@@ -11,6 +11,8 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.jdo.annotations.PersistenceCapable;
 import javax.jdo.annotations.Persistent;
 import nl.uva.vlet.Global;
@@ -36,8 +38,34 @@ import nl.uva.vlet.vrs.VRSContext;
 public class StorageSite implements Serializable, IStorageSite {
 
     private static final long serialVersionUID = -2552461454620784560L;
+
+    // Static 
+    static {
+        staticInit();
+    }
+
+    private static void staticInit() {
+        try {
+            GlobalConfig.setBaseLocation(new URL("http://dummy/url"));
+        } catch (MalformedURLException ex) {
+            Logger.getLogger(StorageSite.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        // runtime configuration
+        GlobalConfig.setHasUI(false);
+        GlobalConfig.setIsApplet(true);
+        GlobalConfig.setPassiveMode(true);
+        GlobalConfig.setIsService(true);
+        GlobalConfig.setInitURLStreamFactory(false);
+        GlobalConfig.setAllowUserInteraction(false);
+
+        // user configuration 
+        GlobalConfig.setUsePersistantUserConfiguration(false);
+        //  GlobalConfig.setUserHomeLocation(new URL("file:///tmp/myservice"));
+
+        Global.init();
+    }
     private Properties prop;
-    private final VRL vrl;
+    private VRL vrl;
     @Persistent
     private String endpoint;
     @Persistent
@@ -91,28 +119,9 @@ public class StorageSite implements Serializable, IStorageSite {
     }
 
     private void initVFS() throws VlException, MalformedURLException {
-        GlobalConfig.setAllowUserInteraction(false);
-        GlobalConfig.setBaseLocation(new URL("http://dummy/url"));
-        GlobalConfig.setHasUI(false);
-        GlobalConfig.setIsApplet(true);
-        GlobalConfig.setPassiveMode(true);
-//        GlobalConfig.setUsePersistantUserConfiguration(false);
-        GlobalConfig.setInitURLStreamFactory(false);
-//        GlobalConfig.setUserHomeLocation(new URL("file:///tmp"));
-
-        Global.init();
-
-
-//        context = new VRSContext(false);
-        context = VRSContext.getDefault();
-
-//        context.setUserHomeLocation(new VRL("file:///tmp"));
-//        context.setVirtualRoot(VFS.newVDir(context, new VRL("file:///tmp")));
-
-        String userHome = context.getLocalUserHome();
-
-        debug(">>>>>The user home: " + userHome);
-
+        vfsClient = new VFSClient();
+        context = vfsClient.getVRSContext();
+                
         info = context.getServerInfoFor(vrl, true);
         String authScheme = info.getAuthScheme();
         GridProxy proxy = credentials.getStorageSiteGridProxy();
@@ -125,10 +134,13 @@ public class StorageSite implements Serializable, IStorageSite {
                 || StringUtil.equals(authScheme, ServerInfo.PASSWORD_OR_PASSPHRASE_AUTH)
                 || StringUtil.equals(authScheme, ServerInfo.PASSPHRASE_AUTH)) {
             info.setUsername(credentials.getStorageSiteUsername());
+
             info.setPassword(credentials.getStorageSitePassword());
         }
 
-        vfsClient = new VFSClient(context);
+        info.setAttribute(ServerInfo.ATTR_DEFAULT_YES_NO_ANSWER, true);
+        info.store();
+
     }
 
     @Override

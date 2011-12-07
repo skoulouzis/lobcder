@@ -101,6 +101,14 @@ there are no implementations to enhance
             <version>1</version>
             <scope>runtime</scope>
         </dependency>
+        
+        
+        <dependency>
+            <groupId>nl.uva.vlet</groupId>
+            <artifactId>nl.uva.vlet.vfs.jcraft.ssh</artifactId>
+            <version>1</version>
+            <scope>runtime</scope>
+        </dependency>
 
         <dependency>
             <groupId>nl.uva.vlet</groupId>
