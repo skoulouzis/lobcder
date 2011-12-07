@@ -9,7 +9,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.FileNotFoundException;
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Properties;
 import org.junit.After;
@@ -21,11 +20,11 @@ import static org.junit.Assert.*;
 
 /**
  *
- * @author skoulouz
+ * @author S. koulouzis
  */
 public class StorageSiteManagerTest {
 
-    private static String[] names = new String[]{"storage2.prop", "storage3.prop"};
+    private static String[] names = new String[]{"storage2.prop", "storage4.prop"};
     private String vphUname;
 
     public StorageSiteManagerTest() {
@@ -61,9 +60,9 @@ public class StorageSiteManagerTest {
             assertNotNull(result);
 
             assertEquals(names.length, result.size());
-//            for (StorageSite s : result) {
-//                System.out.println("Site: " + s.getEndpoint());
-//            }
+            for (StorageSite s : result) {
+                System.out.println("Site: " + s.getEndpoint());
+            }
 
         } finally {
             instance.clearAllSites();
@@ -102,21 +101,25 @@ public class StorageSiteManagerTest {
         StorageSiteManager instance = new StorageSiteManager();
         Collection<String> paths;
         try {
-            
-            
-            //            Collection<StorageSite> result = instance.getSitesByLPath(Path.root);
-            //            assertNotNull(result);
             Collection<StorageSite> allSites = instance.getAllSites();
+            Path p1 = Path.path("path1");
+            Path p2 = Path.path("path2");
+            Path p3 = Path.path("path2/path3");
+            
             for (StorageSite s : allSites) {
                 System.out.println("Site: " + s.getEndpoint());
-                s.createVFSNode(Path.path("path1"));
-                s.createVFSNode(Path.path("path2"));
-                s.createVFSNode(Path.path("path2/path3"));
+                s.createVFSNode(p1);
+                s.createVFSNode(p2);
+                s.createVFSNode(p3);
                 paths = s.getLogicalPaths();
                 for (String path : paths) {
-                    System.out.println("\t path: " + path);
+                    assertNotNull(path);
+//                    System.out.println("\t path: " + path);
                 }
             }
+                        
+            Collection<StorageSite> res = instance.getSitesByUname(vphUname);
+            
         } finally {
             instance.clearAllSites();
             Collection<StorageSite> allSites = instance.getAllSites();

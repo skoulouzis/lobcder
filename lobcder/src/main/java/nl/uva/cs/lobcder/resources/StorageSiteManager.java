@@ -5,7 +5,6 @@
 package nl.uva.cs.lobcder.resources;
 
 import com.bradmcevoy.common.Path;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Properties;
 import javax.jdo.JDOHelper;
@@ -45,14 +44,14 @@ public class StorageSiteManager {
                     debug("getSites. endpoint: " + s.getEndpoint());
                 }
             }
-            
+
             tx.commit();
-            
+
         } finally {
             if (tx.isActive()) {
                 tx.rollback();
             }
-            
+
             pm.close();
         }
         return results;
@@ -87,8 +86,35 @@ public class StorageSiteManager {
         System.err.println(this.getClass().getName() + ": " + msg);
     }
 
-    public ArrayList<StorageSite> getSitesByLPath(Path lDRI) {
-        throw new UnsupportedOperationException("Not yet implemented");
+    public Collection<StorageSite> getSitesByLPath(Path lDRI) {
+        PersistenceManager pm = pmf.getPersistenceManager();
+        Transaction tx = pm.currentTransaction();
+        Collection<StorageSite> results;
+        
+        try {
+            tx.begin();
+            //This query, will return objects of type DataResourceEntry
+            Query q = pm.newQuery(StorageSite.class);
+
+            //restrict to instances which have the field ldri equal to some logicalResourceName
+            q.setFilter("logicalPaths.contains(lDRI.getName())");
+            results = (Collection<StorageSite>) q.execute(lDRI.getName());
+            if (!results.isEmpty()) {
+                for (StorageSite s : results) {
+                    debug("getSites. endpoint: " + s.getEndpoint());
+                }
+            }
+
+            tx.commit();
+
+        } finally {
+            if (tx.isActive()) {
+                tx.rollback();
+            }
+
+            pm.close();
+        }
+        return results;
     }
 
     void cleaSite(String endpoint) {

@@ -20,14 +20,11 @@ import nl.uva.vlet.GlobalConfig;
 import nl.uva.vlet.data.StringUtil;
 import nl.uva.vlet.exception.VlException;
 import nl.uva.vlet.util.cog.GridProxy;
-import nl.uva.vlet.vfs.VFS;
 import nl.uva.vlet.vfs.VFSClient;
 import nl.uva.vlet.vfs.VFSNode;
 import nl.uva.vlet.vfs.VFile;
 import nl.uva.vlet.vrl.VRL;
 import nl.uva.vlet.vrs.ServerInfo;
-import nl.uva.vlet.vrs.VNode;
-import nl.uva.vlet.vrs.VRS;
 import nl.uva.vlet.vrs.VRSContext;
 
 /**
@@ -102,8 +99,7 @@ public class StorageSite implements Serializable, IStorageSite {
     }
 
     VFSNode createVFSNode(Path path) throws VlException {
-        VFile node = vfsClient.newFile(vrl.append(path.getName()));
-        node.create();
+        VFile node = vfsClient.createFile(vrl.append(path.getName()), true);
         logicalPaths.add(path.getName());
         return node;
     }
@@ -121,7 +117,7 @@ public class StorageSite implements Serializable, IStorageSite {
     private void initVFS() throws VlException, MalformedURLException {
         vfsClient = new VFSClient();
         context = vfsClient.getVRSContext();
-                
+
         info = context.getServerInfoFor(vrl, true);
         String authScheme = info.getAuthScheme();
         GridProxy proxy = credentials.getStorageSiteGridProxy();

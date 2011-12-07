@@ -90,9 +90,10 @@ public class StorageSiteTest {
         assertNotNull(result);
         VFSNode node = instance.getVNode(Path.path(strPath));
         assertNotNull(node);
-
+        
         assertEquals(node.getVRL(), result.getVRL());
     }
+    
     /**
      * Test of getEndpoint method, of class StorageSite.
      */
@@ -136,6 +137,7 @@ public class StorageSiteTest {
         
         assertTrue(result.contains(strPath1));
         assertTrue(result.contains(strPath2));
+        
     }
     
     
