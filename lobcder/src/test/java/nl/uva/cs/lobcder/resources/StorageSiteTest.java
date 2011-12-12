@@ -86,7 +86,7 @@ public class StorageSiteTest {
         String strPath = "file1";
         Path path = Path.path(strPath);
         StorageSite instance = new StorageSite(testEndpoint, testCred);
-        VFSNode result = instance.createVFSNode(path);
+        VFSNode result = instance.createVFSFile(path);
         assertNotNull(result);
         VFSNode node = instance.getVNode(Path.path(strPath));
         assertNotNull(node);
@@ -129,8 +129,8 @@ public class StorageSiteTest {
         String strPath2 = "file2";
         Path path2 = Path.path(strPath2);
         
-        instance.createVFSNode(path1);
-        instance.createVFSNode(path2);
+        instance.createVFSFile(path1);
+        instance.createVFSFile(path2);
         
         Collection<String> result = instance.getLogicalPaths();
         assertNotNull(result);
@@ -150,7 +150,7 @@ public class StorageSiteTest {
         String strPath = "file1";
         Path path = Path.path(strPath);
         StorageSite instance = new StorageSite(testEndpoint, testCred);
-        VFSNode result = instance.createVFSNode(path);
+        VFSNode result = instance.createVFSFile(path);
         assertNotNull(result);
         VFSNode node = instance.getVNode(Path.path(strPath));
         assertNotNull(node);
@@ -160,7 +160,7 @@ public class StorageSiteTest {
         strPath = "file3/file4";
         path = Path.path(strPath);
         
-        result = instance.createVFSNode(path);
+        result = instance.createVFSFile(path);
         assertNotNull(result);
         node = instance.getVNode(Path.path(strPath));
         assertNotNull(node);

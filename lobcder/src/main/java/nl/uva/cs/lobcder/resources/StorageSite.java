@@ -36,12 +36,17 @@ public class StorageSite implements Serializable, IStorageSite {
 
     private static final long serialVersionUID = -2552461454620784560L;
 
-    // Static 
     static {
-        staticInit();
+        try {
+            InitGlobalVFS();
+        } catch (MalformedURLException ex) {
+            Logger.getLogger(StorageSite.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (VlException ex) {
+            Logger.getLogger(StorageSite.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
-    private static void staticInit() {
+    private static void InitGlobalVFS() throws MalformedURLException, VlException {
         try {
             GlobalConfig.setBaseLocation(new URL("http://dummy/url"));
         } catch (MalformedURLException ex) {
@@ -57,7 +62,8 @@ public class StorageSite implements Serializable, IStorageSite {
 
         // user configuration 
         GlobalConfig.setUsePersistantUserConfiguration(false);
-        //  GlobalConfig.setUserHomeLocation(new URL("file:///tmp/myservice"));
+//        GlobalConfig.setUserHomeLocation(new URL("file:////" + this.tmpVPHuserHome.getAbsolutePath()));
+//        Global.setDebug(true);
 
         Global.init();
     }
@@ -91,16 +97,23 @@ public class StorageSite implements Serializable, IStorageSite {
     }
 
     VFSNode getVNode(Path path) throws VlException {
-        if (logicalPaths.contains(path.getName())) {
-            return vfsClient.openLocation(vrl.append(path.getName()));
+        if (logicalPaths.contains(path.toString())) {
+            return vfsClient.openLocation(vrl.append(path.toString()));
         } else {
             return null;
         }
     }
 
-    VFSNode createVFSNode(Path path) throws VlException {
-        VFile node = vfsClient.createFile(vrl.append(path.getName()), true);
-        logicalPaths.add(path.getName());
+    VFSNode createVFSFile(Path path) throws VlException {
+        String[] parts = path.getParts();
+        if (parts.length > 1) {
+            String parent = path.getParent().toString();
+            debug("mkdirs: "+vrl.append(parent));
+            vfsClient.mkdirs(vrl.append(parent));
+        }
+        
+        VFile node = vfsClient.createFile(vrl.append(path.toString()), true);
+        logicalPaths.add(path.toString());
         return node;
     }
 
@@ -117,7 +130,7 @@ public class StorageSite implements Serializable, IStorageSite {
     private void initVFS() throws VlException, MalformedURLException {
         vfsClient = new VFSClient();
         context = vfsClient.getVRSContext();
-
+        //Bug in sftp: We have to put the username in the url 
         info = context.getServerInfoFor(vrl, true);
         String authScheme = info.getAuthScheme();
         GridProxy proxy = credentials.getStorageSiteGridProxy();
@@ -130,13 +143,12 @@ public class StorageSite implements Serializable, IStorageSite {
                 || StringUtil.equals(authScheme, ServerInfo.PASSWORD_OR_PASSPHRASE_AUTH)
                 || StringUtil.equals(authScheme, ServerInfo.PASSPHRASE_AUTH)) {
             info.setUsername(credentials.getStorageSiteUsername());
-
             info.setPassword(credentials.getStorageSitePassword());
         }
 
         info.setAttribute(ServerInfo.ATTR_DEFAULT_YES_NO_ANSWER, true);
-        info.store();
 
+        info.store();
     }
 
     @Override

@@ -53,7 +53,7 @@ public class StorageSiteManagerTest {
     public void testGetAllSites() throws Exception {
         System.out.println("testGetAllSites");
         populateStorageSites();
-        
+
         StorageSiteManager instance = new StorageSiteManager();
         try {
             Collection<StorageSite> result = instance.getAllSites();
@@ -97,29 +97,60 @@ public class StorageSiteManagerTest {
     public void testGetSitesByLPath() throws Exception {
         System.out.println("testGetSitesByLPath");
         populateStorageSites();
+        Path p1, p2, p3;
 
         StorageSiteManager instance = new StorageSiteManager();
         Collection<String> paths;
         try {
             Collection<StorageSite> allSites = instance.getAllSites();
-            Path p1 = Path.path("path1");
-            Path p2 = Path.path("path2");
-            Path p3 = Path.path("path2/path3");
-            
-            for (StorageSite s : allSites) {
-                System.out.println("Site: " + s.getEndpoint());
-                s.createVFSNode(p1);
-                s.createVFSNode(p2);
-                s.createVFSNode(p3);
-                paths = s.getLogicalPaths();
-                for (String path : paths) {
-                    assertNotNull(path);
-//                    System.out.println("\t path: " + path);
-                }
+            StorageSite[] sitesArray = new StorageSite[allSites.size()];
+            sitesArray = allSites.toArray(sitesArray);
+            p1 = Path.path("path1");
+            p2 = Path.path("path2");
+            p3 = Path.path("path3/path4/path5");
+
+            sitesArray[0].createVFSFile(p1);
+            paths = sitesArray[0].getLogicalPaths();
+            for (String path : paths) {
+                assertNotNull(path);
             }
-                        
-            Collection<StorageSite> res = instance.getSitesByUname(vphUname);
-            
+            sitesArray[1].createVFSFile(p2);
+            paths = sitesArray[1].getLogicalPaths();
+            for (String path : paths) {
+                assertNotNull(path);
+            }
+            sitesArray[0].createVFSFile(p3);
+            paths = sitesArray[0].getLogicalPaths();
+            for (String path : paths) {
+                assertNotNull(path);
+            }
+
+            Collection<StorageSite> res = instance.getSitesByLPath(p1);
+
+            for (StorageSite s : res) {
+//                System.out.println("endpoints: " + s.getEndpoint());
+                assertNotNull(s);
+                assertTrue(s.getLogicalPaths().contains(p1.toString()));
+            }
+
+            res = instance.getSitesByLPath(p2);
+
+            for (StorageSite s : res) {
+//                System.out.println("endpoints: " + s.getEndpoint());
+                assertNotNull(s);
+                assertTrue(s.getLogicalPaths().contains(p2.toString()));
+            }
+
+            res = instance.getSitesByLPath(p3);
+
+            for (StorageSite s : res) {
+//                System.out.println("endpoints: " + s.getEndpoint());
+                assertNotNull(s);
+                assertTrue(s.getLogicalPaths().contains(p3.toString()));
+            }
+
+
+
         } finally {
             instance.clearAllSites();
             Collection<StorageSite> allSites = instance.getAllSites();

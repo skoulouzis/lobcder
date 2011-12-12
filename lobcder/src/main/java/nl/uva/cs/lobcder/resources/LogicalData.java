@@ -167,6 +167,6 @@ public class LogicalData implements ILogicalData, Serializable {
                 break;
             }
         }
-        return site.createVFSNode(getLDRI());
+        return site.createVFSFile(getLDRI());
     }
 }

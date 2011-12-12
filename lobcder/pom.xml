@@ -199,6 +199,7 @@ there are no implementations to enhance
             <groupId>org.datanucleus</groupId>
             <artifactId>datanucleus-core</artifactId>
             <version>3.0.3</version>
+            <scope>runtime</scope>
         </dependency>
 
 
@@ -233,10 +234,10 @@ there are no implementations to enhance
         </repository>
 
 
-        <repository>
+<!--        <repository>
             <id>local-repo</id>
             <url>file://${project.basedir}/src/main/webapp/WEB-INF/lib</url>
-        </repository>
+        </repository>-->
 
 
         <repository>

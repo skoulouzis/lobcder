@@ -5,6 +5,8 @@
 package nl.uva.cs.lobcder.resources;
 
 import com.bradmcevoy.common.Path;
+import com.sun.org.apache.xml.internal.utils.StopParseException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Properties;
 import javax.jdo.JDOHelper;
@@ -90,17 +92,22 @@ public class StorageSiteManager {
         PersistenceManager pm = pmf.getPersistenceManager();
         Transaction tx = pm.currentTransaction();
         Collection<StorageSite> results;
+        ArrayList<StorageSite> resultsWithPaths = new ArrayList<StorageSite>();
+        
         
         try {
             tx.begin();
             //This query, will return objects of type DataResourceEntry
             Query q = pm.newQuery(StorageSite.class);
-
+            
             //restrict to instances which have the field ldri equal to some logicalResourceName
-            q.setFilter("logicalPaths.contains(lDRI.getName())");
+//            q.setFilter("logicalPaths.contains(lDRI.getName())");
             results = (Collection<StorageSite>) q.execute(lDRI.getName());
             if (!results.isEmpty()) {
                 for (StorageSite s : results) {
+                    if(s.getLogicalPaths().contains(lDRI.getName())){
+                        resultsWithPaths.add(s);
+                    }
                     debug("getSites. endpoint: " + s.getEndpoint());
                 }
             }
@@ -114,7 +121,7 @@ public class StorageSiteManager {
 
             pm.close();
         }
-        return results;
+        return resultsWithPaths;
     }
 
     void cleaSite(String endpoint) {

@@ -15,10 +15,15 @@ import com.bradmcevoy.http.exceptions.BadRequestException;
 import com.bradmcevoy.http.exceptions.ConflictException;
 import com.bradmcevoy.http.exceptions.NotAuthorizedException;
 import com.bradmcevoy.http.http11.PartialGetHelper;
+import eu.medsea.mimeutil.MimeType;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.FileNameMap;
+import java.net.URLConnection;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
 import java.util.logging.Level;
@@ -27,6 +32,8 @@ import nl.uva.cs.lobcder.catalogue.IDLCatalogue;
 import nl.uva.cs.lobcder.resources.ILogicalData;
 import nl.uva.cs.lobcder.resources.Metadata;
 import nl.uva.cs.lobcder.resources.LogicalFile;
+import nl.uva.cs.lobcder.util.MMTypeTools;
+import nl.uva.vlet.data.StringUtil;
 import nl.uva.vlet.exception.VlException;
 import nl.uva.vlet.vfs.VFile;
 import org.apache.commons.io.IOUtils;
@@ -45,7 +52,7 @@ public class WebDataFileResource implements
         this.catalogue = catalogue;
         this.logicalData = logicalData;
     }
-    
+
     @Override
     public void copyTo(CollectionResource collectionResource, String name) {
         try {
@@ -61,7 +68,7 @@ public class WebDataFileResource implements
             Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
+
     @Override
     public void delete() {
         try {
@@ -70,7 +77,7 @@ public class WebDataFileResource implements
             Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
+
     @Override
     public Long getContentLength() {
         Metadata meta = logicalData.getMetadata();
@@ -83,24 +90,22 @@ public class WebDataFileResource implements
     @Override
     public String getContentType(String accepts) {
         debug("getContentType. accepts: " + accepts);
+        int comp;
+        String type;
+
         if (accepts != null) {
             String[] acceptsTypes = accepts.split(",");
-
-            debug("\t acceptsTypes: " + acceptsTypes);
-
+            Collection<String> supported = new ArrayList<String>();
+            supported.addAll(Arrays.asList(acceptsTypes));
+            
             if (logicalData.getMetadata() != null) {
-                ArrayList<String> mimeTypes = logicalData.getMetadata().getMimeTypes();
-                debug("\t mimeTypes: " + mimeTypes);
-
-                for (String accessType : acceptsTypes) {
-                    debug("\taccessType: " + accessType);
-                    for (String mimeType : mimeTypes) {
-                        if (accessType.equals(mimeType)) {
-                            return mimeType;
-                        }
+                ArrayList<String> fileMimeTypes = logicalData.getMetadata().getMimeTypes();
+                for (String fileMimeType : fileMimeTypes) {
+                    type = MMTypeTools.bestMatch(supported, fileMimeType);
+                    if (!StringUtil.isEmpty(type)) {
+                        return type;
                     }
                 }
-                return mimeTypes.get(0);
             }
         }
         return null;
@@ -122,16 +127,16 @@ public class WebDataFileResource implements
             debug("\t params: " + params);
             debug("\t contentType: " + contentType);
 
-            
+
             VFile vFile;
             if (!logicalData.hasPhysicalData()) {
                 vFile = (VFile) logicalData.createPhysicalData();
             } else {
                 vFile = (VFile) logicalData.getVNode();
             }
-            
+
             in = vFile.getInputStream();
-            
+
             if (range != null) {
                 debug("sendContent: ranged content: " + vFile.getVRL());
                 PartialGetHelper.writeRange(in, range, out);
