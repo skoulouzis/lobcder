@@ -14,19 +14,19 @@ import nl.uva.cs.lobcder.resources.ILogicalData;
  */
 public interface IDLCatalogue {
 
-    public void registerResourceEntry(ILogicalData entry) throws Exception;
+    public void registerResourceEntry(ILogicalData entry) throws CatalogueException;
 
     public ILogicalData getResourceEntryByLDRI(Path logicalResourceName)
             throws Exception;
 
 //    public IResourceEntry getResourceEntryByUID(String UID)
 //            throws Exception;
-    public void unregisterResourceEntry(ILogicalData entry) throws Exception;
+    public void unregisterResourceEntry(ILogicalData entry) throws CatalogueException;
 
-    public Boolean resourceEntryExists(ILogicalData entry) throws Exception;
+    public Boolean resourceEntryExists(ILogicalData entry) throws CatalogueException;
 
-    public Collection<ILogicalData> getTopLevelResourceEntries() throws Exception;
+    public Collection<ILogicalData> getTopLevelResourceEntries() throws CatalogueException;
 
-    public void renameEntry(Path oldPath, Path newPath) throws Exception;
+    public void renameEntry(Path oldPath, Path newPath) throws CatalogueException;
     
 }

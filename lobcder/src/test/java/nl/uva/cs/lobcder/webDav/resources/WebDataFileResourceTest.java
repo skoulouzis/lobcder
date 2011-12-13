@@ -9,9 +9,11 @@ import com.bradmcevoy.http.exceptions.BadRequestException;
 import com.bradmcevoy.http.exceptions.ConflictException;
 import com.bradmcevoy.http.exceptions.NotAuthorizedException;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import nl.uva.cs.lobcder.catalogue.CatalogueException;
 import nl.uva.cs.lobcder.resources.LogicalData;
 import nl.uva.cs.lobcder.resources.ILogicalData;
 import com.bradmcevoy.common.Path;
@@ -69,38 +71,62 @@ public class WebDataFileResourceTest {
     public void testCopyTo() {
         System.out.println("copyTo");
         WebDataDirResource collectionResource = null;
+        WebDataFileResource webDAVFile = null;
+        ILogicalData chLData = null;
+        LogicalFolder testLogicalFolder = null;
         try {
             String testColl = "testCopyToColl";
             Path testCollPath = Path.path(testColl);
-            ILogicalData testLogicalFolder = new LogicalFolder(testCollPath);
-            
-//            catalogue.registerResourceEntry(testLogicalFolder);
+            testLogicalFolder = new LogicalFolder(testCollPath);
+
+            catalogue.registerResourceEntry(testLogicalFolder);
             collectionResource = new WebDataDirResource(catalogue, testLogicalFolder);
 
             String testFile = "testCopyToFile";
             Path testFilePath = Path.path(testFile);
-            ILogicalData testLogicalFile = new LogicalFile(testFilePath);
+            LogicalFile testLogicalFile = new LogicalFile(testFilePath);
 
-            WebDataFileResource instance = new WebDataFileResource(catalogue, testLogicalFile);
-            instance.copyTo(collectionResource, instance.getName());
+            webDAVFile = new WebDataFileResource(catalogue, testLogicalFile);
+            webDAVFile.copyTo(collectionResource, webDAVFile.getName());
 
-            List<? extends Resource> children = collectionResource.getChildren();
-            for (Resource r : children) {
-                System.out.println("Ch: " + r.getName());
+
+            ILogicalData folderLData = catalogue.getResourceEntryByLDRI(testCollPath);
+            ArrayList<Path> children = folderLData.getChildren();
+            assertNotNull(children);
+
+            boolean foundIt = false;
+            for (Path p : children) {
+                chLData = catalogue.getResourceEntryByLDRI(p);
+//                System.out.println("LData:              "+chLData.getLDRI().getName()+"         "+chLData.getUID());
+//                System.out.println("webDAVFile:         "+webDAVFile.getName()+"            "+webDAVFile.getUniqueId());
+//                System.out.println("testLogicalFile:    "+testLogicalFile.getLDRI().getName()+"         "+testLogicalFile.getUID());
+                if (chLData.getLDRI().getName().equals(testFile)) {
+                    foundIt = true;
+                    break;
+                }
             }
-            // TODO review the generated test code and remove the default call to fail.
-//            fail("The test case is a prototype.");
-        } catch (IOException ex) {
-            Logger.getLogger(WebDataFileResourceTest.class.getName()).log(Level.SEVERE, null, ex);
+            assertTrue(foundIt);
+
+        } catch (Exception ex) {
+            fail(ex.getMessage());
+            ex.printStackTrace();
         } finally {
             try {
+                webDAVFile.delete();
+
+                catalogue.unregisterResourceEntry(chLData);
+                catalogue.unregisterResourceEntry(testLogicalFolder);
+
                 collectionResource.delete();
+
+            } catch (CatalogueException ex) {
+                Logger.getLogger(WebDataFileResourceTest.class.getName()).log(Level.SEVERE, null, ex);
             } catch (NotAuthorizedException ex) {
-                Logger.getLogger(WebDataFileResourceTest.class.getName()).log(Level.SEVERE, null, ex);
+                fail(ex.getMessage());
             } catch (ConflictException ex) {
-                Logger.getLogger(WebDataFileResourceTest.class.getName()).log(Level.SEVERE, null, ex);
+                fail(ex.getMessage());
             } catch (BadRequestException ex) {
-                Logger.getLogger(WebDataFileResourceTest.class.getName()).log(Level.SEVERE, null, ex);
+                fail(ex.getMessage());
             }
         }
     }

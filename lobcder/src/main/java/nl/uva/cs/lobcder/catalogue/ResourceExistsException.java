@@ -6,13 +6,12 @@ package nl.uva.cs.lobcder.catalogue;
 
 /**
  *
- * @author S Koulouzis
+ * @author S Koulouzis 
  */
-public class CatalogueException extends Exception{
+public class ResourceExistsException extends CatalogueException {
 
-    public CatalogueException(String msg) {
+    public ResourceExistsException(String msg) {
         super(msg);
     }
-    
     
 }

@@ -19,46 +19,77 @@ import nl.uva.cs.lobcder.resources.ILogicalData;
  */
 public class WebDataResource implements PropFindableResource, Resource {
 
-    public WebDataResource(IDLCatalogue catalogue, ILogicalData ch) {
+    private final ILogicalData logicalData;
+
+    public WebDataResource(IDLCatalogue catalogue, ILogicalData logicalData) {
+        this.logicalData = logicalData;
     }
 
     @Override
     public Date getCreateDate() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        debug("getCreateDate.");
+        if (logicalData.getMetadata() != null && logicalData.getMetadata().getCreateDate() != null) {
+            return new Date(logicalData.getMetadata().getCreateDate());
+        }
+        return null;
     }
 
     @Override
     public String getUniqueId() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return logicalData.getUID();
     }
 
     @Override
     public String getName() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return logicalData.getLDRI().getName();
     }
 
     @Override
     public Object authenticate(String user, String password) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        debug("authenticate.");
+        debug("\t user: " + user);
+        debug("\t password: " + password);
+        return user;
     }
 
     @Override
     public boolean authorise(Request request, Method method, Auth auth) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        debug("authorise.");
+        return true;
     }
 
     @Override
     public String getRealm() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return "realm";
     }
 
     @Override
     public Date getModifiedDate() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        debug("getModifiedDate.");
+        if (logicalData.getMetadata() != null && logicalData.getMetadata().getModifiedDate() != null) {
+            return new Date(logicalData.getMetadata().getModifiedDate());
+        }
+        return null;
     }
 
     @Override
     public String checkRedirect(Request request) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        debug("checkRedirect.");
+        switch (request.getMethod()) {
+            case GET:
+                if (logicalData.isRedirectAllowed()) {
+                    //Replica selection algorithm 
+                    return null;
+                }
+                return null;
+
+            default:
+                return null;
+        }
+    }
+
+    protected void debug(String msg) {
+        System.err.println(this.getClass().getSimpleName() + "." + logicalData.getLDRI() + ": " + msg);
+//        log.debug(msg);
     }
 }

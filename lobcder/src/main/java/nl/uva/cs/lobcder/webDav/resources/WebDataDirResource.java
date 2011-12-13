@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import nl.uva.cs.lobcder.catalogue.CatalogueException;
 import nl.uva.cs.lobcder.catalogue.IDLCatalogue;
 import nl.uva.cs.lobcder.resources.ILogicalData;
 import nl.uva.cs.lobcder.resources.LogicalFile;
@@ -57,12 +58,12 @@ class WebDataDirResource implements FolderResource, CollectionResource {
             newFolderEntry.getMetadata().setCreateDate(System.currentTimeMillis());
             catalogue.registerResourceEntry(newFolderEntry);
             debug("\t newCollection: " + newFolderEntry.getLDRI() + " getLDRI().getName():" + newFolderEntry.getLDRI().getName());
-            
+
             return new WebDataDirResource(catalogue, newFolderEntry);
         } catch (Exception ex) {
             Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, ex);
-            if(ex.getMessage().contains("resource exists")){
-                throw  new ConflictException(this, newName);
+            if (ex.getMessage().contains("resource exists")) {
+                throw new ConflictException(this, newName);
             }
         }
         return null;
@@ -154,13 +155,13 @@ class WebDataDirResource implements FolderResource, CollectionResource {
             debug("\t length: " + length);
             debug("\t contentType: " + contentType);
             LogicalFile newResource = new LogicalFile(Path.path(entry.getLDRI(), newName));
-            
+
             Metadata meta = new Metadata();
             meta.setLength(length);
             meta.addMimeType(contentType);
             meta.setCreateDate(System.currentTimeMillis());
             newResource.setMetadata(meta);
-                    
+
             catalogue.registerResourceEntry(newResource);
             WebDataFileResource file = new WebDataFileResource(catalogue, newResource);
             debug("returning createNew. " + file.getName());
@@ -185,8 +186,8 @@ class WebDataDirResource implements FolderResource, CollectionResource {
             catalogue.registerResourceEntry(newFolderEntry);
 
         } catch (Exception ex) {
-            if(ex.getMessage().contains("resource exists")){
-                throw  new ConflictException(this, ex.getMessage());
+            if (ex.getMessage().contains("resource exists")) {
+                throw new ConflictException(this, ex.getMessage());
             }
             Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -194,18 +195,17 @@ class WebDataDirResource implements FolderResource, CollectionResource {
 
     @Override
     public void delete() throws NotAuthorizedException, ConflictException, BadRequestException {
-        debug("delete.");
         try {
+            debug("delete.");
             catalogue.unregisterResourceEntry(entry);
-        } catch (Exception ex) {
-            Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, ex);
-            debug("Exception: " + ex.getMessage());
+        } catch (CatalogueException ex) {
+            throw new BadRequestException(this);
         }
     }
 
     @Override
     public void sendContent(OutputStream out, Range range, Map<String, String> params, String contentType) throws IOException, NotAuthorizedException, BadRequestException {
-        //Not sure what is does
+        //Not sure what it does
         debug("sendContent.");
     }
 
@@ -257,7 +257,7 @@ class WebDataDirResource implements FolderResource, CollectionResource {
             catalogue.renameEntry(entry.getLDRI(), Path.path(name));
         } catch (Exception ex) {
             Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, ex);
-            if(ex.getMessage().contains("resource exists")){
+            if (ex.getMessage().contains("resource exists")) {
                 throw new ConflictException(rDest, ex.getMessage());
             }
         }
@@ -297,6 +297,10 @@ class WebDataDirResource implements FolderResource, CollectionResource {
 
     private ArrayList<? extends Resource> getEntriesChildren() throws Exception {
         ArrayList<Path> childrenPaths = entry.getChildren();
+//        if(childrenPaths == null){
+//             entry = catalogue.getResourceEntryByLDRI(this.entry.getLDRI());
+//        }
+//        childrenPaths = entry.getChildren();
         ArrayList<Resource> children = new ArrayList<Resource>();
         if (childrenPaths != null) {
             for (Path p : childrenPaths) {
@@ -311,7 +315,6 @@ class WebDataDirResource implements FolderResource, CollectionResource {
                 }
             }
         }
-
         return children;
     }
 }

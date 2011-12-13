@@ -30,7 +30,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
     }
 
     @Override
-    public void registerResourceEntry(ILogicalData entry) throws Exception {
+    public void registerResourceEntry(ILogicalData entry) throws CatalogueException {
         ILogicalData loaded = queryEntry(entry.getLDRI());
         if (loaded != null && comparePaths(loaded.getLDRI(), entry.getLDRI())) {
             throw new DuplicateResourceException("Cannot register resource " + entry.getLDRI() + " resource exists");
@@ -56,17 +56,17 @@ public class SimpleDLCatalogue implements IDLCatalogue {
 //        return loadEntryByUID(uid);
 //    }
     @Override
-    public void unregisterResourceEntry(ILogicalData entry) throws Exception {
+    public void unregisterResourceEntry(ILogicalData entry) throws CatalogueException {
         deleteEntry(entry.getLDRI());
     }
 
     @Override
-    public Boolean resourceEntryExists(ILogicalData entry) throws Exception {
+    public Boolean resourceEntryExists(ILogicalData entry) throws CatalogueException {
         return queryEntry(entry.getLDRI()) != null ? true : false;
     }
 
     @Override
-    public Collection<ILogicalData> getTopLevelResourceEntries() throws Exception {
+    public Collection<ILogicalData> getTopLevelResourceEntries() throws CatalogueException {
         return queryTopLevelResources();
     }
 
@@ -144,7 +144,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
         return entry;
     }
 
-    private void deleteEntry(Path logicalResourceName) throws Exception {
+    private void deleteEntry(Path logicalResourceName) throws ResourceExistsException {
         debug("deleteEntry: " + logicalResourceName);
         //first remove this node from it's parent
         Path parent = logicalResourceName.getParent();
@@ -171,7 +171,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                 for (LogicalData e : results) {
                     if (comparePaths(e.getLDRI(), logicalResourceName)) {
                         if (e.hasChildren()) {
-                            throw new Exception("deleteEntry: cannot remove " + e.getLDRI() + " Is a collection");
+                            throw new ResourceExistsException("deleteEntry: cannot remove " + e.getLDRI() + " is a collection containing nodes");
                         }
                         pm.deletePersistent(e);
                         break;
@@ -188,7 +188,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
         }
     }
 
-    private void addChild(Path parent, Path child) throws Exception {
+    private void addChild(Path parent, Path child) throws NonExistingResourceException {
         debug("Will add to " + parent + " " + child);
         PersistenceManager pm = pmf.getPersistenceManager();
         Transaction tx = pm.currentTransaction();
@@ -304,15 +304,15 @@ public class SimpleDLCatalogue implements IDLCatalogue {
     }
 
     @Override
-    public void renameEntry(Path oldPath, Path newPath) throws Exception {
+    public void renameEntry(Path oldPath, Path newPath) throws CatalogueException {
         debug("renameEntry.");
         debug("\t entry: " + oldPath + " newName: " + newPath);
 
 
         ILogicalData loaded = queryEntry(oldPath);
-
+        
         if (loaded == null) {
-            throw new Exception("renameEntry: cannot rename resource " + oldPath + " resource doesn't exists");
+            throw new ResourceExistsException ("Rename Entry: cannot rename resource " + oldPath + " resource doesn't exists");
         }
 
         removeChild(oldPath.getParent(), oldPath);

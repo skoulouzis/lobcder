@@ -28,6 +28,7 @@ import java.util.Date;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import nl.uva.cs.lobcder.catalogue.CatalogueException;
 import nl.uva.cs.lobcder.catalogue.IDLCatalogue;
 import nl.uva.cs.lobcder.resources.ILogicalData;
 import nl.uva.cs.lobcder.resources.Metadata;
@@ -52,20 +53,24 @@ public class WebDataFileResource implements
         this.catalogue = catalogue;
         this.logicalData = logicalData;
     }
-
+    
     @Override
-    public void copyTo(CollectionResource collectionResource, String name) {
+    public void copyTo(CollectionResource collectionResource, String name) throws ConflictException {
         try {
             debug("copyTo.");
             debug("\t toCollection: " + collectionResource.getName());
             debug("\t name: " + name);
             Path toCollectionLDRI = Path.path(collectionResource.getName());
             Path newLDRI = Path.path(toCollectionLDRI, name);
+            
             LogicalFile newFolderEntry = new LogicalFile(newLDRI);
+            
             newFolderEntry.getMetadata().setModifiedDate(System.currentTimeMillis());
             catalogue.registerResourceEntry(newFolderEntry);
-        } catch (Exception ex) {
-            Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (CatalogueException ex) {
+            throw new ConflictException(this);
+        } catch (IOException ex) {
+            throw new ConflictException(this);
         }
     }
 
