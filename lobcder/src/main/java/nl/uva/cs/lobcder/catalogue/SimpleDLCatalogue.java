@@ -33,11 +33,11 @@ public class SimpleDLCatalogue implements IDLCatalogue {
     public void registerResourceEntry(ILogicalData entry) throws Exception {
         ILogicalData loaded = queryEntry(entry.getLDRI());
         if (loaded != null && comparePaths(loaded.getLDRI(), entry.getLDRI())) {
-            throw new Exception("registerResourceEntry: cannot register resource " + entry.getLDRI() + " resource exists");
+            throw new DuplicateResourceException("Cannot register resource " + entry.getLDRI() + " resource exists");
         }
 
         Path parentPath = entry.getLDRI().getParent();
-        if (!parentPath.isRoot()) {
+        if (parentPath != null && !parentPath.isRoot()) {
             addChild(parentPath, entry.getLDRI());
         }
         persistEntry(entry);
@@ -146,10 +146,10 @@ public class SimpleDLCatalogue implements IDLCatalogue {
 
     private void deleteEntry(Path logicalResourceName) throws Exception {
         debug("deleteEntry: " + logicalResourceName);
-
-        //first remove this node from it's parent 
-        if (!logicalResourceName.isRoot()) {
-            removeChild(logicalResourceName.getParent(), logicalResourceName);
+        //first remove this node from it's parent
+        Path parent = logicalResourceName.getParent();
+        if (parent != null && !logicalResourceName.isRoot()) {
+            removeChild(parent, logicalResourceName);
         }
 
         //Next the node 
@@ -188,7 +188,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
         }
     }
 
-    private void addChild(Path parent, Path child) {
+    private void addChild(Path parent, Path child) throws Exception {
         debug("Will add to " + parent + " " + child);
         PersistenceManager pm = pmf.getPersistenceManager();
         Transaction tx = pm.currentTransaction();
@@ -214,6 +214,8 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                         break;
                     }
                 }
+            } else if (results == null || results.isEmpty()) {
+                throw new NonExistingResourceException("Cannot add " + child.toString() + " child to non existing parent " + parent.toString());
             }
             tx.commit();
 
@@ -306,7 +308,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
         debug("renameEntry.");
         debug("\t entry: " + oldPath + " newName: " + newPath);
 
-        
+
         ILogicalData loaded = queryEntry(oldPath);
 
         if (loaded == null) {
@@ -314,7 +316,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
         }
 
         removeChild(oldPath.getParent(), oldPath);
-        
+
 
         PersistenceManager pm = pmf.getPersistenceManager();
         Transaction tx = pm.currentTransaction();

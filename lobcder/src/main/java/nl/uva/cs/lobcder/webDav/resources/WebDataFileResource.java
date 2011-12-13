@@ -97,7 +97,7 @@ public class WebDataFileResource implements
             String[] acceptsTypes = accepts.split(",");
             Collection<String> supported = new ArrayList<String>();
             supported.addAll(Arrays.asList(acceptsTypes));
-            
+
             if (logicalData.getMetadata() != null) {
                 ArrayList<String> fileMimeTypes = logicalData.getMetadata().getMimeTypes();
                 for (String fileMimeType : fileMimeTypes) {
@@ -127,13 +127,11 @@ public class WebDataFileResource implements
             debug("\t params: " + params);
             debug("\t contentType: " + contentType);
 
-
             VFile vFile;
             if (!logicalData.hasPhysicalData()) {
                 vFile = (VFile) logicalData.createPhysicalData();
-            } else {
-                vFile = (VFile) logicalData.getVNode();
             }
+            vFile = (VFile) logicalData.getVNode();
 
             in = vFile.getInputStream();
 

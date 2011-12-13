@@ -25,7 +25,7 @@ import nl.uva.cs.lobcder.resources.LogicalFolder;
 
 public class WebDataResourceFactory implements ResourceFactory {
 
-    private Logger log = LoggerFactory.getLogger(WebDataResourceFactory.class);
+//    private Logger log = LoggerFactory.getLogger(WebDataResourceFactory.class);
     public static final String REALM = "vph-share";
     private IDLCatalogue catalogue;
     private boolean debug = true;
