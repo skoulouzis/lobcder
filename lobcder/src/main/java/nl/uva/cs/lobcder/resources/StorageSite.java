@@ -108,10 +108,10 @@ public class StorageSite implements Serializable, IStorageSite {
         String[] parts = path.getParts();
         if (parts.length > 1) {
             String parent = path.getParent().toString();
-            debug("mkdirs: "+vrl.append(parent));
+            debug("mkdirs: " + vrl.append(parent));
             vfsClient.mkdirs(vrl.append(parent));
         }
-        
+
         VFile node = vfsClient.createFile(vrl.append(path.toString()), true);
         logicalPaths.add(path.toString());
         return node;
@@ -158,5 +158,10 @@ public class StorageSite implements Serializable, IStorageSite {
 
     private void debug(String msg) {
         System.err.println(this.getClass().getSimpleName() + ": " + msg);
+    }
+
+    @Override
+    public boolean LDRIHasPhysicalData(Path ldri) {
+        return logicalPaths.contains(ldri.toString());
     }
 }

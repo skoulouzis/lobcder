@@ -9,6 +9,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.FileNotFoundException;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Properties;
 import org.junit.After;
@@ -26,6 +27,7 @@ public class StorageSiteManagerTest {
 
     private static String[] names = new String[]{"storage2.prop", "storage4.prop"};
     private String vphUname;
+    private ArrayList<String> endpoints;
 
     public StorageSiteManagerTest() {
     }
@@ -58,10 +60,10 @@ public class StorageSiteManagerTest {
         try {
             Collection<StorageSite> result = instance.getAllSites();
             assertNotNull(result);
-
-            assertEquals(names.length, result.size());
+            
             for (StorageSite s : result) {
-                System.out.println("Site: " + s.getEndpoint());
+//                System.out.println("Site: " + s.getEndpoint());
+                assertTrue(endpoints.contains(s.getEndpoint()));
             }
 
         } finally {
@@ -163,9 +165,12 @@ public class StorageSiteManagerTest {
                 + "workspace" + File.separator + "lobcder"
                 + File.separator + "etc" + File.separator;
 
+        endpoints = new ArrayList<String>();
+        
         for (String name : names) {
             Properties prop = getCloudProperties(propBasePath + name);
             vphUname = prop.getProperty(nl.uva.cs.lobcder.webdav.Constants.Constants.VPH_USERNAME);
+            endpoints.add(prop.getProperty(nl.uva.cs.lobcder.webdav.Constants.Constants.STORAGE_SITE_ENDPOINT));
             StorageSiteManager instance = new StorageSiteManager();
             instance.registerStorageSite(prop);
         }

@@ -8,10 +8,12 @@ import nl.uva.cs.lobcder.resources.Metadata;
 import com.bradmcevoy.common.Path;
 import java.util.ArrayList;
 import java.util.Collection;
+import nl.uva.cs.lobcder.resources.Credential;
 import nl.uva.cs.lobcder.resources.LogicalData;
 import nl.uva.cs.lobcder.resources.ILogicalData;
 import nl.uva.cs.lobcder.resources.LogicalFile;
 import nl.uva.cs.lobcder.resources.LogicalFolder;
+import nl.uva.cs.lobcder.resources.StorageSite;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -363,7 +365,47 @@ public class SimpleDRCatalogueTest {
             } catch (Exception ex) {
                 fail("Exception: " + ex.getMessage());
             }
+        }
+    }
+    
+    
+        @Test
+    public void testRegisterWithStorageSite() {
+        System.out.println("testRegisterWithStorageSite");
+        SimpleDLCatalogue instance = null;
+        ILogicalData lParent = null;
+        try {
 
+            instance = new SimpleDLCatalogue();
+            Path parentPath = Path.path("parent");
+
+            lParent = new LogicalFolder(parentPath);
+            ArrayList<StorageSite> sites = new ArrayList<StorageSite>();
+            sites.add(new StorageSite("file:///tmp", new Credential("user1")));
+            lParent.setStorageSites(sites);
+            ArrayList<StorageSite> theSites = lParent.getStorageSites();
+            
+            assertNotNull(theSites);
+            assertFalse(theSites.isEmpty());
+            
+            //When registering the rentry, the storage site is set to null
+            instance.registerResourceEntry(lParent);
+            lParent = instance.getResourceEntryByLDRI(parentPath);
+                    
+            theSites = lParent.getStorageSites();
+            
+            assertNotNull(theSites);
+            assertFalse(theSites.isEmpty());
+
+        } catch (Exception ex) {
+            fail("Exception: " + ex.getMessage());
+        } finally {
+            try {
+                if(lParent!=null)
+                    new SimpleDLCatalogue().unregisterResourceEntry(lParent);
+            } catch (Exception ex) {
+                fail("Exception: " + ex.getMessage());
+            }
         }
     }
 

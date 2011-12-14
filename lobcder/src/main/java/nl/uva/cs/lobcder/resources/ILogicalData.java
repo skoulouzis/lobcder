@@ -46,7 +46,7 @@ public interface ILogicalData {
 
     public VFSNode getVNode() throws VlException;
 
-    public boolean hasPhysicalData();
+    public boolean hasPhysicalData()throws VlException;
 
     public VFSNode createPhysicalData()throws VlException;
     

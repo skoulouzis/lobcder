@@ -4,6 +4,7 @@
  */
 package nl.uva.cs.lobcder.resources;
 
+import com.bradmcevoy.common.Path;
 import java.util.Collection;
 
 /**
@@ -17,4 +18,6 @@ public interface IStorageSite {
     String getVPHUsername();
 
     Collection<String> getLogicalPaths();
+    
+    boolean LDRIHasPhysicalData(Path ldri);
 }

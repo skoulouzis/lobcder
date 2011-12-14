@@ -31,14 +31,12 @@ public class LogicalData implements ILogicalData, Serializable {
     @Persistent
     private ArrayList<Path> children;
     @Persistent
-    private ArrayList<StorageSite> storageSite;
+    private ArrayList<StorageSite> storageSites;
     private boolean debug = false;
 
     public LogicalData(Path ldri) {
         this.ldri = ldri;
         uid = java.util.UUID.randomUUID().toString();
-        
-        
     }
 
     @Override
@@ -53,14 +51,13 @@ public class LogicalData implements ILogicalData, Serializable {
 
     @Override
     public ArrayList<StorageSite> getStorageSites() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return this.storageSites;
     }
 
     @Override
     public Metadata getMetadata() {
         if (this.metadata == null) {
             Metadata meta = new Metadata();
-            meta.setCreateDate(System.currentTimeMillis());
             return meta;
         }
         return this.metadata;
@@ -86,8 +83,8 @@ public class LogicalData implements ILogicalData, Serializable {
     }
 
     @Override
-    public void setStorageSites(ArrayList<StorageSite> storageResource) {
-        this.storageSite = storageResource;
+    public void setStorageSites(ArrayList<StorageSite> storageSites) {
+        this.storageSites = storageSites;
     }
 
     @Override
@@ -131,11 +128,6 @@ public class LogicalData implements ILogicalData, Serializable {
     }
 
     @Override
-    public void setLDRI(Path path) {
-        this.ldri = path;
-    }
-
-    @Override
     public boolean isRedirectAllowed() {
         //Read policy and decide....
         return false;
@@ -144,7 +136,7 @@ public class LogicalData implements ILogicalData, Serializable {
     @Override
     public VFSNode getVNode() throws VlException {
         StorageSite site = null;
-        for (StorageSite s : this.storageSite) {
+        for (StorageSite s : this.storageSites) {
             if (s != null) {
                 site = s;
                 break;
@@ -154,19 +146,34 @@ public class LogicalData implements ILogicalData, Serializable {
     }
 
     @Override
-    public boolean hasPhysicalData() {
-        return !storageSite.isEmpty();
+    public boolean hasPhysicalData() throws VlException {
+        if (storageSites != null && !storageSites.isEmpty()) {
+            for (StorageSite s : storageSites) {
+                if (s.LDRIHasPhysicalData(ldri)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     @Override
     public VFSNode createPhysicalData() throws VlException {
         StorageSite site = null;
-        for (StorageSite s : this.storageSite) {
+        if (this.storageSites == null || this.storageSites.isEmpty()) {
+            return null;
+        }
+        for (StorageSite s : this.storageSites) {
             if (s != null) {
                 site = s;
                 break;
             }
         }
         return site.createVFSFile(getLDRI());
+    }
+
+    @Override
+    public void setLDRI(Path ldri) {
+        this.ldri = ldri;
     }
 }

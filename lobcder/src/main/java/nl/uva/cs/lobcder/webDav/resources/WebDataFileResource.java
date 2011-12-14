@@ -51,9 +51,9 @@ public class WebDataFileResource implements
 
     public WebDataFileResource(IDLCatalogue catalogue, ILogicalData logicalData) {
         this.catalogue = catalogue;
-        this.logicalData = logicalData;
+        this.logicalData = logicalData;   
     }
-    
+
     @Override
     public void copyTo(CollectionResource collectionResource, String name) throws ConflictException {
         try {
@@ -62,9 +62,9 @@ public class WebDataFileResource implements
             debug("\t name: " + name);
             Path toCollectionLDRI = Path.path(collectionResource.getName());
             Path newLDRI = Path.path(toCollectionLDRI, name);
-            
+
             LogicalFile newFolderEntry = new LogicalFile(newLDRI);
-            
+
             newFolderEntry.getMetadata().setModifiedDate(System.currentTimeMillis());
             catalogue.registerResourceEntry(newFolderEntry);
         } catch (CatalogueException ex) {
@@ -75,11 +75,11 @@ public class WebDataFileResource implements
     }
 
     @Override
-    public void delete() {
+    public void delete() throws NotAuthorizedException, ConflictException, BadRequestException {
         try {
             catalogue.unregisterResourceEntry(logicalData);
-        } catch (Exception ex) {
-            Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (CatalogueException ex) {
+            throw new BadRequestException(this);
         }
     }
 
@@ -149,10 +149,20 @@ public class WebDataFileResource implements
             }
             out.flush();
 
+            Metadata meta = logicalData.getMetadata();
+            if (meta == null) {
+                meta = new Metadata();
+            }
+
+            meta.setLength(vFile.getLength());
+            logicalData.setMetadata(meta);
+
         } catch (VlException ex) {
             throw new IOException(ex);
         } finally {
-            in.close();
+            if (in != null) {
+                in.close();
+            }
         }
 
     }

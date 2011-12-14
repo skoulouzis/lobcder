@@ -46,7 +46,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
     }
 
     @Override
-    public ILogicalData getResourceEntryByLDRI(Path logicalResourceName) throws Exception {
+    public ILogicalData getResourceEntryByLDRI(Path logicalResourceName) throws CatalogueException {
         debug("Quering " + logicalResourceName);
         return queryEntry(logicalResourceName);
     }
@@ -167,7 +167,6 @@ public class SimpleDLCatalogue implements IDLCatalogue {
             q.declareParameters("Path logicalResourceName");
             Collection<LogicalData> results = (Collection<LogicalData>) q.execute(logicalResourceName);
             if (!results.isEmpty()) {
-
                 for (LogicalData e : results) {
                     if (comparePaths(e.getLDRI(), logicalResourceName)) {
                         if (e.hasChildren()) {
