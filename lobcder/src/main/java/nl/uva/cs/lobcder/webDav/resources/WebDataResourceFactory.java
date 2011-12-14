@@ -5,8 +5,6 @@ import java.util.logging.Level;
 
 import nl.uva.cs.lobcder.resources.StorageSite;
 import nl.uva.cs.lobcder.resources.StorageSiteManager;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.bradmcevoy.common.Path;
 import com.bradmcevoy.http.Resource;

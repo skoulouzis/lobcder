@@ -273,7 +273,7 @@ public class LogicalDataTest {
 
 //        System.err.println(">>>>>. NodeExp: " + expResult.getVRL());
 
-        VFSNode result = instance.getVNode();
+        VFSNode result = instance.getVFSNode();
 
 //        System.err.println(">>>>>. NodeResult: " + result.getVRL());
 

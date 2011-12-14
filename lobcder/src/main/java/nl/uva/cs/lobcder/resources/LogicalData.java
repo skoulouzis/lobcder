@@ -13,6 +13,7 @@ import javax.jdo.annotations.Persistent;
 import javax.jdo.annotations.PrimaryKey;
 import nl.uva.vlet.exception.VlException;
 import nl.uva.vlet.vfs.VFSNode;
+import nl.uva.vlet.vfs.VFile;
 
 @PersistenceCapable
 public class LogicalData implements ILogicalData, Serializable {
@@ -134,7 +135,7 @@ public class LogicalData implements ILogicalData, Serializable {
     }
 
     @Override
-    public VFSNode getVNode() throws VlException {
+    public VFSNode getVFSNode() throws VlException {
         StorageSite site = null;
         for (StorageSite s : this.storageSites) {
             if (s != null) {
@@ -168,7 +169,7 @@ public class LogicalData implements ILogicalData, Serializable {
                 site = s;
                 break;
             }
-        }
+        }        
         return site.createVFSFile(getLDRI());
     }
 

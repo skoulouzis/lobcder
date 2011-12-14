@@ -51,7 +51,7 @@ public class WebDataFileResource implements
 
     public WebDataFileResource(IDLCatalogue catalogue, ILogicalData logicalData) {
         this.catalogue = catalogue;
-        this.logicalData = logicalData;   
+        this.logicalData = logicalData;
     }
 
     @Override
@@ -135,11 +135,12 @@ public class WebDataFileResource implements
             VFile vFile;
             if (!logicalData.hasPhysicalData()) {
                 vFile = (VFile) logicalData.createPhysicalData();
+            } else {
+                vFile = (VFile) logicalData.getVFSNode();
             }
-            vFile = (VFile) logicalData.getVNode();
 
             in = vFile.getInputStream();
-
+            
             if (range != null) {
                 debug("sendContent: ranged content: " + vFile.getVRL());
                 PartialGetHelper.writeRange(in, range, out);
@@ -148,14 +149,6 @@ public class WebDataFileResource implements
                 IOUtils.copy(in, out);
             }
             out.flush();
-
-            Metadata meta = logicalData.getMetadata();
-            if (meta == null) {
-                meta = new Metadata();
-            }
-
-            meta.setLength(vFile.getLength());
-            logicalData.setMetadata(meta);
 
         } catch (VlException ex) {
             throw new IOException(ex);
