@@ -6,6 +6,8 @@ package nl.uva.cs.lobcder.resources;
 
 import com.bradmcevoy.common.Path;
 import java.util.Collection;
+import nl.uva.vlet.exception.VlException;
+import nl.uva.vlet.vfs.VFSNode;
 
 /**
  *
@@ -20,4 +22,9 @@ public interface IStorageSite {
     Collection<String> getLogicalPaths();
     
     boolean LDRIHasPhysicalData(Path ldri);
+    
+    VFSNode getVNode(Path path) throws VlException;
+    
+    
+    VFSNode createVFSFile(Path path) throws VlException;
 }

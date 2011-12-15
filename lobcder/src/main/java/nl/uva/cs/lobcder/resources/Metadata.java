@@ -27,7 +27,7 @@ public class Metadata implements Serializable {
     @Persistent
     private Long length;
     @Persistent
-    private ArrayList<String> mimeTypes;
+    private ArrayList<String> contentTypes;
 
     public Long getCreateDate() {
         return this.createDate;
@@ -53,16 +53,16 @@ public class Metadata implements Serializable {
         this.length = length;
     }
 
-    public ArrayList<String> getMimeTypes() {
-        return this.mimeTypes;
+    public ArrayList<String> getContentTypes() {
+        return this.contentTypes;
     }
 
-    public void addMimeType(String mimeType) {
-        if (mimeTypes == null) {
-            mimeTypes = new ArrayList<String>();
+    public void addContentType(String contentType) {
+        if (contentTypes == null) {
+            contentTypes = new ArrayList<String>();
         }
-        if (mimeType != null && !mimeTypes.contains(mimeType)) {
-            this.mimeTypes.add(mimeType);
+        if (contentType != null && !contentTypes.contains(contentType)) {
+            this.contentTypes.add(contentType);
         }
 
     }

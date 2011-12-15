@@ -260,7 +260,7 @@ public class SimpleDRCatalogueTest {
         LogicalData e = new LogicalData(originalPath);
         Metadata meta = new Metadata();
         String type = "text/plain";
-        meta.addMimeType(type);
+        meta.addContentType(type);
         meta.setCreateDate(System.currentTimeMillis());
         meta.setLength(new Long(0));
         e.setMetadata(meta);
@@ -275,9 +275,9 @@ public class SimpleDRCatalogueTest {
 
             assertNotNull(meta);
 
-            assertNotNull(meta.getMimeTypes());
+            assertNotNull(meta.getContentTypes());
 
-            assertEquals(type, meta.getMimeTypes().get(0));
+            assertEquals(type, meta.getContentTypes().get(0));
 
             assertNotNull(meta.getCreateDate());
 

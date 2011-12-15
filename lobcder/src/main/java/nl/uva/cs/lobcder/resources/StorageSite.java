@@ -96,7 +96,8 @@ public class StorageSite implements Serializable, IStorageSite {
         }
     }
 
-    VFSNode getVNode(Path path) throws VlException {
+    @Override
+    public VFSNode getVNode(Path path) throws VlException {
         if (logicalPaths.contains(path.toString())) {
             return vfsClient.openLocation(vrl.append(path.toString()));
         } else {
@@ -104,7 +105,8 @@ public class StorageSite implements Serializable, IStorageSite {
         }
     }
 
-    VFSNode createVFSFile(Path path) throws VlException {
+    @Override
+    public VFSNode createVFSFile(Path path) throws VlException {
         String[] parts = path.getParts();
         if (parts.length > 1) {
             String parent = path.getParent().toString();

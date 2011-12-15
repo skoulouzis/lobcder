@@ -309,12 +309,14 @@ public class SimpleDLCatalogue implements IDLCatalogue {
 
 
         ILogicalData loaded = queryEntry(oldPath);
-        
-        if (loaded == null) {
-            throw new ResourceExistsException ("Rename Entry: cannot rename resource " + oldPath + " resource doesn't exists");
-        }
 
-        removeChild(oldPath.getParent(), oldPath);
+        if (loaded == null) {
+            throw new ResourceExistsException("Rename Entry: cannot rename resource " + oldPath + " resource doesn't exists");
+        }
+        Path parent = oldPath.getParent();
+        if (parent != null) {
+            removeChild(parent, oldPath);
+        }
 
 
         PersistenceManager pm = pmf.getPersistenceManager();

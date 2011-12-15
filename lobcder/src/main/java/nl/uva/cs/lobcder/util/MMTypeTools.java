@@ -14,7 +14,8 @@ import nl.uva.vlet.data.StringUtil;
 
 /**
  *
- * @author S. Koulouzis
+ * Source: http://code.google.com/p/mimeparse/
+ * 
  */
 public class MMTypeTools {
 
@@ -36,7 +37,7 @@ public class MMTypeTools {
 
         FitnessAndQuality lastOne = weightedMatches.get(weightedMatches.size() - 1);
 //        debug("Get back: " + lastOne.quality + " , " + lastOne.mimeType);
-
+        
         if (lastOne.quality != 0) {
             return lastOne.mimeType;
         }
@@ -193,7 +194,7 @@ public class MMTypeTools {
 
         @Override
         public String toString() {
-            StringBuffer s = new StringBuffer("('" + type + "', '" + subType
+            StringBuilder s = new StringBuilder("('" + type + "', '" + subType
                     + "', {");
             for (String k : params.keySet()) {
                 s.append("'" + k + "':'" + params.get(k) + "',");

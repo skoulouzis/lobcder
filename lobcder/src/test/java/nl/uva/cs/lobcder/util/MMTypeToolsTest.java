@@ -15,7 +15,7 @@ import static org.junit.Assert.*;
 
 /**
  *
- * @author skoulouz
+ * @author S. Koulouzis
  */
 public class MMTypeToolsTest {
     
@@ -45,17 +45,17 @@ public class MMTypeToolsTest {
     public void testBestMatch() {
         System.out.println("bestMatch");
         
-        Collection<String> supported = new ArrayList<String>();
-        supported.add("text/html");
-        supported.add("text/*;q=0.9");
-        supported.add("image/jpeg;q=0.9");
-        supported.add("image/png;q=0.9");
-        supported.add("image/*;q=0.9");
-        supported.add("*/*;q=0.8");
+        Collection<String> acceps = new ArrayList<String>();
+        acceps.add("text/html");
+        acceps.add("text/*;q=0.9");
+        acceps.add("image/jpeg;q=0.9");
+        acceps.add("image/png;q=0.9");
+        acceps.add("image/*;q=0.9");
+        acceps.add("*/*;q=0.8");
        
-        String header = "text/plain";
+        String fileContentType = "text/plain";
         String expResult = "text/*;q=0.9";
-        String result = MMTypeTools.bestMatch(supported, header);
+        String result = MMTypeTools.bestMatch(acceps, fileContentType);
         assertEquals(expResult, result);
     }
     

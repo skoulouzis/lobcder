@@ -4,6 +4,7 @@
  */
 package nl.uva.cs.lobcder.webDav.resources;
 
+import com.bradmcevoy.common.ContentTypeUtils;
 import com.bradmcevoy.common.Path;
 import com.bradmcevoy.http.Auth;
 import com.bradmcevoy.http.CollectionResource;
@@ -15,12 +16,9 @@ import com.bradmcevoy.http.exceptions.BadRequestException;
 import com.bradmcevoy.http.exceptions.ConflictException;
 import com.bradmcevoy.http.exceptions.NotAuthorizedException;
 import com.bradmcevoy.http.http11.PartialGetHelper;
-import eu.medsea.mimeutil.MimeType;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.FileNameMap;
-import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -95,18 +93,23 @@ public class WebDataFileResource implements
     @Override
     public String getContentType(String accepts) {
         debug("getContentType. accepts: " + accepts);
-        int comp;
+
         String type;
+
+
 
         if (accepts != null) {
             String[] acceptsTypes = accepts.split(",");
-            Collection<String> supported = new ArrayList<String>();
-            supported.addAll(Arrays.asList(acceptsTypes));
+            Collection<String> acceptsList = new ArrayList<String>();
+            acceptsList.addAll(Arrays.asList(acceptsTypes));
 
             if (logicalData.getMetadata() != null) {
-                ArrayList<String> fileMimeTypes = logicalData.getMetadata().getMimeTypes();
-                for (String fileMimeType : fileMimeTypes) {
-                    type = MMTypeTools.bestMatch(supported, fileMimeType);
+                ArrayList<String> fileContentTypes = logicalData.getMetadata().getContentTypes();
+                for (String fileContentType : fileContentTypes) {
+                    type = MMTypeTools.bestMatch(acceptsList, fileContentType);
+
+//                    return ContentTypeUtils.findAcceptableContentType(type, accepts);
+                    debug("\t type: " + type);
                     if (!StringUtil.isEmpty(type)) {
                         return type;
                     }
@@ -116,6 +119,13 @@ public class WebDataFileResource implements
         return null;
     }
 
+    /**
+     * Specifies a lifetime for the information returned by this header. 
+     * A client MUST discard any information related to this header after the 
+     * specified amount of time.
+     * @param auth
+     * @return 
+     */
     @Override
     public Long getMaxAgeSeconds(Auth auth) {
         return null;
@@ -138,9 +148,12 @@ public class WebDataFileResource implements
             } else {
                 vFile = (VFile) logicalData.getVFSNode();
             }
+            if (vFile == null) {
+                throw new IOException("Could not locate physical data source for " + logicalData.getLDRI());
+            }
 
             in = vFile.getInputStream();
-            
+
             if (range != null) {
                 debug("sendContent: ranged content: " + vFile.getVRL());
                 PartialGetHelper.writeRange(in, range, out);
@@ -148,11 +161,11 @@ public class WebDataFileResource implements
                 debug("sendContent: send whole file " + vFile.getVRL());
                 IOUtils.copy(in, out);
             }
-            out.flush();
 
         } catch (VlException ex) {
             throw new IOException(ex);
         } finally {
+            out.flush();
             if (in != null) {
                 in.close();
             }
@@ -174,11 +187,12 @@ public class WebDataFileResource implements
 //            debug("----------------Have to throw forbidden ");
 //            throw new ForbiddenException(this);
 //        }
-
+        Path dirPath = ((WebDataDirResource) rDest).getPath();
         debug("\t rDestgetUniqueId: " + rDest.getUniqueId());
-        Path newPath = Path.path(Path.path(rDest.getName()), name);
-        if (newPath.isRelative()) {
-            parent = logicalData.getLDRI().getParent();
+
+        Path newPath = Path.path(dirPath, name);
+        parent = logicalData.getLDRI().getParent();
+        if (newPath.isRelative() && parent != null) {
             tmpPath = Path.path(parent, name);
             newPath = tmpPath;
         }
@@ -194,12 +208,12 @@ public class WebDataFileResource implements
     }
 
     @Override
-    public String processForm(Map<String, String> arg0,
-            Map<String, FileItem> arg1) throws BadRequestException,
+    public String processForm(Map<String, String> parameters,
+            Map<String, FileItem> files) throws BadRequestException,
             NotAuthorizedException {
         debug("processForm.");
-        debug("\t arg0: " + arg0);
-        debug("\t arg1: " + arg1);
+        debug("\t arg0: " + parameters);
+        debug("\t arg1: " + files);
         return null;
     }
 
@@ -269,5 +283,9 @@ public class WebDataFileResource implements
             return new Date(logicalData.getMetadata().getCreateDate());
         }
         return null;
+    }
+
+    Path getPath() {
+        return this.logicalData.getLDRI();
     }
 }

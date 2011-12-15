@@ -158,7 +158,7 @@ class WebDataDirResource implements FolderResource, CollectionResource {
 
             Metadata meta = new Metadata();
             meta.setLength(length);
-            meta.addMimeType(contentType);
+            meta.addContentType(contentType);
             meta.setCreateDate(System.currentTimeMillis());
             newResource.setMetadata(meta);
 
@@ -223,7 +223,7 @@ class WebDataDirResource implements FolderResource, CollectionResource {
         if (accepts != null) {
             String[] acceptsTypes = accepts.split(",");
             if (entry.getMetadata() != null) {
-                mimeTypes = entry.getMetadata().getMimeTypes();
+                mimeTypes = entry.getMetadata().getContentTypes();
                 for (String accessType : acceptsTypes) {
                     for (String mimeType : mimeTypes) {
                         if (accessType.equals(mimeType)) {
@@ -317,5 +317,9 @@ class WebDataDirResource implements FolderResource, CollectionResource {
             }
         }
         return children;
+    }
+
+    Path getPath() {
+        return this.entry.getLDRI();
     }
 }
