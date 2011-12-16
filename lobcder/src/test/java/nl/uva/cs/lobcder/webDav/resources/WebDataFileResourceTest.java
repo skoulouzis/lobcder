@@ -4,6 +4,7 @@
  */
 package nl.uva.cs.lobcder.webDav.resources;
 
+import java.io.File;
 import com.bradmcevoy.http.FileItem;
 import java.util.List;
 import java.util.Map;
@@ -97,7 +98,7 @@ public class WebDataFileResourceTest {
                     + "own sheer folly in eating the cattle of the Sun-god "
                     + "Hyperion; so the god prevented them from ever reaching "
                     + "home. Tell me, too, about all these things, O daughter of "
-                    + "Jove, from whatsoever source you may know them. ";
+                    + "Jove, from whatsoever source you may know them.";
 
         } catch (Exception ex) {
             Logger.getLogger(WebDataFileResourceTest.class.getName()).log(Level.SEVERE, null, ex);
@@ -389,24 +390,39 @@ public class WebDataFileResourceTest {
             rDest.delete();
         }
     }
+/**
+     * Test of processForm method, of class WebDataFileResource.
+     */
+    @Test
+    public void testProcessForm() throws Exception {
+        System.out.println("processForm");
+        Map<String, String> params = null;
+        Map<String, FileItem> files = new HashMap<String, FileItem>();
 
-//    /**
-//     * Test of processForm method, of class WebDataFileResource.
-//     */
-//    @Test
-//    public void testProcessForm() throws Exception {
-//        System.out.println("processForm");
-//        Map<String, String> params = null;
-//        Map<String, FileItem> files = new HashMap<String, FileItem>();
-//        FileItem fItem = new FileItemWrapper(null);
-//        files.put(key, fItem);
+        try {
+            VFSNode node = site.createVFSFile(testFilePath);
+            ((VFile) node).setContents(testData);
+            String path = node.getVRL().getPath();
+            
+            System.out.println("Path: "+path);
+            
+            boolean isFormField = false;
+            int sizeThreshold = 1;
+            File repository = new File(System.getProperty("java.io.tmpdir"));
+
+            org.apache.commons.fileupload.FileItem fItem = new org.apache.commons.fileupload.disk.DiskFileItem("fieldName", "text/plain", isFormField, path, sizeThreshold, repository);
+
+
+
+            FileItem fItemW = new FileItemWrapper(fItem);
+            files.put("key", fItemW);
 //        WebDataFileResource instance = new WebDataFileResource(catalogue, testLogicalFile);
 //        String expResult = "";
 //        String result = instance.processForm(params, files);
 //        assertEquals(expResult, result);
-        // TODO review the generated test code and remove the default call to fail.
-//        fail("The test case is a prototype.");
-//    }
+        } finally {
+        }
+    }
 //
 //
 //    /**
