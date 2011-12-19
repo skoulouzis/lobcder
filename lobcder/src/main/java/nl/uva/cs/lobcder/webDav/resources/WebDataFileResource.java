@@ -212,8 +212,16 @@ public class WebDataFileResource implements
             Map<String, FileItem> files) throws BadRequestException,
             NotAuthorizedException {
         debug("processForm.");
-        debug("\t arg0: " + parameters);
-        debug("\t arg1: " + files);
+        debug("\t parameters: " + parameters);
+        debug("\t files: " + files);
+        Collection<FileItem> values = files.values();
+        for(FileItem i:values){
+            debug("\t getContentType: "+i.getContentType());
+            debug("\t getFieldName: "+i.getFieldName());
+            debug("\t getName: "+i.getName());
+            debug("\t getSize: "+i.getSize());
+        }
+        
         return null;
     }
 

@@ -4,8 +4,12 @@
  */
 package nl.uva.cs.lobcder.webDav.resources;
 
+import java.io.OutputStream;
+import java.net.URL;
+import org.apache.commons.httpclient.methods.PostMethod;
 import java.io.File;
 import com.bradmcevoy.http.FileItem;
+import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 import com.bradmcevoy.http.Range;
@@ -20,7 +24,6 @@ import java.util.logging.Logger;
 import nl.uva.cs.lobcder.catalogue.CatalogueException;
 import nl.uva.cs.lobcder.resources.ILogicalData;
 import com.bradmcevoy.common.Path;
-import com.bradmcevoy.http.FileItemWrapper;
 import java.io.ByteArrayInputStream;
 import nl.uva.cs.lobcder.catalogue.SimpleDLCatalogue;
 import java.io.ByteArrayOutputStream;
@@ -32,6 +35,7 @@ import nl.uva.cs.lobcder.resources.Metadata;
 import nl.uva.cs.lobcder.resources.StorageSite;
 import nl.uva.vlet.vfs.VFSNode;
 import nl.uva.vlet.vfs.VFile;
+import org.apache.commons.fileupload.DefaultFileItem;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -390,7 +394,8 @@ public class WebDataFileResourceTest {
             rDest.delete();
         }
     }
-/**
+
+    /**
      * Test of processForm method, of class WebDataFileResource.
      */
     @Test
@@ -400,43 +405,37 @@ public class WebDataFileResourceTest {
         Map<String, FileItem> files = new HashMap<String, FileItem>();
 
         try {
-            VFSNode node = site.createVFSFile(testFilePath);
-            ((VFile) node).setContents(testData);
-            String path = node.getVRL().getPath();
-            
-            System.out.println("Path: "+path);
             
             boolean isFormField = false;
-            int sizeThreshold = 1;
+            int sizeThreshold = -1;
             File repository = new File(System.getProperty("java.io.tmpdir"));
 
-            org.apache.commons.fileupload.FileItem fItem = new org.apache.commons.fileupload.disk.DiskFileItem("fieldName", "text/plain", isFormField, path, sizeThreshold, repository);
-
-
-
-            FileItem fItemW = new FileItemWrapper(fItem);
-            files.put("key", fItemW);
-//        WebDataFileResource instance = new WebDataFileResource(catalogue, testLogicalFile);
-//        String expResult = "";
-//        String result = instance.processForm(params, files);
-//        assertEquals(expResult, result);
+//            org.apache.commons.fileupload.disk.DiskFileItemFactory factory = new DiskFileItemFactory(sizeThreshold, repository);
+//            org.apache.commons.fileupload.FileItem fItem = factory.createItem("fieldName", "text/plain", isFormField, fileName);
+            org.apache.commons.fileupload.disk.DiskFileItem fItem = new org.apache.commons.fileupload.disk.DiskFileItem("fieldName", "text/plain", isFormField, testFileName, sizeThreshold, repository);
+            OutputStream out = fItem.getOutputStream();
+            out.write(testData.getBytes());
+            out.flush();
+            out.close();
+            
+            
+            assertNotNull(fItem);
+            
+            System.out.println("File size: "+fItem.getSize());
+       
         } finally {
         }
     }
-//
-//
 //    /**
 //     * Test of getUniqueId method, of class WebDataFileResource.
 //     */
 //    @Test
 //    public void testGetUniqueId() {
 //        System.out.println("getUniqueId");
-//        WebDataFileResource instance = null;
-//        String expResult = "";
+//        WebDataFileResource instance = new WebDataFileResource(catalogue, testLogicalFile);
+//        String expResult = testLogicalFile.getUID();
 //        String result = instance.getUniqueId();
 //        assertEquals(expResult, result);
-//        // TODO review the generated test code and remove the default call to fail.
-//        fail("The test case is a prototype.");
 //    }
 //
 //    /**

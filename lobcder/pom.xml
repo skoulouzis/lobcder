@@ -16,7 +16,7 @@
 <!--        <webdav.test.url>http://localhost:8080/lobcder-1.0-SNAPSHOT/</webdav.test.url>
         <webdav.test.username>user</webdav.test.username>
         <webdav.test.password>passwd</webdav.test.password>-->
-        <skipTests>false</skipTests>
+        <skipTests>true</skipTests>
     </properties>
 
     <dependencies>
@@ -225,7 +225,13 @@ there are no implementations to enhance
             <version>2.2.8</version>
             <scope>test</scope>
         </dependency>-->
-       
+        <dependency>
+            <groupId>commons-httpclient</groupId>
+            <artifactId>commons-httpclient</artifactId>
+            <version>3.1</version>
+            <scope>test</scope>
+            <type>jar</type>
+        </dependency>
     </dependencies>
     
     <repositories>
