@@ -4,8 +4,11 @@
  */
 package nl.uva.cs.lobcder.webDav.resources;
 
+import java.util.Date;
 import java.io.OutputStream;
 import java.net.URL;
+import java.util.Iterator;
+import org.apache.commons.fileupload.FileItemHeaders;
 import org.apache.commons.httpclient.methods.PostMethod;
 import java.io.File;
 import com.bradmcevoy.http.FileItem;
@@ -24,6 +27,7 @@ import java.util.logging.Logger;
 import nl.uva.cs.lobcder.catalogue.CatalogueException;
 import nl.uva.cs.lobcder.resources.ILogicalData;
 import com.bradmcevoy.common.Path;
+import com.bradmcevoy.http.FileItemWrapper;
 import java.io.ByteArrayInputStream;
 import nl.uva.cs.lobcder.catalogue.SimpleDLCatalogue;
 import java.io.ByteArrayOutputStream;
@@ -401,7 +405,7 @@ public class WebDataFileResourceTest {
     @Test
     public void testProcessForm() throws Exception {
         System.out.println("processForm");
-        Map<String, String> params = null;
+        Map<String, String> params = new HashMap<String, String>();
         Map<String, FileItem> files = new HashMap<String, FileItem>();
 
         try {
@@ -409,48 +413,70 @@ public class WebDataFileResourceTest {
             boolean isFormField = false;
             int sizeThreshold = -1;
             File repository = new File(System.getProperty("java.io.tmpdir"));
-
-//            org.apache.commons.fileupload.disk.DiskFileItemFactory factory = new DiskFileItemFactory(sizeThreshold, repository);
-//            org.apache.commons.fileupload.FileItem fItem = factory.createItem("fieldName", "text/plain", isFormField, fileName);
-            org.apache.commons.fileupload.disk.DiskFileItem fItem = new org.apache.commons.fileupload.disk.DiskFileItem("fieldName", "text/plain", isFormField, testFileName, sizeThreshold, repository);
+            
+            org.apache.commons.fileupload.disk.DiskFileItem fItem = new org.apache.commons.fileupload.disk.DiskFileItem("file", "text/plain", isFormField, testFileName, sizeThreshold, repository);
             OutputStream out = fItem.getOutputStream();
             out.write(testData.getBytes());
             out.flush();
             out.close();
             
+            assertNotNull(fItem);
+            assertEquals(fItem.getSize(), new Long(testData.getBytes().length).longValue());
+            assertEquals(fItem.getContentType(), "text/plain");
+            assertEquals(fItem.getFieldName(), "file");
+            assertEquals(fItem.getString(), testData);
+           
+            FileItemWrapper fIW = new FileItemWrapper(fItem);
+            
+            files.put("file1", fIW);
+            
+            
+            fItem = new org.apache.commons.fileupload.disk.DiskFileItem("file", "text/plain", isFormField, testFileName, sizeThreshold, repository);
+            out = fItem.getOutputStream();
+            out.write(testData.getBytes());
+            out.flush();
+            out.close();
             
             assertNotNull(fItem);
+            assertEquals(fItem.getSize(), new Long(testData.getBytes().length).longValue());
+            assertEquals(fItem.getContentType(), "text/plain");
+            assertEquals(fItem.getFieldName(), "file");
+            assertEquals(fItem.getString(), testData);
+           
+            fIW = new FileItemWrapper(fItem);
             
-            System.out.println("File size: "+fItem.getSize());
+            files.put("file2", fIW);
+            
+            WebDataFileResource instance = new WebDataFileResource(catalogue, testLogicalFile);
+            String processForm = instance.processForm(params, files);
        
         } finally {
         }
     }
-//    /**
-//     * Test of getUniqueId method, of class WebDataFileResource.
-//     */
-//    @Test
-//    public void testGetUniqueId() {
-//        System.out.println("getUniqueId");
-//        WebDataFileResource instance = new WebDataFileResource(catalogue, testLogicalFile);
-//        String expResult = testLogicalFile.getUID();
-//        String result = instance.getUniqueId();
-//        assertEquals(expResult, result);
-//    }
-//
-//    /**
-//     * Test of getName method, of class WebDataFileResource.
-//     */
-//    @Test
-//    public void testGetName() {
-//        System.out.println("getName");
-//        WebDataFileResource instance = null;
-//        String expResult = "";
-//        String result = instance.getName();
-//        assertEquals(expResult, result);
-//        // TODO review the generated test code and remove the default call to fail.
-//        fail("The test case is a prototype.");
-//    }
+    /**
+     * Test of getUniqueId method, of class WebDataFileResource.
+     */
+    @Test
+    public void testGetUniqueId() {
+        System.out.println("getUniqueId");
+        WebDataFileResource instance = new WebDataFileResource(catalogue, testLogicalFile);
+        String expResult = testLogicalFile.getUID();
+        String result = instance.getUniqueId();
+        assertEquals(expResult, result);
+         assertEquals(testLogicalFile.getUID(), result);
+    }
+
+    /**
+     * Test of getName method, of class WebDataFileResource.
+     */
+    @Test
+    public void testGetName() {
+        System.out.println("getName");
+        WebDataFileResource instance = new WebDataFileResource(catalogue, testLogicalFile);
+        String expResult = testLogicalFile.getLDRI().getName();
+        String result = instance.getName();
+        assertEquals(expResult, result);
+    }
 //
 //    /**
 //     * Test of authenticate method, of class WebDataFileResource.
@@ -505,7 +531,7 @@ public class WebDataFileResourceTest {
 //    @Test
 //    public void testGetModifiedDate() {
 //        System.out.println("getModifiedDate");
-//        WebDataFileResource instance = null;
+//        WebDataFileResource instance = new WebDataFileResource(catalogue, testLogicalFile);
 //        Date expResult = null;
 //        Date result = instance.getModifiedDate();
 //        assertEquals(expResult, result);

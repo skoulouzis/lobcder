@@ -60,9 +60,12 @@ public class StorageSiteManagerTest {
         try {
             Collection<StorageSite> result = instance.getAllSites();
             assertNotNull(result);
-            
+
             for (StorageSite s : result) {
-//                System.out.println("Site: " + s.getEndpoint());
+
+                for (String e : endpoints) {
+                    System.out.println("Site: " + s.getEndpoint() + " endpoint: " + e);
+                }
                 assertTrue(endpoints.contains(s.getEndpoint()));
             }
 
@@ -166,7 +169,7 @@ public class StorageSiteManagerTest {
                 + File.separator + "etc" + File.separator;
 
         endpoints = new ArrayList<String>();
-        
+
         for (String name : names) {
             Properties prop = getCloudProperties(propBasePath + name);
             vphUname = prop.getProperty(nl.uva.cs.lobcder.webdav.Constants.Constants.VPH_USERNAME);

@@ -34,6 +34,7 @@ import nl.uva.cs.lobcder.resources.LogicalFile;
 import nl.uva.cs.lobcder.util.MMTypeTools;
 import nl.uva.vlet.data.StringUtil;
 import nl.uva.vlet.exception.VlException;
+import nl.uva.vlet.vfs.VFSNode;
 import nl.uva.vlet.vfs.VFile;
 import org.apache.commons.io.IOUtils;
 
@@ -62,7 +63,6 @@ public class WebDataFileResource implements
             Path newLDRI = Path.path(toCollectionLDRI, name);
 
             LogicalFile newFolderEntry = new LogicalFile(newLDRI);
-
             newFolderEntry.getMetadata().setModifiedDate(System.currentTimeMillis());
             catalogue.registerResourceEntry(newFolderEntry);
         } catch (CatalogueException ex) {
@@ -166,6 +166,7 @@ public class WebDataFileResource implements
             throw new IOException(ex);
         } finally {
             out.flush();
+            out.close();
             if (in != null) {
                 in.close();
             }
@@ -211,17 +212,45 @@ public class WebDataFileResource implements
     public String processForm(Map<String, String> parameters,
             Map<String, FileItem> files) throws BadRequestException,
             NotAuthorizedException {
+
+        //Maybe we can do more smart things here with deltas. So if we update a file send only the diff
         debug("processForm.");
         debug("\t parameters: " + parameters);
         debug("\t files: " + files);
         Collection<FileItem> values = files.values();
-        for(FileItem i:values){
-            debug("\t getContentType: "+i.getContentType());
-            debug("\t getFieldName: "+i.getFieldName());
-            debug("\t getName: "+i.getName());
-            debug("\t getSize: "+i.getSize());
+        VFSNode node;
+        OutputStream out;
+        InputStream in;
+        Metadata meta;
+        try {
+            for (FileItem i : values) {
+
+                debug("\t getContentType: " + i.getContentType());
+                debug("\t getFieldName: " + i.getFieldName());
+                debug("\t getName: " + i.getName());
+                debug("\t getSize: " + i.getSize());
+//                if (!logicalData.hasPhysicalData()) {
+//                    node = logicalData.createPhysicalData();
+//                    out = ((VFile)node).getOutputStream();
+//                    in = i.getInputStream();
+//                    IOUtils.copy(in, out);
+////                     PartialGetHelper.writeRange(in, range, out);
+//                    in.close();
+//                    out.flush();
+//                    out.close();
+//                    meta = logicalData.getMetadata();
+//                    meta.setLength(i.getSize());
+//                    meta.addContentType(i.getContentType());
+//                    meta.setModifiedDate(System.currentTimeMillis());
+//                    logicalData.setMetadata(meta);
+//                    
+//                }else{
+//                    throw new BadRequestException(this);
+//                }
+
+            }
+        } finally {
         }
-        
         return null;
     }
 
