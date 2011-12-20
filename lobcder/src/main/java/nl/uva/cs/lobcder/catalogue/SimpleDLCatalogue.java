@@ -170,7 +170,8 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                 for (LogicalData e : results) {
                     if (comparePaths(e.getLDRI(), logicalResourceName)) {
                         if (e.hasChildren()) {
-                            throw new ResourceExistsException("deleteEntry: cannot remove " + e.getLDRI() + " is a collection containing nodes");
+                                        //webDAV has no problem deleting folders with data 
+//                            throw new ResourceExistsException("deleteEntry: cannot remove " + e.getLDRI() + " is a collection containing nodes");
                         }
                         pm.deletePersistent(e);
                         break;

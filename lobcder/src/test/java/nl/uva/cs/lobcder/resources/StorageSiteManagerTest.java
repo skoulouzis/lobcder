@@ -55,7 +55,7 @@ public class StorageSiteManagerTest {
     public void testGetAllSites() throws Exception {
         System.out.println("testGetAllSites");
         populateStorageSites();
-
+        
         StorageSiteManager instance = new StorageSiteManager();
         try {
             Collection<StorageSite> result = instance.getAllSites();
@@ -164,12 +164,13 @@ public class StorageSiteManagerTest {
     }
 
     private void populateStorageSites() throws FileNotFoundException, IOException, Exception {
+        new StorageSiteManager().clearAllSites();
         String propBasePath = System.getProperty("user.home") + File.separator
                 + "workspace" + File.separator + "lobcder"
                 + File.separator + "etc" + File.separator;
 
         endpoints = new ArrayList<String>();
-
+        
         for (String name : names) {
             Properties prop = getCloudProperties(propBasePath + name);
             vphUname = prop.getProperty(nl.uva.cs.lobcder.webdav.Constants.Constants.VPH_USERNAME);

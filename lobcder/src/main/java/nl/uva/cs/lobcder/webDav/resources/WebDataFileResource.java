@@ -28,9 +28,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import nl.uva.cs.lobcder.catalogue.CatalogueException;
 import nl.uva.cs.lobcder.catalogue.IDLCatalogue;
+import nl.uva.cs.lobcder.catalogue.ResourceExistsException;
 import nl.uva.cs.lobcder.resources.ILogicalData;
 import nl.uva.cs.lobcder.resources.Metadata;
 import nl.uva.cs.lobcder.resources.LogicalFile;
+import nl.uva.cs.lobcder.resources.StorageSiteManager;
 import nl.uva.cs.lobcder.util.MMTypeTools;
 import nl.uva.vlet.data.StringUtil;
 import nl.uva.vlet.exception.VlException;
@@ -48,9 +50,12 @@ public class WebDataFileResource implements
     private final IDLCatalogue catalogue;
     private final ILogicalData logicalData;
 
-    public WebDataFileResource(IDLCatalogue catalogue, ILogicalData logicalData) {
+    public WebDataFileResource(IDLCatalogue catalogue, ILogicalData logicalData) throws CatalogueException {
         this.catalogue = catalogue;
         this.logicalData = logicalData;
+//        if (!catalogue.resourceEntryExists(logicalData)) {
+//            catalogue.registerResourceEntry(logicalData);
+//        }
     }
 
     @Override

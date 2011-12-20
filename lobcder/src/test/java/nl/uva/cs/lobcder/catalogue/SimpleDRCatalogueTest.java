@@ -78,7 +78,6 @@ public class SimpleDRCatalogueTest {
 
         instance.unregisterResourceEntry(entry);
         ILogicalData result = instance.getResourceEntryByLDRI(path);
-
         assertNull(result);
     }
 
