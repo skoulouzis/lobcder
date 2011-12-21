@@ -58,15 +58,15 @@ public class WebDataResourceFactory implements ResourceFactory {
                 debug("Didn't find " + ldri + ". returning null");
                 return null;
             }
+            
+            sites = (ArrayList<StorageSite>) siteManager.getSitesByLPath(entry.getLDRI());
+            entry.setStorageSites(sites);
             if (entry instanceof LogicalFolder) {
                 return new WebDataDirResource(catalogue, entry);
             }
             if (entry instanceof LogicalFile) {
-                sites = (ArrayList<StorageSite>) siteManager.getSitesByLPath(entry.getLDRI());
-                entry.setStorageSites(sites);
                 return new WebDataFileResource(catalogue, entry);
             }
-
             return new WebDataResource(catalogue, entry);
         } catch (Exception ex) {
             java.util.logging.Logger.getLogger(WebDataResourceFactory.class.getName()).log(Level.SEVERE, null, ex);
@@ -81,7 +81,7 @@ public class WebDataResourceFactory implements ResourceFactory {
         }
     }
 
-    private void initStorageSites() throws  Exception {
+    private void initStorageSites() throws Exception {
         siteManager = new StorageSiteManager();
         String[] names = new String[]{"storage2.prop", "storage3.prop"};
 

@@ -4,7 +4,6 @@
  */
 package nl.uva.cs.lobcder.webDav.resources;
 
-import com.bradmcevoy.common.ContentTypeUtils;
 import com.bradmcevoy.common.Path;
 import com.bradmcevoy.http.Auth;
 import com.bradmcevoy.http.CollectionResource;
@@ -28,11 +27,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import nl.uva.cs.lobcder.catalogue.CatalogueException;
 import nl.uva.cs.lobcder.catalogue.IDLCatalogue;
-import nl.uva.cs.lobcder.catalogue.ResourceExistsException;
 import nl.uva.cs.lobcder.resources.ILogicalData;
 import nl.uva.cs.lobcder.resources.Metadata;
 import nl.uva.cs.lobcder.resources.LogicalFile;
-import nl.uva.cs.lobcder.resources.StorageSiteManager;
 import nl.uva.cs.lobcder.util.MMTypeTools;
 import nl.uva.vlet.data.StringUtil;
 import nl.uva.vlet.exception.VlException;
@@ -141,11 +138,12 @@ public class WebDataFileResource implements
             Map<String, String> params, String contentType) throws IOException,
             NotAuthorizedException, BadRequestException {
         InputStream in = null;
+        debug("sendContent.");
+        debug("\t range: " + range);
+        debug("\t params: " + params);
+        debug("\t contentType: " + contentType);
+
         try {
-            debug("sendContent.");
-            debug("\t range: " + range);
-            debug("\t params: " + params);
-            debug("\t contentType: " + contentType);
 
             VFile vFile;
             if (!logicalData.hasPhysicalData()) {
@@ -163,7 +161,7 @@ public class WebDataFileResource implements
                 debug("sendContent: ranged content: " + vFile.getVRL());
                 PartialGetHelper.writeRange(in, range, out);
             } else {
-                debug("sendContent: send whole file " + vFile.getVRL());
+                debug("sendContent: send whole file to " + vFile.getVRL());
                 IOUtils.copy(in, out);
             }
 

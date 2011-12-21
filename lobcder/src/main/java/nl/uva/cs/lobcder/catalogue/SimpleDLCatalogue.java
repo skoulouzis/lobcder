@@ -41,8 +41,6 @@ public class SimpleDLCatalogue implements IDLCatalogue {
             addChild(parentPath, entry.getLDRI());
         }
         persistEntry(entry);
-
-        return;
     }
 
     @Override
@@ -101,7 +99,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
     private ILogicalData queryEntry(Path logicalResourceName) {
         PersistenceManager pm = pmf.getPersistenceManager();
         Transaction tx = pm.currentTransaction();
-        Collection<LogicalData> results;
+        Collection<LogicalData> results = null;
         ILogicalData entry = null;
 
         try {
@@ -116,7 +114,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
             //and the parameter itself
             q.declareParameters("Path logicalResourceName");
             results = (Collection<LogicalData>) q.execute(logicalResourceName);
-            if (!results.isEmpty()) {
+            if (results != null && !results.isEmpty()) {
 //                debug("queryEntry. Num of res: " + results.size());
 
                 //TODO fix query 
@@ -169,10 +167,10 @@ public class SimpleDLCatalogue implements IDLCatalogue {
             if (!results.isEmpty()) {
                 for (LogicalData e : results) {
                     if (comparePaths(e.getLDRI(), logicalResourceName)) {
-                        if (e.hasChildren()) {
-                                        //webDAV has no problem deleting folders with data 
+//                        if (e.hasChildren()) {
+                        //webDAV has no problem deleting folders with data 
 //                            throw new ResourceExistsException("deleteEntry: cannot remove " + e.getLDRI() + " is a collection containing nodes");
-                        }
+//                        }
                         pm.deletePersistent(e);
                         break;
                     }

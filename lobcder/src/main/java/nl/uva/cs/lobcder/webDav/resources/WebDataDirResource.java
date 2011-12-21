@@ -31,6 +31,9 @@ import nl.uva.cs.lobcder.resources.ILogicalData;
 import nl.uva.cs.lobcder.resources.LogicalFile;
 import nl.uva.cs.lobcder.resources.LogicalFolder;
 import nl.uva.cs.lobcder.resources.Metadata;
+import nl.uva.vlet.vfs.VFSNode;
+import nl.uva.vlet.vfs.VFile;
+import org.apache.commons.io.IOUtils;
 
 /**
  *
@@ -149,30 +152,47 @@ class WebDataDirResource implements FolderResource, CollectionResource {
 
     @Override
     public Resource createNew(String newName, InputStream inputStream, Long length, String contentType) throws IOException, ConflictException, NotAuthorizedException, BadRequestException {
+        OutputStream out = null;
+        VFSNode node;
         try {
             debug("createNew.");
             debug("\t newName: " + newName);
             debug("\t length: " + length);
             debug("\t contentType: " + contentType);
+
             LogicalFile newResource = new LogicalFile(Path.path(entry.getLDRI(), newName));
+
+            newResource.setStorageSites(entry.getStorageSites());
+            if (!newResource.hasPhysicalData()) {
+                node = newResource.createPhysicalData();
+            } else {
+                node = newResource.getVFSNode();
+            }
+
+            out = ((VFile) node).getOutputStream();
+            IOUtils.copy(inputStream, out);
 
             Metadata meta = new Metadata();
             meta.setLength(length);
             meta.addContentType(contentType);
             meta.setCreateDate(System.currentTimeMillis());
             newResource.setMetadata(meta);
-
-            catalogue.registerResourceEntry(newResource);
-            ILogicalData relodedResource = catalogue.getResourceEntryByLDRI(newResource.getLDRI());
-            WebDataFileResource file = new WebDataFileResource(catalogue, relodedResource);
             
+            catalogue.registerResourceEntry(newResource);
+            
+            ILogicalData relodedResource = catalogue.getResourceEntryByLDRI(newResource.getLDRI());
+            
+            WebDataFileResource file = new WebDataFileResource(catalogue, relodedResource);
+
             debug("returning createNew. " + file.getName());
             return file;
         } catch (Exception ex) {
-            Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, ex);
+            throw new IOException(ex);
+        } finally {
+            inputStream.close();
+            out.flush();
+            out.close();
         }
-        debug("returning createNew. null");
-        return null;
     }
 
     @Override

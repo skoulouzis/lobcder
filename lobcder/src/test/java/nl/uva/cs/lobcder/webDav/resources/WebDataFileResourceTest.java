@@ -118,7 +118,7 @@ public class WebDataFileResourceTest {
         WebDataDirResource collectionResource = null;
         WebDataFileResource webDAVFile = null;
         ILogicalData chLData = null;
-//        LogicalFolder testLogicalFolder = null;
+        ILogicalData load;
         try {
             String testColl = "testCopyToColl";
             Path testCollPath = Path.path(testColl);
@@ -153,12 +153,15 @@ public class WebDataFileResourceTest {
 //            ex.printStackTrace();
         } finally {
             try {
-                webDAVFile.delete();
-
-                catalogue.unregisterResourceEntry(chLData);
-                catalogue.unregisterResourceEntry(testLogicalFolder);
-
                 collectionResource.delete();
+
+                load = catalogue.getResourceEntryByLDRI(testLogicalFolder.getLDRI());
+                assertNull(load);
+
+                load = catalogue.getResourceEntryByLDRI(testLogicalFile.getLDRI());
+                assertNull(load);
+
+                new StorageSiteManager().clearAllSites();
 
             } catch (CatalogueException ex) {
                 Logger.getLogger(WebDataFileResourceTest.class.getName()).log(Level.SEVERE, null, ex);
@@ -211,23 +214,25 @@ public class WebDataFileResourceTest {
         ILogicalData load;
         try {
 
-            testLogicalFile.setStorageSites(sites);
+//            testLogicalFile.setStorageSites(sites);
 //            catalogue.registerResourceEntry(testLogicalFile);
 
-            ArrayList<StorageSite> theSites = testLogicalFile.getStorageSites();
+//            ArrayList<StorageSite> theSites = testLogicalFile.getStorageSites();
+//            assertNotNull(theSites);
+//            assertFalse(theSites.isEmpty());
 
-            assertNotNull(theSites);
-            assertFalse(theSites.isEmpty());
+            sites.add(site);
+            testLogicalFolder.setStorageSites(sites);
+            catalogue.registerResourceEntry(testLogicalFolder);
+            
+            //If we don't reload the logical file, metadata and storage sites are set to null
+            ILogicalData loadedLFolder = catalogue.getResourceEntryByLDRI(testLogicalFolder.getLDRI());
 
-
+            
+            coll = new WebDataDirResource(catalogue, loadedLFolder);
 
             ByteArrayInputStream bais = new ByteArrayInputStream(testData.getBytes());
-
-
-            catalogue.registerResourceEntry(testLogicalFolder);
-            coll = new WebDataDirResource(catalogue, testLogicalFolder);
             instance = (WebDataFileResource) coll.createNew(testFileName, bais, new Long(testData.getBytes().length), "text/plain");
-
 
             Long result = instance.getContentLength();
 
@@ -246,14 +251,16 @@ public class WebDataFileResourceTest {
             fail(ex.getMessage());
         } finally {
             try {
-                instance.delete();
                 coll.delete();
 
                 load = catalogue.getResourceEntryByLDRI(testLogicalFile.getLDRI());
-
                 assertNull(load);
+
+                load = catalogue.getResourceEntryByLDRI(testLogicalFolder.getLDRI());
+                assertNull(load);
+
                 new StorageSiteManager().clearAllSites();
-                
+
             } catch (CatalogueException ex) {
                 Logger.getLogger(WebDataFileResourceTest.class.getName()).log(Level.SEVERE, null, ex);
             } catch (NotAuthorizedException ex) {
@@ -304,6 +311,8 @@ public class WebDataFileResourceTest {
 //                catalogue.unregisterResourceEntry(testLogicalFile);
                 load = catalogue.getResourceEntryByLDRI(testLogicalFile.getLDRI());
                 assertNull(load);
+
+                new StorageSiteManager().clearAllSites();
             } catch (NotAuthorizedException ex) {
                 Logger.getLogger(WebDataFileResourceTest.class.getName()).log(Level.SEVERE, null, ex);
             } catch (ConflictException ex) {
@@ -337,42 +346,42 @@ public class WebDataFileResourceTest {
     @Test
     public void testSendContent() throws Exception {
         System.out.println("sendContent");
-//        ByteArrayOutputStream out = null;
-//        Range range = null;
-//        Map<String, String> params = null;
-//        String contentType = "text/plain";
-//        WebDataFileResource instance = null;
-//        try {
-//            VFSNode node = site.createVFSFile(testFilePath);
-//            ((VFile) node).setContents(testData);
-//
-//            sites.add(site);
-//            testLogicalFile.setStorageSites(sites);
-//            catalogue.registerResourceEntry(testLogicalFile);
-//            //If we don't reload the logical file, metadata and storage sites are set to null
-//            ILogicalData loadedLFile = catalogue.getResourceEntryByLDRI(testFilePath);
-//
-//            out = new ByteArrayOutputStream();
-//
-//            instance = new WebDataFileResource(catalogue, loadedLFile);
-//            instance.sendContent(out, range, params, contentType);
-//            String result = new String(out.toByteArray());
-//            assertEquals(testData, result);
-//
-//
-//            out.reset();
-//            range = new Range(0, 50);
-//            instance.sendContent(out, range, params, contentType);
-//            result = new String(out.toByteArray());
-//            assertEquals(testData.subSequence(0, 50), result);
-//
-//        } finally {
-//            instance.delete();
-//            ILogicalData load = catalogue.getResourceEntryByLDRI(testLogicalFile.getLDRI());
-//            assertNull(load);
-//
-//            new StorageSiteManager().clearAllSites();
-//        }
+        ByteArrayOutputStream out = null;
+        Range range = null;
+        Map<String, String> params = null;
+        String contentType = "text/plain";
+        WebDataFileResource instance = null;
+        try {
+            VFSNode node = site.createVFSFile(testFilePath);
+            ((VFile) node).setContents(testData);
+
+            sites.add(site);
+            testLogicalFile.setStorageSites(sites);
+            catalogue.registerResourceEntry(testLogicalFile);
+            //If we don't reload the logical file, metadata and storage sites are set to null
+            ILogicalData loadedLFile = catalogue.getResourceEntryByLDRI(testFilePath);
+
+            out = new ByteArrayOutputStream();
+
+            instance = new WebDataFileResource(catalogue, loadedLFile);
+            instance.sendContent(out, range, params, contentType);
+            String result = new String(out.toByteArray());
+            assertEquals(testData, result);
+
+
+            out.reset();
+            range = new Range(0, 50);
+            instance.sendContent(out, range, params, contentType);
+            result = new String(out.toByteArray());
+            assertEquals(testData.subSequence(0, 50), result);
+
+        } finally {
+            instance.delete();
+            ILogicalData load = catalogue.getResourceEntryByLDRI(testLogicalFile.getLDRI());
+            assertNull(load);
+
+            new StorageSiteManager().clearAllSites();
+        }
     }
 
     /**
