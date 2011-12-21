@@ -10,58 +10,28 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 import java.util.Properties;
-import org.apache.commons.httpclient.HttpMethod;
-import org.apache.commons.httpclient.params.HttpMethodParams;
-import org.apache.jackrabbit.webdav.property.DavPropertyName;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
-import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.methods.HeadMethod;
 import org.apache.commons.httpclient.methods.PutMethod;
 import org.apache.commons.httpclient.methods.StringRequestEntity;
-import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.MultiStatus;
 import org.apache.jackrabbit.webdav.MultiStatusResponse;
 import org.apache.jackrabbit.webdav.bind.BindConstants;
-import org.apache.jackrabbit.webdav.bind.BindInfo;
-import org.apache.jackrabbit.webdav.bind.ParentElement;
-import org.apache.jackrabbit.webdav.bind.RebindInfo;
-import org.apache.jackrabbit.webdav.bind.UnbindInfo;
-import org.apache.jackrabbit.webdav.client.methods.BindMethod;
-import org.apache.jackrabbit.webdav.client.methods.DavMethodBase;
 import org.apache.jackrabbit.webdav.client.methods.MkColMethod;
-import org.apache.jackrabbit.webdav.client.methods.MoveMethod;
-import org.apache.jackrabbit.webdav.client.methods.OptionsMethod;
 import org.apache.jackrabbit.webdav.client.methods.PropFindMethod;
-import org.apache.jackrabbit.webdav.client.methods.RebindMethod;
-import org.apache.jackrabbit.webdav.client.methods.UnbindMethod;
-import org.apache.jackrabbit.webdav.client.methods.VersionControlMethod;
 import org.apache.jackrabbit.webdav.property.DavProperty;
 import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.client.methods.DeleteMethod;
-import org.apache.jackrabbit.webdav.client.methods.LockMethod;
-import org.apache.jackrabbit.webdav.lock.LockInfo;
-import org.apache.jackrabbit.webdav.lock.Scope;
-import org.apache.jackrabbit.webdav.lock.Type;
-import org.apache.jackrabbit.webdav.property.DavPropertySet;
-import org.apache.jackrabbit.webdav.version.DeltaVConstants;
-import org.slf4j.impl.StaticLoggerBinder;
-import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
@@ -125,7 +95,6 @@ public class WebDAVTest {
 //        //Just get something back 
 //        assertTrue("GetMethod status: " + status, status == 404 || status == 200);
 //    }
-
 //    // http://greenbytes.de/tech/webdav/rfc5842.html#rfc.section.8.1
 //    @Test
 //    public void testOptions() throws HttpException, IOException {
@@ -157,7 +126,6 @@ public class WebDAVTest {
 //        assertTrue("Allow header should include HEAD method", allow.contains("HEAD"));
 //    }
     // create test resource, make it referenceable, check resource id, move resource, check again
-
 //    @Test
 //    public void testResourceId() throws HttpException, IOException, DavException, URISyntaxException {
 //        String testcol = this.root + "testResourceId/";
@@ -193,7 +161,6 @@ public class WebDAVTest {
 //            assertTrue("DeleteMethod status: " + status, status == 200 || status == 204);
 //        }
 //    }
-
     @Test
     public void testSimpleBind() throws Exception {
         String testcol = this.root + "testSimpleBind/";
@@ -206,11 +173,11 @@ public class WebDAVTest {
             MkColMethod mkcol = new MkColMethod(testcol);
             status = this.client.executeMethod(mkcol);
             assertEquals(201, status);
-            
+
             mkcol = new MkColMethod(subcol1);
             status = this.client.executeMethod(mkcol);
             assertEquals(201, status);
-            
+
             mkcol = new MkColMethod(subcol2);
             status = this.client.executeMethod(mkcol);
             assertEquals(201, status);
@@ -230,9 +197,9 @@ public class WebDAVTest {
 //            assertEquals(this.getResourceId(testres1), this.getResourceId(testres2));
 
             //compare representations retrieved with both paths
-            GetMethod get = new GetMethod(testres1);
-            status = this.client.executeMethod(get);
-            assertEquals(200, status);
+//            GetMethod get = new GetMethod(testres1);
+//            status = this.client.executeMethod(get);
+//            assertEquals(200, status);
 //            assertEquals("foo", get.getResponseBodyAsString());
 
             //Doesn't work cause we don't have bind
@@ -248,21 +215,21 @@ public class WebDAVTest {
 //            assertTrue("status: " + status, status == 200 || status == 204);
 //
 ////            //compare representations retrieved with both paths
-            get = new GetMethod(testres1);
-            status = this.client.executeMethod(get);
-            assertEquals(200, status);
-            assertEquals("bar", get.getResponseBodyAsString());
-            get = new GetMethod(testres2);
-            status = this.client.executeMethod(get);
-            assertEquals(200, status);
-            assertEquals("bar", get.getResponseBodyAsString());
+//            get = new GetMethod(testres1);
+//            status = this.client.executeMethod(get);
+//            assertEquals(200, status);
+//            assertEquals("bar", get.getResponseBodyAsString());
+//            get = new GetMethod(testres2);
+//            status = this.client.executeMethod(get);
+//            assertEquals(200, status);
+//            assertEquals("bar", get.getResponseBodyAsString());
         } finally {
 //            DeleteMethod delete = new DeleteMethod(testcol);
 //            status = this.client.executeMethod(delete);
 //            assertTrue("status: " + status, status == 200 || status == 204);
         }
     }
-    
+
     //No rebind yet
 //    @Test
 //    public void testRebind() throws Exception {
@@ -846,10 +813,8 @@ public class WebDAVTest {
 //            assertTrue("status: " + status, status == 200 || status == 204 || status == 404);
 //        }
 //    }
-    
-       // utility methods
+    // utility methods
     // see http://greenbytes.de/tech/webdav/rfc5842.html#rfc.section.3.1
-
     private URI getResourceId(String uri) throws IOException, DavException, URISyntaxException {
         DavPropertyNameSet names = new DavPropertyNameSet();
         names.add(BindConstants.RESOURCEID);
@@ -888,8 +853,7 @@ public class WebDAVTest {
         assertNotNull(parentset);
         return parentset;
     }
-    
-    
+
     private static Properties getTestProperties(String propPath)
             throws FileNotFoundException, IOException {
         Properties properties = new Properties();
