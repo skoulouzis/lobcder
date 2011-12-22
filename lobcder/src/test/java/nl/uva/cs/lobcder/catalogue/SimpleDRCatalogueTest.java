@@ -53,32 +53,35 @@ public class SimpleDRCatalogueTest {
     public void testRegisterResourceEntry() throws Exception {
         System.out.println("registerResourceEntry");
         //Register one resource
-        String ldri = "/resource1";
+        String ldri = "resource1";
         Path path = Path.path(ldri);
         ILogicalData entry = new LogicalData(path);
 
         SimpleDLCatalogue instance = new SimpleDLCatalogue();
         try {
             instance.registerResourceEntry(entry);
-            System.out.println("entry:          " + entry.getLDRI());
+//            System.out.println("entry:          " + entry.getLDRI());
+
+
+            ILogicalData loadedEntry = instance.getResourceEntryByLDRI(path);
+            assertNotNull(loadedEntry);
+
+            boolean theSame = compareEntries(entry, loadedEntry);
+
+            assertTrue(theSame);
+
+
         } catch (Exception ex) {
             if (!ex.getMessage().equals("registerResourceEntry: cannot register resource " + ldri + " resource exists")) {
                 fail(ex.getMessage());
             } else {
                 ex.printStackTrace();
             }
+        } finally {
+            instance.unregisterResourceEntry(entry);
+            ILogicalData result = instance.getResourceEntryByLDRI(path);
+            assertNull(result);
         }
-
-        ILogicalData loadedEntry = instance.getResourceEntryByLDRI(path);
-        assertNotNull(loadedEntry);
-
-        boolean theSame = compareEntries(entry, loadedEntry);
-
-        assertTrue(theSame);
-
-        instance.unregisterResourceEntry(entry);
-        ILogicalData result = instance.getResourceEntryByLDRI(path);
-        assertNull(result);
     }
 
     @Test
@@ -357,18 +360,19 @@ public class SimpleDRCatalogueTest {
             fail("Exception: " + ex.getMessage());
         } finally {
             try {
-               if(lChild!=null)
-                    new SimpleDLCatalogue().unregisterResourceEntry(lChild);       
-                if(lParent!=null)
+                if (lChild != null) {
+                    new SimpleDLCatalogue().unregisterResourceEntry(lChild);
+                }
+                if (lParent != null) {
                     new SimpleDLCatalogue().unregisterResourceEntry(lParent);
+                }
             } catch (Exception ex) {
                 fail("Exception: " + ex.getMessage());
             }
         }
     }
-    
-    
-        @Test
+
+    @Test
     public void testRegisterWithStorageSite() {
         System.out.println("testRegisterWithStorageSite");
         SimpleDLCatalogue instance = null;
@@ -383,16 +387,16 @@ public class SimpleDRCatalogueTest {
             sites.add(new StorageSite("file:///tmp", new Credential("user1")));
             lParent.setStorageSites(sites);
             ArrayList<StorageSite> theSites = lParent.getStorageSites();
-            
+
             assertNotNull(theSites);
             assertFalse(theSites.isEmpty());
-            
+
             //When registering the rentry, the storage site is set to null
             instance.registerResourceEntry(lParent);
             lParent = instance.getResourceEntryByLDRI(parentPath);
-                    
+
             theSites = lParent.getStorageSites();
-            
+
             assertNotNull(theSites);
             assertFalse(theSites.isEmpty());
 
@@ -400,8 +404,9 @@ public class SimpleDRCatalogueTest {
             fail("Exception: " + ex.getMessage());
         } finally {
             try {
-                if(lParent!=null)
+                if (lParent != null) {
                     new SimpleDLCatalogue().unregisterResourceEntry(lParent);
+                }
             } catch (Exception ex) {
                 fail("Exception: " + ex.getMessage());
             }
