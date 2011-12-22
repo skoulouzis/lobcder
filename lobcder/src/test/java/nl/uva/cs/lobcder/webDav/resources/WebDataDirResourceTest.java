@@ -98,22 +98,22 @@ public class WebDataDirResourceTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of createCollection method, of class WebDataDirResource.
-     */
-    @Test
-    public void testCreateCollection() throws Exception {
-        System.out.println("createCollection");
-        String newName = "";
-        
-        catalogue.registerResourceEntry(testLogicalFolder);
-        WebDataDirResource instance = new WebDataDirResource(catalogue, testLogicalFolder);
-        
-        CollectionResource expResult = null;
-        CollectionResource result = instance.createCollection(newName);
-//        assertEquals(expResult, result);
-        
-    }
+//    /**
+//     * Test of createCollection method, of class WebDataDirResource.
+//     */
+//    @Test
+//    public void testCreateCollection() throws Exception {
+//        System.out.println("createCollection");
+//        String newName = "";
+//        
+//        catalogue.registerResourceEntry(testLogicalFolder);
+//        WebDataDirResource instance = new WebDataDirResource(catalogue, testLogicalFolder);
+//        
+//        CollectionResource expResult = null;
+//        CollectionResource result = instance.createCollection(newName);
+////        assertEquals(expResult, result);
+//        
+//    }
 
 //    /**
 //     * Test of child method, of class WebDataDirResource.

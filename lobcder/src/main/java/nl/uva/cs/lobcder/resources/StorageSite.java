@@ -113,8 +113,9 @@ public class StorageSite implements Serializable, IStorageSite {
             debug("mkdirs: " + vrl.append(parent));
             vfsClient.mkdirs(vrl.append(parent));
         }
-
-        VFile node = vfsClient.createFile(vrl.append(path.toString()), true);
+        
+        VRL newVRL = vrl.append(path.toString());        
+        VFile node = vfsClient.createFile(newVRL, true);
         logicalPaths.add(path.toString());
         return node;
     }
