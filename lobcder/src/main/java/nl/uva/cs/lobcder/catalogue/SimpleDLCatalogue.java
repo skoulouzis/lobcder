@@ -18,6 +18,8 @@ import javax.jdo.Query;
 import javax.jdo.Transaction;
 import nl.uva.cs.lobcder.resources.LogicalData;
 import nl.uva.cs.lobcder.resources.ILogicalData;
+import nl.uva.cs.lobcder.resources.StorageSite;
+import nl.uva.cs.lobcder.resources.StorageSiteManager;
 
 public class SimpleDLCatalogue implements IDLCatalogue {
 
@@ -55,6 +57,11 @@ public class SimpleDLCatalogue implements IDLCatalogue {
 //    }
     @Override
     public void unregisterResourceEntry(ILogicalData entry) throws CatalogueException {
+        ArrayList<StorageSite> sites = entry.getStorageSites();
+        if (sites != null && sites.isEmpty()) {
+            StorageSiteManager sm = new StorageSiteManager();
+            sm.deleteStorgaeSites(entry.getStorageSites());
+        }
         deleteEntry(entry.getLDRI());
     }
 

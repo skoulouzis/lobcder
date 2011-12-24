@@ -30,6 +30,8 @@ import nl.uva.cs.lobcder.catalogue.IDLCatalogue;
 import nl.uva.cs.lobcder.resources.ILogicalData;
 import nl.uva.cs.lobcder.resources.Metadata;
 import nl.uva.cs.lobcder.resources.LogicalFile;
+import nl.uva.cs.lobcder.resources.StorageSite;
+import nl.uva.cs.lobcder.resources.StorageSiteManager;
 import nl.uva.cs.lobcder.util.MMTypeTools;
 import nl.uva.vlet.data.StringUtil;
 import nl.uva.vlet.exception.VlException;
@@ -77,6 +79,10 @@ public class WebDataFileResource implements
     @Override
     public void delete() throws NotAuthorizedException, ConflictException, BadRequestException {
         try {
+            ArrayList<StorageSite> sites = logicalData.getStorageSites();
+            if (sites != null && !sites.isEmpty()) {
+                new StorageSiteManager().deleteStorgaeSites(sites);
+            }
             catalogue.unregisterResourceEntry(logicalData);
         } catch (CatalogueException ex) {
             throw new BadRequestException(this);

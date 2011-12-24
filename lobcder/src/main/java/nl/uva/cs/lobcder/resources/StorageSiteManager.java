@@ -65,6 +65,8 @@ public class StorageSiteManager {
         cred.setStorageSitePassword(prop.getProperty(Constants.STORAGE_SITE_PASSWORD));
         String endpoint = prop.getProperty(Constants.STORAGE_SITE_ENDPOINT);
 
+        debug("Adding endpoint: " + endpoint);
+
         StorageSite site = new StorageSite(endpoint, cred);
 
         PersistenceManager pm = pmf.getPersistenceManager();
@@ -93,19 +95,19 @@ public class StorageSiteManager {
         Transaction tx = pm.currentTransaction();
         Collection<StorageSite> results;
         ArrayList<StorageSite> resultsWithPaths = new ArrayList<StorageSite>();
-        
-        
+
+
         try {
             tx.begin();
             //This query, will return objects of type DataResourceEntry
             Query q = pm.newQuery(StorageSite.class);
-            
+
             //restrict to instances which have the field ldri equal to some logicalResourceName
 //            q.setFilter("logicalPaths.contains(lDRI.getName())");
             results = (Collection<StorageSite>) q.execute(lDRI.getName());
             if (!results.isEmpty()) {
                 for (StorageSite s : results) {
-                    if(s.getLogicalPaths().contains(lDRI.getName())){
+                    if (s.getLogicalPaths().contains(lDRI.getName())) {
                         resultsWithPaths.add(s);
                     }
                     debug("getSites. endpoint: " + s.getEndpoint());
@@ -155,7 +157,7 @@ public class StorageSiteManager {
         }
     }
 
-    Collection<StorageSite> getAllSites() {
+    public Collection<StorageSite> getAllSites() {
         //Next the node 
         PersistenceManager pm = pmf.getPersistenceManager();
         Transaction tx = pm.currentTransaction();
@@ -184,8 +186,42 @@ public class StorageSiteManager {
         try {
             tx.begin();
             Query q = pm.newQuery(StorageSite.class);
-            Collection<LogicalData> results = (Collection<LogicalData>) q.execute();
+            Collection<StorageSite> results = (Collection<StorageSite>) q.execute();
             pm.deletePersistentAll(results);
+            tx.commit();
+
+        } finally {
+            if (tx.isActive()) {
+                tx.rollback();
+            }
+            pm.close();
+        }
+    }
+
+    public void deleteStorgaeSites(Collection<StorageSite> storageSites) {
+        for (StorageSite s : storageSites) {
+            deleteStorageSite(s);
+        }
+    }
+
+    private void deleteStorageSite(StorageSite s) {
+//        debug("delete Endpint:  >>>>>>>>>>>>"+s.getEndpoint());
+        PersistenceManager pm = pmf.getPersistenceManager();
+        Transaction tx = pm.currentTransaction();
+        try {
+            tx.begin();
+
+            Query q = pm.newQuery(StorageSite.class);
+            q.setFilter("endpoint == s.getEndpoint");
+            Collection<StorageSite> results = (Collection<StorageSite>) q.execute(s);
+            if (!results.isEmpty()) {
+                for (StorageSite e : results) {
+                    if(e.getEndpoint().equals(s.getEndpoint()))
+                    pm.deletePersistent(e);
+//                    debug("Endpint:  >>>>>>>>>>>>"+e.getEndpoint());
+                }
+            }
+//            debug("Endpint:  >>>>>>>>>>>>");
             tx.commit();
 
         } finally {

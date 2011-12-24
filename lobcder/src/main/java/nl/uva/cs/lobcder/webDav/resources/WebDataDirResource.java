@@ -31,6 +31,8 @@ import nl.uva.cs.lobcder.resources.ILogicalData;
 import nl.uva.cs.lobcder.resources.LogicalFile;
 import nl.uva.cs.lobcder.resources.LogicalFolder;
 import nl.uva.cs.lobcder.resources.Metadata;
+import nl.uva.cs.lobcder.resources.StorageSite;
+import nl.uva.cs.lobcder.resources.StorageSiteManager;
 import nl.uva.vlet.vfs.VFSNode;
 import nl.uva.vlet.vfs.VFile;
 import org.apache.commons.io.IOUtils;
@@ -161,7 +163,7 @@ class WebDataDirResource implements FolderResource, CollectionResource {
             debug("\t contentType: " + contentType);
 
             LogicalFile newResource = new LogicalFile(Path.path(entry.getLDRI(), newName));
-
+            
             newResource.setStorageSites(entry.getStorageSites());
             if (!newResource.hasPhysicalData()) {
                 node = newResource.createPhysicalData();
@@ -219,6 +221,10 @@ class WebDataDirResource implements FolderResource, CollectionResource {
     public void delete() throws NotAuthorizedException, ConflictException, BadRequestException {
         try {
             debug("delete.");
+            ArrayList<StorageSite> sites = entry.getStorageSites();
+            if(sites !=null && !sites.isEmpty()){
+                new StorageSiteManager().deleteStorgaeSites(sites);
+            }
             catalogue.unregisterResourceEntry(entry);
         } catch (CatalogueException ex) {
             throw new BadRequestException(this);
