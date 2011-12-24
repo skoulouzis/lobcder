@@ -59,7 +59,8 @@ public class WebDataResourceFactory implements ResourceFactory {
                 return null;
             }
             
-            sites = (ArrayList<StorageSite>) siteManager.getSitesByLPath(entry.getLDRI());
+            sites = (ArrayList<StorageSite>) siteManager.getAllSites();
+            
             entry.setStorageSites(sites);
             if (entry instanceof LogicalFolder) {
                 return new WebDataDirResource(catalogue, entry);
