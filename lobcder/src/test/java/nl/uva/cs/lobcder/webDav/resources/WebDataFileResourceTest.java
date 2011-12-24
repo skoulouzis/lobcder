@@ -218,23 +218,14 @@ public class WebDataFileResourceTest {
         WebDataDirResource coll = null;
         WebDataFileResource instance = null;
         ILogicalData load;
-        try {
-
-            testLogicalFile.setStorageSites(sites);
-            catalogue.registerResourceEntry(testLogicalFile);
-            
-            ILogicalData loaded = catalogue.getResourceEntryByLDRI(testFilePath);
-
-            ArrayList<StorageSite> theSites = loaded.getStorageSites();
-
-            assertNotNull(theSites);
-            assertFalse(theSites.isEmpty());
-            
+        try {            
             ByteArrayInputStream bais = new ByteArrayInputStream(testData.getBytes());
             
+            testLogicalFolder.setStorageSites(sites);
             catalogue.registerResourceEntry(testLogicalFolder);
             
-            coll = new WebDataDirResource(catalogue, testLogicalFolder);
+            ILogicalData loaded = catalogue.getResourceEntryByLDRI(testFolderPath);
+            coll = new WebDataDirResource(catalogue, loaded);
             instance = (WebDataFileResource) coll.createNew(testFileName, bais, new Long(testData.getBytes().length), "text/plain");
 
             Long result = instance.getContentLength();
@@ -246,6 +237,7 @@ public class WebDataFileResourceTest {
             fail(ex.getMessage());
         } finally {
             try {
+                instance.delete();
                 coll.delete();
 
                 load = catalogue.getResourceEntryByLDRI(testLogicalFile.getLDRI());

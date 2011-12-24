@@ -7,6 +7,7 @@ package nl.uva.cs.lobcder.webDav.resources;
 import com.bradmcevoy.common.Path;
 import com.bradmcevoy.http.Auth;
 import com.bradmcevoy.http.CollectionResource;
+import com.bradmcevoy.http.DeletableResource;
 import com.bradmcevoy.http.FolderResource;
 import com.bradmcevoy.http.Range;
 import com.bradmcevoy.http.Request;
@@ -165,6 +166,7 @@ class WebDataDirResource implements FolderResource, CollectionResource {
             LogicalFile newResource = new LogicalFile(Path.path(entry.getLDRI(), newName));
             
             newResource.setStorageSites(entry.getStorageSites());
+                        
             if (!newResource.hasPhysicalData()) {
                 node = newResource.createPhysicalData();
             } else {
@@ -180,12 +182,15 @@ class WebDataDirResource implements FolderResource, CollectionResource {
             meta.setCreateDate(System.currentTimeMillis());
             newResource.setMetadata(meta);
             
+            WebDataFileResource file = new WebDataFileResource(catalogue, newResource);
             catalogue.registerResourceEntry(newResource);
-            
-            ILogicalData relodedResource = catalogue.getResourceEntryByLDRI(newResource.getLDRI());
-            
-            WebDataFileResource file = new WebDataFileResource(catalogue, relodedResource);
-
+            meta = newResource.getMetadata();
+            meta.setLength(length);
+            meta.addContentType(contentType);
+            meta.setCreateDate(System.currentTimeMillis());
+            newResource.setMetadata(meta);
+            newResource.setStorageSites(entry.getStorageSites());
+//            ILogicalData relodedResource = catalogue.getResourceEntryByLDRI(newResource.getLDRI());
             debug("returning createNew. " + file.getName());
             return file;
         } catch (Exception ex) {
@@ -225,6 +230,13 @@ class WebDataDirResource implements FolderResource, CollectionResource {
             if(sites !=null && !sites.isEmpty()){
                 new StorageSiteManager().deleteStorgaeSites(sites);
             }
+//            List<? extends Resource> children = getChildren();
+//            for(Resource r : children){
+//                if(r instanceof DeletableResource){
+//                    ((DeletableResource)r).delete();
+//                }
+//            }
+            
             catalogue.unregisterResourceEntry(entry);
         } catch (CatalogueException ex) {
             throw new BadRequestException(this);
