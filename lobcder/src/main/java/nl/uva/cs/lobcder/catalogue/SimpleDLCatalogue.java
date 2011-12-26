@@ -20,6 +20,7 @@ import nl.uva.cs.lobcder.resources.LogicalData;
 import nl.uva.cs.lobcder.resources.ILogicalData;
 import nl.uva.cs.lobcder.resources.StorageSite;
 import nl.uva.cs.lobcder.resources.StorageSiteManager;
+import nl.uva.vlet.data.StringUtil;
 
 public class SimpleDLCatalogue implements IDLCatalogue {
 
@@ -39,7 +40,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
         }
 
         Path parentPath = entry.getLDRI().getParent();
-        if (parentPath != null && !parentPath.isRoot()) {
+        if (parentPath != null && !StringUtil.isEmpty(parentPath.toString()) && !parentPath.isRoot()) {
             addChild(parentPath, entry.getLDRI());
         }
         persistEntry(entry);
@@ -104,9 +105,9 @@ public class SimpleDLCatalogue implements IDLCatalogue {
     }
 
     private ILogicalData queryEntry(Path logicalResourceName) {
+        String strLogicalResourceName = logicalResourceName.toString();
         PersistenceManager pm = pmf.getPersistenceManager();
         Transaction tx = pm.currentTransaction();
-        Collection<LogicalData> results = null;
         ILogicalData entry = null;
 
         try {
@@ -115,28 +116,10 @@ public class SimpleDLCatalogue implements IDLCatalogue {
             Query q = pm.newQuery(LogicalData.class);
 
             //restrict to instances which have the field ldri equal to some logicalResourceName
-            q.setFilter("ldri.getName == logicalResourceName.getName");
-            //We then import the type of our logicalResourceName parameter
-            q.declareImports("import " + logicalResourceName.getClass().getName());
-            //and the parameter itself
-            q.declareParameters("Path logicalResourceName");
-            results = (Collection<LogicalData>) q.execute(logicalResourceName);
-            if (results != null && !results.isEmpty()) {
-//                debug("queryEntry. Num of res: " + results.size());
-
-                //TODO fix query 
-                for (LogicalData e : results) {
-//                    debug("queryEntry. LDRI: " + e.getLDRI() + " UID: " + e.getUID());
-                    if (comparePaths(e.getLDRI(), logicalResourceName)) {
-//                        debug("Returning: " + e.getLDRI() + " " + e.getUID());
-                        entry = e;
-                        break;
-                    }
-                }
-//                Object id = pm.getObjectId(entry);
-//                debug("queryEntry. DB UID class: " + id.getClass().getName() + " UID: " + id);
-            }
-
+            q.setFilter("strLDRI == strLogicalResourceName");
+            q.declareParameters(strLogicalResourceName.getClass().getName() + " strLogicalResourceName");
+            q.setUnique(true);
+            entry = (ILogicalData) q.execute(strLogicalResourceName);
             tx.commit();
 
         } finally {
@@ -149,11 +132,14 @@ public class SimpleDLCatalogue implements IDLCatalogue {
         return entry;
     }
 
-    private void deleteEntry(Path logicalResourceName) throws ResourceExistsException {
+    private void deleteEntry(Path logicalResourceName) throws ResourceExistsException, NonExistingResourceException {
         debug("deleteEntry: " + logicalResourceName);
+        String strLogicalResourceName = logicalResourceName.toString();
+
         //first remove this node from it's parent
         Path parent = logicalResourceName.getParent();
-        if (parent != null && !logicalResourceName.isRoot()) {
+
+        if (parent != null && !StringUtil.isEmpty(parent.toString()) && !logicalResourceName.isRoot()) {
             removeChild(parent, logicalResourceName);
         }
 
@@ -164,25 +150,12 @@ public class SimpleDLCatalogue implements IDLCatalogue {
             tx.begin();
 
             Query q = pm.newQuery(LogicalData.class);
-            //restrict to instances which have the field ldri equal to some logicalResourceName
-            q.setFilter("ldri.getName == logicalResourceName.getName");
-            //We then import the type of our logicalResourceName parameter
-            q.declareImports("import " + logicalResourceName.getClass().getName());
-            //and the parameter itself
-            q.declareParameters("Path logicalResourceName");
-            Collection<LogicalData> results = (Collection<LogicalData>) q.execute(logicalResourceName);
-            if (!results.isEmpty()) {
-                for (LogicalData e : results) {
-                    if (comparePaths(e.getLDRI(), logicalResourceName)) {
-//                        if (e.hasChildren()) {
-                        //webDAV has no problem deleting folders with data 
-//                            throw new ResourceExistsException("deleteEntry: cannot remove " + e.getLDRI() + " is a collection containing nodes");
-//                        }
-                        pm.deletePersistent(e);
-                        break;
-                    }
-                }
-            }
+            q.setFilter("strLDRI == strLogicalResourceName");
+            q.declareParameters(strLogicalResourceName.getClass().getName() + " strLogicalResourceName");
+
+            q.setUnique(true);
+            LogicalData result = (LogicalData) q.execute(strLogicalResourceName);
+            pm.deletePersistent(result);
             tx.commit();
 
         } finally {
@@ -195,33 +168,25 @@ public class SimpleDLCatalogue implements IDLCatalogue {
 
     private void addChild(Path parent, Path child) throws NonExistingResourceException {
         debug("Will add to " + parent + " " + child);
+        String strLogicalResourceName = parent.toString();
+
         PersistenceManager pm = pmf.getPersistenceManager();
         Transaction tx = pm.currentTransaction();
-        Collection<LogicalData> results;
         ILogicalData entry = null;
 
         try {
             tx.begin();
             //This query, will return objects of type DataResourceEntry
             Query q = pm.newQuery(LogicalData.class);
-
             //restrict to instances which have the field ldri equal to some logicalResourceName
-            q.setFilter("ldri.getName == parent.getName");
-            //We then import the type of our logicalResourceName parameter
-            q.declareImports("import " + parent.getClass().getName());
-            //and the parameter itself
-            q.declareParameters("Path parent");
-            results = (Collection<LogicalData>) q.execute(parent);
-            if (!results.isEmpty()) {
-                for (LogicalData e : results) {
-                    if (comparePaths(e.getLDRI(), parent)) {
-                        e.addChild(child);
-                        break;
-                    }
-                }
-            } else if (results == null || results.isEmpty()) {
+            q.setFilter("strLDRI == strLogicalResourceName");
+            q.declareParameters(strLogicalResourceName.getClass().getName() + " strLogicalResourceName");
+            q.setUnique(true);
+            entry = (ILogicalData) q.execute(strLogicalResourceName);
+            if (entry == null) {
                 throw new NonExistingResourceException("Cannot add " + child.toString() + " child to non existing parent " + parent.toString());
             }
+            entry.addChild(child);
             tx.commit();
 
         } finally {
@@ -232,32 +197,25 @@ public class SimpleDLCatalogue implements IDLCatalogue {
         }
     }
 
-    private void removeChild(Path parent, Path child) {
+    private void removeChild(Path parent, Path child) throws NonExistingResourceException {
         debug("Will remove from " + parent + " " + child);
+        String strLogicalResourceName = parent.toString();
         PersistenceManager pm = pmf.getPersistenceManager();
         Transaction tx = pm.currentTransaction();
-        Collection<LogicalData> results;
 
         try {
             tx.begin();
             //This query, will return objects of type DataResourceEntry
             Query q = pm.newQuery(LogicalData.class);
+            q.setFilter("strLDRI == strLogicalResourceName");
+            q.declareParameters(strLogicalResourceName.getClass().getName() + " strLogicalResourceName");
 
-            //restrict to instances which have the field ldri equal to some logicalResourceName
-            q.setFilter("ldri.getName == parent.getName");
-            //We then import the type of our logicalResourceName parameter
-            q.declareImports("import " + parent.getClass().getName());
-            //and the parameter itself
-            q.declareParameters("Path parent");
-            results = (Collection<LogicalData>) q.execute(parent);
-            if (!results.isEmpty()) {
-                for (LogicalData e : results) {
-                    if (comparePaths(e.getLDRI(), parent)) {
-                        e.removeChild(child);
-                        break;
-                    }
-                }
+            q.setUnique(true);
+            LogicalData result = (LogicalData) q.execute(strLogicalResourceName);
+            if (result == null) {
+                throw new NonExistingResourceException("Cannot remove " + child.toString() + " from non existing parent " + parent.toString());
             }
+            result.removeChild(child);
             tx.commit();
 
         } finally {
@@ -312,42 +270,33 @@ public class SimpleDLCatalogue implements IDLCatalogue {
     public void renameEntry(Path oldPath, Path newPath) throws CatalogueException {
         debug("renameEntry.");
         debug("\t entry: " + oldPath + " newName: " + newPath);
-
+        String strLogicalResourceName = oldPath.toPath();
 
         ILogicalData loaded = queryEntry(oldPath);
 
         if (loaded == null) {
             throw new ResourceExistsException("Rename Entry: cannot rename resource " + oldPath + " resource doesn't exists");
         }
+
         Path parent = oldPath.getParent();
-        if (parent != null) {
+        if (parent != null && !StringUtil.isEmpty(parent.toString())) {
             removeChild(parent, oldPath);
         }
 
 
         PersistenceManager pm = pmf.getPersistenceManager();
         Transaction tx = pm.currentTransaction();
-        Collection<LogicalData> results;
         try {
             tx.begin();
             //This query, will return objects of type DataResourceEntry
             Query q = pm.newQuery(LogicalData.class);
 
-            //restrict to instances which have the field ldri equal to some logicalResourceName
-            q.setFilter("ldri.getName == oldPath.getName");
-            //We then import the type of our logicalResourceName parameter
-            q.declareImports("import " + oldPath.getClass().getName());
-            //and the parameter itself
-            q.declareParameters("Path oldLdri");
-            results = (Collection<LogicalData>) q.execute(oldPath);
-            if (!results.isEmpty()) {
-                for (LogicalData e : results) {
-                    if (comparePaths(e.getLDRI(), oldPath)) {
-                        e.setLDRI(newPath);
-                        break;
-                    }
-                }
-            }
+            q.setFilter("strLDRI == strLogicalResourceName");
+            q.declareParameters(strLogicalResourceName.getClass().getName() + " strLogicalResourceName");
+
+            q.setUnique(true);
+            ILogicalData entry = (ILogicalData) q.execute(strLogicalResourceName);
+            entry.setLDRI(newPath);
             tx.commit();
 
         } finally {
@@ -356,8 +305,11 @@ public class SimpleDLCatalogue implements IDLCatalogue {
             }
             pm.close();
         }
-
-        addChild(newPath.getParent(), newPath);
+        
+        Path newParent = newPath.getParent();
+        if (newParent != null && !StringUtil.isEmpty(newParent.toString())) {
+            addChild(newPath.getParent(), newPath);
+        }
     }
 
     private boolean comparePaths(Path path1, Path path2) {

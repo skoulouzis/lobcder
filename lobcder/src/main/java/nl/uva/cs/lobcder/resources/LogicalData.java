@@ -28,6 +28,8 @@ public class LogicalData implements ILogicalData, Serializable {
     @Persistent
     private Path ldri;
     @Persistent
+    private String strLDRI;
+    @Persistent
     private Metadata metadata;
     @Persistent
     private ArrayList<Path> children;
@@ -37,6 +39,7 @@ public class LogicalData implements ILogicalData, Serializable {
 
     public LogicalData(Path ldri) {
         this.ldri = ldri;
+        strLDRI = ldri.toString();
         uid = java.util.UUID.randomUUID().toString();
     }
 
@@ -176,5 +179,6 @@ public class LogicalData implements ILogicalData, Serializable {
     @Override
     public void setLDRI(Path ldri) {
         this.ldri = ldri;
+        this.strLDRI = ldri.toString();
     }
 }

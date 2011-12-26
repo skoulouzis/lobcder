@@ -164,8 +164,18 @@ class WebDataDirResource implements FolderResource, CollectionResource {
             debug("\t contentType: " + contentType);
 
             LogicalFile newResource = new LogicalFile(Path.path(entry.getLDRI(), newName));
-            newResource.setStorageSites(entry.getStorageSites());
             
+            newResource.setStorageSites(entry.getStorageSites());
+                        
+            if (!newResource.hasPhysicalData()) {
+                node = newResource.createPhysicalData();
+            } else {
+                node = newResource.getVFSNode();
+            }
+
+            out = ((VFile) node).getOutputStream();
+            IOUtils.copy(inputStream, out);
+
             Metadata meta = new Metadata();
             meta.setLength(length);
             meta.addContentType(contentType);
@@ -173,30 +183,18 @@ class WebDataDirResource implements FolderResource, CollectionResource {
             newResource.setMetadata(meta);
             
             catalogue.registerResourceEntry(newResource);
-            ILogicalData loaded = catalogue.getResourceEntryByLDRI(newResource.getLDRI());
-
-            if (!loaded.hasPhysicalData()) {
-                node = loaded.createPhysicalData();
-            } else {
-                node = loaded.getVFSNode();
-            }
-
-//            out = ((VFile) node).getOutputStream();
-//            IOUtils.copy(inputStream, out);
-
-            WebDataFileResource file = new WebDataFileResource(catalogue, loaded);
+            ILogicalData relodedResource = catalogue.getResourceEntryByLDRI(newResource.getLDRI());
+            
+            WebDataFileResource file = new WebDataFileResource(catalogue, relodedResource);
+            
             debug("returning createNew. " + file.getName());
             return file;
         } catch (Exception ex) {
             throw new IOException(ex);
         } finally {
-            if (inputStream != null) {
-                inputStream.close();
-            }
-            if (out != null) {
-                out.flush();
-                out.close();
-            }
+            inputStream.close();
+            out.flush();
+            out.close();
         }
     }
 
@@ -225,16 +223,16 @@ class WebDataDirResource implements FolderResource, CollectionResource {
         try {
             debug("delete.");
             ArrayList<StorageSite> sites = entry.getStorageSites();
-            if (sites != null && !sites.isEmpty()) {
+            if(sites !=null && !sites.isEmpty()){
                 new StorageSiteManager().deleteStorgaeSites(sites);
             }
-            List<? extends Resource> children = getChildren();
-            for (Resource r : children) {
-                if (r instanceof DeletableResource) {
-                    ((DeletableResource) r).delete();
-                }
-            }
-
+//            List<? extends Resource> children = getChildren();
+//            for(Resource r : children){
+//                if(r instanceof DeletableResource){
+//                    ((DeletableResource)r).delete();
+//                }
+//            }
+            
             catalogue.unregisterResourceEntry(entry);
         } catch (CatalogueException ex) {
             throw new BadRequestException(this);
