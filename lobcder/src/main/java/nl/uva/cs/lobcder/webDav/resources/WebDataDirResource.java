@@ -164,9 +164,12 @@ class WebDataDirResource implements FolderResource, CollectionResource {
             debug("\t contentType: " + contentType);
 
             LogicalFile newResource = new LogicalFile(Path.path(entry.getLDRI(), newName));
-            
-            newResource.setStorageSites(entry.getStorageSites());
-                        
+            //We have to make a copy of the member collection. The same collection 
+            //can't be a member of the two different classes, the relationship is 1-N!!!
+            ArrayList<StorageSite> copyStorageSites = new ArrayList<StorageSite>();
+            copyStorageSites.addAll(entry.getStorageSites());
+            newResource.setStorageSites(copyStorageSites);
+
             if (!newResource.hasPhysicalData()) {
                 node = newResource.createPhysicalData();
             } else {
@@ -181,12 +184,12 @@ class WebDataDirResource implements FolderResource, CollectionResource {
             meta.addContentType(contentType);
             meta.setCreateDate(System.currentTimeMillis());
             newResource.setMetadata(meta);
-            
+
             catalogue.registerResourceEntry(newResource);
             ILogicalData relodedResource = catalogue.getResourceEntryByLDRI(newResource.getLDRI());
-            
+
             WebDataFileResource file = new WebDataFileResource(catalogue, relodedResource);
-            
+
             debug("returning createNew. " + file.getName());
             return file;
         } catch (Exception ex) {
@@ -223,7 +226,7 @@ class WebDataDirResource implements FolderResource, CollectionResource {
         try {
             debug("delete.");
             ArrayList<StorageSite> sites = entry.getStorageSites();
-            if(sites !=null && !sites.isEmpty()){
+            if (sites != null && !sites.isEmpty()) {
                 new StorageSiteManager().deleteStorgaeSites(sites);
             }
 //            List<? extends Resource> children = getChildren();
@@ -232,7 +235,7 @@ class WebDataDirResource implements FolderResource, CollectionResource {
 //                    ((DeletableResource)r).delete();
 //                }
 //            }
-            
+
             catalogue.unregisterResourceEntry(entry);
         } catch (CatalogueException ex) {
             throw new BadRequestException(this);
