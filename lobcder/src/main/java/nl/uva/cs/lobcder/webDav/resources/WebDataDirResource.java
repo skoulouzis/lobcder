@@ -229,13 +229,12 @@ class WebDataDirResource implements FolderResource, CollectionResource {
             if (sites != null && !sites.isEmpty()) {
                 new StorageSiteManager().deleteStorgaeSites(sites);
             }
-//            List<? extends Resource> children = getChildren();
-//            for(Resource r : children){
-//                if(r instanceof DeletableResource){
-//                    ((DeletableResource)r).delete();
-//                }
-//            }
-
+            List<? extends Resource> children = getChildren();
+            for(Resource r : children){
+                if(r instanceof DeletableResource){
+                    ((DeletableResource)r).delete();
+                }
+            }
             catalogue.unregisterResourceEntry(entry);
         } catch (CatalogueException ex) {
             throw new BadRequestException(this);

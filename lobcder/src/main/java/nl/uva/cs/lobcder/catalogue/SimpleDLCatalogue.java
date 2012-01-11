@@ -11,6 +11,7 @@ package nl.uva.cs.lobcder.catalogue;
 import com.bradmcevoy.common.Path;
 import java.util.ArrayList;
 import java.util.Collection;
+import javax.jdo.Extent;
 import javax.jdo.JDOHelper;
 import javax.jdo.PersistenceManager;
 import javax.jdo.PersistenceManagerFactory;
@@ -305,7 +306,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
             }
             pm.close();
         }
-        
+
         Path newParent = newPath.getParent();
         if (newParent != null && !StringUtil.isEmpty(newParent.toString())) {
             addChild(newPath.getParent(), newPath);
@@ -317,5 +318,24 @@ public class SimpleDLCatalogue implements IDLCatalogue {
             return true;
         }
         return false;
+    }
+
+    public Collection<LogicalData> getAllLogicalData() {
+        PersistenceManager pm = pmf.getPersistenceManager();
+        Transaction tx = pm.currentTransaction();
+        Collection c;
+        try {
+            tx.begin();
+            Query q = pm.newQuery(LogicalData.class);
+            c = (Collection) q.execute();
+            tx.commit();
+
+        } finally {
+            if (tx.isActive()) {
+                tx.rollback();
+            }
+            pm.close();
+        }
+        return c;
     }
 }

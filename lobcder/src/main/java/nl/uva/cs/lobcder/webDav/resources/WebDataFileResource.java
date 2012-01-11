@@ -231,13 +231,14 @@ public class WebDataFileResource implements
         OutputStream out;
         InputStream in;
         Metadata meta;
-        try {
-            for (FileItem i : values) {
-
-                debug("\t getContentType: " + i.getContentType());
-                debug("\t getFieldName: " + i.getFieldName());
-                debug("\t getName: " + i.getName());
-                debug("\t getSize: " + i.getSize());
+//        try {
+//            for (FileItem i : values) {
+//
+//                debug("\t getContentType: " + i.getContentType());
+//                debug("\t getFieldName: " + i.getFieldName());
+//                debug("\t getName: " + i.getName());
+//                debug("\t getSize: " + i.getSize());
+//                
 //                if (!logicalData.hasPhysicalData()) {
 //                    node = logicalData.createPhysicalData();
 //                    out = ((VFile)node).getOutputStream();
@@ -256,10 +257,13 @@ public class WebDataFileResource implements
 //                }else{
 //                    throw new BadRequestException(this);
 //                }
-
-            }
-        } finally {
-        }
+//            }
+//        } catch (IOException ex) {
+//            throw new BadRequestException(this);
+//        } catch (VlException ex) {
+//            throw new BadRequestException(this);
+//        } finally {
+//        }
         return null;
     }
 
