@@ -5,10 +5,9 @@
 package nl.uva.cs.lobcder.resources;
 
 import com.bradmcevoy.common.Path;
-import java.util.ArrayList;
+import java.util.Collection;
 import nl.uva.vlet.exception.VlException;
 import nl.uva.vlet.vfs.VFSNode;
-import nl.uva.vlet.vfs.VFile;
 
 /**
  *
@@ -18,15 +17,15 @@ public interface ILogicalData {
 
     public Path getLDRI();
     
-    public ArrayList<Path> getChildren();
+    public Collection<Path> getChildren();
 
-    public void addChildren(ArrayList<Path> children);
+    public void addChildren(Collection<Path> children);
 
     public void addChild(Path child);
 
-    public ArrayList<StorageSite> getStorageSites();
+    public Collection<StorageSite> getStorageSites();
 
-    public void setStorageSites(ArrayList<StorageSite> storageResources);
+    public void setStorageSites(Collection<StorageSite> storageResources);
 
     public Metadata getMetadata();
 
@@ -37,6 +36,8 @@ public interface ILogicalData {
     public boolean hasChildren();
 
     public void removeChild(Path childPath);
+    
+    public void removeChildren(Collection<Path> childPath);
 
     public Path getChild(Path path);
 

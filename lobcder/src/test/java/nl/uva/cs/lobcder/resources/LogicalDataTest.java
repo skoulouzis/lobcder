@@ -4,6 +4,7 @@
  */
 package nl.uva.cs.lobcder.resources;
 
+import java.util.Collection;
 import com.bradmcevoy.common.Path;
 import java.util.ArrayList;
 import java.util.logging.Level;
@@ -80,7 +81,7 @@ public class LogicalDataTest {
         LogicalData instance = new LogicalData(path);
         instance.addChild(child);
 
-        ArrayList<Path> result = instance.getChildren();
+        Collection<Path> result = instance.getChildren();
 
         assertNotNull(result);
         assertFalse(result.isEmpty());
@@ -96,7 +97,7 @@ public class LogicalDataTest {
         LogicalData instance = new LogicalData(path);
         instance.setStorageSites(sites);
 
-        ArrayList result = instance.getStorageSites();
+        Collection result = instance.getStorageSites();
 
         assertNotNull(result);
         assertFalse(result.isEmpty());

@@ -225,7 +225,7 @@ class WebDataDirResource implements FolderResource, CollectionResource {
     public void delete() throws NotAuthorizedException, ConflictException, BadRequestException {
         try {
             debug("delete.");
-            ArrayList<StorageSite> sites = entry.getStorageSites();
+            Collection<StorageSite> sites = entry.getStorageSites();
             if (sites != null && !sites.isEmpty()) {
                 new StorageSiteManager().deleteStorgaeSites(sites);
             }
@@ -334,7 +334,7 @@ class WebDataDirResource implements FolderResource, CollectionResource {
     }
 
     private ArrayList<? extends Resource> getEntriesChildren() throws Exception {
-        ArrayList<Path> childrenPaths = entry.getChildren();
+        Collection<Path> childrenPaths = entry.getChildren();
 //        if(childrenPaths == null){
 //             entry = catalogue.getResourceEntryByLDRI(this.entry.getLDRI());
 //        }

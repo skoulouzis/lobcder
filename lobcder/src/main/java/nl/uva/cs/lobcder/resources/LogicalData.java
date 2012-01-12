@@ -8,6 +8,7 @@ import com.bradmcevoy.common.Path;
 import java.io.Serializable;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import javax.jdo.annotations.PersistenceCapable;
 import javax.jdo.annotations.Persistent;
 import javax.jdo.annotations.PrimaryKey;
@@ -32,9 +33,9 @@ public class LogicalData implements ILogicalData, Serializable {
     @Persistent
     private Metadata metadata;
     @Persistent
-    private ArrayList<Path> children;
+    private Collection<Path> children;
     @Persistent
-    private ArrayList<StorageSite> storageSites;
+    private Collection<StorageSite> storageSites;
     private boolean debug = false;
 
     public LogicalData(Path ldri) {
@@ -49,12 +50,12 @@ public class LogicalData implements ILogicalData, Serializable {
     }
 
     @Override
-    public ArrayList<Path> getChildren() {
+    public Collection<Path> getChildren() {
         return children;
     }
 
     @Override
-    public ArrayList<StorageSite> getStorageSites() {
+    public Collection<StorageSite> getStorageSites() {
         return this.storageSites;
     }
 
@@ -78,7 +79,7 @@ public class LogicalData implements ILogicalData, Serializable {
     }
 
     @Override
-    public void addChildren(ArrayList<Path> children) {
+    public void addChildren(Collection<Path> children) {
         if (this.children == null) {
             this.children = children;
         } else {
@@ -87,7 +88,7 @@ public class LogicalData implements ILogicalData, Serializable {
     }
 
     @Override
-    public void setStorageSites(ArrayList<StorageSite> storageSites) {
+    public void setStorageSites(Collection<StorageSite> storageSites) {
         this.storageSites = storageSites;
     }
 
@@ -180,5 +181,10 @@ public class LogicalData implements ILogicalData, Serializable {
     public void setLDRI(Path ldri) {
         this.ldri = ldri;
         this.strLDRI = ldri.toString();
+    }
+
+    @Override
+    public void removeChildren(Collection<Path> childPath) {
+        this.children.removeAll(children);
     }
 }

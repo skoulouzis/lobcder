@@ -11,6 +11,7 @@ package nl.uva.cs.lobcder.catalogue;
 import com.bradmcevoy.common.Path;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import javax.jdo.Extent;
 import javax.jdo.JDOHelper;
 import javax.jdo.PersistenceManager;
@@ -59,7 +60,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
 //    }
     @Override
     public void unregisterResourceEntry(ILogicalData entry) throws CatalogueException {
-        ArrayList<StorageSite> sites = entry.getStorageSites();
+        Collection<StorageSite> sites = entry.getStorageSites();
         if (sites != null && sites.isEmpty()) {
             StorageSiteManager sm = new StorageSiteManager();
             sm.deleteStorgaeSites(entry.getStorageSites());
@@ -216,6 +217,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
             if (result == null) {
                 throw new NonExistingResourceException("Cannot remove " + child.toString() + " from non existing parent " + parent.toString());
             }
+
             result.removeChild(child);
             tx.commit();
 
@@ -285,8 +287,18 @@ public class SimpleDLCatalogue implements IDLCatalogue {
         }
 
 
+
+
         PersistenceManager pm = pmf.getPersistenceManager();
         Transaction tx = pm.currentTransaction();
+        String[] parts;
+        String addition;
+        String strNewChildPath = "";
+        Path newChildPath;
+        LogicalData child;
+        String strChildLRN;
+        ILogicalData loadedChild;
+
         try {
             tx.begin();
             //This query, will return objects of type DataResourceEntry
@@ -298,6 +310,49 @@ public class SimpleDLCatalogue implements IDLCatalogue {
             q.setUnique(true);
             ILogicalData entry = (ILogicalData) q.execute(strLogicalResourceName);
             entry.setLDRI(newPath);
+
+            Collection<Path> children = entry.getChildren();
+            entry.removeChildren(children);
+
+            FIX ME: RENAME CHILDREN 
+                    
+                      for (Path p : children) {
+//                debug("Path: " + p);
+                parts = p.getParts();
+
+                for (String part : parts) {
+//                    debug("Part: " + part);
+                    if (part.equals(oldPath.getName())) {
+                        addition = newPath.getName();
+                    } else {
+                        addition = part;
+                    }
+                    strNewChildPath += "/" + addition;
+
+                }
+
+                newChildPath = Path.path(newPath, strNewChildPath);
+//                debug("newChildPath: " + newChildPath);
+                strNewChildPath = "";
+
+                entry.addChild(newChildPath);
+                entry.removeChild(p);
+
+                strChildLRN = p.toString();
+                Query q2 = pm.newQuery(LogicalData.class);
+                q2.setFilter("strLDRI == strChildLRN");
+                q2.declareParameters(strLogicalResourceName.getClass().getName() + " strChildLRN");
+                q2.setUnique(true);
+                loadedChild = (ILogicalData) q2.execute(strChildLRN);
+                if (loadedChild != null) {
+                    loadedChild.setLDRI(newChildPath);
+                } else {
+                    child = new LogicalData(newChildPath);
+                    pm.makePersistent(child);
+                }
+
+            }
+
             tx.commit();
 
         } finally {
@@ -306,6 +361,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
             }
             pm.close();
         }
+
 
         Path newParent = newPath.getParent();
         if (newParent != null && !StringUtil.isEmpty(newParent.toString())) {

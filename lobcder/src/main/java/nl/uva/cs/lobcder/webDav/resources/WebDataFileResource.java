@@ -79,7 +79,7 @@ public class WebDataFileResource implements
     @Override
     public void delete() throws NotAuthorizedException, ConflictException, BadRequestException {
         try {
-            ArrayList<StorageSite> sites = logicalData.getStorageSites();
+            Collection<StorageSite> sites = logicalData.getStorageSites();
             if (sites != null && !sites.isEmpty()) {
                 new StorageSiteManager().deleteStorgaeSites(sites);
             }

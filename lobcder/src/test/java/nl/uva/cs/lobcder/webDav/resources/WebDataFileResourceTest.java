@@ -141,7 +141,7 @@ public class WebDataFileResourceTest {
 
 
             ILogicalData folderLData = catalogue.getResourceEntryByLDRI(testCollPath);
-            ArrayList<Path> children = folderLData.getChildren();
+            Collection<Path> children = folderLData.getChildren();
             assertNotNull(children);
 
             boolean foundIt = false;

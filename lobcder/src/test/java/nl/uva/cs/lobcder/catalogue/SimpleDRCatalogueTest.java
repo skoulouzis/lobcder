@@ -143,151 +143,153 @@ public class SimpleDRCatalogueTest {
         assertNull(loaded);
     }
 
-    /**
-     * Test of getTopLevelResourceEntries method, of class SimpleDRCatalogue.
-     */
-    @Test
-    public void testGetTopLevelResourceEntries() {
-        System.out.println("getTopLevelResourceEntries");
-        Collection<ILogicalData> topEntries = new ArrayList<ILogicalData>();
-        LogicalData topEntry1 = new LogicalData(Path.path("/r1"));
-        topEntries.add(topEntry1);
-        LogicalData topEntry2 = new LogicalData(Path.path("/r2"));
-        topEntries.add(topEntry2);
-        LogicalData topEntry3 = new LogicalData(Path.path("/r3"));
-        topEntries.add(topEntry3);
-
-        LogicalData entry11 = new LogicalData(Path.path("/r1/r11"));
-        LogicalData entry21 = new LogicalData(Path.path("/r2/r21"));
-        SimpleDLCatalogue instance = null;
-        Collection<ILogicalData> result = null;
-        ILogicalData loaded;
-        try {
-
-            instance = new SimpleDLCatalogue();
-            instance.registerResourceEntry(topEntry1);
-            instance.registerResourceEntry(topEntry2);
-            instance.registerResourceEntry(topEntry3);
-            instance.registerResourceEntry(entry11);
-            instance.registerResourceEntry(entry21);
-
-            result = instance.getTopLevelResourceEntries();
-
-
-            for (ILogicalData d : result) {
-                System.out.println("TOP:        " + d.getLDRI() + "     " + d.getUID());
-
-                if (!compareEntries(d, topEntry3)) {
-                    if (!compareEntries(d, topEntry2)) {
-                        if (!compareEntries(d, topEntry1)) {
-                            fail("Resource " + topEntry1.getLDRI() + " is not returned by query!");
-                        }
-                    }
-                }
-            }
-
-            for (ILogicalData e : result) {
-                if (e.getLDRI().getLength() > 1) {
-                    fail("Resource " + e.getLDRI() + " is not a top level");
-                }
-            }
-
-        } catch (Exception ex) {
-            fail("Unexpected Exception: " + ex.getMessage());
-        } finally {
-            try {
-                instance.unregisterResourceEntry(entry21);
-                instance.unregisterResourceEntry(entry11);
-                instance.unregisterResourceEntry(topEntry3);
-                instance.unregisterResourceEntry(topEntry2);
-                instance.unregisterResourceEntry(topEntry1);
-
-
-                result = instance.getTopLevelResourceEntries();
-
-
-                for (ILogicalData d : result) {
-                    if (compareEntries(d, topEntry3) || compareEntries(d, topEntry2) || compareEntries(d, topEntry1)) {
-                        fail("entry: " + d.getLDRI() + " should not be registered in the catalogue!");
-                    }
-                }
-
-
-                loaded = instance.getResourceEntryByLDRI(entry21.getLDRI());
-                assertNull(loaded);
-
-                loaded = instance.getResourceEntryByLDRI(entry11.getLDRI());
-                assertNull(loaded);
-
-                loaded = instance.getResourceEntryByLDRI(topEntry3.getLDRI());
-                assertNull(loaded);
-
-
-                loaded = instance.getResourceEntryByLDRI(topEntry2.getLDRI());
-                assertNull(loaded);
-
-                loaded = instance.getResourceEntryByLDRI(topEntry1.getLDRI());
-                assertNull(loaded);
-
-
-
-            } catch (Exception ex) {
-                fail("Unexpected Exception: " + ex.getMessage());
-            }
-        }
-    }
-
-    @Test
-    public void testRenameEntry() {
-        System.out.println("testRenameEntry");
-        SimpleDLCatalogue instance = null;
-        ILogicalData loaded = null;
-        Path newPath = null;
-        try {
-
-            instance = new SimpleDLCatalogue();
-            Path originalPath = Path.path("/oldResourceName");
-            LogicalData e = new LogicalData(originalPath);
-
-            instance.registerResourceEntry(e);
-            newPath = Path.path("/newResourceName");
-
-            instance.renameEntry(originalPath, newPath);
-
-            loaded = instance.getResourceEntryByLDRI(newPath);
-            assertNotNull(loaded);
-            assertEquals(newPath.toString(), loaded.getLDRI().toString());
-
-
-            ILogicalData loadedOriginal = instance.getResourceEntryByLDRI(originalPath);
-            assertNull(loadedOriginal);
-
-
-        } catch (Exception ex) {
-            fail("Unexpected Exception: " + ex.getMessage());
-        } finally {
-            try {
-                instance.unregisterResourceEntry(loaded);
-                loaded = instance.getResourceEntryByLDRI(newPath);
-                assertNull(loaded);
-
-            } catch (Exception ex) {
-                fail("Unexpected Exception: " + ex.getMessage());
-            }
-        }
-    }
-
+//    /**
+//     * Test of getTopLevelResourceEntries method, of class SimpleDRCatalogue.
+//     */
+//    @Test
+//    public void testGetTopLevelResourceEntries() {
+//        System.out.println("getTopLevelResourceEntries");
+//        Collection<ILogicalData> topEntries = new ArrayList<ILogicalData>();
+//        LogicalData topEntry1 = new LogicalData(Path.path("/r1"));
+//        topEntries.add(topEntry1);
+//        LogicalData topEntry2 = new LogicalData(Path.path("/r2"));
+//        topEntries.add(topEntry2);
+//        LogicalData topEntry3 = new LogicalData(Path.path("/r3"));
+//        topEntries.add(topEntry3);
+//
+//        LogicalData entry11 = new LogicalData(Path.path("/r1/r11"));
+//        LogicalData entry21 = new LogicalData(Path.path("/r2/r21"));
+//        SimpleDLCatalogue instance = null;
+//        Collection<ILogicalData> result = null;
+//        ILogicalData loaded;
+//        try {
+//
+//            instance = new SimpleDLCatalogue();
+//            instance.registerResourceEntry(topEntry1);
+//            instance.registerResourceEntry(topEntry2);
+//            instance.registerResourceEntry(topEntry3);
+//            instance.registerResourceEntry(entry11);
+//            instance.registerResourceEntry(entry21);
+//
+//            result = instance.getTopLevelResourceEntries();
+//
+//
+//            for (ILogicalData d : result) {
+//                System.out.println("TOP:        " + d.getLDRI() + "     " + d.getUID());
+//
+//                if (!compareEntries(d, topEntry3)) {
+//                    if (!compareEntries(d, topEntry2)) {
+//                        if (!compareEntries(d, topEntry1)) {
+//                            fail("Resource " + topEntry1.getLDRI() + " is not returned by query!");
+//                        }
+//                    }
+//                }
+//            }
+//
+//            for (ILogicalData e : result) {
+//                if (e.getLDRI().getLength() > 1) {
+//                    fail("Resource " + e.getLDRI() + " is not a top level");
+//                }
+//            }
+//
+//        } catch (Exception ex) {
+//            fail("Unexpected Exception: " + ex.getMessage());
+//        } finally {
+//            try {
+//                instance.unregisterResourceEntry(entry21);
+//                instance.unregisterResourceEntry(entry11);
+//                instance.unregisterResourceEntry(topEntry3);
+//                instance.unregisterResourceEntry(topEntry2);
+//                instance.unregisterResourceEntry(topEntry1);
+//
+//
+//                result = instance.getTopLevelResourceEntries();
+//
+//
+//                for (ILogicalData d : result) {
+//                    if (compareEntries(d, topEntry3) || compareEntries(d, topEntry2) || compareEntries(d, topEntry1)) {
+//                        fail("entry: " + d.getLDRI() + " should not be registered in the catalogue!");
+//                    }
+//                }
+//
+//
+//                loaded = instance.getResourceEntryByLDRI(entry21.getLDRI());
+//                assertNull(loaded);
+//
+//                loaded = instance.getResourceEntryByLDRI(entry11.getLDRI());
+//                assertNull(loaded);
+//
+//                loaded = instance.getResourceEntryByLDRI(topEntry3.getLDRI());
+//                assertNull(loaded);
+//
+//
+//                loaded = instance.getResourceEntryByLDRI(topEntry2.getLDRI());
+//                assertNull(loaded);
+//
+//                loaded = instance.getResourceEntryByLDRI(topEntry1.getLDRI());
+//                assertNull(loaded);
+//
+//
+//
+//            } catch (Exception ex) {
+//                fail("Unexpected Exception: " + ex.getMessage());
+//            }
+//        }
+//    }
+//
+//    @Test
+//    public void testRenameEntry() {
+//        System.out.println("testRenameEntry");
+//        SimpleDLCatalogue instance = null;
+//        ILogicalData loaded = null;
+//        Path newPath = null;
+//        try {
+//
+//            instance = new SimpleDLCatalogue();
+//            Path originalPath = Path.path("/oldResourceName");
+//            LogicalData e = new LogicalData(originalPath);
+//
+//            instance.registerResourceEntry(e);
+//            newPath = Path.path("/newResourceName");
+//
+//            instance.renameEntry(originalPath, newPath);
+//
+//            loaded = instance.getResourceEntryByLDRI(newPath);
+//            assertNotNull(loaded);
+//            assertEquals(newPath.toString(), loaded.getLDRI().toString());
+//
+//
+//            ILogicalData loadedOriginal = instance.getResourceEntryByLDRI(originalPath);
+//            assertNull(loadedOriginal);
+//
+//
+//        } catch (Exception ex) {
+//            fail("Unexpected Exception: " + ex.getMessage());
+//        } finally {
+//            try {
+//                instance.unregisterResourceEntry(loaded);
+//                loaded = instance.getResourceEntryByLDRI(newPath);
+//                assertNull(loaded);
+//
+//            } catch (Exception ex) {
+//                fail("Unexpected Exception: " + ex.getMessage());
+//            }
+//        }
+//    }
     @Test
     public void testRenameWithChildren() {
         System.out.println("testRenameWithChildren");
         SimpleDLCatalogue instance = null;
         ILogicalData loaded = null;
-        boolean foundIt = false;
-        String childName = "Child1";
+        int foundIt = 0;
+        String childName1 = "Child1";
+        String childName2 = "Child2";
 
-        LogicalData childEntry = null;
+        LogicalData childEntry1 = null;
+        LogicalData childEntry2 = null;
         ILogicalData childLoaded;
         ILogicalData parentLoaded;
+        Path newPath = null;
         try {
 
             instance = new SimpleDLCatalogue();
@@ -295,11 +297,15 @@ public class SimpleDRCatalogueTest {
             LogicalData e = new LogicalData(originalPath);
             instance.registerResourceEntry(e);
 
-            Path originalChildPath = Path.path("/oldResourceName/" + childName);
-            childEntry = new LogicalData(originalChildPath);
-            instance.registerResourceEntry(childEntry);
+            Path originalChildPath1 = Path.path("/oldResourceName/" + childName1);
+            childEntry1 = new LogicalData(originalChildPath1);
+            instance.registerResourceEntry(childEntry1);
 
-            Path newPath = Path.path("/newResourceName");
+            Path originalChildPath2 = Path.path("/oldResourceName/" + childName2);
+            childEntry2 = new LogicalData(originalChildPath2);
+            instance.registerResourceEntry(childEntry2);
+
+            newPath = Path.path("/newResourceName");
             instance.renameEntry(originalPath, newPath);
 
 
@@ -308,30 +314,35 @@ public class SimpleDRCatalogueTest {
             assertNotNull(loaded);
             assertEquals(newPath.toString(), loaded.getLDRI().toString());
 
-            ArrayList<Path> children = loaded.getChildren();
+            Collection<Path> children = loaded.getChildren();
             assertNotNull(children);
             assertFalse(children.isEmpty());
 
             for (Path p : children) {
-                if (p.equals(Path.path(newPath , childName))) {
-                    foundIt = true;
-                    break;
+                if (p.equals(Path.path(newPath, childName1)) || p.equals(Path.path(newPath, childName2))) {
+                    foundIt++;
                 }
             }
-            assertTrue(foundIt);
-
-
-
-
+            assertEquals(foundIt, 2);
 
         } catch (Exception ex) {
             fail("Unexpected Exception: " + ex.getMessage());
         } finally {
             try {
 
-                instance.unregisterResourceEntry(childEntry);
-                childLoaded = instance.getResourceEntryByLDRI(childEntry.getLDRI());
+                childLoaded = instance.getResourceEntryByLDRI(Path.path(newPath, childName1));
+                assertNotNull(childLoaded);
+                instance.unregisterResourceEntry(childLoaded);
+                childLoaded = instance.getResourceEntryByLDRI(Path.path(newPath, childName1));
                 assertNull(childLoaded);
+
+
+                childLoaded = instance.getResourceEntryByLDRI(Path.path(newPath, childName2));
+                assertNotNull(childLoaded);
+                instance.unregisterResourceEntry(childLoaded);
+                childLoaded = instance.getResourceEntryByLDRI(Path.path(newPath, childName2));
+                assertNull(childLoaded);
+
 
                 instance.unregisterResourceEntry(loaded);
                 parentLoaded = instance.getResourceEntryByLDRI(loaded.getLDRI());
