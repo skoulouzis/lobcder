@@ -201,7 +201,7 @@ class WebDataDirResource implements FolderResource, CollectionResource {
 
             WebDataFileResource file = new WebDataFileResource(catalogue, relodedResource);
 
-            debug("returning createNew. " + file.getName());
+            debug("\t returning createNew. " + file.getName());
             return file;
         } catch (Exception ex) {
             throw new IOException(ex);

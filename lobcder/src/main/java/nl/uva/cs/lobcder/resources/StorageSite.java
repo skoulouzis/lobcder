@@ -99,11 +99,7 @@ public class StorageSite implements Serializable, IStorageSite {
 
     @Override
     public VFSNode getVNode(Path path) throws VlException {
-        if (logicalPaths.contains(path.toString())) {
-            return vfsClient.openLocation(vrl.append(path.toString()));
-        } else {
-            return null;
-        }
+        return vfsClient.openLocation(vrl.append(path.toString()));
     }
 
     @Override
@@ -114,8 +110,8 @@ public class StorageSite implements Serializable, IStorageSite {
             debug("mkdirs: " + vrl.append(parent));
             vfsClient.mkdirs(vrl.append(parent));
         }
-        
-        VRL newVRL = vrl.append(path.toString());        
+
+        VRL newVRL = vrl.append(path.toString());
         VFile node = vfsClient.createFile(newVRL, true);
         logicalPaths.add(path.toString());
         return node;
