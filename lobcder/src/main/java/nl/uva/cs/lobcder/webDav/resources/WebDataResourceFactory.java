@@ -31,7 +31,6 @@ public class WebDataResourceFactory implements ResourceFactory {
 
     public WebDataResourceFactory() throws Exception {
         catalogue = new SimpleDLCatalogue();
-
         initStorageSites();
     }
 
@@ -40,6 +39,7 @@ public class WebDataResourceFactory implements ResourceFactory {
 
         Path ldri = Path.path(strPath).getStripFirst();
         ArrayList<StorageSite> sites;
+        LogicalData root;
         try {
             //Gets the root path. If instead we called :'ldri = Path.path(strPath);' we get back '/lobcder-1.0-SNAPSHOT'
             debug("getResource:  strPath: " + strPath + " path: " + Path.path(strPath));
@@ -48,8 +48,15 @@ public class WebDataResourceFactory implements ResourceFactory {
 //            if (host == null && Path.path(strPath).toString().equals("")) {
 //                debug(">>>>>>>>>>>>>>> Host null and path is empty");
 //            }
+            sites = (ArrayList<StorageSite>) siteManager.getSitesByLPath(ldri);
+            if(sites == null || sites.isEmpty()){
+                debug("\t StorageSites for "+ldri+" are empty!");
+                throw new IOException("StorageSites for "+ldri+" are empty!");
+            }
 
             if (ldri.isRoot() || ldri.toString().equals("")) {
+                root = new LogicalData(ldri);
+                root.setStorageSites(sites);
                 return new WebDataDirResource(catalogue, new LogicalData(ldri));
             }
 
@@ -58,9 +65,10 @@ public class WebDataResourceFactory implements ResourceFactory {
                 debug("Didn't find " + ldri + ". returning null");
                 return null;
             }
-            
-            sites = (ArrayList<StorageSite>) siteManager.getSitesByLPath(entry.getLDRI());
+
+
             entry.setStorageSites(sites);
+
             if (entry instanceof LogicalFolder) {
                 return new WebDataDirResource(catalogue, entry);
             }
@@ -101,7 +109,6 @@ public class WebDataResourceFactory implements ResourceFactory {
 
         File f = new File(propPath);
         properties.load(new FileInputStream(f));
-
         return properties;
     }
 }

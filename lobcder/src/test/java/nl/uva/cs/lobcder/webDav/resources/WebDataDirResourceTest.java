@@ -4,6 +4,9 @@
  */
 package nl.uva.cs.lobcder.webDav.resources;
 
+import java.io.ByteArrayOutputStream;
+import nl.uva.cs.lobcder.resources.ILogicalData;
+import java.io.ByteArrayInputStream;
 import java.util.logging.Level;
 import java.util.ArrayList;
 import nl.uva.cs.lobcder.resources.StorageSite;
@@ -24,6 +27,7 @@ import java.io.OutputStream;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import javax.swing.text.Position.Bias;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -36,6 +40,7 @@ import static org.junit.Assert.*;
  * @author S. koulouzis
  */
 public class WebDataDirResourceTest {
+
     private SimpleDLCatalogue catalogue;
     private String testFileName;
     private Path testFilePath;
@@ -114,7 +119,6 @@ public class WebDataDirResourceTest {
 ////        assertEquals(expResult, result);
 //        
 //    }
-
 //    /**
 //     * Test of child method, of class WebDataDirResource.
 //     */
@@ -248,23 +252,48 @@ public class WebDataDirResourceTest {
 //        fail("The test case is a prototype.");
 //    }
 //
-//    /**
-//     * Test of createNew method, of class WebDataDirResource.
-//     */
-//    @Test
-//    public void testCreateNew() throws Exception {
-//        System.out.println("createNew");
-//        String newName = "";
-//        InputStream inputStream = null;
-//        Long length = null;
-//        String contentType = "";
-//        WebDataDirResource instance = null;
-//        Resource expResult = null;
-//        Resource result = instance.createNew(newName, inputStream, length, contentType);
-//        assertEquals(expResult, result);
-//        // TODO review the generated test code and remove the default call to fail.
-//        fail("The test case is a prototype.");
-//    }
+    /**
+     * Test of createNew method, of class WebDataDirResource.
+     */
+    @Test
+    public void testCreateNew() throws Exception {
+        System.out.println("createNew");
+
+
+        ByteArrayInputStream bais = new ByteArrayInputStream(testData.getBytes());
+
+        testLogicalFolder.setStorageSites(sites);
+        catalogue.registerResourceEntry(testLogicalFolder);
+
+
+        ILogicalData loaded = catalogue.getResourceEntryByLDRI(testFolderPath);
+        WebDataDirResource instance = new WebDataDirResource(catalogue, loaded);
+
+        WebDataFileResource result = (WebDataFileResource) instance.createNew(testFileName, bais, new Long(testData.getBytes().length), "text/plain");
+        assertNotNull(result);
+        assertEquals(new Long(testData.getBytes().length), result.getContentLength());
+        loaded = catalogue.getResourceEntryByLDRI(Path.path(testFolderPath, testFileName));
+        assertNotNull(loaded);
+        
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        Range range = null;
+        Map<String, String> params = null;
+        String contentType = "text/plain";
+        result.sendContent(out, range, params, contentType);
+        String content = new String(out.toByteArray());
+        assertEquals(testData, content);
+        
+        
+        loaded = catalogue.getResourceEntryByLDRI(testFolderPath);
+        instance = new WebDataDirResource(catalogue, loaded);
+        instance.delete();
+        
+        loaded = catalogue.getResourceEntryByLDRI(testFolderPath);
+        assertNull(loaded);
+        
+        loaded = catalogue.getResourceEntryByLDRI(Path.path(testFolderPath, testFileName));
+        assertNull(loaded);
+    }
 //
 //    /**
 //     * Test of copyTo method, of class WebDataDirResource.

@@ -167,6 +167,10 @@ class WebDataDirResource implements FolderResource, CollectionResource {
             //We have to make a copy of the member collection. The same collection 
             //can't be a member of the two different classes, the relationship is 1-N!!!
             ArrayList<StorageSite> copyStorageSites = new ArrayList<StorageSite>();
+            if (entry.getStorageSites().isEmpty()) {
+                debug("\t ERORR! StorageSites are empty!");
+                throw new IOException("Storage Sites are empty!");
+            }
             copyStorageSites.addAll(entry.getStorageSites());
             newResource.setStorageSites(copyStorageSites);
 
@@ -230,9 +234,9 @@ class WebDataDirResource implements FolderResource, CollectionResource {
                 new StorageSiteManager().deleteStorgaeSites(sites);
             }
             List<? extends Resource> children = getChildren();
-            for(Resource r : children){
-                if(r instanceof DeletableResource){
-                    ((DeletableResource)r).delete();
+            for (Resource r : children) {
+                if (r instanceof DeletableResource) {
+                    ((DeletableResource) r).delete();
                 }
             }
             catalogue.unregisterResourceEntry(entry);

@@ -64,7 +64,7 @@ public class StorageSiteManager {
         cred.setStorageSiteUsername(prop.getProperty(Constants.STORAGE_SITE_USERNAME));
         cred.setStorageSitePassword(prop.getProperty(Constants.STORAGE_SITE_PASSWORD));
         String endpoint = prop.getProperty(Constants.STORAGE_SITE_ENDPOINT);
-
+        
         debug("Adding endpoint: " + endpoint);
 
         StorageSite site = new StorageSite(endpoint, cred);

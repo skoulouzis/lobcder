@@ -244,6 +244,7 @@ public class WebDataFileResourceTest {
 
             ILogicalData loaded = catalogue.getResourceEntryByLDRI(testFolderPath);
             coll = new WebDataDirResource(catalogue, loaded);
+            
             instance = (WebDataFileResource) coll.createNew(testFileName, bais, new Long(testData.getBytes().length), "text/plain");
 
             Long result = instance.getContentLength();

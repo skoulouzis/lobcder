@@ -20,6 +20,7 @@ import nl.uva.vlet.GlobalConfig;
 import nl.uva.vlet.data.StringUtil;
 import nl.uva.vlet.exception.VlException;
 import nl.uva.vlet.util.cog.GridProxy;
+import nl.uva.vlet.vfs.VDir;
 import nl.uva.vlet.vfs.VFSClient;
 import nl.uva.vlet.vfs.VFSNode;
 import nl.uva.vlet.vfs.VFile;
