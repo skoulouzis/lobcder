@@ -28,6 +28,8 @@ public class WebDataResourceFactory implements ResourceFactory {
     private IDLCatalogue catalogue;
     private boolean debug = true;
     private StorageSiteManager siteManager;
+    //Hardcoded for now. We need to find a way to get the username
+    private String uname = "uname1";
 
     public WebDataResourceFactory() throws Exception {
         catalogue = new SimpleDLCatalogue();
@@ -48,7 +50,7 @@ public class WebDataResourceFactory implements ResourceFactory {
 //            if (host == null && Path.path(strPath).toString().equals("")) {
 //                debug(">>>>>>>>>>>>>>> Host null and path is empty");
 //            }
-            sites = (ArrayList<StorageSite>) siteManager.getSitesByLPath(ldri);
+            sites = (ArrayList<StorageSite>) siteManager.getSitesByUname(uname);
             if(sites == null || sites.isEmpty()){
                 debug("\t StorageSites for "+ldri+" are empty!");
                 throw new IOException("StorageSites for "+ldri+" are empty!");
@@ -57,7 +59,7 @@ public class WebDataResourceFactory implements ResourceFactory {
             if (ldri.isRoot() || ldri.toString().equals("")) {
                 root = new LogicalData(ldri);
                 root.setStorageSites(sites);
-                return new WebDataDirResource(catalogue, new LogicalData(ldri));
+                return new WebDataDirResource(catalogue, root);
             }
 
             ILogicalData entry = catalogue.getResourceEntryByLDRI(ldri);

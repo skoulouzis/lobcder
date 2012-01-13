@@ -168,4 +168,8 @@ public class StorageSite implements Serializable, IStorageSite {
     public boolean LDRIHasPhysicalData(Path ldri) {
         return logicalPaths.contains(ldri.toString());
     }
+
+    public Credential getCredentials() {
+        return this.credentials;
+    }
 }

@@ -53,5 +53,7 @@ public class WebDataResourceFactoryTest {
         
         ByteArrayInputStream bais = new ByteArrayInputStream("DATA".getBytes());
         result.createNew("newName", bais, new Long("DATA".getBytes().length), "text/plain");
+        
+        result.delete();
     }
 }

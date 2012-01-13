@@ -28,6 +28,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import nl.uva.cs.lobcder.catalogue.CatalogueException;
 import nl.uva.cs.lobcder.catalogue.IDLCatalogue;
+import nl.uva.cs.lobcder.resources.Credential;
 import nl.uva.cs.lobcder.resources.ILogicalData;
 import nl.uva.cs.lobcder.resources.LogicalFile;
 import nl.uva.cs.lobcder.resources.LogicalFolder;
@@ -167,11 +168,16 @@ class WebDataDirResource implements FolderResource, CollectionResource {
             //We have to make a copy of the member collection. The same collection 
             //can't be a member of the two different classes, the relationship is 1-N!!!
             ArrayList<StorageSite> copyStorageSites = new ArrayList<StorageSite>();
-            if (entry.getStorageSites().isEmpty()) {
-                debug("\t ERORR! StorageSites are empty!");
-                throw new IOException("Storage Sites are empty!");
+            Collection<StorageSite> sites = entry.getStorageSites();
+            if (sites.isEmpty()) {
+                debug("\t Storage Sites for " + this.entry.getLDRI() + " are empty!");
+                throw new IOException("Storage Sites for " + this.entry.getLDRI() + " are empty!");
             }
-            copyStorageSites.addAll(entry.getStorageSites());
+            //Maybe we have a problem with shalow copy
+            //copyStorageSites.addAll(entry.getStorageSites());
+            for (StorageSite s : sites) {
+                copyStorageSites.add(new StorageSite(s.getEndpoint(), s.getCredentials()));
+            }
             newResource.setStorageSites(copyStorageSites);
 
             if (!newResource.hasPhysicalData()) {
@@ -179,9 +185,10 @@ class WebDataDirResource implements FolderResource, CollectionResource {
             } else {
                 node = newResource.getVFSNode();
             }
-
-            out = ((VFile) node).getOutputStream();
-            IOUtils.copy(inputStream, out);
+            if (node != null) {
+                out = ((VFile) node).getOutputStream();
+                IOUtils.copy(inputStream, out);
+            }
 
             Metadata meta = new Metadata();
             meta.setLength(length);
@@ -199,9 +206,13 @@ class WebDataDirResource implements FolderResource, CollectionResource {
         } catch (Exception ex) {
             throw new IOException(ex);
         } finally {
-            inputStream.close();
-            out.flush();
-            out.close();
+            if (inputStream != null) {
+                inputStream.close();
+            }
+            if (out != null) {
+                out.flush();
+                out.close();
+            }
         }
     }
 
