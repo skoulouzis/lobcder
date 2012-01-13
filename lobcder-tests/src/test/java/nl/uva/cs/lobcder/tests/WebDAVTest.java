@@ -197,10 +197,10 @@ public class WebDAVTest {
 //            assertEquals(this.getResourceId(testres1), this.getResourceId(testres2));
 
             //compare representations retrieved with both paths
-//            GetMethod get = new GetMethod(testres1);
-//            status = this.client.executeMethod(get);
-//            assertEquals(200, status);
-//            assertEquals("foo", get.getResponseBodyAsString());
+            GetMethod get = new GetMethod(testres1);
+            status = this.client.executeMethod(get);
+            assertEquals(200, status);
+            assertEquals("foo", get.getResponseBodyAsString());
 
             //Doesn't work cause we don't have bind
 //            get = new GetMethod(testres2);
@@ -224,9 +224,9 @@ public class WebDAVTest {
 //            assertEquals(200, status);
 //            assertEquals("bar", get.getResponseBodyAsString());
         } finally {
-//            DeleteMethod delete = new DeleteMethod(testcol);
-//            status = this.client.executeMethod(delete);
-//            assertTrue("status: " + status, status == 200 || status == 204);
+            DeleteMethod delete = new DeleteMethod(testcol);
+            status = this.client.executeMethod(delete);
+            assertTrue("status: " + status, status == 200 || status == 204);
         }
     }
 
