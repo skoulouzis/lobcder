@@ -11,7 +11,10 @@ package nl.uva.cs.lobcder.catalogue;
 import com.bradmcevoy.common.Path;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import javax.jdo.Extent;
 import javax.jdo.JDOHelper;
 import javax.jdo.PersistenceManager;
@@ -295,9 +298,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
         String addition;
         String strNewChildPath = "";
         Path newChildPath;
-        LogicalData child;
-        String strChildLRN;
-        ILogicalData loadedChild;
+        Map<Path, Path> renamedChildrenMap = new HashMap<Path, Path>();
 
         try {
             tx.begin();
@@ -310,49 +311,30 @@ public class SimpleDLCatalogue implements IDLCatalogue {
             q.setUnique(true);
             ILogicalData entry = (ILogicalData) q.execute(strLogicalResourceName);
             entry.setLDRI(newPath);
-
             Collection<Path> children = entry.getChildren();
-            entry.removeChildren(children);
-
-            FIX ME: RENAME CHILDREN 
-                    
-                      for (Path p : children) {
+            if (children != null && !children.isEmpty()) {
+                for (Path p : children) {
 //                debug("Path: " + p);
-                parts = p.getParts();
+                    parts = p.getParts();
 
-                for (String part : parts) {
+                    for (String part : parts) {
 //                    debug("Part: " + part);
-                    if (part.equals(oldPath.getName())) {
-                        addition = newPath.getName();
-                    } else {
-                        addition = part;
+                        if (part.equals(oldPath.getName())) {
+                            addition = newPath.getName();
+                        } else {
+                            addition = part;
+                        }
+                        strNewChildPath += "/" + addition;
+
                     }
-                    strNewChildPath += "/" + addition;
-
-                }
-
-                newChildPath = Path.path(newPath, strNewChildPath);
+                    newChildPath = Path.path(newPath, strNewChildPath);
 //                debug("newChildPath: " + newChildPath);
-                strNewChildPath = "";
-
-                entry.addChild(newChildPath);
-                entry.removeChild(p);
-
-                strChildLRN = p.toString();
-                Query q2 = pm.newQuery(LogicalData.class);
-                q2.setFilter("strLDRI == strChildLRN");
-                q2.declareParameters(strLogicalResourceName.getClass().getName() + " strChildLRN");
-                q2.setUnique(true);
-                loadedChild = (ILogicalData) q2.execute(strChildLRN);
-                if (loadedChild != null) {
-                    loadedChild.setLDRI(newChildPath);
-                } else {
-                    child = new LogicalData(newChildPath);
-                    pm.makePersistent(child);
+                    entry.removeChild(p);
+                    entry.addChild(newChildPath);
+                    renamedChildrenMap.put(p, newChildPath);
+                    strNewChildPath = "";
                 }
-
             }
-
             tx.commit();
 
         } finally {
@@ -362,6 +344,36 @@ public class SimpleDLCatalogue implements IDLCatalogue {
             pm.close();
         }
 
+        if (renamedChildrenMap != null && !renamedChildrenMap.isEmpty()) {
+            Set<Path> keySet = renamedChildrenMap.keySet();
+            for (Path p : keySet) {
+                strLogicalResourceName = p.toString();
+                pm = pmf.getPersistenceManager();
+                tx = pm.currentTransaction();
+
+                try {
+                    tx.begin();
+                    //This query, will return objects of type DataResourceEntry
+                    Query q = pm.newQuery(LogicalData.class);
+                    q.setFilter("strLDRI == strLogicalResourceName");
+                    q.declareParameters(strLogicalResourceName.getClass().getName() + " strLogicalResourceName");
+
+                    q.setUnique(true);
+                    ILogicalData childEntry = (ILogicalData) q.execute(strLogicalResourceName);
+                    if (childEntry == null) {
+//                        pm.makePersistent(new LogicalData(renamedChildrenMap.get(p)));
+                    } else {
+                        childEntry.setLDRI(renamedChildrenMap.get(p));
+                    }
+                    tx.commit();
+                } finally {
+                    if (tx.isActive()) {
+                        tx.rollback();
+                    }
+                    pm.close();
+                }
+            }
+        }
 
         Path newParent = newPath.getParent();
         if (newParent != null && !StringUtil.isEmpty(newParent.toString())) {

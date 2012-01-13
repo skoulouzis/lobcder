@@ -336,7 +336,7 @@ public class SimpleDRCatalogueTest {
                 childLoaded = instance.getResourceEntryByLDRI(Path.path(newPath, childName1));
                 assertNull(childLoaded);
 
-
+                
                 childLoaded = instance.getResourceEntryByLDRI(Path.path(newPath, childName2));
                 assertNotNull(childLoaded);
                 instance.unregisterResourceEntry(childLoaded);
