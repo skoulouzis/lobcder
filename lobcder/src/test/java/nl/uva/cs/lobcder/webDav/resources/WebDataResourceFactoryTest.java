@@ -189,4 +189,17 @@ public class WebDataResourceFactoryTest {
         assertNull(entry);
 
     }
+
+    @Test
+    public void testStorageSites() throws Exception {
+
+        System.out.println("getResource");
+        String host = "localhost:8080";
+
+        WebDataResourceFactory instance = new WebDataResourceFactory();
+        WebDataDirResource result = (WebDataDirResource) instance.getResource(host, ContantsAndSettings.TEST_FOLDER_NAME);
+        assertNotNull(result);
+        
+        
+    }
 }

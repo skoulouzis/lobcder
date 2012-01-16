@@ -64,7 +64,7 @@ public class StorageSiteManager {
         cred.setStorageSiteUsername(prop.getProperty(Constants.STORAGE_SITE_USERNAME));
         cred.setStorageSitePassword(prop.getProperty(Constants.STORAGE_SITE_PASSWORD));
         String endpoint = prop.getProperty(Constants.STORAGE_SITE_ENDPOINT);
-        
+
         debug("Adding endpoint: " + endpoint);
 
         StorageSite site = new StorageSite(endpoint, cred);
@@ -145,7 +145,6 @@ public class StorageSiteManager {
                         break;
                     }
                 }
-
             }
             tx.commit();
 
@@ -216,12 +215,11 @@ public class StorageSiteManager {
             Collection<StorageSite> results = (Collection<StorageSite>) q.execute(s);
             if (!results.isEmpty()) {
                 for (StorageSite e : results) {
-                    if(e.getEndpoint().equals(s.getEndpoint()))
-                    pm.deletePersistent(e);
-//                    debug("Endpint:  >>>>>>>>>>>>"+e.getEndpoint());
+                    if (e.getEndpoint().equals(s.getEndpoint())) {
+                        pm.deletePersistent(e);
+                    }
                 }
             }
-//            debug("Endpint:  >>>>>>>>>>>>");
             tx.commit();
 
         } finally {
@@ -229,6 +227,43 @@ public class StorageSiteManager {
                 tx.rollback();
             }
             pm.close();
+        }
+    }
+
+    public boolean storageSiteExists(Properties prop) throws Exception {
+        String uname = prop.getProperty(Constants.VPH_USERNAME);
+        String ssUname = Constants.STORAGE_SITE_USERNAME;
+        String endpoint = prop.getProperty(Constants.STORAGE_SITE_ENDPOINT);
+
+
+        StorageSite ss;
+        PersistenceManager pm = pmf.getPersistenceManager();
+        Transaction tx = pm.currentTransaction();
+
+        try {
+            tx.begin();
+            //This query, will return objects of type DataResourceEntry
+            Query q = pm.newQuery(StorageSite.class);
+
+            //restrict to instances which have the field ldri equal to some logicalResourceName
+            q.setFilter("endpoint == endpoint && vphUsername = uname");
+            q.declareParameters(endpoint.getClass().getName() + " endpoint");
+            q.setUnique(true);
+            ss = (StorageSite) q.execute(endpoint);
+            tx.commit();
+
+        } finally {
+            if (tx.isActive()) {
+                tx.rollback();
+            }
+
+            pm.close();
+        }
+        
+        if (ss == null) {
+            return false;
+        } else {
+            return true;
         }
     }
 }

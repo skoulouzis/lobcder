@@ -51,25 +51,25 @@ public class WebDataResourceFactory implements ResourceFactory {
 //                debug(">>>>>>>>>>>>>>> Host null and path is empty");
 //            }
             sites = (ArrayList<StorageSite>) siteManager.getSitesByUname(uname);
-            if(sites == null || sites.isEmpty()){
-                debug("\t StorageSites for "+ldri+" are empty!");
-                throw new IOException("StorageSites for "+ldri+" are empty!");
+            if (sites == null || sites.isEmpty()) {
+                debug("\t StorageSites for " + ldri + " are empty!");
+                throw new IOException("StorageSites for " + ldri + " are empty!");
             }
-            
+
             if (ldri.isRoot() || ldri.toString().equals("")) {
                 root = new LogicalData(ldri);
                 root.setStorageSites(sites);
                 return new WebDataDirResource(catalogue, root);
             }
-            
+
             ILogicalData entry = catalogue.getResourceEntryByLDRI(ldri);
             if (entry == null) {
                 debug("Didn't find " + ldri + ". returning null");
                 return null;
             }
-            
+
             entry.setStorageSites(sites);
-            
+
             if (entry instanceof LogicalFolder) {
                 return new WebDataDirResource(catalogue, entry);
             }
@@ -100,7 +100,9 @@ public class WebDataResourceFactory implements ResourceFactory {
 
         for (String name : names) {
             Properties prop = getCloudProperties(propBasePath + name);
-            siteManager.registerStorageSite(prop);
+            if (!siteManager.storageSiteExists(prop)) {
+                siteManager.registerStorageSite(prop);
+            }
         }
     }
 

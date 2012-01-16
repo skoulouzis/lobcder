@@ -36,7 +36,7 @@ public class LogicalData implements ILogicalData, Serializable {
     private Collection<Path> children;
     @Persistent
     private Collection<StorageSite> storageSites;
-    private boolean debug = false;
+    private boolean debug = true;
 
     public LogicalData(Path ldri) {
         this.ldri = ldri;
@@ -89,7 +89,17 @@ public class LogicalData implements ILogicalData, Serializable {
 
     @Override
     public void setStorageSites(Collection<StorageSite> storageSites) {
-        this.storageSites = storageSites;
+        if (this.storageSites == null) {
+            this.storageSites = storageSites;
+        } else {
+            for (StorageSite s : storageSites) {
+                if (!this.storageSites.contains(s)) {
+                    this.storageSites.add(s);
+                }
+            }
+        }
+
+        debug("StorageSite num : " + this.storageSites.size());
     }
 
     @Override
@@ -102,7 +112,7 @@ public class LogicalData implements ILogicalData, Serializable {
 
     private void debug(String msg) {
         if (debug) {
-            System.err.println(this.getClass().getSimpleName() + ": " + msg);
+            System.err.println(this.getClass().getName() + "."+this.ldri+": " + msg);
         }
     }
 
@@ -173,7 +183,7 @@ public class LogicalData implements ILogicalData, Serializable {
                 site = s;
                 break;
             }
-        }        
+        }
         return site.createVFSFile(getLDRI());
     }
 
