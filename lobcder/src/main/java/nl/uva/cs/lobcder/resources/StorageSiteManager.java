@@ -65,25 +65,29 @@ public class StorageSiteManager {
         cred.setStorageSitePassword(prop.getProperty(Constants.STORAGE_SITE_PASSWORD));
         String endpoint = prop.getProperty(Constants.STORAGE_SITE_ENDPOINT);
 
-        debug("Adding endpoint: " + endpoint);
+        if (!storageSiteExists(prop)) {
+            debug("Adding endpoint: " + endpoint);
 
-        StorageSite site = new StorageSite(endpoint, cred);
+            StorageSite site = new StorageSite(endpoint, cred);
 
-        PersistenceManager pm = pmf.getPersistenceManager();
-        Transaction tx = pm.currentTransaction();
-        try {
-            tx.begin();
+            PersistenceManager pm = pmf.getPersistenceManager();
+            Transaction tx = pm.currentTransaction();
+            try {
+                tx.begin();
 
-            pm.makePersistent(site);
-            tx.commit();
+                pm.makePersistent(site);
+                tx.commit();
 
-        } finally {
-            if (tx.isActive()) {
-                tx.rollback();
+            } finally {
+                if (tx.isActive()) {
+                    tx.rollback();
+                }
+                site.getEndpoint();
+                pm.close();
             }
-            site.getEndpoint();
-            pm.close();
+
         }
+
     }
 
     private void debug(String msg) {
@@ -221,7 +225,6 @@ public class StorageSiteManager {
                 }
             }
             tx.commit();
-
         } finally {
             if (tx.isActive()) {
                 tx.rollback();
@@ -236,9 +239,11 @@ public class StorageSiteManager {
         String endpoint = prop.getProperty(Constants.STORAGE_SITE_ENDPOINT);
 
 
-        StorageSite ss;
+        Collection<StorageSite> ss;
+        StorageSite storageSite = null;
         PersistenceManager pm = pmf.getPersistenceManager();
         Transaction tx = pm.currentTransaction();
+        int hit = 0;
 
         try {
             tx.begin();
@@ -246,10 +251,17 @@ public class StorageSiteManager {
             Query q = pm.newQuery(StorageSite.class);
 
             //restrict to instances which have the field ldri equal to some logicalResourceName
-            q.setFilter("endpoint == endpoint && vphUsername = uname");
-            q.declareParameters(endpoint.getClass().getName() + " endpoint");
-            q.setUnique(true);
-            ss = (StorageSite) q.execute(endpoint);
+            q.setFilter("endpoint == endpoint && vphUsername == uname");
+            q.declareParameters(endpoint.getClass().getName() + " endpoint, " + uname.getClass().getName() + " uname");
+
+            ss = (Collection<StorageSite>) q.execute(endpoint, uname);
+
+            for (StorageSite s : ss) {
+                if (s.getEndpoint().equals(endpoint) && s.getVPHUsername().equals(uname)) {
+                    hit++;
+                    storageSite = s;
+                }
+            }
             tx.commit();
 
         } finally {
@@ -259,11 +271,20 @@ public class StorageSiteManager {
 
             pm.close();
         }
-        
-        if (ss == null) {
+
+        if (storageSite == null) {
             return false;
         } else {
             return true;
         }
+    }
+
+    void deleteStorgaeSite(Properties prop) throws Exception {
+                Credential cred = new Credential(prop.getProperty(Constants.VPH_USERNAME));
+        cred.setStorageSiteUsername(prop.getProperty(Constants.STORAGE_SITE_USERNAME));
+        cred.setStorageSitePassword(prop.getProperty(Constants.STORAGE_SITE_PASSWORD));
+        String endpoint = prop.getProperty(Constants.STORAGE_SITE_ENDPOINT);
+        
+        deleteStorageSite(new StorageSite(endpoint, cred));
     }
 }

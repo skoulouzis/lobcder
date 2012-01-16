@@ -15,6 +15,7 @@ import java.util.Collection;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import nl.uva.cs.lobcder.webdav.Constants.Constants;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -136,10 +137,19 @@ public class StorageSiteManagerTest {
     public void testStorageSiteExists() throws Exception {
         System.out.println("testStorageSiteExists");
         StorageSiteManager instance = new StorageSiteManager();
-
-
-        TODO:FIX THIS TEST!
-        instance.storageSiteExists(null);
+        
+        Properties p = props.iterator().next();
+        
+        
+        boolean exists = instance.storageSiteExists(p);
+        
+        assertTrue(exists);
+        
+        instance.deleteStorgaeSite(p);
+        
+        exists = instance.storageSiteExists(p);
+        
+        assertFalse(exists);
 
     }
 
