@@ -52,9 +52,7 @@ public class WebDataFileResource implements
     public WebDataFileResource(IDLCatalogue catalogue, ILogicalData logicalData) throws CatalogueException {
         this.catalogue = catalogue;
         this.logicalData = logicalData;
-//        if (!catalogue.resourceEntryExists(logicalData)) {
-//            catalogue.registerResourceEntry(logicalData);
-//        }
+        initMetadata();
     }
 
     @Override
@@ -79,10 +77,10 @@ public class WebDataFileResource implements
     @Override
     public void delete() throws NotAuthorizedException, ConflictException, BadRequestException {
         try {
-            Collection<StorageSite> sites = logicalData.getStorageSites();
-            if (sites != null && !sites.isEmpty()) {
-                new StorageSiteManager().deleteStorgaeSites(sites);
-            }
+//            Collection<StorageSite> sites = logicalData.getStorageSites();
+//            if (sites != null && !sites.isEmpty()) {
+//                new StorageSiteManager().deleteStorgaeSites(sites);
+//            }
             catalogue.unregisterResourceEntry(logicalData);
         } catch (CatalogueException ex) {
             throw new BadRequestException(this);
@@ -103,8 +101,6 @@ public class WebDataFileResource implements
         debug("getContentType. accepts: " + accepts);
 
         String type;
-
-
 
         if (accepts != null) {
             String[] acceptsTypes = accepts.split(",");
@@ -337,5 +333,20 @@ public class WebDataFileResource implements
 
     Path getPath() {
         return this.logicalData.getLDRI();
+    }
+
+    private void initMetadata() {
+
+        Metadata meta = this.logicalData.getMetadata();
+        Long createDate = meta.getCreateDate();
+        if (createDate == null) {
+            meta.setCreateDate(System.currentTimeMillis());
+            logicalData.setMetadata(meta);
+        }
+        Long modifiedDate = meta.getModifiedDate();
+        if (modifiedDate == null) {
+            meta.setModifiedDate(System.currentTimeMillis());
+            logicalData.setMetadata(meta);
+        }
     }
 }

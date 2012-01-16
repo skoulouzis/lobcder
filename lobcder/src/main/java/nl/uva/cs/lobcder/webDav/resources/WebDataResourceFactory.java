@@ -55,22 +55,21 @@ public class WebDataResourceFactory implements ResourceFactory {
                 debug("\t StorageSites for "+ldri+" are empty!");
                 throw new IOException("StorageSites for "+ldri+" are empty!");
             }
-
+            
             if (ldri.isRoot() || ldri.toString().equals("")) {
                 root = new LogicalData(ldri);
                 root.setStorageSites(sites);
                 return new WebDataDirResource(catalogue, root);
             }
-
+            
             ILogicalData entry = catalogue.getResourceEntryByLDRI(ldri);
             if (entry == null) {
                 debug("Didn't find " + ldri + ". returning null");
                 return null;
             }
-
-
+            
             entry.setStorageSites(sites);
-
+            
             if (entry instanceof LogicalFolder) {
                 return new WebDataDirResource(catalogue, entry);
             }

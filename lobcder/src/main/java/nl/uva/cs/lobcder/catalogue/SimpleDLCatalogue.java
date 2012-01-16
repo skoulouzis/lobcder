@@ -63,11 +63,11 @@ public class SimpleDLCatalogue implements IDLCatalogue {
 //    }
     @Override
     public void unregisterResourceEntry(ILogicalData entry) throws CatalogueException {
-        Collection<StorageSite> sites = entry.getStorageSites();
-        if (sites != null && sites.isEmpty()) {
-            StorageSiteManager sm = new StorageSiteManager();
-            sm.deleteStorgaeSites(entry.getStorageSites());
-        }
+//        Collection<StorageSite> sites = entry.getStorageSites();
+//        if (sites != null && sites.isEmpty()) {
+//            StorageSiteManager sm = new StorageSiteManager();
+//            sm.deleteStorgaeSites(entry.getStorageSites());
+//        }
         deleteEntry(entry.getLDRI());
     }
 

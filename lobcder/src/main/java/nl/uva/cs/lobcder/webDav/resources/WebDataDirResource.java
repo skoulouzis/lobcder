@@ -240,10 +240,10 @@ class WebDataDirResource implements FolderResource, CollectionResource {
     public void delete() throws NotAuthorizedException, ConflictException, BadRequestException {
         try {
             debug("delete.");
-            Collection<StorageSite> sites = entry.getStorageSites();
-            if (sites != null && !sites.isEmpty()) {
-                new StorageSiteManager().deleteStorgaeSites(sites);
-            }
+//            Collection<StorageSite> sites = entry.getStorageSites();
+//            if (sites != null && !sites.isEmpty()) {
+//                new StorageSiteManager().deleteStorgaeSites(sites);
+//            }
             List<? extends Resource> children = getChildren();
             for (Resource r : children) {
                 if (r instanceof DeletableResource) {

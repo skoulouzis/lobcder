@@ -4,6 +4,7 @@
  */
 package nl.uva.cs.lobcder.webDav.resources;
 
+import nl.uva.cs.lobcder.util.ContantsAndSettings;
 import java.io.ByteArrayOutputStream;
 import nl.uva.cs.lobcder.resources.ILogicalData;
 import java.io.ByteArrayInputStream;
@@ -42,15 +43,11 @@ import static org.junit.Assert.*;
 public class WebDataDirResourceTest {
 
     private SimpleDLCatalogue catalogue;
-    private String testFileName;
-    private Path testFilePath;
     private LogicalFile testLogicalFile;
-    private String testFolderName;
     private Path testFolderPath;
     private LogicalFolder testLogicalFolder;
     private StorageSite site;
     private ArrayList<StorageSite> sites;
-    private String testData;
 
     public WebDataDirResourceTest() {
     }
@@ -68,12 +65,10 @@ public class WebDataDirResourceTest {
         try {
             catalogue = new SimpleDLCatalogue();
 
-            testFileName = "testFile";
-            testFilePath = Path.path(testFileName);
-            testLogicalFile = new LogicalFile(testFilePath);
 
-            testFolderName = "testFolder";
-            testFolderPath = Path.path(testFolderName);
+            testLogicalFile = new LogicalFile(ContantsAndSettings.TEST_FILE_PATH);
+
+            testFolderPath = Path.path(ContantsAndSettings.TEST_FOLDER_NAME);
             testLogicalFolder = new LogicalFolder(testFolderPath);
 
             String endpoint = "file:///tmp/";
@@ -83,17 +78,6 @@ public class WebDataDirResourceTest {
 
             sites = new ArrayList<StorageSite>();
             sites.add(site);
-
-            testData = "Tell me, O muse, of that ingenious hero who travelled "
-                    + "far and wide after he had sacked the famous town of Troy. "
-                    + "Many cities did he visit, and many were the nations with "
-                    + "whose manners and customs he was acquainted; moreover he "
-                    + "suffered much by sea while trying to save his own life "
-                    + "and bring his men safely home; but do what he might he "
-                    + "could not save his men, for they perished through their "
-                    + "own sheer folly in eating the cattle of the Sun-god "
-                    + "Hyperion; so the god prevented them from ever reaching "
-                    + "home.";
         } catch (Exception ex) {
             Logger.getLogger(WebDataFileResourceTest.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -260,7 +244,7 @@ public class WebDataDirResourceTest {
         System.out.println("createNew");
 
 
-        ByteArrayInputStream bais = new ByteArrayInputStream(testData.getBytes());
+        ByteArrayInputStream bais = new ByteArrayInputStream(ContantsAndSettings.TEST_DATA.getBytes());
 
         testLogicalFolder.setStorageSites(sites);
         catalogue.registerResourceEntry(testLogicalFolder);
@@ -269,31 +253,32 @@ public class WebDataDirResourceTest {
         ILogicalData loaded = catalogue.getResourceEntryByLDRI(testFolderPath);
         WebDataDirResource instance = new WebDataDirResource(catalogue, loaded);
 
-        WebDataFileResource result = (WebDataFileResource) instance.createNew(testFileName, bais, new Long(testData.getBytes().length), "text/plain");
+        WebDataFileResource result = (WebDataFileResource) instance.createNew(ContantsAndSettings.TEST_FILE_NAME, bais, new Long(ContantsAndSettings.TEST_DATA.getBytes().length), "text/plain");
         assertNotNull(result);
-        assertEquals(new Long(testData.getBytes().length), result.getContentLength());
-        loaded = catalogue.getResourceEntryByLDRI(Path.path(testFolderPath, testFileName));
+        assertEquals(new Long(ContantsAndSettings.TEST_DATA.getBytes().length), result.getContentLength());
+        loaded = catalogue.getResourceEntryByLDRI(Path.path(testFolderPath, ContantsAndSettings.TEST_FILE_NAME));
         assertNotNull(loaded);
-        
+
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         Range range = null;
         Map<String, String> params = null;
         String contentType = "text/plain";
         result.sendContent(out, range, params, contentType);
         String content = new String(out.toByteArray());
-        assertEquals(testData, content);
-        
-        
+        assertEquals(ContantsAndSettings.TEST_DATA, content);
+
+
         loaded = catalogue.getResourceEntryByLDRI(testFolderPath);
         instance = new WebDataDirResource(catalogue, loaded);
         instance.delete();
-        
+
         loaded = catalogue.getResourceEntryByLDRI(testFolderPath);
         assertNull(loaded);
-        
-        loaded = catalogue.getResourceEntryByLDRI(Path.path(testFolderPath, testFileName));
+
+        loaded = catalogue.getResourceEntryByLDRI(Path.path(testFolderPath, ContantsAndSettings.TEST_FILE_NAME));
         assertNull(loaded);
     }
+    
 //
 //    /**
 //     * Test of copyTo method, of class WebDataDirResource.
