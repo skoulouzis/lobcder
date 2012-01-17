@@ -5,6 +5,7 @@
 package nl.uva.cs.lobcder.resources;
 
 import com.bradmcevoy.common.Path;
+
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -12,9 +13,9 @@ import java.util.Collection;
 import javax.jdo.annotations.PersistenceCapable;
 import javax.jdo.annotations.Persistent;
 import javax.jdo.annotations.PrimaryKey;
+import nl.uva.cs.lobcder.util.CollectionTools;
 import nl.uva.vlet.exception.VlException;
 import nl.uva.vlet.vfs.VFSNode;
-import nl.uva.vlet.vfs.VFile;
 
 @PersistenceCapable
 public class LogicalData implements ILogicalData, Serializable {
@@ -91,15 +92,13 @@ public class LogicalData implements ILogicalData, Serializable {
     public void setStorageSites(Collection<StorageSite> storageSites) {
         if (this.storageSites == null) {
             this.storageSites = storageSites;
-        } else {
-            for (StorageSite s : storageSites) {
-                if (!this.storageSites.contains(s)) {
-                    this.storageSites.add(s);
-                }
-            }
+        } else if (this.storageSites.isEmpty()){
+            this.storageSites.addAll(storageSites);            
+        }else{
+            Collection<StorageSite> combinedSites =  CollectionTools.combineStorageSites(this.storageSites, storageSites);
+            this.storageSites = combinedSites;
         }
-
-        debug("StorageSite num : " + this.storageSites.size());
+//        debug("StorageSite num : " + this.storageSites.size());
     }
 
     @Override

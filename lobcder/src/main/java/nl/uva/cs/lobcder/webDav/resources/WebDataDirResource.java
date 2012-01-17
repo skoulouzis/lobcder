@@ -374,4 +374,8 @@ class WebDataDirResource implements FolderResource, CollectionResource {
     Path getPath() {
         return this.entry.getLDRI();
     }
+
+    Collection<StorageSite> getStorageSites() {
+        return this.entry.getStorageSites();
+    }
 }

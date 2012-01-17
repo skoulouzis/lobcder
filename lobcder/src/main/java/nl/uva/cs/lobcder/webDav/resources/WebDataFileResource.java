@@ -349,4 +349,8 @@ public class WebDataFileResource implements
             logicalData.setMetadata(meta);
         }
     }
+
+    Collection<StorageSite> getStorageSites() {
+        return this.logicalData.getStorageSites();
+    }
 }

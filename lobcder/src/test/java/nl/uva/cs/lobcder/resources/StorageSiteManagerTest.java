@@ -4,18 +4,15 @@
  */
 package nl.uva.cs.lobcder.resources;
 
-import com.bradmcevoy.common.Path;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.FileNotFoundException;
 import java.io.File;
-import java.text.Normalizer.Form;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import nl.uva.cs.lobcder.webdav.Constants.Constants;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -29,8 +26,7 @@ import static org.junit.Assert.*;
  */
 public class StorageSiteManagerTest {
 
-    private static String[] names = new String[]{"storage2.prop", "storage4.prop"};
-    private String vphUname;
+    private static String[] names = new String[]{"storage1.prop", "storage2.prop", "storage3.prop", "storage4.prop"};
     private ArrayList<String> endpoints;
     private Collection<Properties> props = new ArrayList<Properties>();
 
@@ -61,7 +57,10 @@ public class StorageSiteManagerTest {
 
     @After
     public void tearDown() {
-        new StorageSiteManager().clearAllSites();
+        StorageSiteManager ssm = new StorageSiteManager();
+        ssm.clearAllSites();
+        Collection<StorageSite> all = ssm.getAllSites();
+        assertTrue(all.isEmpty());
     }
 
     /**
@@ -97,8 +96,14 @@ public class StorageSiteManagerTest {
 
         StorageSiteManager instance = new StorageSiteManager();
         try {
-            Collection<StorageSite> result = instance.getSitesByUname(vphUname);
+            Collection<StorageSite> result = instance.getSitesByUname("uname2");
             assertNotNull(result);
+            assertFalse(result.isEmpty());
+
+            for (StorageSite s : result) {
+                assertEquals(s.getVPHUsername(), "uname2");
+            }
+
         } finally {
             instance.clearAllSites();
             Collection<StorageSite> allSites = instance.getAllSites();
@@ -115,12 +120,12 @@ public class StorageSiteManagerTest {
 
         StorageSiteManager instance = new StorageSiteManager();
         try {
-            Collection<StorageSite> result = instance.getSitesByUname(vphUname);
+            Collection<StorageSite> result = instance.getSitesByUname("uname2");
             assertNotNull(result);
 
             instance.deleteStorgaeSites(result);
 
-            result = instance.getSitesByUname(vphUname);
+            result = instance.getSitesByUname("uname2");
             assertTrue(result.isEmpty());
 
         } finally {
@@ -137,103 +142,106 @@ public class StorageSiteManagerTest {
     public void testStorageSiteExists() throws Exception {
         System.out.println("testStorageSiteExists");
         StorageSiteManager instance = new StorageSiteManager();
-        
+
         Properties p = props.iterator().next();
-        
-        
+
+
         boolean exists = instance.storageSiteExists(p);
-        
+
         assertTrue(exists);
-        
+
         instance.deleteStorgaeSite(p);
-        
+
         exists = instance.storageSiteExists(p);
-        
+
         assertFalse(exists);
+        
+        instance.clearAllSites();
+        Collection<StorageSite> allSites = instance.getAllSites();
+        assertEquals(allSites.size(), 0);
 
     }
 
-    /**
-     * Test of getSites method, of class StorageSiteManager.
-     */
-    @Test
-    public void testGetSitesByLPath() throws Exception {
-        System.out.println("testGetSitesByLPath");
-        Path p1, p2, p3;
-
-        StorageSiteManager instance = new StorageSiteManager();
-        Collection<String> paths;
-        boolean foundIt = false;
-        try {
-            Collection<StorageSite> allSites = instance.getAllSites();
-            StorageSite[] sitesArray = new StorageSite[allSites.size()];
-            sitesArray = allSites.toArray(sitesArray);
-            p1 = Path.path("path1");
-            p2 = Path.path("path2");
-            p3 = Path.path("path3/path4/path5");
-
-            sitesArray[0].createVFSFile(p1);
-            paths = sitesArray[0].getLogicalPaths();
-            for (String path : paths) {
-                assertNotNull(path);
-                if (path.equals(p1.toString())) {
-                    foundIt = true;
-                }
-            }
-            assertTrue(foundIt);
-
-            sitesArray[1].createVFSFile(p2);
-            paths = sitesArray[1].getLogicalPaths();
-            for (String path : paths) {
-                assertNotNull(path);
-                if (path.equals(p2.toString())) {
-                    foundIt = true;
-                }
-            }
-            assertTrue(foundIt);
-
-            sitesArray[0].createVFSFile(p3);
-            paths = sitesArray[0].getLogicalPaths();
-            for (String path : paths) {
-                assertNotNull(path);
-                if (path.equals(p3.toString())) {
-                    foundIt = true;
-                }
-            }
-            assertTrue(foundIt);
-
-            Collection<StorageSite> res = instance.getSitesByLPath(p1);
-            for (StorageSite s : res) {
-//                System.out.println("endpoints: " + s.getEndpoint());
-                assertNotNull(s);
-                assertTrue(s.getLogicalPaths().contains(p1.toString()));
-            }
-
-            res = instance.getSitesByLPath(p2);
-
-            for (StorageSite s : res) {
-//                System.out.println("endpoints: " + s.getEndpoint());
-                assertNotNull(s);
-                assertTrue(s.getLogicalPaths().contains(p2.toString()));
-            }
-
-            res = instance.getSitesByLPath(p3);
-
-            for (StorageSite s : res) {
-//                System.out.println("endpoints: " + s.getEndpoint());
-                assertNotNull(s);
-                assertTrue(s.getLogicalPaths().contains(p3.toString()));
-            }
-
-
-
-        } finally {
-            instance.clearAllSites();
-            Collection<StorageSite> allSites = instance.getAllSites();
-            assertEquals(allSites.size(), 0);
-        }
-    }
-
+//    /**
+//     * Test of getSites method, of class StorageSiteManager.
+//     */
+//    @Test
+//    public void testGetSitesByLPath() throws Exception {
+//        System.out.println("testGetSitesByLPath");
+//        Path p1, p2, p3;
+//
+//        StorageSiteManager instance = new StorageSiteManager();
+//        Collection<String> paths;
+//        boolean foundIt = false;
+//        try {
+//            Collection<StorageSite> allSites = instance.getAllSites();
+//            StorageSite[] sitesArray = new StorageSite[allSites.size()];
+//            sitesArray = allSites.toArray(sitesArray);
+//            p1 = Path.path("path1");
+//            p2 = Path.path("path2");
+//            p3 = Path.path("path3/path4/path5");
+//
+//            sitesArray[0].createVFSFile(p1);
+//            paths = sitesArray[0].getLogicalPaths();
+//            for (String path : paths) {
+//                assertNotNull(path);
+//                if (path.equals(p1.toString())) {
+//                    foundIt = true;
+//                }
+//            }
+//            assertTrue(foundIt);
+//
+//            sitesArray[1].createVFSFile(p2);
+//            paths = sitesArray[1].getLogicalPaths();
+//            for (String path : paths) {
+//                assertNotNull(path);
+//                if (path.equals(p2.toString())) {
+//                    foundIt = true;
+//                }
+//            }
+//            assertTrue(foundIt);
+//
+//            sitesArray[0].createVFSFile(p3);
+//            paths = sitesArray[0].getLogicalPaths();
+//            for (String path : paths) {
+//                assertNotNull(path);
+//                if (path.equals(p3.toString())) {
+//                    foundIt = true;
+//                }
+//            }
+//            assertTrue(foundIt);
+//
+//            Collection<StorageSite> res = instance.getSitesByLPath(p1);
+//            for (StorageSite s : res) {
+////                System.out.println("endpoints: " + s.getEndpoint());
+//                assertNotNull(s);
+//                assertTrue(s.getLogicalPaths().contains(p1.toString()));
+//            }
+//
+//            res = instance.getSitesByLPath(p2);
+//
+//            for (StorageSite s : res) {
+////                System.out.println("endpoints: " + s.getEndpoint());
+//                assertNotNull(s);
+//                assertTrue(s.getLogicalPaths().contains(p2.toString()));
+//            }
+//
+//            res = instance.getSitesByLPath(p3);
+//
+//            for (StorageSite s : res) {
+////                System.out.println("endpoints: " + s.getEndpoint());
+//                assertNotNull(s);
+//                assertTrue(s.getLogicalPaths().contains(p3.toString()));
+//            }
+//
+//
+//
+//        } finally {
+//            instance.clearAllSites();
+//            Collection<StorageSite> allSites = instance.getAllSites();
+//            assertEquals(allSites.size(), 0);
+//        }
+//    }
     private void populateStorageSites() throws FileNotFoundException, IOException, Exception {
         new StorageSiteManager().clearAllSites();
         String propBasePath = System.getProperty("user.home") + File.separator
@@ -246,7 +254,6 @@ public class StorageSiteManagerTest {
         props.clear();
         for (String name : names) {
             Properties prop = getCloudProperties(propBasePath + name);
-            vphUname = prop.getProperty(nl.uva.cs.lobcder.webdav.Constants.Constants.VPH_USERNAME);
             this.props.add(prop);
             endpoints.add(prop.getProperty(nl.uva.cs.lobcder.webdav.Constants.Constants.STORAGE_SITE_ENDPOINT));
             instance.registerStorageSite(prop);

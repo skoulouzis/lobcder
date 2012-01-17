@@ -25,11 +25,11 @@ public class Credential {
         return this.gridProxy;
     }
 
-    String getStorageSiteUsername() {
+    public String getStorageSiteUsername() {
         return storageSiteUname;
     }
 
-    String getStorageSitePassword() {
+    public String getStorageSitePassword() {
         return passwd;
     }
 

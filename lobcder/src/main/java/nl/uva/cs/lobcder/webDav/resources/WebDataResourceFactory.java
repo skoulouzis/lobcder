@@ -92,7 +92,7 @@ public class WebDataResourceFactory implements ResourceFactory {
 
     private void initStorageSites() throws Exception {
         siteManager = new StorageSiteManager();
-        String[] names = new String[]{"storage2.prop", "storage3.prop"};
+        String[] names = new String[]{"storage1.prop","storage2.prop", "storage3.prop","storage4.prop"};
 
         String propBasePath = System.getProperty("user.home") + File.separator
                 + "workspace" + File.separator + "lobcder"

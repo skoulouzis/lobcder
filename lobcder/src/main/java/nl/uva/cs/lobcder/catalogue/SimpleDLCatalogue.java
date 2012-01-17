@@ -12,10 +12,8 @@ import com.bradmcevoy.common.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import javax.jdo.Extent;
 import javax.jdo.JDOHelper;
 import javax.jdo.PersistenceManager;
 import javax.jdo.PersistenceManagerFactory;
@@ -23,8 +21,6 @@ import javax.jdo.Query;
 import javax.jdo.Transaction;
 import nl.uva.cs.lobcder.resources.LogicalData;
 import nl.uva.cs.lobcder.resources.ILogicalData;
-import nl.uva.cs.lobcder.resources.StorageSite;
-import nl.uva.cs.lobcder.resources.StorageSiteManager;
 import nl.uva.vlet.data.StringUtil;
 
 public class SimpleDLCatalogue implements IDLCatalogue {
