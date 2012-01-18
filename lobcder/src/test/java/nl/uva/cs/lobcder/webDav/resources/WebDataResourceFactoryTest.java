@@ -164,10 +164,19 @@ public class WebDataResourceFactoryTest {
         result = (WebDataDirResource) instance.getResource(host, ContantsAndSettings.TEST_FOLDER_NAME);
         assertNotNull(result);
 
+        Collection<StorageSite> sites = file.getStorageSites();
+
+        System.out.println(">>>>>>Sites: " + sites.size());
+        for (StorageSite s : sites) {
+            System.out.println(">>>>>>Sites: " + s.getEndpoint()+" "+s.getUID());
+        }
+
 
         file = (WebDataFileResource) result.createNew(ContantsAndSettings.TEST_FILE_NAME, bais, new Long("DATA".getBytes().length), "text/plain");
         len = file.getContentLength();
         assertEquals(len, new Long("DATA".getBytes().length));
+
+
 
         acceps = "text/html,text/*;q=0.9";
         res = file.getContentType(acceps);
@@ -182,15 +191,6 @@ public class WebDataResourceFactoryTest {
 
         name = file.getName();
         assertEquals(ContantsAndSettings.TEST_FILE_NAME, name);
-
-
-        Collection<StorageSite> sites = file.getStorageSites();
-
-        System.out.println(">>>>>>Sites: " + sites.size());
-        for (StorageSite s : sites) {
-            System.out.println(">>>>>>Sites: " + s.getEndpoint());
-        }
-
 
         result.delete();
         cat = new SimpleDLCatalogue();

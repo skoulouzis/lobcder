@@ -35,9 +35,13 @@ public class LogicalData implements ILogicalData, Serializable {
     private Metadata metadata;
     @Persistent
     private Collection<Path> children;
-    @Persistent
-    private Collection<StorageSite> storageSites;
+//    @Persistent
+//    private Collection<StorageSite> storageSites;
     private boolean debug = true;
+    
+    
+
+    private Collection<StorageSite> storageSites;
 
     public LogicalData(Path ldri) {
         this.ldri = ldri;
@@ -195,5 +199,10 @@ public class LogicalData implements ILogicalData, Serializable {
     @Override
     public void removeChildren(Collection<Path> childPath) {
         this.children.removeAll(children);
+    }
+
+    @Override
+    public void removeStorageSites() {
+        this.storageSites.clear();
     }
 }

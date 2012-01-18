@@ -50,5 +50,7 @@ public interface ILogicalData {
     public boolean hasPhysicalData()throws VlException;
 
     public VFSNode createPhysicalData()throws VlException;
+
+    public void removeStorageSites();
     
 }

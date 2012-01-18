@@ -247,11 +247,11 @@ public class StorageSiteManager {
             Query q = pm.newQuery(StorageSite.class);
 
             //restrict to instances which have the field ldri equal to some logicalResourceName
-            q.setFilter("endpoint == ePoint && vphUsername == uname");
-            q.declareParameters(ePoint.getClass().getName() + " endpoint, " + uname.getClass().getName() + " uname");
-
+            q.setFilter("endpoint == ePoint");
+            q.declareParameters(ePoint.getClass().getName() + " ePoint, " + uname.getClass().getName() + " uname");
+            
             ss = (Collection<StorageSite>) q.execute(ePoint, uname);
-
+            
             for (StorageSite s : ss) {
                 if (s.getEndpoint().equals(ePoint) && s.getVPHUsername().equals(uname)) {
                     hit++;
@@ -267,7 +267,7 @@ public class StorageSiteManager {
 
             pm.close();
         }
-
+        
         if (storageSite == null) {
             return false;
         } else {

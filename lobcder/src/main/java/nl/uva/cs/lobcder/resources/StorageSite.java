@@ -13,14 +13,15 @@ import java.util.Collection;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.jdo.annotations.IdGeneratorStrategy;
 import javax.jdo.annotations.PersistenceCapable;
 import javax.jdo.annotations.Persistent;
+import javax.jdo.annotations.PrimaryKey;
 import nl.uva.vlet.Global;
 import nl.uva.vlet.GlobalConfig;
 import nl.uva.vlet.data.StringUtil;
 import nl.uva.vlet.exception.VlException;
 import nl.uva.vlet.util.cog.GridProxy;
-import nl.uva.vlet.vfs.VDir;
 import nl.uva.vlet.vfs.VFSClient;
 import nl.uva.vlet.vfs.VFSNode;
 import nl.uva.vlet.vfs.VFile;
@@ -68,6 +69,9 @@ public class StorageSite implements Serializable, IStorageSite {
 
         Global.init();
     }
+    @PrimaryKey
+    @Persistent(valueStrategy = IdGeneratorStrategy.INCREMENT)
+    private long id;
     private Properties prop;
     private VRL vrl;
     @Persistent
@@ -167,5 +171,9 @@ public class StorageSite implements Serializable, IStorageSite {
 
     public Credential getCredentials() {
         return this.credentials;
+    }
+
+    public long getUID() {
+        return this.id;
     }
 }

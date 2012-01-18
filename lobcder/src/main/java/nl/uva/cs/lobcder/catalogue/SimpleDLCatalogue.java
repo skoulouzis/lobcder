@@ -21,6 +21,7 @@ import javax.jdo.Query;
 import javax.jdo.Transaction;
 import nl.uva.cs.lobcder.resources.LogicalData;
 import nl.uva.cs.lobcder.resources.ILogicalData;
+import nl.uva.cs.lobcder.resources.StorageSite;
 import nl.uva.vlet.data.StringUtil;
 
 public class SimpleDLCatalogue implements IDLCatalogue {
@@ -86,13 +87,33 @@ public class SimpleDLCatalogue implements IDLCatalogue {
     private void persistEntry(ILogicalData entry) {
         PersistenceManager pm = pmf.getPersistenceManager();
         Transaction tx = pm.currentTransaction();
+        Collection<StorageSite> storageSites = entry.getStorageSites();
+        Collection<StorageSite> results;
+        Collection<StorageSite> deleteStorageSites = new ArrayList<StorageSite>();
+        String epoint;
+        String uname;
         try {
             tx.begin();
-
             pm.makePersistent(entry);
-//            pm.makePersistent(entry.getMetadata());
-//            Object id = pm.getObjectId(entry);
 //            debug("persistEntry. DB UID class: " + id.getClass().getName() + " UID: " + id);
+            //work around to remove duplicated storage sites 
+            for (StorageSite s : storageSites) {
+                uname = s.getVPHUsername();
+                epoint = s.getEndpoint();
+                Query q = pm.newQuery(StorageSite.class);
+
+                q.setFilter("vphUsername == uname && endpoint == epoint");
+                q.declareParameters(uname.getClass().getName() + " uname, " + epoint.getClass().getName() + " epoint");
+
+
+                results = (Collection<StorageSite>) q.execute(uname, epoint);
+                for (StorageSite ss : results) {
+                    if (s.getUID() != ss.getUID()) {
+                        deleteStorageSites.add(ss);
+                    }
+                }
+            }
+            pm.deletePersistentAll(deleteStorageSites);
             tx.commit();
 
         } finally {
