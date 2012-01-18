@@ -97,23 +97,26 @@ public class SimpleDLCatalogue implements IDLCatalogue {
             pm.makePersistent(entry);
 //            debug("persistEntry. DB UID class: " + id.getClass().getName() + " UID: " + id);
             //work around to remove duplicated storage sites 
-            for (StorageSite s : storageSites) {
-                uname = s.getVPHUsername();
-                epoint = s.getEndpoint();
-                Query q = pm.newQuery(StorageSite.class);
+            if (storageSites != null && !storageSites.isEmpty()) {
+                for (StorageSite s : storageSites) {
+                    uname = s.getVPHUsername();
+                    epoint = s.getEndpoint();
+                    Query q = pm.newQuery(StorageSite.class);
 
-                q.setFilter("vphUsername == uname && endpoint == epoint");
-                q.declareParameters(uname.getClass().getName() + " uname, " + epoint.getClass().getName() + " epoint");
+                    q.setFilter("vphUsername == uname && endpoint == epoint");
+                    q.declareParameters(uname.getClass().getName() + " uname, " + epoint.getClass().getName() + " epoint");
 
 
-                results = (Collection<StorageSite>) q.execute(uname, epoint);
-                for (StorageSite ss : results) {
-                    if (s.getUID() != ss.getUID()) {
-                        deleteStorageSites.add(ss);
+                    results = (Collection<StorageSite>) q.execute(uname, epoint);
+                    for (StorageSite ss : results) {
+                        if (s.getUID() != ss.getUID()) {
+                            deleteStorageSites.add(ss);
+                        }
                     }
                 }
+                pm.deletePersistentAll(deleteStorageSites);
             }
-            pm.deletePersistentAll(deleteStorageSites);
+
             tx.commit();
 
         } finally {
