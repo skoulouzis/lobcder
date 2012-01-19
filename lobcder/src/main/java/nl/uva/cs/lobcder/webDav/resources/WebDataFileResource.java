@@ -33,6 +33,7 @@ import nl.uva.cs.lobcder.resources.LogicalFile;
 import nl.uva.cs.lobcder.resources.StorageSite;
 import nl.uva.cs.lobcder.resources.StorageSiteManager;
 import nl.uva.cs.lobcder.util.MMTypeTools;
+import nl.uva.cs.lobcder.webdav.exceptions.ForbiddenException;
 import nl.uva.vlet.data.StringUtil;
 import nl.uva.vlet.exception.VlException;
 import nl.uva.vlet.vfs.VFSNode;
@@ -189,10 +190,11 @@ public class WebDataFileResource implements
 
 
         debug("\t rDestgetName: " + rDest.getName() + " name: " + name);
-//        if (rDest == null || rDest.getName() == null) {
+//        if (rDest == null) {
 //            debug("----------------Have to throw forbidden ");
 //            throw new ForbiddenException(this);
 //        }
+        
         Path dirPath = ((WebDataDirResource) rDest).getPath();
         debug("\t rDestgetUniqueId: " + rDest.getUniqueId());
 
