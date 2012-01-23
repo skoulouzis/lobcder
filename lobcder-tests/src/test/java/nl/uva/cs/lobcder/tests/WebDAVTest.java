@@ -69,7 +69,7 @@ public class WebDAVTest {
         String propBasePath = System.getProperty("user.home") + File.separator
                 + "workspace" + File.separator + "lobcder-tests"
                 + File.separator + "etc" + File.separator + "test.proprties";
-        Properties prop = getTestProperties(propBasePath);
+        Properties prop =  TestSettings.getTestProperties(propBasePath);
 
         String testURL = prop.getProperty("webdav.test.url");
         //Some problem with the pom.xml. The properties are set but System.getProperty gets null
@@ -892,14 +892,4 @@ public class WebDAVTest {
 //        return parentset;
 //    }
 //
-
-    private static Properties getTestProperties(String propPath)
-            throws FileNotFoundException, IOException {
-        Properties properties = new Properties();
-
-        File f = new File(propPath);
-        properties.load(new FileInputStream(f));
-
-        return properties;
-    }
 }
