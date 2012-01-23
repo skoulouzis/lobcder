@@ -31,9 +31,7 @@ import nl.uva.cs.lobcder.resources.ILogicalData;
 import nl.uva.cs.lobcder.resources.Metadata;
 import nl.uva.cs.lobcder.resources.LogicalFile;
 import nl.uva.cs.lobcder.resources.StorageSite;
-import nl.uva.cs.lobcder.resources.StorageSiteManager;
 import nl.uva.cs.lobcder.util.MMTypeTools;
-import nl.uva.cs.lobcder.webdav.exceptions.ForbiddenException;
 import nl.uva.vlet.data.StringUtil;
 import nl.uva.vlet.exception.VlException;
 import nl.uva.vlet.vfs.VFSNode;
@@ -101,25 +99,29 @@ public class WebDataFileResource implements
     public String getContentType(String accepts) {
         debug("getContentType. accepts: " + accepts);
 
-        String type;
+        String type = "";
+        ArrayList<String> fileContentTypes = null;
+        if (logicalData.getMetadata() != null) {
+            fileContentTypes = logicalData.getMetadata().getContentTypes();
+        }
 
-        if (accepts != null) {
+        if (accepts != null && fileContentTypes != null && !fileContentTypes.isEmpty()) {
             String[] acceptsTypes = accepts.split(",");
             Collection<String> acceptsList = new ArrayList<String>();
             acceptsList.addAll(Arrays.asList(acceptsTypes));
 
-            if (logicalData.getMetadata() != null) {
-                ArrayList<String> fileContentTypes = logicalData.getMetadata().getContentTypes();
-                for (String fileContentType : fileContentTypes) {
-                    type = MMTypeTools.bestMatch(acceptsList, fileContentType);
-
+            for (String fileContentType : fileContentTypes) {
+                type = MMTypeTools.bestMatch(acceptsList, fileContentType);
 //                    return ContentTypeUtils.findAcceptableContentType(type, accepts);
-                    debug("\t type: " + type);
-                    if (!StringUtil.isEmpty(type)) {
-                        return type;
-                    }
+                debug("\t type: " + type);
+                if (!StringUtil.isEmpty(type)) {
+                    return type;
                 }
             }
+        } else {
+            String regex = "(^.*?\\[|\\]\\s*$)";
+            type = fileContentTypes.toString().replaceAll(regex, "");
+            return type;
         }
         return null;
     }
@@ -194,7 +196,7 @@ public class WebDataFileResource implements
 //            debug("----------------Have to throw forbidden ");
 //            throw new ForbiddenException(this);
 //        }
-        
+
         Path dirPath = ((WebDataDirResource) rDest).getPath();
         debug("\t rDestgetUniqueId: " + rDest.getUniqueId());
 

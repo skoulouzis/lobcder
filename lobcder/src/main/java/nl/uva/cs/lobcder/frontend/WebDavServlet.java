@@ -43,7 +43,7 @@ public class WebDavServlet implements Servlet {
             javax.servlet.ServletResponse servletResponse) throws ServletException, IOException {
         HttpServletRequest req = (HttpServletRequest) servletRequest;
         HttpServletResponse resp = (HttpServletResponse) servletResponse;
-
+        
         debug("HttpServletRequest \n" +
                 "\t getAuthType: "+req.getAuthType()+"\n"+
                 "\t getContentType: "+req.getContentType()+"\n"+

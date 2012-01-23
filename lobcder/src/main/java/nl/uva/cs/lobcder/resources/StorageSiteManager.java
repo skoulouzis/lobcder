@@ -35,7 +35,7 @@ public class StorageSiteManager {
             
             q.setFilter("vphUsername == vphUname");
             q.declareParameters(vphUname.getClass().getName() + " vphUname");
-
+                        
             results = (Collection<StorageSite>) q.execute(vphUname);
 
             if (!results.isEmpty()) {

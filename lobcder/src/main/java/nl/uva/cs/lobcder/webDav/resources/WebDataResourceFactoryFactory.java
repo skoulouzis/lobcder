@@ -20,7 +20,7 @@ public class WebDataResourceFactoryFactory implements ResourceFactoryFactory {
     private static AuthenticationService authenticationService;
     private static WebDataResourceFactory resourceFactory;
     private boolean debug = false;
-
+    
     @Override
     public ResourceFactory createResourceFactory() {
         return resourceFactory;

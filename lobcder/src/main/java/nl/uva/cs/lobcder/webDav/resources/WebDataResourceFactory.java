@@ -14,12 +14,14 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Properties;
+import javax.servlet.http.HttpServletRequest;
 import nl.uva.cs.lobcder.catalogue.IDLCatalogue;
 import nl.uva.cs.lobcder.catalogue.SimpleDLCatalogue;
 import nl.uva.cs.lobcder.resources.ILogicalData;
 import nl.uva.cs.lobcder.resources.LogicalData;
 import nl.uva.cs.lobcder.resources.LogicalFile;
 import nl.uva.cs.lobcder.resources.LogicalFolder;
+import nl.uva.cs.lobcder.webdav.exceptions.ForbiddenException;
 
 public class WebDataResourceFactory implements ResourceFactory {
 
@@ -44,9 +46,9 @@ public class WebDataResourceFactory implements ResourceFactory {
         LogicalData root;
         try {
             //Gets the root path. If instead we called :'ldri = Path.path(strPath);' we get back '/lobcder-1.0-SNAPSHOT'
-            debug("getResource:  strPath: " + strPath + " path: " + Path.path(strPath));
+            debug("getResource:  strPath: " + strPath + " path: " + Path.path(strPath) + " ldri: " + ldri);
             debug("getResource:  host: " + host + " path: " + ldri);
-
+            
 //            if (host == null && Path.path(strPath).toString().equals("")) {
 //                debug(">>>>>>>>>>>>>>> Host null and path is empty");
 //            }
@@ -92,7 +94,7 @@ public class WebDataResourceFactory implements ResourceFactory {
 
     private void initStorageSites() throws Exception {
         siteManager = new StorageSiteManager();
-        String[] names = new String[]{"storage1.prop","storage2.prop", "storage3.prop","storage4.prop"};
+        String[] names = new String[]{"storage1.prop", "storage2.prop", "storage3.prop", "storage4.prop"};
 
         String propBasePath = System.getProperty("user.home") + File.separator
                 + "workspace" + File.separator + "lobcder"
