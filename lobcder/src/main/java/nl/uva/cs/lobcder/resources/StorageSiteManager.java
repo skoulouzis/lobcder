@@ -20,22 +20,25 @@ import nl.uva.cs.lobcder.webdav.Constants.Constants;
 public class StorageSiteManager {
 
     private final PersistenceManagerFactory pmf;
+    private PersistenceManager pm;
 
     public StorageSiteManager() {
         pmf = JDOHelper.getPersistenceManagerFactory("datanucleus.properties");
+        pm = pmf.getPersistenceManagerProxy();
     }
 
-    public Collection<StorageSite> getSitesByUname(String vphUname) {
-        PersistenceManager pm = pmf.getPersistenceManager();
+    public  Collection<StorageSite> getSitesByUname(String vphUname) {
+        //PersistenceManager pm = pmf.getPersistenceManagerProxy();
+
         Transaction tx = pm.currentTransaction();
         Collection<StorageSite> results;
         try {
             tx.begin();
             Query q = pm.newQuery(StorageSite.class);
-            
+
             q.setFilter("vphUsername == vphUname");
             q.declareParameters(vphUname.getClass().getName() + " vphUname");
-                        
+
             results = (Collection<StorageSite>) q.execute(vphUname);
 
             if (!results.isEmpty()) {
@@ -51,12 +54,12 @@ public class StorageSiteManager {
                 tx.rollback();
             }
 
-            pm.close();
+            //pm.close();
         }
         return results;
     }
 
-    public void registerStorageSite(Properties prop) throws Exception {
+    public  void registerStorageSite(Properties prop) throws Exception {
         Credential cred = new Credential(prop.getProperty(Constants.VPH_USERNAME));
         cred.setStorageSiteUsername(prop.getProperty(Constants.STORAGE_SITE_USERNAME));
         cred.setStorageSitePassword(prop.getProperty(Constants.STORAGE_SITE_PASSWORD));
@@ -67,7 +70,7 @@ public class StorageSiteManager {
 
             StorageSite site = new StorageSite(endpoint, cred);
 
-            PersistenceManager pm = pmf.getPersistenceManager();
+            //PersistenceManager pm = pmf.getPersistenceManagerProxy();
             Transaction tx = pm.currentTransaction();
             try {
                 tx.begin();
@@ -80,7 +83,7 @@ public class StorageSiteManager {
                     tx.rollback();
                 }
                 site.getEndpoint();
-                pm.close();
+                //pm.close();
             }
 
         }
@@ -92,7 +95,7 @@ public class StorageSiteManager {
     }
 
 //    public Collection<StorageSite> getSitesByLPath(Path lDRI) {
-//        PersistenceManager pm = pmf.getPersistenceManager();
+//        //PersistenceManager pm = pmf.getPersistenceManagerProxy();
 //        Transaction tx = pm.currentTransaction();
 //        Collection<StorageSite> results;
 //        ArrayList<StorageSite> resultsWithPaths = new ArrayList<StorageSite>();
@@ -122,14 +125,14 @@ public class StorageSiteManager {
 //                tx.rollback();
 //            }
 //
-//            pm.close();
+//            //pm.close();
 //        }
 //        return resultsWithPaths;
 //    }
-    void cleaSite(String endpoint) {
+     void cleaSite(String endpoint) {
 
         //Next the node 
-        PersistenceManager pm = pmf.getPersistenceManager();
+        //PersistenceManager pm = pmf.getPersistenceManagerProxy();
         Transaction tx = pm.currentTransaction();
         try {
             tx.begin();
@@ -152,13 +155,13 @@ public class StorageSiteManager {
             if (tx.isActive()) {
                 tx.rollback();
             }
-            pm.close();
+            //pm.close();
         }
     }
 
-    public Collection<StorageSite> getAllSites() {
+    public  Collection<StorageSite> getAllSites() {
         //Next the node 
-        PersistenceManager pm = pmf.getPersistenceManager();
+        //PersistenceManager pm = pmf.getPersistenceManagerProxy();
         Transaction tx = pm.currentTransaction();
         try {
             tx.begin();
@@ -173,12 +176,12 @@ public class StorageSiteManager {
             if (tx.isActive()) {
                 tx.rollback();
             }
-            pm.close();
+            //pm.close();
         }
     }
 
-    public void clearAllSites() {
-        PersistenceManager pm = pmf.getPersistenceManager();
+    public  void clearAllSites() {
+        //PersistenceManager pm = pmf.getPersistenceManagerProxy();
         Transaction tx = pm.currentTransaction();
         try {
             tx.begin();
@@ -191,19 +194,19 @@ public class StorageSiteManager {
             if (tx.isActive()) {
                 tx.rollback();
             }
-            pm.close();
+            //pm.close();
         }
     }
 
-    public void deleteStorgaeSites(Collection<StorageSite> storageSites) {
+    public  void deleteStorgaeSites(Collection<StorageSite> storageSites) {
         for (StorageSite s : storageSites) {
             deleteStorageSite(s);
         }
     }
 
-    private void deleteStorageSite(StorageSite s) {
+    private  void deleteStorageSite(StorageSite s) {
 //        debug("delete Endpint:  >>>>>>>>>>>>"+s.getEndpoint());
-        PersistenceManager pm = pmf.getPersistenceManager();
+        //PersistenceManager pm = pmf.getPersistenceManagerProxy();
         Transaction tx = pm.currentTransaction();
         try {
             tx.begin();
@@ -223,11 +226,11 @@ public class StorageSiteManager {
             if (tx.isActive()) {
                 tx.rollback();
             }
-            pm.close();
+            //pm.close();
         }
     }
 
-    public boolean storageSiteExists(Properties prop) throws Exception {
+    public  boolean storageSiteExists(Properties prop) throws Exception {
         String uname = prop.getProperty(Constants.VPH_USERNAME);
         String ssUname = Constants.STORAGE_SITE_USERNAME;
         String ePoint = prop.getProperty(Constants.STORAGE_SITE_ENDPOINT);
@@ -235,7 +238,7 @@ public class StorageSiteManager {
 
         Collection<StorageSite> ss;
         StorageSite storageSite = null;
-        PersistenceManager pm = pmf.getPersistenceManager();
+        //PersistenceManager pm = pmf.getPersistenceManagerProxy();
         Transaction tx = pm.currentTransaction();
         int hit = 0;
 
@@ -247,9 +250,9 @@ public class StorageSiteManager {
             //restrict to instances which have the field ldri equal to some logicalResourceName
             q.setFilter("endpoint == ePoint");
             q.declareParameters(ePoint.getClass().getName() + " ePoint, " + uname.getClass().getName() + " uname");
-            
+
             ss = (Collection<StorageSite>) q.execute(ePoint, uname);
-            
+
             for (StorageSite s : ss) {
                 if (s.getEndpoint().equals(ePoint) && s.getVPHUsername().equals(uname)) {
                     hit++;
@@ -263,9 +266,9 @@ public class StorageSiteManager {
                 tx.rollback();
             }
 
-            pm.close();
+            //pm.close();
         }
-        
+
         if (storageSite == null) {
             return false;
         } else {
@@ -273,7 +276,7 @@ public class StorageSiteManager {
         }
     }
 
-    void deleteStorgaeSite(Properties prop) throws Exception {
+     void deleteStorgaeSite(Properties prop) throws Exception {
         Credential cred = new Credential(prop.getProperty(Constants.VPH_USERNAME));
         cred.setStorageSiteUsername(prop.getProperty(Constants.STORAGE_SITE_USERNAME));
         cred.setStorageSitePassword(prop.getProperty(Constants.STORAGE_SITE_PASSWORD));

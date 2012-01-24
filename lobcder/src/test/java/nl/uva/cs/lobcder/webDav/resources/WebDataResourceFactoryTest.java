@@ -275,6 +275,7 @@ public class WebDataResourceFactoryTest {
 
             } catch (Exception ex) {
                 fail(ex.getMessage());
+                ex.printStackTrace();
             }
         }
 

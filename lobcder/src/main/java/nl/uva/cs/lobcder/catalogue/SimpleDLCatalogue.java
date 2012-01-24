@@ -35,7 +35,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
     }
 
     @Override
-    public void registerResourceEntry(ILogicalData entry) throws CatalogueException {
+    public  void registerResourceEntry(ILogicalData entry) throws CatalogueException {
         ILogicalData loaded = queryEntry(entry.getLDRI());
         if (loaded != null && comparePaths(loaded.getLDRI(), entry.getLDRI())) {
             throw new DuplicateResourceException("Cannot register resource " + entry.getLDRI() + " resource exists");
@@ -49,7 +49,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
     }
 
     @Override
-    public ILogicalData getResourceEntryByLDRI(Path logicalResourceName) throws CatalogueException {
+    public  ILogicalData getResourceEntryByLDRI(Path logicalResourceName) throws CatalogueException {
         debug("Quering " + logicalResourceName);
         return queryEntry(logicalResourceName);
     }
@@ -59,7 +59,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
 //        return loadEntryByUID(uid);
 //    }
     @Override
-    public void unregisterResourceEntry(ILogicalData entry) throws CatalogueException {
+    public  void unregisterResourceEntry(ILogicalData entry) throws CatalogueException {
 //        Collection<StorageSite> sites = entry.getStorageSites();
 //        if (sites != null && sites.isEmpty()) {
 //            StorageSiteManager sm = new StorageSiteManager();
@@ -69,12 +69,12 @@ public class SimpleDLCatalogue implements IDLCatalogue {
     }
 
     @Override
-    public Boolean resourceEntryExists(ILogicalData entry) throws CatalogueException {
+    public  Boolean resourceEntryExists(ILogicalData entry) throws CatalogueException {
         return queryEntry(entry.getLDRI()) != null ? true : false;
     }
 
     @Override
-    public Collection<ILogicalData> getTopLevelResourceEntries() throws CatalogueException {
+    public  Collection<ILogicalData> getTopLevelResourceEntries() throws CatalogueException {
         return queryTopLevelResources();
     }
 
@@ -84,7 +84,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
         }
     }
 
-    private void persistEntry(ILogicalData entry) {
+    private  void persistEntry(ILogicalData entry) {
         PersistenceManager pm = pmf.getPersistenceManager();
         Transaction tx = pm.currentTransaction();
         Collection<StorageSite> storageSites = entry.getStorageSites();
@@ -129,7 +129,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
         }
     }
 
-    private ILogicalData queryEntry(Path logicalResourceName) {
+    private   ILogicalData queryEntry(Path logicalResourceName) {
         String strLogicalResourceName = logicalResourceName.toString();
         PersistenceManager pm = pmf.getPersistenceManager();
         Transaction tx = pm.currentTransaction();
@@ -157,7 +157,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
         return entry;
     }
 
-    private void deleteEntry(Path logicalResourceName) throws ResourceExistsException, NonExistingResourceException {
+    private  void deleteEntry(Path logicalResourceName) throws ResourceExistsException, NonExistingResourceException {
         debug("deleteEntry: " + logicalResourceName);
         String strLogicalResourceName = logicalResourceName.toString();
 
@@ -191,7 +191,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
         }
     }
 
-    private void addChild(Path parent, Path child) throws NonExistingResourceException {
+    private  void addChild(Path parent, Path child) throws NonExistingResourceException {
         debug("Will add to " + parent + " " + child);
         String strLogicalResourceName = parent.toString();
 
@@ -222,7 +222,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
         }
     }
 
-    private void removeChild(Path parent, Path child) throws NonExistingResourceException {
+    private  void removeChild(Path parent, Path child) throws NonExistingResourceException {
         debug("Will remove from " + parent + " " + child);
         String strLogicalResourceName = parent.toString();
         PersistenceManager pm = pmf.getPersistenceManager();
@@ -252,7 +252,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
         }
     }
 
-    private Collection<ILogicalData> queryTopLevelResources() {
+    private  Collection<ILogicalData> queryTopLevelResources() {
 
         //TODO Fix all the queris!
         PersistenceManager pm = pmf.getPersistenceManager();
@@ -293,7 +293,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
     }
 
     @Override
-    public void renameEntry(Path oldPath, Path newPath) throws CatalogueException {
+    public  void renameEntry(Path oldPath, Path newPath) throws CatalogueException {
         debug("renameEntry.");
         debug("\t entry: " + oldPath + " newName: " + newPath);
         String strLogicalResourceName = oldPath.toPath();
@@ -408,7 +408,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
         return false;
     }
 
-    public Collection<LogicalData> getAllLogicalData() {
+    public  Collection<LogicalData> getAllLogicalData() {
         PersistenceManager pm = pmf.getPersistenceManager();
         Transaction tx = pm.currentTransaction();
         Collection c;
