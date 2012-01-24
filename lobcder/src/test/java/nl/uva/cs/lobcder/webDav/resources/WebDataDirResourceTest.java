@@ -56,7 +56,7 @@ public class WebDataDirResourceTest {
             catalogue = new SimpleDLCatalogue();
 
 
-            testLogicalFile = new LogicalFile(ContantsAndSettings.TEST_FILE_PATH1);
+            testLogicalFile = new LogicalFile(ContantsAndSettings.TEST_FILE_PATH_1);
 
             testFolderPath = Path.path(ContantsAndSettings.TEST_FOLDER_NAME);
             testLogicalFolder = new LogicalFolder(testFolderPath);
@@ -243,10 +243,10 @@ public class WebDataDirResourceTest {
         ILogicalData loaded = catalogue.getResourceEntryByLDRI(testFolderPath);
         WebDataDirResource instance = new WebDataDirResource(catalogue, loaded);
 
-        WebDataFileResource result = (WebDataFileResource) instance.createNew(ContantsAndSettings.TEST_FILE_NAME1, bais, new Long(ContantsAndSettings.TEST_DATA.getBytes().length), "text/plain");
+        WebDataFileResource result = (WebDataFileResource) instance.createNew(ContantsAndSettings.TEST_FILE_NAME_1, bais, new Long(ContantsAndSettings.TEST_DATA.getBytes().length), "text/plain");
         assertNotNull(result);
         assertEquals(new Long(ContantsAndSettings.TEST_DATA.getBytes().length), result.getContentLength());
-        loaded = catalogue.getResourceEntryByLDRI(Path.path(testFolderPath, ContantsAndSettings.TEST_FILE_NAME1));
+        loaded = catalogue.getResourceEntryByLDRI(Path.path(testFolderPath, ContantsAndSettings.TEST_FILE_NAME_1));
         assertNotNull(loaded);
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -265,7 +265,7 @@ public class WebDataDirResourceTest {
         loaded = catalogue.getResourceEntryByLDRI(testFolderPath);
         assertNull(loaded);
 
-        loaded = catalogue.getResourceEntryByLDRI(Path.path(testFolderPath, ContantsAndSettings.TEST_FILE_NAME1));
+        loaded = catalogue.getResourceEntryByLDRI(Path.path(testFolderPath, ContantsAndSettings.TEST_FILE_NAME_1));
         assertNull(loaded);
     }
     
