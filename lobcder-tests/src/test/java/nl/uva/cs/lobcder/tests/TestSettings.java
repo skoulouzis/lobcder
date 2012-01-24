@@ -16,7 +16,8 @@ import java.util.Properties;
  */
 public class TestSettings {
 
-    public static final String TEST_FILE_NAME = "testFileName";
+    public static final String TEST_FILE_NAME1 = "testFileName1";
+    public static final String TEST_FILE_NAME2 = "testFileName2";
     public static final String TEST_DATA = "Tell me, O muse, of that ingenious hero who travelled "
             + "far and wide after he had sacked the famous town of Troy. "
             + "Many cities did he visit, and many were the nations with "

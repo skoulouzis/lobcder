@@ -4,6 +4,10 @@
  */
 package nl.uva.cs.lobcder.tests;
 
+import java.io.UnsupportedEncodingException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.apache.commons.httpclient.HttpException;
 import org.apache.jackrabbit.webdav.client.methods.PropPatchMethod;
 import org.apache.jackrabbit.webdav.property.DefaultDavProperty;
 import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
@@ -49,8 +53,11 @@ public class TestWebWAVFS {
 
     private String root;
     private URI uri;
-    private String username, password;
-    private HttpClient client;
+    private String username1, password1;
+    private HttpClient client1;
+    private HttpClient client2;
+    private String username2;
+    private String password2;
 
     @Before
     public void setUp() throws Exception {
@@ -72,43 +79,67 @@ public class TestWebWAVFS {
             this.root += "/";
         }
 
-        this.username = prop.getProperty(("webdav.test.username"), "");
-        if (username == null) {
-            username = "user";
+        this.username1 = prop.getProperty(("webdav.test.username1"), "");
+        if (username1 == null) {
+            username1 = "user1";
         }
-        assertTrue(username != null);
-        this.password = prop.getProperty(("webdav.test.password"), "");
-        if (password == null) {
-            password = "passwd";
+        assertTrue(username1 != null);
+        this.password1 = prop.getProperty(("webdav.test.password1"), "");
+        if (password1 == null) {
+            password1 = "passwd1";
         }
-        assertTrue(password != null);
+        assertTrue(password1 != null);
 
-        this.client = new HttpClient();
+
+        this.username2 = prop.getProperty(("webdav.test.username2"), "");
+        if (username1 == null) {
+            username1 = "user2";
+        }
+        assertTrue(username2 != null);
+        this.password2 = prop.getProperty(("webdav.test.password2"), "");
+        if (password2 == null) {
+            password2 = "passwd2";
+        }
+        assertTrue(password2 != null);
+
+
+        this.client1 = new HttpClient();
 
         assertNotNull(this.uri.getHost());
         assertNotNull(this.uri.getPort());
-        assertNotNull(this.client);
+        assertNotNull(this.client1);
 
-        this.client.getState().setCredentials(
+        this.client1.getState().setCredentials(
                 new AuthScope(this.uri.getHost(), this.uri.getPort()),
-                new UsernamePasswordCredentials(this.username, this.password));
+                new UsernamePasswordCredentials(this.username1, this.password1));
+
+
+        this.client2 = new HttpClient();
+
+        assertNotNull(this.uri.getHost());
+        assertNotNull(this.uri.getPort());
+        assertNotNull(this.client2);
+
+        this.client2.getState().setCredentials(
+                new AuthScope(this.uri.getHost(), this.uri.getPort()),
+                new UsernamePasswordCredentials(this.username2, this.password2));
     }
 
     @Test
     public void testCreateAndDeleteFile() throws IOException, DavException {
-        String testFileURI1 = this.uri.toASCIIString() + TestSettings.TEST_FILE_NAME;
+        String testFileURI1 = this.uri.toASCIIString() + TestSettings.TEST_FILE_NAME1;
         PutMethod put = new PutMethod(testFileURI1);
         put.setRequestEntity(new StringRequestEntity(TestSettings.TEST_DATA, "text/plain", "UTF-8"));
-        int status = client.executeMethod(put);
+        int status = client1.executeMethod(put);
         assertEquals(HttpStatus.SC_CREATED, status);
 
-        
+
         String testFileURI2 = this.uri.toASCIIString() + TestSettings.TEST_TXT_FILE_NAME;
         put = new PutMethod(testFileURI2);
         put.setRequestEntity(new StringRequestEntity(TestSettings.TEST_DATA, "text/plain", "UTF-8"));
-        status = client.executeMethod(put);
+        status = client1.executeMethod(put);
         assertEquals(HttpStatus.SC_CREATED, status);
-        
+
 
         delete(testFileURI1);
         delete(testFileURI2);
@@ -135,14 +166,14 @@ public class TestWebWAVFS {
 
     @Test
     public void testSetGetPropertySet() throws IOException, DavException {
-        String testFileURI1 = this.uri.toASCIIString() + TestSettings.TEST_FILE_NAME;
+        String testFileURI1 = this.uri.toASCIIString() + TestSettings.TEST_FILE_NAME1;
         PutMethod put = new PutMethod(testFileURI1);
         put.setRequestEntity(new StringRequestEntity(TestSettings.TEST_DATA, "text/plain", "UTF-8"));
-        int status = client.executeMethod(put);
+        int status = client1.executeMethod(put);
         assertEquals(HttpStatus.SC_CREATED, status);
 
         PropFindMethod propFind = new PropFindMethod(testFileURI1, DavConstants.PROPFIND_ALL_PROP_INCLUDE, DavConstants.DEPTH_0);
-        status = client.executeMethod(propFind);
+        status = client1.executeMethod(propFind);
         assertEquals(HttpStatus.SC_MULTI_STATUS, status);
         MultiStatus multiStatus = propFind.getResponseBodyAsMultiStatus();
         MultiStatusResponse[] responses = multiStatus.getResponses();
@@ -194,10 +225,10 @@ public class TestWebWAVFS {
     @Test
     public void testSetGetACL() throws IOException, DavException {
 
-        String testFileURI1 = this.uri.toASCIIString() + TestSettings.TEST_FILE_NAME;
+        String testFileURI1 = this.uri.toASCIIString() + TestSettings.TEST_FILE_NAME1;
         PutMethod put = new PutMethod(testFileURI1);
         put.setRequestEntity(new StringRequestEntity(TestSettings.TEST_DATA, "text/plain", "UTF-8"));
-        int status = client.executeMethod(put);
+        int status = client1.executeMethod(put);
         assertEquals(HttpStatus.SC_CREATED, status);
 
         Principal principal = Principal.getAllPrincipal();
@@ -220,9 +251,77 @@ public class TestWebWAVFS {
 
     }
 
+    @Test
+    public void testMultiThread() throws IOException, DavException {
+        try {
+            Thread userThread1 = new UserThread(this.client1, this.uri.toASCIIString(),1);
+
+            Thread userThread2 = new UserThread(this.client2, this.uri.toASCIIString(),2);
+            
+            
+            userThread1.start();
+            userThread2.start();
+            
+            userThread1.join();
+            userThread2.join();
+        } catch (InterruptedException ex) {
+            Logger.getLogger(TestWebWAVFS.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+    }
+
     private void delete(String testFileURI1) throws IOException {
         DeleteMethod del = new DeleteMethod(testFileURI1);
-        int status = client.executeMethod(del);
+        int status = client1.executeMethod(del);
         assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
+    }
+
+    private static class UserThread extends Thread {
+
+        private final HttpClient client;
+        private final String serverLOC;
+        private final int num;
+
+        private UserThread(HttpClient client, String serverLOC, int num) {
+            this.client = client;
+            this.serverLOC = serverLOC;
+            this.num = num;
+        }
+
+        @Override
+        public void run() {
+            String testFileURI1 = null;
+            try {
+                if (num == 1) {
+                    testFileURI1 = serverLOC + TestSettings.TEST_FILE_NAME1;
+                } else if (num == 2) {
+                    testFileURI1 = serverLOC + TestSettings.TEST_FILE_NAME2;
+                }
+
+                PutMethod put = new PutMethod(testFileURI1);
+                put.setRequestEntity(new StringRequestEntity(TestSettings.TEST_DATA, "text/plain", "UTF-8"));
+                int status = client.executeMethod(put);
+                assertEquals(HttpStatus.SC_CREATED, status);
+
+
+                PropFindMethod propFind = new PropFindMethod(testFileURI1, DavConstants.PROPFIND_ALL_PROP_INCLUDE, DavConstants.DEPTH_0);
+                status = client.executeMethod(propFind);
+                assertEquals(HttpStatus.SC_MULTI_STATUS, status);
+                MultiStatus multiStatus = propFind.getResponseBodyAsMultiStatus();
+                MultiStatusResponse[] responses = multiStatus.getResponses();
+                assertEquals(HttpStatus.SC_OK, responses[0].getStatus()[0].getStatusCode());
+
+
+
+                DeleteMethod del = new DeleteMethod(testFileURI1);
+                status = client.executeMethod(del);
+                assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
+
+            } catch (DavException ex) {
+                Logger.getLogger(TestWebWAVFS.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (IOException ex) {
+                Logger.getLogger(TestWebWAVFS.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
     }
 }

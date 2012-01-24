@@ -1,3 +1,6 @@
 webdav.test.url=http://localhost:8080/lobcder-1.0-SNAPSHOT/
-webdav.test.username=user
-webdav.test.password=passwd
+webdav.test.username1=user1
+webdav.test.password1=passwd1
+
+webdav.test.username2=user2
+webdav.test.password2=passwd2
