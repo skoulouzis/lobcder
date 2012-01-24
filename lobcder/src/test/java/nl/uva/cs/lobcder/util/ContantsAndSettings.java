@@ -22,7 +22,8 @@ public class ContantsAndSettings {
             + "own sheer folly in eating the cattle of the Sun-god "
             + "Hyperion; so the god prevented them from ever reaching "
             + "home.";
-    public static final String TEST_FILE_NAME = "testFile";
-    public static final Path TEST_FILE_PATH = Path.path(TEST_FILE_NAME);
+    public static final String TEST_FILE_NAME1 = "testFile1";
+    public static final String TEST_FILE_NAME2 = "testFile2";
+    public static final Path TEST_FILE_PATH1 = Path.path(TEST_FILE_NAME1);
     public static final String TEST_FOLDER_NAME = "/testCollection";
 }

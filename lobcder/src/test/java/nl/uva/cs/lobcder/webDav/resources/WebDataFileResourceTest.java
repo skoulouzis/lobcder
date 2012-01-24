@@ -67,7 +67,7 @@ public class WebDataFileResourceTest {
         try {
             catalogue = new SimpleDLCatalogue();
 
-            testLogicalFile = new LogicalFile(ContantsAndSettings.TEST_FILE_PATH);
+            testLogicalFile = new LogicalFile(ContantsAndSettings.TEST_FILE_PATH1);
 
             //For some reason 'testFolder' creates an exception with data nucleus
             testFolderPath = Path.path(ContantsAndSettings.TEST_FOLDER_NAME);
@@ -126,7 +126,7 @@ public class WebDataFileResourceTest {
                 System.out.println("LData:              " + chLData.getLDRI().getName() + "         " + chLData.getUID());
                 System.out.println("webDAVFile:         " + webDAVFile.getName() + "            " + webDAVFile.getUniqueId());
                 System.out.println("testLogicalFile:    " + testLogicalFile.getLDRI().getName() + "         " + testLogicalFile.getUID());
-                if (chLData.getLDRI().getName().equals(ContantsAndSettings.TEST_FILE_NAME)) {
+                if (chLData.getLDRI().getName().equals(ContantsAndSettings.TEST_FILE_NAME1)) {
                     foundIt = true;
                     break;
                 }
@@ -138,7 +138,7 @@ public class WebDataFileResourceTest {
             List<? extends Resource> webChildren = collectionResource.getChildren();
             for (Resource r : webChildren) {
                 System.out.println("Children: " + r.getName() + " " + r.getUniqueId());
-                if (r.getName().equals(ContantsAndSettings.TEST_FILE_NAME)) {
+                if (r.getName().equals(ContantsAndSettings.TEST_FILE_NAME1)) {
                     foundIt = true;
                     break;
                 }
@@ -161,7 +161,7 @@ public class WebDataFileResourceTest {
                 load = catalogue.getResourceEntryByLDRI(testLogicalFolder.getLDRI());
                 assertNull(load);
 
-                load = catalogue.getResourceEntryByLDRI(Path.path(testLogicalFolder.getLDRI(), ContantsAndSettings.TEST_FILE_NAME));
+                load = catalogue.getResourceEntryByLDRI(Path.path(testLogicalFolder.getLDRI(), ContantsAndSettings.TEST_FILE_NAME1));
                 assertNull(load);
 
             } catch (CatalogueException ex) {
