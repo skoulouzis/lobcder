@@ -4,7 +4,6 @@
  */
 package nl.uva.cs.lobcder.webDav.resources;
 
-import com.bradmcevoy.http.Resource;
 import nl.uva.cs.lobcder.resources.IStorageSite;
 import java.util.Collection;
 import java.util.Date;
