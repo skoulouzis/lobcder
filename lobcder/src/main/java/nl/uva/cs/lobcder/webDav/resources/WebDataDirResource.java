@@ -34,6 +34,7 @@ import nl.uva.cs.lobcder.resources.LogicalFile;
 import nl.uva.cs.lobcder.resources.LogicalFolder;
 import nl.uva.cs.lobcder.resources.Metadata;
 import nl.uva.cs.lobcder.resources.StorageSite;
+import nl.uva.vlet.exception.VlException;
 import nl.uva.vlet.vfs.VFSNode;
 import nl.uva.vlet.vfs.VFile;
 import org.apache.commons.io.IOUtils;
@@ -157,53 +158,25 @@ class WebDataDirResource implements FolderResource, CollectionResource {
     public Resource createNew(String newName, InputStream inputStream, Long length, String contentType) throws IOException, ConflictException, NotAuthorizedException, BadRequestException {
         OutputStream out = null;
         VFSNode node;
+        Resource file = null;
         try {
             debug("createNew.");
             debug("\t newName: " + newName);
             debug("\t length: " + length);
             debug("\t contentType: " + contentType);
+            Path newPath = Path.path(entry.getLDRI(), newName);
 
-            LogicalFile newResource = new LogicalFile(Path.path(entry.getLDRI(), newName));
-            //We have to make a copy of the member collection. The same collection 
-            //can't be a member of the two different classes, the relationship is 1-N!!!
-            ArrayList<IStorageSite> copyStorageSites = new ArrayList<IStorageSite>();
-            Collection<IStorageSite> sites = entry.getStorageSites();
-            if (sites == null || sites.isEmpty()) {
-                debug("\t Storage Sites for " + this.entry.getLDRI() + " are empty!");
-                throw new IOException("Storage Sites for " + this.entry.getLDRI() + " are empty!");
-            }
-            //Maybe we have a problem with shalow copy
-            //copyStorageSites.addAll(entry.getStorageSites());
-            for (IStorageSite s : sites) {
-                copyStorageSites.add(new StorageSite(s.getEndpoint(), s.getCredentials()));
-            }
-            newResource.setStorageSites(copyStorageSites);
-
-            if (!newResource.hasPhysicalData()) {
-                node = newResource.createPhysicalData();
+            LogicalFile newResource = (LogicalFile) catalogue.getResourceEntryByLDRI(newPath);
+            if (newResource != null) {
+                file = updateExistingFile(newResource, length, contentType, inputStream);
             } else {
-                node = newResource.getVFSNode();
+                file = createNonExistingFile(newPath, length, contentType, inputStream);
             }
-            if (node != null) {
-                out = ((VFile) node).getOutputStream();
-                IOUtils.copy(inputStream, out);
-            }
-
-            Metadata meta = new Metadata();
-            meta.setLength(length);
-            meta.addContentType(contentType);
-            meta.setCreateDate(System.currentTimeMillis());
-            newResource.setMetadata(meta);
-
-            catalogue.registerResourceEntry(newResource);
-            LogicalFile relodedResource = (LogicalFile) catalogue.getResourceEntryByLDRI(newResource.getLDRI());
-
-            WebDataFileResource file = new WebDataFileResource(catalogue, relodedResource);
 
             debug("\t returning createNew. " + file.getName());
             return file;
         } catch (Exception ex) {
-            throw new IOException(ex);
+            throw new BadRequestException(this, ex.getMessage());
         } finally {
             if (inputStream != null) {
                 inputStream.close();
@@ -376,5 +349,73 @@ class WebDataDirResource implements FolderResource, CollectionResource {
 
     Collection<IStorageSite> getStorageSites() {
         return this.entry.getStorageSites();
+    }
+
+    private Resource createNonExistingFile(Path newPath, Long length, String contentType, InputStream inputStream) throws IOException, Exception {
+        LogicalFile newResource = new LogicalFile(newPath);
+        //We have to make a copy of the member collection. The same collection 
+        //can't be a member of the two different classes, the relationship is 1-N!!!
+        ArrayList<IStorageSite> copyStorageSites = new ArrayList<IStorageSite>();
+        Collection<IStorageSite> sites = entry.getStorageSites();
+        if (sites == null || sites.isEmpty()) {
+            debug("\t Storage Sites for " + this.entry.getLDRI() + " are empty!");
+            throw new IOException("Storage Sites for " + this.entry.getLDRI() + " are empty!");
+        }
+        //Maybe we have a problem with shalow copy
+        //copyStorageSites.addAll(entry.getStorageSites());
+        for (IStorageSite s : sites) {
+            copyStorageSites.add(new StorageSite(s.getEndpoint(), s.getCredentials()));
+        }
+        newResource.setStorageSites(copyStorageSites);
+        VFSNode node;
+        if (!newResource.hasPhysicalData()) {
+            node = newResource.createPhysicalData();
+        } else {
+            node = newResource.getVFSNode();
+        }
+        if (node != null) {
+            OutputStream out = ((VFile) node).getOutputStream();
+            IOUtils.copy(inputStream, out);
+        }
+
+        Metadata meta = new Metadata();
+        meta.setLength(length);
+        meta.addContentType(contentType);
+        meta.setCreateDate(System.currentTimeMillis());
+        newResource.setMetadata(meta);
+
+        catalogue.registerResourceEntry(newResource);
+        LogicalFile relodedResource = (LogicalFile) catalogue.getResourceEntryByLDRI(newResource.getLDRI());
+
+        return new WebDataFileResource(catalogue, relodedResource);
+    }
+
+    private Resource updateExistingFile(LogicalFile newResource, Long length, String contentType, InputStream inputStream) throws VlException, IOException, Exception {
+        VFSNode node;
+
+        if (!newResource.hasPhysicalData()) {
+            node = newResource.createPhysicalData();
+        } else {
+            node = newResource.getVFSNode();
+        }
+
+        if (node != null) {
+            OutputStream out = ((VFile) node).getOutputStream();
+            IOUtils.copy(inputStream, out);
+        }
+
+        Metadata meta = newResource.getMetadata();
+        long totalLen = meta.getLength() + length;
+        meta.setLength(totalLen);
+        meta.addContentType(contentType);
+        meta.setModifiedDate(System.currentTimeMillis());
+        newResource.setMetadata(meta);
+
+
+        catalogue.updateResourceEntry(newResource);
+        
+        LogicalFile relodedResource = (LogicalFile) catalogue.getResourceEntryByLDRI(newResource.getLDRI());
+
+        return new WebDataFileResource(catalogue, relodedResource);
     }
 }

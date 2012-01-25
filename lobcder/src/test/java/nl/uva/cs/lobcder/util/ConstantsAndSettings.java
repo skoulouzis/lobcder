@@ -10,7 +10,7 @@ import com.bradmcevoy.common.Path;
  *
  * @author skoulouz
  */
-public class ContantsAndSettings {
+public class ConstantsAndSettings {
 
     public static final String TEST_DATA = "Tell me, O muse, of that ingenious hero who travelled "
             + "far and wide after he had sacked the famous town of Troy. "
@@ -25,5 +25,6 @@ public class ContantsAndSettings {
     public static final String TEST_FILE_NAME_1 = "testFile1";
     public static final Path TEST_FILE_PATH_1 = Path.path(TEST_FILE_NAME_1);
     public static final String TEST_FOLDER_NAME = "/testCollection";
-    public static final String TEST_FILE_NAME_2="testFile2";
+    public static final String TEST_FILE_NAME_2 = "testFile2";
+    public static Path TEST_FILE_PATH_2 = Path.path(TEST_FILE_NAME_2);
 }

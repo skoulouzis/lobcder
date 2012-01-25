@@ -15,8 +15,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.jdo.JDOHelper;
 import javax.jdo.PersistenceManager;
 import javax.jdo.PersistenceManagerFactory;
@@ -26,6 +24,7 @@ import nl.uva.cs.lobcder.resources.Credential;
 import nl.uva.cs.lobcder.resources.LogicalData;
 import nl.uva.cs.lobcder.resources.ILogicalData;
 import nl.uva.cs.lobcder.resources.IStorageSite;
+import nl.uva.cs.lobcder.resources.Metadata;
 import nl.uva.cs.lobcder.resources.StorageSite;
 import nl.uva.cs.lobcder.webdav.Constants.Constants;
 import nl.uva.vlet.data.StringUtil;
@@ -615,6 +614,45 @@ public class SimpleDLCatalogue implements IDLCatalogue {
             return false;
         } else {
             return true;
+        }
+    }
+
+    @Override
+    public void updateResourceEntry(ILogicalData entry) {
+        ILogicalData loaded;
+        Collection<Path> children = entry.getChildren();
+        Path ldri = entry.getLDRI();
+        Metadata meta = entry.getMetadata();
+        Collection<IStorageSite> ss = entry.getStorageSites();
+        String strLogicalResourceName = entry.getLDRI().toString();
+
+        synchronized (lock) {
+            PersistenceManager pm = pmf.getPersistenceManager();
+            Transaction tx = pm.currentTransaction();
+
+            try {
+                tx.begin();
+                
+                Query q = pm.newQuery(LogicalData.class);
+                //restrict to instances which have the field ldri equal to some logicalResourceName
+                q.setFilter("strLDRI == strLogicalResourceName");
+                q.declareParameters(strLogicalResourceName.getClass().getName() + " strLogicalResourceName");
+                q.setUnique(true);
+                loaded = (ILogicalData) q.execute(strLogicalResourceName);
+                
+                loaded.setChildren(children);
+                loaded.setLDRI(ldri);
+                loaded.setMetadata(meta);
+                loaded.setStorageSites(ss);
+
+                tx.commit();
+
+            } finally {
+                if (tx.isActive()) {
+                    tx.rollback();
+                }
+                pm.close();
+            }
         }
     }
 }

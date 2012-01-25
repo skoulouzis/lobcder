@@ -4,14 +4,14 @@
  */
 package nl.uva.cs.lobcder.webDav.resources;
 
+import com.bradmcevoy.http.Resource;
 import nl.uva.cs.lobcder.resources.IStorageSite;
 import java.util.Collection;
 import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import nl.uva.cs.lobcder.resources.ILogicalData;
-import nl.uva.cs.lobcder.resources.StorageSite;
-import nl.uva.cs.lobcder.util.ContantsAndSettings;
+import nl.uva.cs.lobcder.util.ConstantsAndSettings;
 import java.io.ByteArrayInputStream;
 import nl.uva.cs.lobcder.catalogue.SimpleDLCatalogue;
 import org.junit.After;
@@ -56,8 +56,8 @@ public class WebDataResourceFactoryTest {
         WebDataDirResource result = (WebDataDirResource) instance.getResource(host, strPath);
         assertNotNull(result);
 
-        ByteArrayInputStream bais = new ByteArrayInputStream(ContantsAndSettings.TEST_DATA.getBytes());
-        result.createNew(ContantsAndSettings.TEST_FILE_NAME_1, bais, new Long(ContantsAndSettings.TEST_DATA.getBytes().length), "text/plain");
+        ByteArrayInputStream bais = new ByteArrayInputStream(ConstantsAndSettings.TEST_DATA.getBytes());
+        result.createNew(ConstantsAndSettings.TEST_FILE_NAME_1, bais, new Long(ConstantsAndSettings.TEST_DATA.getBytes().length), "text/plain");
 
         result.delete();
     }
@@ -71,11 +71,11 @@ public class WebDataResourceFactoryTest {
         String host = "localhost:8080";
 
         WebDataResourceFactory instance = new WebDataResourceFactory();
-        WebDataDirResource result = (WebDataDirResource) instance.getResource(host, ContantsAndSettings.TEST_FOLDER_NAME);
+        WebDataDirResource result = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.TEST_FOLDER_NAME);
         assertNotNull(result);
 
-        ByteArrayInputStream bais = new ByteArrayInputStream(ContantsAndSettings.TEST_DATA.getBytes());
-        WebDataFileResource file = (WebDataFileResource) result.createNew(ContantsAndSettings.TEST_FILE_NAME_1, bais, new Long("DATA".getBytes().length), "text/plain");
+        ByteArrayInputStream bais = new ByteArrayInputStream(ConstantsAndSettings.TEST_DATA.getBytes());
+        WebDataFileResource file = (WebDataFileResource) result.createNew(ConstantsAndSettings.TEST_FILE_NAME_1, bais, new Long("DATA".getBytes().length), "text/plain");
         Long len = file.getContentLength();
         assertEquals(len, new Long("DATA".getBytes().length));
 
@@ -91,16 +91,16 @@ public class WebDataResourceFactoryTest {
 
 
         String name = file.getName();
-        assertEquals(ContantsAndSettings.TEST_FILE_NAME_1, name);
+        assertEquals(ConstantsAndSettings.TEST_FILE_NAME_1, name);
 
         result.delete();
 
         instance = new WebDataResourceFactory();
-        result = (WebDataDirResource) instance.getResource(host, ContantsAndSettings.TEST_FOLDER_NAME);
+        result = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.TEST_FOLDER_NAME);
         assertNotNull(result);
 
-        bais = new ByteArrayInputStream(ContantsAndSettings.TEST_DATA.getBytes());
-        file = (WebDataFileResource) result.createNew(ContantsAndSettings.TEST_FILE_NAME_1, bais, new Long("DATA".getBytes().length), "text/plain");
+        bais = new ByteArrayInputStream(ConstantsAndSettings.TEST_DATA.getBytes());
+        file = (WebDataFileResource) result.createNew(ConstantsAndSettings.TEST_FILE_NAME_1, bais, new Long("DATA".getBytes().length), "text/plain");
         len = file.getContentLength();
         assertEquals(len, new Long("DATA".getBytes().length));
 
@@ -116,7 +116,7 @@ public class WebDataResourceFactoryTest {
 
 
         name = file.getName();
-        assertEquals(ContantsAndSettings.TEST_FILE_NAME_1, name);
+        assertEquals(ConstantsAndSettings.TEST_FILE_NAME_1, name);
 
         result.delete();
 
@@ -129,12 +129,12 @@ public class WebDataResourceFactoryTest {
         String host = "localhost:8080";
 
         WebDataResourceFactory instance = new WebDataResourceFactory();
-        WebDataDirResource result = (WebDataDirResource) instance.getResource(host, ContantsAndSettings.TEST_FOLDER_NAME);
+        WebDataDirResource result = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.TEST_FOLDER_NAME);
         assertNotNull(result);
 
 
-        ByteArrayInputStream bais = new ByteArrayInputStream(ContantsAndSettings.TEST_DATA.getBytes());
-        WebDataFileResource file = (WebDataFileResource) result.createNew(ContantsAndSettings.TEST_FILE_NAME_1, bais, new Long("DATA".getBytes().length), "text/plain");
+        ByteArrayInputStream bais = new ByteArrayInputStream(ConstantsAndSettings.TEST_DATA.getBytes());
+        WebDataFileResource file = (WebDataFileResource) result.createNew(ConstantsAndSettings.TEST_FILE_NAME_1, bais, new Long("DATA".getBytes().length), "text/plain");
         Long len = file.getContentLength();
         assertEquals(len, new Long("DATA".getBytes().length));
 
@@ -150,7 +150,7 @@ public class WebDataResourceFactoryTest {
 
 
         String name = file.getName();
-        assertEquals(ContantsAndSettings.TEST_FILE_NAME_1, name);
+        assertEquals(ConstantsAndSettings.TEST_FILE_NAME_1, name);
 
         file.delete();
 
@@ -158,7 +158,7 @@ public class WebDataResourceFactoryTest {
         ILogicalData entry = cat.getResourceEntryByLDRI(file.getPath());
         assertNull(entry);
 
-        result = (WebDataDirResource) instance.getResource(host, ContantsAndSettings.TEST_FOLDER_NAME);
+        result = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.TEST_FOLDER_NAME);
         assertNotNull(result);
 
         Collection<IStorageSite> sites = file.getStorageSites();
@@ -169,7 +169,7 @@ public class WebDataResourceFactoryTest {
         }
 
 
-        file = (WebDataFileResource) result.createNew(ContantsAndSettings.TEST_FILE_NAME_1, bais, new Long("DATA".getBytes().length), "text/plain");
+        file = (WebDataFileResource) result.createNew(ConstantsAndSettings.TEST_FILE_NAME_1, bais, new Long("DATA".getBytes().length), "text/plain");
         len = file.getContentLength();
         assertEquals(len, new Long("DATA".getBytes().length));
 
@@ -187,7 +187,7 @@ public class WebDataResourceFactoryTest {
 
 
         name = file.getName();
-        assertEquals(ContantsAndSettings.TEST_FILE_NAME_1, name);
+        assertEquals(ConstantsAndSettings.TEST_FILE_NAME_1, name);
 
         result.delete();
         cat = new SimpleDLCatalogue();
@@ -203,7 +203,7 @@ public class WebDataResourceFactoryTest {
         String host = "localhost:8080";
 
         WebDataResourceFactory instance = new WebDataResourceFactory();
-        WebDataDirResource result = (WebDataDirResource) instance.getResource(host, ContantsAndSettings.TEST_FOLDER_NAME);
+        WebDataDirResource result = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.TEST_FOLDER_NAME);
         assertNotNull(result);
 
         Collection<IStorageSite> sites = result.getStorageSites();
@@ -216,7 +216,7 @@ public class WebDataResourceFactoryTest {
 
 
         instance = new WebDataResourceFactory();
-        result = (WebDataDirResource) instance.getResource(host, ContantsAndSettings.TEST_FOLDER_NAME);
+        result = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.TEST_FOLDER_NAME);
         assertNotNull(result);
 
         sites = result.getStorageSites();
@@ -225,7 +225,31 @@ public class WebDataResourceFactoryTest {
         for (IStorageSite s : sites) {
             System.out.println(">>>>>>Sites: " + s.getEndpoint());
         }
+    }
 
+    @Test
+    public void testCreateAndGetResourceContent() throws Exception {
+        System.out.println("testCreateAndGetResourceContent");
+        String host = "localhost:8080";
+
+        WebDataResourceFactory instance = new WebDataResourceFactory();
+        WebDataDirResource result = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.TEST_FOLDER_NAME);
+        assertNotNull(result);
+
+        ByteArrayInputStream bais = new ByteArrayInputStream("\n".getBytes());
+        WebDataFileResource file = (WebDataFileResource) result.createNew(ConstantsAndSettings.TEST_FILE_NAME_1, bais, new Long("\n".getBytes().length), "text/plain");
+        Long len = file.getContentLength();
+        assertEquals(len, new Long("\n".getBytes().length));
+
+        instance = new WebDataResourceFactory();
+        result = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.TEST_FOLDER_NAME);
+        assertNotNull(result);
+
+        bais = new ByteArrayInputStream(ConstantsAndSettings.TEST_DATA.getBytes());
+        file = (WebDataFileResource) result.createNew(ConstantsAndSettings.TEST_FILE_NAME_1, bais, new Long(ConstantsAndSettings.TEST_DATA.getBytes().length), "text/plain");
+        len = file.getContentLength();
+        long total = new Long("\n".getBytes().length) + new Long(ConstantsAndSettings.TEST_DATA.getBytes().length);
+        assertEquals(len, new Long(total));
     }
 
     @Test
@@ -283,15 +307,15 @@ public class WebDataResourceFactoryTest {
             String host = "localhost:8080";
             String fileName = null;
             if (this.getName().equals("T1")) {
-                fileName = ContantsAndSettings.TEST_FILE_NAME_1;
+                fileName = ConstantsAndSettings.TEST_FILE_NAME_1;
             } else if (this.getName().equals("T2")) {
-                fileName = ContantsAndSettings.TEST_FILE_NAME_2;
+                fileName = ConstantsAndSettings.TEST_FILE_NAME_2;
             }
             WebDataResourceFactory instance = new WebDataResourceFactory();
-            WebDataDirResource result = (WebDataDirResource) instance.getResource(host, ContantsAndSettings.TEST_FOLDER_NAME);
+            WebDataDirResource result = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.TEST_FOLDER_NAME);
             assertNotNull(result);
 
-            ByteArrayInputStream bais = new ByteArrayInputStream(ContantsAndSettings.TEST_DATA.getBytes());
+            ByteArrayInputStream bais = new ByteArrayInputStream(ConstantsAndSettings.TEST_DATA.getBytes());
             WebDataFileResource file = (WebDataFileResource) result.createNew(fileName, bais, new Long("DATA".getBytes().length), "text/plain");
             Long len = file.getContentLength();
             assertEquals(len, new Long("DATA".getBytes().length));
@@ -313,10 +337,10 @@ public class WebDataResourceFactoryTest {
             result.delete();
 
             instance = new WebDataResourceFactory();
-            result = (WebDataDirResource) instance.getResource(host, ContantsAndSettings.TEST_FOLDER_NAME);
+            result = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.TEST_FOLDER_NAME);
             assertNotNull(result);
 
-            bais = new ByteArrayInputStream(ContantsAndSettings.TEST_DATA.getBytes());
+            bais = new ByteArrayInputStream(ConstantsAndSettings.TEST_DATA.getBytes());
             file = (WebDataFileResource) result.createNew(fileName, bais, new Long("DATA".getBytes().length), "text/plain");
             len = file.getContentLength();
             assertEquals(len, new Long("DATA".getBytes().length));

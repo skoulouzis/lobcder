@@ -52,5 +52,7 @@ public interface ILogicalData {
     public VFSNode createPhysicalData()throws VlException;
 
     public void removeStorageSites();
+
+    public void setChildren(Collection<Path> children);
     
 }

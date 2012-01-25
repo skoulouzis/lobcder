@@ -205,4 +205,9 @@ public class LogicalData implements ILogicalData, Serializable {
     public void removeStorageSites() {
         this.storageSites.clear();
     }
+
+    @Override
+    public void setChildren(Collection<Path> children) {
+        this.children = children;
+    }
 }

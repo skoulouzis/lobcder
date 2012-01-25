@@ -9,6 +9,7 @@ import java.util.Collection;
 import java.util.Properties;
 import nl.uva.cs.lobcder.resources.ILogicalData;
 import nl.uva.cs.lobcder.resources.IStorageSite;
+import nl.uva.cs.lobcder.resources.LogicalFile;
 
 /**
  *
@@ -36,5 +37,7 @@ public interface IDLCatalogue {
     public boolean storageSiteExists(Properties prop)throws CatalogueException;
 
     public void registerStorageSite(Properties prop)throws CatalogueException;
+
+    public void updateResourceEntry(ILogicalData newResource);
     
 }

@@ -4,7 +4,7 @@
  */
 package nl.uva.cs.lobcder.webDav.resources;
 
-import nl.uva.cs.lobcder.util.ContantsAndSettings;
+import nl.uva.cs.lobcder.util.ConstantsAndSettings;
 import java.util.Collection;
 import java.util.List;
 import com.bradmcevoy.http.Resource;
@@ -58,10 +58,10 @@ public class WebDataFileResourceTest {
         try {
             catalogue = new SimpleDLCatalogue();
 
-            testLogicalFile = new LogicalFile(ContantsAndSettings.TEST_FILE_PATH_1);
+            testLogicalFile = new LogicalFile(ConstantsAndSettings.TEST_FILE_PATH_1);
 
             //For some reason 'testFolder' creates an exception with data nucleus
-            testFolderPath = Path.path(ContantsAndSettings.TEST_FOLDER_NAME);
+            testFolderPath = Path.path(ConstantsAndSettings.TEST_FOLDER_NAME);
             testLogicalFolder = new LogicalFolder(testFolderPath);
 
             String endpoint = "file:///tmp/";
@@ -117,7 +117,7 @@ public class WebDataFileResourceTest {
                 System.out.println("LData:              " + chLData.getLDRI().getName() + "         " + chLData.getUID());
                 System.out.println("webDAVFile:         " + webDAVFile.getName() + "            " + webDAVFile.getUniqueId());
                 System.out.println("testLogicalFile:    " + testLogicalFile.getLDRI().getName() + "         " + testLogicalFile.getUID());
-                if (chLData.getLDRI().getName().equals(ContantsAndSettings.TEST_FILE_NAME_1)) {
+                if (chLData.getLDRI().getName().equals(ConstantsAndSettings.TEST_FILE_NAME_1)) {
                     foundIt = true;
                     break;
                 }
@@ -129,7 +129,7 @@ public class WebDataFileResourceTest {
             List<? extends Resource> webChildren = collectionResource.getChildren();
             for (Resource r : webChildren) {
                 System.out.println("Children: " + r.getName() + " " + r.getUniqueId());
-                if (r.getName().equals(ContantsAndSettings.TEST_FILE_NAME_1)) {
+                if (r.getName().equals(ConstantsAndSettings.TEST_FILE_NAME_1)) {
                     foundIt = true;
                     break;
                 }
@@ -152,7 +152,7 @@ public class WebDataFileResourceTest {
                 load = catalogue.getResourceEntryByLDRI(testLogicalFolder.getLDRI());
                 assertNull(load);
 
-                load = catalogue.getResourceEntryByLDRI(Path.path(testLogicalFolder.getLDRI(), ContantsAndSettings.TEST_FILE_NAME_1));
+                load = catalogue.getResourceEntryByLDRI(Path.path(testLogicalFolder.getLDRI(), ConstantsAndSettings.TEST_FILE_NAME_1));
                 assertNull(load);
 
             } catch (CatalogueException ex) {

@@ -9,6 +9,8 @@ import java.util.Properties;
 import java.io.File;
 import java.io.IOException;
 import java.io.FileNotFoundException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import nl.uva.cs.lobcder.resources.IStorageSite;
 import nl.uva.cs.lobcder.resources.Metadata;
 import com.bradmcevoy.common.Path;
@@ -20,6 +22,7 @@ import nl.uva.cs.lobcder.resources.ILogicalData;
 import nl.uva.cs.lobcder.resources.LogicalFile;
 import nl.uva.cs.lobcder.resources.LogicalFolder;
 import nl.uva.cs.lobcder.resources.StorageSite;
+import nl.uva.cs.lobcder.util.ConstantsAndSettings;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -601,6 +604,66 @@ public class SimpleDRCatalogueTest {
             Collection<StorageSite> allSites = instance.getAllSites();
             assertEquals(allSites.size(), 0);
         }
+    }
+
+    @Test
+    public void testUpdateResourceEntry() {
+        SimpleDLCatalogue instance = new SimpleDLCatalogue();
+        ILogicalData loaded = null;
+        try {
+            System.out.println("testUpdateResourceEntry");
+
+
+            LogicalFile newEntry = new LogicalFile(ConstantsAndSettings.TEST_FILE_PATH_1);
+            instance.registerResourceEntry(newEntry);
+            loaded = instance.getResourceEntryByLDRI(newEntry.getLDRI());
+            boolean same = compareEntries(newEntry, loaded);
+            assertTrue(same);
+
+            Metadata meta = newEntry.getMetadata();
+            String mime = "application/octet-stream";
+            meta.addContentType(mime);
+            long create = System.currentTimeMillis();
+            meta.setCreateDate(create);
+            Long len = new Long(32);
+            meta.setLength(len);
+            long mod = System.currentTimeMillis();
+            meta.setModifiedDate(mod);
+            newEntry.setMetadata(meta);
+
+
+            Collection<Path> children = new ArrayList<Path>();
+            children.add(ConstantsAndSettings.TEST_FILE_PATH_2);
+            newEntry.setChildren(children);
+
+//            ArrayList<IStorageSite> sites = new ArrayList<IStorageSite>();
+//            sites.add(new StorageSite("file:///tmp", new Credential("user1")));
+//            newEntry.setStorageSites(sites);
+                        
+            instance.updateResourceEntry(newEntry);
+            loaded = instance.getResourceEntryByLDRI(newEntry.getLDRI());
+            same = compareEntries(newEntry, loaded);
+            assertTrue(same);
+
+            Metadata loadedMeta = loaded.getMetadata();
+            assertTrue(loadedMeta.getContentTypes().contains(mime));
+            assertEquals(loadedMeta.getCreateDate(), new Long(create));
+            assertEquals(loadedMeta.getModifiedDate(), new Long(mod));
+            assertEquals(loadedMeta.getLength(), len);
+
+        } catch (Exception ex) {
+            fail();
+            Logger.getLogger(SimpleDRCatalogueTest.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            try {
+                instance.unregisterResourceEntry(loaded);
+                
+            } catch (CatalogueException ex) {
+                Logger.getLogger(SimpleDRCatalogueTest.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+
+
     }
 
     private void populateStorageSites() throws FileNotFoundException, IOException, Exception {
