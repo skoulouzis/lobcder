@@ -28,6 +28,7 @@ import java.util.logging.Logger;
 import nl.uva.cs.lobcder.catalogue.CatalogueException;
 import nl.uva.cs.lobcder.catalogue.IDLCatalogue;
 import nl.uva.cs.lobcder.resources.ILogicalData;
+import nl.uva.cs.lobcder.resources.IStorageSite;
 import nl.uva.cs.lobcder.resources.Metadata;
 import nl.uva.cs.lobcder.resources.LogicalFile;
 import nl.uva.cs.lobcder.resources.StorageSite;
@@ -354,7 +355,7 @@ public class WebDataFileResource implements
         }
     }
 
-    Collection<StorageSite> getStorageSites() {
+    Collection<IStorageSite> getStorageSites() {
         return this.logicalData.getStorageSites();
     }
 }

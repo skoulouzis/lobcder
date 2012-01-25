@@ -6,6 +6,7 @@ package nl.uva.cs.lobcder.util;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import nl.uva.cs.lobcder.resources.IStorageSite;
 import nl.uva.cs.lobcder.resources.StorageSite;
 
 /**
@@ -14,10 +15,10 @@ import nl.uva.cs.lobcder.resources.StorageSite;
  */
 public class CollectionTools {
 
-    public static Collection<StorageSite> combineStorageSites(Collection<StorageSite> storageSitesA, Collection<StorageSite> storageSitesB) {
-         Collection<StorageSite> notInSA = new ArrayList<StorageSite>();
-        for(StorageSite sB: storageSitesB){
-            for(StorageSite sA : storageSitesA){
+    public static Collection<IStorageSite> combineStorageSites(Collection<IStorageSite> storageSitesA, Collection<IStorageSite> storageSitesB) {
+         ArrayList<IStorageSite> notInSA = new ArrayList<IStorageSite>();
+        for(IStorageSite sB: storageSitesB){
+            for(IStorageSite sA : storageSitesA){
                 if(!sB.getEndpoint().equals(sA.getEndpoint()) &&
                         !sB.getVPHUsername().equals(sA.getVPHUsername())&&
                         !sB.getCredentials().getStorageSiteUsername().equals(sA.getCredentials().getStorageSiteUsername())){

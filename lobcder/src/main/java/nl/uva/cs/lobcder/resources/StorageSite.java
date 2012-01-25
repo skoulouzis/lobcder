@@ -169,10 +169,12 @@ public class StorageSite implements Serializable, IStorageSite {
         return logicalPaths.contains(ldri.toString());
     }
 
+    @Override
     public Credential getCredentials() {
         return this.credentials;
     }
 
+    @Override
     public long getUID() {
         return this.id;
     }

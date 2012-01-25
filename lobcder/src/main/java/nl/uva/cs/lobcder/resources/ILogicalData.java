@@ -23,9 +23,9 @@ public interface ILogicalData {
 
     public void addChild(Path child);
 
-    public Collection<StorageSite> getStorageSites();
+    public Collection<IStorageSite> getStorageSites();
 
-    public void setStorageSites(Collection<StorageSite> storageResources);
+    public void setStorageSites(Collection<IStorageSite> storageResources);
 
     public Metadata getMetadata();
 

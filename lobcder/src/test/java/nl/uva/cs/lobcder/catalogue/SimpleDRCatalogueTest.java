@@ -4,6 +4,12 @@
  */
 package nl.uva.cs.lobcder.catalogue;
 
+import java.io.FileInputStream;
+import java.util.Properties;
+import java.io.File;
+import java.io.IOException;
+import java.io.FileNotFoundException;
+import nl.uva.cs.lobcder.resources.IStorageSite;
 import nl.uva.cs.lobcder.resources.Metadata;
 import com.bradmcevoy.common.Path;
 import java.util.ArrayList;
@@ -27,8 +33,7 @@ import static org.junit.Assert.*;
  */
 public class SimpleDRCatalogueTest {
 
-    public SimpleDRCatalogueTest() {
-    }
+    private static String[] names = new String[]{"storage1.prop", "storage2.prop", "storage3.prop", "storage4.prop"};
 
     @BeforeClass
     public static void setUpClass() throws Exception {
@@ -276,7 +281,7 @@ public class SimpleDRCatalogueTest {
             }
         }
     }
-    
+
     @Test
     public void testRenameWithChildren() {
         System.out.println("testRenameWithChildren");
@@ -410,7 +415,7 @@ public class SimpleDRCatalogueTest {
             }
         }
     }
-    
+
     @Test
     public void testMetadataPersistence() {
         System.out.println("testMetadataPersistence");
@@ -471,7 +476,7 @@ public class SimpleDRCatalogueTest {
             lChild = new LogicalFile(childPath);
 
             instance.registerResourceEntry(lChild);
-            
+
             fail("Should throw NonExistingResourceException");
 
         } catch (Exception ex) {
@@ -494,6 +499,7 @@ public class SimpleDRCatalogueTest {
         }
     }
 //
+
     @Test
     public void testRegisterToExistiongParent() {
         System.out.println("testRegisterToExistiongParent");
@@ -543,10 +549,10 @@ public class SimpleDRCatalogueTest {
             Path parentPath = Path.path("parent");
 
             lParent = new LogicalFolder(parentPath);
-            ArrayList<StorageSite> sites = new ArrayList<StorageSite>();
+            ArrayList<IStorageSite> sites = new ArrayList<IStorageSite>();
             sites.add(new StorageSite("file:///tmp", new Credential("user1")));
             lParent.setStorageSites(sites);
-            Collection<StorageSite> theSites = lParent.getStorageSites();
+            Collection<IStorageSite> theSites = lParent.getStorageSites();
 
             assertNotNull(theSites);
             assertFalse(theSites.isEmpty());
@@ -573,6 +579,56 @@ public class SimpleDRCatalogueTest {
         }
     }
 
+    /**
+     * Test of getSites method, of class StorageSiteManager.
+     */
+    @Test
+    public void testGetSitesByUnames() throws Exception {
+        System.out.println("testGetSitesByUnames");
+        populateStorageSites();
+        SimpleDLCatalogue instance = new SimpleDLCatalogue();
+        try {
+            Collection<IStorageSite> result = instance.getSitesByUname("uname2");
+            assertNotNull(result);
+            assertFalse(result.isEmpty());
+
+            for (IStorageSite s : result) {
+                assertEquals(s.getVPHUsername(), "uname2");
+            }
+
+        } finally {
+            instance.clearAllSites();
+            Collection<StorageSite> allSites = instance.getAllSites();
+            assertEquals(allSites.size(), 0);
+        }
+    }
+
+    private void populateStorageSites() throws FileNotFoundException, IOException, Exception {
+        SimpleDLCatalogue instance = new SimpleDLCatalogue();
+        instance.clearAllSites();
+        String propBasePath = System.getProperty("user.home") + File.separator
+                + "workspace" + File.separator + "lobcder"
+                + File.separator + "etc" + File.separator;
+        ArrayList<String> endpoints = new ArrayList<String>();
+
+//        props.clear();
+        for (String name : names) {
+            Properties prop = getCloudProperties(propBasePath + name);
+//            props.add(prop);
+            endpoints.add(prop.getProperty(nl.uva.cs.lobcder.webdav.Constants.Constants.STORAGE_SITE_ENDPOINT));
+            instance.registerStorageSite(prop);
+        }
+    }
+
+    private static Properties getCloudProperties(String propPath)
+            throws FileNotFoundException, IOException {
+        Properties properties = new Properties();
+
+        File f = new File(propPath);
+        properties.load(new FileInputStream(f));
+
+        return properties;
+    }
 
     private boolean compareEntries(ILogicalData entry, ILogicalData loadedEntry) {
 //        System.out.println("entry:          " + entry.getUID() + " " + entry.getLDRI());

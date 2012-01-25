@@ -28,13 +28,12 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import nl.uva.cs.lobcder.catalogue.CatalogueException;
 import nl.uva.cs.lobcder.catalogue.IDLCatalogue;
-import nl.uva.cs.lobcder.resources.Credential;
 import nl.uva.cs.lobcder.resources.ILogicalData;
+import nl.uva.cs.lobcder.resources.IStorageSite;
 import nl.uva.cs.lobcder.resources.LogicalFile;
 import nl.uva.cs.lobcder.resources.LogicalFolder;
 import nl.uva.cs.lobcder.resources.Metadata;
 import nl.uva.cs.lobcder.resources.StorageSite;
-import nl.uva.cs.lobcder.resources.StorageSiteManager;
 import nl.uva.vlet.vfs.VFSNode;
 import nl.uva.vlet.vfs.VFile;
 import org.apache.commons.io.IOUtils;
@@ -167,15 +166,15 @@ class WebDataDirResource implements FolderResource, CollectionResource {
             LogicalFile newResource = new LogicalFile(Path.path(entry.getLDRI(), newName));
             //We have to make a copy of the member collection. The same collection 
             //can't be a member of the two different classes, the relationship is 1-N!!!
-            ArrayList<StorageSite> copyStorageSites = new ArrayList<StorageSite>();
-            Collection<StorageSite> sites = entry.getStorageSites();
-            if (sites.isEmpty()) {
+            ArrayList<IStorageSite> copyStorageSites = new ArrayList<IStorageSite>();
+            Collection<IStorageSite> sites = entry.getStorageSites();
+            if (sites == null || sites.isEmpty()) {
                 debug("\t Storage Sites for " + this.entry.getLDRI() + " are empty!");
                 throw new IOException("Storage Sites for " + this.entry.getLDRI() + " are empty!");
             }
             //Maybe we have a problem with shalow copy
             //copyStorageSites.addAll(entry.getStorageSites());
-            for (StorageSite s : sites) {
+            for (IStorageSite s : sites) {
                 copyStorageSites.add(new StorageSite(s.getEndpoint(), s.getCredentials()));
             }
             newResource.setStorageSites(copyStorageSites);
@@ -375,7 +374,7 @@ class WebDataDirResource implements FolderResource, CollectionResource {
         return this.entry.getLDRI();
     }
 
-    Collection<StorageSite> getStorageSites() {
+    Collection<IStorageSite> getStorageSites() {
         return this.entry.getStorageSites();
     }
 }

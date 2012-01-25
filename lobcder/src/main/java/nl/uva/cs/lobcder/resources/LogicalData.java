@@ -41,7 +41,7 @@ public class LogicalData implements ILogicalData, Serializable {
     
     
 
-    private Collection<StorageSite> storageSites;
+    private Collection<IStorageSite> storageSites;
 
     public LogicalData(Path ldri) {
         this.ldri = ldri;
@@ -60,7 +60,7 @@ public class LogicalData implements ILogicalData, Serializable {
     }
 
     @Override
-    public Collection<StorageSite> getStorageSites() {
+    public Collection<IStorageSite> getStorageSites() {
         return this.storageSites;
     }
 
@@ -93,13 +93,13 @@ public class LogicalData implements ILogicalData, Serializable {
     }
 
     @Override
-    public void setStorageSites(Collection<StorageSite> storageSites) {
+    public void setStorageSites(Collection<IStorageSite> storageSites) {
         if (this.storageSites == null) {
             this.storageSites = storageSites;
         } else if (this.storageSites.isEmpty()){
             this.storageSites.addAll(storageSites);            
         }else{
-            Collection<StorageSite> combinedSites =  CollectionTools.combineStorageSites(this.storageSites, storageSites);
+            Collection<IStorageSite> combinedSites =  CollectionTools.combineStorageSites(this.storageSites, storageSites);
             this.storageSites = combinedSites;
         }
 //        debug("StorageSite num : " + this.storageSites.size());
@@ -153,8 +153,8 @@ public class LogicalData implements ILogicalData, Serializable {
 
     @Override
     public VFSNode getVFSNode() throws VlException {
-        StorageSite site = null;
-        for (StorageSite s : this.storageSites) {
+        IStorageSite site = null;
+        for (IStorageSite s : this.storageSites) {
             if (s != null) {
                 site = s;
                 break;
@@ -166,7 +166,7 @@ public class LogicalData implements ILogicalData, Serializable {
     @Override
     public boolean hasPhysicalData() throws VlException {
         if (storageSites != null && !storageSites.isEmpty()) {
-            for (StorageSite s : storageSites) {
+            for (IStorageSite s : storageSites) {
                 if (s.LDRIHasPhysicalData(ldri)) {
                     return true;
                 }
@@ -177,11 +177,11 @@ public class LogicalData implements ILogicalData, Serializable {
 
     @Override
     public VFSNode createPhysicalData() throws VlException {
-        StorageSite site = null;
+        IStorageSite site = null;
         if (this.storageSites == null || this.storageSites.isEmpty()) {
             return null;
         }
-        for (StorageSite s : this.storageSites) {
+        for (IStorageSite s : this.storageSites) {
             if (s != null) {
                 site = s;
                 break;

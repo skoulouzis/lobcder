@@ -4,6 +4,7 @@
  */
 package nl.uva.cs.lobcder.webDav.resources;
 
+import nl.uva.cs.lobcder.resources.IStorageSite;
 import nl.uva.cs.lobcder.util.ContantsAndSettings;
 import java.io.ByteArrayOutputStream;
 import nl.uva.cs.lobcder.resources.ILogicalData;
@@ -37,7 +38,7 @@ public class WebDataDirResourceTest {
     private Path testFolderPath;
     private LogicalFolder testLogicalFolder;
     private StorageSite site;
-    private ArrayList<StorageSite> sites;
+    private ArrayList<IStorageSite> sites;
 
     public WebDataDirResourceTest() {
     }
@@ -66,7 +67,7 @@ public class WebDataDirResourceTest {
             Credential cred = new Credential(vphUser);
             site = new StorageSite(endpoint, cred);
 
-            sites = new ArrayList<StorageSite>();
+            sites = new ArrayList<IStorageSite>();
             sites.add(site);
         } catch (Exception ex) {
             Logger.getLogger(WebDataFileResourceTest.class.getName()).log(Level.SEVERE, null, ex);

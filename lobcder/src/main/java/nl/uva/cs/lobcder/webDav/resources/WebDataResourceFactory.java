@@ -1,10 +1,7 @@
 package nl.uva.cs.lobcder.webDav.resources;
 
-import java.util.ArrayList;
 import java.util.logging.Level;
 
-import nl.uva.cs.lobcder.resources.StorageSite;
-import nl.uva.cs.lobcder.resources.StorageSiteManager;
 
 import com.bradmcevoy.common.Path;
 import com.bradmcevoy.http.Resource;
@@ -13,15 +10,15 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Properties;
-import javax.servlet.http.HttpServletRequest;
 import nl.uva.cs.lobcder.catalogue.IDLCatalogue;
 import nl.uva.cs.lobcder.catalogue.SimpleDLCatalogue;
 import nl.uva.cs.lobcder.resources.ILogicalData;
+import nl.uva.cs.lobcder.resources.IStorageSite;
 import nl.uva.cs.lobcder.resources.LogicalData;
 import nl.uva.cs.lobcder.resources.LogicalFile;
 import nl.uva.cs.lobcder.resources.LogicalFolder;
-import nl.uva.cs.lobcder.webdav.exceptions.ForbiddenException;
 
 public class WebDataResourceFactory implements ResourceFactory {
 
@@ -29,7 +26,6 @@ public class WebDataResourceFactory implements ResourceFactory {
     public static final String REALM = "vph-share";
     private IDLCatalogue catalogue;
     private boolean debug = true;
-    private StorageSiteManager siteManager;
     //Hardcoded for now. We need to find a way to get the username
     private String uname = "uname1";
 
@@ -42,17 +38,17 @@ public class WebDataResourceFactory implements ResourceFactory {
     public Resource getResource(String host, String strPath) {
 
         Path ldri = Path.path(strPath).getStripFirst();
-        ArrayList<StorageSite> sites;
+        ArrayList<IStorageSite> sites;
         LogicalData root;
         try {
             //Gets the root path. If instead we called :'ldri = Path.path(strPath);' we get back '/lobcder-1.0-SNAPSHOT'
             debug("getResource:  strPath: " + strPath + " path: " + Path.path(strPath) + " ldri: " + ldri);
             debug("getResource:  host: " + host + " path: " + ldri);
-            
+
 //            if (host == null && Path.path(strPath).toString().equals("")) {
 //                debug(">>>>>>>>>>>>>>> Host null and path is empty");
 //            }
-            sites = (ArrayList<StorageSite>) siteManager.getSitesByUname(uname);
+            sites = (ArrayList<IStorageSite>) catalogue.getSitesByUname(uname);
             if (sites == null || sites.isEmpty()) {
                 debug("\t StorageSites for " + ldri + " are empty!");
                 throw new IOException("StorageSites for " + ldri + " are empty!");
@@ -93,7 +89,6 @@ public class WebDataResourceFactory implements ResourceFactory {
     }
 
     private void initStorageSites() throws Exception {
-        siteManager = new StorageSiteManager();
         String[] names = new String[]{"storage1.prop", "storage2.prop", "storage3.prop", "storage4.prop"};
 
         String propBasePath = System.getProperty("user.home") + File.separator
@@ -102,8 +97,8 @@ public class WebDataResourceFactory implements ResourceFactory {
 
         for (String name : names) {
             Properties prop = getCloudProperties(propBasePath + name);
-            if (!siteManager.storageSiteExists(prop)) {
-                siteManager.registerStorageSite(prop);
+            if (!catalogue.storageSiteExists(prop)) {
+                catalogue.registerStorageSite(prop);
             }
         }
     }

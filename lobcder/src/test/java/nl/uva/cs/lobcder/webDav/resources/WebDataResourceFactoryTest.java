@@ -4,6 +4,7 @@
  */
 package nl.uva.cs.lobcder.webDav.resources;
 
+import nl.uva.cs.lobcder.resources.IStorageSite;
 import java.util.Collection;
 import java.util.Date;
 import java.util.logging.Level;
@@ -160,10 +161,10 @@ public class WebDataResourceFactoryTest {
         result = (WebDataDirResource) instance.getResource(host, ContantsAndSettings.TEST_FOLDER_NAME);
         assertNotNull(result);
 
-        Collection<StorageSite> sites = file.getStorageSites();
+        Collection<IStorageSite> sites = file.getStorageSites();
 
         System.out.println(">>>>>>Sites: " + sites.size());
-        for (StorageSite s : sites) {
+        for (IStorageSite s : sites) {
             System.out.println(">>>>>>Sites: " + s.getEndpoint() + " " + s.getUID());
         }
 
@@ -205,10 +206,10 @@ public class WebDataResourceFactoryTest {
         WebDataDirResource result = (WebDataDirResource) instance.getResource(host, ContantsAndSettings.TEST_FOLDER_NAME);
         assertNotNull(result);
 
-        Collection<StorageSite> sites = result.getStorageSites();
+        Collection<IStorageSite> sites = result.getStorageSites();
 
         System.out.println(">>>>>>Sites: " + sites.size());
-        for (StorageSite s : sites) {
+        for (IStorageSite s : sites) {
             System.out.println(">>>>>>Sites: " + s.getEndpoint());
         }
 
@@ -221,7 +222,7 @@ public class WebDataResourceFactoryTest {
         sites = result.getStorageSites();
 
         System.out.println(">>>>>>Sites: " + sites.size());
-        for (StorageSite s : sites) {
+        for (IStorageSite s : sites) {
             System.out.println(">>>>>>Sites: " + s.getEndpoint());
         }
 
@@ -247,7 +248,6 @@ public class WebDataResourceFactoryTest {
             fail();
             Logger.getLogger(WebDataResourceFactoryTest.class.getName()).log(Level.SEVERE, null, ex);
         }
-
     }
 
     private static class UserThread extends Thread {
@@ -282,9 +282,9 @@ public class WebDataResourceFactoryTest {
         private void op1() throws Exception {
             String host = "localhost:8080";
             String fileName = null;
-            if(this.getName().equals("T1")){
+            if (this.getName().equals("T1")) {
                 fileName = ContantsAndSettings.TEST_FILE_NAME_1;
-            }else if(this.getName().equals("T2")){
+            } else if (this.getName().equals("T2")) {
                 fileName = ContantsAndSettings.TEST_FILE_NAME_2;
             }
             WebDataResourceFactory instance = new WebDataResourceFactory();

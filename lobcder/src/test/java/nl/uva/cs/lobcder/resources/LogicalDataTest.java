@@ -27,8 +27,8 @@ public class LogicalDataTest {
 
     private Path path;
     private Path child;
-    private ArrayList<StorageSite> sites;
-    private StorageSite site;
+    private ArrayList<IStorageSite> sites;
+    private IStorageSite site;
 
     public LogicalDataTest() {
     }
@@ -47,7 +47,7 @@ public class LogicalDataTest {
             path = Path.path("testPath");
             child = Path.path("testChildPath");
 
-            sites = new ArrayList<StorageSite>();
+            sites = new ArrayList<IStorageSite>();
             site = new StorageSite("file:///" + System.getProperty("java.io.tmpdir"), new Credential("user1"));
             sites.add(site);
         } catch (Exception ex) {

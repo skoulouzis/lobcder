@@ -6,7 +6,9 @@ package nl.uva.cs.lobcder.catalogue;
 
 import com.bradmcevoy.common.Path;
 import java.util.Collection;
+import java.util.Properties;
 import nl.uva.cs.lobcder.resources.ILogicalData;
+import nl.uva.cs.lobcder.resources.IStorageSite;
 
 /**
  *
@@ -28,5 +30,11 @@ public interface IDLCatalogue {
     public Collection<ILogicalData> getTopLevelResourceEntries() throws CatalogueException;
 
     public void renameEntry(Path oldPath, Path newPath) throws CatalogueException;
+    
+    public Collection<IStorageSite> getSitesByUname(String vphUname) throws CatalogueException;
+
+    public boolean storageSiteExists(Properties prop)throws CatalogueException;
+
+    public void registerStorageSite(Properties prop)throws CatalogueException;
     
 }

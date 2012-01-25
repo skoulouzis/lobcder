@@ -27,4 +27,8 @@ public interface IStorageSite {
     
     
     VFSNode createVFSFile(Path path) throws VlException;
+
+    public Credential getCredentials();
+
+    public long getUID();
 }
