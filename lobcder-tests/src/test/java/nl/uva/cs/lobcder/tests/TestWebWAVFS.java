@@ -4,26 +4,17 @@
  */
 package nl.uva.cs.lobcder.tests;
 
-import java.io.UnsupportedEncodingException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.apache.commons.httpclient.HttpException;
-import org.apache.jackrabbit.webdav.client.methods.PropPatchMethod;
-import org.apache.jackrabbit.webdav.property.DefaultDavProperty;
-import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
 import org.apache.jackrabbit.webdav.security.AclProperty.Ace;
 import org.apache.jackrabbit.webdav.security.AclResource;
 import org.apache.jackrabbit.webdav.security.Privilege;
 import org.apache.jackrabbit.webdav.security.Principal;
-import org.apache.jackrabbit.webdav.property.DavProperty;
-import org.apache.jackrabbit.webdav.property.DavPropertyIterator;
 import org.apache.jackrabbit.webdav.Status;
 import org.apache.jackrabbit.webdav.MultiStatusResponse;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.MultiStatus;
 import org.apache.commons.httpclient.methods.StringRequestEntity;
-import org.apache.commons.httpclient.params.HttpConnectionManagerParams;
-import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
 import org.apache.jackrabbit.webdav.client.methods.PutMethod;
 import java.io.IOException;
 import org.apache.jackrabbit.webdav.client.methods.PropFindMethod;
@@ -36,7 +27,6 @@ import java.net.URI;
 import java.util.Properties;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpStatus;
-import org.apache.jackrabbit.webdav.client.methods.AclMethod;
 import org.apache.jackrabbit.webdav.client.methods.DeleteMethod;
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
 import org.apache.jackrabbit.webdav.security.AclProperty;
