@@ -4,6 +4,11 @@
  */
 package nl.uva.cs.lobcder.webDav.resources;
 
+import java.util.Map;
+import com.bradmcevoy.http.Range;
+import java.io.ByteArrayOutputStream;
+import com.bradmcevoy.http.Resource;
+import java.util.List;
 import nl.uva.cs.lobcder.resources.IStorageSite;
 import java.util.Collection;
 import java.util.Date;
@@ -231,24 +236,35 @@ public class WebDataResourceFactoryTest {
         System.out.println("testCreateAndGetResourceContent");
         String host = "localhost:8080";
 
+
+        //1st PUT
         WebDataResourceFactory instance = new WebDataResourceFactory();
         WebDataDirResource result = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.TEST_FOLDER_NAME);
         assertNotNull(result);
-
-        ByteArrayInputStream bais = new ByteArrayInputStream("\n".getBytes());
+        ByteArrayInputStream bais = new ByteArrayInputStream(ConstantsAndSettings.TEST_DATA.getBytes());
         WebDataFileResource file = (WebDataFileResource) result.createNew(ConstantsAndSettings.TEST_FILE_NAME_1, bais, new Long("\n".getBytes().length), "text/plain");
         Long len = file.getContentLength();
-        assertEquals(len, new Long("\n".getBytes().length));
+        assertEquals(len, new Long(ConstantsAndSettings.TEST_DATA.getBytes().length));
 
+        //1st GET
         instance = new WebDataResourceFactory();
         result = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.TEST_FOLDER_NAME);
-        assertNotNull(result);
+        List<? extends Resource> children = result.getChildren();
+        assertNotNull(children);
+        assertFalse(children.isEmpty());
 
-        bais = new ByteArrayInputStream(ConstantsAndSettings.TEST_DATA.getBytes());
-        file = (WebDataFileResource) result.createNew(ConstantsAndSettings.TEST_FILE_NAME_1, bais, new Long(ConstantsAndSettings.TEST_DATA.getBytes().length), "text/plain");
-        len = file.getContentLength();
-        long total = new Long("\n".getBytes().length) + new Long(ConstantsAndSettings.TEST_DATA.getBytes().length);
-        assertEquals(len, new Long(total));
+        for (Resource r : children) {
+            if (r.getName().equals(ConstantsAndSettings.TEST_FILE_NAME_1)) {
+                file = (WebDataFileResource) r;
+            }
+        }
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        Range range = null;
+        Map<String, String> params = null;
+        String contentType = "text/plain";
+        file.sendContent(out, range, params, contentType);
+        String content = new String(out.toByteArray());
+        assertEquals(ConstantsAndSettings.TEST_DATA, content);
     }
 
     @Test

@@ -157,8 +157,6 @@ class WebDataDirResource implements FolderResource, CollectionResource {
     @Override
     public Resource createNew(String newName, InputStream inputStream, Long length, String contentType) throws IOException, ConflictException, NotAuthorizedException, BadRequestException {
         OutputStream out = null;
-        VFSNode node;
-        Resource file = null;
         try {
             debug("createNew.");
             debug("\t newName: " + newName);
@@ -168,23 +166,13 @@ class WebDataDirResource implements FolderResource, CollectionResource {
 
             LogicalFile newResource = (LogicalFile) catalogue.getResourceEntryByLDRI(newPath);
             if (newResource != null) {
-                file = updateExistingFile(newResource, length, contentType, inputStream);
+                return updateExistingFile(newResource, length, contentType, inputStream);
             } else {
-                file = createNonExistingFile(newPath, length, contentType, inputStream);
+                return createNonExistingFile(newPath, length, contentType, inputStream);
             }
-
-            debug("\t returning createNew. " + file.getName());
-            return file;
         } catch (Exception ex) {
             throw new BadRequestException(this, ex.getMessage());
         } finally {
-            if (inputStream != null) {
-                inputStream.close();
-            }
-            if (out != null) {
-                out.flush();
-                out.close();
-            }
         }
     }
 
@@ -376,6 +364,13 @@ class WebDataDirResource implements FolderResource, CollectionResource {
         if (node != null) {
             OutputStream out = ((VFile) node).getOutputStream();
             IOUtils.copy(inputStream, out);
+            if (inputStream != null) {
+                inputStream.close();
+            }
+            if (out != null) {
+                out.flush();
+                out.close();
+            }
         }
 
         Metadata meta = new Metadata();
@@ -402,20 +397,23 @@ class WebDataDirResource implements FolderResource, CollectionResource {
         if (node != null) {
             OutputStream out = ((VFile) node).getOutputStream();
             IOUtils.copy(inputStream, out);
+            if (inputStream != null) {
+                inputStream.close();
+            }
+            if (out != null) {
+                out.flush();
+                out.close();
+            }
         }
 
         Metadata meta = newResource.getMetadata();
-        long totalLen = meta.getLength() + length;
-        meta.setLength(totalLen);
+        meta.setLength(length);
         meta.addContentType(contentType);
         meta.setModifiedDate(System.currentTimeMillis());
         newResource.setMetadata(meta);
 
-
         catalogue.updateResourceEntry(newResource);
-        
         LogicalFile relodedResource = (LogicalFile) catalogue.getResourceEntryByLDRI(newResource.getLDRI());
-
         return new WebDataFileResource(catalogue, relodedResource);
     }
 }
