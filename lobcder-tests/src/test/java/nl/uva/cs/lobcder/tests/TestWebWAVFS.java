@@ -242,16 +242,49 @@ public class TestWebWAVFS {
     }
 
     @Test
+    public void testPROPFIND_PUT_PROPFIND_GET_PUT() throws IOException, DavException {
+        String testFileURI1 = this.uri.toASCIIString() + TestSettings.TEST_FILE_NAME1;
+        PropFindMethod propFind = new PropFindMethod(testFileURI1, DavConstants.PROPFIND_ALL_PROP_INCLUDE, DavConstants.DEPTH_0);
+        int status = client1.executeMethod(propFind);
+        assertEquals(HttpStatus.SC_NOT_FOUND, status);
+
+        PutMethod put = new PutMethod(testFileURI1);
+        put.setRequestEntity(new StringRequestEntity("\n", "text/plain", "UTF-8"));
+        status = client1.executeMethod(put);
+        assertEquals(HttpStatus.SC_CREATED, status);
+
+
+        propFind = new PropFindMethod(testFileURI1, DavConstants.PROPFIND_ALL_PROP_INCLUDE, DavConstants.DEPTH_0);
+        status = client1.executeMethod(propFind);
+        assertEquals(HttpStatus.SC_MULTI_STATUS, status);
+
+
+        MultiStatus multiStatus = propFind.getResponseBodyAsMultiStatus();
+        MultiStatusResponse[] responses = multiStatus.getResponses();
+        
+        for(MultiStatusResponse r : responses ){
+            System.out.println("responses: "+r.getHref());
+            Status[] statuses = r.getStatus();
+            for(Status s : statuses){
+                System.out.println("\tStatus: "+s.getStatusCode());
+            }
+        }
+        
+        
+        delete(testFileURI1);
+    }
+
+    @Test
     public void testMultiThread() throws IOException, DavException {
         try {
-            Thread userThread1 = new UserThread(this.client1, this.uri.toASCIIString(),1);
+            Thread userThread1 = new UserThread(this.client1, this.uri.toASCIIString(), 1);
 
-            Thread userThread2 = new UserThread(this.client2, this.uri.toASCIIString(),2);
-            
-            
+            Thread userThread2 = new UserThread(this.client2, this.uri.toASCIIString(), 2);
+
+
             userThread1.start();
             userThread2.start();
-            
+
             userThread1.join();
             userThread2.join();
         } catch (InterruptedException ex) {
