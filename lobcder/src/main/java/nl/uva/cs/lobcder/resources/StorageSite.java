@@ -23,11 +23,15 @@ import nl.uva.vlet.data.StringUtil;
 import nl.uva.vlet.exception.VlException;
 import nl.uva.vlet.util.cog.GridProxy;
 import nl.uva.vlet.vfs.VFSClient;
+import nl.uva.vlet.vfs.VFSFactory;
 import nl.uva.vlet.vfs.VFSNode;
 import nl.uva.vlet.vfs.VFile;
 import nl.uva.vlet.vrl.VRL;
 import nl.uva.vlet.vrs.ServerInfo;
+import nl.uva.vlet.vrs.VNode;
+import nl.uva.vlet.vrs.VRS;
 import nl.uva.vlet.vrs.VRSContext;
+import nl.uva.vlet.vrs.VRSFactory;
 
 /**
  *
@@ -41,14 +45,12 @@ public class StorageSite implements Serializable, IStorageSite {
     static {
         try {
             InitGlobalVFS();
-        } catch (MalformedURLException ex) {
-            Logger.getLogger(StorageSite.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (VlException ex) {
+        } catch (Exception ex) {
             Logger.getLogger(StorageSite.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
-    private static void InitGlobalVFS() throws MalformedURLException, VlException {
+    private static void InitGlobalVFS() throws MalformedURLException, VlException, Exception {
         try {
             GlobalConfig.setBaseLocation(new URL("http://dummy/url"));
         } catch (MalformedURLException ex) {
@@ -66,8 +68,19 @@ public class StorageSite implements Serializable, IStorageSite {
         GlobalConfig.setUsePersistantUserConfiguration(false);
 //        GlobalConfig.setUserHomeLocation(new URL("file:////" + this.tmpVPHuserHome.getAbsolutePath()));
 //        Global.setDebug(true);
+        
+        VRS.getRegistry().addVRSDriverClass(nl.uva.vlet.vfs.cloud.CloudFSFactory.class);
+        String[] supportedSchemes = VRS.getRegistry().getDefaultSchemeNames();
+        
+        for(String s : supportedSchemes){
+            dubug("Supported storage: "+s);
+        }
+        
+        Global.init();        
+    }
 
-        Global.init();
+    private static void dubug(String msg) {
+        System.err.println(StorageSite.class.getName()+": " + msg);
     }
     @PrimaryKey
     @Persistent(valueStrategy = IdGeneratorStrategy.INCREMENT)
@@ -151,8 +164,18 @@ public class StorageSite implements Serializable, IStorageSite {
         }
 
         info.setAttribute(ServerInfo.ATTR_DEFAULT_YES_NO_ANSWER, true);
-
         info.store();
+        
+        VRSFactory rf = context.getResourceFactoryFor(new VRL("swift://149.156.10.131:8443/auth/v1.0/testBlobStoreVFS"));
+        debug("ResourceFactory: "+rf.getClass().getName());
+        for(String s : rf.getResourceTypes()){
+            debug("Types: "+s);
+        }
+        
+        VNode loc = rf.openLocation(context, "swift://149.156.10.131:8443/auth/v1.0/testBlobStoreVFS");
+        
+        debug("Opened: "+loc.getVRL()); 
+        
     }
 
     @Override
@@ -177,5 +200,17 @@ public class StorageSite implements Serializable, IStorageSite {
     @Override
     public long getUID() {
         return this.id;
+    }
+
+    @Override
+    public void deleteVNode(Path lDRI) throws VlException {
+        boolean exists = this.vfsClient.existsPath(vrl.append(lDRI.toString()));
+        if (exists) {
+            VFSNode node = this.getVNode(lDRI);
+            if (node != null && node.delete()) {
+                this.logicalPaths.remove(lDRI.toString());
+            }
+        }
+
     }
 }

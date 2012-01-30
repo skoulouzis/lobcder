@@ -156,7 +156,6 @@ class WebDataDirResource implements FolderResource, CollectionResource {
 
     @Override
     public Resource createNew(String newName, InputStream inputStream, Long length, String contentType) throws IOException, ConflictException, NotAuthorizedException, BadRequestException {
-        OutputStream out = null;
         try {
             debug("createNew.");
             debug("\t newName: " + newName);
@@ -200,10 +199,12 @@ class WebDataDirResource implements FolderResource, CollectionResource {
     public void delete() throws NotAuthorizedException, ConflictException, BadRequestException {
         try {
             debug("delete.");
-//            Collection<StorageSite> sites = entry.getStorageSites();
-//            if (sites != null && !sites.isEmpty()) {
-//                new StorageSiteManager().deleteStorgaeSites(sites);
-//            }
+            Collection<IStorageSite> sites = entry.getStorageSites();
+            if (sites != null && !sites.isEmpty()) {
+                for (IStorageSite s : sites) {
+                    s.deleteVNode(entry.getLDRI());
+                }
+            }
             List<? extends Resource> children = getChildren();
             for (Resource r : children) {
                 if (r instanceof DeletableResource) {
@@ -212,7 +213,9 @@ class WebDataDirResource implements FolderResource, CollectionResource {
             }
             catalogue.unregisterResourceEntry(entry);
         } catch (CatalogueException ex) {
-            throw new BadRequestException(this);
+            throw new BadRequestException(this, ex.toString());
+        } catch (VlException ex) {
+            throw new BadRequestException(this,ex.toString());
         }
     }
 

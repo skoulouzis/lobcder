@@ -31,7 +31,6 @@ import nl.uva.cs.lobcder.resources.ILogicalData;
 import nl.uva.cs.lobcder.resources.IStorageSite;
 import nl.uva.cs.lobcder.resources.Metadata;
 import nl.uva.cs.lobcder.resources.LogicalFile;
-import nl.uva.cs.lobcder.resources.StorageSite;
 import nl.uva.cs.lobcder.util.MMTypeTools;
 import nl.uva.vlet.data.StringUtil;
 import nl.uva.vlet.exception.VlException;
@@ -68,22 +67,26 @@ public class WebDataFileResource implements
             newFolderEntry.getMetadata().setModifiedDate(System.currentTimeMillis());
             catalogue.registerResourceEntry(newFolderEntry);
         } catch (CatalogueException ex) {
-            throw new ConflictException(this);
+            throw new ConflictException(this, ex.toString());
         } catch (IOException ex) {
-            throw new ConflictException(this);
+            throw new ConflictException(this, ex.toString());
         }
     }
 
     @Override
     public void delete() throws NotAuthorizedException, ConflictException, BadRequestException {
         try {
-//            Collection<StorageSite> sites = logicalData.getStorageSites();
-//            if (sites != null && !sites.isEmpty()) {
-//                new StorageSiteManager().deleteStorgaeSites(sites);
-//            }
+            Collection<IStorageSite> sites = logicalData.getStorageSites();
+            if (sites != null && !sites.isEmpty()) {
+                for (IStorageSite s : sites) {
+                    s.deleteVNode(logicalData.getLDRI());
+                }
+            }
             catalogue.unregisterResourceEntry(logicalData);
         } catch (CatalogueException ex) {
-            throw new BadRequestException(this);
+            throw new BadRequestException(this, ex.toString());
+        } catch (VlException ex) {
+            throw new BadRequestException(this, ex.toString());
         }
     }
 
