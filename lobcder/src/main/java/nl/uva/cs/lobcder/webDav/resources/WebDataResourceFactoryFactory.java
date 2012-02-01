@@ -1,6 +1,5 @@
 package nl.uva.cs.lobcder.webDav.resources;
 
-import java.io.IOException;
 import java.util.logging.Level;
 
 import org.slf4j.Logger;
@@ -11,8 +10,6 @@ import com.bradmcevoy.http.ResourceFactory;
 import com.bradmcevoy.http.ResourceFactoryFactory;
 import com.bradmcevoy.http.webdav.DefaultWebDavResponseHandler;
 import com.bradmcevoy.http.webdav.WebDavResponseHandler;
-import java.net.URISyntaxException;
-import nl.uva.vlet.exception.VlException;
 
 public class WebDataResourceFactoryFactory implements ResourceFactoryFactory {
 

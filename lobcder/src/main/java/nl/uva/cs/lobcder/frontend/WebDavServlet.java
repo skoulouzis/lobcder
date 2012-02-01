@@ -10,7 +10,6 @@ import com.bradmcevoy.http.ResourceFactory;
 import com.bradmcevoy.http.webdav.WebDavResponseHandler;
 
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import javax.servlet.Servlet;
@@ -18,10 +17,7 @@ import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import nl.uva.vlet.exception.VlException;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import nl.uva.cs.lobcder.webDav.resources.WebDataResourceFactory;
 import nl.uva.cs.lobcder.webDav.resources.WebDataResourceFactoryFactory;
 
@@ -80,7 +76,7 @@ public class WebDavServlet implements Servlet {
             // Note that the config variable may be null, in which case default handlers will be used
             // If present and blank, NO handlers will be configed
             List<String> authHandlers = loadAuthHandlersIfAny(config.getInitParameter("authentication.handler.classes"));
-
+            
             initFromFactoryFactory(authHandlers);
 //            if (resourceFactoryFactoryClassName != null && resourceFactoryFactoryClassName.length() > 0) {
 //                
