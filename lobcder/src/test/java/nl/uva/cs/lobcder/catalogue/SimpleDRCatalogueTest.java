@@ -23,6 +23,7 @@ import nl.uva.cs.lobcder.resources.LogicalFile;
 import nl.uva.cs.lobcder.resources.LogicalFolder;
 import nl.uva.cs.lobcder.resources.StorageSite;
 import nl.uva.cs.lobcder.util.ConstantsAndSettings;
+import nl.uva.cs.lobcder.webdav.Constants.Constants;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -591,12 +592,21 @@ public class SimpleDRCatalogueTest {
         populateStorageSites();
         SimpleDLCatalogue instance = new SimpleDLCatalogue();
         try {
-            Collection<IStorageSite> result = instance.getSitesByUname("uname2");
+            String uname = "uname2";
+            Properties prop = new Properties();
+            prop.setProperty(Constants.VPH_USERNAME, uname);
+            prop.setProperty(Constants.STORAGE_SITE_USERNAME, "vph_dev:user");
+            prop.setProperty(Constants.STORAGE_SITE_PASSWORD, "non");
+            prop.setProperty(Constants.STORAGE_SITE_ENDPOINT, "file:///home/user/deleteMe/");
+
+            instance.registerStorageSite(prop);
+            
+            Collection<IStorageSite> result = instance.getSitesByUname(uname);
             assertNotNull(result);
             assertFalse(result.isEmpty());
 
             for (IStorageSite s : result) {
-                assertEquals(s.getVPHUsername(), "uname2");
+                assertEquals(s.getVPHUsername(), uname);
             }
 
         } finally {
@@ -674,10 +684,9 @@ public class SimpleDRCatalogueTest {
                 + File.separator + "etc" + File.separator;
         ArrayList<String> endpoints = new ArrayList<String>();
 
-//        props.clear();
+        
         for (String name : names) {
             Properties prop = getCloudProperties(propBasePath + name);
-//            props.add(prop);
             endpoints.add(prop.getProperty(nl.uva.cs.lobcder.webdav.Constants.Constants.STORAGE_SITE_ENDPOINT));
             instance.registerStorageSite(prop);
         }
@@ -689,7 +698,6 @@ public class SimpleDRCatalogueTest {
 
         File f = new File(propPath);
         properties.load(new FileInputStream(f));
-
         return properties;
     }
 

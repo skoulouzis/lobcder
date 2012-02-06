@@ -68,13 +68,7 @@ public class StorageSite implements Serializable, IStorageSite {
 //        GlobalConfig.setUserHomeLocation(new URL("file:////" + this.tmpVPHuserHome.getAbsolutePath()));
 //        Global.setDebug(true);
         
-        VRS.getRegistry().addVRSDriverClass(nl.uva.vlet.vfs.cloud.CloudFSFactory.class);
-        String[] supportedSchemes = VRS.getRegistry().getDefaultSchemeNames();
-        
-        for(String s : supportedSchemes){
-            dubug("Supported storage: "+s);
-        }
-        
+        VRS.getRegistry().addVRSDriverClass(nl.uva.vlet.vfs.cloud.CloudFSFactory.class);        
         Global.init();        
     }
 
@@ -165,15 +159,15 @@ public class StorageSite implements Serializable, IStorageSite {
         info.setAttribute(ServerInfo.ATTR_DEFAULT_YES_NO_ANSWER, true);
         info.store();
         
-        VRSFactory rf = context.getResourceFactoryFor(new VRL("swift://149.156.10.131:8443/auth/v1.0/testBlobStoreVFS"));
-        debug("ResourceFactory: "+rf.getClass().getName());
-        for(String s : rf.getResourceTypes()){
-            debug("Types: "+s);
-        }
-        
-        VNode loc = rf.openLocation(context, "swift://149.156.10.131:8443/auth/v1.0/testBlobStoreVFS");
-        
-        debug("Opened: "+loc.getVRL()); 
+//        VRSFactory rf = context.getResourceFactoryFor(new VRL("swift://149.156.10.131:8443/auth/v1.0/testBlobStoreVFS"));
+//        debug("ResourceFactory: "+rf.getClass().getName());
+//        for(String s : rf.getResourceTypes()){
+//            debug("Types: "+s);
+//        }
+//        
+//        VNode loc = rf.openLocation(context, "swift://149.156.10.131:8443/auth/v1.0/testBlobStoreVFS");
+//        
+//        debug("Opened: "+loc.getVRL()); 
         
     }
 

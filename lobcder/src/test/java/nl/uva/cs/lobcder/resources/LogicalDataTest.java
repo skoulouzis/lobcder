@@ -44,12 +44,19 @@ public class LogicalDataTest {
     @Before
     public void setUp() {
         try {
-            path = Path.path("testPath");
-            child = Path.path("testChildPath");
+            if (path == null) {
+                path = Path.path("testPath");
+            }
 
-            sites = new ArrayList<IStorageSite>();
-            site = new StorageSite("file:///" + System.getProperty("java.io.tmpdir"), new Credential("user1"));
-            sites.add(site);
+            if (child == null) {
+                child = Path.path("testChildPath");
+            }
+            if (sites == null) {
+                sites = new ArrayList<IStorageSite>();
+                site = new StorageSite("file:///" + System.getProperty("java.io.tmpdir"), new Credential("user1"));
+                sites.add(site);
+            }
+
         } catch (Exception ex) {
             Logger.getLogger(LogicalDataTest.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -331,7 +338,7 @@ public class LogicalDataTest {
         instance.setStorageSites(sites);
         result = instance.createPhysicalData();
         assertNotNull(result);
-        
+
         assertTrue(result.exists());
     }
 }

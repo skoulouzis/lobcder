@@ -111,13 +111,6 @@ there are no implementations to enhance
             <scope>runtime</scope>
         </dependency>
         
-        
-        <dependency>
-            <groupId>nl.uva.vlet</groupId>
-            <artifactId>nl.uva.vlet.vfs.cloud</artifactId>
-            <version>1.0-SNAPSHOT</version>
-        </dependency>
-        
         <dependency>
             <groupId>org.jclouds</groupId>
             <artifactId>jclouds-allblobstore</artifactId>
@@ -130,12 +123,6 @@ there are no implementations to enhance
             <artifactId>vlet-grid-globus-4.1</artifactId>
             <version>4.1</version>
             <scope>runtime</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>nl.uva.vlet</groupId>
-            <artifactId>vlet-vrs-core</artifactId>
-            <version>1.4.2</version>
         </dependency>
 
         <dependency>
@@ -246,7 +233,16 @@ there are no implementations to enhance
             <scope>test</scope>
             <type>jar</type>
         </dependency>
-                
+        <dependency>
+            <groupId>nl.uva.vlet</groupId>
+            <artifactId>vlet-vrs.core</artifactId>
+            <version>1.4.2</version>
+        </dependency>
+        <dependency>
+            <groupId>nl.uva.vlet</groupId>
+            <artifactId>vlet-vfs.cloud</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
     </dependencies>
     
     <repositories>

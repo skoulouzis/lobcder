@@ -27,7 +27,7 @@ import static org.junit.Assert.*;
 
 /**
  *
- * @author alogo
+ * @author S. Koulouzis
  */
 public class WebDataResourceFactoryTest {
 
@@ -236,10 +236,14 @@ public class WebDataResourceFactoryTest {
         System.out.println("testCreateAndGetResourceContent");
         String host = "localhost:8080";
 
-
         //1st PUT
         WebDataResourceFactory instance = new WebDataResourceFactory();
-        WebDataDirResource result = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.TEST_FOLDER_NAME);
+        WebDataDirResource result = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH  + ConstantsAndSettings.TEST_FOLDER_NAME);
+        if(result==null){
+            WebDataDirResource root = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH);
+            assertNotNull(root);
+            result = (WebDataDirResource) root.createCollection(ConstantsAndSettings.TEST_FOLDER_NAME);
+        }
         assertNotNull(result);
         ByteArrayInputStream bais = new ByteArrayInputStream(ConstantsAndSettings.TEST_DATA.getBytes());
         WebDataFileResource file = (WebDataFileResource) result.createNew(ConstantsAndSettings.TEST_FILE_NAME_1, bais, new Long("\n".getBytes().length), "text/plain");
