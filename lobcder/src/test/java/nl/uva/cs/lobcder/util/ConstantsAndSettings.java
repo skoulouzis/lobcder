@@ -24,7 +24,8 @@ public class ConstantsAndSettings {
             + "home.";
     public static final String TEST_FILE_NAME_1 = "testFile1";
     public static final Path TEST_FILE_PATH_1 = Path.path(TEST_FILE_NAME_1);
-    public static final String TEST_FOLDER_NAME = "/testCollection";
+    public static final String TEST_FOLDER_NAME_1 = "/testCollection1";
+    public static final String TEST_FOLDER_NAME_2 = "/testCollection2";
     public static final String TEST_FILE_NAME_2 = "testFile2";
     public static Path TEST_FILE_PATH_2 = Path.path(TEST_FILE_NAME_2);
     

@@ -172,11 +172,14 @@ public class LogicalDataTest {
             System.out.println("setStorageSites");
             LogicalData instance = new LogicalData(path);
             instance.setStorageSites(sites);
-            assertFalse(instance.hasPhysicalData());
+            boolean hasData = instance.hasPhysicalData();
+            assertFalse(hasData);
 
             site.createVFSFile(path);
             instance.setStorageSites(sites);
             assertTrue(instance.hasPhysicalData());
+            
+            assertTrue(instance.getVFSNode().delete());
         } catch (VlException ex) {
             Logger.getLogger(LogicalDataTest.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -294,6 +297,8 @@ public class LogicalDataTest {
             String checksum2 = ((VChecksum) expResult).getChecksum(type);
             assertEquals(checksum1, checksum2);
         }
+        
+        assertTrue(instance.getVFSNode().delete());
 
     }
 
@@ -318,6 +323,8 @@ public class LogicalDataTest {
             instance.setStorageSites(sites);
             result = instance.hasPhysicalData();
             assertTrue(result);
+            
+            assertTrue(instance.getVFSNode().delete());
 
 
         } catch (VlException ex) {
@@ -340,5 +347,8 @@ public class LogicalDataTest {
         assertNotNull(result);
 
         assertTrue(result.exists());
+         
+        
+        assertTrue(instance.getVFSNode().delete());
     }
 }

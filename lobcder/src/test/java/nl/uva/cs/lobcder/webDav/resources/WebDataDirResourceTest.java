@@ -59,7 +59,7 @@ public class WebDataDirResourceTest {
 
             testLogicalFile = new LogicalFile(ConstantsAndSettings.TEST_FILE_PATH_1);
 
-            testFolderPath = Path.path(ConstantsAndSettings.TEST_FOLDER_NAME);
+            testFolderPath = Path.path(ConstantsAndSettings.TEST_FOLDER_NAME_1);
             testLogicalFolder = new LogicalFolder(testFolderPath);
 
             String endpoint = "file:///tmp/";
