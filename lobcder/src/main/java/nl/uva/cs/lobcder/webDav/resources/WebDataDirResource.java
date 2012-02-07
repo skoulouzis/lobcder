@@ -79,12 +79,12 @@ class WebDataDirResource implements FolderResource, CollectionResource {
             catalogue.registerResourceEntry(newFolderEntry);
             ILogicalData reloaded = catalogue.getResourceEntryByLDRI(newFolderEntry.getLDRI());
             debug("\t newCollection: " + reloaded.getLDRI() + " getLDRI().getName():" + reloaded.getLDRI().getName());
-           
+
             WebDataDirResource resource = new WebDataDirResource(catalogue, reloaded);
-            
+
             reloaded = catalogue.getResourceEntryByLDRI(this.entry.getLDRI());
             this.entry = reloaded;
-            
+
             return resource;
         } catch (Exception ex) {
             Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, ex);
@@ -185,11 +185,11 @@ class WebDataDirResource implements FolderResource, CollectionResource {
 
             LogicalFile newResource = (LogicalFile) catalogue.getResourceEntryByLDRI(newPath);
             if (newResource != null) {
-                resource =  updateExistingFile(newResource, length, contentType, inputStream);
+                resource = updateExistingFile(newResource, length, contentType, inputStream);
             } else {
                 resource = createNonExistingFile(newPath, length, contentType, inputStream);
             }
-            
+
             ILogicalData reloaded = catalogue.getResourceEntryByLDRI(this.entry.getLDRI());
             this.entry = reloaded;
             return resource;
