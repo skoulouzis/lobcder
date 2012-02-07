@@ -5,19 +5,13 @@
 package nl.uva.cs.lobcder.tests;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.Enumeration;
-import java.util.List;
 import java.util.Properties;
 
-import java.util.Vector;
 import org.apache.commons.httpclient.HttpMethod;
 import org.junit.After;
 import org.junit.Before;
@@ -36,17 +30,12 @@ import org.apache.commons.httpclient.methods.StringRequestEntity;
 import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.MultiStatus;
 import org.apache.jackrabbit.webdav.MultiStatusResponse;
-import org.apache.jackrabbit.webdav.bind.BindConstants;
 import org.apache.jackrabbit.webdav.client.methods.MkColMethod;
 import org.apache.jackrabbit.webdav.client.methods.PropFindMethod;
-import org.apache.jackrabbit.webdav.property.DavProperty;
 import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
 import org.apache.jackrabbit.webdav.DavException;
-import org.apache.jackrabbit.webdav.bind.RebindInfo;
-import org.apache.jackrabbit.webdav.client.methods.DavMethodBase;
 import org.apache.jackrabbit.webdav.client.methods.DeleteMethod;
 import org.apache.jackrabbit.webdav.client.methods.MoveMethod;
-import org.apache.jackrabbit.webdav.client.methods.RebindMethod;
 import org.apache.jackrabbit.webdav.client.methods.VersionControlMethod;
 import org.apache.jackrabbit.webdav.property.DavPropertySet;
 import org.apache.jackrabbit.webdav.version.DeltaVConstants;

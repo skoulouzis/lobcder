@@ -4,6 +4,7 @@
  */
 package nl.uva.cs.lobcder.tests;
 
+import org.apache.commons.httpclient.methods.GetMethod;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.jackrabbit.webdav.security.AclProperty.Ace;
@@ -27,6 +28,7 @@ import java.net.URI;
 import java.util.Properties;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpStatus;
+import org.apache.jackrabbit.webdav.DavResourceIteratorImpl;
 import org.apache.jackrabbit.webdav.client.methods.DeleteMethod;
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
 import org.apache.jackrabbit.webdav.security.AclProperty;
@@ -222,16 +224,18 @@ public class TestWebWAVFS {
         assertEquals(HttpStatus.SC_CREATED, status);
 
         Principal principal = Principal.getAllPrincipal();
+        
         Privilege[] privileges = new Privilege[1];
         privileges[0] = Privilege.PRIVILEGE_ALL;
         boolean invert = false;
         boolean isProtected = false;
-        AclResource inheritedFrom = null;// new DavResourceImpl();
-        Ace ace = AclProperty.createGrantAce(principal, privileges, invert,
-                isProtected, inheritedFrom);
-        Ace[] accessControlElements = new Ace[1];
-        accessControlElements[0] = ace;
-        AclProperty aclProp = new AclProperty(accessControlElements);
+        
+          
+//        AclResource inheritedFrom = null;
+//        Ace ace = AclProperty.createGrantAce(principal, privileges, invert, isProtected, inheritedFrom);
+//        Ace[] accessControlElements = new Ace[1];
+//        accessControlElements[0] = ace;
+//        AclProperty aclProp = new AclProperty(accessControlElements);
 
         //       org.apache.jackrabbit.webdav.client.methods.AclMethod acl = new AclMethod(testFileURI1, new AclProperty(accessControlElements)); 
 
@@ -243,17 +247,20 @@ public class TestWebWAVFS {
 
     @Test
     public void testPROPFIND_PUT_PROPFIND_GET_PUT() throws IOException, DavException {
+
+        //PROPFIND file is not there 
         String testFileURI1 = this.uri.toASCIIString() + TestSettings.TEST_FILE_NAME1;
         PropFindMethod propFind = new PropFindMethod(testFileURI1, DavConstants.PROPFIND_ALL_PROP_INCLUDE, DavConstants.DEPTH_0);
         int status = client1.executeMethod(propFind);
         assertEquals(HttpStatus.SC_NOT_FOUND, status);
 
+        //PUT create an empty file 
         PutMethod put = new PutMethod(testFileURI1);
         put.setRequestEntity(new StringRequestEntity("\n", "text/plain", "UTF-8"));
         status = client1.executeMethod(put);
         assertEquals(HttpStatus.SC_CREATED, status);
 
-
+        //PROPFIND get proerties 
         propFind = new PropFindMethod(testFileURI1, DavConstants.PROPFIND_ALL_PROP_INCLUDE, DavConstants.DEPTH_0);
         status = client1.executeMethod(propFind);
         assertEquals(HttpStatus.SC_MULTI_STATUS, status);
@@ -261,16 +268,55 @@ public class TestWebWAVFS {
 
         MultiStatus multiStatus = propFind.getResponseBodyAsMultiStatus();
         MultiStatusResponse[] responses = multiStatus.getResponses();
+
+        DavPropertySet allProp = getProperties(responses[0]);
+//        DavPropertyIterator iter = allProp.iterator();
+//        while (iter.hasNext()) {
+//            DavProperty<?> p = iter.nextProperty();
+//            System.out.println("P: " + p.getName() + " " + p.getValue());
+//        }
+
+        String isCollStr = (String) allProp.get(DavPropertyName.ISCOLLECTION).getValue();
+        Boolean isCollection = Boolean.getBoolean(isCollStr);
+        assertFalse(isCollection);
+        String lenStr = (String) allProp.get(DavPropertyName.GETCONTENTLENGTH).getValue();
+        assertEquals(Long.valueOf(lenStr), Long.valueOf("\n".length()));
+        String contentType = (String) allProp.get(DavPropertyName.GETCONTENTTYPE).getValue();
+        assertEquals("text/plain; charset=UTF-8", contentType);
+
+
+        //GET the file 
+        GetMethod get = new GetMethod(testFileURI1);
+        status = this.client1.executeMethod(get);
+        assertEquals(HttpStatus.SC_OK, status);
+        assertEquals("\n", get.getResponseBodyAsString());
+
+        //PUT
+        put = new PutMethod(testFileURI1);
+        String content = get.getResponseBodyAsString() + TestSettings.TEST_DATA;
+        put.setRequestEntity(new StringRequestEntity(content, "text/plain", "UTF-8"));
+        status = client1.executeMethod(put);
+        assertEquals(HttpStatus.SC_CREATED, status);
         
-        for(MultiStatusResponse r : responses ){
-            System.out.println("responses: "+r.getHref());
-            Status[] statuses = r.getStatus();
-            for(Status s : statuses){
-                System.out.println("\tStatus: "+s.getStatusCode());
-            }
-        }
+        
+        get = new GetMethod(testFileURI1);
+        status = this.client1.executeMethod(get);
+        assertEquals(HttpStatus.SC_OK, status);
+        assertEquals(content, get.getResponseBodyAsString());
+
+        put = new PutMethod(testFileURI1);
+        content = get.getResponseBodyAsString() + TestSettings.TEST_DATA;
+        put.setRequestEntity(new StringRequestEntity(content, "text/plain", "UTF-8"));
+        status = client1.executeMethod(put);
+        assertEquals(HttpStatus.SC_CREATED, status);
         
         
+        get = new GetMethod(testFileURI1);
+        status = this.client1.executeMethod(get);
+        assertEquals(HttpStatus.SC_OK, status);
+        assertEquals(content, get.getResponseBodyAsString());
+
+
         delete(testFileURI1);
     }
 
