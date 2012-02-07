@@ -20,6 +20,7 @@ import static org.junit.Assert.*;
 
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpException;
+import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.GetMethod;
@@ -715,16 +716,21 @@ public class WebDAVTest {
     }
 
     public void testPutIfEtag() throws HttpException, IOException, DavException, URISyntaxException {
-        String testuri = this.root + "iftest";
-//
+        String testcol = this.root + "testResourceId/";
+        String testuri = testcol + "iftest";
         int status;
         try {
+                         
+            MkColMethod mkcol = new MkColMethod(testcol);
+            status = this.client.executeMethod(mkcol);
+            assertEquals(HttpStatus.SC_CREATED, status);
+            
             PutMethod put = new PutMethod(testuri);
             String condition = "<" + testuri + "> ([" + "\"an-etag-this-testcase-invented\"" + "])";
             put.setRequestEntity(new StringRequestEntity("1"));
             put.setRequestHeader("If", condition);
             status = this.client.executeMethod(put);
-            assertEquals("status: " + status, 412, status);
+            assertEquals("status: " + status, HttpStatus.SC_PRECONDITION_FAILED, status);
         } finally {
             DeleteMethod delete = new DeleteMethod(testuri);
             status = this.client.executeMethod(delete);
@@ -816,7 +822,7 @@ public class WebDAVTest {
             PutMethod put = new PutMethod(testuri);
             put.setRequestEntity(new StringRequestEntity("1"));
             status = this.client.executeMethod(put);
-            assertEquals("status: " + status, 201, status);
+            assertEquals("status: " + status, HttpStatus.SC_CREATED, status);
 
             DavPropertyNameSet names = new DavPropertyNameSet();
             names.add(DeltaVConstants.COMMENT);
