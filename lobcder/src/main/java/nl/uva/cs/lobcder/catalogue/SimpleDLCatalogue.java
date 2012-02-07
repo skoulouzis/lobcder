@@ -644,7 +644,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                 loaded.setLDRI(ldri);
                 loaded.setMetadata(meta);
                 loaded.setStorageSites(ss);
-
+                
                 tx.commit();
 
             } finally {

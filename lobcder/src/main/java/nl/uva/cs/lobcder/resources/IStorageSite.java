@@ -21,7 +21,7 @@ public interface IStorageSite {
 
     Collection<String> getLogicalPaths();
     
-    boolean LDRIHasPhysicalData(Path ldri);
+    boolean LDRIHasPhysicalData(Path ldri)throws VlException;
     
     VFSNode getVNode(Path path) throws VlException;
     

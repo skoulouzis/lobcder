@@ -38,9 +38,6 @@ public class LogicalData implements ILogicalData, Serializable {
 //    @Persistent
 //    private Collection<StorageSite> storageSites;
     private boolean debug = true;
-    
-    
-
     private Collection<IStorageSite> storageSites;
 
     public LogicalData(Path ldri) {
@@ -96,10 +93,10 @@ public class LogicalData implements ILogicalData, Serializable {
     public void setStorageSites(Collection<IStorageSite> storageSites) {
         if (this.storageSites == null) {
             this.storageSites = storageSites;
-        } else if (this.storageSites.isEmpty()){
-            this.storageSites.addAll(storageSites);            
-        }else{
-            Collection<IStorageSite> combinedSites =  CollectionTools.combineStorageSites(this.storageSites, storageSites);
+        } else if (this.storageSites.isEmpty()) {
+            this.storageSites.addAll(storageSites);
+        } else {
+            Collection<IStorageSite> combinedSites = CollectionTools.combineStorageSites(this.storageSites, storageSites);
             this.storageSites = combinedSites;
         }
 //        debug("StorageSite num : " + this.storageSites.size());
@@ -115,7 +112,7 @@ public class LogicalData implements ILogicalData, Serializable {
 
     private void debug(String msg) {
         if (debug) {
-            System.err.println(this.getClass().getName() + "."+this.ldri+": " + msg);
+            System.err.println(this.getClass().getName() + "." + this.ldri + ": " + msg);
         }
     }
 
@@ -129,7 +126,9 @@ public class LogicalData implements ILogicalData, Serializable {
 
     @Override
     public void removeChild(Path childPath) {
-        children.remove(childPath);
+        if (children != null && !children.isEmpty()) {
+            children.remove(childPath);
+        }
     }
 
     @Override

@@ -45,7 +45,7 @@ import org.apache.commons.io.IOUtils;
  */
 class WebDataDirResource implements FolderResource, CollectionResource {
 
-    private final ILogicalData entry;
+    private ILogicalData entry;
     private final IDLCatalogue catalogue;
 
     public WebDataDirResource(IDLCatalogue catalogue, ILogicalData entry) {
@@ -79,8 +79,13 @@ class WebDataDirResource implements FolderResource, CollectionResource {
             catalogue.registerResourceEntry(newFolderEntry);
             ILogicalData reloaded = catalogue.getResourceEntryByLDRI(newFolderEntry.getLDRI());
             debug("\t newCollection: " + reloaded.getLDRI() + " getLDRI().getName():" + reloaded.getLDRI().getName());
-
-            return new WebDataDirResource(catalogue, reloaded);
+           
+            WebDataDirResource resource = new WebDataDirResource(catalogue, reloaded);
+            
+            reloaded = catalogue.getResourceEntryByLDRI(this.entry.getLDRI());
+            this.entry = reloaded;
+            
+            return resource;
         } catch (Exception ex) {
             Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, ex);
             if (ex.getMessage().contains("resource exists")) {
@@ -170,6 +175,7 @@ class WebDataDirResource implements FolderResource, CollectionResource {
 
     @Override
     public Resource createNew(String newName, InputStream inputStream, Long length, String contentType) throws IOException, ConflictException, NotAuthorizedException, BadRequestException {
+        Resource resource;
         try {
             debug("createNew.");
             debug("\t newName: " + newName);
@@ -179,10 +185,14 @@ class WebDataDirResource implements FolderResource, CollectionResource {
 
             LogicalFile newResource = (LogicalFile) catalogue.getResourceEntryByLDRI(newPath);
             if (newResource != null) {
-                return updateExistingFile(newResource, length, contentType, inputStream);
+                resource =  updateExistingFile(newResource, length, contentType, inputStream);
             } else {
-                return createNonExistingFile(newPath, length, contentType, inputStream);
+                resource = createNonExistingFile(newPath, length, contentType, inputStream);
             }
+            
+            ILogicalData reloaded = catalogue.getResourceEntryByLDRI(this.entry.getLDRI());
+            this.entry = reloaded;
+            return resource;
         } catch (Exception ex) {
             throw new BadRequestException(this, ex.getMessage());
         } finally {

@@ -67,13 +67,13 @@ public class StorageSite implements Serializable, IStorageSite {
         GlobalConfig.setUsePersistantUserConfiguration(false);
 //        GlobalConfig.setUserHomeLocation(new URL("file:////" + this.tmpVPHuserHome.getAbsolutePath()));
 //        Global.setDebug(true);
-        
-        VRS.getRegistry().addVRSDriverClass(nl.uva.vlet.vfs.cloud.CloudFSFactory.class);        
-        Global.init();        
+
+        VRS.getRegistry().addVRSDriverClass(nl.uva.vlet.vfs.cloud.CloudFSFactory.class);
+        Global.init();
     }
 
     private static void dubug(String msg) {
-        System.err.println(StorageSite.class.getName()+": " + msg);
+        System.err.println(StorageSite.class.getName() + ": " + msg);
     }
     @PrimaryKey
     @Persistent(valueStrategy = IdGeneratorStrategy.INCREMENT)
@@ -158,17 +158,7 @@ public class StorageSite implements Serializable, IStorageSite {
 
         info.setAttribute(ServerInfo.ATTR_DEFAULT_YES_NO_ANSWER, true);
         info.store();
-        
-//        VRSFactory rf = context.getResourceFactoryFor(new VRL("swift://149.156.10.131:8443/auth/v1.0/testBlobStoreVFS"));
-//        debug("ResourceFactory: "+rf.getClass().getName());
-//        for(String s : rf.getResourceTypes()){
-//            debug("Types: "+s);
-//        }
-//        
-//        VNode loc = rf.openLocation(context, "swift://149.156.10.131:8443/auth/v1.0/testBlobStoreVFS");
-//        
-//        debug("Opened: "+loc.getVRL()); 
-        
+
     }
 
     @Override
@@ -181,7 +171,11 @@ public class StorageSite implements Serializable, IStorageSite {
     }
 
     @Override
-    public boolean LDRIHasPhysicalData(Path ldri) {
+    public boolean LDRIHasPhysicalData(Path ldri) throws VlException {
+        if (!logicalPaths.contains(ldri.toString())) {
+            VRL newVRL = vrl.append(ldri.toString());
+            return vfsClient.existsPath(newVRL);
+        }
         return logicalPaths.contains(ldri.toString());
     }
 
