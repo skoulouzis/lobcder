@@ -148,7 +148,7 @@ public class StorageSite implements Serializable, IStorageSite {
         if (StringUtil.equals(authScheme, ServerInfo.GSI_AUTH) && proxy != null) {
             context.setGridProxy(proxy);
         }
-
+        
         if (StringUtil.equals(authScheme, ServerInfo.PASSWORD_AUTH)
                 || StringUtil.equals(authScheme, ServerInfo.PASSWORD_OR_PASSPHRASE_AUTH)
                 || StringUtil.equals(authScheme, ServerInfo.PASSPHRASE_AUTH)) {
