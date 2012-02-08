@@ -49,7 +49,7 @@ public class WebDataResourceFactory implements ResourceFactory {
 //            if (host == null && Path.path(strPath).toString().equals("")) {
 //                debug(">>>>>>>>>>>>>>> Host null and path is empty");
 //            }
-
+            
             if (ldri.isRoot() || ldri.toString().equals("")) {
                 root = new LogicalData(ldri);
                 sites = root.getStorageSites();

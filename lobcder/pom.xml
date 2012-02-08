@@ -73,7 +73,6 @@ there are no implementations to enhance
             <version>1.6.5</version>
         </dependency>
         
-        
         <dependency>
             <groupId>nl.uva.vlet</groupId>
             <artifactId>nl.uva.vlet.lbl.srm</artifactId>
@@ -89,14 +88,14 @@ there are no implementations to enhance
         </dependency>
 
         
+        
+
         <dependency>
             <groupId>nl.uva.vlet</groupId>
             <artifactId>nl.uva.vlet.vfs.lfc</artifactId>
             <version>1</version>
             <scope>runtime</scope>
-        </dependency>
-
-        <dependency>
+        </dependency><dependency>
             <groupId>nl.uva.vlet</groupId>
             <artifactId>nl.uva.vlet.vfs.srm</artifactId>
             <version>1</version>
