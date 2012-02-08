@@ -101,7 +101,7 @@ public class WebDAVTest {
         int status = client.executeMethod(method);
 
         //Just get something back 
-        assertTrue("GetMethod status: " + status, status == 404 || status == 200);
+        assertTrue("GetMethod status: " + status, status == HttpStatus.SC_NOT_FOUND || status == HttpStatus.SC_OK);
     }
 
 //     http://greenbytes.de/tech/webdav/rfc5842.html#rfc.section.8.1
@@ -109,7 +109,7 @@ public class WebDAVTest {
     public void testOptions() throws HttpException, IOException {
         OptionsMethod options = new OptionsMethod(this.uri.toASCIIString());
         int status = this.client.executeMethod(options);
-        assertEquals(200, status);
+        assertEquals(HttpStatus.SC_OK, status);
 
 //        List allow = Arrays.asList(options.getAllowedMethods());
 
@@ -154,30 +154,30 @@ public class WebDAVTest {
         try {
             MkColMethod mkcol = new MkColMethod(testcol);
             status = this.client.executeMethod(mkcol);
-            assertEquals(201, status);
+            assertEquals(HttpStatus.SC_CREATED, status);
 
             PutMethod put = new PutMethod(testuri1);
             put.setRequestEntity(new StringRequestEntity("foo", "text/plain", "UTF-8"));
             status = this.client.executeMethod(put);
-            assertEquals(201, status);
+            assertEquals(HttpStatus.SC_CREATED, status);
 
             // enabling version control always makes the resource referenceable
             //No version control yet
 //            VersionControlMethod versioncontrol = new VersionControlMethod(testuri1);
 //            status = this.client.executeMethod(versioncontrol);
-//            assertTrue("VersionControlMethod status: " + status, status == 200 || status == 201);
+//            assertTrue("VersionControlMethod status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_CREATED);
 
 //            URI resourceId = getResourceId(testuri1);
 
             MoveMethod move = new MoveMethod(testuri1, testuri2, true);
             status = this.client.executeMethod(move);
-            assertEquals(201, status);
+            assertEquals(HttpStatus.SC_CREATED, status);
 //            URI resourceId2 = getResourceId(testuri2);
 //            assertEquals(resourceId, resourceId2);
         } finally {
             DeleteMethod delete = new DeleteMethod(testcol);
             status = this.client.executeMethod(delete);
-            assertTrue("DeleteMethod status: " + status, status == 200 || status == 204);
+            assertTrue("DeleteMethod status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
         }
     }
 
@@ -192,61 +192,61 @@ public class WebDAVTest {
         try {
             MkColMethod mkcol = new MkColMethod(testcol);
             status = this.client.executeMethod(mkcol);
-            assertEquals(201, status);
+            assertEquals(HttpStatus.SC_CREATED, status);
 
             mkcol = new MkColMethod(subcol1);
             status = this.client.executeMethod(mkcol);
-            assertEquals(201, status);
+            assertEquals(HttpStatus.SC_CREATED, status);
 
             mkcol = new MkColMethod(subcol2);
             status = this.client.executeMethod(mkcol);
-            assertEquals(201, status);
+            assertEquals(HttpStatus.SC_CREATED, status);
 
             //create new resource R with path bindtest1/res1
             PutMethod put = new PutMethod(testres1);
             put.setRequestEntity(new StringRequestEntity("foo", "text/plain", "UTF-8"));
             status = this.client.executeMethod(put);
-            assertEquals(201, status);
+            assertEquals(HttpStatus.SC_CREATED, status);
 
             //create new binding of R with path bindtest2/res2
             //No BindMethod yet
 //            DavMethodBase bind = new BindMethod(subcol2, new BindInfo(testres1, "res2"));
 //            status = this.client.executeMethod(bind);
-//            assertEquals(201, status);
+//            assertEquals(HttpStatus.SC_CREATED, status);
             //check if both bindings report the same DAV:resource-id
 //            assertEquals(this.getResourceId(testres1), this.getResourceId(testres2));
 
             //compare representations retrieved with both paths
             GetMethod get = new GetMethod(testres1);
             status = this.client.executeMethod(get);
-            assertEquals(200, status);
+            assertEquals(HttpStatus.SC_OK, status);
             assertEquals("foo", get.getResponseBodyAsString());
 
             //Doesn't work cause we don't have bind
 //            get = new GetMethod(testres2);
 //            status = this.client.executeMethod(get);
-//            assertEquals(200, status);
+//            assertEquals(HttpStatus.SC_OK, status);
 //            assertEquals("foo", get.getResponseBodyAsString());
 
 //            //modify R using the new path
 //            put = new PutMethod(testres2);
 //            put.setRequestEntity(new StringRequestEntity("bar", "text/plain", "UTF-8"));
 //            status = this.client.executeMethod(put);
-//            assertTrue("status: " + status, status == 200 || status == 204);
+//            assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
 //
 ////            //compare representations retrieved with both paths
 //            get = new GetMethod(testres1);
 //            status = this.client.executeMethod(get);
-//            assertEquals(200, status);
+//            assertEquals(HttpStatus.SC_OK, status);
 //            assertEquals("bar", get.getResponseBodyAsString());
 //            get = new GetMethod(testres2);
 //            status = this.client.executeMethod(get);
-//            assertEquals(200, status);
+//            assertEquals(HttpStatus.SC_OK, status);
 //            assertEquals("bar", get.getResponseBodyAsString());
         } finally {
             DeleteMethod delete = new DeleteMethod(testcol);
             status = this.client.executeMethod(delete);
-            assertTrue("status: " + status, status == 200 || status == 204);
+            assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
         }
     }
 
@@ -262,42 +262,42 @@ public class WebDAVTest {
 //        try {
 //            MkColMethod mkcol = new MkColMethod(testcol);
 //            status = this.client.executeMethod(mkcol);
-//            assertEquals(201, status);
+//            assertEquals(HttpStatus.SC_CREATED, status);
 //            mkcol = new MkColMethod(subcol1);
 //            status = this.client.executeMethod(mkcol);
-//            assertEquals(201, status);
+//            assertEquals(HttpStatus.SC_CREATED, status);
 //            mkcol = new MkColMethod(subcol2);
 //            status = this.client.executeMethod(mkcol);
-//            assertEquals(201, status);
+//            assertEquals(HttpStatus.SC_CREATED, status);
 //
 //            //create new resource R with path bindtest1/res1
 //            PutMethod put = new PutMethod(testres1);
 //            put.setRequestEntity(new StringRequestEntity("foo", "text/plain", "UTF-8"));
 //            status = this.client.executeMethod(put);
-//            assertEquals(201, status);
+//            assertEquals(HttpStatus.SC_CREATED, status);
 //
 //            // enabling version control always makes the resource referenceable
 //            VersionControlMethod versioncontrol = new VersionControlMethod(testres1);
 //            status = this.client.executeMethod(versioncontrol);
-//            assertTrue("status: " + status, status == 200 || status == 201);
+//            assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_CREATED);
 //
 ////            URI r1 = this.getResourceId(testres1);
 //
 //            GetMethod get = new GetMethod(testres1);
 //            status = this.client.executeMethod(get);
-//            assertEquals(200, status);
+//            assertEquals(HttpStatus.SC_OK, status);
 //            assertEquals("foo", get.getResponseBodyAsString());
 //
 //            //rebind R with path bindtest2/res2
 ////            DavMethodBase rebind = new RebindMethod(subcol2, new RebindInfo(testres1, "res2"));
 ////            status = this.client.executeMethod(rebind);
-////            assertEquals(201, status);
+////            assertEquals(HttpStatus.SC_CREATED, status);
 //
 ////            URI r2 = this.getResourceId(testres2);
 //
 //            get = new GetMethod(testres2);
 //            status = this.client.executeMethod(get);
-//            assertEquals(200, status);
+//            assertEquals(HttpStatus.SC_OK, status);
 //            assertEquals("foo", get.getResponseBodyAsString());
 //
 //            //make sure that rebind did not change the resource-id
@@ -306,11 +306,11 @@ public class WebDAVTest {
 //            //verify that the initial binding is gone
 //            HeadMethod head = new HeadMethod(testres1);
 //            status = this.client.executeMethod(head);
-//            assertEquals(404, status);
+//            assertEquals(HttpStatus.SC_NOT_FOUND, status);
 //        } finally {
 //            DeleteMethod delete = new DeleteMethod(testcol);
 //            status = this.client.executeMethod(delete);
-//            assertTrue("status: " + status, status == 200 || status == 204);
+//            assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
 //        }
 //    }
     @Test
@@ -324,25 +324,25 @@ public class WebDAVTest {
         try {
             MkColMethod mkcol = new MkColMethod(testcol);
             status = this.client.executeMethod(mkcol);
-            assertEquals(201, status);
+            assertEquals(HttpStatus.SC_CREATED, status);
             mkcol = new MkColMethod(subcol1);
             status = this.client.executeMethod(mkcol);
-            assertEquals(201, status);
+            assertEquals(HttpStatus.SC_CREATED, status);
             mkcol = new MkColMethod(subcol2);
             status = this.client.executeMethod(mkcol);
-            assertEquals(201, status);
+            assertEquals(HttpStatus.SC_CREATED, status);
 
             //create new resource R with path bindtest1/res1
             PutMethod put = new PutMethod(testres1);
             put.setRequestEntity(new StringRequestEntity("foo", "text/plain", "UTF-8"));
             status = this.client.executeMethod(put);
-            assertEquals(201, status);
+            assertEquals(HttpStatus.SC_CREATED, status);
 
             //create new resource R' with path bindtest2/res2
             put = new PutMethod(testres2);
             put.setRequestEntity(new StringRequestEntity("bar", "text/plain", "UTF-8"));
             status = this.client.executeMethod(put);
-            assertEquals(201, status);
+            assertEquals(HttpStatus.SC_CREATED, status);
 
             //try to create new binding of R with path bindtest2/res2 and Overwrite:F
 //            DavMethodBase bind = new BindMethod(subcol2, new BindInfo(testres1, "res2"));
@@ -353,28 +353,28 @@ public class WebDAVTest {
             //verify that bindtest2/res2 still points to R'
 //            GetMethod get = new GetMethod(testres2);
 //            status = this.client.executeMethod(get);
-//            assertEquals(200, status);
+//            assertEquals(HttpStatus.SC_OK, status);
 //            assertEquals("bar", get.getResponseBodyAsString());
 
             //create new binding of R with path bindtest2/res2
 //            bind = new BindMethod(subcol2, new BindInfo(testres1, "res2"));
 //            status = this.client.executeMethod(bind);
-//            assertTrue("status: " + status, status == 200 || status == 204);
+//            assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
 
             //verify that bindtest2/res2 now points to R
 //            get = new GetMethod(testres2);
 //            status = this.client.executeMethod(get);
-//            assertEquals(200, status);
+//            assertEquals(HttpStatus.SC_OK, status);
 //            assertEquals("foo", get.getResponseBodyAsString());
 
             //verify that the initial binding is still there
 //            HeadMethod head = new HeadMethod(testres1);
 //            status = this.client.executeMethod(head);
-//            assertEquals(200, status);
+//            assertEquals(HttpStatus.SC_OK, status);
         } finally {
             DeleteMethod delete = new DeleteMethod(testcol);
             status = this.client.executeMethod(delete);
-            assertTrue("status: " + status, status == 200 || status == 204);
+            assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
         }
     }
 
@@ -389,31 +389,31 @@ public class WebDAVTest {
         try {
             MkColMethod mkcol = new MkColMethod(testcol);
             status = this.client.executeMethod(mkcol);
-            assertEquals(201, status);
+            assertEquals(HttpStatus.SC_CREATED, status);
             mkcol = new MkColMethod(subcol1);
             status = this.client.executeMethod(mkcol);
-            assertEquals(201, status);
+            assertEquals(HttpStatus.SC_CREATED, status);
             mkcol = new MkColMethod(subcol2);
             status = this.client.executeMethod(mkcol);
-            assertEquals(201, status);
+            assertEquals(HttpStatus.SC_CREATED, status);
 
             //create new resource R with path testSimpleBind/bindtest1/res1
             PutMethod put = new PutMethod(testres1);
             put.setRequestEntity(new StringRequestEntity("foo", "text/plain", "UTF-8"));
             status = this.client.executeMethod(put);
-            assertEquals(201, status);
+            assertEquals(HttpStatus.SC_CREATED, status);
 
 
             // enabling version control always makes the resource referenceable
             VersionControlMethod versioncontrol = new VersionControlMethod(testres1);
             status = this.client.executeMethod(versioncontrol);
-            assertTrue("status: " + status, status == 200 || status == 201);
+            assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_CREATED);
 
             //create new resource R' with path testSimpleBind/bindtest2/res2
             put = new PutMethod(testres2);
             put.setRequestEntity(new StringRequestEntity("bar", "text/plain", "UTF-8"));
             status = this.client.executeMethod(put);
-            assertEquals(201, status);
+            assertEquals(HttpStatus.SC_CREATED, status);
 
             //try rebind R with path testSimpleBind/bindtest2/res2 and Overwrite:F
 //            RebindMethod rebind = new RebindMethod(subcol2, new RebindInfo(testres1, "res2"));
@@ -424,30 +424,30 @@ public class WebDAVTest {
             //verify that testSimpleBind/bindtest2/res2 still points to R'
             GetMethod get = new GetMethod(testres2);
             status = this.client.executeMethod(get);
-            assertEquals(200, status);
+            assertEquals(HttpStatus.SC_OK, status);
             //No content yet 
 //            assertEquals("bar", get.getResponseBodyAsString());
 
             //rebind R with path testSimpleBind/bindtest2/res2
 //            rebind = new RebindMethod(subcol2, new RebindInfo(testres1, "res2"));
 //            status = this.client.executeMethod(rebind);
-//            assertTrue("status: " + status, status == 200 || status == 204);
+//            assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
 
             //verify that testSimpleBind/bindtest2/res2 now points to R
             get = new GetMethod(testres2);
             status = this.client.executeMethod(get);
-            assertEquals(200, status);
+            assertEquals(HttpStatus.SC_OK, status);
             //No content yet 
 //            assertEquals("foo", get.getResponseBodyAsString());
 
             //verify that the initial binding is gone
 //            HeadMethod head = new HeadMethod(testres1);
 //            status = this.client.executeMethod(head);
-//            assertEquals(404, status);
+//            assertEquals(HttpStatus.SC_NOT_FOUND, status);
         } finally {
             DeleteMethod delete = new DeleteMethod(testcol);
             status = this.client.executeMethod(delete);
-            assertTrue("status: " + status, status == 200 || status == 204);
+            assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
         }
     }
 
@@ -463,24 +463,24 @@ public class WebDAVTest {
         try {
             MkColMethod mkcol = new MkColMethod(testcol);
             status = this.client.executeMethod(mkcol);
-            assertEquals(201, status);
+            assertEquals(HttpStatus.SC_CREATED, status);
             mkcol = new MkColMethod(subcol1);
             status = this.client.executeMethod(mkcol);
-            assertEquals(201, status);
+            assertEquals(HttpStatus.SC_CREATED, status);
             mkcol = new MkColMethod(subcol2);
             status = this.client.executeMethod(mkcol);
-            assertEquals(201, status);
+            assertEquals(HttpStatus.SC_CREATED, status);
 
             //create new resource R with path testSimpleBind/bindtest1/res1
             PutMethod put = new PutMethod(testres1);
             put.setRequestEntity(new StringRequestEntity("foo", "text/plain", "UTF-8"));
             status = this.client.executeMethod(put);
-            assertEquals(201, status);
+            assertEquals(HttpStatus.SC_CREATED, status);
 
 //            create new binding of R with path testSimpleBind/bindtest2/res2
 //            DavMethodBase bind = new BindMethod(subcol2, new BindInfo(testres1, "res2"));
 //            status = this.client.executeMethod(bind);
-//            assertEquals(201, status);
+//            assertEquals(HttpStatus.SC_CREATED, status);
             //check if both bindings report the same DAV:resource-id
 //            assertEquals(this.getResourceId(testres1), this.getResourceId(testres2));
 
@@ -518,7 +518,7 @@ public class WebDAVTest {
         } finally {
             DeleteMethod delete = new DeleteMethod(testcol);
             status = this.client.executeMethod(delete);
-            assertTrue("status: " + status, status == 200 || status == 204);
+            assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
         }
     }
 //
@@ -537,44 +537,44 @@ public class WebDAVTest {
 //        try {
 //            MkColMethod mkcol = new MkColMethod(testcol);
 //            status = this.client.executeMethod(mkcol);
-//            assertEquals(201, status);
+//            assertEquals(HttpStatus.SC_CREATED, status);
 //            mkcol = new MkColMethod(a1);
 //            status = this.client.executeMethod(mkcol);
-//            assertEquals(201, status);
+//            assertEquals(HttpStatus.SC_CREATED, status);
 //            mkcol = new MkColMethod(a2);
 //            status = this.client.executeMethod(mkcol);
-//            assertEquals(201, status);
+//            assertEquals(HttpStatus.SC_CREATED, status);
 //
 //            //create collection resource C
 //            mkcol = new MkColMethod(b1);
 //            status = this.client.executeMethod(mkcol);
-//            assertEquals(201, status);
+//            assertEquals(HttpStatus.SC_CREATED, status);
 //            mkcol = new MkColMethod(c1);
 //            status = this.client.executeMethod(mkcol);
-//            assertEquals(201, status);
+//            assertEquals(HttpStatus.SC_CREATED, status);
 //
 //            //create plain resource R
 //            PutMethod put = new PutMethod(x1);
 //            put.setRequestEntity(new StringRequestEntity("foo", "text/plain", "UTF-8"));
 //            status = this.client.executeMethod(put);
-//            assertEquals(201, status);
+//            assertEquals(HttpStatus.SC_CREATED, status);
 ////
 ////            //create new binding of C with path a2/b2
 ////            DavMethodBase bind = new BindMethod(a2, new BindInfo(b1, "b2"));
 ////            status = this.client.executeMethod(bind);
-////            assertEquals(201, status);
+////            assertEquals(HttpStatus.SC_CREATED, status);
 ////            //check if both bindings report the same DAV:resource-id
 ////            assertEquals(this.getResourceId(b1), this.getResourceId(b2));
 ////
 ////            mkcol = new MkColMethod(c2);
 ////            status = this.client.executeMethod(mkcol);
 ////            debug("Cretaing "+c2);
-////            assertEquals(201, status);
+////            assertEquals(HttpStatus.SC_CREATED, status);
 ////
 ////            //create new binding of R with path a2/b2/c2/r2
 ////            bind = new BindMethod(c2, new BindInfo(x1, "x2"));
 ////            status = this.client.executeMethod(bind);
-////            assertEquals(201, status);
+////            assertEquals(HttpStatus.SC_CREATED, status);
 ////            //check if both bindings report the same DAV:resource-id
 ////            assertEquals(this.getResourceId(x1), this.getResourceId(x2));
 ////
@@ -592,7 +592,7 @@ public class WebDAVTest {
 //        } finally {
 //            DeleteMethod delete = new DeleteMethod(testcol);
 //            status = this.client.executeMethod(delete);
-//            assertTrue("status: " + status, status == 200 || status == 204);
+//            assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
 //        }
 //    }
 //    //will fail until <https://issues.apache.org/jira/browse/JCR-1773> is fixed
@@ -607,45 +607,45 @@ public class WebDAVTest {
 //        try {
 //            MkColMethod mkcol = new MkColMethod(testcol);
 //            status = this.client.executeMethod(mkcol);
-//            assertEquals(201, status);
+//            assertEquals(HttpStatus.SC_CREATED, status);
 //            mkcol = new MkColMethod(subcol1);
 //            status = this.client.executeMethod(mkcol);
-//            assertEquals(201, status);
+//            assertEquals(HttpStatus.SC_CREATED, status);
 //            mkcol = new MkColMethod(subcol2);
 //            status = this.client.executeMethod(mkcol);
-//            assertEquals(201, status);
+//            assertEquals(HttpStatus.SC_CREATED, status);
 //
 //            //create new resource R with path testSimpleBind/bindtest1/res1
 //            PutMethod put = new PutMethod(testres1);
 //            put.setRequestEntity(new StringRequestEntity("foo", "text/plain", "UTF-8"));
 //            status = this.client.executeMethod(put);
-//            assertEquals(201, status);
+//            assertEquals(HttpStatus.SC_CREATED, status);
 ////
 ////            //create new binding of R with path testSimpleBind/bindtest2/res2
 ////            DavMethodBase bind = new BindMethod(subcol2, new BindInfo(testres1, "res2"));
 ////            status = this.client.executeMethod(bind);
-////            assertEquals(201, status);
+////            assertEquals(HttpStatus.SC_CREATED, status);
 ////            //check if both bindings report the same DAV:resource-id
 ////            assertEquals(this.getResourceId(testres1), this.getResourceId(testres2));
 ////
 ////            //remove new path
 ////            UnbindMethod unbind = new UnbindMethod(subcol2, new UnbindInfo("res2"));
 ////            status = this.client.executeMethod(unbind);
-////            assertTrue("status: " + status, status == 200 || status == 204);
+////            assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
 ////
 ////            //verify that the new binding is gone
 ////            HeadMethod head = new HeadMethod(testres2);
 ////            status = this.client.executeMethod(head);
-////            assertEquals(404, status);
+////            assertEquals(HttpStatus.SC_NOT_FOUND, status);
 ////
 ////            //verify that the initial binding is still there
 ////            head = new HeadMethod(testres1);
 ////            status = this.client.executeMethod(head);
-////            assertEquals(200, status);
+////            assertEquals(HttpStatus.SC_OK, status);
 //        } finally {
 //            DeleteMethod delete = new DeleteMethod(testcol);
 //            status = this.client.executeMethod(delete);
-//            assertTrue("status: " + status, status == 200 || status == 204);
+//            assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
 //        }
 //    }
 
@@ -666,7 +666,8 @@ public class WebDAVTest {
     @Test
     public void testMove() throws HttpException, IOException, DavException, URISyntaxException {
 
-        String testuri = this.root + "movetest";
+        String testcol = this.root + "testResourceId/";
+        String testuri = testcol + "movetest";
         String destinationuri = testuri + "2";
         String destinationpath = new URI(destinationuri).getRawPath();
         // make sure the scheme is removed
@@ -676,7 +677,7 @@ public class WebDAVTest {
         try {
             PutMethod put = new PutMethod(testuri);
             status = this.client.executeMethod(put);
-            assertTrue("status: " + status, status == 200 || status == 201 || status == 204);
+            assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_CREATED || status == HttpStatus.SC_NO_CONTENT);
 
             // try to move outside the servlet's name space
 //            MoveMethod moveOutsideNamespace = new MoveMethod(testuri, "/outside_the_servlet_namespace", true);
@@ -694,24 +695,24 @@ public class WebDAVTest {
 
             MoveMethod moveNormal = new MoveMethod(testuri, destinationpath, true);
             status = this.client.executeMethod(moveNormal);
-            assertTrue("status: " + status, status == 200 || status == 201 || status == 204);
+            assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_CREATED || status == HttpStatus.SC_NO_CONTENT);
 
             HeadMethod head = new HeadMethod(destinationuri);
             status = this.client.executeMethod(head);
-            //We get back 204 
-//            assertTrue("status: " + status, status == 200);
+            //We get back HttpStatus.SC_NO_CONTENT 
+//            assertTrue("status: " + status, status == HttpStatus.SC_OK);
 
             head = new HeadMethod(testuri);
             status = this.client.executeMethod(head);
-            assertTrue("status: " + status, status == 404);
+            assertTrue("status: " + status, status == HttpStatus.SC_NOT_FOUND);
 
         } finally {
             DeleteMethod delete = new DeleteMethod(testuri);
             status = this.client.executeMethod(delete);
-            assertTrue("status: " + status, status == 200 || status == 204 || status == 404);
+            assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT || status == HttpStatus.SC_NOT_FOUND);
             delete = new DeleteMethod(destinationuri);
             status = this.client.executeMethod(delete);
-            assertTrue("status: " + status, status == 200 || status == 204 || status == 404);
+            assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT || status == HttpStatus.SC_NOT_FOUND);
         }
     }
 
@@ -734,7 +735,7 @@ public class WebDAVTest {
         } finally {
             DeleteMethod delete = new DeleteMethod(testuri);
             status = this.client.executeMethod(delete);
-            assertTrue("status: " + status, status == 200 || status == 204 || status == 404);
+            assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT || status == HttpStatus.SC_NOT_FOUND);
         }
     }
 
@@ -750,12 +751,12 @@ public class WebDAVTest {
 //            PutMethod put = new PutMethod(testuri);
 //            put.setRequestEntity(new StringRequestEntity("1"));
 //            status = this.client.executeMethod(put);
-//            assertTrue("status: " + status, status == 200 || status == 201 || status == 204);
+//            assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_CREATED || status == HttpStatus.SC_NO_CONTENT);
 //
 //            LockMethod lock = new LockMethod(testuri, new LockInfo(
 //                    Scope.EXCLUSIVE, Type.WRITE, "testcase", 10000, true));
 //            status = this.client.executeMethod(lock);
-//            assertEquals("status", 200, status);
+//            assertEquals("status", HttpStatus.SC_OK, status);
 //            locktoken = lock.getLockToken();
 //            assertNotNull(locktoken);
 //
@@ -777,7 +778,7 @@ public class WebDAVTest {
 //            put.setRequestEntity(new StringRequestEntity("2"));
 //            put.setRequestHeader("If", "(<" + locktoken + ">)");
 //            status = this.client.executeMethod(put);
-//            assertTrue("status: " + status, status == 200 || status == 204);
+//            assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
 //
 //            // try to overwrite using correct lock token, using Tagged-list format
 //            // and full URI
@@ -785,7 +786,7 @@ public class WebDAVTest {
 //            put.setRequestEntity(new StringRequestEntity("3"));
 //            put.setRequestHeader("If", "<" + testuri + ">" + "(<" + locktoken + ">)");
 //            status = this.client.executeMethod(put);
-//            assertTrue("status: " + status, status == 200 || status == 204);
+//            assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
 //
 //            // try to overwrite using correct lock token, using Tagged-list format
 //            // and absolute path only
@@ -793,7 +794,7 @@ public class WebDAVTest {
 //            put.setRequestEntity(new StringRequestEntity("4"));
 //            put.setRequestHeader("If", "<" + new URI(testuri).getRawPath() + ">" + "(<" + locktoken + ">)");
 //            status = this.client.executeMethod(put);
-//            assertTrue("status: " + status, status == 200 || status == 204);
+//            assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
 //
 //            // try to overwrite using correct lock token, using Tagged-list format
 //            // and bad path
@@ -801,22 +802,22 @@ public class WebDAVTest {
 //            put.setRequestEntity(new StringRequestEntity("5"));
 //            put.setRequestHeader("If", "</foobar>" + "(<" + locktoken + ">)");
 //            status = this.client.executeMethod(put);
-//            assertTrue("status: " + status, status == 404 || status == 412);
+//            assertTrue("status: " + status, status == HttpStatus.SC_NOT_FOUND || status == 412);
 //        } finally {
 //            DeleteMethod delete = new DeleteMethod(testuri);
 //            if (locktoken != null) {
 //                delete.setRequestHeader("If", "(<" + locktoken + ">)");
 //            }
 //            status = this.client.executeMethod(delete);
-//            assertTrue("status: " + status, status == 200 || status == 204 || status == 404);
+//            assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT || status == HttpStatus.SC_NOT_FOUND);
 //        }
 //    }
 //
     @Test
     public void testPropfindInclude() throws HttpException, IOException, DavException, URISyntaxException {
 
-        String testuri = this.root + "iftest";
-
+        String testcol = this.root + "testResourceId/";
+        String testuri = testcol + "iftest";
         int status;
         try {
             PutMethod put = new PutMethod(testuri);
@@ -835,15 +836,15 @@ public class WebDAVTest {
             assertEquals(1, responses.length);
 
             MultiStatusResponse response = responses[0];
-            DavPropertySet found = response.getProperties(200);
-            DavPropertySet notfound = response.getProperties(404);
+            DavPropertySet found = response.getProperties(HttpStatus.SC_OK);
+            DavPropertySet notfound = response.getProperties(HttpStatus.SC_NOT_FOUND);
 
             //No comments yet
 //            assertTrue(found.contains(DeltaVConstants.COMMENT) || notfound.contains(DeltaVConstants.COMMENT));
         } finally {
             DeleteMethod delete = new DeleteMethod(testuri);
             status = this.client.executeMethod(delete);
-            assertTrue("status: " + status, status == 200 || status == 204 || status == 404);
+            assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT || status == HttpStatus.SC_NOT_FOUND);
         }
     }
 //    // utility methods
@@ -860,7 +861,7 @@ public class WebDAVTest {
 //        MultiStatusResponse[] responses = multistatus.getResponses();
 //        assertEquals(1, responses.length);
 //
-//        DavProperty resourceId = responses[0].getProperties(200).get(BindConstants.RESOURCEID);
+//        DavProperty resourceId = responses[0].getProperties(HttpStatus.SC_OK).get(BindConstants.RESOURCEID);
 //
 //        assertNotNull(resourceId);
 //        assertTrue(resourceId.getValue() instanceof Element);
@@ -882,7 +883,7 @@ public class WebDAVTest {
 //        MultiStatus multistatus = propfind.getResponseBodyAsMultiStatus();
 //        MultiStatusResponse[] responses = multistatus.getResponses();
 //        assertEquals(1, responses.length);
-//        DavProperty parentset = responses[0].getProperties(200).get(BindConstants.PARENTSET);
+//        DavProperty parentset = responses[0].getProperties(HttpStatus.SC_OK).get(BindConstants.PARENTSET);
 //        assertNotNull(parentset);
 //        return parentset;
 //    }
