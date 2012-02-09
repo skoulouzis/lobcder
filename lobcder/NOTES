@@ -1,6 +1,6 @@
 To install the missing VRS jars:
 
-From comand line
+From command line
 
 mvn install:install-file \
 -Dfile=${project.basedir}/src/main/webapp/WEB-INF/lib/JAR_NAME \
@@ -9,10 +9,9 @@ mvn install:install-file \
 -Dversion=1.4.0 \
 -Dpackaging=jar
 
-
 From NetBeans
 Expand the library node on the project tree locate the missing jar and right
-click and select 'Manualy install artifact' browse to
+click and select 'Manually install artifact' browse to
 ${project.basedir}/src/main/webapp/WEB-INF/lib/ select the jar and press install
 locally
 
