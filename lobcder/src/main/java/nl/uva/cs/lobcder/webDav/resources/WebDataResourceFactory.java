@@ -42,6 +42,9 @@ public class WebDataResourceFactory implements ResourceFactory {
         Collection<IStorageSite> sites;
         LogicalData root;
         try {
+            if(strPath.contains("testPropfindInclude")){
+                debug("Stop!");
+            }
             //Gets the root path. If instead we called :'ldri = Path.path(strPath);' we get back '/lobcder-1.0-SNAPSHOT'
             debug("getResource:  strPath: " + strPath + " path: " + Path.path(strPath) + " ldri: " + ldri);
             debug("getResource:  host: " + host + " path: " + ldri);

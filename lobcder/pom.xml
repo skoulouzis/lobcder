@@ -95,7 +95,8 @@ there are no implementations to enhance
             <artifactId>nl.uva.vlet.vfs.lfc</artifactId>
             <version>1</version>
             <scope>runtime</scope>
-        </dependency><dependency>
+        </dependency>
+        <dependency>
             <groupId>nl.uva.vlet</groupId>
             <artifactId>nl.uva.vlet.vfs.srm</artifactId>
             <version>1</version>
@@ -107,13 +108,6 @@ there are no implementations to enhance
             <groupId>nl.uva.vlet</groupId>
             <artifactId>nl.uva.vlet.vfs.jcraft.ssh</artifactId>
             <version>1</version>
-            <scope>runtime</scope>
-        </dependency>
-        
-        <dependency>
-            <groupId>org.jclouds</groupId>
-            <artifactId>jclouds-allblobstore</artifactId>
-            <version>1.2.1</version>
             <scope>runtime</scope>
         </dependency>
 
@@ -232,10 +226,17 @@ there are no implementations to enhance
             <scope>test</scope>
             <type>jar</type>
         </dependency>
+        
         <dependency>
             <groupId>nl.uva.vlet</groupId>
             <artifactId>vlet-vrs.core</artifactId>
             <version>1.4.2</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.jclouds</groupId>
+            <artifactId>jclouds-allblobstore</artifactId>
+            <version>1.3.1</version>
         </dependency>
         <dependency>
             <groupId>nl.uva.vlet</groupId>

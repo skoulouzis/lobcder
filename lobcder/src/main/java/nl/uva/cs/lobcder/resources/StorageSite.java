@@ -71,10 +71,6 @@ public class StorageSite implements Serializable, IStorageSite {
         VRS.getRegistry().addVRSDriverClass(nl.uva.vlet.vfs.cloud.CloudFSFactory.class);
         Global.init();
     }
-
-    private static void dubug(String msg) {
-        System.err.println(StorageSite.class.getName() + ": " + msg);
-    }
     @PrimaryKey
     @Persistent(valueStrategy = IdGeneratorStrategy.INCREMENT)
     private long id;
@@ -90,12 +86,13 @@ public class StorageSite implements Serializable, IStorageSite {
     @Persistent
     private String vphUsername;
     private final Credential credentials;
+    public static final String storagePrefix = "LOBCDER-REPLICA";
 
     public StorageSite(String endpoint, Credential cred) throws Exception {
         try {
             this.endpoint = endpoint;
             vphUsername = cred.getVPHUsername();
-            vrl = new VRL(endpoint);
+            vrl = new VRL(endpoint+"/"+storagePrefix);
 
             prop = new Properties();
 
@@ -148,7 +145,7 @@ public class StorageSite implements Serializable, IStorageSite {
         if (StringUtil.equals(authScheme, ServerInfo.GSI_AUTH) && proxy != null) {
             context.setGridProxy(proxy);
         }
-        
+
         if (StringUtil.equals(authScheme, ServerInfo.PASSWORD_AUTH)
                 || StringUtil.equals(authScheme, ServerInfo.PASSWORD_OR_PASSPHRASE_AUTH)
                 || StringUtil.equals(authScheme, ServerInfo.PASSPHRASE_AUTH)) {
@@ -191,6 +188,7 @@ public class StorageSite implements Serializable, IStorageSite {
 
     @Override
     public void deleteVNode(Path lDRI) throws VlException {
+        debug("Exists?: " + lDRI);
         boolean exists = this.vfsClient.existsPath(vrl.append(lDRI.toString()));
         if (exists) {
             VFSNode node = this.getVNode(lDRI);
@@ -198,6 +196,5 @@ public class StorageSite implements Serializable, IStorageSite {
                 this.logicalPaths.remove(lDRI.toString());
             }
         }
-
     }
 }
