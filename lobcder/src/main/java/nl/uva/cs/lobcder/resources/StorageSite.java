@@ -111,13 +111,14 @@ public class StorageSite implements Serializable, IStorageSite {
 
     @Override
     public VFSNode createVFSFile(Path path) throws VlException {
+        vfsClient.mkdirs(vrl, true);
         String[] parts = path.getParts();
         if (parts.length > 1) {
             String parent = path.getParent().toString();
             debug("mkdirs: " + vrl.append(parent));
             vfsClient.mkdirs(vrl.append(parent));
         }
-
+        
         VRL newVRL = vrl.append(path.toString());
         VFile node = vfsClient.createFile(newVRL, true);
         logicalPaths.add(path.toString());
@@ -155,8 +156,7 @@ public class StorageSite implements Serializable, IStorageSite {
 
         info.setAttribute(ServerInfo.ATTR_DEFAULT_YES_NO_ANSWER, true);
         info.store();
-                
-        vfsClient.mkdirs(vrl);
+        
     }
 
     @Override
