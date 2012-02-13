@@ -597,7 +597,7 @@ public class SimpleDRCatalogueTest {
             prop.setProperty(Constants.VPH_USERNAME, uname);
             prop.setProperty(Constants.STORAGE_SITE_USERNAME, "vph_dev:user");
             prop.setProperty(Constants.STORAGE_SITE_PASSWORD, "non");
-            prop.setProperty(Constants.STORAGE_SITE_ENDPOINT, "file:///home/user/deleteMe/");
+            prop.setProperty(Constants.STORAGE_SITE_ENDPOINT, "file:///"+System.getProperty("user.home")+"/deleteMe/");
 
             instance.registerStorageSite(prop);
             

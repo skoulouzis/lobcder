@@ -155,7 +155,8 @@ public class StorageSite implements Serializable, IStorageSite {
 
         info.setAttribute(ServerInfo.ATTR_DEFAULT_YES_NO_ANSWER, true);
         info.store();
-
+                
+        vfsClient.mkdirs(vrl);
     }
 
     @Override
