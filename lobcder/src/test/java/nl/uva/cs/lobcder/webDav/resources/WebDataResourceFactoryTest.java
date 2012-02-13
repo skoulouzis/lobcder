@@ -379,8 +379,7 @@ public class WebDataResourceFactoryTest {
             assertTrue(node.exists());
 
             s.deleteVNode(ConstantsAndSettings.TEST_FILE_PATH_1);
-            node = s.getVNode(ConstantsAndSettings.TEST_FILE_PATH_1);
-            assertNull(node);
+            
             assertFalse(node.exists());
             boolean hasData = s.LDRIHasPhysicalData(ConstantsAndSettings.TEST_FILE_PATH_1);
             assertFalse(hasData);
@@ -434,7 +433,6 @@ public class WebDataResourceFactoryTest {
                     assertNotNull(root);
                     result = (WebDataDirResource) root.createCollection(collectionName);
                 }
-
                 assertNotNull(result);
                 Collection<IStorageSite> sites = result.getStorageSites();
                 assertFalse(sites.isEmpty());
