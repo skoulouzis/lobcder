@@ -91,15 +91,10 @@ public class LogicalData implements ILogicalData, Serializable {
 
     @Override
     public void setStorageSites(Collection<IStorageSite> storageSites) {
-        if (this.storageSites == null) {
+        if (storageSites != null && !storageSites.isEmpty()) {
             this.storageSites = storageSites;
-        } else if (this.storageSites.isEmpty()) {
-            this.storageSites.addAll(storageSites);
-        } else {
-            Collection<IStorageSite> combinedSites = CollectionTools.combineStorageSites(this.storageSites, storageSites);
-            this.storageSites = combinedSites;
+            debug("StorageSite num : " + this.storageSites.size());
         }
-//        debug("StorageSite num : " + this.storageSites.size());
     }
 
     @Override

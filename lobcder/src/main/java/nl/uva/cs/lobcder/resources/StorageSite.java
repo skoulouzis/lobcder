@@ -72,8 +72,8 @@ public class StorageSite implements Serializable, IStorageSite {
         Global.init();
     }
     @PrimaryKey
-    @Persistent(valueStrategy = IdGeneratorStrategy.INCREMENT)
-    private long id;
+    @Persistent
+    private String uid;
     private Properties prop;
     private VRL vrl;
     @Persistent
@@ -90,6 +90,7 @@ public class StorageSite implements Serializable, IStorageSite {
 
     public StorageSite(String endpoint, Credential cred) throws Exception {
         try {
+            uid = java.util.UUID.randomUUID().toString();
             this.endpoint = endpoint;
             vphUsername = cred.getVPHUsername();
             vrl = new VRL(endpoint+"/"+storagePrefix);
@@ -183,8 +184,8 @@ public class StorageSite implements Serializable, IStorageSite {
     }
 
     @Override
-    public long getUID() {
-        return this.id;
+    public String getUID() {
+        return this.uid;
     }
 
     @Override

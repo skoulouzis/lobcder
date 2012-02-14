@@ -4,6 +4,7 @@
  */
 package nl.uva.cs.lobcder.catalogue;
 
+import nl.uva.cs.lobcder.webDav.resources.UserThread;
 import java.io.FileInputStream;
 import java.util.Properties;
 import java.io.File;
@@ -37,7 +38,7 @@ import static org.junit.Assert.*;
  */
 public class SimpleDRCatalogueTest {
 
-    private static String[] names = new String[]{"storage1.prop", "storage2.prop", "storage3.prop", "storage4.prop"};
+    private static String[] names = new String[]{"storage1.prop", "storage2.prop", "storage3.prop"};
 
     @BeforeClass
     public static void setUpClass() throws Exception {
@@ -597,10 +598,10 @@ public class SimpleDRCatalogueTest {
             prop.setProperty(Constants.VPH_USERNAME, uname);
             prop.setProperty(Constants.STORAGE_SITE_USERNAME, "vph_dev:user");
             prop.setProperty(Constants.STORAGE_SITE_PASSWORD, "non");
-            prop.setProperty(Constants.STORAGE_SITE_ENDPOINT, "file:///"+System.getProperty("user.home")+"/deleteMe/");
+            prop.setProperty(Constants.STORAGE_SITE_ENDPOINT, "file:///" + System.getProperty("user.home") + "/deleteMe/");
 
             instance.registerStorageSite(prop);
-            
+
             Collection<IStorageSite> result = instance.getSitesByUname(uname);
             assertNotNull(result);
             assertFalse(result.isEmpty());
@@ -649,7 +650,7 @@ public class SimpleDRCatalogueTest {
 //            ArrayList<IStorageSite> sites = new ArrayList<IStorageSite>();
 //            sites.add(new StorageSite("file:///tmp", new Credential("user1")));
 //            newEntry.setStorageSites(sites);
-                        
+
             instance.updateResourceEntry(newEntry);
             loaded = instance.getResourceEntryByLDRI(newEntry.getLDRI());
             same = compareEntries(newEntry, loaded);
@@ -667,13 +668,32 @@ public class SimpleDRCatalogueTest {
         } finally {
             try {
                 instance.unregisterResourceEntry(loaded);
-                
+
             } catch (CatalogueException ex) {
                 Logger.getLogger(SimpleDRCatalogueTest.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
+    }
+
+    @Test
+    public void testMultiThread() {
+        try {
+            System.out.println("testMultiThread");
+            Thread userThread1 = new UserThread(2);
+            userThread1.setName("T1");
+
+            Thread userThread2 = new UserThread(2);
+            userThread2.setName("T2");
 
 
+            userThread1.start();
+            userThread2.start();
+
+            userThread1.join();
+            userThread2.join();
+        } catch (InterruptedException ex) {
+            Logger.getLogger(SimpleDRCatalogueTest.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     private void populateStorageSites() throws FileNotFoundException, IOException, Exception {
@@ -684,7 +704,7 @@ public class SimpleDRCatalogueTest {
                 + File.separator + "etc" + File.separator;
         ArrayList<String> endpoints = new ArrayList<String>();
 
-        
+
         for (String name : names) {
             Properties prop = getCloudProperties(propBasePath + name);
             endpoints.add(prop.getProperty(nl.uva.cs.lobcder.webdav.Constants.Constants.STORAGE_SITE_ENDPOINT));

@@ -25,7 +25,7 @@ import static org.junit.Assert.*;
  */
 public class StorageSiteTest {
 
-    private static String name = "storage4.prop";
+    private static String name = "storage1.prop";
     private final String testEndpoint;
     private final Credential testCred;
     private final String vphUser;

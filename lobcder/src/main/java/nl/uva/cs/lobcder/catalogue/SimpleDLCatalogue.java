@@ -65,11 +65,11 @@ public class SimpleDLCatalogue implements IDLCatalogue {
 //    }
     @Override
     public void unregisterResourceEntry(ILogicalData entry) throws CatalogueException {
-//        Collection<StorageSite> sites = entry.getStorageSites();
-//        if (sites != null && sites.isEmpty()) {
-//            StorageSiteManager sm = new StorageSiteManager();
-//            sm.deleteStorgaeSites(entry.getStorageSites());
-//        }
+        //        Collection<StorageSite> sites = entry.getStorageSites();
+        //        if (sites != null && sites.isEmpty()) {
+        //            StorageSiteManager sm = new StorageSiteManager();
+        //            sm.deleteStorgaeSites(entry.getStorageSites());
+        //        }
         deleteEntry(entry.getLDRI());
     }
 
@@ -100,7 +100,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
             String uname;
             try {
                 tx.begin();
-                pm.makePersistent(entry);
+
 //            debug("persistEntry. DB UID class: " + id.getClass().getName() + " UID: " + id);
                 //work around to remove duplicated storage sites 
                 if (storageSites != null && !storageSites.isEmpty()) {
@@ -115,14 +115,14 @@ public class SimpleDLCatalogue implements IDLCatalogue {
 
                         results = (Collection<StorageSite>) q.execute(uname, epoint);
                         for (StorageSite ss : results) {
-                            if (s.getUID() != ss.getUID()) {
+                            if (s.getUID().equals(ss.getUID())) {
                                 deleteStorageSites.add(ss);
                             }
                         }
                     }
                     pm.deletePersistentAll(deleteStorageSites);
                 }
-
+                pm.makePersistent(entry);
                 tx.commit();
 
             } finally {
@@ -131,10 +131,12 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                 }
                 //!?!?!?! if this is not here, the entry's LDRI gets to null???
                 entry.getLDRI();
+                entry.getChildren();
+                entry.getStorageSites();
+                entry.getUID();
                 pm.close();
             }
         }
-
     }
 
     private ILogicalData queryEntry(Path logicalResourceName) {
@@ -576,6 +578,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
 
         Collection<StorageSite> ss;
         StorageSite storageSite = null;
+        Object r;
         synchronized (lock) {
             PersistenceManager pm = pmf.getPersistenceManagerProxy();
             Transaction tx = pm.currentTransaction();
@@ -586,12 +589,9 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                 //This query, will return objects of type DataResourceEntry
                 Query q = pm.newQuery(StorageSite.class);
 
-                //restrict to instances which have the field ldri equal to some logicalResourceName
-                q.setFilter("endpoint == ePoint");
+                q.setFilter("endpoint == ePoint && vphUsername == uname");
                 q.declareParameters(ePoint.getClass().getName() + " ePoint, " + uname.getClass().getName() + " uname");
-
                 ss = (Collection<StorageSite>) q.execute(ePoint, uname);
-
                 for (StorageSite s : ss) {
                     if (s.getEndpoint().equals(ePoint) && s.getVPHUsername().equals(uname)) {
                         hit++;
@@ -608,8 +608,6 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                 pm.close();
             }
         }
-
-
         if (storageSite == null) {
             return false;
         } else {
@@ -632,19 +630,25 @@ public class SimpleDLCatalogue implements IDLCatalogue {
 
             try {
                 tx.begin();
-                
+
                 Query q = pm.newQuery(LogicalData.class);
                 //restrict to instances which have the field ldri equal to some logicalResourceName
                 q.setFilter("strLDRI == strLogicalResourceName");
                 q.declareParameters(strLogicalResourceName.getClass().getName() + " strLogicalResourceName");
                 q.setUnique(true);
                 loaded = (ILogicalData) q.execute(strLogicalResourceName);
-                
-                loaded.setChildren(children);
+                if (children != null) {
+                    loaded.setChildren(children);
+                }
+
                 loaded.setLDRI(ldri);
-                loaded.setMetadata(meta);
-                loaded.setStorageSites(ss);
-                
+                if (meta != null) {
+                    loaded.setMetadata(meta);
+                }
+                if (ss != null) {
+                    loaded.setStorageSites(ss);
+                }
+
                 tx.commit();
 
             } finally {

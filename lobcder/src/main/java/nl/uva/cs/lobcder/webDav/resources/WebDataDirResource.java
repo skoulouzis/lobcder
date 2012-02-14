@@ -48,7 +48,7 @@ class WebDataDirResource implements FolderResource, CollectionResource {
     private ILogicalData entry;
     private final IDLCatalogue catalogue;
 
-    public WebDataDirResource(IDLCatalogue catalogue, ILogicalData entry) {
+    public WebDataDirResource(IDLCatalogue catalogue, ILogicalData entry) throws IOException {
         this.entry = entry;
         this.catalogue = catalogue;
         debug("Init. entry: " + entry.getLDRI());
@@ -69,17 +69,28 @@ class WebDataDirResource implements FolderResource, CollectionResource {
                 debug("\t Storage Sites for " + this.entry.getLDRI() + " are empty!");
                 throw new IOException("Storage Sites for " + this.entry.getLDRI() + " are empty!");
             }
+
             //Maybe we have a problem with shalow copy
             //copyStorageSites.addAll(entry.getStorageSites());
             ArrayList<IStorageSite> copyStorageSites = new ArrayList<IStorageSite>();
             for (IStorageSite s : sites) {
                 copyStorageSites.add(new StorageSite(s.getEndpoint(), s.getCredentials()));
             }
-            newFolderEntry.setStorageSites(copyStorageSites);
-            catalogue.registerResourceEntry(newFolderEntry);
-            ILogicalData reloaded = catalogue.getResourceEntryByLDRI(newFolderEntry.getLDRI());
-            debug("\t newCollection: " + reloaded.getLDRI() + " getLDRI().getName():" + reloaded.getLDRI().getName());
 
+            newFolderEntry.setStorageSites(copyStorageSites);
+//            sites = newFolderEntry.getStorageSites();
+//            if (sites == null || sites.isEmpty()) {
+//                debug("\t Storage Sites for " + newFolderEntry.getLDRI() + " are empty!");
+//                throw new IOException("Storage Sites for " + newFolderEntry.getLDRI() + " are empty!");
+//            }
+            catalogue.registerResourceEntry(newFolderEntry);
+
+            ILogicalData reloaded = catalogue.getResourceEntryByLDRI(newFolderEntry.getLDRI());
+            sites = reloaded.getStorageSites();
+            if (sites == null || sites.isEmpty()) {
+                debug("\t Storage Sites for (reloaded)" + reloaded.getLDRI() + " are empty!");
+                throw new IOException("Storage Sites for " + reloaded.getLDRI() + " are empty!");
+            }
             WebDataDirResource resource = new WebDataDirResource(catalogue, reloaded);
 
             reloaded = catalogue.getResourceEntryByLDRI(this.entry.getLDRI());

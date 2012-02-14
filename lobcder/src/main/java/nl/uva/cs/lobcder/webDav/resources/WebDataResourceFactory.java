@@ -56,13 +56,13 @@ public class WebDataResourceFactory implements ResourceFactory {
                 sites = root.getStorageSites();
                 if (sites == null || sites.isEmpty()) {
                     sites = (ArrayList<IStorageSite>) catalogue.getSitesByUname(uname);
+                    
                     if (sites == null || sites.isEmpty()) {
                         debug("\t StorageSites for " + ldri + " are empty!");
                         throw new IOException("StorageSites for " + ldri + " are empty!");
                     }
                     root.setStorageSites(sites);
                 }
-
                 return new WebDataDirResource(catalogue, root);
             }
             
@@ -105,7 +105,8 @@ public class WebDataResourceFactory implements ResourceFactory {
     }
 
     private void initStorageSites() throws Exception {
-        String[] names = new String[]{"storage1.prop", "storage2.prop", "storage3.prop", "storage4.prop"};
+//        String[] names = new String[]{"storage1.prop", "storage2.prop", "storage3.prop"};
+        String[] names = new String[]{"storage1.prop"};
 
         String propBasePath = System.getProperty("user.home") + File.separator
                 + "workspace" + File.separator + "lobcder"
