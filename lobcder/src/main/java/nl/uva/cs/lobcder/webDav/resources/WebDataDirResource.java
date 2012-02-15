@@ -89,7 +89,16 @@ class WebDataDirResource implements FolderResource, CollectionResource {
             sites = reloaded.getStorageSites();
             if (sites == null || sites.isEmpty()) {
                 debug("\t Storage Sites for (reloaded)" + reloaded.getLDRI() + " are empty!");
-                throw new IOException("Storage Sites for " + reloaded.getLDRI() + " are empty!");
+                //Bad bad horrible patch!
+                sites = entry.getStorageSites();
+                copyStorageSites = new ArrayList<IStorageSite>();
+                for (IStorageSite s : sites) {
+                    copyStorageSites.add(new StorageSite(s.getEndpoint(), s.getCredentials()));
+                }
+                newFolderEntry.setStorageSites(copyStorageSites);
+                catalogue.updateResourceEntry(newFolderEntry);
+                reloaded = catalogue.getResourceEntryByLDRI(newFolderEntry.getLDRI());
+//                throw new IOException("Storage Sites for " + reloaded.getLDRI() + " are empty!");
             }
             WebDataDirResource resource = new WebDataDirResource(catalogue, reloaded);
 

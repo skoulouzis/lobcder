@@ -72,7 +72,7 @@ public class StorageSite implements Serializable, IStorageSite {
         Global.init();
     }
     @PrimaryKey
-    @Persistent
+    @Persistent(customValueStrategy="uuid")
     private String uid;
     private Properties prop;
     private VRL vrl;
@@ -90,7 +90,7 @@ public class StorageSite implements Serializable, IStorageSite {
 
     public StorageSite(String endpoint, Credential cred) throws Exception {
         try {
-            uid = java.util.UUID.randomUUID().toString();
+            uid = String.valueOf(System.currentTimeMillis());
             this.endpoint = endpoint;
             vphUsername = cred.getVPHUsername();
             vrl = new VRL(endpoint+"/"+storagePrefix);

@@ -38,6 +38,6 @@ public interface IDLCatalogue {
 
     public void registerStorageSite(Properties prop)throws CatalogueException;
 
-    public void updateResourceEntry(ILogicalData newResource);
+    public void updateResourceEntry(ILogicalData newResource)throws CatalogueException;
     
 }

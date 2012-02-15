@@ -9,12 +9,15 @@ package nl.uva.cs.lobcder.catalogue;
  * @author S. Koulouzis
  */
 import com.bradmcevoy.common.Path;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.jdo.JDOHelper;
 import javax.jdo.PersistenceManager;
 import javax.jdo.PersistenceManagerFactory;
@@ -24,6 +27,8 @@ import nl.uva.cs.lobcder.resources.Credential;
 import nl.uva.cs.lobcder.resources.LogicalData;
 import nl.uva.cs.lobcder.resources.ILogicalData;
 import nl.uva.cs.lobcder.resources.IStorageSite;
+import nl.uva.cs.lobcder.resources.LogicalFile;
+import nl.uva.cs.lobcder.resources.LogicalFolder;
 import nl.uva.cs.lobcder.resources.Metadata;
 import nl.uva.cs.lobcder.resources.StorageSite;
 import nl.uva.cs.lobcder.webdav.Constants.Constants;
@@ -115,7 +120,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
 
                         results = (Collection<StorageSite>) q.execute(uname, epoint);
                         for (StorageSite ss : results) {
-                            if (s.getUID().equals(ss.getUID())) {
+                            if (s.getVPHUsername().equals(ss.getVPHUsername())  && s.getEndpoint().equals(ss.getEndpoint())){
                                 deleteStorageSites.add(ss);
                             }
                         }
@@ -161,7 +166,6 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                 if (tx.isActive()) {
                     tx.rollback();
                 }
-
                 pm.close();
             }
         }
@@ -616,47 +620,39 @@ public class SimpleDLCatalogue implements IDLCatalogue {
     }
 
     @Override
-    public void updateResourceEntry(ILogicalData entry) {
-        ILogicalData loaded;
+    public void updateResourceEntry(ILogicalData entry) throws CatalogueException {
         Collection<Path> children = entry.getChildren();
         Path ldri = entry.getLDRI();
         Metadata meta = entry.getMetadata();
-        Collection<IStorageSite> ss = entry.getStorageSites();
-        String strLogicalResourceName = entry.getLDRI().toString();
+        Collection<IStorageSite> sites = entry.getStorageSites();
 
-        synchronized (lock) {
-            PersistenceManager pm = pmf.getPersistenceManager();
-            Transaction tx = pm.currentTransaction();
-
-            try {
-                tx.begin();
-
-                Query q = pm.newQuery(LogicalData.class);
-                //restrict to instances which have the field ldri equal to some logicalResourceName
-                q.setFilter("strLDRI == strLogicalResourceName");
-                q.declareParameters(strLogicalResourceName.getClass().getName() + " strLogicalResourceName");
-                q.setUnique(true);
-                loaded = (ILogicalData) q.execute(strLogicalResourceName);
-                if (children != null) {
-                    loaded.setChildren(children);
-                }
-
-                loaded.setLDRI(ldri);
-                if (meta != null) {
-                    loaded.setMetadata(meta);
-                }
-                if (ss != null) {
-                    loaded.setStorageSites(ss);
-                }
-
-                tx.commit();
-
-            } finally {
-                if (tx.isActive()) {
-                    tx.rollback();
-                }
-                pm.close();
+        ILogicalData updated;
+        try {
+            if (entry instanceof LogicalFile) {
+                updated = new LogicalFile(ldri);
+            } else if (entry instanceof LogicalFolder) {
+                updated = new LogicalFolder(ldri);
+            } else {
+                updated = new LogicalData(ldri);
             }
+            updated.setChildren(children);
+            updated.setMetadata(meta);
+            Credential cred;
+            if (sites != null && !sites.isEmpty()) {
+                Collection<IStorageSite> copySites = new ArrayList<IStorageSite>();
+                for (IStorageSite s : sites) {
+                    cred = new Credential(s.getVPHUsername());
+                    cred.setStorageSitePassword(s.getCredentials().getStorageSitePassword());
+                    cred.setStorageSiteUsername(s.getCredentials().getStorageSiteUsername());
+                    copySites.add(new StorageSite(s.getEndpoint(), cred));
+                }
+                updated.setStorageSites(copySites);
+            }
+        } catch (Exception ex) {
+            throw new CatalogueException(ex.getMessage());
         }
+
+        unregisterResourceEntry(entry);
+        registerResourceEntry(updated);
     }
 }

@@ -25,7 +25,7 @@ public class LogicalData implements ILogicalData, Serializable {
      */
     private static final long serialVersionUID = -1529997963561059214L;
     @PrimaryKey
-    @Persistent
+    @Persistent(customValueStrategy="uuid")
     private String uid;
     @Persistent
     private Path ldri;
@@ -43,7 +43,7 @@ public class LogicalData implements ILogicalData, Serializable {
     public LogicalData(Path ldri) {
         this.ldri = ldri;
         strLDRI = ldri.toString();
-        uid = java.util.UUID.randomUUID().toString();
+//        uid = java.util.UUID.randomUUID().toString();
     }
 
     @Override
