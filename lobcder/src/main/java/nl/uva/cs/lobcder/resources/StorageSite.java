@@ -72,7 +72,7 @@ public class StorageSite implements Serializable, IStorageSite {
         Global.init();
     }
     @PrimaryKey
-    @Persistent(customValueStrategy="uuid")
+    @Persistent(customValueStrategy = "uuid")
     private String uid;
     private Properties prop;
     private VRL vrl;
@@ -93,7 +93,7 @@ public class StorageSite implements Serializable, IStorageSite {
             uid = String.valueOf(System.currentTimeMillis());
             this.endpoint = endpoint;
             vphUsername = cred.getVPHUsername();
-            vrl = new VRL(endpoint+"/"+storagePrefix);
+            vrl = new VRL(endpoint + "/" + storagePrefix);
 
             prop = new Properties();
 
@@ -119,7 +119,7 @@ public class StorageSite implements Serializable, IStorageSite {
             debug("mkdirs: " + vrl.append(parent));
             vfsClient.mkdirs(vrl.append(parent));
         }
-        
+
         VRL newVRL = vrl.append(path.toString());
         VFile node = vfsClient.createFile(newVRL, true);
         logicalPaths.add(path.toString());
@@ -157,7 +157,7 @@ public class StorageSite implements Serializable, IStorageSite {
 
         info.setAttribute(ServerInfo.ATTR_DEFAULT_YES_NO_ANSWER, true);
         info.store();
-        
+
     }
 
     @Override
@@ -191,12 +191,16 @@ public class StorageSite implements Serializable, IStorageSite {
     @Override
     public void deleteVNode(Path lDRI) throws VlException {
         debug("Exists?: " + lDRI);
-        boolean exists = this.vfsClient.existsPath(vrl.append(lDRI.toString()));
-        if (exists) {
-            VFSNode node = this.getVNode(lDRI);
-            if (node != null && node.delete()) {
-                this.logicalPaths.remove(lDRI.toString());
+        try {
+            boolean exists = this.vfsClient.existsPath(vrl.append(lDRI.toString()));
+            if (exists) {
+                VFSNode node = this.getVNode(lDRI);
+                if (node != null && node.delete()) {
+                    this.logicalPaths.remove(lDRI.toString());
+                }
             }
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
     }
 }
