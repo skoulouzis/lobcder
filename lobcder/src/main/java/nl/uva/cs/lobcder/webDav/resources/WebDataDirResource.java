@@ -162,13 +162,30 @@ class WebDataDirResource implements FolderResource, CollectionResource {
 
     @Override
     public Object authenticate(String user, String password) {
-        debug("authenticate.");
+        debug("authenticate.\n"
+                + "\t user: " + user
+                + "\t password: " + password);
         return user;
     }
 
     @Override
     public boolean authorise(Request request, Method method, Auth auth) {
-        debug("authorise.");
+        debug("authorise. \n"
+                + "\t request.getAbsolutePath(): " + request.getAbsolutePath() + "\n"
+                + "\t request.getAbsoluteUrl(): " + request.getAbsoluteUrl() + "\n"
+                + "\t request.getAcceptHeader(): " + request.getAcceptHeader() + "\n"
+                + "\t request.getFromAddress(): " + request.getFromAddress() + "\n"
+                + "\t request.getRemoteAddr(): " + request.getRemoteAddr() + "\n"
+                + "\t auth.getCnonce(): " + auth.getCnonce() + "\n"
+                + "\t auth.getNc(): " + auth.getNc() + "\n"
+                + "\t auth.getNonce(): " + auth.getNonce() + "\n"
+                + "\t auth.getPassword(): " + auth.getPassword() + "\n"
+                + "\t auth.getQop(): " + auth.getQop() + "\n"
+                + "\t auth.getRealm(): " + auth.getRealm() + "\n"
+                + "\t auth.getResponseDigest(): " + auth.getResponseDigest() + "\n"
+                + "\t auth.getUri(): " + auth.getUri() + "\n"
+                + "\t auth.getUser(): " + auth.getUser() + "\n"
+                + "\t auth.getTag(): " + auth.getTag());
         return true;
     }
 
