@@ -297,6 +297,21 @@ public class WebDataFileResource implements
     @Override
     public boolean authorise(Request request, Method method, Auth auth) {
         debug("authorise.");
+        debug("\t request.getAbsolutePath(): "+request.getAbsolutePath());
+        debug("\t request.getAbsoluteUrl(): "+request.getAbsoluteUrl());
+        debug("\t request.getAcceptHeader(): "+request.getAcceptHeader());
+        debug("\t request.getFromAddress(): "+request.getFromAddress());
+        debug("\t request.getRemoteAddr(): "+request.getRemoteAddr());
+        debug("\t auth.getCnonce(): "+auth.getCnonce());
+        debug("\t auth.getNc(): "+auth.getNc());
+        debug("\t auth.getNonce(): "+auth.getNonce());
+        debug("\t auth.getPassword(): "+auth.getPassword());
+        debug("\t auth.getQop(): "+auth.getQop());
+        debug("\t auth.getRealm(): "+auth.getRealm());
+        debug("\t auth.getResponseDigest(): "+auth.getResponseDigest());
+        debug("\t auth.getUri(): "+auth.getUri());
+        debug("\t auth.getUser(): "+auth.getUser());
+        debug("\t auth.getTag(): "+auth.getTag());
         return true;
     }
 

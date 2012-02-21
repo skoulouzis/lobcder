@@ -50,14 +50,14 @@ public class WebDavServlet implements Servlet {
                 "\t getQueryString: "+req.getQueryString()+"\n"+
                 "\t getRemoteUser: "+req.getRemoteUser()+"\n"+
                 "\t getRequestURI: "+req.getRequestURI()+"\n"+
-                "\t getRequestedSessionId: "+req.getRequestedSessionId());
+                "\t getRequestedSessionId: "+req.getRequestedSessionId() );
         
         try {
             originalRequest.set(req);
             originalResponse.set(resp);
             com.bradmcevoy.http.Request request = new com.bradmcevoy.http.ServletRequest(req);
             com.bradmcevoy.http.Response response = new com.bradmcevoy.http.ServletResponse(resp);
-            
+                        
             httpManager.process(request, response);
 
         } finally {

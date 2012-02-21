@@ -125,6 +125,9 @@ public class WebDataResourceFactory implements ResourceFactory {
         Properties properties = new Properties();
 
         File f = new File(propPath);
+        if(!f.exists()){
+            throw  new FileNotFoundException("Configuration file "+f.getAbsolutePath()+" not found");
+        }
         properties.load(new FileInputStream(f));
         return properties;
     }
