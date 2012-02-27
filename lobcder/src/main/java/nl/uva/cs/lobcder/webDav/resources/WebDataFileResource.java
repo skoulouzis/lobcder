@@ -296,22 +296,56 @@ public class WebDataFileResource implements
 
     @Override
     public boolean authorise(Request request, Method method, Auth auth) {
+        String absPath = null;
+        String absURL = null;
+        String acceptHeader = null;
+        String fromAddress = null;
+        String remoteAddr = null;
+        String cnonce = null;
+        String nc = null;
+        String nonce = null;
+        String password = null;
+        String qop = null;
+        String relm = null;
+        String responseDigest = null;
+        String uri = null;
+        String user = null;
+        Object tag = null;
+        if (request != null) {
+            absPath = request.getAbsolutePath();
+            absURL = request.getAbsoluteUrl();
+            acceptHeader = request.getAcceptHeader();
+            fromAddress = request.getFromAddress();
+            remoteAddr = request.getRemoteAddr();
+        }
+        if (auth != null) {
+            cnonce = auth.getCnonce();
+            nc = auth.getNc();
+            nonce = auth.getNonce();
+            password = auth.getPassword();
+            qop = auth.getQop();
+            relm = auth.getRealm();
+            responseDigest = auth.getResponseDigest();
+            uri = auth.getUri();
+            user = auth.getUser();
+            tag = auth.getTag();
+        }
         debug("authorise. \n"
-                + "\t request.getAbsolutePath(): " + request.getAbsolutePath() + "\n"
-                + "\t request.getAbsoluteUrl(): " + request.getAbsoluteUrl() + "\n"
-                + "\t request.getAcceptHeader(): " + request.getAcceptHeader() + "\n"
-                + "\t request.getFromAddress(): " + request.getFromAddress() + "\n"
-                + "\t request.getRemoteAddr(): " + request.getRemoteAddr() + "\n"
-                + "\t auth.getCnonce(): " + auth.getCnonce() + "\n"
-                + "\t auth.getNc(): " + auth.getNc() + "\n"
-                + "\t auth.getNonce(): " + auth.getNonce() + "\n"
-                + "\t auth.getPassword(): " + auth.getPassword() + "\n"
-                + "\t auth.getQop(): " + auth.getQop() + "\n"
-                + "\t auth.getRealm(): " + auth.getRealm() + "\n"
-                + "\t auth.getResponseDigest(): " + auth.getResponseDigest() + "\n"
-                + "\t auth.getUri(): " + auth.getUri() + "\n"
-                + "\t auth.getUser(): " + auth.getUser() + "\n"
-                + "\t auth.getTag(): " + auth.getTag());
+                + "\t request.getAbsolutePath(): " + absPath + "\n"
+                + "\t request.getAbsoluteUrl(): " + absURL + "\n"
+                + "\t request.getAcceptHeader(): " + acceptHeader + "\n"
+                + "\t request.getFromAddress(): " + fromAddress + "\n"
+                + "\t request.getRemoteAddr(): " + remoteAddr + "\n"
+                + "\t auth.getCnonce(): " + cnonce + "\n"
+                + "\t auth.getNc(): " + nc + "\n"
+                + "\t auth.getNonce(): " + nonce + "\n"
+                + "\t auth.getPassword(): " + password + "\n"
+                + "\t auth.getQop(): " + qop + "\n"
+                + "\t auth.getRealm(): " + relm + "\n"
+                + "\t auth.getResponseDigest(): " + responseDigest + "\n"
+                + "\t auth.getUri(): " + uri + "\n"
+                + "\t auth.getUser(): " + user + "\n"
+                + "\t auth.getTag(): " + tag);
         return true;
     }
 
