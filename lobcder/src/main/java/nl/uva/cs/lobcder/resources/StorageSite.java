@@ -13,7 +13,6 @@ import java.util.Collection;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.jdo.annotations.IdGeneratorStrategy;
 import javax.jdo.annotations.PersistenceCapable;
 import javax.jdo.annotations.Persistent;
 import javax.jdo.annotations.PrimaryKey;
@@ -27,10 +26,8 @@ import nl.uva.vlet.vfs.VFSNode;
 import nl.uva.vlet.vfs.VFile;
 import nl.uva.vlet.vrl.VRL;
 import nl.uva.vlet.vrs.ServerInfo;
-import nl.uva.vlet.vrs.VNode;
 import nl.uva.vlet.vrs.VRS;
 import nl.uva.vlet.vrs.VRSContext;
-import nl.uva.vlet.vrs.VRSFactory;
 
 /**
  *
