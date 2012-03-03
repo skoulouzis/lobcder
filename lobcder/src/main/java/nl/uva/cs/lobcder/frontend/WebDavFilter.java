@@ -15,9 +15,9 @@ import com.bradmcevoy.http.exceptions.ConflictException;
 import com.bradmcevoy.http.exceptions.NotAuthorizedException;
 import com.bradmcevoy.http.http11.Http11ResponseHandler;
 import nl.uva.cs.lobcder.webDav.resources.WebDataResource;
-import nl.uva.cs.lobcder.webdav.exceptions.ForbiddenException;
-import nl.uva.cs.lobcder.webdav.exceptions.UnauthorizedException;
-import nl.uva.cs.lobcder.webdav.exceptions.WebDavException;
+import nl.uva.cs.lobcder.webDav.exceptions.ForbiddenException;
+import nl.uva.cs.lobcder.webDav.exceptions.UnauthorizedException;
+import nl.uva.cs.lobcder.webDav.exceptions.WebDavException;
 
 /**
  *

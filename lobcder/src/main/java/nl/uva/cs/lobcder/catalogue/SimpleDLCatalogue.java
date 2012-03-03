@@ -31,7 +31,7 @@ import nl.uva.cs.lobcder.resources.LogicalFile;
 import nl.uva.cs.lobcder.resources.LogicalFolder;
 import nl.uva.cs.lobcder.resources.Metadata;
 import nl.uva.cs.lobcder.resources.StorageSite;
-import nl.uva.cs.lobcder.webdav.Constants.Constants;
+import nl.uva.cs.lobcder.webDav.resources.Constants;
 import nl.uva.vlet.data.StringUtil;
 
 public class SimpleDLCatalogue implements IDLCatalogue {

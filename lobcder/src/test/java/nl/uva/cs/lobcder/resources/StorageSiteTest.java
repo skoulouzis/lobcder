@@ -11,6 +11,7 @@ import java.util.Properties;
 import java.io.File;
 import com.bradmcevoy.common.Path;
 import java.util.Collection;
+import nl.uva.cs.lobcder.webDav.resources.Constants;
 import nl.uva.vlet.vfs.VFSNode;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -37,13 +38,13 @@ public class StorageSiteTest {
 
 
         Properties prop = getCloudProperties(propBasePath + name);
-        testEndpoint = prop.getProperty(nl.uva.cs.lobcder.webdav.Constants.Constants.STORAGE_SITE_ENDPOINT);
-        vphUser = prop.getProperty(nl.uva.cs.lobcder.webdav.Constants.Constants.STORAGE_SITE_USERNAME);
+        testEndpoint = prop.getProperty(Constants.STORAGE_SITE_ENDPOINT);
+        vphUser = prop.getProperty(Constants.STORAGE_SITE_USERNAME);
 
         testCred = new Credential(vphUser);
-        String siteUname = prop.getProperty(nl.uva.cs.lobcder.webdav.Constants.Constants.STORAGE_SITE_USERNAME);
+        String siteUname = prop.getProperty(Constants.STORAGE_SITE_USERNAME);
         testCred.setStorageSiteUsername(siteUname);
-        String passwd = prop.getProperty(nl.uva.cs.lobcder.webdav.Constants.Constants.STORAGE_SITE_PASSWORD);
+        String passwd = prop.getProperty(Constants.STORAGE_SITE_PASSWORD);
         testCred.setStorageSitePassword(passwd);
     }
 

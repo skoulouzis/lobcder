@@ -4,7 +4,6 @@
  */
 package nl.uva.cs.lobcder.catalogue;
 
-import nl.uva.cs.lobcder.webDav.resources.UserThread;
 import java.io.FileInputStream;
 import java.util.Properties;
 import java.io.File;
@@ -24,7 +23,8 @@ import nl.uva.cs.lobcder.resources.LogicalFile;
 import nl.uva.cs.lobcder.resources.LogicalFolder;
 import nl.uva.cs.lobcder.resources.StorageSite;
 import nl.uva.cs.lobcder.util.ConstantsAndSettings;
-import nl.uva.cs.lobcder.webdav.Constants.Constants;
+import nl.uva.cs.lobcder.webDav.resources.Constants;
+import nl.uva.cs.lobcder.webDav.resources.UserThread;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -740,7 +740,7 @@ public class SimpleDRCatalogueTest {
 
         for (String name : names) {
             Properties prop = getCloudProperties(propBasePath + name);
-            endpoints.add(prop.getProperty(nl.uva.cs.lobcder.webdav.Constants.Constants.STORAGE_SITE_ENDPOINT));
+            endpoints.add(prop.getProperty(Constants.STORAGE_SITE_ENDPOINT));
             instance.registerStorageSite(prop);
             boolean exists = instance.storageSiteExists(prop);
             assertTrue(exists);
