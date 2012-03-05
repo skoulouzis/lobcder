@@ -43,7 +43,7 @@ import org.apache.commons.io.IOUtils;
  * @author S. Koulouzis
  */
 public class WebDataFileResource implements
-        com.bradmcevoy.http.FileResource {
+        com.bradmcevoy.http.FileResource   {
 
     private final IDLCatalogue catalogue;
     private final ILogicalData logicalData;
