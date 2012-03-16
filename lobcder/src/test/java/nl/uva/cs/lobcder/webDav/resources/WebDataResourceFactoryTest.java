@@ -4,7 +4,6 @@
  */
 package nl.uva.cs.lobcder.webDav.resources;
 
-import com.bradmcevoy.common.Path;
 import java.util.Map;
 import com.bradmcevoy.http.Range;
 import java.io.ByteArrayOutputStream;
@@ -19,7 +18,6 @@ import nl.uva.cs.lobcder.resources.ILogicalData;
 import nl.uva.cs.lobcder.util.ConstantsAndSettings;
 import java.io.ByteArrayInputStream;
 import nl.uva.cs.lobcder.catalogue.SimpleDLCatalogue;
-import nl.uva.cs.lobcder.resources.StorageSite;
 import nl.uva.vlet.exception.VlException;
 import nl.uva.vlet.vfs.VFSNode;
 import org.junit.After;
