@@ -4,6 +4,9 @@
  */
 package nl.uva.cs.lobcder.webDav.resources;
 
+import com.bradmcevoy.http.exceptions.BadRequestException;
+import com.bradmcevoy.http.exceptions.ConflictException;
+import com.bradmcevoy.http.exceptions.NotAuthorizedException;
 import java.util.Map;
 import com.bradmcevoy.http.Range;
 import java.io.ByteArrayOutputStream;
@@ -17,6 +20,10 @@ import java.util.logging.Logger;
 import nl.uva.cs.lobcder.resources.ILogicalData;
 import nl.uva.cs.lobcder.util.ConstantsAndSettings;
 import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.util.Random;
 import nl.uva.cs.lobcder.catalogue.SimpleDLCatalogue;
 import nl.uva.vlet.exception.VlException;
 import nl.uva.vlet.vfs.VFSNode;
@@ -325,6 +332,48 @@ public class WebDataResourceFactoryTest {
         result.delete();
         result = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH + ConstantsAndSettings.TEST_FOLDER_NAME_1);
         assertNull(result);
+    }
+
+    @Test
+    public void testUpDownloadLargeFiles() throws NotAuthorizedException, ConflictException, BadRequestException {
+        System.out.println("testUpDownloadLargeFiles");
+        String host = "localhost:8080";
+        WebDataFileResource file = null;
+        WebDataDirResource dir = null;
+        try {
+            WebDataResourceFactory instance = new WebDataResourceFactory();
+            dir = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH + ConstantsAndSettings.TEST_FOLDER_NAME_1);
+            if (dir == null) {
+                WebDataDirResource root = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH);
+                assertNotNull(root);
+                dir = (WebDataDirResource) root.createCollection(ConstantsAndSettings.TEST_FOLDER_NAME_1);
+            }
+            checkResource(dir);
+
+            int count = 200;
+            for (int i = 0; i < count; i++) {
+                File tmpLocalFile = File.createTempFile(this.getClass().getName(), null);
+                byte[] data = new byte[1024 * 1024];//1MB
+                Random r = new Random();
+                r.nextBytes(data);
+
+                FileOutputStream fos = new FileOutputStream(tmpLocalFile);
+                fos.write(data);
+                fos.flush();
+                fos.close();
+
+                FileInputStream fins = new FileInputStream(tmpLocalFile);
+                file = (WebDataFileResource) dir.createNew(ConstantsAndSettings.TEST_FILE_NAME_1, fins, new Long(tmpLocalFile.length()), "application/octet-stream");
+                checkChildren(dir, file);
+
+                Long len = file.getContentLength();
+                assertEquals(len, new Long(tmpLocalFile.length()));
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        } finally {
+            dir.delete();
+        }
     }
 
     @Test
