@@ -40,4 +40,6 @@ public interface IDLCatalogue {
 
     public void updateResourceEntry(ILogicalData newResource)throws CatalogueException;
     
+    public void close()throws CatalogueException;
+    
 }

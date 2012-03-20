@@ -38,7 +38,8 @@ import static org.junit.Assert.*;
  */
 public class SimpleDRCatalogueTest {
 
-    private static String[] names = new String[]{"storage1.prop", "storage2.prop", "storage3.prop"};
+//    private static String[] names = new String[]{"storage1.prop", "storage2.prop", "storage3.prop"};
+    private static String[] names = new String[]{"storage1.prop"};
 
     @BeforeClass
     public static void setUpClass() throws Exception {
@@ -67,7 +68,7 @@ public class SimpleDRCatalogueTest {
         Path path = Path.path(ldri);
         ILogicalData entry = new LogicalData(path);
 
-        SimpleDLCatalogue instance = new SimpleDLCatalogue();
+        SimpleDLCatalogueOld instance = new SimpleDLCatalogueOld();
         try {
             instance.registerResourceEntry(entry);
 //            System.out.println("entry:          " + entry.getLDRI());
@@ -101,7 +102,7 @@ public class SimpleDRCatalogueTest {
         Path parentPath = Path.path(ldri);
         ILogicalData parent = new LogicalData(parentPath);
 
-        SimpleDLCatalogue instance = new SimpleDLCatalogue();
+        SimpleDLCatalogueOld instance = new SimpleDLCatalogueOld();
 
         instance.registerResourceEntry(parent);
 
@@ -136,7 +137,7 @@ public class SimpleDRCatalogueTest {
         String ldri = "/resource";
         Path path = Path.path(ldri);
         ILogicalData entry = new LogicalData(path);
-        SimpleDLCatalogue instance = new SimpleDLCatalogue();
+        SimpleDLCatalogueOld instance = new SimpleDLCatalogueOld();
 
         Boolean expResult = false;
         Boolean result = instance.resourceEntryExists(entry);
@@ -169,12 +170,12 @@ public class SimpleDRCatalogueTest {
 
         LogicalData entry11 = new LogicalData(Path.path("/r1/r11"));
         LogicalData entry21 = new LogicalData(Path.path("/r2/r21"));
-        SimpleDLCatalogue instance = null;
+        SimpleDLCatalogueOld instance = null;
         Collection<ILogicalData> result = null;
         ILogicalData loaded;
         try {
 
-            instance = new SimpleDLCatalogue();
+            instance = new SimpleDLCatalogueOld();
             instance.registerResourceEntry(topEntry1);
             instance.registerResourceEntry(topEntry2);
             instance.registerResourceEntry(topEntry3);
@@ -250,12 +251,12 @@ public class SimpleDRCatalogueTest {
     @Test
     public void testRenameEntry() {
         System.out.println("testRenameEntry");
-        SimpleDLCatalogue instance = null;
+        SimpleDLCatalogueOld instance = null;
         ILogicalData loaded = null;
         Path newPath = null;
         try {
 
-            instance = new SimpleDLCatalogue();
+            instance = new SimpleDLCatalogueOld();
             Path originalPath = Path.path("/oldResourceName");
             LogicalData e = new LogicalData(originalPath);
 
@@ -290,7 +291,7 @@ public class SimpleDRCatalogueTest {
     @Test
     public void testRenameWithChildren() {
         System.out.println("testRenameWithChildren");
-        SimpleDLCatalogue instance = null;
+        SimpleDLCatalogueOld instance = null;
         ILogicalData loaded = null;
         int foundIt = 0;
         String childName1 = "Child1";
@@ -303,7 +304,7 @@ public class SimpleDRCatalogueTest {
         Path newPath = null;
         try {
 
-            instance = new SimpleDLCatalogue();
+            instance = new SimpleDLCatalogueOld();
             Path originalPath = Path.path("/oldResourceName/");
             LogicalData e = new LogicalData(originalPath);
             instance.registerResourceEntry(e);
@@ -367,7 +368,7 @@ public class SimpleDRCatalogueTest {
     @Test
     public void testRenameChild() {
         System.out.println("testRenameChild");
-        SimpleDLCatalogue instance = null;
+        SimpleDLCatalogueOld instance = null;
         ILogicalData loaded = null;
         String childName1 = "Child1";
         String childName2 = "Child2";
@@ -379,7 +380,7 @@ public class SimpleDRCatalogueTest {
         ILogicalData parent = null;
         try {
 
-            instance = new SimpleDLCatalogue();
+            instance = new SimpleDLCatalogueOld();
             Path originalPath = Path.path("/oldResourceName/");
             parent = new LogicalData(originalPath);
             instance.registerResourceEntry(parent);
@@ -424,7 +425,7 @@ public class SimpleDRCatalogueTest {
     @Test
     public void testMetadataPersistence() {
         System.out.println("testMetadataPersistence");
-        SimpleDLCatalogue instance = new SimpleDLCatalogue();
+        SimpleDLCatalogueOld instance = new SimpleDLCatalogueOld();
         Path originalPath = Path.path("/oldResourceName");
         LogicalData e = new LogicalData(originalPath);
         Metadata meta = new Metadata();
@@ -438,7 +439,7 @@ public class SimpleDRCatalogueTest {
             instance.registerResourceEntry(e);
 
 
-            SimpleDLCatalogue instance2 = new SimpleDLCatalogue();
+            SimpleDLCatalogueOld instance2 = new SimpleDLCatalogueOld();
             ILogicalData entry = instance2.getResourceEntryByLDRI(originalPath);
             meta = entry.getMetadata();
 
@@ -457,7 +458,7 @@ public class SimpleDRCatalogueTest {
             fail("Unexpected Exception: " + ex.getMessage());
         } finally {
             try {
-                new SimpleDLCatalogue().unregisterResourceEntry(e);
+                new SimpleDLCatalogueOld().unregisterResourceEntry(e);
             } catch (Exception ex) {
                 fail("Unexpected Exception: " + ex.getMessage());
             }
@@ -467,12 +468,12 @@ public class SimpleDRCatalogueTest {
     @Test
     public void testRegisterToNonExistiongParent() {
         System.out.println("testRegisterToNonExistiongParent");
-        SimpleDLCatalogue instance = null;
+        SimpleDLCatalogueOld instance = null;
         LogicalData lChild = null;
         ILogicalData res;
         try {
 
-            instance = new SimpleDLCatalogue();
+            instance = new SimpleDLCatalogueOld();
             Path parentPath = Path.path("parent");
             Path childPath = Path.path("parent/child");
 
@@ -508,12 +509,12 @@ public class SimpleDRCatalogueTest {
     @Test
     public void testRegisterToExistiongParent() {
         System.out.println("testRegisterToExistiongParent");
-        SimpleDLCatalogue instance = null;
+        SimpleDLCatalogueOld instance = null;
         LogicalData lChild = null;
         LogicalData lParent = null;
         try {
 
-            instance = new SimpleDLCatalogue();
+            instance = new SimpleDLCatalogueOld();
             Path parentPath = Path.path("parent");
             Path childPath = Path.path("parent/child");
 
@@ -532,10 +533,10 @@ public class SimpleDRCatalogueTest {
         } finally {
             try {
                 if (lChild != null) {
-                    new SimpleDLCatalogue().unregisterResourceEntry(lChild);
+                    new SimpleDLCatalogueOld().unregisterResourceEntry(lChild);
                 }
                 if (lParent != null) {
-                    new SimpleDLCatalogue().unregisterResourceEntry(lParent);
+                    new SimpleDLCatalogueOld().unregisterResourceEntry(lParent);
                 }
             } catch (Exception ex) {
                 fail("Exception: " + ex.getMessage());
@@ -546,11 +547,11 @@ public class SimpleDRCatalogueTest {
     @Test
     public void testRegisterWithStorageSite() {
         System.out.println("testRegisterWithStorageSite");
-        SimpleDLCatalogue instance = null;
+        SimpleDLCatalogueOld instance = null;
         ILogicalData lParent = null;
         try {
 
-            instance = new SimpleDLCatalogue();
+            instance = new SimpleDLCatalogueOld();
             Path parentPath = Path.path("parent");
 
             lParent = new LogicalFolder(parentPath);
@@ -576,7 +577,7 @@ public class SimpleDRCatalogueTest {
         } finally {
             try {
                 if (lParent != null) {
-                    new SimpleDLCatalogue().unregisterResourceEntry(lParent);
+                    new SimpleDLCatalogueOld().unregisterResourceEntry(lParent);
                 }
             } catch (Exception ex) {
                 fail("Exception: " + ex.getMessage());
@@ -591,7 +592,7 @@ public class SimpleDRCatalogueTest {
     public void testGetSitesByUnames() throws Exception {
         System.out.println("testGetSitesByUnames");
         populateStorageSites();
-        SimpleDLCatalogue instance = new SimpleDLCatalogue();
+        SimpleDLCatalogueOld instance = new SimpleDLCatalogueOld();
         try {
             String uname = "uname2";
             Properties prop = new Properties();
@@ -621,7 +622,7 @@ public class SimpleDRCatalogueTest {
 
     @Test
     public void testUpdateResourceEntry() {
-        SimpleDLCatalogue instance = new SimpleDLCatalogue();
+        SimpleDLCatalogueOld instance = new SimpleDLCatalogueOld();
         ILogicalData loaded = null;
         try {
             System.out.println("testUpdateResourceEntry");
@@ -679,7 +680,7 @@ public class SimpleDRCatalogueTest {
 
     @Test
     public void testStorageSiteExistsy() {
-        SimpleDLCatalogue instance = new SimpleDLCatalogue();
+        SimpleDLCatalogueOld instance = new SimpleDLCatalogueOld();
         try {
             String uname = "uname2";
             Properties prop = new Properties();
@@ -730,7 +731,7 @@ public class SimpleDRCatalogueTest {
     }
 
     private void populateStorageSites() throws FileNotFoundException, IOException, Exception {
-        SimpleDLCatalogue instance = new SimpleDLCatalogue();
+        SimpleDLCatalogueOld instance = new SimpleDLCatalogueOld();
         instance.clearAllSites();
         String propBasePath = System.getProperty("user.home") + File.separator
                 + "workspace" + File.separator + "lobcder"

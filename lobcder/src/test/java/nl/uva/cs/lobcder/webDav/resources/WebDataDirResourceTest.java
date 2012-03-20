@@ -15,7 +15,7 @@ import nl.uva.cs.lobcder.resources.StorageSite;
 import nl.uva.cs.lobcder.resources.Credential;
 import nl.uva.cs.lobcder.resources.LogicalFolder;
 import nl.uva.cs.lobcder.resources.LogicalFile;
-import nl.uva.cs.lobcder.catalogue.SimpleDLCatalogue;
+import nl.uva.cs.lobcder.catalogue.SimpleDLCatalogueOld;
 import java.util.logging.Logger;
 import com.bradmcevoy.common.Path;
 import com.bradmcevoy.http.Range;
@@ -33,7 +33,7 @@ import static org.junit.Assert.*;
  */
 public class WebDataDirResourceTest {
 
-    private SimpleDLCatalogue catalogue;
+    private SimpleDLCatalogueOld catalogue;
     private LogicalFile testLogicalFile;
     private Path testFolderPath;
     private LogicalFolder testLogicalFolder;
@@ -54,7 +54,7 @@ public class WebDataDirResourceTest {
     @Before
     public void setUp() {
         try {
-            catalogue = new SimpleDLCatalogue();
+            catalogue = new SimpleDLCatalogueOld();
 
 
             testLogicalFile = new LogicalFile(ConstantsAndSettings.TEST_FILE_PATH_1);

@@ -17,7 +17,7 @@ import java.util.logging.Logger;
 import nl.uva.cs.lobcder.catalogue.CatalogueException;
 import nl.uva.cs.lobcder.resources.ILogicalData;
 import com.bradmcevoy.common.Path;
-import nl.uva.cs.lobcder.catalogue.SimpleDLCatalogue;
+import nl.uva.cs.lobcder.catalogue.SimpleDLCatalogueOld;
 import nl.uva.cs.lobcder.resources.Credential;
 import nl.uva.cs.lobcder.resources.LogicalFile;
 import nl.uva.cs.lobcder.resources.LogicalFolder;
@@ -35,7 +35,7 @@ import static org.junit.Assert.*;
  */
 public class WebDataFileResourceTest {
 
-    private SimpleDLCatalogue catalogue;
+    private SimpleDLCatalogueOld catalogue;
     private LogicalFile testLogicalFile;
     private Path testFolderPath;
     private ArrayList<StorageSite> sites;
@@ -56,7 +56,7 @@ public class WebDataFileResourceTest {
     @Before
     public void setUp() {
         try {
-            catalogue = new SimpleDLCatalogue();
+            catalogue = new SimpleDLCatalogueOld();
 
             testLogicalFile = new LogicalFile(ConstantsAndSettings.TEST_FILE_PATH_1);
 
