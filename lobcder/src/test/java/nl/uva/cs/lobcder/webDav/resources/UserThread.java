@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import nl.uva.cs.lobcder.resources.Metadata;
 import nl.uva.cs.lobcder.resources.LogicalFile;
 import nl.uva.cs.lobcder.resources.ILogicalData;
-import nl.uva.cs.lobcder.catalogue.SimpleDLCatalogueOld;
+import nl.uva.cs.lobcder.catalogue.SimpleDLCatalogue;
 import com.bradmcevoy.http.Resource;
 import java.util.List;
 import java.util.Date;
@@ -156,7 +156,7 @@ public class UserThread extends Thread {
     }
 
     public void testUpdateResourceEntry() {
-        SimpleDLCatalogueOld instance = new SimpleDLCatalogueOld();
+        SimpleDLCatalogue instance = new SimpleDLCatalogue();
         ILogicalData loaded = null;
         try {
             System.out.println("testUpdateResourceEntry");
@@ -230,7 +230,7 @@ public class UserThread extends Thread {
         Path parentPath = Path.path(ldri);
         ILogicalData parent = new LogicalData(parentPath);
 
-        SimpleDLCatalogueOld instance = new SimpleDLCatalogueOld();
+        SimpleDLCatalogue instance = new SimpleDLCatalogue();
 
         instance.registerResourceEntry(parent);
 

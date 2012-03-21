@@ -24,7 +24,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.util.Random;
-import nl.uva.cs.lobcder.catalogue.SimpleDLCatalogueOld;
+import nl.uva.cs.lobcder.catalogue.SimpleDLCatalogue;
 import nl.uva.vlet.exception.VlException;
 import nl.uva.vlet.vfs.VFSNode;
 import org.junit.After;
@@ -217,7 +217,7 @@ public class WebDataResourceFactoryTest {
         assertTrue(foundIt);
 
         file.delete();
-        SimpleDLCatalogueOld cat = new SimpleDLCatalogueOld();
+        SimpleDLCatalogue cat = new SimpleDLCatalogue();
         ILogicalData entry = cat.getResourceEntryByLDRI(file.getPath());
         assertNull(entry);
 
@@ -259,7 +259,7 @@ public class WebDataResourceFactoryTest {
         result.delete();
 //        result = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH + ConstantsAndSettings.TEST_FOLDER_NAME_1);
 //        assertNull(result);
-        cat = new SimpleDLCatalogueOld();
+        cat = new SimpleDLCatalogue();
         entry = cat.getResourceEntryByLDRI(result.getPath());
         assertNull(entry);
 

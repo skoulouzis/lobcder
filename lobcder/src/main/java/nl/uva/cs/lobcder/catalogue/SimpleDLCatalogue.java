@@ -34,15 +34,11 @@ import nl.uva.vlet.data.StringUtil;
 public class SimpleDLCatalogue implements IDLCatalogue {
 
     private static boolean debug = true;
-//    private final PersistenceManagerFactory pmf;
+    private final PersistenceManagerFactory pmf;
     private static final Object lock = new Object();
-    private final PersistenceManager pm;
-    private final Transaction tx;
 
     public SimpleDLCatalogue() {
-        PersistenceManagerFactory pmf = JDOHelper.getPersistenceManagerFactory("datanucleus.properties");
-        this.pm = pmf.getPersistenceManager();
-        this.tx = pm.currentTransaction();
+        pmf = JDOHelper.getPersistenceManagerFactory("datanucleus.properties");
     }
 
     @Override
@@ -64,9 +60,18 @@ public class SimpleDLCatalogue implements IDLCatalogue {
         debug("Quering " + logicalResourceName);
         return queryEntry(logicalResourceName);
     }
-    
+
+//    @Override
+//    public IResourceEntry getResourceEntryByUID(String uid) throws Exception {
+//        return loadEntryByUID(uid);
+//    }
     @Override
     public void unregisterResourceEntry(ILogicalData entry) throws CatalogueException {
+        //        Collection<StorageSite> sites = entry.getStorageSites();
+        //        if (sites != null && sites.isEmpty()) {
+        //            StorageSiteManager sm = new StorageSiteManager();
+        //            sm.deleteStorgaeSites(entry.getStorageSites());
+        //        }
         deleteEntry(entry.getLDRI());
     }
 
@@ -88,6 +93,8 @@ public class SimpleDLCatalogue implements IDLCatalogue {
 
     private void persistEntry(ILogicalData entry) {
         synchronized (lock) {
+            PersistenceManager pm = pmf.getPersistenceManager();
+            Transaction tx = pm.currentTransaction();
             Collection<IStorageSite> storageSites = entry.getStorageSites();
             Collection<StorageSite> results;
             Collection<StorageSite> deleteStorageSites = new ArrayList<StorageSite>();
@@ -95,7 +102,8 @@ public class SimpleDLCatalogue implements IDLCatalogue {
             String uname;
             try {
                 tx.begin();
-                //debug("persistEntry. DB UID class: " + id.getClass().getName() + " UID: " + id);
+
+//            debug("persistEntry. DB UID class: " + id.getClass().getName() + " UID: " + id);
                 //work around to remove duplicated storage sites 
                 if (storageSites != null && !storageSites.isEmpty()) {
                     for (IStorageSite s : storageSites) {
@@ -118,7 +126,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                 }
                 pm.makePersistent(entry);
                 tx.commit();
-                
+
             } finally {
                 if (tx.isActive()) {
                     tx.rollback();
@@ -128,7 +136,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                 entry.getChildren();
                 entry.getStorageSites();
                 entry.getUID();
-                // pm.close();
+                pm.close();
             }
         }
     }
@@ -137,8 +145,8 @@ public class SimpleDLCatalogue implements IDLCatalogue {
         String strLogicalResourceName = logicalResourceName.toString();
         ILogicalData entry;
         synchronized (lock) {
-            //PersistenceManager pm = pmf.getPersistenceManager();
-            //Transaction tx = pm.currentTransaction();
+            PersistenceManager pm = pmf.getPersistenceManager();
+            Transaction tx = pm.currentTransaction();
             try {
                 tx.begin();
                 //This query, will return objects of type DataResourceEntry
@@ -149,13 +157,13 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                 q.declareParameters(strLogicalResourceName.getClass().getName() + " strLogicalResourceName");
                 q.setUnique(true);
                 entry = (ILogicalData) q.execute(strLogicalResourceName);
-//                tx.commit();
+                tx.commit();
                 
             } finally {
                 if (tx.isActive()) {
                     tx.rollback();
                 }
-                // pm.close();
+                pm.close();
             }
         }
 
@@ -175,8 +183,8 @@ public class SimpleDLCatalogue implements IDLCatalogue {
 
         synchronized (lock) {
             //Next the node 
-            //PersistenceManager pm = pmf.getPersistenceManager();
-            //Transaction tx = pm.currentTransaction();
+            PersistenceManager pm = pmf.getPersistenceManager();
+            Transaction tx = pm.currentTransaction();
             try {
                 tx.begin();
 
@@ -193,7 +201,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                 if (tx.isActive()) {
                     tx.rollback();
                 }
-                // pm.close();
+                pm.close();
             }
         }
 
@@ -204,8 +212,8 @@ public class SimpleDLCatalogue implements IDLCatalogue {
         String strLogicalResourceName = parent.toString();
 
         synchronized (lock) {
-            //PersistenceManager pm = pmf.getPersistenceManager();
-            //Transaction tx = pm.currentTransaction();
+            PersistenceManager pm = pmf.getPersistenceManager();
+            Transaction tx = pm.currentTransaction();
             ILogicalData entry = null;
 
             try {
@@ -227,7 +235,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                 if (tx.isActive()) {
                     tx.rollback();
                 }
-                // pm.close();
+                pm.close();
             }
         }
 
@@ -238,8 +246,8 @@ public class SimpleDLCatalogue implements IDLCatalogue {
         String strLogicalResourceName = parent.toString();
 
         synchronized (lock) {
-            //PersistenceManager pm = pmf.getPersistenceManager();
-            //Transaction tx = pm.currentTransaction();
+            PersistenceManager pm = pmf.getPersistenceManager();
+            Transaction tx = pm.currentTransaction();
 
             try {
                 tx.begin();
@@ -261,7 +269,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                 if (tx.isActive()) {
                     tx.rollback();
                 }
-                // pm.close();
+                pm.close();
             }
         }
 
@@ -271,8 +279,8 @@ public class SimpleDLCatalogue implements IDLCatalogue {
         Collection topLevel = new ArrayList<ILogicalData>();
         synchronized (lock) {
             //TODO Fix all the queris!
-            //PersistenceManager pm = pmf.getPersistenceManager();
-            //Transaction tx = pm.currentTransaction();
+            PersistenceManager pm = pmf.getPersistenceManager();
+            Transaction tx = pm.currentTransaction();
             Collection<ILogicalData> results;
             Path p = Path.path("/");
             try {
@@ -293,14 +301,14 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                         topLevel.add(e);
                     }
                 }
-//                tx.commit();
+                tx.commit();
 
             } finally {
                 if (tx.isActive()) {
                     tx.rollback();
                 }
 
-                // pm.close();
+                pm.close();
             }
         }
 
@@ -325,11 +333,11 @@ public class SimpleDLCatalogue implements IDLCatalogue {
         }
 
         Map<Path, Path> renamedChildrenMap = new HashMap<Path, Path>();
-//        PersistenceManager pm;
-//        Transaction tx;
+        PersistenceManager pm;
+        Transaction tx;
         synchronized (lock) {
-//            pm = pmf.getPersistenceManager();
-//            tx = pm.currentTransaction();
+            pm = pmf.getPersistenceManager();
+            tx = pm.currentTransaction();
             String[] parts;
             String addition;
             String strNewChildPath = "";
@@ -377,7 +385,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                 if (tx.isActive()) {
                     tx.rollback();
                 }
-                // pm.close();
+                pm.close();
             }
         }
 
@@ -387,8 +395,8 @@ public class SimpleDLCatalogue implements IDLCatalogue {
             for (Path p : keySet) {
                 strLogicalResourceName = p.toString();
                 synchronized (lock) {
-//                    pm = pmf.getPersistenceManager();
-//                    tx = pm.currentTransaction();
+                    pm = pmf.getPersistenceManager();
+                    tx = pm.currentTransaction();
 
                     try {
                         tx.begin();
@@ -409,7 +417,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                         if (tx.isActive()) {
                             tx.rollback();
                         }
-                        // pm.close();
+                        pm.close();
                     }
                 }
 
@@ -432,8 +440,8 @@ public class SimpleDLCatalogue implements IDLCatalogue {
     public Collection<LogicalData> getAllLogicalData() {
         Collection c;
         synchronized (lock) {
-            //PersistenceManager pm = pmf.getPersistenceManager();
-            //Transaction tx = pm.currentTransaction();
+            PersistenceManager pm = pmf.getPersistenceManager();
+            Transaction tx = pm.currentTransaction();
             try {
                 tx.begin();
                 Query q = pm.newQuery(LogicalData.class);
@@ -444,7 +452,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                 if (tx.isActive()) {
                     tx.rollback();
                 }
-                // pm.close();
+                pm.close();
             }
         }
         return c;
@@ -454,8 +462,8 @@ public class SimpleDLCatalogue implements IDLCatalogue {
     public Collection<IStorageSite> getSitesByUname(String vphUname) {
         Collection<IStorageSite> results;
         synchronized (lock) {
-//            PersistenceManager pm = pmf.getPersistenceManagerProxy();
-            //Transaction tx = pm.currentTransaction();
+            PersistenceManager pm = pmf.getPersistenceManagerProxy();
+            Transaction tx = pm.currentTransaction();
             try {
                 tx.begin();
                 Query q = pm.newQuery(StorageSite.class);
@@ -477,7 +485,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                 if (tx.isActive()) {
                     tx.rollback();
                 }
-                // pm.close();
+                pm.close();
             }
         }
         return results;
@@ -485,8 +493,8 @@ public class SimpleDLCatalogue implements IDLCatalogue {
 
     public void clearAllSites() {
         synchronized (lock) {
-//            PersistenceManager pm = pmf.getPersistenceManagerProxy();
-            //Transaction tx = pm.currentTransaction();
+            PersistenceManager pm = pmf.getPersistenceManagerProxy();
+            Transaction tx = pm.currentTransaction();
             try {
                 tx.begin();
                 Query q = pm.newQuery(StorageSite.class);
@@ -498,7 +506,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                 if (tx.isActive()) {
                     tx.rollback();
                 }
-                // pm.close();
+                pm.close();
             }
         }
     }
@@ -506,14 +514,14 @@ public class SimpleDLCatalogue implements IDLCatalogue {
     public Collection<StorageSite> getAllSites() {
         synchronized (lock) {
             //Next the node 
-//            PersistenceManager pm = pmf.getPersistenceManagerProxy();
-            //Transaction tx = pm.currentTransaction();
+            PersistenceManager pm = pmf.getPersistenceManagerProxy();
+            Transaction tx = pm.currentTransaction();
             try {
                 tx.begin();
 
                 Query q = pm.newQuery(StorageSite.class);
                 Collection<StorageSite> results = (Collection<StorageSite>) q.execute();
-//                tx.commit();
+                tx.commit();
 
                 return results;
 
@@ -521,7 +529,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                 if (tx.isActive()) {
                     tx.rollback();
                 }
-                // pm.close();
+                pm.close();
             }
         }
     }
@@ -539,8 +547,8 @@ public class SimpleDLCatalogue implements IDLCatalogue {
 
                 StorageSite site = new StorageSite(endpoint, cred);
                 synchronized (lock) {
-//                    PersistenceManager pm = pmf.getPersistenceManagerProxy();
-                    //Transaction tx = pm.currentTransaction();
+                    PersistenceManager pm = pmf.getPersistenceManagerProxy();
+                    Transaction tx = pm.currentTransaction();
                     try {
                         tx.begin();
 
@@ -552,7 +560,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                             tx.rollback();
                         }
                         site.getEndpoint();
-                        // pm.close();
+                        pm.close();
                     }
                 }
             } catch (Exception ex) {
@@ -573,8 +581,8 @@ public class SimpleDLCatalogue implements IDLCatalogue {
         StorageSite storageSite = null;
         Object r;
         synchronized (lock) {
-//            PersistenceManager pm = pmf.getPersistenceManagerProxy();
-            //Transaction tx = pm.currentTransaction();
+            PersistenceManager pm = pmf.getPersistenceManagerProxy();
+            Transaction tx = pm.currentTransaction();
             int hit = 0;
 
             try {
@@ -591,14 +599,14 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                         storageSite = s;
                     }
                 }
-//                tx.commit();
+                tx.commit();
 
             } finally {
                 if (tx.isActive()) {
                     tx.rollback();
                 }
 
-                // pm.close();
+                pm.close();
             }
         }
         if (storageSite == null) {
@@ -647,6 +655,6 @@ public class SimpleDLCatalogue implements IDLCatalogue {
 
     @Override
     public void close() throws CatalogueException {
-        this.pm.close();
+        this.pmf.getPersistenceManager().close();
     }
 }
