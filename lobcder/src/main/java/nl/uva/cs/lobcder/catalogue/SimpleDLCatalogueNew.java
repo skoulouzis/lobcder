@@ -31,13 +31,13 @@ import nl.uva.cs.lobcder.resources.StorageSite;
 import nl.uva.cs.lobcder.webDav.resources.Constants;
 import nl.uva.vlet.data.StringUtil;
 
-public class SimpleDLCatalogueOld implements IDLCatalogue {
+public class SimpleDLCatalogueNew implements IDLCatalogue {
 
     private static boolean debug = true;
     private final PersistenceManagerFactory pmf;
     private static final Object lock = new Object();
 
-    public SimpleDLCatalogueOld() {
+    public SimpleDLCatalogueNew() {
         pmf = JDOHelper.getPersistenceManagerFactory("datanucleus.properties");
     }
 
@@ -157,7 +157,7 @@ public class SimpleDLCatalogueOld implements IDLCatalogue {
                 q.declareParameters(strLogicalResourceName.getClass().getName() + " strLogicalResourceName");
                 q.setUnique(true);
                 entry = (ILogicalData) q.execute(strLogicalResourceName);
-                tx.commit();
+//                tx.commit();
                 
             } finally {
                 if (tx.isActive()) {
@@ -301,7 +301,7 @@ public class SimpleDLCatalogueOld implements IDLCatalogue {
                         topLevel.add(e);
                     }
                 }
-                tx.commit();
+//                tx.commit();
 
             } finally {
                 if (tx.isActive()) {
@@ -446,7 +446,7 @@ public class SimpleDLCatalogueOld implements IDLCatalogue {
                 tx.begin();
                 Query q = pm.newQuery(LogicalData.class);
                 c = (Collection) q.execute();
-                tx.commit();
+//                tx.commit();
 
             } finally {
                 if (tx.isActive()) {
@@ -478,8 +478,8 @@ public class SimpleDLCatalogueOld implements IDLCatalogue {
                         debug("getSites. endpoint: " + s.getEndpoint() + " uname: " + s.getVPHUsername());
                     }
                 }
-
-                tx.commit();
+                
+//                tx.commit();
 
             } finally {
                 if (tx.isActive()) {
@@ -521,7 +521,7 @@ public class SimpleDLCatalogueOld implements IDLCatalogue {
 
                 Query q = pm.newQuery(StorageSite.class);
                 Collection<StorageSite> results = (Collection<StorageSite>) q.execute();
-                tx.commit();
+//                tx.commit();
 
                 return results;
 
@@ -599,7 +599,7 @@ public class SimpleDLCatalogueOld implements IDLCatalogue {
                         storageSite = s;
                     }
                 }
-                tx.commit();
+//                tx.commit();
 
             } finally {
                 if (tx.isActive()) {

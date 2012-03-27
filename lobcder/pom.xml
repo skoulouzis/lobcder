@@ -16,7 +16,7 @@
 <!--        <webdav.test.url>http://localhost:8080/lobcder-1.0-SNAPSHOT/</webdav.test.url>
         <webdav.test.username>user</webdav.test.username>
         <webdav.test.password>passwd</webdav.test.password>-->
-        <skipTests>falce</skipTests>
+        <skipTests>true</skipTests>
     </properties>
 
     <dependencies>
@@ -211,6 +211,12 @@ there are no implementations to enhance
             <version>3.0.1</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.datanucleus</groupId>
+            <artifactId>datanucleus-rdbms</artifactId>
+            <version>3.0.8</version>
+            <scope>runtime</scope>
+        </dependency>
 
 <!--        <dependency>
             <groupId>commons-httpclient</groupId>

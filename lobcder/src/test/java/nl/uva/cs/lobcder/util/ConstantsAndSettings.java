@@ -27,7 +27,10 @@ public class ConstantsAndSettings {
     public static final String TEST_FOLDER_NAME_1 = "/testCollection1";
     public static final String TEST_FOLDER_NAME_2 = "/testCollection2";
     public static final String TEST_FILE_NAME_2 = "testFile2";
-    public static Path TEST_FILE_PATH_2 = Path.path(TEST_FILE_NAME_2);
+    public static final Path TEST_FILE_PATH_2 = Path.path(TEST_FILE_NAME_2);
     
     public static final String CONTEXT_PATH = "/lobcder-1.0-SNAPSHOT";
+    public static final String TEST_FILE_NAME_3 = "testFile3";
+    public static final String TEST_FOLDER_NAME_3 = "/testCollection3";
+    public static final Path TEST_FILE_PATH_3 =  Path.path(TEST_FILE_NAME_3);
 }

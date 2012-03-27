@@ -62,8 +62,11 @@ public class UserThread extends Thread {
             } else if (this.getName().equals("T2")) {
                 fileName = ConstantsAndSettings.TEST_FILE_NAME_2;
                 collectionName = ConstantsAndSettings.TEST_FOLDER_NAME_2;
+            } else if (this.getName().equals("T3")) {
+                fileName = ConstantsAndSettings.TEST_FILE_NAME_3;
+                collectionName = ConstantsAndSettings.TEST_FOLDER_NAME_3;
             }
-            
+
             WebDataResourceFactory instance = new WebDataResourceFactory();
             WebDataDirResource result = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH + collectionName);
             if (result == null) {
@@ -96,18 +99,18 @@ public class UserThread extends Thread {
 
             String name = file.getName();
             assertEquals(fileName, name);
-            
+
             instance = new WebDataResourceFactory();
             result = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH + collectionName);
             assertNotNull(result);
             sites = result.getStorageSites();
             assertFalse(sites.isEmpty());
-            
-            
+
+
             bais = new ByteArrayInputStream(ConstantsAndSettings.TEST_DATA.getBytes());
             file = (WebDataFileResource) result.createNew(fileName, bais, new Long("DATA".getBytes().length), "text/plain");
             checkChildren(result, file);
-            
+
 //
 //            len = file.getContentLength();
 //            assertEquals(len, new Long("DATA".getBytes().length));
@@ -165,6 +168,8 @@ public class UserThread extends Thread {
                 newEntry = new LogicalFile(ConstantsAndSettings.TEST_FILE_PATH_1);
             } else if (this.getName().equals("T2")) {
                 newEntry = new LogicalFile(ConstantsAndSettings.TEST_FILE_PATH_2);
+            } else if (this.getName().equals("T3")) {
+                newEntry = new LogicalFile(ConstantsAndSettings.TEST_FILE_PATH_3);
             }
             instance.registerResourceEntry(newEntry);
             loaded = instance.getResourceEntryByLDRI(newEntry.getLDRI());
@@ -262,7 +267,7 @@ public class UserThread extends Thread {
         if (entry.getLDRI().getName().equals(loadedEntry.getLDRI().getName())) {
             //Due to very bad ptaches the UDIs are not the same any more 
 //            if (entry.getUID().equals(loadedEntry.getUID())) {
-                return true;
+            return true;
 //            }
         }
         return false;
