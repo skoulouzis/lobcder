@@ -132,15 +132,15 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                 }
                 //!?!?!?! if this is not here, the entry's LDRI gets to null???
                 entry.getLDRI();
-                entry.getChildren();
-                entry.getStorageSites();
-                entry.getUID();
+//                entry.getChildren();
+//                entry.getStorageSites();
+//                entry.getUID();
                 pm.close();
             }
         }
     }
 
-    private ILogicalData queryEntry(Path logicalResourceName) {
+    private ILogicalData queryEntry(Path logicalResourceName) throws CatalogueException {
         String strLogicalResourceName = logicalResourceName.toString();
         ILogicalData entry;
         synchronized (lock) {
@@ -150,13 +150,16 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                 tx.begin();
                 //This query, will return objects of type DataResourceEntry
                 Query q = pm.newQuery(LogicalData.class);
-
+                
                 //restrict to instances which have the field ldri equal to some logicalResourceName
                 q.setFilter("strLDRI == strLogicalResourceName");
                 q.declareParameters(strLogicalResourceName.getClass().getName() + " strLogicalResourceName");
                 q.setUnique(true);
                 entry = (ILogicalData) q.execute(strLogicalResourceName);
-//                tx.commit();
+                if(entry!=null && entry.getLDRI()==null){
+                    throw new CatalogueException("entry "+logicalResourceName +" has null LDRI");
+                }
+                tx.commit();
                 
             } finally {
                 if (tx.isActive()) {
@@ -178,7 +181,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
         if (parent != null && !StringUtil.isEmpty(parent.toString()) && !logicalResourceName.isRoot()) {
             removeChild(parent, logicalResourceName);
         }
-
+        
         synchronized (lock) {
             //Next the node 
             PersistenceManager pm = pmf.getPersistenceManager();

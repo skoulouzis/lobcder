@@ -13,6 +13,7 @@ import nl.uva.vlet.vfs.VFSNode;
  *
  * @author S. Koulouzis
  */
+
 public interface IStorageSite {
 
     String getEndpoint();

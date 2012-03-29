@@ -10,10 +10,11 @@ import java.io.Serializable;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import javax.jdo.annotations.Element;
+import javax.jdo.annotations.Join;
 import javax.jdo.annotations.PersistenceCapable;
 import javax.jdo.annotations.Persistent;
 import javax.jdo.annotations.PrimaryKey;
-import nl.uva.cs.lobcder.util.CollectionTools;
 import nl.uva.vlet.exception.VlException;
 import nl.uva.vlet.vfs.VFSNode;
 
@@ -35,9 +36,12 @@ public class LogicalData implements ILogicalData, Serializable {
     private Metadata metadata;
     @Persistent
     private Collection<Path> children;
-//    @Persistent
-//    private Collection<StorageSite> storageSites;
+    
     private boolean debug = true;
+    
+    @Persistent
+    @Join
+    @Element(types=nl.uva.cs.lobcder.resources.StorageSite.class)
     private Collection<IStorageSite> storageSites;
 
     public LogicalData(Path ldri) {

@@ -16,3 +16,20 @@ ${project.basedir}/src/main/webapp/WEB-INF/lib/ select the jar and press install
 locally
 
 
+
+Create MySQL DB 
+
+#
+# Connect to the local database server as user root
+# You will be prompted for a password.
+#
+mysql -h localhost  -u root -p
+
+
+mysql> create database mydb;
+
+
+#
+# Now we create the user paul and give him full 
+# permissions on the new database
+mysql> grant CREATE,INSERT,DELETE,UPDATE,SELECT on mydb.* to username@localhost identified by 'password';
