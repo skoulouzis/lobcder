@@ -297,16 +297,21 @@ public class SimpleDLCatalogue implements IDLCatalogue {
             try {
                 tx.begin();
                 //This query, will return objects of type DataResourceEntry
-                Query q = pm.newQuery(LogicalData.class);
+//                Query q = pm.newQuery(LogicalData.class);
 
                 //restrict to instances which have the field ldri equal to some logicalResourceName
-                q.setFilter("ldriLen == 1");
+//                q.setFilter("ldriLen == 1");
                 //We then import the type of our logicalResourceName parameter
                 
 //                q.declareParameters(threshold.getClass().getName() + " threshold");
                 
 //                results = (Collection<ILogicalData>) q.execute(threshold);
-                results = (Collection<ILogicalData>) q.execute();
+//                results = (Collection<ILogicalData>) q.execute();
+                
+                    Query q = pm.newQuery("SELECT FROM " + LogicalData.class.getName() + 
+                          " WHERE ldriLen == 1");
+                    results = (Collection<ILogicalData>) q.execute();
+
                 
                 for (ILogicalData e : results) {
                     if (e.getLDRI().getLength() == 1) {
