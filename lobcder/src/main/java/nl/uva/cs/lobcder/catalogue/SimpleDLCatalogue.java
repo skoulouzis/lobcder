@@ -156,14 +156,20 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                 q.declareParameters(strLogicalResourceName.getClass().getName() + " strLogicalResourceName");
                 q.setUnique(true);
                 entry = (ILogicalData) q.execute(strLogicalResourceName);
-                if (entry != null) {
-                    debug("Got back: " + entry.getLDRI());
-                }
+//                if (entry != null) {
+//                    debug("Got back: " + entry.getLDRI());
+//                }
                 if (entry != null && entry.getLDRI() == null) {
                     throw new CatalogueException("entry " + logicalResourceName + " has null LDRI");
                 }
                 tx.commit();
-
+                
+                if (entry != null) {
+                    //Bug! If we don't do this the ldri becomes null
+                    Path ldri = entry.getLDRI();
+//                    debug("Got back: " + ldri);
+                }
+                
             } finally {
                 if (tx.isActive()) {
                     tx.rollback();
@@ -171,11 +177,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                 pm.close();
             }
         }
-
-        if (entry != null) {
-            debug("Got back: " + entry.getLDRI());
-        }
-
+        
         return entry;
     }
 
@@ -290,21 +292,22 @@ public class SimpleDLCatalogue implements IDLCatalogue {
             //TODO Fix all the queris!
             PersistenceManager pm = pmf.getPersistenceManager();
             Transaction tx = pm.currentTransaction();
-            Collection<ILogicalData> results;
-            Path p = Path.path("/");
+            Collection<ILogicalData> results; 
+            int threshold = 1;
             try {
                 tx.begin();
                 //This query, will return objects of type DataResourceEntry
                 Query q = pm.newQuery(LogicalData.class);
 
                 //restrict to instances which have the field ldri equal to some logicalResourceName
-                q.setFilter("ldri.getLength == p.getLength");
+                q.setFilter("ldriLen == 1");
                 //We then import the type of our logicalResourceName parameter
-                q.declareImports("import " + p.getClass().getName());
-                //and the parameter itself
-                q.declareParameters("Path p");
-                results = (Collection<ILogicalData>) q.execute(p);
-
+                
+//                q.declareParameters(threshold.getClass().getName() + " threshold");
+                
+//                results = (Collection<ILogicalData>) q.execute(threshold);
+                results = (Collection<ILogicalData>) q.execute();
+                
                 for (ILogicalData e : results) {
                     if (e.getLDRI().getLength() == 1) {
                         topLevel.add(e);

@@ -33,6 +33,8 @@ public class LogicalData implements ILogicalData, Serializable {
     @Persistent
     private String strLDRI;
     @Persistent
+    private int ldriLen;
+    @Persistent
     private Metadata metadata;
     @Persistent
     private Collection<Path> children;
@@ -47,6 +49,7 @@ public class LogicalData implements ILogicalData, Serializable {
     public LogicalData(Path ldri) {
         this.ldri = ldri;
         strLDRI = ldri.toString();
+        ldriLen = ldri.getLength();
 //        uid = java.util.UUID.randomUUID().toString();
     }
 
