@@ -71,11 +71,13 @@ public class SimpleDRCatalogueScaleTests {
         SimpleDLCatalogue instance = new SimpleDLCatalogue();
         try {
             instance.registerResourceEntry(entry);
-//            System.out.println("entry:          " + entry.getLDRI());
+            System.out.println("entry:          " + entry.getLDRI());
 
 
             ILogicalData loadedEntry = instance.getResourceEntryByLDRI(path);
             assertNotNull(loadedEntry);
+            
+            System.out.println("LDRI: "+loadedEntry.getLDRI());
 
             boolean theSame = compareEntries(entry, loadedEntry);
 

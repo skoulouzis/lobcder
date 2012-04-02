@@ -116,7 +116,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
 
                         results = (Collection<StorageSite>) q.execute(uname, epoint);
                         for (StorageSite ss : results) {
-                            if (s.getVPHUsername().equals(ss.getVPHUsername())  && s.getEndpoint().equals(ss.getEndpoint())){
+                            if (s.getVPHUsername().equals(ss.getVPHUsername()) && s.getEndpoint().equals(ss.getEndpoint())) {
                                 deleteStorageSites.add(ss);
                             }
                         }
@@ -150,17 +150,20 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                 tx.begin();
                 //This query, will return objects of type DataResourceEntry
                 Query q = pm.newQuery(LogicalData.class);
-                
+
                 //restrict to instances which have the field ldri equal to some logicalResourceName
                 q.setFilter("strLDRI == strLogicalResourceName");
                 q.declareParameters(strLogicalResourceName.getClass().getName() + " strLogicalResourceName");
                 q.setUnique(true);
                 entry = (ILogicalData) q.execute(strLogicalResourceName);
-                if(entry!=null && entry.getLDRI()==null){
-                    throw new CatalogueException("entry "+logicalResourceName +" has null LDRI");
+                if (entry != null) {
+                    debug("Got back: " + entry.getLDRI());
+                }
+                if (entry != null && entry.getLDRI() == null) {
+                    throw new CatalogueException("entry " + logicalResourceName + " has null LDRI");
                 }
                 tx.commit();
-                
+
             } finally {
                 if (tx.isActive()) {
                     tx.rollback();
@@ -168,6 +171,11 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                 pm.close();
             }
         }
+
+        if (entry != null) {
+            debug("Got back: " + entry.getLDRI());
+        }
+
         return entry;
     }
 
@@ -181,7 +189,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
         if (parent != null && !StringUtil.isEmpty(parent.toString()) && !logicalResourceName.isRoot()) {
             removeChild(parent, logicalResourceName);
         }
-        
+
         synchronized (lock) {
             //Next the node 
             PersistenceManager pm = pmf.getPersistenceManager();
