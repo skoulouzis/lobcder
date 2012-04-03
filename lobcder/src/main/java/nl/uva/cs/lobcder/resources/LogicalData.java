@@ -10,15 +10,13 @@ import java.io.Serializable;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import javax.jdo.annotations.Element;
-import javax.jdo.annotations.Join;
-import javax.jdo.annotations.PersistenceCapable;
-import javax.jdo.annotations.Persistent;
-import javax.jdo.annotations.PrimaryKey;
+import javax.jdo.annotations.*;
 import nl.uva.vlet.exception.VlException;
 import nl.uva.vlet.vfs.VFSNode;
 
 @PersistenceCapable
+@Inheritance(strategy=InheritanceStrategy.SUBCLASS_TABLE)
+//@Discriminator(strategy=DiscriminatorStrategy.CLASS_NAME)
 public class LogicalData implements ILogicalData, Serializable {
 
     /**

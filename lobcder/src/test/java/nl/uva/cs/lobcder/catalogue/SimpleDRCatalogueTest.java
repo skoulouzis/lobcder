@@ -477,7 +477,6 @@ public class SimpleDRCatalogueTest {
             Path parentPath = Path.path("parent");
             Path childPath = Path.path("parent/child");
 
-
             LogicalData lParent = new LogicalFolder(parentPath);
             lChild = new LogicalFile(childPath);
 

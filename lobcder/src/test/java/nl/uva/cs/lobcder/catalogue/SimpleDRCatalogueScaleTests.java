@@ -5,9 +5,9 @@
 package nl.uva.cs.lobcder.catalogue;
 
 import com.bradmcevoy.common.Path;
+import java.io.IOException;
 import java.util.Collection;
-import nl.uva.cs.lobcder.resources.LogicalData;
-import nl.uva.cs.lobcder.resources.ILogicalData;
+import nl.uva.cs.lobcder.resources.*;
 import org.junit.*;
 import static org.junit.Assert.*;
 
@@ -37,79 +37,51 @@ public class SimpleDRCatalogueScaleTests {
     }
 
     @Test
-    public void testRenameWithChildren() {
-        System.out.println("testRenameWithChildren");
+    public void testRegisterToExistiongParent() {
+        System.out.println("testRegisterToExistiongParent");
         SimpleDLCatalogue instance = null;
-        ILogicalData loaded = null;
-        int foundIt = 0;
-        String childName1 = "Child1";
-        String childName2 = "Child2";
-
-        LogicalData childEntry1 = null;
-        LogicalData childEntry2 = null;
-        ILogicalData childLoaded;
-        ILogicalData parentLoaded;
-        Path newPath = null;
+        LogicalData lChild = null;
+        LogicalData lParent = null;
         try {
 
             instance = new SimpleDLCatalogue();
-            Path originalPath = Path.path("/oldResourceName/");
-            LogicalData e = new LogicalData(originalPath);
-            instance.registerResourceEntry(e);
+            Path parentPath = Path.path("parent");
+            Path childPath = Path.path("parent/child");
 
-            Path originalChildPath1 = Path.path("/oldResourceName/" + childName1);
-            childEntry1 = new LogicalData(originalChildPath1);
-            instance.registerResourceEntry(childEntry1);
+            lParent = new LogicalFolder(parentPath);
+            lChild = new LogicalFile(childPath);
 
-            Path originalChildPath2 = Path.path("/oldResourceName/" + childName2);
-            childEntry2 = new LogicalData(originalChildPath2);
-            instance.registerResourceEntry(childEntry2);
+            instance.registerResourceEntry(lParent);
 
-            newPath = Path.path("/newResourceName");
-            instance.renameEntry(originalPath, newPath);
-            
-            
-            loaded = instance.getResourceEntryByLDRI(newPath);
-
-            assertNotNull(loaded);
-            assertEquals(newPath.toString(), loaded.getLDRI().toString());
-            
-            Collection<Path> children = loaded.getChildren();
-            assertNotNull(children);
-            assertFalse(children.isEmpty());
-
-            for (Path p : children) {
-                if (p.equals(Path.path(newPath, childName1)) || p.equals(Path.path(newPath, childName2))) {
-                    foundIt++;
-                }
-            }
-            assertEquals(foundIt, 2);
+            instance.registerResourceEntry(lChild);
+            ILogicalData res = instance.getResourceEntryByLDRI(childPath);
+            boolean theSame = compareEntries(lChild, res);
+            assertTrue(theSame);
 
         } catch (Exception ex) {
-            fail("Unexpected Exception: " + ex.getMessage());
+            fail("Exception: " + ex.getMessage());
         } finally {
             try {
-
-                childLoaded = instance.getResourceEntryByLDRI(Path.path(newPath, childName1));
-                assertNotNull(childLoaded);
-                instance.unregisterResourceEntry(childLoaded);
-                childLoaded = instance.getResourceEntryByLDRI(Path.path(newPath, childName1));
-                assertNull(childLoaded);
-                
-
-                childLoaded = instance.getResourceEntryByLDRI(Path.path(newPath, childName2));
-                assertNotNull(childLoaded);
-                instance.unregisterResourceEntry(childLoaded);
-                childLoaded = instance.getResourceEntryByLDRI(Path.path(newPath, childName2));
-                assertNull(childLoaded);
-
-
-                instance.unregisterResourceEntry(loaded);
-                parentLoaded = instance.getResourceEntryByLDRI(loaded.getLDRI());
-                assertNull(parentLoaded);
+                if (lChild != null) {
+                    new SimpleDLCatalogue().unregisterResourceEntry(lChild);
+                }
+                if (lParent != null) {
+                    new SimpleDLCatalogue().unregisterResourceEntry(lParent);
+                }
             } catch (Exception ex) {
-                fail("Unexpected Exception: " + ex.getMessage());
+                fail("Exception: " + ex.getMessage());
             }
         }
+    }
+
+    private boolean compareEntries(ILogicalData entry, ILogicalData loadedEntry) {
+//        System.out.println("entry:          " + entry.getUID() + " " + entry.getLDRI());
+//        System.out.println("loadedEntry:    " + loadedEntry.getUID() + " " + loadedEntry.getLDRI());
+        if (entry.getLDRI().getName().equals(loadedEntry.getLDRI().getName())) {
+//            if (entry.getUID().equals(loadedEntry.getUID())) {
+            return true;
+//            }
+        }
+        return false;
     }
 }

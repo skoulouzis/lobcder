@@ -15,6 +15,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.jdo.JDOHelper;
 import javax.jdo.PersistenceManager;
 import javax.jdo.PersistenceManagerFactory;
@@ -130,19 +132,25 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                 if (tx.isActive()) {
                     tx.rollback();
                 }
+
                 //!?!?!?! if this is not here, the entry's LDRI gets to null???
-                entry.getLDRI();
-//                entry.getChildren();
-//                entry.getStorageSites();
-//                entry.getUID();
+                stupidBugPatch(entry);
+
                 pm.close();
             }
         }
+        Collection<LogicalData> all = getAllLogicalData();
+
+        debug("LD in DB: " + all.size());
+        for (LogicalData ld : all) {
+            debug("ld: " + ld.getLDRI());
+        }
+
     }
 
     private ILogicalData queryEntry(Path logicalResourceName) throws CatalogueException {
         String strLogicalResourceName = logicalResourceName.toString();
-        ILogicalData entry;
+        ILogicalData entry = null;
         synchronized (lock) {
             PersistenceManager pm = pmf.getPersistenceManager();
             Transaction tx = pm.currentTransaction();
@@ -154,23 +162,25 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                 //restrict to instances which have the field ldri equal to some logicalResourceName
                 q.setFilter("strLDRI == strLogicalResourceName");
                 q.declareParameters(strLogicalResourceName.getClass().getName() + " strLogicalResourceName");
-                q.setUnique(true);
-                entry = (ILogicalData) q.execute(strLogicalResourceName);
-
+//                q.setUnique(true);
+//                entry = (ILogicalData) q.execute(strLogicalResourceName);
+                Object res = q.execute(strLogicalResourceName);
+                
+                //In SQL (RDBMS) inheritance works by either creating new tables 
+                //add to subclass or superclass. super/sub is not working right for us.
+                //We get all the class tree and return the lowest level class 
+//                Collection<ILogicalData> results = (Collection<ILogicalData>) q.execute(strLogicalResourceName);
+//                for (ILogicalData ld : results) {
+//                    //Keep the low-most class
+//                    if (ld instanceof LogicalFile || ld instanceof LogicalFolder) {
+//                        entry = ld;
+//                        break;
+//                    }
+//                    entry = ld;
+//                }
                 tx.commit();
 
-                if (entry != null) {
-                    //Bug! If we don't do this the ldri becomes null
-                    Path ldri = entry.getLDRI();
-//                    debug("Got back: " + ldri);
-                    Collection<Path> rChildren = entry.getChildren();
-                    if (rChildren != null) {
-                        for (Path p : rChildren) {
-//                            debug("Renamed: " + p);
-                            p.toPath();
-                        }
-                    }
-                }
+                stupidBugPatch(entry);
 
             } finally {
                 if (tx.isActive()) {
@@ -238,6 +248,18 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                 q.declareParameters(strLogicalResourceName.getClass().getName() + " strLogicalResourceName");
                 q.setUnique(true);
                 entry = (ILogicalData) q.execute(strLogicalResourceName);
+
+//                Collection<ILogicalData> results = (Collection<ILogicalData>) q.execute(strLogicalResourceName);
+//                for (ILogicalData ld : results) {
+//                    //Keep the low-most class
+//                    if (ld instanceof LogicalFile || ld instanceof LogicalFolder) {
+//                        entry = ld;
+//                        break;
+//                    }
+//                    entry = ld;
+//                }
+
+
                 if (entry == null) {
                     throw new NonExistingResourceException("Cannot add " + child.toString() + " child to non existing parent " + parent.toString());
                 }
@@ -307,15 +329,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                 if (results != null) {
                     //The stupid bug 
                     for (ILogicalData e : results) {
-                        e.getLDRI();
-//                        Collection<Path> rChildren = e.getChildren();
-//                        if (rChildren != null) {
-//                            for (Path p : rChildren) {
-//                            debug("Renamed: " + p);
-//                                p.toPath();
-//                            }
-//                            }
-//                        }
+                        stupidBugPatch(e);
                     }
                 }
 
@@ -683,5 +697,21 @@ public class SimpleDLCatalogue implements IDLCatalogue {
     @Override
     public void close() throws CatalogueException {
         this.pmf.getPersistenceManager().close();
+    }
+
+    private void stupidBugPatch(ILogicalData entry) {
+        if (entry != null) {
+            //Bug! If we don't do this the ldri becomes null
+            Path ldri = entry.getLDRI();
+            ArrayList<String> types = entry.getMetadata().getContentTypes();
+//                    debug("Got back: " + ldri);
+            Collection<Path> rChildren = entry.getChildren();
+//                    if (rChildren != null) {
+//                        for (Path p : rChildren) {
+//                            debug("Renamed: " + p);
+//                            p.toPath();
+//                        }
+//                    }
+        }
     }
 }
