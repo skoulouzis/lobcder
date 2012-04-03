@@ -156,18 +156,20 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                 q.declareParameters(strLogicalResourceName.getClass().getName() + " strLogicalResourceName");
                 q.setUnique(true);
                 entry = (ILogicalData) q.execute(strLogicalResourceName);
-//                if (entry != null) {
-//                    debug("Got back: " + entry.getLDRI());
-//                }
-                if (entry != null && entry.getLDRI() == null) {
-                    throw new CatalogueException("entry " + logicalResourceName + " has null LDRI");
-                }
+
                 tx.commit();
 
                 if (entry != null) {
                     //Bug! If we don't do this the ldri becomes null
                     Path ldri = entry.getLDRI();
 //                    debug("Got back: " + ldri);
+                    Collection<Path> rChildren = entry.getChildren();
+                    if (rChildren != null) {
+                        for (Path p : rChildren) {
+//                            debug("Renamed: " + p);
+                            p.toPath();
+                        }
+                    }
                 }
 
             } finally {
@@ -299,17 +301,21 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                 Query q = pm.newQuery("SELECT FROM " + LogicalData.class.getName()
                         + " WHERE ldriLen == 1");
                 results = (Collection<ILogicalData>) q.execute();
-//                      for (ILogicalData e : results) {
-//                    if (e.getLDRI().getLength() == 1) {
-//                        topLevel.add(e);
-//                    }
-//                }
+
                 tx.commit();
 
                 if (results != null) {
                     //The stupid bug 
                     for (ILogicalData e : results) {
                         e.getLDRI();
+//                        Collection<Path> rChildren = e.getChildren();
+//                        if (rChildren != null) {
+//                            for (Path p : rChildren) {
+//                            debug("Renamed: " + p);
+//                                p.toPath();
+//                            }
+//                            }
+//                        }
                     }
                 }
 
@@ -338,6 +344,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
             throw new ResourceExistsException("Rename Entry: cannot rename resource " + oldPath + " resource doesn't exists");
         }
 
+        //Remove this node from it's parent 
         Path parent = oldPath.getParent();
         if (parent != null && !StringUtil.isEmpty(parent.toString())) {
             removeChild(parent, oldPath);
@@ -346,6 +353,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
         Map<Path, Path> renamedChildrenMap = new HashMap<Path, Path>();
         PersistenceManager pm;
         Transaction tx;
+        ILogicalData entry;
         synchronized (lock) {
             pm = pmf.getPersistenceManager();
             tx = pm.currentTransaction();
@@ -354,36 +362,35 @@ public class SimpleDLCatalogue implements IDLCatalogue {
             String strNewChildPath = "";
             Path newChildPath;
 
-
+            //Rename the node and hold it's children aside 
             try {
                 tx.begin();
-                //This query, will return objects of type DataResourceEntry
+                //This query, will return objects of type LogicalData
                 Query q = pm.newQuery(LogicalData.class);
 
                 q.setFilter("strLDRI == strLogicalResourceName");
                 q.declareParameters(strLogicalResourceName.getClass().getName() + " strLogicalResourceName");
 
                 q.setUnique(true);
-                ILogicalData entry = (ILogicalData) q.execute(strLogicalResourceName);
+                entry = (ILogicalData) q.execute(strLogicalResourceName);
                 entry.setLDRI(newPath);
                 Collection<Path> children = entry.getChildren();
                 if (children != null && !children.isEmpty()) {
                     for (Path p : children) {
-//                debug("Path: " + p);
+                        debug("Path: " + p);
                         parts = p.getParts();
 
                         for (String part : parts) {
-//                    debug("Part: " + part);
+                            debug("Part: " + part);
                             if (part.equals(oldPath.getName())) {
                                 addition = newPath.getName();
                             } else {
                                 addition = part;
                             }
                             strNewChildPath += "/" + addition;
-
                         }
                         newChildPath = Path.path(newPath, strNewChildPath);
-//                debug("newChildPath: " + newChildPath);
+                        debug("newChildPath: " + newChildPath);
                         entry.removeChild(p);
                         entry.addChild(newChildPath);
                         renamedChildrenMap.put(p, newChildPath);
@@ -391,7 +398,10 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                     }
                 }
                 tx.commit();
-
+                Collection<Path> rChildren = entry.getChildren();
+//                for (Path p : rChildren) {
+//                    debug("Renamed: " + p);
+//                }
             } finally {
                 if (tx.isActive()) {
                     tx.rollback();
@@ -400,9 +410,10 @@ public class SimpleDLCatalogue implements IDLCatalogue {
             }
         }
 
-
+        //Rename children of type LogicalData. The children of the prev step are just of type Path
         if (renamedChildrenMap != null && !renamedChildrenMap.isEmpty()) {
             Set<Path> keySet = renamedChildrenMap.keySet();
+            //Query the old children names 
             for (Path p : keySet) {
                 strLogicalResourceName = p.toString();
                 synchronized (lock) {
@@ -411,7 +422,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
 
                     try {
                         tx.begin();
-                        //This query, will return objects of type DataResourceEntry
+
                         Query q = pm.newQuery(LogicalData.class);
                         q.setFilter("strLDRI == strLogicalResourceName");
                         q.declareParameters(strLogicalResourceName.getClass().getName() + " strLogicalResourceName");
@@ -431,14 +442,19 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                         pm.close();
                     }
                 }
-
             }
         }
 
+        //Add the renamed entry to it's new parent 
         Path newParent = newPath.getParent();
         if (newParent != null && !StringUtil.isEmpty(newParent.toString())) {
             addChild(newPath.getParent(), newPath);
         }
+
+//        Collection<Path> rChildren = entry.getChildren();
+//        for (Path p : rChildren) {
+//            debug("Renamed: " + p);
+//        }
     }
 
     private boolean comparePaths(Path path1, Path path2) {
