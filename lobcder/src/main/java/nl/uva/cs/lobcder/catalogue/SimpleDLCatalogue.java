@@ -163,13 +163,13 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                     throw new CatalogueException("entry " + logicalResourceName + " has null LDRI");
                 }
                 tx.commit();
-                
+
                 if (entry != null) {
                     //Bug! If we don't do this the ldri becomes null
                     Path ldri = entry.getLDRI();
 //                    debug("Got back: " + ldri);
                 }
-                
+
             } finally {
                 if (tx.isActive()) {
                     tx.rollback();
@@ -177,7 +177,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                 pm.close();
             }
         }
-        
+
         return entry;
     }
 
@@ -288,37 +288,30 @@ public class SimpleDLCatalogue implements IDLCatalogue {
 
     private Collection<ILogicalData> queryTopLevelResources() {
         Collection topLevel = new ArrayList<ILogicalData>();
+        Collection<ILogicalData> results = null;
         synchronized (lock) {
             //TODO Fix all the queris!
             PersistenceManager pm = pmf.getPersistenceManager();
             Transaction tx = pm.currentTransaction();
-            Collection<ILogicalData> results; 
-            int threshold = 1;
             try {
                 tx.begin();
-                //This query, will return objects of type DataResourceEntry
-//                Query q = pm.newQuery(LogicalData.class);
 
-                //restrict to instances which have the field ldri equal to some logicalResourceName
-//                q.setFilter("ldriLen == 1");
-                //We then import the type of our logicalResourceName parameter
-                
-//                q.declareParameters(threshold.getClass().getName() + " threshold");
-                
-//                results = (Collection<ILogicalData>) q.execute(threshold);
-//                results = (Collection<ILogicalData>) q.execute();
-                
-                    Query q = pm.newQuery("SELECT FROM " + LogicalData.class.getName() + 
-                          " WHERE ldriLen == 1");
-                    results = (Collection<ILogicalData>) q.execute();
+                Query q = pm.newQuery("SELECT FROM " + LogicalData.class.getName()
+                        + " WHERE ldriLen == 1");
+                results = (Collection<ILogicalData>) q.execute();
+//                      for (ILogicalData e : results) {
+//                    if (e.getLDRI().getLength() == 1) {
+//                        topLevel.add(e);
+//                    }
+//                }
+                tx.commit();
 
-                
-                for (ILogicalData e : results) {
-                    if (e.getLDRI().getLength() == 1) {
-                        topLevel.add(e);
+                if (results != null) {
+                    //The stupid bug 
+                    for (ILogicalData e : results) {
+                        e.getLDRI();
                     }
                 }
-                tx.commit();
 
             } finally {
                 if (tx.isActive()) {
@@ -329,7 +322,8 @@ public class SimpleDLCatalogue implements IDLCatalogue {
             }
         }
 
-        return topLevel;
+//        return topLevel;
+        return results;
     }
 
     @Override
