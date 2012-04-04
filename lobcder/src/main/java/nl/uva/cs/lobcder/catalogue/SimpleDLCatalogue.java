@@ -45,7 +45,15 @@ public class SimpleDLCatalogue implements IDLCatalogue {
 
     @Override
     public void registerResourceEntry(ILogicalData entry) throws CatalogueException {
-        ILogicalData loaded = queryEntry(entry.getLDRI());
+        ILogicalData loaded = null;
+        try{
+        loaded = queryEntry(entry.getLDRI());
+        }catch(UnsupportedOperationException ex){
+            if(!ex.getMessage().contains("No tables for query of")){
+                throw new CatalogueException(ex.getMessage());
+            }
+        }
+        
         if (loaded != null && comparePaths(loaded.getLDRI(), entry.getLDRI())) {
             throw new DuplicateResourceException("Cannot register resource " + entry.getLDRI() + " resource exists");
         }
@@ -156,28 +164,16 @@ public class SimpleDLCatalogue implements IDLCatalogue {
             Transaction tx = pm.currentTransaction();
             try {
                 tx.begin();
+
                 //This query, will return objects of type DataResourceEntry
                 Query q = pm.newQuery(LogicalData.class);
 
                 //restrict to instances which have the field ldri equal to some logicalResourceName
                 q.setFilter("strLDRI == strLogicalResourceName");
                 q.declareParameters(strLogicalResourceName.getClass().getName() + " strLogicalResourceName");
-//                q.setUnique(true);
-//                entry = (ILogicalData) q.execute(strLogicalResourceName);
-                Object res = q.execute(strLogicalResourceName);
-                
-                //In SQL (RDBMS) inheritance works by either creating new tables 
-                //add to subclass or superclass. super/sub is not working right for us.
-                //We get all the class tree and return the lowest level class 
-//                Collection<ILogicalData> results = (Collection<ILogicalData>) q.execute(strLogicalResourceName);
-//                for (ILogicalData ld : results) {
-//                    //Keep the low-most class
-//                    if (ld instanceof LogicalFile || ld instanceof LogicalFolder) {
-//                        entry = ld;
-//                        break;
-//                    }
-//                    entry = ld;
-//                }
+                q.setUnique(true);
+                entry = (ILogicalData) q.execute(strLogicalResourceName);
+
                 tx.commit();
 
                 stupidBugPatch(entry);

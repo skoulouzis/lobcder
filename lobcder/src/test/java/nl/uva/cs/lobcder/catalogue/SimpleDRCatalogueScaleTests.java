@@ -6,6 +6,7 @@ package nl.uva.cs.lobcder.catalogue;
 
 import com.bradmcevoy.common.Path;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import nl.uva.cs.lobcder.resources.*;
 import org.junit.*;
@@ -37,39 +38,92 @@ public class SimpleDRCatalogueScaleTests {
     }
 
     @Test
-    public void testRegisterToExistiongParent() {
-        System.out.println("testRegisterToExistiongParent");
+    public void testGetTopLevelResourceEntries() {
+        System.out.println("getTopLevelResourceEntries");
+        Collection<ILogicalData> topEntries = new ArrayList<ILogicalData>();
+        LogicalData topEntry1 = new LogicalData(Path.path("/r1"));
+        topEntries.add(topEntry1);
+        LogicalData topEntry2 = new LogicalData(Path.path("/r2"));
+        topEntries.add(topEntry2);
+        LogicalData topEntry3 = new LogicalData(Path.path("/r3"));
+        topEntries.add(topEntry3);
+
+        LogicalData entry11 = new LogicalData(Path.path("/r1/r11"));
+        LogicalData entry21 = new LogicalData(Path.path("/r2/r21"));
         SimpleDLCatalogue instance = null;
-        LogicalData lChild = null;
-        LogicalData lParent = null;
+        Collection<ILogicalData> result = null;
+        ILogicalData loaded;
         try {
 
             instance = new SimpleDLCatalogue();
-            Path parentPath = Path.path("parent");
-            Path childPath = Path.path("parent/child");
+            instance.registerResourceEntry(topEntry1);
+            instance.registerResourceEntry(topEntry2);
+            instance.registerResourceEntry(topEntry3);
+            instance.registerResourceEntry(entry11);
+            instance.registerResourceEntry(entry21);
 
-            lParent = new LogicalFolder(parentPath);
-            lChild = new LogicalFile(childPath);
+            result = instance.getTopLevelResourceEntries();
 
-            instance.registerResourceEntry(lParent);
 
-            instance.registerResourceEntry(lChild);
-            ILogicalData res = instance.getResourceEntryByLDRI(childPath);
-            boolean theSame = compareEntries(lChild, res);
-            assertTrue(theSame);
+            for (ILogicalData d : result) {
+                System.out.println("TOP:        " + d.getLDRI() + "     " + d.getUID());
+
+                if (!compareEntries(d, topEntry3)) {
+                    if (!compareEntries(d, topEntry2)) {
+                        if (!compareEntries(d, topEntry1)) {
+                            fail("Resource " + topEntry1.getLDRI() + " is not returned by query!");
+                        }
+                    }
+                }
+            }
+
+            for (ILogicalData e : result) {
+                if (e.getLDRI().getLength() > 1) {
+                    fail("Resource " + e.getLDRI() + " is not a top level");
+                }
+            }
 
         } catch (Exception ex) {
-            fail("Exception: " + ex.getMessage());
+            fail("Unexpected Exception: " + ex.getMessage());
         } finally {
             try {
-                if (lChild != null) {
-                    new SimpleDLCatalogue().unregisterResourceEntry(lChild);
+                instance.unregisterResourceEntry(entry21);
+                instance.unregisterResourceEntry(entry11);
+                instance.unregisterResourceEntry(topEntry3);
+                instance.unregisterResourceEntry(topEntry2);
+                instance.unregisterResourceEntry(topEntry1);
+
+
+                result = instance.getTopLevelResourceEntries();
+
+
+                for (ILogicalData d : result) {
+                    if (compareEntries(d, topEntry3) || compareEntries(d, topEntry2) || compareEntries(d, topEntry1)) {
+                        fail("entry: " + d.getLDRI() + " should not be registered in the catalogue!");
+                    }
                 }
-                if (lParent != null) {
-                    new SimpleDLCatalogue().unregisterResourceEntry(lParent);
-                }
+
+
+                loaded = instance.getResourceEntryByLDRI(entry21.getLDRI());
+                assertNull(loaded);
+
+                loaded = instance.getResourceEntryByLDRI(entry11.getLDRI());
+                assertNull(loaded);
+
+                loaded = instance.getResourceEntryByLDRI(topEntry3.getLDRI());
+                assertNull(loaded);
+
+
+                loaded = instance.getResourceEntryByLDRI(topEntry2.getLDRI());
+                assertNull(loaded);
+
+                loaded = instance.getResourceEntryByLDRI(topEntry1.getLDRI());
+                assertNull(loaded);
+
+
+
             } catch (Exception ex) {
-                fail("Exception: " + ex.getMessage());
+                fail("Unexpected Exception: " + ex.getMessage());
             }
         }
     }

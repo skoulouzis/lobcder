@@ -4,33 +4,22 @@
  */
 package nl.uva.cs.lobcder.catalogue;
 
-import java.io.FileInputStream;
-import java.util.Properties;
-import java.io.File;
-import java.io.IOException;
-import java.io.FileNotFoundException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import nl.uva.cs.lobcder.resources.IStorageSite;
-import nl.uva.cs.lobcder.resources.Metadata;
 import com.bradmcevoy.common.Path;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import nl.uva.cs.lobcder.resources.Credential;
-import nl.uva.cs.lobcder.resources.LogicalData;
-import nl.uva.cs.lobcder.resources.ILogicalData;
-import nl.uva.cs.lobcder.resources.LogicalFile;
-import nl.uva.cs.lobcder.resources.LogicalFolder;
-import nl.uva.cs.lobcder.resources.StorageSite;
+import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import nl.uva.cs.lobcder.resources.*;
 import nl.uva.cs.lobcder.util.ConstantsAndSettings;
 import nl.uva.cs.lobcder.webDav.resources.Constants;
 import nl.uva.cs.lobcder.webDav.resources.UserThread;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
 import static org.junit.Assert.*;
+import org.junit.*;
 
 /**
  *

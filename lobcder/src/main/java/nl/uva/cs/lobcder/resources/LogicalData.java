@@ -5,9 +5,7 @@
 package nl.uva.cs.lobcder.resources;
 
 import com.bradmcevoy.common.Path;
-
 import java.io.Serializable;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import javax.jdo.annotations.*;
@@ -15,8 +13,7 @@ import nl.uva.vlet.exception.VlException;
 import nl.uva.vlet.vfs.VFSNode;
 
 @PersistenceCapable
-@Inheritance(strategy=InheritanceStrategy.SUBCLASS_TABLE)
-//@Discriminator(strategy=DiscriminatorStrategy.CLASS_NAME)
+@Inheritance(strategy= InheritanceStrategy.SUBCLASS_TABLE )
 public class LogicalData implements ILogicalData, Serializable {
 
     /**
