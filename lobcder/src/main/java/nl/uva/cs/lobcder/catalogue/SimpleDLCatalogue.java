@@ -26,6 +26,7 @@ import nl.uva.cs.lobcder.resources.Metadata;
 import nl.uva.cs.lobcder.resources.StorageSite;
 import nl.uva.cs.lobcder.webDav.resources.Constants;
 import nl.uva.vlet.data.StringUtil;
+import org.datanucleus.store.rdbms.query.ForwardQueryResult;
 
 public class SimpleDLCatalogue implements IDLCatalogue {
 
@@ -120,16 +121,15 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                     pm.deletePersistentAll(deleteStorageSites);
                 }
                 pm.makePersistent(entry);
+                //!?!?!?! if this is not here, the entry's LDRI gets to null???
+                stupidBugPatch(entry);
                 tx.commit();
 
             } finally {
                 if (tx.isActive()) {
                     tx.rollback();
                 }
-
-                //!?!?!?! if this is not here, the entry's LDRI gets to null???
-                stupidBugPatch(entry);
-
+                entry.getLDRI();
                 pm.close();
             }
         }
@@ -465,7 +465,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
 
     @Override
     public Collection<IStorageSite> getSitesByUname(String vphUname) {
-        Collection<IStorageSite> results;
+        Collection<IStorageSite> results = null;
         synchronized (lock) {
             PersistenceManager pm = pmf.getPersistenceManagerProxy();
             Transaction tx = pm.currentTransaction();
@@ -475,16 +475,19 @@ public class SimpleDLCatalogue implements IDLCatalogue {
 
                 q.setFilter("vphUsername == vphUname");
                 q.declareParameters(vphUname.getClass().getName() + " vphUname");
-
+                //Cast for both RDBMS and neodatis
+                Object res = q.execute(vphUname);
+                ForwardQueryResult f;
+                f = (ForwardQueryResult)res;
+                
+                debug("Class: "+res.getClass().getName());
                 results = (Collection<IStorageSite>) q.execute(vphUname);
-
-                if (!results.isEmpty()) {
-                    for (IStorageSite s : results) {
-                        debug("getSites. endpoint: " + s.getEndpoint() + " uname: " + s.getVPHUsername());
-                    }
-                }
-
                 tx.commit();
+                
+                //Stupid bug!
+                if(!results.isEmpty()){
+                    results.iterator().next().getVPHUsername();
+                }
 
             } finally {
                 if (tx.isActive()) {
@@ -558,6 +561,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                         tx.begin();
 
                         pm.makePersistent(site);
+                        site.getVPHUsername();
                         tx.commit();
 
                     } finally {
@@ -670,12 +674,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
             ArrayList<String> types = entry.getMetadata().getContentTypes();
 //                    debug("Got back: " + ldri);
             Collection<Path> rChildren = entry.getChildren();
-//                    if (rChildren != null) {
-//                        for (Path p : rChildren) {
-//                            debug("Renamed: " + p);
-//                            p.toPath();
-//                        }
-//                    }
+            entry.getStorageSites();
         }
     }
 }

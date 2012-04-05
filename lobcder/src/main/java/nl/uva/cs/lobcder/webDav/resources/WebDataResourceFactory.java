@@ -81,9 +81,7 @@ public class WebDataResourceFactory implements ResourceFactory {
                 }
                 entry.setStorageSites(sites);
             }
-
-
-
+            
             if (entry instanceof LogicalFolder) {
                 return new WebDataDirResource(catalogue, entry);
             }

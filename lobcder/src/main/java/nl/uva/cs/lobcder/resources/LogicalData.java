@@ -39,6 +39,7 @@ public class LogicalData implements ILogicalData, Serializable {
     
     @Persistent
     @Join
+    @Order(column="STORAGE_SITE")
     @Element(types=nl.uva.cs.lobcder.resources.StorageSite.class)
     private Collection<IStorageSite> storageSites;
 

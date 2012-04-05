@@ -215,7 +215,6 @@ there are no implementations to enhance
             <groupId>org.datanucleus</groupId>
             <artifactId>datanucleus-rdbms</artifactId>
             <version>3.0.8</version>
-            <scope>runtime</scope>
         </dependency>
         
         <dependency>

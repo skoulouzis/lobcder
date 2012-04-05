@@ -5,7 +5,15 @@
 package nl.uva.cs.lobcder.catalogue;
 
 import com.bradmcevoy.common.Path;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Properties;
 import nl.uva.cs.lobcder.resources.*;
+import nl.uva.cs.lobcder.webDav.resources.Constants;
 import org.junit.*;
 import static org.junit.Assert.*;
 
@@ -35,71 +43,67 @@ public class SimpleDRCatalogueScaleTests {
     }
 
     @Test
-    public void testRegisterToExistiongParent() {
-        System.out.println("testRegisterToExistiongParent");
-        SimpleDLCatalogue instance = null;
-        LogicalData lParent = null;
+    public void testGetSitesByUnames() throws Exception {
+        System.out.println("testGetSitesByUnames");
+        populateStorageSites();
+        SimpleDLCatalogue instance = new SimpleDLCatalogue();
         try {
+            String uname = "uname2";
+            Properties prop = new Properties();
+            prop.setProperty(Constants.VPH_USERNAME, uname);
+            prop.setProperty(Constants.STORAGE_SITE_USERNAME, "vph_dev:user");
+            prop.setProperty(Constants.STORAGE_SITE_PASSWORD, "non");
+            prop.setProperty(Constants.STORAGE_SITE_ENDPOINT, "file:///" + System.getProperty("user.home") + "/deleteMe/");
 
-            instance = new SimpleDLCatalogue();
-            Path parentPath = Path.path("parent");
+            instance.registerStorageSite(prop);
+            boolean exists = instance.storageSiteExists(prop);
+            assertTrue(exists);
 
-            lParent = new LogicalFolder(parentPath);
+            Collection<IStorageSite> result = instance.getSitesByUname(uname);
+            assertNotNull(result);
+            assertFalse(result.isEmpty());
 
-            instance.registerResourceEntry(lParent);
-
-        } catch (Exception ex) {
-            fail("Exception: " + ex.getMessage());
-        } 
-        finally {
-            try {
-                if (lParent != null) {
-                    new SimpleDLCatalogue().unregisterResourceEntry(lParent);
-                }
-            } catch (Exception ex) {
-                fail("Exception: " + ex.getMessage());
+            for (IStorageSite s : result) {
+                assertEquals( uname,s.getVPHUsername());
             }
+
+        } finally {
+            instance.clearAllSites();
+            Collection<StorageSite> allSites = instance.getAllSites();
+            assertEquals(allSites.size(), 0);
         }
     }
 
-    @Test
-    public void testRegisterResourceEntry() throws Exception {
-        System.out.println("registerResourceEntry");
-        //Register one resource
-        String ldri = "resource1";
-        Path path = Path.path(ldri);
-        ILogicalData entry = new LogicalData(path);
-
+    private void populateStorageSites() throws FileNotFoundException, IOException, Exception {
         SimpleDLCatalogue instance = new SimpleDLCatalogue();
-        try {
-            instance.registerResourceEntry(entry);
-//            System.out.println("entry:          " + entry.getLDRI());
+        instance.clearAllSites();
+        String propBasePath = System.getProperty("user.home") + File.separator
+                + "workspace" + File.separator + "lobcder"
+                + File.separator + "etc" + File.separator;
+        ArrayList<String> endpoints = new ArrayList<String>();
 
 
-            ILogicalData loadedEntry = instance.getResourceEntryByLDRI(path);
-            assertNotNull(loadedEntry);
-
-            boolean theSame = compareEntries(entry, loadedEntry);
-
-            assertTrue(theSame);
-
-
-        } catch (Exception ex) {
-            if (!ex.getMessage().equals("registerResourceEntry: cannot register resource " + ldri + " resource exists")) {
-                fail(ex.getMessage());
-            } else {
-                ex.printStackTrace();
-            }
-        } finally {
-            instance.unregisterResourceEntry(entry);
-            ILogicalData result = instance.getResourceEntryByLDRI(path);
-            assertNull(result);
+        for (String name : names) {
+            Properties prop = getCloudProperties(propBasePath + name);
+            endpoints.add(prop.getProperty(Constants.STORAGE_SITE_ENDPOINT));
+            instance.registerStorageSite(prop);
+            boolean exists = instance.storageSiteExists(prop);
+            assertTrue(exists);
         }
+    }
+
+    private static Properties getCloudProperties(String propPath)
+            throws FileNotFoundException, IOException {
+        Properties properties = new Properties();
+
+        File f = new File(propPath);
+        properties.load(new FileInputStream(f));
+        return properties;
     }
 
     private boolean compareEntries(ILogicalData entry, ILogicalData loadedEntry) {
-//        System.out.println("entry:          " + entry.getUID() + " " + entry.getLDRI());
-//        System.out.println("loadedEntry:    " + loadedEntry.getUID() + " " + loadedEntry.getLDRI());
+        System.out.println("entry:          " + entry.getUID() + " " + entry.getLDRI());
+        System.out.println("loadedEntry:    " + loadedEntry.getUID() + " " + loadedEntry.getLDRI());
         if (entry.getLDRI().getName().equals(loadedEntry.getLDRI().getName())) {
 //            if (entry.getUID().equals(loadedEntry.getUID())) {
             return true;
