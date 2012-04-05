@@ -15,13 +15,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.jdo.JDOHelper;
-import javax.jdo.PersistenceManager;
-import javax.jdo.PersistenceManagerFactory;
-import javax.jdo.Query;
-import javax.jdo.Transaction;
+import javax.jdo.*;
 import nl.uva.cs.lobcder.resources.Credential;
 import nl.uva.cs.lobcder.resources.LogicalData;
 import nl.uva.cs.lobcder.resources.ILogicalData;
@@ -45,15 +39,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
 
     @Override
     public void registerResourceEntry(ILogicalData entry) throws CatalogueException {
-        ILogicalData loaded = null;
-        try{
-        loaded = queryEntry(entry.getLDRI());
-        }catch(UnsupportedOperationException ex){
-            if(!ex.getMessage().contains("No tables for query of")){
-                throw new CatalogueException(ex.getMessage());
-            }
-        }
-        
+        ILogicalData loaded = queryEntry(entry.getLDRI());
         if (loaded != null && comparePaths(loaded.getLDRI(), entry.getLDRI())) {
             throw new DuplicateResourceException("Cannot register resource " + entry.getLDRI() + " resource exists");
         }
@@ -147,12 +133,6 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                 pm.close();
             }
         }
-        Collection<LogicalData> all = getAllLogicalData();
-
-        debug("LD in DB: " + all.size());
-        for (LogicalData ld : all) {
-            debug("ld: " + ld.getLDRI());
-        }
 
     }
 
@@ -164,16 +144,15 @@ public class SimpleDLCatalogue implements IDLCatalogue {
             Transaction tx = pm.currentTransaction();
             try {
                 tx.begin();
-
                 //This query, will return objects of type DataResourceEntry
                 Query q = pm.newQuery(LogicalData.class);
+//                Query q = pm.newQuery(extend);
 
                 //restrict to instances which have the field ldri equal to some logicalResourceName
                 q.setFilter("strLDRI == strLogicalResourceName");
                 q.declareParameters(strLogicalResourceName.getClass().getName() + " strLogicalResourceName");
                 q.setUnique(true);
                 entry = (ILogicalData) q.execute(strLogicalResourceName);
-
                 tx.commit();
 
                 stupidBugPatch(entry);
@@ -244,17 +223,6 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                 q.declareParameters(strLogicalResourceName.getClass().getName() + " strLogicalResourceName");
                 q.setUnique(true);
                 entry = (ILogicalData) q.execute(strLogicalResourceName);
-
-//                Collection<ILogicalData> results = (Collection<ILogicalData>) q.execute(strLogicalResourceName);
-//                for (ILogicalData ld : results) {
-//                    //Keep the low-most class
-//                    if (ld instanceof LogicalFile || ld instanceof LogicalFolder) {
-//                        entry = ld;
-//                        break;
-//                    }
-//                    entry = ld;
-//                }
-
 
                 if (entry == null) {
                     throw new NonExistingResourceException("Cannot add " + child.toString() + " child to non existing parent " + parent.toString());

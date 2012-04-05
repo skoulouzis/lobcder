@@ -14,6 +14,7 @@ import nl.uva.vlet.vfs.VFSNode;
 
 @PersistenceCapable
 @Inheritance(strategy= InheritanceStrategy.NEW_TABLE )
+//@Discriminator(strategy=DiscriminatorStrategy.CLASS_NAME)
 public class LogicalData implements ILogicalData, Serializable {
 
     /**

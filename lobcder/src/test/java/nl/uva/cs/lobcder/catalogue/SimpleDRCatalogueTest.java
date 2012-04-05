@@ -492,7 +492,7 @@ public class SimpleDRCatalogueTest {
 
         }
     }
-//
+
 
     @Test
     public void testRegisterToExistiongParent() {
