@@ -82,7 +82,9 @@ public class StorageSite implements Serializable, IStorageSite {
     private VFSClient vfsClient;
     @Persistent
     private String vphUsername;
-    private final Credential credentials;
+    
+    @Persistent
+    private Credential credentials;
     public static final String storagePrefix = "LOBCDER-REPLICA";
 
     public StorageSite(String endpoint, Credential cred) throws Exception {

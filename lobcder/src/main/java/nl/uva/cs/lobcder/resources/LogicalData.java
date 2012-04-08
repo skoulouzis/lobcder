@@ -6,6 +6,7 @@ package nl.uva.cs.lobcder.resources;
 
 import com.bradmcevoy.common.Path;
 import java.io.Serializable;
+import java.util.AbstractCollection;
 import java.util.ArrayList;
 import java.util.Collection;
 import javax.jdo.annotations.*;
@@ -41,7 +42,7 @@ public class LogicalData implements ILogicalData, Serializable {
     @Join
     @Order(column="STORAGE_SITE")
     @Element(types=nl.uva.cs.lobcder.resources.StorageSite.class)
-    private Collection<IStorageSite> storageSites;
+    private AbstractCollection<IStorageSite> storageSites;
 
     public LogicalData(Path ldri) {
         this.ldri = ldri;
@@ -61,7 +62,7 @@ public class LogicalData implements ILogicalData, Serializable {
     }
 
     @Override
-    public Collection<IStorageSite> getStorageSites() {
+    public AbstractCollection<IStorageSite> getStorageSites() {
         return this.storageSites;
     }
 
@@ -94,7 +95,7 @@ public class LogicalData implements ILogicalData, Serializable {
     }
 
     @Override
-    public void setStorageSites(Collection<IStorageSite> storageSites) {
+    public void setStorageSites(AbstractCollection<IStorageSite> storageSites) {
         if (storageSites != null && !storageSites.isEmpty()) {
             this.storageSites = storageSites;
             debug("StorageSite num : " + this.storageSites.size());

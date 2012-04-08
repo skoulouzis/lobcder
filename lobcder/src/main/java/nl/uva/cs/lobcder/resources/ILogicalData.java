@@ -5,6 +5,7 @@
 package nl.uva.cs.lobcder.resources;
 
 import com.bradmcevoy.common.Path;
+import java.util.AbstractCollection;
 import java.util.Collection;
 import nl.uva.vlet.exception.VlException;
 import nl.uva.vlet.vfs.VFSNode;
@@ -23,9 +24,9 @@ public interface ILogicalData {
 
     public void addChild(Path child);
 
-    public Collection<IStorageSite> getStorageSites();
+    public AbstractCollection<IStorageSite> getStorageSites();
 
-    public void setStorageSites(Collection<IStorageSite> storageResources);
+    public void setStorageSites(AbstractCollection<IStorageSite> storageResources);
 
     public Metadata getMetadata();
 

@@ -4,13 +4,14 @@
  */
 package nl.uva.cs.lobcder.resources;
 
+import java.io.Serializable;
 import nl.uva.vlet.util.cog.GridProxy;
 
 /**
  *
  * @author S. Koulouzis
  */
-public class Credential {
+public class Credential implements Serializable{
 
     private String vphUsername;
     private String storageSiteUname;

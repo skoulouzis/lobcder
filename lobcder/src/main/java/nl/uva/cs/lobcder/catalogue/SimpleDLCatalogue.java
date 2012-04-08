@@ -9,12 +9,7 @@ package nl.uva.cs.lobcder.catalogue;
  * @author S. Koulouzis
  */
 import com.bradmcevoy.common.Path;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 import javax.jdo.*;
 import nl.uva.cs.lobcder.resources.Credential;
 import nl.uva.cs.lobcder.resources.LogicalData;
@@ -122,14 +117,14 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                 }
                 pm.makePersistent(entry);
                 //!?!?!?! if this is not here, the entry's LDRI gets to null???
-                stupidBugPatch(entry);
+                stupidBugLogicData(entry);
                 tx.commit();
 
             } finally {
                 if (tx.isActive()) {
                     tx.rollback();
                 }
-                entry.getLDRI();
+                stupidBugLogicData(entry);
                 pm.close();
             }
         }
@@ -155,7 +150,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                 entry = (ILogicalData) q.execute(strLogicalResourceName);
                 tx.commit();
 
-                stupidBugPatch(entry);
+                stupidBugLogicData(entry);
 
             } finally {
                 if (tx.isActive()) {
@@ -293,7 +288,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                 if (results != null) {
                     //The stupid bug 
                     for (ILogicalData e : results) {
-                        stupidBugPatch(e);
+                        stupidBugLogicData(e);
                     }
                 }
 
@@ -464,8 +459,8 @@ public class SimpleDLCatalogue implements IDLCatalogue {
     }
 
     @Override
-    public Collection<IStorageSite> getSitesByUname(String vphUname) {
-        Collection<IStorageSite> results = null;
+    public AbstractCollection<IStorageSite> getSitesByUname(String vphUname) {
+        AbstractCollection<IStorageSite> results = null;
         synchronized (lock) {
             PersistenceManager pm = pmf.getPersistenceManagerProxy();
             Transaction tx = pm.currentTransaction();
@@ -475,18 +470,13 @@ public class SimpleDLCatalogue implements IDLCatalogue {
 
                 q.setFilter("vphUsername == vphUname");
                 q.declareParameters(vphUname.getClass().getName() + " vphUname");
-                //Cast for both RDBMS and neodatis
-                Object res = q.execute(vphUname);
-                ForwardQueryResult f;
-                f = (ForwardQueryResult)res;
-                
-                debug("Class: "+res.getClass().getName());
-                results = (Collection<IStorageSite>) q.execute(vphUname);
+                results = (AbstractCollection<IStorageSite>) q.execute(vphUname);
                 tx.commit();
-                
+
                 //Stupid bug!
-                if(!results.isEmpty()){
-                    results.iterator().next().getVPHUsername();
+                if (!results.isEmpty()) {
+                    Iterator<IStorageSite> iter = results.iterator();  
+                    stupidBugStorageSite(iter.next());
                 }
 
             } finally {
@@ -548,12 +538,12 @@ public class SimpleDLCatalogue implements IDLCatalogue {
         cred.setStorageSiteUsername(prop.getProperty(Constants.STORAGE_SITE_USERNAME));
         cred.setStorageSitePassword(prop.getProperty(Constants.STORAGE_SITE_PASSWORD));
         String endpoint = prop.getProperty(Constants.STORAGE_SITE_ENDPOINT);
-
+        StorageSite site = null;
         if (!storageSiteExists(prop)) {
             try {
                 debug("Adding endpoint: " + endpoint);
 
-                StorageSite site = new StorageSite(endpoint, cred);
+                site = new StorageSite(endpoint, cred);
                 synchronized (lock) {
                     PersistenceManager pm = pmf.getPersistenceManagerProxy();
                     Transaction tx = pm.currentTransaction();
@@ -561,14 +551,14 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                         tx.begin();
 
                         pm.makePersistent(site);
-                        site.getVPHUsername();
+                        stupidBugStorageSite(site);
                         tx.commit();
 
                     } finally {
                         if (tx.isActive()) {
                             tx.rollback();
                         }
-                        site.getEndpoint();
+//                        stupidBugStorageSite(site);
                         pm.close();
                     }
                 }
@@ -576,7 +566,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                 throw new CatalogueException(ex.getMessage());
             }
         }
-
+//        stupidBugStorageSite(site);
     }
 
     @Override
@@ -645,7 +635,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
             updated.setMetadata(meta);
             Credential cred;
             if (sites != null && !sites.isEmpty()) {
-                Collection<IStorageSite> copySites = new ArrayList<IStorageSite>();
+                AbstractCollection<IStorageSite> copySites = new ArrayList<IStorageSite>();
                 for (IStorageSite s : sites) {
                     cred = new Credential(s.getVPHUsername());
                     cred.setStorageSitePassword(s.getCredentials().getStorageSitePassword());
@@ -667,14 +657,24 @@ public class SimpleDLCatalogue implements IDLCatalogue {
         this.pmf.getPersistenceManager().close();
     }
 
-    private void stupidBugPatch(ILogicalData entry) {
+    private void stupidBugLogicData(ILogicalData entry) {
         if (entry != null) {
             //Bug! If we don't do this the ldri becomes null
             Path ldri = entry.getLDRI();
             ArrayList<String> types = entry.getMetadata().getContentTypes();
 //                    debug("Got back: " + ldri);
             Collection<Path> rChildren = entry.getChildren();
-            entry.getStorageSites();
+            AbstractCollection<IStorageSite> ss = entry.getStorageSites();
+            for(IStorageSite s : ss){
+                stupidBugStorageSite(s);
+            }
         }
+    }
+
+    private void stupidBugStorageSite(IStorageSite site) {
+        String ep = site.getEndpoint();
+        debug("Endpoint: " + ep);
+        Credential cred = site.getCredentials();
+        debug("Credentials: " + cred);
     }
 }

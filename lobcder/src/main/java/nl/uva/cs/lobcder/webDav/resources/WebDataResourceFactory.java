@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.AbstractCollection;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Properties;
@@ -39,7 +40,6 @@ public class WebDataResourceFactory implements ResourceFactory {
     public Resource getResource(String host, String strPath) {
 
         Path ldri = Path.path(strPath).getStripFirst();
-        Collection<IStorageSite> sites;
         LogicalData root;
         try {
             
@@ -50,12 +50,12 @@ public class WebDataResourceFactory implements ResourceFactory {
 //            if (host == null && Path.path(strPath).toString().equals("")) {
 //                debug(">>>>>>>>>>>>>>> Host null and path is empty");
 //            }
-            
+            AbstractCollection<IStorageSite> sites;
             if (ldri.isRoot() || ldri.toString().equals("")) {
                 root = new LogicalData(ldri);
-                sites = root.getStorageSites();
+                 sites = root.getStorageSites();
                 if (sites == null || sites.isEmpty()) {
-                    sites = (ArrayList<IStorageSite>) catalogue.getSitesByUname(uname);
+                    sites = (AbstractCollection<IStorageSite>) catalogue.getSitesByUname(uname);
                     
                     if (sites == null || sites.isEmpty()) {
                         debug("\t StorageSites for " + ldri + " are empty!");

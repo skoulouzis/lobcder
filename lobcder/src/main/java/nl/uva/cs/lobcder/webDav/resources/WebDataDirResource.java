@@ -28,12 +28,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import nl.uva.cs.lobcder.catalogue.CatalogueException;
 import nl.uva.cs.lobcder.catalogue.IDLCatalogue;
-import nl.uva.cs.lobcder.resources.ILogicalData;
-import nl.uva.cs.lobcder.resources.IStorageSite;
-import nl.uva.cs.lobcder.resources.LogicalFile;
-import nl.uva.cs.lobcder.resources.LogicalFolder;
-import nl.uva.cs.lobcder.resources.Metadata;
-import nl.uva.cs.lobcder.resources.StorageSite;
+import nl.uva.cs.lobcder.resources.*;
 import nl.uva.vlet.exception.VlException;
 import nl.uva.vlet.vfs.VFSNode;
 import nl.uva.vlet.vfs.VFile;
@@ -74,7 +69,10 @@ class WebDataDirResource implements FolderResource, CollectionResource {
             //copyStorageSites.addAll(entry.getStorageSites());
             ArrayList<IStorageSite> copyStorageSites = new ArrayList<IStorageSite>();
             for (IStorageSite s : sites) {
-                copyStorageSites.add(new StorageSite(s.getEndpoint(), s.getCredentials()));
+                String ep = s.getEndpoint();
+                Credential cred = s.getCredentials();
+                StorageSite ss = new StorageSite(ep, cred);
+                copyStorageSites.add(ss);
             }
 
             newFolderEntry.setStorageSites(copyStorageSites);
@@ -101,9 +99,13 @@ class WebDataDirResource implements FolderResource, CollectionResource {
 //                throw new IOException("Storage Sites for " + reloaded.getLDRI() + " are empty!");
             }
             WebDataDirResource resource = new WebDataDirResource(catalogue, reloaded);
-
-            reloaded = catalogue.getResourceEntryByLDRI(this.entry.getLDRI());
-            this.entry = reloaded;
+            
+            //Why do we do that ?
+//            reloaded = catalogue.getResourceEntryByLDRI(this.entry.getLDRI());
+//            if(reloaded==null){
+//                throw new BadRequestException(this, "Logical resource queried from catalogue is null");
+//            }
+//            this.entry = reloaded;
 
             return resource;
         } catch (Exception ex) {
