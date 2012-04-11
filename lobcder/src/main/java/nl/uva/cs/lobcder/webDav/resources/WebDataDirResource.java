@@ -482,10 +482,9 @@ class WebDataDirResource implements FolderResource, CollectionResource {
         meta.addContentType(contentType);
         meta.setCreateDate(System.currentTimeMillis());
         newResource.setMetadata(meta);
-
         catalogue.registerResourceEntry(newResource);
         LogicalFile relodedResource = (LogicalFile) catalogue.getResourceEntryByLDRI(newResource.getLDRI());
-
+        
         return new WebDataFileResource(catalogue, relodedResource);
     }
 

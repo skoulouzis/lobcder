@@ -74,7 +74,7 @@ public class WebDataResourceFactory implements ResourceFactory {
 
             sites = entry.getStorageSites();
             if (sites == null || sites.isEmpty()) {
-                sites = (ArrayList<IStorageSite>) catalogue.getSitesByUname(uname);
+                sites = (AbstractCollection<IStorageSite>) catalogue.getSitesByUname(uname);
                 if (sites == null || sites.isEmpty()) {
                     debug("\t StorageSites for " + ldri + " are empty!");
                     throw new IOException("StorageSites for " + ldri + " are empty!");

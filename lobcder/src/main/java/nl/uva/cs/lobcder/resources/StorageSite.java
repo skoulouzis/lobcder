@@ -19,6 +19,7 @@ import javax.jdo.annotations.PrimaryKey;
 import nl.uva.vlet.Global;
 import nl.uva.vlet.GlobalConfig;
 import nl.uva.vlet.data.StringUtil;
+import nl.uva.vlet.exception.VRLSyntaxException;
 import nl.uva.vlet.exception.VlException;
 import nl.uva.vlet.util.cog.GridProxy;
 import nl.uva.vlet.vfs.VFSClient;
@@ -106,21 +107,21 @@ public class StorageSite implements Serializable, IStorageSite {
 
     @Override
     public VFSNode getVNode(Path path) throws VlException {
-        return vfsClient.openLocation(vrl.append(path.toString()));
+        return getVfsClient().openLocation(getVrl().append(path.toString()));
     }
 
     @Override
     public VFSNode createVFSFile(Path path) throws VlException {
-        vfsClient.mkdirs(vrl, true);
+        getVfsClient().mkdirs(getVrl(), true);
         String[] parts = path.getParts();
         if (parts.length > 1) {
             String parent = path.getParent().toString();
-            debug("mkdirs: " + vrl.append(parent));
-            vfsClient.mkdirs(vrl.append(parent));
+            debug("mkdirs: " + getVrl().append(parent));
+            getVfsClient().mkdirs(getVrl().append(parent));
         }
 
-        VRL newVRL = vrl.append(path.toString());
-        VFile node = vfsClient.createFile(newVRL, true);
+        VRL newVRL = getVrl().append(path.toString());
+        VFile node = getVfsClient().createFile(newVRL, true);
         logicalPaths.add(path.toString());
         return node;
     }
@@ -136,10 +137,10 @@ public class StorageSite implements Serializable, IStorageSite {
     }
 
     private void initVFS() throws VlException, MalformedURLException {
-        vfsClient = new VFSClient();
-        context = vfsClient.getVRSContext();
+        setVfsClient(new VFSClient());
+        context = getVfsClient().getVRSContext();
         //Bug in sftp: We have to put the username in the url 
-        info = context.getServerInfoFor(vrl, true);
+        info = context.getServerInfoFor(getVrl(), true);
         String authScheme = info.getAuthScheme();
         GridProxy proxy = credentials.getStorageSiteGridProxy();
 
@@ -171,8 +172,8 @@ public class StorageSite implements Serializable, IStorageSite {
     @Override
     public boolean LDRIHasPhysicalData(Path ldri) throws VlException {
         if (!logicalPaths.contains(ldri.toString())) {
-            VRL newVRL = vrl.append(ldri.toString());
-            return vfsClient.existsPath(newVRL);
+            VRL newVRL = getVrl().append(ldri.toString());
+            return getVfsClient().existsPath(newVRL);
         }
         return logicalPaths.contains(ldri.toString());
     }
@@ -191,7 +192,7 @@ public class StorageSite implements Serializable, IStorageSite {
     public void deleteVNode(Path lDRI) throws VlException {
         debug("Exists?: " + lDRI);
         try {
-            boolean exists = this.vfsClient.existsPath(vrl.append(lDRI.toString()));
+            boolean exists = this.getVfsClient().existsPath(getVrl().append(lDRI.toString()));
             if (exists) {
                 VFSNode node = this.getVNode(lDRI);
                 if (node != null && node.delete()) {
@@ -201,5 +202,49 @@ public class StorageSite implements Serializable, IStorageSite {
         } catch (Exception ex) {
             ex.printStackTrace();
         }
+    }
+
+    /**
+     * @return the vfsClient
+     */
+    @Override
+    public VFSClient getVfsClient() throws VlException {
+        if(vfsClient == null){
+            try {
+                initVFS();
+            } catch (MalformedURLException ex) {
+                throw new nl.uva.vlet.exception.VRLSyntaxException(ex);
+            }
+        }
+        return vfsClient;
+    }
+
+    /**
+     * @param vfsClient the vfsClient to set
+     */
+    public void setVfsClient(VFSClient vfsClient) {
+        this.vfsClient = vfsClient;
+    }
+
+    @Override
+    public ServerInfo getInfo() {
+        return this.info;
+    }
+
+    /**
+     * @return the vrl
+     */
+    private VRL getVrl() throws VRLSyntaxException {
+        if(vrl==null){
+            vrl = new VRL(endpoint + "/" + storagePrefix);
+        }
+        return vrl;
+    }
+
+    /**
+     * @param vrl the vrl to set
+     */
+    private void setVrl(VRL vrl) {
+        this.vrl = vrl;
     }
 }

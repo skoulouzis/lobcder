@@ -10,6 +10,8 @@ package nl.uva.cs.lobcder.catalogue;
  */
 import com.bradmcevoy.common.Path;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.jdo.*;
 import nl.uva.cs.lobcder.resources.Credential;
 import nl.uva.cs.lobcder.resources.LogicalData;
@@ -21,6 +23,7 @@ import nl.uva.cs.lobcder.resources.Metadata;
 import nl.uva.cs.lobcder.resources.StorageSite;
 import nl.uva.cs.lobcder.webDav.resources.Constants;
 import nl.uva.vlet.data.StringUtil;
+import nl.uva.vlet.exception.VlException;
 import org.datanucleus.store.rdbms.query.ForwardQueryResult;
 
 public class SimpleDLCatalogue implements IDLCatalogue {
@@ -117,7 +120,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                 }
                 pm.makePersistent(entry);
                 //!?!?!?! if this is not here, the entry's LDRI gets to null???
-                stupidBugLogicData(entry);
+//                stupidBugLogicData(entry);
                 tx.commit();
 
             } finally {
@@ -128,7 +131,6 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                 pm.close();
             }
         }
-
     }
 
     private ILogicalData queryEntry(Path logicalResourceName) throws CatalogueException {
@@ -149,7 +151,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                 q.setUnique(true);
                 entry = (ILogicalData) q.execute(strLogicalResourceName);
                 tx.commit();
-
+                
                 stupidBugLogicData(entry);
 
             } finally {
@@ -558,7 +560,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                         if (tx.isActive()) {
                             tx.rollback();
                         }
-//                        stupidBugStorageSite(site);
+                        stupidBugStorageSite(site);
                         pm.close();
                     }
                 }
@@ -676,5 +678,8 @@ public class SimpleDLCatalogue implements IDLCatalogue {
         debug("Endpoint: " + ep);
         Credential cred = site.getCredentials();
         debug("Credentials: " + cred);
+        site.getUID();
+        site.getInfo();
+        site.getLogicalPaths();
     }
 }

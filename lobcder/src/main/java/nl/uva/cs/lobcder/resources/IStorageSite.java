@@ -7,7 +7,9 @@ package nl.uva.cs.lobcder.resources;
 import com.bradmcevoy.common.Path;
 import java.util.Collection;
 import nl.uva.vlet.exception.VlException;
+import nl.uva.vlet.vfs.VFSClient;
 import nl.uva.vlet.vfs.VFSNode;
+import nl.uva.vlet.vrs.ServerInfo;
 
 /**
  *
@@ -34,4 +36,8 @@ public interface IStorageSite {
     public String getUID();
 
     public void deleteVNode(Path lDRI)throws VlException;
+
+    public ServerInfo getInfo();
+    
+    public VFSClient getVfsClient() throws VlException;
 }

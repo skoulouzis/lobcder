@@ -16,7 +16,7 @@ import javax.jdo.annotations.PersistenceCapable;
  */
 
 @PersistenceCapable
-@Inheritance(strategy= InheritanceStrategy.NEW_TABLE )
+@Inheritance(strategy= InheritanceStrategy.SUBCLASS_TABLE )
 public class LogicalFile extends LogicalData {
 
     /**
