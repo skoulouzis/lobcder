@@ -748,7 +748,7 @@ public class SimpleDRCatalogueTest {
     private boolean compareEntries(ILogicalData entry, ILogicalData loadedEntry) {
 //        System.out.println("entry:          " + entry.getUID() + " " + entry.getLDRI());
 //        System.out.println("loadedEntry:    " + loadedEntry.getUID() + " " + loadedEntry.getLDRI());
-        if (entry.getLDRI().getName().equals(loadedEntry.getLDRI().getName())) {
+        if (entry.getLDRI().getName().equals(loadedEntry.getLDRI().getName()) && entry.getType().equals(loadedEntry.getType())) {
 //            if (entry.getUID().equals(loadedEntry.getUID())) {
                 return true;
 //            }

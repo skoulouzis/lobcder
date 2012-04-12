@@ -36,7 +36,7 @@ import static org.junit.Assert.*;
 public class WebDataFileResourceTest {
 
     private SimpleDLCatalogue catalogue;
-    private LogicalData testLogicalData;
+    private LogicalData testLogicalFolder;
     private Path testFolderPath;
     private ArrayList<StorageSite> sites;
     private StorageSite site;
@@ -57,11 +57,11 @@ public class WebDataFileResourceTest {
         try {
             catalogue = new SimpleDLCatalogue();
 
-            testLogicalData = new LogicalData(ConstantsAndSettings.TEST_FILE_PATH_1,Constants.LOGICAL_FILE);
+            testLogicalFolder = new LogicalData(ConstantsAndSettings.TEST_FILE_PATH_1, Constants.LOGICAL_FILE);
 
             //For some reason 'testFolder' creates an exception with data nucleus
             testFolderPath = Path.path(ConstantsAndSettings.TEST_FOLDER_NAME_1);
-            testLogicalData = new LogicalData(testFolderPath,Constants.LOGICAL_FOLDER);
+            testLogicalFolder = new LogicalData(testFolderPath, Constants.LOGICAL_FOLDER);
 
             String endpoint = "file:///tmp/";
             String vphUser = "user1";
@@ -97,16 +97,20 @@ public class WebDataFileResourceTest {
         try {
             String testColl = "testCopyToColl";
             Path testCollPath = Path.path(testColl);
-            testLogicalData = new LogicalData(testCollPath,Constants.LOGICAL_FOLDER);
+            testLogicalFolder = new LogicalData(testCollPath, Constants.LOGICAL_FOLDER);
 
-            catalogue.registerResourceEntry(testLogicalData);
-            collectionResource = new WebDataDirResource(catalogue, testLogicalData);
+            catalogue.registerResourceEntry(testLogicalFolder);
+            collectionResource = new WebDataDirResource(catalogue, testLogicalFolder);
 
-            webDAVFile = new WebDataFileResource(catalogue, testLogicalData);
+            String testFile = ConstantsAndSettings.TEST_FILE_NAME_1;
+            Path testFilePath = Path.path(testFile);
+            LogicalData testLogicalFile = new LogicalData(testFilePath, Constants.LOGICAL_FILE);
+            webDAVFile = new WebDataFileResource(catalogue, testLogicalFile);
             webDAVFile.copyTo(collectionResource, webDAVFile.getName());
 
 
             ILogicalData folderLData = catalogue.getResourceEntryByLDRI(testCollPath);
+            assertEquals(testLogicalFolder.getType(), folderLData.getType());
             Collection<Path> children = folderLData.getChildren();
             assertNotNull(children);
 
@@ -115,7 +119,7 @@ public class WebDataFileResourceTest {
                 chLData = catalogue.getResourceEntryByLDRI(p);
                 System.out.println("LData:              " + chLData.getLDRI().getName() + "         " + chLData.getUID());
                 System.out.println("webDAVFile:         " + webDAVFile.getName() + "            " + webDAVFile.getUniqueId());
-                System.out.println("testLogicalData:    " + testLogicalData.getLDRI().getName() + "         " + testLogicalData.getUID());
+                System.out.println("testLogicalData:    " + testLogicalFolder.getLDRI().getName() + "         " + testLogicalFolder.getUID());
                 if (chLData.getLDRI().getName().equals(ConstantsAndSettings.TEST_FILE_NAME_1)) {
                     foundIt = true;
                     break;
@@ -143,15 +147,15 @@ public class WebDataFileResourceTest {
             try {
 
 
-                load = catalogue.getResourceEntryByLDRI(testLogicalData.getLDRI());
+                load = catalogue.getResourceEntryByLDRI(testLogicalFolder.getLDRI());
                 assertNotNull(load);
 
                 collectionResource.delete();
 
-                load = catalogue.getResourceEntryByLDRI(testLogicalData.getLDRI());
+                load = catalogue.getResourceEntryByLDRI(testLogicalFolder.getLDRI());
                 assertNull(load);
 
-                load = catalogue.getResourceEntryByLDRI(Path.path(testLogicalData.getLDRI(), ConstantsAndSettings.TEST_FILE_NAME_1));
+                load = catalogue.getResourceEntryByLDRI(Path.path(testLogicalFolder.getLDRI(), ConstantsAndSettings.TEST_FILE_NAME_1));
                 assertNull(load);
 
             } catch (CatalogueException ex) {
@@ -165,7 +169,6 @@ public class WebDataFileResourceTest {
             }
         }
     }
-
 //    /**
 //     * Test of delete method, of class WebDataFileResource.
 //     */

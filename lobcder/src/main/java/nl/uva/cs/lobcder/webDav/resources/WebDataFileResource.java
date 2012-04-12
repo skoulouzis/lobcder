@@ -48,9 +48,12 @@ public class WebDataFileResource implements
     private final IDLCatalogue catalogue;
     private final ILogicalData logicalData;
 
-    public WebDataFileResource(IDLCatalogue catalogue, ILogicalData logicalData) throws CatalogueException {
+    public WebDataFileResource(IDLCatalogue catalogue, ILogicalData logicalData) throws CatalogueException, Exception {
         this.catalogue = catalogue;
         this.logicalData = logicalData;
+        if(!logicalData.getType().equals(Constants.LOGICAL_FILE)){
+            throw new Exception("The logical data has the wonrg type: "+logicalData.getType());
+        }
         initMetadata();
     }
 
@@ -63,7 +66,8 @@ public class WebDataFileResource implements
             Path toCollectionLDRI = Path.path(collectionResource.getName());
             Path newLDRI = Path.path(toCollectionLDRI, name);
 
-            LogicalData newFolderEntry = new LogicalData(newLDRI,Constants.LOGICAL_FILE);
+            FIX ME!Why do we crate new LogicalData
+            LogicalData newFolderEntry = new LogicalData(newLDRI,Constants.LOGICAL_FOLDER);
             newFolderEntry.getMetadata().setModifiedDate(System.currentTimeMillis());
             catalogue.registerResourceEntry(newFolderEntry);
         } catch (CatalogueException ex) {
