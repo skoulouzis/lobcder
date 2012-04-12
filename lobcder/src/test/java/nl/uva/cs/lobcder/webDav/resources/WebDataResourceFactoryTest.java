@@ -72,7 +72,7 @@ public class WebDataResourceFactoryTest {
             result = (WebDataDirResource) root.createCollection(ConstantsAndSettings.TEST_FOLDER_NAME_1);
         }
         checkResource(result);
-
+        
         ByteArrayInputStream bais = new ByteArrayInputStream(ConstantsAndSettings.TEST_DATA.getBytes());
         WebDataFileResource file = (WebDataFileResource) result.createNew(ConstantsAndSettings.TEST_FILE_NAME_1, bais, new Long(ConstantsAndSettings.TEST_DATA.getBytes().length), "text/plain");
         checkChildren(result, file);
