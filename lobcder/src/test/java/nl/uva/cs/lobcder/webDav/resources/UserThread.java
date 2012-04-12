@@ -9,7 +9,7 @@ import nl.uva.cs.lobcder.catalogue.CatalogueException;
 import com.bradmcevoy.common.Path;
 import java.util.ArrayList;
 import nl.uva.cs.lobcder.resources.Metadata;
-import nl.uva.cs.lobcder.resources.LogicalFile;
+import nl.uva.cs.lobcder.resources.LogicalData;
 import nl.uva.cs.lobcder.resources.ILogicalData;
 import nl.uva.cs.lobcder.catalogue.SimpleDLCatalogue;
 import com.bradmcevoy.http.Resource;
@@ -163,13 +163,13 @@ public class UserThread extends Thread {
         ILogicalData loaded = null;
         try {
             System.out.println("testUpdateResourceEntry");
-            LogicalFile newEntry = null;
+            LogicalData newEntry = null;
             if (this.getName().equals("T1")) {
-                newEntry = new LogicalFile(ConstantsAndSettings.TEST_FILE_PATH_1);
+                newEntry = new LogicalData(ConstantsAndSettings.TEST_FILE_PATH_1,Constants.LOGICAL_FILE);
             } else if (this.getName().equals("T2")) {
-                newEntry = new LogicalFile(ConstantsAndSettings.TEST_FILE_PATH_2);
+                newEntry = new LogicalData(ConstantsAndSettings.TEST_FILE_PATH_2,Constants.LOGICAL_FILE);
             } else if (this.getName().equals("T3")) {
-                newEntry = new LogicalFile(ConstantsAndSettings.TEST_FILE_PATH_3);
+                newEntry = new LogicalData(ConstantsAndSettings.TEST_FILE_PATH_3,Constants.LOGICAL_FILE);
             }
             instance.registerResourceEntry(newEntry);
             loaded = instance.getResourceEntryByLDRI(newEntry.getLDRI());
@@ -233,7 +233,7 @@ public class UserThread extends Thread {
             childLdri = "/child2";
         }
         Path parentPath = Path.path(ldri);
-        ILogicalData parent = new LogicalData(parentPath);
+        ILogicalData parent = new LogicalData(parentPath,Constants.LOGICAL_DATA);
 
         SimpleDLCatalogue instance = new SimpleDLCatalogue();
 
@@ -243,7 +243,7 @@ public class UserThread extends Thread {
 
         Path childPath = Path.path(ldri + childLdri);
 
-        LogicalData child = new LogicalData(childPath);
+        LogicalData child = new LogicalData(childPath,Constants.LOGICAL_DATA);
         System.out.println("child: " + child.getUID() + " " + child.getLDRI());
         instance.registerResourceEntry(child);
 

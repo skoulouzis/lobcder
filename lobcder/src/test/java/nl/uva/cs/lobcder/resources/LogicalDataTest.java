@@ -9,6 +9,7 @@ import com.bradmcevoy.common.Path;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import nl.uva.cs.lobcder.webDav.resources.Constants;
 import nl.uva.vlet.exception.VlException;
 import nl.uva.vlet.vfs.VChecksum;
 import nl.uva.vlet.vfs.VFSNode;
@@ -72,7 +73,7 @@ public class LogicalDataTest {
     @Test
     public void testGetLDRI() {
         System.out.println("getLDRI");
-        LogicalData instance = new LogicalData(path);
+        LogicalData instance = new LogicalData(path,Constants.LOGICAL_DATA);
 
         Path expResult = path;
         Path result = instance.getLDRI();
@@ -85,7 +86,7 @@ public class LogicalDataTest {
     @Test
     public void testGetChildren() {
         System.out.println("getChildren");
-        LogicalData instance = new LogicalData(path);
+        LogicalData instance = new LogicalData(path,Constants.LOGICAL_DATA);
         instance.addChild(child);
 
         Collection<Path> result = instance.getChildren();
@@ -101,7 +102,7 @@ public class LogicalDataTest {
     @Test
     public void testGetStorageSites() {
         System.out.println("getStorageSites");
-        LogicalData instance = new LogicalData(path);
+        LogicalData instance = new LogicalData(path,Constants.LOGICAL_DATA);
         instance.setStorageSites(sites);
 
         Collection result = instance.getStorageSites();
@@ -117,7 +118,7 @@ public class LogicalDataTest {
     @Test
     public void testGetMetadata() {
         System.out.println("getMetadata");
-        LogicalData instance = new LogicalData(path);
+        LogicalData instance = new LogicalData(path,Constants.LOGICAL_DATA);
         Metadata result = instance.getMetadata();
         assertNotNull(result);
     }
@@ -130,7 +131,7 @@ public class LogicalDataTest {
         System.out.println("setMetadata");
         Metadata metadata = new Metadata();
         metadata.setLength(Long.MIN_VALUE);
-        LogicalData instance = new LogicalData(path);
+        LogicalData instance = new LogicalData(path,Constants.LOGICAL_DATA);
         instance.setMetadata(metadata);
         Metadata result = instance.getMetadata();
 
@@ -145,7 +146,7 @@ public class LogicalDataTest {
     @Test
     public void testGetUID() {
         System.out.println("getUID");
-        LogicalData instance = new LogicalData(path);
+        LogicalData instance = new LogicalData(path,Constants.LOGICAL_DATA);
         String result = instance.getUID();
 //        assertNotNull(result);
     }
@@ -158,7 +159,7 @@ public class LogicalDataTest {
         System.out.println("addChildren");
         ArrayList<Path> children = new ArrayList<Path>();
         children.add(child);
-        LogicalData instance = new LogicalData(path);
+        LogicalData instance = new LogicalData(path,Constants.LOGICAL_DATA);
         instance.addChildren(children);
         assertTrue(instance.hasChildren());
     }
@@ -170,7 +171,7 @@ public class LogicalDataTest {
     public void testSetStorageSites() {
         try {
             System.out.println("setStorageSites");
-            LogicalData instance = new LogicalData(path);
+            LogicalData instance = new LogicalData(path,Constants.LOGICAL_DATA);
             instance.setStorageSites(sites);
             boolean hasData = instance.hasPhysicalData();
             assertFalse(hasData);
@@ -191,7 +192,7 @@ public class LogicalDataTest {
     @Test
     public void testAddChild() {
         System.out.println("addChild");
-        LogicalData instance = new LogicalData(path);
+        LogicalData instance = new LogicalData(path,Constants.LOGICAL_DATA);
         instance.addChild(child);
         assertTrue(instance.hasChildren());
     }
@@ -202,7 +203,7 @@ public class LogicalDataTest {
     @Test
     public void testHasChildren() {
         System.out.println("hasChildren");
-        LogicalData instance = new LogicalData(path);
+        LogicalData instance = new LogicalData(path,Constants.LOGICAL_DATA);
         boolean result = instance.hasChildren();
         assertFalse(result);
 
@@ -219,7 +220,7 @@ public class LogicalDataTest {
     public void testRemoveChild() {
         System.out.println("removeChild");
 
-        LogicalData instance = new LogicalData(path);
+        LogicalData instance = new LogicalData(path,Constants.LOGICAL_DATA);
         instance.addChild(child);
         boolean result = instance.hasChildren();
         assertTrue(result);
@@ -236,7 +237,7 @@ public class LogicalDataTest {
     @Test
     public void testGetChild() {
         System.out.println("getChild");
-        LogicalData instance = new LogicalData(path);
+        LogicalData instance = new LogicalData(path,Constants.LOGICAL_DATA);
         instance.addChild(child);
 
         Path result = instance.getChild(child);
@@ -250,7 +251,7 @@ public class LogicalDataTest {
     public void testSetLDRI() {
         System.out.println("setLDRI");
         Path newPath = Path.path("newPath");
-        LogicalData instance = new LogicalData(path);
+        LogicalData instance = new LogicalData(path,Constants.LOGICAL_DATA);
 
         instance.setLDRI(newPath);
 
@@ -277,7 +278,7 @@ public class LogicalDataTest {
     @Test
     public void testGetVNode() throws Exception {
         System.out.println("getVNode");
-        LogicalData instance = new LogicalData(path);
+        LogicalData instance = new LogicalData(path,Constants.LOGICAL_DATA);
 
         VFSNode expResult = site.createVFSFile(path);
         instance.setStorageSites(sites);
@@ -309,7 +310,7 @@ public class LogicalDataTest {
     public void testHasPhysicalData() {
         try {
             System.out.println("hasPhysicalData");
-            LogicalData instance = new LogicalData(path);
+            LogicalData instance = new LogicalData(path,Constants.LOGICAL_DATA);
             boolean result = instance.hasPhysicalData();
             assertFalse(result);
 
@@ -338,7 +339,7 @@ public class LogicalDataTest {
     @Test
     public void testCreatePhysicalData() throws Exception {
         System.out.println("createPhysicalData");
-        LogicalData instance = new LogicalData(path);
+        LogicalData instance = new LogicalData(path,Constants.LOGICAL_DATA);
         VFSNode result = instance.createPhysicalData();
         assertNull(result);
 

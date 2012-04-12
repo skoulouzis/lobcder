@@ -15,7 +15,7 @@ import nl.uva.vlet.vfs.VFSNode;
 
 @PersistenceCapable
 @Inheritance(strategy= InheritanceStrategy.NEW_TABLE )
-//@Discriminator(strategy=DiscriminatorStrategy.CLASS_NAME)
+@Discriminator(strategy=DiscriminatorStrategy.CLASS_NAME)
 public class LogicalData implements ILogicalData, Serializable {
 
     /**
@@ -36,6 +36,9 @@ public class LogicalData implements ILogicalData, Serializable {
     @Persistent
     private Collection<Path> children;
     
+    @Persistent
+    private String type;
+    
     private boolean debug = true;
     
     @Persistent
@@ -44,11 +47,12 @@ public class LogicalData implements ILogicalData, Serializable {
     @Element(types=nl.uva.cs.lobcder.resources.StorageSite.class)
     private AbstractCollection<IStorageSite> storageSites;
 
-    public LogicalData(Path ldri) {
+    public LogicalData(Path ldri, String type) {
         this.ldri = ldri;
         strLDRI = ldri.toString();
         ldriLen = ldri.getLength();
 //        uid = java.util.UUID.randomUUID().toString();
+        this.type = type;
     }
 
     @Override
@@ -208,5 +212,18 @@ public class LogicalData implements ILogicalData, Serializable {
     @Override
     public void setChildren(Collection<Path> children) {
         this.children = children;
+    }
+
+
+    @Override
+    public String getType() {
+        return type;
+    }
+
+    /**
+     * @param type the type to set
+     */
+    public void setType(String type) {
+        this.type = type;
     }
 }

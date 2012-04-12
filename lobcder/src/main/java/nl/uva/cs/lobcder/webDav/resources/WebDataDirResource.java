@@ -56,7 +56,7 @@ class WebDataDirResource implements FolderResource, CollectionResource {
 
             Path newCollectionPath = Path.path(entry.getLDRI(), newName);
             debug("\t newCollectionPath: " + newCollectionPath);
-            LogicalFolder newFolderEntry = new LogicalFolder(newCollectionPath);
+            LogicalData newFolderEntry = new LogicalData(newCollectionPath,Constants.LOGICAL_FOLDER);
             newFolderEntry.getMetadata().setCreateDate(System.currentTimeMillis());
 
             Collection<IStorageSite> sites = entry.getStorageSites();
@@ -82,7 +82,7 @@ class WebDataDirResource implements FolderResource, CollectionResource {
 //                throw new IOException("Storage Sites for " + newFolderEntry.getLDRI() + " are empty!");
 //            }
             catalogue.registerResourceEntry(newFolderEntry);
-
+            
             ILogicalData reloaded = catalogue.getResourceEntryByLDRI(newFolderEntry.getLDRI());
             sites = reloaded.getStorageSites();
             if (sites == null || sites.isEmpty()) {
@@ -256,7 +256,7 @@ class WebDataDirResource implements FolderResource, CollectionResource {
             debug("\t contentType: " + contentType);
             Path newPath = Path.path(entry.getLDRI(), newName);
 
-            LogicalFile newResource = (LogicalFile) catalogue.getResourceEntryByLDRI(newPath);
+            LogicalData newResource = (LogicalData) catalogue.getResourceEntryByLDRI(newPath);
             if (newResource != null) {
                 resource = updateExistingFile(newResource, length, contentType, inputStream);
             } else {
@@ -280,7 +280,7 @@ class WebDataDirResource implements FolderResource, CollectionResource {
             debug("\t name: " + name);
             Path toCollectionLDRI = Path.path(toCollection.getName());
             Path newLDRI = Path.path(toCollectionLDRI, name);
-            LogicalFolder newFolderEntry = new LogicalFolder(newLDRI);
+            LogicalData newFolderEntry = new LogicalData(newLDRI,Constants.LOGICAL_FOLDER);
             newFolderEntry.getMetadata().setModifiedDate(System.currentTimeMillis());
             catalogue.registerResourceEntry(newFolderEntry);
 
@@ -397,9 +397,9 @@ class WebDataDirResource implements FolderResource, CollectionResource {
         Collection<ILogicalData> topEntries = catalogue.getTopLevelResourceEntries();
         ArrayList<Resource> children = new ArrayList<Resource>();
         for (ILogicalData e : topEntries) {
-            if (e instanceof LogicalFolder) {
+            if (e instanceof LogicalData) {
                 children.add(new WebDataDirResource(catalogue, e));
-            } else if (e instanceof LogicalFile) {
+            } else if (e instanceof LogicalData) {
                 children.add(new WebDataFileResource(catalogue, e));
             } else {
                 children.add(new WebDataResource(catalogue, e));
@@ -419,9 +419,9 @@ class WebDataDirResource implements FolderResource, CollectionResource {
             for (Path p : childrenPaths) {
                 debug("Adding children: " + p);
                 ILogicalData ch = catalogue.getResourceEntryByLDRI(p);
-                if (ch instanceof LogicalFolder) {
+                if (ch instanceof LogicalData) {
                     children.add(new WebDataDirResource(catalogue, ch));
-                } else if (ch instanceof LogicalFile) {
+                } else if (ch instanceof LogicalData) {
                     children.add(new WebDataFileResource(catalogue, ch));
                 } else {
                     children.add(new WebDataResource(catalogue, ch));
@@ -440,7 +440,7 @@ class WebDataDirResource implements FolderResource, CollectionResource {
     }
 
     private Resource createNonExistingFile(Path newPath, Long length, String contentType, InputStream inputStream) throws IOException, Exception {
-        LogicalFile newResource = new LogicalFile(newPath);
+        LogicalData newResource = new LogicalData(newPath,Constants.LOGICAL_FILE);
         //We have to make a copy of the member collection. The same collection 
         //can't be a member of the two different classes, the relationship is 1-N!!!
         ArrayList<IStorageSite> copyStorageSites = new ArrayList<IStorageSite>();
@@ -483,12 +483,12 @@ class WebDataDirResource implements FolderResource, CollectionResource {
         meta.setCreateDate(System.currentTimeMillis());
         newResource.setMetadata(meta);
         catalogue.registerResourceEntry(newResource);
-        LogicalFile relodedResource = (LogicalFile) catalogue.getResourceEntryByLDRI(newResource.getLDRI());
+        LogicalData relodedResource = (LogicalData) catalogue.getResourceEntryByLDRI(newResource.getLDRI());
         
         return new WebDataFileResource(catalogue, relodedResource);
     }
 
-    private Resource updateExistingFile(LogicalFile newResource, Long length, String contentType, InputStream inputStream) throws VlException, IOException, Exception {
+    private Resource updateExistingFile(LogicalData newResource, Long length, String contentType, InputStream inputStream) throws VlException, IOException, Exception {
         VFSNode node;
 
         if (!newResource.hasPhysicalData()) {
@@ -516,7 +516,7 @@ class WebDataDirResource implements FolderResource, CollectionResource {
         newResource.setMetadata(meta);
 
         catalogue.updateResourceEntry(newResource);
-        LogicalFile relodedResource = (LogicalFile) catalogue.getResourceEntryByLDRI(newResource.getLDRI());
+        LogicalData relodedResource = (LogicalData) catalogue.getResourceEntryByLDRI(newResource.getLDRI());
         return new WebDataFileResource(catalogue, relodedResource);
     }
 }

@@ -14,4 +14,7 @@ public class Constants {
     public static final String STORAGE_SITE_PASSWORD="storage.site.password";
     public static final String STORAGE_SITE_GRID_PROXY="storage.site.grid.proxy";
     public static final String STORAGE_SITE_ENDPOINT="storage.site.endpoint";
+    public static final String LOGICAL_DATA="logical.data";
+    public static final String LOGICAL_FILE="logical.file";
+    public static final String LOGICAL_FOLDER="logical.folder";;
 }

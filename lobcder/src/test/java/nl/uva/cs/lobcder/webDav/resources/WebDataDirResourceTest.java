@@ -13,13 +13,13 @@ import java.util.logging.Level;
 import java.util.ArrayList;
 import nl.uva.cs.lobcder.resources.StorageSite;
 import nl.uva.cs.lobcder.resources.Credential;
-import nl.uva.cs.lobcder.resources.LogicalFolder;
-import nl.uva.cs.lobcder.resources.LogicalFile;
+import nl.uva.cs.lobcder.resources.LogicalData;
 import nl.uva.cs.lobcder.catalogue.SimpleDLCatalogue;
 import java.util.logging.Logger;
 import com.bradmcevoy.common.Path;
 import com.bradmcevoy.http.Range;
 import java.util.Map;
+import nl.uva.cs.lobcder.resources.*;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -34,9 +34,8 @@ import static org.junit.Assert.*;
 public class WebDataDirResourceTest {
 
     private SimpleDLCatalogue catalogue;
-    private LogicalFile testLogicalFile;
+    private LogicalData testLogicalData;
     private Path testFolderPath;
-    private LogicalFolder testLogicalFolder;
     private StorageSite site;
     private ArrayList<IStorageSite> sites;
 
@@ -57,10 +56,10 @@ public class WebDataDirResourceTest {
             catalogue = new SimpleDLCatalogue();
 
 
-            testLogicalFile = new LogicalFile(ConstantsAndSettings.TEST_FILE_PATH_1);
+            testLogicalData = new LogicalData(ConstantsAndSettings.TEST_FILE_PATH_1,Constants.LOGICAL_FILE);
 
             testFolderPath = Path.path(ConstantsAndSettings.TEST_FOLDER_NAME_1);
-            testLogicalFolder = new LogicalFolder(testFolderPath);
+            testLogicalData = new LogicalData(testFolderPath,Constants.LOGICAL_FOLDER);
 
             String endpoint = "file:///tmp/";
             String vphUser = "user1";
@@ -86,8 +85,8 @@ public class WebDataDirResourceTest {
 //        System.out.println("createCollection");
 //        String newName = "";
 //        
-//        catalogue.registerResourceEntry(testLogicalFolder);
-//        WebDataDirResource instance = new WebDataDirResource(catalogue, testLogicalFolder);
+//        catalogue.registerResourceEntry(testLogicalData);
+//        WebDataDirResource instance = new WebDataDirResource(catalogue, testLogicalData);
 //        
 //        CollectionResource expResult = null;
 //        CollectionResource result = instance.createCollection(newName);
@@ -237,8 +236,8 @@ public class WebDataDirResourceTest {
 
         ByteArrayInputStream bais = new ByteArrayInputStream(ConstantsAndSettings.TEST_DATA.getBytes());
 
-        testLogicalFolder.setStorageSites(sites);
-        catalogue.registerResourceEntry(testLogicalFolder);
+        testLogicalData.setStorageSites(sites);
+        catalogue.registerResourceEntry(testLogicalData);
 
 
         ILogicalData loaded = catalogue.getResourceEntryByLDRI(testFolderPath);

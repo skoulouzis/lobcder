@@ -17,8 +17,6 @@ import nl.uva.cs.lobcder.resources.Credential;
 import nl.uva.cs.lobcder.resources.LogicalData;
 import nl.uva.cs.lobcder.resources.ILogicalData;
 import nl.uva.cs.lobcder.resources.IStorageSite;
-import nl.uva.cs.lobcder.resources.LogicalFile;
-import nl.uva.cs.lobcder.resources.LogicalFolder;
 import nl.uva.cs.lobcder.resources.Metadata;
 import nl.uva.cs.lobcder.resources.StorageSite;
 import nl.uva.cs.lobcder.webDav.resources.Constants;
@@ -626,12 +624,12 @@ public class SimpleDLCatalogue implements IDLCatalogue {
 
         ILogicalData updated;
         try {
-            if (entry instanceof LogicalFile) {
-                updated = new LogicalFile(ldri);
-            } else if (entry instanceof LogicalFolder) {
-                updated = new LogicalFolder(ldri);
+            if (entry.getType().equals(Constants.LOGICAL_FILE)) {
+                updated = new LogicalData(ldri,Constants.LOGICAL_FILE);
+            } else if (entry.getType().equals(Constants.LOGICAL_FOLDER)) {
+                updated = new LogicalData(ldri,Constants.LOGICAL_FOLDER);
             } else {
-                updated = new LogicalData(ldri);
+                updated = new LogicalData(ldri,Constants.LOGICAL_DATA);
             }
             updated.setChildren(children);
             updated.setMetadata(meta);
@@ -663,6 +661,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
         if (entry != null) {
             //Bug! If we don't do this the ldri becomes null
             Path ldri = entry.getLDRI();
+            String type = entry.getType();
             ArrayList<String> types = entry.getMetadata().getContentTypes();
 //                    debug("Got back: " + ldri);
             Collection<Path> rChildren = entry.getChildren();

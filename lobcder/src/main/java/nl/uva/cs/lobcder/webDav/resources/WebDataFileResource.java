@@ -30,7 +30,7 @@ import nl.uva.cs.lobcder.catalogue.IDLCatalogue;
 import nl.uva.cs.lobcder.resources.ILogicalData;
 import nl.uva.cs.lobcder.resources.IStorageSite;
 import nl.uva.cs.lobcder.resources.Metadata;
-import nl.uva.cs.lobcder.resources.LogicalFile;
+import nl.uva.cs.lobcder.resources.LogicalData;
 import nl.uva.cs.lobcder.util.MMTypeTools;
 import nl.uva.vlet.data.StringUtil;
 import nl.uva.vlet.exception.VlException;
@@ -63,14 +63,12 @@ public class WebDataFileResource implements
             Path toCollectionLDRI = Path.path(collectionResource.getName());
             Path newLDRI = Path.path(toCollectionLDRI, name);
 
-            LogicalFile newFolderEntry = new LogicalFile(newLDRI);
+            LogicalData newFolderEntry = new LogicalData(newLDRI,Constants.LOGICAL_FILE);
             newFolderEntry.getMetadata().setModifiedDate(System.currentTimeMillis());
             catalogue.registerResourceEntry(newFolderEntry);
         } catch (CatalogueException ex) {
             throw new ConflictException(this, ex.toString());
-        } catch (IOException ex) {
-            throw new ConflictException(this, ex.toString());
-        }
+        } 
     }
 
     @Override

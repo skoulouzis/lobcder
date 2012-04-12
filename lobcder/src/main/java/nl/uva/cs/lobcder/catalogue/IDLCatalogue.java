@@ -9,7 +9,6 @@ import java.util.Collection;
 import java.util.Properties;
 import nl.uva.cs.lobcder.resources.ILogicalData;
 import nl.uva.cs.lobcder.resources.IStorageSite;
-import nl.uva.cs.lobcder.resources.LogicalFile;
 
 /**
  *

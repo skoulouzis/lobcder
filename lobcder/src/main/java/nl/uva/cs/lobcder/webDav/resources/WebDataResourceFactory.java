@@ -19,8 +19,6 @@ import nl.uva.cs.lobcder.catalogue.SimpleDLCatalogue;
 import nl.uva.cs.lobcder.resources.ILogicalData;
 import nl.uva.cs.lobcder.resources.IStorageSite;
 import nl.uva.cs.lobcder.resources.LogicalData;
-import nl.uva.cs.lobcder.resources.LogicalFile;
-import nl.uva.cs.lobcder.resources.LogicalFolder;
 
 public class WebDataResourceFactory implements ResourceFactory {
 
@@ -52,7 +50,7 @@ public class WebDataResourceFactory implements ResourceFactory {
 //            }
             AbstractCollection<IStorageSite> sites;
             if (ldri.isRoot() || ldri.toString().equals("")) {
-                root = new LogicalData(ldri);
+                root = new LogicalData(ldri, Constants.LOGICAL_DATA);
                  sites = root.getStorageSites();
                 if (sites == null || sites.isEmpty()) {
                     sites = (AbstractCollection<IStorageSite>) catalogue.getSitesByUname(uname);
@@ -82,10 +80,10 @@ public class WebDataResourceFactory implements ResourceFactory {
                 entry.setStorageSites(sites);
             }
             
-            if (entry instanceof LogicalFolder) {
+            if (entry.getType().equals(Constants.LOGICAL_FOLDER)) {
                 return new WebDataDirResource(catalogue, entry);
             }
-            if (entry instanceof LogicalFile) {
+            if (entry.getType().equals(Constants.LOGICAL_FILE)) {
                 return new WebDataFileResource(catalogue, entry);
             }
             return new WebDataResource(catalogue, entry);
