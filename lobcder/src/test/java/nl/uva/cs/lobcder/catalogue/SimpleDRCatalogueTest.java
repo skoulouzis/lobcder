@@ -55,7 +55,7 @@ public class SimpleDRCatalogueTest {
         //Register one resource
         String ldri = "resource1";
         Path path = Path.path(ldri);
-        ILogicalData entry = new LogicalData(path,Constants.LOGICAL_DATA);
+        ILogicalData entry = new LogicalData(path, Constants.LOGICAL_DATA);
 
         SimpleDLCatalogue instance = new SimpleDLCatalogue();
         try {
@@ -89,7 +89,7 @@ public class SimpleDRCatalogueTest {
         System.out.println("testRegisterMultipleResourceEntry");
         String ldri = "/resource2";
         Path parentPath = Path.path(ldri);
-        ILogicalData parent = new LogicalData(parentPath,Constants.LOGICAL_DATA);
+        ILogicalData parent = new LogicalData(parentPath, Constants.LOGICAL_DATA);
 
         SimpleDLCatalogue instance = new SimpleDLCatalogue();
 
@@ -99,7 +99,7 @@ public class SimpleDRCatalogueTest {
         String childLdri = "/child1";
         Path childPath = Path.path(ldri + childLdri);
 
-        LogicalData child = new LogicalData(childPath,Constants.LOGICAL_DATA);
+        LogicalData child = new LogicalData(childPath, Constants.LOGICAL_DATA);
         System.out.println("child: " + child.getUID() + " " + child.getLDRI());
         instance.registerResourceEntry(child);
 
@@ -125,7 +125,7 @@ public class SimpleDRCatalogueTest {
         System.out.println("resourceEntryExists");
         String ldri = "/resource";
         Path path = Path.path(ldri);
-        ILogicalData entry = new LogicalData(path,Constants.LOGICAL_DATA);
+        ILogicalData entry = new LogicalData(path, Constants.LOGICAL_DATA);
         SimpleDLCatalogue instance = new SimpleDLCatalogue();
 
         Boolean expResult = false;
@@ -150,15 +150,15 @@ public class SimpleDRCatalogueTest {
     public void testGetTopLevelResourceEntries() {
         System.out.println("getTopLevelResourceEntries");
         Collection<ILogicalData> topEntries = new ArrayList<ILogicalData>();
-        LogicalData topEntry1 = new LogicalData(Path.path("/r1"),Constants.LOGICAL_DATA);
+        LogicalData topEntry1 = new LogicalData(Path.path("/r1"), Constants.LOGICAL_DATA);
         topEntries.add(topEntry1);
-        LogicalData topEntry2 = new LogicalData(Path.path("/r2"),Constants.LOGICAL_DATA);
+        LogicalData topEntry2 = new LogicalData(Path.path("/r2"), Constants.LOGICAL_DATA);
         topEntries.add(topEntry2);
-        LogicalData topEntry3 = new LogicalData(Path.path("/r3"),Constants.LOGICAL_DATA);
+        LogicalData topEntry3 = new LogicalData(Path.path("/r3"), Constants.LOGICAL_DATA);
         topEntries.add(topEntry3);
 
-        LogicalData entry11 = new LogicalData(Path.path("/r1/r11"),Constants.LOGICAL_DATA);
-        LogicalData entry21 = new LogicalData(Path.path("/r2/r21"),Constants.LOGICAL_DATA);
+        LogicalData entry11 = new LogicalData(Path.path("/r1/r11"), Constants.LOGICAL_DATA);
+        LogicalData entry21 = new LogicalData(Path.path("/r2/r21"), Constants.LOGICAL_DATA);
         SimpleDLCatalogue instance = null;
         Collection<ILogicalData> result = null;
         ILogicalData loaded;
@@ -173,17 +173,32 @@ public class SimpleDRCatalogueTest {
 
             result = instance.getTopLevelResourceEntries();
 
-
+            boolean[] found = new boolean[]{false, false, false};
             for (ILogicalData d : result) {
                 System.out.println("TOP:        " + d.getLDRI() + "     " + d.getUID());
 
-                if (!compareEntries(d, topEntry3)) {
-                    if (!compareEntries(d, topEntry2)) {
-                        if (!compareEntries(d, topEntry1)) {
-                            fail("Resource " + topEntry1.getLDRI() + " is not returned by query!");
-                        }
-                    }
+                if (compareEntries(d, topEntry3)) {
+                    found[0] = true;
                 }
+
+                if (compareEntries(d, topEntry2)) {
+                    found[1] = true;
+                }
+
+                if (compareEntries(d, topEntry1)) {
+                    found[2] = true;
+                }
+//                if (!compareEntries(d, topEntry3)) {
+//                    if (!compareEntries(d, topEntry2)) {
+//                        if (!compareEntries(d, topEntry1)) {
+//                            fail("Resource " + topEntry1.getLDRI() + " is not returned by query!");
+//                        }
+//                    }
+//                }
+            }
+
+            for (boolean b : found) {
+                assertTrue(b);
             }
 
             for (ILogicalData e : result) {
@@ -247,7 +262,7 @@ public class SimpleDRCatalogueTest {
 
             instance = new SimpleDLCatalogue();
             Path originalPath = Path.path("/oldResourceName");
-            LogicalData e = new LogicalData(originalPath,Constants.LOGICAL_DATA);
+            LogicalData e = new LogicalData(originalPath, Constants.LOGICAL_DATA);
 
             instance.registerResourceEntry(e);
             newPath = Path.path("/newResourceName");
@@ -295,15 +310,15 @@ public class SimpleDRCatalogueTest {
 
             instance = new SimpleDLCatalogue();
             Path originalPath = Path.path("/oldResourceName/");
-            LogicalData e = new LogicalData(originalPath,Constants.LOGICAL_DATA);
+            LogicalData e = new LogicalData(originalPath, Constants.LOGICAL_DATA);
             instance.registerResourceEntry(e);
 
             Path originalChildPath1 = Path.path("/oldResourceName/" + childName1);
-            childEntry1 = new LogicalData(originalChildPath1,Constants.LOGICAL_DATA);
+            childEntry1 = new LogicalData(originalChildPath1, Constants.LOGICAL_DATA);
             instance.registerResourceEntry(childEntry1);
 
             Path originalChildPath2 = Path.path("/oldResourceName/" + childName2);
-            childEntry2 = new LogicalData(originalChildPath2,Constants.LOGICAL_DATA);
+            childEntry2 = new LogicalData(originalChildPath2, Constants.LOGICAL_DATA);
             instance.registerResourceEntry(childEntry2);
 
             newPath = Path.path("/newResourceName");
@@ -371,15 +386,15 @@ public class SimpleDRCatalogueTest {
 
             instance = new SimpleDLCatalogue();
             Path originalPath = Path.path("/oldResourceName/");
-            parent = new LogicalData(originalPath,Constants.LOGICAL_DATA);
+            parent = new LogicalData(originalPath, Constants.LOGICAL_DATA);
             instance.registerResourceEntry(parent);
 
             Path originalChildPath1 = Path.path("/oldResourceName/" + childName1);
-            childEntry1 = new LogicalData(originalChildPath1,Constants.LOGICAL_DATA);
+            childEntry1 = new LogicalData(originalChildPath1, Constants.LOGICAL_DATA);
             instance.registerResourceEntry(childEntry1);
 
             Path originalChildPath2 = Path.path("/oldResourceName/" + childName1 + "/" + childName2);
-            childEntry2 = new LogicalData(originalChildPath2,Constants.LOGICAL_DATA);
+            childEntry2 = new LogicalData(originalChildPath2, Constants.LOGICAL_DATA);
             instance.registerResourceEntry(childEntry2);
 
             newPath = Path.path("/oldResourceName/" + childName1 + "/newChild2");
@@ -416,7 +431,7 @@ public class SimpleDRCatalogueTest {
         System.out.println("testMetadataPersistence");
         SimpleDLCatalogue instance = new SimpleDLCatalogue();
         Path originalPath = Path.path("/oldResourceName");
-        LogicalData e = new LogicalData(originalPath,Constants.LOGICAL_DATA);
+        LogicalData e = new LogicalData(originalPath, Constants.LOGICAL_DATA);
         Metadata meta = new Metadata();
         String type = "text/plain";
         meta.addContentType(type);
@@ -466,8 +481,8 @@ public class SimpleDRCatalogueTest {
             Path parentPath = Path.path("parent");
             Path childPath = Path.path("parent/child");
 
-            LogicalData lParent = new LogicalData(parentPath,Constants.LOGICAL_FOLDER);
-            lChild = new LogicalData(childPath,Constants.LOGICAL_FILE);
+            LogicalData lParent = new LogicalData(parentPath, Constants.LOGICAL_FOLDER);
+            lChild = new LogicalData(childPath, Constants.LOGICAL_FILE);
 
             instance.registerResourceEntry(lChild);
 
@@ -493,7 +508,6 @@ public class SimpleDRCatalogueTest {
         }
     }
 
-
     @Test
     public void testRegisterToExistiongParent() {
         System.out.println("testRegisterToExistiongParent");
@@ -506,8 +520,8 @@ public class SimpleDRCatalogueTest {
             Path parentPath = Path.path("parent");
             Path childPath = Path.path("parent/child");
 
-            lParent = new LogicalData(parentPath,Constants.LOGICAL_FOLDER);
-            lChild = new LogicalData(childPath,Constants.LOGICAL_FILE);
+            lParent = new LogicalData(parentPath, Constants.LOGICAL_FOLDER);
+            lChild = new LogicalData(childPath, Constants.LOGICAL_FILE);
 
             instance.registerResourceEntry(lParent);
 
@@ -542,7 +556,7 @@ public class SimpleDRCatalogueTest {
             instance = new SimpleDLCatalogue();
             Path parentPath = Path.path("parent");
 
-            lParent = new LogicalData(parentPath,Constants.LOGICAL_FOLDER);
+            lParent = new LogicalData(parentPath, Constants.LOGICAL_FOLDER);
             ArrayList<IStorageSite> sites = new ArrayList<IStorageSite>();
             sites.add(new StorageSite("file:///tmp", new Credential("user1")));
             lParent.setStorageSites(sites);
@@ -616,7 +630,7 @@ public class SimpleDRCatalogueTest {
             System.out.println("testUpdateResourceEntry");
 
 
-            LogicalData newEntry = new LogicalData(ConstantsAndSettings.TEST_FILE_PATH_1,Constants.LOGICAL_FILE);
+            LogicalData newEntry = new LogicalData(ConstantsAndSettings.TEST_FILE_PATH_1, Constants.LOGICAL_FILE);
             instance.registerResourceEntry(newEntry);
             loaded = instance.getResourceEntryByLDRI(newEntry.getLDRI());
             boolean same = compareEntries(newEntry, loaded);
@@ -750,7 +764,7 @@ public class SimpleDRCatalogueTest {
 //        System.out.println("loadedEntry:    " + loadedEntry.getUID() + " " + loadedEntry.getLDRI());
         if (entry.getLDRI().getName().equals(loadedEntry.getLDRI().getName()) && entry.getType().equals(loadedEntry.getType())) {
 //            if (entry.getUID().equals(loadedEntry.getUID())) {
-                return true;
+            return true;
 //            }
         }
         return false;

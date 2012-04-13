@@ -91,7 +91,16 @@ public class StorageSite implements Serializable, IStorageSite {
     public StorageSite(String endpoint, Credential cred) throws Exception {
         try {
             uid = String.valueOf(System.currentTimeMillis());
+            if(endpoint==null){
+                throw new NullPointerException("Endpoint is null");
+            }
             this.endpoint = endpoint;
+            if(cred == null){
+                throw new NullPointerException("Credentials are null");
+            }
+            if(cred.getVPHUsername()==null){
+                 throw new NullPointerException("vph Username is null");
+            }
             vphUsername = cred.getVPHUsername();
             vrl = new VRL(endpoint + "/" + storagePrefix);
 

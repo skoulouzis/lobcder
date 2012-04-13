@@ -361,7 +361,6 @@ public class WebDataResourceFactoryTest {
             dir.delete();
         }
     }
-
     @Test
     public void testMultiThread() {
         try {
@@ -371,8 +370,8 @@ public class WebDataResourceFactoryTest {
 
             Thread userThread2 = new UserThread(1);
             userThread2.setName("T2");
-            
-                        Thread userThread3 = new UserThread(2);
+
+            Thread userThread3 = new UserThread(2);
             userThread2.setName("T3");
 
 

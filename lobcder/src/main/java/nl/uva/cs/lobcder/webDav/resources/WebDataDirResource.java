@@ -63,7 +63,13 @@ class WebDataDirResource implements FolderResource, CollectionResource {
             ArrayList<IStorageSite> copyStorageSites = new ArrayList<IStorageSite>();
             for (IStorageSite s : sites) {
                 String ep = s.getEndpoint();
+                if (ep == null) {
+                    throw new NullPointerException("Endpoint is null");
+                }
                 Credential cred = s.getCredentials();
+                if (cred == null) {
+                    throw new NullPointerException("Credentials is null");
+                }
                 StorageSite ss = new StorageSite(ep, cred);
                 copyStorageSites.add(ss);
             }

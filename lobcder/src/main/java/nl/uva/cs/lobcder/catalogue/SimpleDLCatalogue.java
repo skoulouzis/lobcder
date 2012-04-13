@@ -10,19 +10,10 @@ package nl.uva.cs.lobcder.catalogue;
  */
 import com.bradmcevoy.common.Path;
 import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.jdo.*;
-import nl.uva.cs.lobcder.resources.Credential;
-import nl.uva.cs.lobcder.resources.LogicalData;
-import nl.uva.cs.lobcder.resources.ILogicalData;
-import nl.uva.cs.lobcder.resources.IStorageSite;
-import nl.uva.cs.lobcder.resources.Metadata;
-import nl.uva.cs.lobcder.resources.StorageSite;
+import nl.uva.cs.lobcder.resources.*;
 import nl.uva.cs.lobcder.webDav.resources.Constants;
 import nl.uva.vlet.data.StringUtil;
-import nl.uva.vlet.exception.VlException;
-import org.datanucleus.store.rdbms.query.ForwardQueryResult;
 
 public class SimpleDLCatalogue implements IDLCatalogue {
 
@@ -117,8 +108,6 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                     pm.deletePersistentAll(deleteStorageSites);
                 }
                 pm.makePersistent(entry);
-                //!?!?!?! if this is not here, the entry's LDRI gets to null???
-//                stupidBugLogicData(entry);
                 tx.commit();
 
             } finally {
@@ -207,8 +196,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
         synchronized (lock) {
             PersistenceManager pm = pmf.getPersistenceManager();
             Transaction tx = pm.currentTransaction();
-            ILogicalData entry = null;
-
+            
             try {
                 tx.begin();
                 //This query, will return objects of type DataResourceEntry
@@ -217,7 +205,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                 q.setFilter("strLDRI == strLogicalResourceName");
                 q.declareParameters(strLogicalResourceName.getClass().getName() + " strLogicalResourceName");
                 q.setUnique(true);
-                entry = (ILogicalData) q.execute(strLogicalResourceName);
+                ILogicalData entry = (ILogicalData) q.execute(strLogicalResourceName);
 
                 if (entry == null) {
                     throw new NonExistingResourceException("Cannot add " + child.toString() + " child to non existing parent " + parent.toString());
@@ -539,12 +527,10 @@ public class SimpleDLCatalogue implements IDLCatalogue {
         cred.setStorageSiteUsername(prop.getProperty(Constants.STORAGE_SITE_USERNAME));
         cred.setStorageSitePassword(prop.getProperty(Constants.STORAGE_SITE_PASSWORD));
         String endpoint = prop.getProperty(Constants.STORAGE_SITE_ENDPOINT);
-        StorageSite site = null;
         if (!storageSiteExists(prop)) {
             try {
                 debug("Adding endpoint: " + endpoint);
-
-                site = new StorageSite(endpoint, cred);
+                StorageSite site = new StorageSite(endpoint, cred);
                 synchronized (lock) {
                     PersistenceManager pm = pmf.getPersistenceManagerProxy();
                     Transaction tx = pm.currentTransaction();
@@ -567,7 +553,6 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                 throw new CatalogueException(ex.getMessage());
             }
         }
-//        stupidBugStorageSite(site);
     }
 
     @Override
