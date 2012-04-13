@@ -4,18 +4,14 @@
  */
 package nl.uva.cs.lobcder.webDav.resources;
 
-import com.bradmcevoy.http.*;
+import com.bradmcevoy.http.Auth;
+import com.bradmcevoy.http.PropFindableResource;
+import com.bradmcevoy.http.Request;
 import com.bradmcevoy.http.Request.Method;
-import com.bradmcevoy.http.exceptions.BadRequestException;
-import com.bradmcevoy.http.exceptions.ConflictException;
-import com.bradmcevoy.http.exceptions.NotAuthorizedException;
-import java.util.Collection;
+import com.bradmcevoy.http.Resource;
 import java.util.Date;
-import nl.uva.cs.lobcder.catalogue.CatalogueException;
 import nl.uva.cs.lobcder.catalogue.IDLCatalogue;
 import nl.uva.cs.lobcder.resources.ILogicalData;
-import nl.uva.cs.lobcder.resources.IStorageSite;
-import nl.uva.vlet.exception.VlException;
 
 /**
  *
@@ -25,6 +21,7 @@ public class WebDataResource implements PropFindableResource, Resource {
 
     private final ILogicalData logicalData;
     private final IDLCatalogue catalogue;
+    private static final boolean debug = false;
 
     public WebDataResource(IDLCatalogue catalogue, ILogicalData logicalData) {
         this.logicalData = logicalData;
@@ -98,10 +95,11 @@ public class WebDataResource implements PropFindableResource, Resource {
     }
 
     protected void debug(String msg) {
-        System.err.println(this.getClass().getSimpleName() + "." + logicalData.getLDRI() + ": " + msg);
+        if (debug) {
+            System.err.println(this.getClass().getSimpleName() + "." + logicalData.getLDRI() + ": " + msg);
+        }
 //        log.debug(msg);
     }
-
 //    @Override
 //    public void delete() throws NotAuthorizedException, ConflictException, BadRequestException {
 //        try {

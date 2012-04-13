@@ -32,6 +32,7 @@ class WebDataDirResource implements FolderResource, CollectionResource {
 
     private ILogicalData entry;
     private final IDLCatalogue catalogue;
+    private boolean debug = false;
 
     public WebDataDirResource(IDLCatalogue catalogue, ILogicalData entry) throws IOException, Exception {
         this.entry = entry;
@@ -389,7 +390,9 @@ class WebDataDirResource implements FolderResource, CollectionResource {
     }
 
     protected void debug(String msg) {
-        System.err.println(this.getClass().getSimpleName() + "." + entry.getLDRI() + ": " + msg);
+        if (debug) {
+            System.err.println(this.getClass().getSimpleName() + "." + entry.getLDRI() + ": " + msg);
+        }
     }
 
     private ArrayList<? extends Resource> getTopLevelChildren() throws Exception {

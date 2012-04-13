@@ -21,7 +21,7 @@ public class WebDataResourceFactory implements ResourceFactory {
 //    private Logger log = LoggerFactory.getLogger(WebDataResourceFactory.class);
     public static final String REALM = "vph-share";
     private IDLCatalogue catalogue;
-    private boolean debug = true;
+    private boolean debug = false;
     //Hardcoded for now. We need to find a way to get the username
     private String uname = "uname1";
 

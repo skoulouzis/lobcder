@@ -39,7 +39,7 @@ public class LogicalData implements ILogicalData, Serializable {
     @Persistent
     private String type;
     
-    private boolean debug = true;
+    private boolean debug = false;
     
     @Persistent
     @Join

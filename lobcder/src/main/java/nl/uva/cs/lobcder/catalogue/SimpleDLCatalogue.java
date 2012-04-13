@@ -17,7 +17,7 @@ import nl.uva.vlet.data.StringUtil;
 
 public class SimpleDLCatalogue implements IDLCatalogue {
 
-    private static boolean debug = true;
+    private static boolean debug = false;
     private final PersistenceManagerFactory pmf;
     private static final Object lock = new Object();
 

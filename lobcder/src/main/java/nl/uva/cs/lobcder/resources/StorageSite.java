@@ -83,23 +83,23 @@ public class StorageSite implements Serializable, IStorageSite {
     private VFSClient vfsClient;
     @Persistent
     private String vphUsername;
-    
     @Persistent
     private Credential credentials;
     public static final String storagePrefix = "LOBCDER-REPLICA";
+    private static final boolean debug = false;
 
     public StorageSite(String endpoint, Credential cred) throws Exception {
         try {
             uid = String.valueOf(System.currentTimeMillis());
-            if(endpoint==null){
+            if (endpoint == null) {
                 throw new NullPointerException("Endpoint is null");
             }
             this.endpoint = endpoint;
-            if(cred == null){
+            if (cred == null) {
                 throw new NullPointerException("Credentials are null");
             }
-            if(cred.getVPHUsername()==null){
-                 throw new NullPointerException("vph Username is null");
+            if (cred.getVPHUsername() == null) {
+                throw new NullPointerException("vph Username is null");
             }
             vphUsername = cred.getVPHUsername();
             vrl = new VRL(endpoint + "/" + storagePrefix);
@@ -175,7 +175,9 @@ public class StorageSite implements Serializable, IStorageSite {
     }
 
     private void debug(String msg) {
-        System.err.println(this.getClass().getSimpleName() + ": " + msg);
+        if (debug) {
+            System.err.println(this.getClass().getSimpleName() + ": " + msg);
+        }
     }
 
     @Override
@@ -200,16 +202,12 @@ public class StorageSite implements Serializable, IStorageSite {
     @Override
     public void deleteVNode(Path lDRI) throws VlException {
         debug("Exists?: " + lDRI);
-        try {
-            boolean exists = this.getVfsClient().existsPath(getVrl().append(lDRI.toString()));
-            if (exists) {
-                VFSNode node = this.getVNode(lDRI);
-                if (node != null && node.delete()) {
-                    this.logicalPaths.remove(lDRI.toString());
-                }
+        boolean exists = this.getVfsClient().existsPath(getVrl().append(lDRI.toString()));
+        if (exists) {
+            VFSNode node = this.getVNode(lDRI);
+            if (node != null && node.delete()) {
+                this.logicalPaths.remove(lDRI.toString());
             }
-        } catch (Exception ex) {
-            ex.printStackTrace();
         }
     }
 
@@ -218,7 +216,7 @@ public class StorageSite implements Serializable, IStorageSite {
      */
     @Override
     public VFSClient getVfsClient() throws VlException {
-        if(vfsClient == null){
+        if (vfsClient == null) {
             try {
                 initVFS();
             } catch (MalformedURLException ex) {
@@ -244,16 +242,9 @@ public class StorageSite implements Serializable, IStorageSite {
      * @return the vrl
      */
     private VRL getVrl() throws VRLSyntaxException {
-        if(vrl==null){
+        if (vrl == null) {
             vrl = new VRL(endpoint + "/" + storagePrefix);
         }
         return vrl;
-    }
-
-    /**
-     * @param vrl the vrl to set
-     */
-    private void setVrl(VRL vrl) {
-        this.vrl = vrl;
     }
 }

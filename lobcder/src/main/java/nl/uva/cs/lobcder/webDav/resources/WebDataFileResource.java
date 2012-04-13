@@ -35,16 +35,17 @@ import org.apache.commons.io.IOUtils;
  * @author S. Koulouzis
  */
 public class WebDataFileResource implements
-        com.bradmcevoy.http.FileResource   {
+        com.bradmcevoy.http.FileResource {
 
     private final IDLCatalogue catalogue;
     private final ILogicalData logicalData;
+    private static final boolean debug = false;
 
     public WebDataFileResource(IDLCatalogue catalogue, ILogicalData logicalData) throws CatalogueException, Exception {
         this.catalogue = catalogue;
         this.logicalData = logicalData;
-        if(!logicalData.getType().equals(Constants.LOGICAL_FILE)){
-            throw new Exception("The logical data has the wonrg type: "+logicalData.getType());
+        if (!logicalData.getType().equals(Constants.LOGICAL_FILE)) {
+            throw new Exception("The logical data has the wonrg type: " + logicalData.getType());
         }
         initMetadata();
     }
@@ -59,12 +60,12 @@ public class WebDataFileResource implements
             Path newLDRI = Path.path(toCollectionLDRI, name);
 
 //            FIX ME!Why do we crate new LogicalData
-            LogicalData newFolderEntry = new LogicalData(newLDRI,Constants.LOGICAL_FOLDER);
+            LogicalData newFolderEntry = new LogicalData(newLDRI, Constants.LOGICAL_FOLDER);
             newFolderEntry.getMetadata().setModifiedDate(System.currentTimeMillis());
             catalogue.registerResourceEntry(newFolderEntry);
         } catch (CatalogueException ex) {
             throw new ConflictException(this, ex.toString());
-        } 
+        }
     }
 
     @Override
@@ -125,11 +126,12 @@ public class WebDataFileResource implements
     }
 
     /**
-     * Specifies a lifetime for the information returned by this header. 
-     * A client MUST discard any information related to this header after the 
+     * Specifies a lifetime for the information returned by this header. A
+     * client MUST discard any information related to this header after the
      * specified amount of time.
+     *
      * @param auth
-     * @return 
+     * @return
      */
     @Override
     public Long getMaxAgeSeconds(Auth auth) {
@@ -266,7 +268,10 @@ public class WebDataFileResource implements
     }
 
     protected void debug(String msg) {
-        System.err.println(this.getClass().getSimpleName() + "." + logicalData.getLDRI() + ": " + msg);
+        if (debug) {
+            System.err.println(this.getClass().getSimpleName() + "." + logicalData.getLDRI() + ": " + msg);
+        }
+
 //        log.debug(msg);
     }
 
