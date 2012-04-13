@@ -244,7 +244,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                 if (result == null) {
                     throw new NonExistingResourceException("Cannot remove " + child.toString() + " from non existing parent " + parent.toString());
                 }
-
+                
                 result.removeChild(child);
                 tx.commit();
 

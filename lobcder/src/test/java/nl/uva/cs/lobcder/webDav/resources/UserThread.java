@@ -57,13 +57,13 @@ public class UserThread extends Thread {
             String fileName = null;
             String collectionName = null;
             if (this.getName().equals("T1")) {
-                fileName = ConstantsAndSettings.TEST_FILE_NAME_1;
+                fileName = "testFileThread1";//ConstantsAndSettings.TEST_FILE_NAME_1;
                 collectionName = ConstantsAndSettings.TEST_FOLDER_NAME_1;
             } else if (this.getName().equals("T2")) {
-                fileName = ConstantsAndSettings.TEST_FILE_NAME_2;
+                fileName = "testFileThread2";///ConstantsAndSettings.TEST_FILE_NAME_2;
                 collectionName = ConstantsAndSettings.TEST_FOLDER_NAME_2;
             } else if (this.getName().equals("T3")) {
-                fileName = ConstantsAndSettings.TEST_FILE_NAME_3;
+                fileName = "testFileThread3";//ConstantsAndSettings.TEST_FILE_NAME_3;
                 collectionName = ConstantsAndSettings.TEST_FOLDER_NAME_3;
             }
 
@@ -165,11 +165,15 @@ public class UserThread extends Thread {
             System.out.println("testUpdateResourceEntry");
             LogicalData newEntry = null;
             if (this.getName().equals("T1")) {
-                newEntry = new LogicalData(ConstantsAndSettings.TEST_FILE_PATH_1,Constants.LOGICAL_FILE);
+//                newEntry = new LogicalData(ConstantsAndSettings.TEST_FILE_PATH_1,Constants.LOGICAL_FILE);
+                newEntry = new LogicalData(Path.path("testFileThread1"),Constants.LOGICAL_FILE);
             } else if (this.getName().equals("T2")) {
-                newEntry = new LogicalData(ConstantsAndSettings.TEST_FILE_PATH_2,Constants.LOGICAL_FILE);
+//                newEntry = new LogicalData(ConstantsAndSettings.TEST_FILE_PATH_2,Constants.LOGICAL_FILE);
+                newEntry = new LogicalData(Path.path("testFileThread2"),Constants.LOGICAL_FILE);
             } else if (this.getName().equals("T3")) {
-                newEntry = new LogicalData(ConstantsAndSettings.TEST_FILE_PATH_3,Constants.LOGICAL_FILE);
+//                newEntry = new LogicalData(ConstantsAndSettings.TEST_FILE_PATH_3,Constants.LOGICAL_FILE);
+                newEntry = new LogicalData(Path.path("testFileThread3"),Constants.LOGICAL_FILE);
+                
             }
             instance.registerResourceEntry(newEntry);
             loaded = instance.getResourceEntryByLDRI(newEntry.getLDRI());
@@ -189,7 +193,7 @@ public class UserThread extends Thread {
 
 
             Collection<Path> children = new ArrayList<Path>();
-            children.add(ConstantsAndSettings.TEST_FILE_PATH_2);
+            children.add(Path.path("child1"));
             newEntry.setChildren(children);
 
 //            ArrayList<IStorageSite> sites = new ArrayList<IStorageSite>();

@@ -303,9 +303,11 @@ class WebDataDirResource implements FolderResource, CollectionResource {
                 }
             }
             List<? extends Resource> children = getChildren();
-            for (Resource r : children) {
-                if (r instanceof DeletableResource) {
-                    ((DeletableResource) r).delete();
+            if (children != null) {
+                for (Resource r : children) {
+                    if (r instanceof DeletableResource) {
+                        ((DeletableResource) r).delete();
+                    }
                 }
             }
             catalogue.unregisterResourceEntry(entry);
@@ -421,6 +423,9 @@ class WebDataDirResource implements FolderResource, CollectionResource {
             for (Path p : childrenPaths) {
                 debug("Adding children: " + p);
                 ILogicalData ch = catalogue.getResourceEntryByLDRI(p);
+                if(ch == null ){
+                    throw new NullPointerException("The Collection "+entry.getLDRI()+" has "+p+" registered as a child but the catalogue has no such entry");
+                }
                 if (ch.getType().equals(Constants.LOGICAL_FOLDER)) {
                     children.add(new WebDataDirResource(catalogue, ch));
                 } else if (ch.getType().equals(Constants.LOGICAL_FILE)) {

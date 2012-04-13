@@ -39,7 +39,7 @@ public class WebDataFileResource implements
 
     private final IDLCatalogue catalogue;
     private final ILogicalData logicalData;
-    private static final boolean debug = false;
+    private static final boolean debug = true;
 
     public WebDataFileResource(IDLCatalogue catalogue, ILogicalData logicalData) throws CatalogueException, Exception {
         this.catalogue = catalogue;
