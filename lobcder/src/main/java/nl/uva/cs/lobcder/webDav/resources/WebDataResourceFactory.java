@@ -1,8 +1,5 @@
 package nl.uva.cs.lobcder.webDav.resources;
 
-import java.util.logging.Level;
-
-
 import com.bradmcevoy.common.Path;
 import com.bradmcevoy.http.Resource;
 import com.bradmcevoy.http.ResourceFactory;
@@ -11,9 +8,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.AbstractCollection;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Properties;
+import java.util.logging.Level;
 import nl.uva.cs.lobcder.catalogue.IDLCatalogue;
 import nl.uva.cs.lobcder.catalogue.SimpleDLCatalogue;
 import nl.uva.cs.lobcder.resources.ILogicalData;
@@ -50,7 +46,7 @@ public class WebDataResourceFactory implements ResourceFactory {
 //            }
             AbstractCollection<IStorageSite> sites;
             if (ldri.isRoot() || ldri.toString().equals("")) {
-                root = new LogicalData(ldri, Constants.LOGICAL_DATA);
+                root = new LogicalData(ldri, Constants.LOGICAL_FOLDER);
                  sites = root.getStorageSites();
                 if (sites == null || sites.isEmpty()) {
                     sites = (AbstractCollection<IStorageSite>) catalogue.getSitesByUname(uname);

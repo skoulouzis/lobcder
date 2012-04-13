@@ -5,25 +5,15 @@
 package nl.uva.cs.lobcder.webDav.resources;
 
 import com.bradmcevoy.common.Path;
-import com.bradmcevoy.http.Auth;
-import com.bradmcevoy.http.CollectionResource;
-import com.bradmcevoy.http.DeletableResource;
-import com.bradmcevoy.http.FolderResource;
-import com.bradmcevoy.http.Range;
-import com.bradmcevoy.http.Request;
 import com.bradmcevoy.http.Request.Method;
-import com.bradmcevoy.http.Resource;
+import com.bradmcevoy.http.*;
 import com.bradmcevoy.http.exceptions.BadRequestException;
 import com.bradmcevoy.http.exceptions.ConflictException;
 import com.bradmcevoy.http.exceptions.NotAuthorizedException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import nl.uva.cs.lobcder.catalogue.CatalogueException;
@@ -424,7 +414,7 @@ class WebDataDirResource implements FolderResource, CollectionResource {
                 ILogicalData ch = catalogue.getResourceEntryByLDRI(p);
                 if (ch.getType().equals(Constants.LOGICAL_FOLDER)) {
                     children.add(new WebDataDirResource(catalogue, ch));
-                } else if (ch.equals(Constants.LOGICAL_FILE)) {
+                } else if (ch.getType().equals(Constants.LOGICAL_FILE)) {
                     children.add(new WebDataFileResource(catalogue, ch));
                 } else {
                     children.add(new WebDataResource(catalogue, ch));

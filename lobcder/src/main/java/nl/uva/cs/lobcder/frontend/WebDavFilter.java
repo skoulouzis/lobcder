@@ -4,20 +4,15 @@
  */
 package nl.uva.cs.lobcder.frontend;
 
-import com.bradmcevoy.http.Filter;
-import com.bradmcevoy.http.FilterChain;
-import com.bradmcevoy.http.Handler;
-import com.bradmcevoy.http.HttpManager;
-import com.bradmcevoy.http.Request;
-import com.bradmcevoy.http.Response;
+import com.bradmcevoy.http.*;
 import com.bradmcevoy.http.exceptions.BadRequestException;
 import com.bradmcevoy.http.exceptions.ConflictException;
 import com.bradmcevoy.http.exceptions.NotAuthorizedException;
 import com.bradmcevoy.http.http11.Http11ResponseHandler;
-import nl.uva.cs.lobcder.webDav.resources.WebDataResource;
 import nl.uva.cs.lobcder.webDav.exceptions.ForbiddenException;
 import nl.uva.cs.lobcder.webDav.exceptions.UnauthorizedException;
 import nl.uva.cs.lobcder.webDav.exceptions.WebDavException;
+import nl.uva.cs.lobcder.webDav.resources.WebDataResource;
 
 /**
  *

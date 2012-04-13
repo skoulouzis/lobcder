@@ -4,28 +4,19 @@
  */
 package nl.uva.cs.lobcder.webDav.resources;
 
-import nl.uva.cs.lobcder.resources.IStorageSite;
-import nl.uva.cs.lobcder.util.ConstantsAndSettings;
-import java.io.ByteArrayOutputStream;
-import nl.uva.cs.lobcder.resources.ILogicalData;
-import java.io.ByteArrayInputStream;
-import java.util.logging.Level;
-import java.util.ArrayList;
-import nl.uva.cs.lobcder.resources.StorageSite;
-import nl.uva.cs.lobcder.resources.Credential;
-import nl.uva.cs.lobcder.resources.LogicalData;
-import nl.uva.cs.lobcder.catalogue.SimpleDLCatalogue;
-import java.util.logging.Logger;
 import com.bradmcevoy.common.Path;
 import com.bradmcevoy.http.Range;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.util.ArrayList;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import nl.uva.cs.lobcder.catalogue.SimpleDLCatalogue;
 import nl.uva.cs.lobcder.resources.*;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import nl.uva.cs.lobcder.util.ConstantsAndSettings;
 import static org.junit.Assert.*;
+import org.junit.*;
 
 /**
  *

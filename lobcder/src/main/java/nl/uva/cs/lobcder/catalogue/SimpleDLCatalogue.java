@@ -149,7 +149,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                 q.setUnique(true);
                 entry = (ILogicalData) q.execute(strLogicalResourceName);
                 tx.commit();
-                
+
                 stupidBugLogicData(entry);
 
             } finally {
@@ -224,6 +224,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                 }
                 entry.addChild(child);
                 tx.commit();
+                stupidBugLogicData(entry);
 
             } finally {
                 if (tx.isActive()) {
@@ -475,7 +476,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
 
                 //Stupid bug!
                 if (!results.isEmpty()) {
-                    Iterator<IStorageSite> iter = results.iterator();  
+                    Iterator<IStorageSite> iter = results.iterator();
                     stupidBugStorageSite(iter.next());
                 }
 
@@ -625,11 +626,11 @@ public class SimpleDLCatalogue implements IDLCatalogue {
         ILogicalData updated;
         try {
             if (entry.getType().equals(Constants.LOGICAL_FILE)) {
-                updated = new LogicalData(ldri,Constants.LOGICAL_FILE);
+                updated = new LogicalData(ldri, Constants.LOGICAL_FILE);
             } else if (entry.getType().equals(Constants.LOGICAL_FOLDER)) {
-                updated = new LogicalData(ldri,Constants.LOGICAL_FOLDER);
+                updated = new LogicalData(ldri, Constants.LOGICAL_FOLDER);
             } else {
-                updated = new LogicalData(ldri,Constants.LOGICAL_DATA);
+                updated = new LogicalData(ldri, Constants.LOGICAL_DATA);
             }
             updated.setChildren(children);
             updated.setMetadata(meta);
@@ -666,7 +667,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
 //                    debug("Got back: " + ldri);
             Collection<Path> rChildren = entry.getChildren();
             AbstractCollection<IStorageSite> ss = entry.getStorageSites();
-            for(IStorageSite s : ss){
+            for (IStorageSite s : ss) {
                 stupidBugStorageSite(s);
             }
         }

@@ -4,14 +4,18 @@
  */
 package nl.uva.cs.lobcder.webDav.resources;
 
-import com.bradmcevoy.http.Auth;
-import com.bradmcevoy.http.PropFindableResource;
-import com.bradmcevoy.http.Request;
+import com.bradmcevoy.http.*;
 import com.bradmcevoy.http.Request.Method;
-import com.bradmcevoy.http.Resource;
+import com.bradmcevoy.http.exceptions.BadRequestException;
+import com.bradmcevoy.http.exceptions.ConflictException;
+import com.bradmcevoy.http.exceptions.NotAuthorizedException;
+import java.util.Collection;
 import java.util.Date;
+import nl.uva.cs.lobcder.catalogue.CatalogueException;
 import nl.uva.cs.lobcder.catalogue.IDLCatalogue;
 import nl.uva.cs.lobcder.resources.ILogicalData;
+import nl.uva.cs.lobcder.resources.IStorageSite;
+import nl.uva.vlet.exception.VlException;
 
 /**
  *
@@ -20,9 +24,14 @@ import nl.uva.cs.lobcder.resources.ILogicalData;
 public class WebDataResource implements PropFindableResource, Resource {
 
     private final ILogicalData logicalData;
+    private final IDLCatalogue catalogue;
 
     public WebDataResource(IDLCatalogue catalogue, ILogicalData logicalData) {
         this.logicalData = logicalData;
+//        if (!logicalData.getType().equals(Constants.LOGICAL_DATA)) {
+//            throw new Exception("The logical data has the wonrg type: " + logicalData.getType());
+//        }
+        this.catalogue = catalogue;
     }
 
     @Override
@@ -92,4 +101,21 @@ public class WebDataResource implements PropFindableResource, Resource {
         System.err.println(this.getClass().getSimpleName() + "." + logicalData.getLDRI() + ": " + msg);
 //        log.debug(msg);
     }
+
+//    @Override
+//    public void delete() throws NotAuthorizedException, ConflictException, BadRequestException {
+//        try {
+//            Collection<IStorageSite> sites = logicalData.getStorageSites();
+//            if (sites != null && !sites.isEmpty()) {
+//                for (IStorageSite s : sites) {
+//                    s.deleteVNode(logicalData.getLDRI());
+//                }
+//            }
+//            catalogue.unregisterResourceEntry(logicalData);
+//        } catch (CatalogueException ex) {
+//            throw new BadRequestException(this, ex.toString());
+//        } catch (VlException ex) {
+//            throw new BadRequestException(this, ex.toString());
+//        }
+//    }
 }

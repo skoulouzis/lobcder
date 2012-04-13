@@ -5,11 +5,7 @@
 package nl.uva.cs.lobcder.webDav.resources;
 
 import com.bradmcevoy.common.Path;
-import com.bradmcevoy.http.Auth;
-import com.bradmcevoy.http.CollectionResource;
-import com.bradmcevoy.http.FileItem;
-import com.bradmcevoy.http.Range;
-import com.bradmcevoy.http.Request;
+import com.bradmcevoy.http.*;
 import com.bradmcevoy.http.Request.Method;
 import com.bradmcevoy.http.exceptions.BadRequestException;
 import com.bradmcevoy.http.exceptions.ConflictException;
@@ -18,19 +14,15 @@ import com.bradmcevoy.http.http11.PartialGetHelper;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Date;
-import java.util.Map;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import nl.uva.cs.lobcder.catalogue.CatalogueException;
 import nl.uva.cs.lobcder.catalogue.IDLCatalogue;
 import nl.uva.cs.lobcder.resources.ILogicalData;
 import nl.uva.cs.lobcder.resources.IStorageSite;
-import nl.uva.cs.lobcder.resources.Metadata;
 import nl.uva.cs.lobcder.resources.LogicalData;
+import nl.uva.cs.lobcder.resources.Metadata;
 import nl.uva.cs.lobcder.util.MMTypeTools;
 import nl.uva.vlet.data.StringUtil;
 import nl.uva.vlet.exception.VlException;
@@ -66,7 +58,7 @@ public class WebDataFileResource implements
             Path toCollectionLDRI = Path.path(collectionResource.getName());
             Path newLDRI = Path.path(toCollectionLDRI, name);
 
-            FIX ME!Why do we crate new LogicalData
+//            FIX ME!Why do we crate new LogicalData
             LogicalData newFolderEntry = new LogicalData(newLDRI,Constants.LOGICAL_FOLDER);
             newFolderEntry.getMetadata().setModifiedDate(System.currentTimeMillis());
             catalogue.registerResourceEntry(newFolderEntry);
