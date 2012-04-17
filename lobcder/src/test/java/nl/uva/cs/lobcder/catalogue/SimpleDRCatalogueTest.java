@@ -368,6 +368,75 @@ public class SimpleDRCatalogueTest {
             }
         }
     }
+    
+    @Test
+    public void testRenameChild2() {
+        SimpleDLCatalogue instance = null;
+        Path tesCollectionPath = null;
+        ILogicalData logicalCollection = null;
+        ILogicalData logicalChild = null;
+        Path testNewChildPath = null;
+        ILogicalData loadedRenamedLogicalChild = null;
+        try {
+            System.out.println("testRenameChild2");
+
+            tesCollectionPath = Path.path("/testCollection");
+            logicalCollection = new LogicalData(tesCollectionPath, Constants.LOGICAL_FOLDER);
+            instance = new SimpleDLCatalogue();
+            instance.registerResourceEntry(logicalCollection);
+            //Check if the collection is registered
+            ILogicalData loadedLogicalCollection = instance.getResourceEntryByLDRI(tesCollectionPath);
+            assertNotNull(loadedLogicalCollection);
+            compareEntries(loadedLogicalCollection, logicalCollection);
+
+            Path testChildPath = Path.path(tesCollectionPath.toString() + "/testChild");
+            logicalChild = new LogicalData(testChildPath, Constants.LOGICAL_FILE);
+            instance.registerResourceEntry(logicalChild);
+            //Check if the child is registered
+            ILogicalData loadedLogicalChild = instance.getResourceEntryByLDRI(testChildPath);
+            assertNotNull(loadedLogicalChild);
+            compareEntries(loadedLogicalChild, logicalChild);
+
+            //Check if collection has the child 
+            loadedLogicalCollection = instance.getResourceEntryByLDRI(tesCollectionPath);
+            Path loadedChildPath = loadedLogicalCollection.getChild(testChildPath);
+            assertEquals(loadedChildPath.toString(), testChildPath.toString());
+            
+            //Rename child 
+            testNewChildPath = Path.path(tesCollectionPath.toString() + "/testNewChild");
+            instance.renameEntry(testChildPath, testNewChildPath);
+            loadedRenamedLogicalChild = instance.getResourceEntryByLDRI(testNewChildPath);
+            assertNotNull(loadedRenamedLogicalChild);
+            
+            loadedLogicalChild = instance.getResourceEntryByLDRI(testChildPath);
+            assertNull(loadedLogicalChild);
+            //check if collection has renamed child
+            ILogicalData loadedCollection = instance.getResourceEntryByLDRI(logicalCollection.getLDRI());
+            Path loadedNewChild = loadedCollection.getChild(testNewChildPath);
+            assertNotNull(loadedNewChild);
+            
+            
+        } catch (CatalogueException ex) {
+            fail(ex.getMessage());
+            Logger.getLogger(SimpleDRCatalogueTest.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            try {
+
+                instance.unregisterResourceEntry(logicalCollection);
+                ILogicalData loadedCollection = instance.getResourceEntryByLDRI(tesCollectionPath);
+                assertNull(loadedCollection);
+            
+                ILogicalData loadedChild = instance.getResourceEntryByLDRI(logicalChild.getLDRI());
+                assertNull(loadedChild);
+                
+                loadedChild = instance.getResourceEntryByLDRI(loadedRenamedLogicalChild.getLDRI());
+                assertNull(loadedChild);
+                
+            } catch (CatalogueException ex) {
+                fail(ex.getMessage());
+            }
+        }
+    }
 
     @Test
     public void testRenameChild() {
@@ -461,11 +530,7 @@ public class SimpleDRCatalogueTest {
         } catch (Exception ex) {
             fail("Unexpected Exception: " + ex.getMessage());
         } finally {
-            try {
-                new SimpleDLCatalogue().unregisterResourceEntry(e);
-            } catch (Exception ex) {
-                fail("Unexpected Exception: " + ex.getMessage());
-            }
+            
         }
     }
 
@@ -731,7 +796,6 @@ public class SimpleDRCatalogueTest {
             Logger.getLogger(SimpleDRCatalogueTest.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-
     private void populateStorageSites() throws FileNotFoundException, IOException, Exception {
         SimpleDLCatalogue instance = new SimpleDLCatalogue();
         instance.clearAllSites();

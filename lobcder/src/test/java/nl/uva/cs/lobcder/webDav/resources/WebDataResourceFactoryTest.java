@@ -402,6 +402,7 @@ public class WebDataResourceFactoryTest {
             assertEquals(childPath.toString(), file.getPath().toString());
             
             file.moveTo(dir, ConstantsAndSettings.TEST_FILE_NAME_2);
+            FIX ME! child null
             checkChildren(dir, file);
              //Check if catalogue has the child entry with the new name 
             childEntry = cat.getResourceEntryByLDRI(file.getPath());

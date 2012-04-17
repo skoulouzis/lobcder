@@ -10,6 +10,8 @@ package nl.uva.cs.lobcder.catalogue;
  */
 import com.bradmcevoy.common.Path;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.jdo.*;
 import nl.uva.cs.lobcder.resources.*;
 import nl.uva.cs.lobcder.webDav.resources.Constants;
@@ -176,6 +178,23 @@ public class SimpleDLCatalogue implements IDLCatalogue {
 
                 q.setUnique(true);
                 LogicalData result = (LogicalData) q.execute(strLogicalResourceName);
+                
+                Collection<Path> childernPathForDeleition = result.getChildren();
+
+                if (childernPathForDeleition != null) {
+                    Collection<ILogicalData> childernForDeleition = new ArrayList<ILogicalData>();
+                    for (Path p : childernPathForDeleition) {
+                        strLogicalResourceName = p.toString();
+                        q = pm.newQuery(LogicalData.class);
+                        q.setFilter("strLDRI == strLogicalResourceName");
+                        q.declareParameters(strLogicalResourceName.getClass().getName() + " strLogicalResourceName");
+                        q.setUnique(true);
+                        LogicalData ch = (LogicalData) q.execute(strLogicalResourceName);
+                        childernForDeleition.add(ch);
+                    }
+                    pm.deletePersistentAll(childernForDeleition);
+                }
+
                 pm.deletePersistent(result);
                 tx.commit();
 
@@ -196,7 +215,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
         synchronized (lock) {
             PersistenceManager pm = pmf.getPersistenceManager();
             Transaction tx = pm.currentTransaction();
-            
+
             try {
                 tx.begin();
                 //This query, will return objects of type DataResourceEntry
@@ -221,7 +240,6 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                 pm.close();
             }
         }
-
     }
 
     private void removeChild(Path parent, Path child) throws NonExistingResourceException {
@@ -236,17 +254,30 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                 tx.begin();
                 //This query, will return objects of type DataResourceEntry
                 Query q = pm.newQuery(LogicalData.class);
+//                Query q = pm.newQuery(extend);
+
+                //restrict to instances which have the field ldri equal to some logicalResourceName
                 q.setFilter("strLDRI == strLogicalResourceName");
                 q.declareParameters(strLogicalResourceName.getClass().getName() + " strLogicalResourceName");
-
                 q.setUnique(true);
-                LogicalData result = (LogicalData) q.execute(strLogicalResourceName);
+                ILogicalData result = (ILogicalData) q.execute(strLogicalResourceName);
+
                 if (result == null) {
                     throw new NonExistingResourceException("Cannot remove " + child.toString() + " from non existing parent " + parent.toString());
                 }
-                
+
+                Path theChild = result.getChild(child);
+                if (theChild == null) {
+                    throw new NonExistingResourceException("Cannot remove " + child.toString() + ". Parent " + parent.toString() + " has no such child");
+                }
+
                 result.removeChild(child);
+
                 tx.commit();
+
+                stupidBugLogicData(result);
+
+
 
             } finally {
                 if (tx.isActive()) {
@@ -309,6 +340,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
         //Remove this node from it's parent 
         Path parent = oldPath.getParent();
         if (parent != null && !StringUtil.isEmpty(parent.toString())) {
+//            ILogicalData p = queryEntry(parent);
             removeChild(parent, oldPath);
         }
 

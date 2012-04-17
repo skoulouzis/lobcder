@@ -140,7 +140,7 @@ public class LogicalData implements ILogicalData, Serializable {
 
         if (children != null && !children.isEmpty()) {
             for (Path p : children) {
-                if (p.getName().equals(path.getName())) {
+                if (p.toString().equals(path.toString())) {
                     return p;
                 }
             }
