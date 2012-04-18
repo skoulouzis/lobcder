@@ -392,10 +392,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                     }
                 }
                 tx.commit();
-                Collection<Path> rChildren = entry.getChildren();
-//                for (Path p : rChildren) {
-//                    debug("Renamed: " + p);
-//                }
+                stupidBugLogicData(entry);
             } finally {
                 if (tx.isActive()) {
                     tx.rollback();
@@ -444,11 +441,6 @@ public class SimpleDLCatalogue implements IDLCatalogue {
         if (newParent != null && !StringUtil.isEmpty(newParent.toString())) {
             addChild(newPath.getParent(), newPath);
         }
-
-//        Collection<Path> rChildren = entry.getChildren();
-//        for (Path p : rChildren) {
-//            debug("Renamed: " + p);
-//        }
     }
 
     private boolean comparePaths(Path path1, Path path2) {

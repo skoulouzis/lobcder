@@ -38,8 +38,8 @@ public class WebDataFileResource implements
         com.bradmcevoy.http.FileResource {
 
     private final IDLCatalogue catalogue;
-    private final ILogicalData logicalData;
-    private static final boolean debug = true;
+    private ILogicalData logicalData;
+    private static final boolean debug = false;
 
     public WebDataFileResource(IDLCatalogue catalogue, ILogicalData logicalData) throws CatalogueException, Exception {
         this.catalogue = catalogue;
@@ -209,6 +209,17 @@ public class WebDataFileResource implements
         try {
             debug("\t rename: " + logicalData.getLDRI() + " to " + newPath);
             catalogue.renameEntry(logicalData.getLDRI(), newPath);
+            ILogicalData newLogicData = catalogue.getResourceEntryByLDRI(newPath);
+            logicalData = newLogicData;
+            debug("NEw ldata: ldri: "+logicalData.getLDRI());
+            
+            WebDataDirResource dir = (WebDataDirResource) rDest;
+            dir.setLogicalData(catalogue.getResourceEntryByLDRI(dirPath));
+//            List<? extends Resource> children = dir.getChildren();
+//            for (Resource r : children) {
+//                debug("Children: " + r.getName());
+//            }
+
         } catch (Exception ex) {
             Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, ex);
             if (ex.getMessage().contains("resource exists")) {

@@ -526,4 +526,8 @@ class WebDataDirResource implements FolderResource, CollectionResource {
         LogicalData relodedResource = (LogicalData) catalogue.getResourceEntryByLDRI(newResource.getLDRI());
         return new WebDataFileResource(catalogue, relodedResource);
     }
+
+    void setLogicalData(ILogicalData updatedLogicalData) {
+        this.entry = updatedLogicalData;
+    }
 }
