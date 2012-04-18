@@ -310,6 +310,10 @@ class WebDataDirResource implements FolderResource, CollectionResource {
                     }
                 }
             }
+//            Collection<Path> childrenPaths = entry.getChildren();
+//            for (Path p : childrenPaths) {
+//                entry.removeChild(p);
+//            }
             catalogue.unregisterResourceEntry(entry);
         } catch (CatalogueException ex) {
             throw new BadRequestException(this, ex.toString());
@@ -423,8 +427,11 @@ class WebDataDirResource implements FolderResource, CollectionResource {
             for (Path p : childrenPaths) {
                 debug("Adding children: " + p);
                 ILogicalData ch = catalogue.getResourceEntryByLDRI(p);
-                if(ch == null ){
-                    throw new NullPointerException("The Collection "+entry.getLDRI()+" has "+p+" registered as a child but the catalogue has no such entry");
+                if (ch == null) {
+                    //We have some kind of inconsistency. It can happend that someone else calls delete on the child, which removes it from the catalog. In this case we'll belive the catalog and retun null 
+//                    throw new NullPointerException("The Collection " + entry.getLDRI() + " has " + p + " registered as a child but the catalogue has no such entry");
+                    entry.removeChild(p);
+                    continue;
                 }
                 if (ch.getType().equals(Constants.LOGICAL_FOLDER)) {
                     children.add(new WebDataDirResource(catalogue, ch));

@@ -39,7 +39,7 @@ public class WebDataFileResource implements
 
     private final IDLCatalogue catalogue;
     private ILogicalData logicalData;
-    private static final boolean debug = false;
+    private static final boolean debug = true;
 
     public WebDataFileResource(IDLCatalogue catalogue, ILogicalData logicalData) throws CatalogueException, Exception {
         this.catalogue = catalogue;
@@ -219,7 +219,7 @@ public class WebDataFileResource implements
 //            for (Resource r : children) {
 //                debug("Children: " + r.getName());
 //            }
-
+            
         } catch (Exception ex) {
             Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, ex);
             if (ex.getMessage().contains("resource exists")) {
