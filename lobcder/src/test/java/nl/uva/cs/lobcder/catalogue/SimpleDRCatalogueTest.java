@@ -62,7 +62,6 @@ public class SimpleDRCatalogueTest {
             instance.registerResourceEntry(entry);
 //            System.out.println("entry:          " + entry.getLDRI());
 
-
             ILogicalData loadedEntry = instance.getResourceEntryByLDRI(path);
             assertNotNull(loadedEntry);
 
@@ -368,7 +367,7 @@ public class SimpleDRCatalogueTest {
             }
         }
     }
-    
+
     @Test
     public void testRenameChild2() {
         SimpleDLCatalogue instance = null;
@@ -401,21 +400,21 @@ public class SimpleDRCatalogueTest {
             loadedLogicalCollection = instance.getResourceEntryByLDRI(tesCollectionPath);
             Path loadedChildPath = loadedLogicalCollection.getChild(testChildPath);
             assertEquals(loadedChildPath.toString(), testChildPath.toString());
-            
+
             //Rename child 
             testNewChildPath = Path.path(tesCollectionPath.toString() + "/testNewChild");
             instance.renameEntry(testChildPath, testNewChildPath);
             loadedRenamedLogicalChild = instance.getResourceEntryByLDRI(testNewChildPath);
             assertNotNull(loadedRenamedLogicalChild);
-            
+
             loadedLogicalChild = instance.getResourceEntryByLDRI(testChildPath);
             assertNull(loadedLogicalChild);
             //check if collection has renamed child
             ILogicalData loadedCollection = instance.getResourceEntryByLDRI(logicalCollection.getLDRI());
             Path loadedNewChild = loadedCollection.getChild(testNewChildPath);
             assertNotNull(loadedNewChild);
-            
-            
+
+
         } catch (CatalogueException ex) {
             fail(ex.getMessage());
             Logger.getLogger(SimpleDRCatalogueTest.class.getName()).log(Level.SEVERE, null, ex);
@@ -425,13 +424,13 @@ public class SimpleDRCatalogueTest {
                 instance.unregisterResourceEntry(logicalCollection);
                 ILogicalData loadedCollection = instance.getResourceEntryByLDRI(tesCollectionPath);
                 assertNull(loadedCollection);
-            
+
                 ILogicalData loadedChild = instance.getResourceEntryByLDRI(logicalChild.getLDRI());
                 assertNull(loadedChild);
-                
+
                 loadedChild = instance.getResourceEntryByLDRI(loadedRenamedLogicalChild.getLDRI());
                 assertNull(loadedChild);
-                
+
             } catch (CatalogueException ex) {
                 fail(ex.getMessage());
             }
@@ -530,7 +529,6 @@ public class SimpleDRCatalogueTest {
         } catch (Exception ex) {
             fail("Unexpected Exception: " + ex.getMessage());
         } finally {
-            
         }
     }
 
@@ -796,6 +794,7 @@ public class SimpleDRCatalogueTest {
             Logger.getLogger(SimpleDRCatalogueTest.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
+
     private void populateStorageSites() throws FileNotFoundException, IOException, Exception {
         SimpleDLCatalogue instance = new SimpleDLCatalogue();
         instance.clearAllSites();
@@ -826,10 +825,12 @@ public class SimpleDRCatalogueTest {
     private boolean compareEntries(ILogicalData entry, ILogicalData loadedEntry) {
 //        System.out.println("entry:          " + entry.getUID() + " " + entry.getLDRI());
 //        System.out.println("loadedEntry:    " + loadedEntry.getUID() + " " + loadedEntry.getLDRI());
-        if (entry.getLDRI().getName().equals(loadedEntry.getLDRI().getName()) && entry.getType().equals(loadedEntry.getType())) {
+        if (entry.getLDRI().toString().equals(loadedEntry.getLDRI().toString()) && entry.getType().equals(loadedEntry.getType())) {
 //            if (entry.getUID().equals(loadedEntry.getUID())) {
-            return true;
+            if (entry.getPDRI().toString().equals(loadedEntry.getPDRI().toString())) {
+                return true;
 //            }
+            }
         }
         return false;
     }

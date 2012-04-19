@@ -41,7 +41,7 @@ public class WebDataResourceFactory implements ResourceFactory {
             debug("getResource:  strPath: " + strPath + " path: " + Path.path(strPath) + " ldri: " + ldri);
             debug("getResource:  host: " + host + " path: " + ldri);
 
-//            if (host == null && Path.path(strPath).toString().equals("")) {
+//            if (host == null http://www.radio9.gr/Media.aspx?a_id=1338&item=5127&prodId=4&prodId=4&& Path.path(strPath).toString().equals("")) {
 //                debug(">>>>>>>>>>>>>>> Host null and path is empty");
 //            }
             AbstractCollection<IStorageSite> sites;

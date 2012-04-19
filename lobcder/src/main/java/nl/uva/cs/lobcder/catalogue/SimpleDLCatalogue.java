@@ -672,6 +672,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
             //Bug! If we don't do this the ldri becomes null
             Path ldri = entry.getLDRI();
             String type = entry.getType();
+            entry.getPDRI();
             ArrayList<String> types = entry.getMetadata().getContentTypes();
 //                    debug("Got back: " + ldri);
             Collection<Path> rChildren = entry.getChildren();

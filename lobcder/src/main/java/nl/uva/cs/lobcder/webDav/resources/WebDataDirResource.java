@@ -32,7 +32,7 @@ class WebDataDirResource implements FolderResource, CollectionResource {
 
     private ILogicalData entry;
     private final IDLCatalogue catalogue;
-    private boolean debug = false;
+    private boolean debug = true;
 
     public WebDataDirResource(IDLCatalogue catalogue, ILogicalData entry) throws IOException, Exception {
         this.entry = entry;
@@ -153,7 +153,7 @@ class WebDataDirResource implements FolderResource, CollectionResource {
     @Override
     public String getUniqueId() {
         debug("getUniqueId.");
-        return entry.getUID();
+        return String.valueOf(entry.getUID());
     }
 
     @Override
@@ -490,7 +490,7 @@ class WebDataDirResource implements FolderResource, CollectionResource {
                 out.close();
             }
         }
-
+        
         Metadata meta = new Metadata();
         meta.setLength(length);
         meta.addContentType(contentType);

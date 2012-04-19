@@ -42,7 +42,7 @@ public class WebDataResource implements PropFindableResource, Resource {
 
     @Override
     public String getUniqueId() {
-        return logicalData.getUID();
+        return String.valueOf(logicalData.getUID());
     }
 
     @Override

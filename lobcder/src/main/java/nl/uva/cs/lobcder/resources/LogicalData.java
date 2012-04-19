@@ -27,6 +27,10 @@ public class LogicalData implements ILogicalData, Serializable {
     private String uid;
     @Persistent
     private Path ldri;
+    
+    @Persistent
+    private Path pdri;
+    
     @Persistent
     private String strLDRI;
     @Persistent
@@ -53,6 +57,8 @@ public class LogicalData implements ILogicalData, Serializable {
         ldriLen = ldri.getLength();
 //        uid = java.util.UUID.randomUUID().toString();
         this.type = type;
+        //Data will hold the same pdri for ever.
+        pdri = ldri;
     }
 
     @Override
@@ -163,14 +169,14 @@ public class LogicalData implements ILogicalData, Serializable {
                 break;
             }
         }
-        return site.getVNode(this.getLDRI());
+        return site.getVNode(pdri);
     }
 
     @Override
     public boolean hasPhysicalData() throws VlException {
         if (storageSites != null && !storageSites.isEmpty()) {
             for (IStorageSite s : storageSites) {
-                if (s.LDRIHasPhysicalData(ldri)) {
+                if (s.LDRIHasPhysicalData(pdri)) {
                     return true;
                 }
             }
@@ -190,7 +196,7 @@ public class LogicalData implements ILogicalData, Serializable {
                 break;
             }
         }
-        return site.createVFSFile(getLDRI());
+        return site.createVFSFile(pdri);
     }
 
     @Override
@@ -225,5 +231,10 @@ public class LogicalData implements ILogicalData, Serializable {
      */
     public void setType(String type) {
         this.type = type;
+    }
+    
+    @Override
+    public Path getPDRI(){
+        return pdri;
     }
 }

@@ -390,7 +390,7 @@ public class WebDataResourceFactoryTest {
             ILogicalData childEntry = cat.getResourceEntryByLDRI(file.getPath());
             assertEquals(childEntry.getLDRI().toString(), file.getPath().toString());
             assertEquals(childEntry.getUID(), file.getUniqueId());
-            
+
             //Check if the collection has the child
             ILogicalData collectionEntry = cat.getResourceEntryByLDRI(dir.getPath());
             Path childPath = collectionEntry.getChild(file.getPath());
@@ -400,20 +400,28 @@ public class WebDataResourceFactoryTest {
             childPath = collectionEntry.getChild(file.getPath());
             assertNotNull(childPath);
             assertEquals(childPath.toString(), file.getPath().toString());
-            
+
             file.moveTo(dir, ConstantsAndSettings.TEST_FILE_NAME_2);
-            
             checkChildren(dir, file);
-             //Check if catalogue has the child entry with the new name 
+            //Get data 
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            Range range = null;
+            Map<String, String> params = null;
+            String contentType = "text/plain";
+            file.sendContent(out, range, params, contentType);
+            String content = new String(out.toByteArray());
+            assertEquals(ConstantsAndSettings.TEST_DATA, content);
+
+            //Check if catalogue has the child entry with the new name 
             //if we don't have new catalog we get back the old child entry
             cat = new SimpleDLCatalogue();
             childEntry = cat.getResourceEntryByLDRI(file.getPath());
-            
+
             assertEquals(childEntry.getLDRI().toString(), file.getPath().toString());
             assertEquals(childEntry.getUID(), file.getUniqueId());
-            
+
             dir.delete();
-            
+
             //The child and the file should be gone 
             ILogicalData lDir = cat.getResourceEntryByLDRI(Path.path(ConstantsAndSettings.TEST_FOLDER_NAME_1));
             assertNull(lDir);

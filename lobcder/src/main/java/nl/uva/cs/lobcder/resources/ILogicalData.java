@@ -57,5 +57,7 @@ public interface ILogicalData {
     public void setChildren(Collection<Path> children);
     
     public String getType();
+
+    public Path getPDRI();
     
 }

@@ -288,7 +288,7 @@ public class WebDataFileResource implements
 
     @Override
     public String getUniqueId() {
-        return logicalData.getUID();
+        return String.valueOf(logicalData.getUID());
     }
 
     @Override
