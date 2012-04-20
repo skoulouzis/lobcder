@@ -339,7 +339,7 @@ public class WebDataResourceFactoryTest {
             }
             checkResource(dir);
 
-            int count = 200;
+            int count = 1;
             for (int i = 0; i < count; i++) {
                 File tmpLocalFile = File.createTempFile(this.getClass().getName(), null);
                 byte[] data = new byte[1024 * 1024];//1MB
@@ -448,14 +448,16 @@ public class WebDataResourceFactoryTest {
             userThread2.setName("T2");
 
             Thread userThread3 = new UserThread(2);
-            userThread2.setName("T3");
+            userThread3.setName("T3");
 
 
             userThread1.start();
             userThread2.start();
+            userThread3.start();
 
             userThread1.join();
             userThread2.join();
+            userThread3.join();
         } catch (InterruptedException ex) {
             fail();
             ex.printStackTrace();

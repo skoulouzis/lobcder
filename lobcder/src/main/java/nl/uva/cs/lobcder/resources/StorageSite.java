@@ -8,6 +8,7 @@ import com.bradmcevoy.common.Path;
 import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.AbstractCollection;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Properties;
@@ -77,7 +78,7 @@ public class StorageSite implements Serializable, IStorageSite {
     @Persistent
     private String endpoint;
     @Persistent
-    private ArrayList<String> logicalPaths = new ArrayList<String>();
+    private AbstractCollection<String> logicalPaths;
     private ServerInfo info;
     private VRSContext context;
     private VFSClient vfsClient;
@@ -107,6 +108,8 @@ public class StorageSite implements Serializable, IStorageSite {
             prop = new Properties();
 
             this.credentials = cred;
+            
+            logicalPaths = new ArrayList<String>();
 
             initVFS();
         } catch (VlException ex) {
@@ -200,13 +203,13 @@ public class StorageSite implements Serializable, IStorageSite {
     }
 
     @Override
-    public void deleteVNode(Path lDRI) throws VlException {
-        debug("Exists?: " + lDRI);
-        boolean exists = this.getVfsClient().existsPath(getVrl().append(lDRI.toString()));
+    public void deleteVNode(Path pDRI) throws VlException {
+        debug("Exists?: " + pDRI);
+        boolean exists = this.getVfsClient().existsPath(getVrl().append(pDRI.toString()));
         if (exists) {
-            VFSNode node = this.getVNode(lDRI);
+            VFSNode node = this.getVNode(pDRI);
             if (node != null && node.delete()) {
-                this.logicalPaths.remove(lDRI.toString());
+                this.logicalPaths.remove(pDRI.toString());
             }
         }
     }

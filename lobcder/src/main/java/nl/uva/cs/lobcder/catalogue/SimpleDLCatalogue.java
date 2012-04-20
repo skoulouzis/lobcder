@@ -10,8 +10,6 @@ package nl.uva.cs.lobcder.catalogue;
  */
 import com.bradmcevoy.common.Path;
 import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.jdo.*;
 import nl.uva.cs.lobcder.resources.*;
 import nl.uva.cs.lobcder.webDav.resources.Constants;
@@ -178,7 +176,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
 
                 q.setUnique(true);
                 LogicalData result = (LogicalData) q.execute(strLogicalResourceName);
-                
+
                 Collection<Path> childernPathForDeleition = result.getChildren();
 
                 if (childernPathForDeleition != null) {
@@ -684,12 +682,13 @@ public class SimpleDLCatalogue implements IDLCatalogue {
     }
 
     private void stupidBugStorageSite(IStorageSite site) {
-        String ep = site.getEndpoint();
-        debug("Endpoint: " + ep);
-        Credential cred = site.getCredentials();
-        debug("Credentials: " + cred);
-        site.getUID();
-        site.getInfo();
-        site.getLogicalPaths();
+        
+            String ep = site.getEndpoint();
+//        debug("Endpoint: " + ep);
+            Credential cred = site.getCredentials();
+//        debug("Credentials: " + cred);
+            site.getUID();
+            site.getInfo();
+            site.getLogicalPaths();
     }
 }

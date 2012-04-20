@@ -19,6 +19,7 @@ import java.io.ByteArrayInputStream;
 import nl.uva.cs.lobcder.catalogue.SimpleDRCatalogueTest;
 import nl.uva.cs.lobcder.resources.IStorageSite;
 import java.util.Collection;
+import nl.uva.cs.lobcder.resources.*;
 import nl.uva.cs.lobcder.util.ConstantsAndSettings;
 import static org.junit.Assert.*;
 
@@ -57,15 +58,17 @@ public class UserThread extends Thread {
             String fileName = null;
             String collectionName = null;
             if (this.getName().equals("T1")) {
-                fileName = "testFileThread1";//ConstantsAndSettings.TEST_FILE_NAME_1;
+                fileName = ConstantsAndSettings.TEST_FILE_NAME_1;
                 collectionName = ConstantsAndSettings.TEST_FOLDER_NAME_1;
             } else if (this.getName().equals("T2")) {
-                fileName = "testFileThread2";///ConstantsAndSettings.TEST_FILE_NAME_2;
+                fileName = ConstantsAndSettings.TEST_FILE_NAME_2;
                 collectionName = ConstantsAndSettings.TEST_FOLDER_NAME_2;
             } else if (this.getName().equals("T3")) {
-                fileName = "testFileThread3";//ConstantsAndSettings.TEST_FILE_NAME_3;
+                fileName = ConstantsAndSettings.TEST_FILE_NAME_3;
                 collectionName = ConstantsAndSettings.TEST_FOLDER_NAME_3;
             }
+            
+            debug("path: "+collectionName +"/"+fileName);
 
             WebDataResourceFactory instance = new WebDataResourceFactory();
             WebDataDirResource result = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH + collectionName);
@@ -74,14 +77,21 @@ public class UserThread extends Thread {
                 assertNotNull(root);
                 Collection<IStorageSite> sites = root.getStorageSites();
                 assertFalse(sites.isEmpty());
+                
+                for(IStorageSite s : sites){
+                    debug("SS: "+s.getEndpoint() +" "+s.getUID()+" "+s.getVPHUsername()+" "+s.getCredentials().getStorageSiteUsername());
+                }
+                
                 result = (WebDataDirResource) root.createCollection(collectionName);
             }
 
             assertNotNull(result);
             Collection<IStorageSite> sites = result.getStorageSites();
             assertFalse(sites.isEmpty());
-
+            
+                        
             ByteArrayInputStream bais = new ByteArrayInputStream(ConstantsAndSettings.TEST_DATA.getBytes());
+            debug("Create "+fileName+" at: "+result.getName());
             WebDataFileResource file = (WebDataFileResource) result.createNew(fileName, bais, new Long("DATA".getBytes().length), "text/plain");
             checkChildren(result, file);
             Long len = file.getContentLength();
@@ -99,7 +109,8 @@ public class UserThread extends Thread {
 
             String name = file.getName();
             assertEquals(fileName, name);
-
+            
+            
             instance = new WebDataResourceFactory();
             result = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH + collectionName);
             assertNotNull(result);
@@ -165,16 +176,20 @@ public class UserThread extends Thread {
             System.out.println("testUpdateResourceEntry");
             LogicalData newEntry = null;
             if (this.getName().equals("T1")) {
-//                newEntry = new LogicalData(ConstantsAndSettings.TEST_FILE_PATH_1,Constants.LOGICAL_FILE);
-                newEntry = new LogicalData(Path.path("testFileThread1"),Constants.LOGICAL_FILE);
+                newEntry = new LogicalData(ConstantsAndSettings.TEST_FILE_PATH_1,Constants.LOGICAL_FILE);
+//                newEntry = new LogicalData(Path.path("testFileThread1"),Constants.LOGICAL_FILE);
             } else if (this.getName().equals("T2")) {
-//                newEntry = new LogicalData(ConstantsAndSettings.TEST_FILE_PATH_2,Constants.LOGICAL_FILE);
-                newEntry = new LogicalData(Path.path("testFileThread2"),Constants.LOGICAL_FILE);
+                newEntry = new LogicalData(ConstantsAndSettings.TEST_FILE_PATH_2,Constants.LOGICAL_FILE);
+//                newEntry = new LogicalData(Path.path("testFileThread2"),Constants.LOGICAL_FILE);
             } else if (this.getName().equals("T3")) {
-//                newEntry = new LogicalData(ConstantsAndSettings.TEST_FILE_PATH_3,Constants.LOGICAL_FILE);
-                newEntry = new LogicalData(Path.path("testFileThread3"),Constants.LOGICAL_FILE);
+                newEntry = new LogicalData(ConstantsAndSettings.TEST_FILE_PATH_3,Constants.LOGICAL_FILE);
+//                newEntry = new LogicalData(Path.path("testFileThread3"),Constants.LOGICAL_FILE);
                 
             }
+            
+            
+            debug("New entry: "+newEntry);
+            
             instance.registerResourceEntry(newEntry);
             loaded = instance.getResourceEntryByLDRI(newEntry.getLDRI());
             boolean same = compareEntries(newEntry, loaded);
@@ -275,5 +290,9 @@ public class UserThread extends Thread {
 //            }
         }
         return false;
+    }
+
+    private void debug(String msg) {
+        System.err.println(this.getClass().getName()+"."+getName()+": "+msg);
     }
 }
