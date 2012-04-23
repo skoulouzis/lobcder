@@ -8,6 +8,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.AbstractCollection;
+import java.util.Collection;
 import java.util.Properties;
 import java.util.logging.Level;
 import nl.uva.cs.lobcder.catalogue.IDLCatalogue;
@@ -40,16 +41,13 @@ public class WebDataResourceFactory implements ResourceFactory {
             //Gets the root path. If instead we called :'ldri = Path.path(strPath);' we get back '/lobcder-1.0-SNAPSHOT'
             debug("getResource:  strPath: " + strPath + " path: " + Path.path(strPath) + " ldri: " + ldri);
             debug("getResource:  host: " + host + " path: " + ldri);
-
-//            if (host == null http://www.radio9.gr/Media.aspx?a_id=1338&item=5127&prodId=4&prodId=4&& Path.path(strPath).toString().equals("")) {
-//                debug(">>>>>>>>>>>>>>> Host null and path is empty");
-//            }
-            AbstractCollection<IStorageSite> sites;
+            
+            Collection<IStorageSite> sites;
             if (ldri.isRoot() || ldri.toString().equals("")) {
                 root = new LogicalData(ldri, Constants.LOGICAL_FOLDER);
                  sites = root.getStorageSites();
                 if (sites == null || sites.isEmpty()) {
-                    sites = (AbstractCollection<IStorageSite>) catalogue.getSitesByUname(uname);
+                    sites = (Collection<IStorageSite>) catalogue.getSitesByUname(uname);
                     
                     if (sites == null || sites.isEmpty()) {
                         debug("\t StorageSites for " + ldri + " are empty!");

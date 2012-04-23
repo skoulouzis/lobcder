@@ -74,7 +74,7 @@ public class WebDataFileResource implements
             Collection<IStorageSite> sites = logicalData.getStorageSites();
             if (sites != null && !sites.isEmpty()) {
                 for (IStorageSite s : sites) {
-                    s.deleteVNode(logicalData.getPDRI());
+                    s.deleteVNode(logicalData.getLDRI());
                 }
             }
             catalogue.unregisterResourceEntry(logicalData);

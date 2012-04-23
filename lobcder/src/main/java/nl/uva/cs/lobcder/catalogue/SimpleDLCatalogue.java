@@ -10,6 +10,8 @@ package nl.uva.cs.lobcder.catalogue;
  */
 import com.bradmcevoy.common.Path;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.jdo.*;
 import nl.uva.cs.lobcder.resources.*;
 import nl.uva.cs.lobcder.webDav.resources.Constants;
@@ -97,7 +99,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                         q.setFilter("vphUsername == uname && endpoint == epoint");
                         q.declareParameters(uname.getClass().getName() + " uname, " + epoint.getClass().getName() + " epoint");
 
-
+                        
                         results = (Collection<StorageSite>) q.execute(uname, epoint);
                         for (StorageSite ss : results) {
                             if (s.getVPHUsername().equals(ss.getVPHUsername()) && s.getEndpoint().equals(ss.getEndpoint())) {
@@ -108,6 +110,8 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                     pm.deletePersistentAll(deleteStorageSites);
                 }
                 pm.makePersistent(entry);
+                //The null bug
+                pm.detachCopy(entry);
                 tx.commit();
 
             } finally {
@@ -136,15 +140,18 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                 q.setFilter("strLDRI == strLogicalResourceName");
                 q.declareParameters(strLogicalResourceName.getClass().getName() + " strLogicalResourceName");
                 q.setUnique(true);
+
+                
                 entry = (ILogicalData) q.execute(strLogicalResourceName);
-                tx.commit();
+                tx.commit();               
 
                 stupidBugLogicData(entry);
-
+                
             } finally {
                 if (tx.isActive()) {
                     tx.rollback();
                 }
+
                 pm.close();
             }
         }
@@ -175,8 +182,9 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                 q.declareParameters(strLogicalResourceName.getClass().getName() + " strLogicalResourceName");
 
                 q.setUnique(true);
+                
                 LogicalData result = (LogicalData) q.execute(strLogicalResourceName);
-
+                
                 Collection<Path> childernPathForDeleition = result.getChildren();
 
                 if (childernPathForDeleition != null) {
@@ -187,6 +195,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                         q.setFilter("strLDRI == strLogicalResourceName");
                         q.declareParameters(strLogicalResourceName.getClass().getName() + " strLogicalResourceName");
                         q.setUnique(true);
+                        
                         LogicalData ch = (LogicalData) q.execute(strLogicalResourceName);
                         childernForDeleition.add(ch);
                     }
@@ -222,6 +231,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                 q.setFilter("strLDRI == strLogicalResourceName");
                 q.declareParameters(strLogicalResourceName.getClass().getName() + " strLogicalResourceName");
                 q.setUnique(true);
+                
                 ILogicalData entry = (ILogicalData) q.execute(strLogicalResourceName);
 
                 if (entry == null) {
@@ -258,6 +268,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                 q.setFilter("strLDRI == strLogicalResourceName");
                 q.declareParameters(strLogicalResourceName.getClass().getName() + " strLogicalResourceName");
                 q.setUnique(true);
+                
                 ILogicalData result = (ILogicalData) q.execute(strLogicalResourceName);
 
                 if (result == null) {
@@ -299,6 +310,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
 
                 Query q = pm.newQuery("SELECT FROM " + LogicalData.class.getName()
                         + " WHERE ldriLen == 1");
+                
                 results = (Collection<ILogicalData>) q.execute();
 
                 tx.commit();
@@ -364,6 +376,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                 q.declareParameters(strLogicalResourceName.getClass().getName() + " strLogicalResourceName");
 
                 q.setUnique(true);
+                
                 entry = (ILogicalData) q.execute(strLogicalResourceName);
                 entry.setLDRI(newPath);
                 Collection<Path> children = entry.getChildren();
@@ -417,6 +430,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                         q.declareParameters(strLogicalResourceName.getClass().getName() + " strLogicalResourceName");
 
                         q.setUnique(true);
+                        
                         ILogicalData childEntry = (ILogicalData) q.execute(strLogicalResourceName);
                         if (childEntry == null) {
 //                        pm.makePersistent(new LogicalData(renamedChildrenMap.get(p)));
@@ -456,6 +470,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
             try {
                 tx.begin();
                 Query q = pm.newQuery(LogicalData.class);
+                
                 c = (Collection) q.execute();
                 tx.commit();
 
@@ -481,9 +496,10 @@ public class SimpleDLCatalogue implements IDLCatalogue {
 
                 q.setFilter("vphUsername == vphUname");
                 q.declareParameters(vphUname.getClass().getName() + " vphUname");
+                
                 results = (AbstractCollection<IStorageSite>) q.execute(vphUname);
                 tx.commit();
-
+                
                 //Stupid bug!
                 if (!results.isEmpty()) {
                     Iterator<IStorageSite> iter = results.iterator();
@@ -507,6 +523,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
             try {
                 tx.begin();
                 Query q = pm.newQuery(StorageSite.class);
+                
                 Collection<StorageSite> results = (Collection<StorageSite>) q.execute();
                 pm.deletePersistentAll(results);
                 tx.commit();
@@ -529,6 +546,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                 tx.begin();
 
                 Query q = pm.newQuery(StorageSite.class);
+                
                 Collection<StorageSite> results = (Collection<StorageSite>) q.execute();
                 tx.commit();
 
@@ -560,7 +578,8 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                         tx.begin();
 
                         pm.makePersistent(site);
-                        stupidBugStorageSite(site);
+                        pm.detachCopy(site);
+                        //stupidBugStorageSite(site);
                         tx.commit();
 
                     } finally {
@@ -666,29 +685,28 @@ public class SimpleDLCatalogue implements IDLCatalogue {
     }
 
     private void stupidBugLogicData(ILogicalData entry) {
-        if (entry != null) {
-            //Bug! If we don't do this the ldri becomes null
-            Path ldri = entry.getLDRI();
-            String type = entry.getType();
-            entry.getPDRI();
-            ArrayList<String> types = entry.getMetadata().getContentTypes();
-//                    debug("Got back: " + ldri);
-            Collection<Path> rChildren = entry.getChildren();
-            AbstractCollection<IStorageSite> ss = entry.getStorageSites();
-            for (IStorageSite s : ss) {
-                stupidBugStorageSite(s);
-            }
-        }
+//        if (entry != null) {
+//            //Bug! If we don't do this the ldri becomes null
+//            Path ldri = entry.getLDRI();
+//            String type = entry.getType();
+//            entry.getPDRI();
+//            ArrayList<String> types = entry.getMetadata().getContentTypes();
+////                    debug("Got back: " + ldri);
+//            Collection<Path> rChildren = entry.getChildren();
+//            Collection<IStorageSite> ss = entry.getStorageSites();
+//            for (IStorageSite s : ss) {
+//                stupidBugStorageSite(s);
+//            }
+//        }
     }
 
     private void stupidBugStorageSite(IStorageSite site) {
-        
-            String ep = site.getEndpoint();
-//        debug("Endpoint: " + ep);
-            Credential cred = site.getCredentials();
-//        debug("Credentials: " + cred);
-            site.getUID();
-            site.getInfo();
-            site.getLogicalPaths();
+//        String ep = site.getEndpoint();
+////        debug("Endpoint: " + ep);
+//        Credential cred = site.getCredentials();
+////        debug("Credentials: " + cred);
+////        site.getUID();
+//        site.getInfo();
+//        site.getLogicalPaths();
     }
 }

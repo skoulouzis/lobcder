@@ -33,7 +33,6 @@ class WebDataDirResource implements FolderResource, CollectionResource {
     private ILogicalData entry;
     private final IDLCatalogue catalogue;
     private boolean debug = true;
-    private static final Object lock = new Object();
 
     public WebDataDirResource(IDLCatalogue catalogue, ILogicalData entry) throws IOException, Exception {
         this.entry = entry;
@@ -46,78 +45,76 @@ class WebDataDirResource implements FolderResource, CollectionResource {
 
     @Override
     public CollectionResource createCollection(String newName) throws NotAuthorizedException, ConflictException, BadRequestException {
-        synchronized (lock) {
-            try {
-                debug("createCollection.");
+        try {
+            debug("createCollection.");
 
-                Path newCollectionPath = Path.path(entry.getLDRI(), newName);
-                debug("\t newCollectionPath: " + newCollectionPath);
-                LogicalData newFolderEntry = new LogicalData(newCollectionPath, Constants.LOGICAL_FOLDER);
-                newFolderEntry.getMetadata().setCreateDate(System.currentTimeMillis());
+            Path newCollectionPath = Path.path(entry.getLDRI(), newName);
+            debug("\t newCollectionPath: " + newCollectionPath);
+            LogicalData newFolderEntry = new LogicalData(newCollectionPath, Constants.LOGICAL_FOLDER);
+            newFolderEntry.getMetadata().setCreateDate(System.currentTimeMillis());
 
-                Collection<IStorageSite> sites = entry.getStorageSites();
-                if (sites == null || sites.isEmpty()) {
-                    debug("\t Storage Sites for " + this.entry.getLDRI() + " are empty!");
-                    throw new IOException("Storage Sites for " + this.entry.getLDRI() + " are empty!");
+            Collection<IStorageSite> sites = entry.getStorageSites();
+            if (sites == null || sites.isEmpty()) {
+                debug("\t Storage Sites for " + this.entry.getLDRI() + " are empty!");
+                throw new IOException("Storage Sites for " + this.entry.getLDRI() + " are empty!");
+            }
+
+            //Maybe we have a problem with shalow copy
+            //copyStorageSites.addAll(entry.getStorageSites());
+            ArrayList<IStorageSite> copyStorageSites = new ArrayList<IStorageSite>();
+            for (IStorageSite s : sites) {
+                String ep = s.getEndpoint();
+                if (ep == null) {
+                    throw new NullPointerException("Endpoint is null");
                 }
-
-                //Maybe we have a problem with shalow copy
-                //copyStorageSites.addAll(entry.getStorageSites());
-                ArrayList<IStorageSite> copyStorageSites = new ArrayList<IStorageSite>();
-                for (IStorageSite s : sites) {
-                    String ep = s.getEndpoint();
-                    if (ep == null) {
-                        throw new NullPointerException("Endpoint is null");
-                    }
-                    Credential cred = s.getCredentials();
-                    if (cred == null) {
-                        throw new NullPointerException("Credentials is null");
-                    }
-                    StorageSite ss = new StorageSite(ep, cred);
-                    copyStorageSites.add(ss);
+                Credential cred = s.getCredentials();
+                if (cred == null) {
+                    throw new NullPointerException("Credentials is null");
                 }
+                StorageSite ss = new StorageSite(ep, cred);
+                copyStorageSites.add(ss);
+            }
 
-                newFolderEntry.setStorageSites(copyStorageSites);
+            newFolderEntry.setStorageSites(copyStorageSites);
 //            sites = newFolderEntry.getStorageSites();
 //            if (sites == null || sites.isEmpty()) {
 //                debug("\t Storage Sites for " + newFolderEntry.getLDRI() + " are empty!");
 //                throw new IOException("Storage Sites for " + newFolderEntry.getLDRI() + " are empty!");
 //            }
-                catalogue.registerResourceEntry(newFolderEntry);
+            catalogue.registerResourceEntry(newFolderEntry);
 
-                ILogicalData reloaded = catalogue.getResourceEntryByLDRI(newFolderEntry.getLDRI());
-                sites = reloaded.getStorageSites();
-                if (sites == null || sites.isEmpty()) {
-                    debug("\t Storage Sites for (reloaded)" + reloaded.getLDRI() + " are empty!");
-                    //Bad bad horrible patch!
-                    sites = entry.getStorageSites();
-                    copyStorageSites = new ArrayList<IStorageSite>();
-                    for (IStorageSite s : sites) {
-                        copyStorageSites.add(new StorageSite(s.getEndpoint(), s.getCredentials()));
-                    }
-                    newFolderEntry.setStorageSites(copyStorageSites);
-                    catalogue.updateResourceEntry(newFolderEntry);
-                    reloaded = catalogue.getResourceEntryByLDRI(newFolderEntry.getLDRI());
-//                throw new IOException("Storage Sites for " + reloaded.getLDRI() + " are empty!");
+            ILogicalData reloaded = catalogue.getResourceEntryByLDRI(newFolderEntry.getLDRI());
+            sites = reloaded.getStorageSites();
+            if (sites == null || sites.isEmpty()) {
+                debug("\t Storage Sites for (reloaded)" + reloaded.getLDRI() + " are empty!");
+                //Bad bad horrible patch!
+                sites = entry.getStorageSites();
+                copyStorageSites = new ArrayList<IStorageSite>();
+                for (IStorageSite s : sites) {
+                    copyStorageSites.add(new StorageSite(s.getEndpoint(), s.getCredentials()));
                 }
-                WebDataDirResource resource = new WebDataDirResource(catalogue, reloaded);
+                newFolderEntry.setStorageSites(copyStorageSites);
+                catalogue.updateResourceEntry(newFolderEntry);
+                reloaded = catalogue.getResourceEntryByLDRI(newFolderEntry.getLDRI());
+//                throw new IOException("Storage Sites for " + reloaded.getLDRI() + " are empty!");
+            }
+            WebDataDirResource resource = new WebDataDirResource(catalogue, reloaded);
 
-                //Why do we do that ?
+            //Why do we do that ?
 //            reloaded = catalogue.getResourceEntryByLDRI(this.entry.getLDRI());
 //            if(reloaded==null){
 //                throw new BadRequestException(this, "Logical resource queried from catalogue is null");
 //            }
 //            this.entry = reloaded;
 
-                return resource;
-            } catch (Exception ex) {
-                Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, ex);
-                if (ex.getMessage().contains("resource exists")) {
-                    throw new ConflictException(this, newName);
-                }
+            return resource;
+        } catch (Exception ex) {
+            Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, ex);
+            if (ex.getMessage().contains("resource exists")) {
+                throw new ConflictException(this, newName);
             }
-            return null;
         }
+        return null;
     }
 
     @Override
@@ -139,20 +136,18 @@ class WebDataDirResource implements FolderResource, CollectionResource {
     @Override
     public List<? extends Resource> getChildren() {
         debug("getChildren.");
-        synchronized (lock) {
-            ArrayList<? extends Resource> children = null;
-            try {
-                if (entry.getLDRI().isRoot()) {
-                    children = getTopLevelChildren();
-                } else {
-                    children = getEntriesChildren();
-                }
-            } catch (Exception ex) {
-                Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, ex);
+        ArrayList<? extends Resource> children = null;
+        try {
+            if (entry.getLDRI().isRoot()) {
+                children = getTopLevelChildren();
+            } else {
+                children = getEntriesChildren();
             }
-            debug("Returning children: " + children);
-            return children;
+        } catch (Exception ex) {
+            Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, ex);
         }
+        debug("Returning children: " + children);
+        return children;
     }
 
     @Override
@@ -254,29 +249,26 @@ class WebDataDirResource implements FolderResource, CollectionResource {
     @Override
     public Resource createNew(String newName, InputStream inputStream, Long length, String contentType) throws IOException, ConflictException, NotAuthorizedException, BadRequestException {
         Resource resource;
-        synchronized (lock) {
-            try {
-                debug("createNew.");
-                debug("\t newName: " + newName);
-                debug("\t length: " + length);
-                debug("\t contentType: " + contentType);
+        try {
+            debug("createNew.");
+            debug("\t newName: " + newName);
+            debug("\t length: " + length);
+            debug("\t contentType: " + contentType);
+            Path newPath = Path.path(entry.getLDRI(), newName);
 
-                Path newPath = Path.path(entry.getLDRI(), newName);
-
-                LogicalData newResource = (LogicalData) catalogue.getResourceEntryByLDRI(newPath);
-                if (newResource != null) {
-                    resource = updateExistingFile(newResource, length, contentType, inputStream);
-                } else {
-                    resource = createNonExistingFile(newPath, length, contentType, inputStream);
-                }
-
-                ILogicalData reloaded = catalogue.getResourceEntryByLDRI(this.entry.getLDRI());
-                this.entry = reloaded;
-                return resource;
-            } catch (Exception ex) {
-                throw new BadRequestException(this, ex.getMessage());
-            } finally {
+            LogicalData newResource = (LogicalData) catalogue.getResourceEntryByLDRI(newPath);
+            if (newResource != null) {
+                resource = updateExistingFile(newResource, length, contentType, inputStream);
+            } else {
+                resource = createNonExistingFile(newPath, length, contentType, inputStream);
             }
+
+            ILogicalData reloaded = catalogue.getResourceEntryByLDRI(this.entry.getLDRI());
+            this.entry = reloaded;
+            return resource;
+        } catch (Exception ex) {
+            throw new BadRequestException(this, ex.getMessage());
+        } finally {
         }
     }
 
@@ -307,7 +299,7 @@ class WebDataDirResource implements FolderResource, CollectionResource {
             Collection<IStorageSite> sites = entry.getStorageSites();
             if (sites != null && !sites.isEmpty()) {
                 for (IStorageSite s : sites) {
-                    s.deleteVNode(entry.getPDRI());
+                    s.deleteVNode(entry.getLDRI());
                 }
             }
             List<? extends Resource> children = getChildren();
@@ -498,7 +490,7 @@ class WebDataDirResource implements FolderResource, CollectionResource {
                 out.close();
             }
         }
-
+        
         Metadata meta = new Metadata();
         meta.setLength(length);
         meta.addContentType(contentType);

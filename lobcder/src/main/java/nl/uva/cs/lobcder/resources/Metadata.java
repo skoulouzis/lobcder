@@ -13,7 +13,16 @@ import javax.jdo.annotations.Persistent;
  *
  * @author S. Koulouzis
  */
-@PersistenceCapable
+
+/**
+ * 
+ * JDO 2.0 introduces a new way of handling this situation, by detaching an 
+ * object from the persistence graph, allowing it to be worked on in the users 
+ * application. It can then be attached to the persistence graph later. 
+ * The first thing to do to use a class with this facility is to tag it as 
+ * "detachable". This is done by adding the attribute 
+ */
+@PersistenceCapable(detachable="true")
 public class Metadata implements Serializable {
 
     /**
@@ -26,7 +35,7 @@ public class Metadata implements Serializable {
     private Long modifiedDate;
     @Persistent
     private Long length;
-    @Persistent
+    @Persistent(defaultFetchGroup="true")
     private ArrayList<String> contentTypes;
 
     public Long getCreateDate() {

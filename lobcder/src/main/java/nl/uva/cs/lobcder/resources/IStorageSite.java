@@ -33,7 +33,7 @@ public interface IStorageSite {
 
     public Credential getCredentials();
 
-    public String getUID();
+//    public String getUID();
 
     public void deleteVNode(Path lDRI)throws VlException;
 

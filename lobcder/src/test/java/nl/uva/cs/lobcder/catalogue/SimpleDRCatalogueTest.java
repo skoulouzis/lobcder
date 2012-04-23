@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.AbstractCollection;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Properties;
@@ -59,8 +60,11 @@ public class SimpleDRCatalogueTest {
 
         SimpleDLCatalogue instance = new SimpleDLCatalogue();
         try {
+//            StorageSite s = new StorageSite("", new Credential(""));
+            Collection<IStorageSite> ss = new ArrayList<IStorageSite>();
+            entry.setStorageSites(ss);
             instance.registerResourceEntry(entry);
-//            System.out.println("entry:          " + entry.getLDRI());
+            System.out.println("entry:          " + entry.getLDRI());
 
             ILogicalData loadedEntry = instance.getResourceEntryByLDRI(path);
             assertNotNull(loadedEntry);
@@ -99,7 +103,6 @@ public class SimpleDRCatalogueTest {
         Path childPath = Path.path(ldri + childLdri);
 
         LogicalData child = new LogicalData(childPath, Constants.LOGICAL_DATA);
-        System.out.println("child: " + child.getUID() + " " + child.getLDRI());
         instance.registerResourceEntry(child);
 
         ILogicalData loadedChildEntry = instance.getResourceEntryByLDRI(childPath);
@@ -742,6 +745,8 @@ public class SimpleDRCatalogueTest {
             }
         }
     }
+    
+         
 
     @Test
     public void testStorageSiteExistsy() {

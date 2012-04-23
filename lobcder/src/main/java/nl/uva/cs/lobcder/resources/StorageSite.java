@@ -8,15 +8,12 @@ import com.bradmcevoy.common.Path;
 import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.AbstractCollection;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.jdo.annotations.PersistenceCapable;
-import javax.jdo.annotations.Persistent;
-import javax.jdo.annotations.PrimaryKey;
+import javax.jdo.annotations.*;
 import nl.uva.vlet.Global;
 import nl.uva.vlet.GlobalConfig;
 import nl.uva.vlet.data.StringUtil;
@@ -35,7 +32,7 @@ import nl.uva.vlet.vrs.VRSContext;
  *
  * @author S. Koulouzis
  */
-@PersistenceCapable
+@PersistenceCapable(detachable="true")
 public class StorageSite implements Serializable, IStorageSite {
 
     private static final long serialVersionUID = -2552461454620784560L;
@@ -70,28 +67,31 @@ public class StorageSite implements Serializable, IStorageSite {
         VRS.getRegistry().addVRSDriverClass(nl.uva.vlet.vfs.cloud.CloudFSFactory.class);
         Global.init();
     }
-    @PrimaryKey
-    @Persistent(customValueStrategy = "uuid")
-    private String uid;
-    private Properties prop;
-    private VRL vrl;
+    
+    
+       
     @Persistent
     private String endpoint;
+    
+    @Persistent(defaultFetchGroup="true")
+    @Element
+    private Collection<String> logicalPaths;
     @Persistent
-    private AbstractCollection<String> logicalPaths;
+    private String vphUsername;
+    @Persistent(defaultFetchGroup="true")
+    private Credential credentials;
+    
+    private Properties prop;
+    private VRL vrl;
     private ServerInfo info;
     private VRSContext context;
     private VFSClient vfsClient;
-    @Persistent
-    private String vphUsername;
-    @Persistent
-    private Credential credentials;
     public static final String storagePrefix = "LOBCDER-REPLICA";
     private static final boolean debug = false;
 
     public StorageSite(String endpoint, Credential cred) throws Exception {
         try {
-            uid = String.valueOf(System.currentTimeMillis());
+//            uid = String.valueOf(System.currentTimeMillis());
             if (endpoint == null) {
                 throw new NullPointerException("Endpoint is null");
             }
@@ -108,8 +108,6 @@ public class StorageSite implements Serializable, IStorageSite {
             prop = new Properties();
 
             this.credentials = cred;
-            
-            logicalPaths = new ArrayList<String>();
 
             initVFS();
         } catch (VlException ex) {
@@ -197,19 +195,19 @@ public class StorageSite implements Serializable, IStorageSite {
         return this.credentials;
     }
 
-    @Override
-    public String getUID() {
-        return this.uid;
-    }
+//    @Override
+//    public String getUID() {
+//        return this.uid;
+//    }
 
     @Override
-    public void deleteVNode(Path pDRI) throws VlException {
-        debug("Exists?: " + pDRI);
-        boolean exists = this.getVfsClient().existsPath(getVrl().append(pDRI.toString()));
+    public void deleteVNode(Path lDRI) throws VlException {
+        debug("Exists?: " + lDRI);
+        boolean exists = this.getVfsClient().existsPath(getVrl().append(lDRI.toString()));
         if (exists) {
-            VFSNode node = this.getVNode(pDRI);
+            VFSNode node = this.getVNode(lDRI);
             if (node != null && node.delete()) {
-                this.logicalPaths.remove(pDRI.toString());
+                this.logicalPaths.remove(lDRI.toString());
             }
         }
     }
