@@ -146,6 +146,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                 q.setUnique(true);
                
                 ILogicalData entry = (ILogicalData) q.execute(strLogicalResourceName);
+                copy = entry;
                 tx.commit();
 
                 String[] loadedFieldNames = NucleusJDOHelper.getLoadedFields(entry, pm);
@@ -159,6 +160,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                     boolean isDetached = JDOHelper.isDetached(entry);
                     debug(entry.getLDRI() + " is detaced: " + isDetached);
                     if (!isDetached) {
+                        pm.makeTransient(entry);
 //                        pm.detachCopy(entry);
                         isDetached = JDOHelper.isDetached(entry);
                         debug(entry.getLDRI() + " is detaced: " + isDetached);
@@ -167,7 +169,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                     ObjectState state = JDOHelper.getObjectState(entry);
                     debug("State: " + state.name());
                 }
-                copy = pm.detachCopy(entry);
+//                copy = pm.detachCopy(entry);
             } finally {
                 if (tx.isActive()) {
                     tx.rollback();
