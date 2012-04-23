@@ -54,7 +54,7 @@ public class LogicalData implements ILogicalData, Serializable {
     
     @Persistent(defaultFetchGroup="true")
     private Collection<Path> children;
-    @Persistent
+    @Persistent(defaultFetchGroup="true")
     private String type;
     private boolean debug = false;
 
@@ -248,5 +248,10 @@ public class LogicalData implements ILogicalData, Serializable {
     @Override
     public Path getPDRI() {
         return pdri;
+    }
+
+    @Override
+    public void setPDRI(Path pdrI) {
+        this.pdri = pdrI;
     }
 }

@@ -59,5 +59,7 @@ public interface ILogicalData {
     public String getType();
 
     public Path getPDRI();
+
+    public void setPDRI(Path pdrI);
     
 }

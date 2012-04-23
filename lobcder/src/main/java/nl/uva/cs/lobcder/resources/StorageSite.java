@@ -113,6 +113,8 @@ public class StorageSite implements Serializable, IStorageSite {
         } catch (VlException ex) {
             throw new Exception(ex);
         }
+        
+        logicalPaths = new ArrayList<String>();
     }
 
     @Override
