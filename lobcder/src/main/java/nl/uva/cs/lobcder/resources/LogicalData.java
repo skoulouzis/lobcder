@@ -9,18 +9,19 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import javax.jdo.annotations.*;
+import nl.uva.vlet.data.StringUtil;
 import nl.uva.vlet.exception.VlException;
 import nl.uva.vlet.vfs.VFSNode;
 
 /**
- * 
- * JDO 2.0 introduces a new way of handling this situation, by detaching an 
- * object from the persistence graph, allowing it to be worked on in the users 
- * application. It can then be attached to the persistence graph later. 
- * The first thing to do to use a class with this facility is to tag it as 
- * "detachable". This is done by adding the attribute 
+ *
+ * JDO 2.0 introduces a new way of handling this situation, by detaching an
+ * object from the persistence graph, allowing it to be worked on in the users
+ * application. It can then be attached to the persistence graph later. The
+ * first thing to do to use a class with this facility is to tag it as
+ * "detachable". This is done by adding the attribute
  */
-@PersistenceCapable(detachable="true")
+@PersistenceCapable(detachable = "true")
 @Inheritance(strategy = InheritanceStrategy.NEW_TABLE)
 @Discriminator(strategy = DiscriminatorStrategy.CLASS_NAME)
 public class LogicalData implements ILogicalData, Serializable {
@@ -32,35 +33,33 @@ public class LogicalData implements ILogicalData, Serializable {
     @PrimaryKey
     @Persistent(customValueStrategy = "uuid")
     private String uid;
-    
     //When an object is retrieved from the datastore by JDO typically not all 
     //fields are retrieved immediately. This is because for efficiency purposes 
     //only particular field types are retrieved in the initial access of the 
     //object, and then any other objects are retrieved when accessed 
     //(lazy loading). The group of fields that are loaded is called a fetch 
     //group
-    @Persistent(defaultFetchGroup="true")
+    @Persistent(defaultFetchGroup = "true")
     private Path ldri;
-    @Persistent(defaultFetchGroup="true")
+    @Persistent(defaultFetchGroup = "true")
     private Path pdri;
     @Persistent
     private String strLDRI;
     @Persistent
     private int ldriLen;
-    
-    @Persistent(defaultFetchGroup="true")
+    @Persistent(defaultFetchGroup = "true")
+    private String parent;
+    @Persistent(defaultFetchGroup = "true")
     private Metadata metadata;
-    
-    @Persistent(defaultFetchGroup="true")
+    @Persistent(defaultFetchGroup = "true")
     private Collection<String> children;
-    @Persistent(defaultFetchGroup="true")
+    @Persistent(defaultFetchGroup = "true")
     private String type;
     private boolean debug = false;
-
-    @Persistent(defaultFetchGroup="true")
+    @Persistent(defaultFetchGroup = "true")
     @Join
-    @Element(types=nl.uva.cs.lobcder.resources.StorageSite.class)    
-    @Order(column="STORAGE_SITE")
+    @Element(types = nl.uva.cs.lobcder.resources.StorageSite.class)
+    @Order(column = "STORAGE_SITE")
     private Collection<IStorageSite> storageSites;
 
     public LogicalData(Path ldri, String type) {
@@ -71,6 +70,13 @@ public class LogicalData implements ILogicalData, Serializable {
         this.type = type;
         //Data will hold the same pdri for ever.
         pdri = ldri;
+        Path parentPath = ldri.getParent();
+        if (parentPath != null && !StringUtil.isEmpty(parentPath.toString())) {
+            parent = parentPath.toString();
+        } else {
+            parent = Path.root.toString();
+        }
+
     }
 
     @Override
@@ -118,7 +124,7 @@ public class LogicalData implements ILogicalData, Serializable {
 
     @Override
     public void setStorageSites(Collection<IStorageSite> storageSites) {
-        if (storageSites != null ){//&& !storageSites.isEmpty()) {
+        if (storageSites != null) {//&& !storageSites.isEmpty()) {
             this.storageSites = storageSites;
             debug("StorageSite num : " + this.storageSites.size());
         }
@@ -252,5 +258,17 @@ public class LogicalData implements ILogicalData, Serializable {
     @Override
     public void setPDRI(Path pdrI) {
         this.pdri = pdrI;
+    }
+
+    @Override
+    public String getParent() {
+        return parent;
+    }
+
+    /**
+     * @param parent the parent to set
+     */
+    public void setParent(String parent) {
+        this.parent = parent;
     }
 }

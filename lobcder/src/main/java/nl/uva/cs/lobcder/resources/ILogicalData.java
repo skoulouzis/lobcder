@@ -62,4 +62,6 @@ public interface ILogicalData {
 
     public void setPDRI(Path pdrI);
     
+    public String getParent();
+    
 }

@@ -1,0 +1,914 @@
+    /*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package nl.uva.cs.lobcder.catalogue;
+
+import com.bradmcevoy.common.Path;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.AbstractCollection;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import nl.uva.cs.lobcder.resources.*;
+import nl.uva.cs.lobcder.util.ConstantsAndSettings;
+import nl.uva.cs.lobcder.webDav.resources.Constants;
+import nl.uva.cs.lobcder.webDav.resources.UserThread;
+import static org.junit.Assert.*;
+import org.junit.*;
+
+/**
+ *
+ * @author S. Koulouzis
+ */
+public class RDMSDLCatalogueTest {
+
+//    private static String[] names = new String[]{"storage1.prop", "storage2.prop", "storage3.prop"};
+    private static String[] names = new String[]{"storage1.prop"};
+
+    @BeforeClass
+    public static void setUpClass() throws Exception {
+    }
+
+    @AfterClass
+    public static void tearDownClass() throws Exception {
+    }
+
+    @Before
+    public void setUp() {
+    }
+
+    @After
+    public void tearDown() {
+    }
+
+    /**
+     * Test of registerResourceEntry method, of class SimpleDRCatalogue.
+     */
+    @Test
+    public void testRegisterResourceEntry() throws Exception {
+        System.out.println("registerResourceEntry");
+        //Register one resource
+        String ldri = "resource1";
+        Path path = Path.path(ldri);
+        ILogicalData entry = new LogicalData(path, Constants.LOGICAL_DATA);
+
+        RDMSDLCatalog instance = new RDMSDLCatalog();
+        try {
+//            StorageSite s = new StorageSite("", new Credential(""));
+            Collection<IStorageSite> ss = new ArrayList<IStorageSite>();
+            entry.setStorageSites(ss);
+            instance.registerResourceEntry(entry);
+            System.out.println("entry:          " + entry.getLDRI());
+
+            ILogicalData loadedEntry = instance.getResourceEntryByLDRI(path);
+            assertNotNull(loadedEntry);
+
+            boolean theSame = compareEntries(entry, loadedEntry);
+
+            assertTrue(theSame);
+
+
+        } catch (Exception ex) {
+            if (!ex.getMessage().equals("registerResourceEntry: cannot register resource " + ldri + " resource exists")) {
+                fail(ex.getMessage());
+            } else {
+                ex.printStackTrace();
+            }
+        } finally {
+            instance.unregisterResourceEntry(entry);
+            ILogicalData result = instance.getResourceEntryByLDRI(path);
+            assertNull(result);
+        }
+    }
+
+    @Test
+    public void testRegisterMultipleResourceEntry() throws Exception {
+        System.out.println("testRegisterMultipleResourceEntry");
+        String ldri = "/resource2";
+        Path parentPath = Path.path(ldri);
+        ILogicalData parent = new LogicalData(parentPath, Constants.LOGICAL_DATA);
+
+        RDMSDLCatalog instance = new RDMSDLCatalog();
+
+        instance.registerResourceEntry(parent);
+
+        //Add children to that resource
+        String childLdri = "/child1";
+        Path childPath = Path.path(ldri + childLdri);
+
+        LogicalData child = new LogicalData(childPath, Constants.LOGICAL_DATA);
+        instance.registerResourceEntry(child);
+
+        ILogicalData loadedChildEntry = instance.getResourceEntryByLDRI(childPath);
+        boolean theSame = compareEntries(child, loadedChildEntry);
+        assertTrue(theSame);
+
+//        System.out.println("Unregister: " + child.getLDRI() + " " + child.getUID());
+//        instance.unregisterResourceEntry(child);
+//        ILogicalData result = instance.getResourceEntryByLDRI(childPath);
+//        assertNull(result);
+
+        instance.unregisterResourceEntry(parent);
+        ILogicalData result = instance.getResourceEntryByLDRI(parentPath);
+        assertNull(result);
+
+        result = instance.getResourceEntryByLDRI(childPath);
+        assertNull(result);
+    }
+
+    /**
+     * Test of resourceEntryExists method, of class SimpleDRCatalogue.
+     */
+    @Test
+    public void testResourceEntryExists() throws Exception {
+        System.out.println("resourceEntryExists");
+        String ldri = "/resource";
+        Path path = Path.path(ldri);
+        ILogicalData entry = new LogicalData(path, Constants.LOGICAL_DATA);
+        RDMSDLCatalog instance = new RDMSDLCatalog();
+
+        Boolean expResult = false;
+        Boolean result = instance.resourceEntryExists(entry);
+        assertEquals(expResult, result);
+
+
+        instance.registerResourceEntry(entry);
+        expResult = true;
+        result = instance.resourceEntryExists(entry);
+        assertEquals(expResult, result);
+
+        instance.unregisterResourceEntry(entry);
+        ILogicalData loaded = instance.getResourceEntryByLDRI(path);
+        assertNull(loaded);
+    }
+
+    /**
+     * Test of getTopLevelResourceEntries method, of class SimpleDRCatalogue.
+     */
+    @Test
+    public void testGetTopLevelResourceEntries() {
+        System.out.println("getTopLevelResourceEntries");
+        Collection<ILogicalData> topEntries = new ArrayList<ILogicalData>();
+        LogicalData topEntry1 = new LogicalData(Path.path("/r1"), Constants.LOGICAL_DATA);
+        topEntries.add(topEntry1);
+        LogicalData topEntry2 = new LogicalData(Path.path("/r2"), Constants.LOGICAL_DATA);
+        topEntries.add(topEntry2);
+        LogicalData topEntry3 = new LogicalData(Path.path("/r3"), Constants.LOGICAL_DATA);
+        topEntries.add(topEntry3);
+
+        LogicalData entry11 = new LogicalData(Path.path("/r1/r11"), Constants.LOGICAL_DATA);
+        LogicalData entry21 = new LogicalData(Path.path("/r2/r21"), Constants.LOGICAL_DATA);
+        RDMSDLCatalog instance = null;
+        Collection<ILogicalData> result = null;
+        ILogicalData loaded;
+        try {
+
+            instance = new RDMSDLCatalog();
+            instance.registerResourceEntry(topEntry1);
+            instance.registerResourceEntry(topEntry2);
+            instance.registerResourceEntry(topEntry3);
+            instance.registerResourceEntry(entry11);
+            instance.registerResourceEntry(entry21);
+
+            result = instance.getTopLevelResourceEntries();
+
+            boolean[] found = new boolean[]{false, false, false};
+            for (ILogicalData d : result) {
+                System.out.println("TOP:        " + d.getLDRI() + "     " + d.getUID());
+
+                if (compareEntries(d, topEntry3)) {
+                    found[0] = true;
+                }
+
+                if (compareEntries(d, topEntry2)) {
+                    found[1] = true;
+                }
+
+                if (compareEntries(d, topEntry1)) {
+                    found[2] = true;
+                }
+//                if (!compareEntries(d, topEntry3)) {
+//                    if (!compareEntries(d, topEntry2)) {
+//                        if (!compareEntries(d, topEntry1)) {
+//                            fail("Resource " + topEntry1.getLDRI() + " is not returned by query!");
+//                        }
+//                    }
+//                }
+            }
+
+            for (boolean b : found) {
+                assertTrue(b);
+            }
+
+            for (ILogicalData e : result) {
+                if (e.getLDRI().getLength() > 1) {
+                    fail("Resource " + e.getLDRI() + " is not a top level");
+                }
+            }
+
+        } catch (Exception ex) {
+            fail("Unexpected Exception: " + ex.getMessage());
+        } finally {
+            try {
+                instance.unregisterResourceEntry(entry21);
+                instance.unregisterResourceEntry(entry11);
+                instance.unregisterResourceEntry(topEntry3);
+                instance.unregisterResourceEntry(topEntry2);
+                instance.unregisterResourceEntry(topEntry1);
+
+
+                result = instance.getTopLevelResourceEntries();
+
+
+                for (ILogicalData d : result) {
+                    if (compareEntries(d, topEntry3) || compareEntries(d, topEntry2) || compareEntries(d, topEntry1)) {
+                        fail("entry: " + d.getLDRI() + " should not be registered in the catalogue!");
+                    }
+                }
+
+
+                loaded = instance.getResourceEntryByLDRI(entry21.getLDRI());
+                assertNull(loaded);
+
+                loaded = instance.getResourceEntryByLDRI(entry11.getLDRI());
+                assertNull(loaded);
+
+                loaded = instance.getResourceEntryByLDRI(topEntry3.getLDRI());
+                assertNull(loaded);
+
+
+                loaded = instance.getResourceEntryByLDRI(topEntry2.getLDRI());
+                assertNull(loaded);
+
+                loaded = instance.getResourceEntryByLDRI(topEntry1.getLDRI());
+                assertNull(loaded);
+
+
+
+            } catch (Exception ex) {
+                fail("Unexpected Exception: " + ex.getMessage());
+            }
+        }
+    }
+
+    @Test
+    public void testRenameEntry() {
+        System.out.println("testRenameEntry");
+        RDMSDLCatalog instance = null;
+        ILogicalData loaded = null;
+        Path newPath = null;
+        try {
+
+            instance = new RDMSDLCatalog();
+            Path originalPath = Path.path("/oldResourceName");
+            LogicalData e = new LogicalData(originalPath, Constants.LOGICAL_DATA);
+
+            instance.registerResourceEntry(e);
+            newPath = Path.path("/newResourceName");
+
+            instance.renameEntry(originalPath, newPath);
+
+            loaded = instance.getResourceEntryByLDRI(newPath);
+            assertNotNull(loaded);
+            assertEquals(newPath.toString(), loaded.getLDRI().toString());
+
+
+            ILogicalData loadedOriginal = instance.getResourceEntryByLDRI(originalPath);
+            assertNull(loadedOriginal);
+
+
+        } catch (Exception ex) {
+            fail("Unexpected Exception: " + ex.getMessage());
+        } finally {
+            try {
+                instance.unregisterResourceEntry(loaded);
+                loaded = instance.getResourceEntryByLDRI(newPath);
+                assertNull(loaded);
+
+            } catch (Exception ex) {
+                fail("Unexpected Exception: " + ex.getMessage());
+            }
+        }
+    }
+
+    @Test
+    public void testRenameWithChildren() {
+        System.out.println("testRenameWithChildren");
+        RDMSDLCatalog instance = null;
+        ILogicalData loaded = null;
+        int foundIt = 0;
+        String childName1 = "Child1";
+        String childName2 = "Child2";
+
+        LogicalData childEntry1 = null;
+        LogicalData childEntry2 = null;
+        ILogicalData childLoaded;
+        ILogicalData parentLoaded;
+        Path newPath = null;
+        try {
+
+            instance = new RDMSDLCatalog();
+            Path originalPath = Path.path("/oldResourceName/");
+            LogicalData e = new LogicalData(originalPath, Constants.LOGICAL_DATA);
+            instance.registerResourceEntry(e);
+
+            Path originalChildPath1 = Path.path("/oldResourceName/" + childName1);
+            childEntry1 = new LogicalData(originalChildPath1, Constants.LOGICAL_DATA);
+            instance.registerResourceEntry(childEntry1);
+
+            Path originalChildPath2 = Path.path("/oldResourceName/" + childName2);
+            childEntry2 = new LogicalData(originalChildPath2, Constants.LOGICAL_DATA);
+            instance.registerResourceEntry(childEntry2);
+
+            newPath = Path.path("/newResourceName");
+            instance.renameEntry(originalPath, newPath);
+
+
+            loaded = instance.getResourceEntryByLDRI(newPath);
+
+            assertNotNull(loaded);
+            assertEquals(newPath.toString(), loaded.getLDRI().toString());
+
+            Collection<String> children = loaded.getChildren();
+            assertNotNull(children);
+            assertFalse(children.isEmpty());
+
+            for (String p : children) {
+                if (p.equals(Path.path(newPath, childName1).toString()) || p.equals(Path.path(newPath, childName2).toString())) {
+                    foundIt++;
+                }
+            }
+            assertEquals(foundIt, 2);
+
+        } catch (Exception ex) {
+            fail("Unexpected Exception: " + ex.getMessage());
+        } finally {
+            try {
+
+                childLoaded = instance.getResourceEntryByLDRI(Path.path(newPath, childName1));
+                assertNotNull(childLoaded);
+                instance.unregisterResourceEntry(childLoaded);
+                childLoaded = instance.getResourceEntryByLDRI(Path.path(newPath, childName1));
+                assertNull(childLoaded);
+
+
+                childLoaded = instance.getResourceEntryByLDRI(Path.path(newPath, childName2));
+                assertNotNull(childLoaded);
+                instance.unregisterResourceEntry(childLoaded);
+                childLoaded = instance.getResourceEntryByLDRI(Path.path(newPath, childName2));
+                assertNull(childLoaded);
+
+
+                instance.unregisterResourceEntry(loaded);
+                parentLoaded = instance.getResourceEntryByLDRI(loaded.getLDRI());
+                assertNull(parentLoaded);
+            } catch (Exception ex) {
+                fail("Unexpected Exception: " + ex.getMessage());
+            }
+        }
+    }
+
+    @Test
+    public void testRenameWithManyChildren() {
+        System.out.println("testRenameWithChildren");
+        RDMSDLCatalog instance = null;
+        try {
+            instance = new RDMSDLCatalog();
+            Path originalPath = Path.path("/testCollection/");
+            LogicalData e = new LogicalData(originalPath, Constants.LOGICAL_FOLDER);
+            instance.registerResourceEntry(e);
+
+            Path originalChildPath1 = Path.path("/testCollection/childName1");
+            LogicalData childEntry1 = new LogicalData(originalChildPath1, Constants.LOGICAL_FOLDER);
+            instance.registerResourceEntry(childEntry1);
+            String sub1 = "sub1";
+
+            Path originalChildSubPath1 = Path.path("/testCollection/childName1/" + sub1);
+            LogicalData childSubEntry1 = new LogicalData(originalChildSubPath1, Constants.LOGICAL_FILE);
+            instance.registerResourceEntry(childSubEntry1);
+
+            String sub2 = "sub2";
+            Path originalChildSubPath2 = Path.path("/testCollection/childName1/" + sub2);
+            LogicalData childSubEntry2 = new LogicalData(originalChildSubPath2, Constants.LOGICAL_FILE);
+            instance.registerResourceEntry(childSubEntry2);
+
+            Path newPath = Path.path("/testCollection/NewChildName1/");
+            instance.renameEntry(originalChildPath1, newPath);
+
+            ILogicalData loaded = instance.getResourceEntryByLDRI(newPath);
+            assertNotNull(loaded);
+            assertEquals(newPath.toString(), loaded.getLDRI().toString());
+
+            assertNull(instance.getResourceEntryByLDRI(originalChildPath1));
+
+            Collection<String> children = loaded.getChildren();
+            assertNotNull(children);
+            assertFalse(children.isEmpty());
+
+            int foundIt = 0;
+            Path newSubPath1 = Path.path(newPath, sub1);
+            Path newSubPath2 = Path.path(newPath, sub2);
+            for (String p : children) {
+                if (p.equals(newSubPath1.toString()) || p.equals(newSubPath2.toString())) {
+                    foundIt++;
+                }
+            }
+            assertEquals(foundIt, 2);
+
+            ILogicalData oldSubEntry1 = instance.getResourceEntryByLDRI(originalChildSubPath1);
+            assertNull(oldSubEntry1);
+            ILogicalData oldSubEntry2 = instance.getResourceEntryByLDRI(originalChildSubPath2);
+            assertNull(oldSubEntry2);
+
+
+            ILogicalData newSubEntry1 = instance.getResourceEntryByLDRI(newSubPath1);
+            assertNotNull(newSubEntry1);
+            ILogicalData newSubEntry2 = instance.getResourceEntryByLDRI(newSubPath2);
+            assertNotNull(newSubEntry2);
+
+            instance.unregisterResourceEntry(e);
+            loaded = instance.getResourceEntryByLDRI(originalPath);
+            assertNull(loaded);
+
+        } catch (Exception ex) {
+            fail("Unexpected Exception: " + ex.getMessage());
+        }
+
+    }
+
+    @Test
+    public void testRenameChild2() throws Exception {
+        RDMSDLCatalog instance = null;
+        Path tesCollectionPath = null;
+        ILogicalData logicalCollection = null;
+        ILogicalData logicalChild = null;
+        Path testNewChildPath = null;
+        ILogicalData loadedRenamedLogicalChild = null;
+        try {
+            System.out.println("testRenameChild2");
+
+            tesCollectionPath = Path.path("/testCollection");
+            logicalCollection = new LogicalData(tesCollectionPath, Constants.LOGICAL_FOLDER);
+            instance = new RDMSDLCatalog();
+            instance.registerResourceEntry(logicalCollection);
+            //Check if the collection is registered
+            ILogicalData loadedLogicalCollection = instance.getResourceEntryByLDRI(tesCollectionPath);
+            assertNotNull(loadedLogicalCollection);
+            compareEntries(loadedLogicalCollection, logicalCollection);
+
+            Path testChildPath = Path.path(tesCollectionPath.toString() + "/testChild");
+            logicalChild = new LogicalData(testChildPath, Constants.LOGICAL_FILE);
+            instance.registerResourceEntry(logicalChild);
+            //Check if the child is registered
+            ILogicalData loadedLogicalChild = instance.getResourceEntryByLDRI(testChildPath);
+            assertNotNull(loadedLogicalChild);
+            compareEntries(loadedLogicalChild, logicalChild);
+
+            //Check if collection has the child 
+            loadedLogicalCollection = instance.getResourceEntryByLDRI(tesCollectionPath);
+            Path loadedChildPath = loadedLogicalCollection.getChild(testChildPath);
+            assertEquals(loadedChildPath.toString(), testChildPath.toString());
+
+            //Rename child 
+            testNewChildPath = Path.path(tesCollectionPath.toString() + "/testNewChild");
+            instance.renameEntry(testChildPath, testNewChildPath);
+            loadedRenamedLogicalChild = instance.getResourceEntryByLDRI(testNewChildPath);
+            assertNotNull(loadedRenamedLogicalChild);
+
+            loadedLogicalChild = instance.getResourceEntryByLDRI(testChildPath);
+            assertNull(loadedLogicalChild);
+            //check if collection has renamed child
+            ILogicalData loadedCollection = instance.getResourceEntryByLDRI(logicalCollection.getLDRI());
+            Path loadedNewChild = loadedCollection.getChild(testNewChildPath);
+            assertNotNull(loadedNewChild);
+
+
+        } catch (CatalogueException ex) {
+            fail(ex.getMessage());
+            Logger.getLogger(RDMSDLCatalogueTest.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            try {
+
+                instance.unregisterResourceEntry(logicalCollection);
+                ILogicalData loadedCollection = instance.getResourceEntryByLDRI(tesCollectionPath);
+                assertNull(loadedCollection);
+
+                ILogicalData loadedChild = instance.getResourceEntryByLDRI(logicalChild.getLDRI());
+                assertNull(loadedChild);
+
+                loadedChild = instance.getResourceEntryByLDRI(loadedRenamedLogicalChild.getLDRI());
+                assertNull(loadedChild);
+
+            } catch (CatalogueException ex) {
+                fail(ex.getMessage());
+            }
+        }
+    }
+
+    @Test
+    public void testRenameChild() {
+        System.out.println("testRenameChild");
+        RDMSDLCatalog instance = null;
+        ILogicalData loaded = null;
+        String childName1 = "Child1";
+        String childName2 = "Child2";
+
+        ILogicalData childEntry1 = null;
+        ILogicalData childEntry2 = null;
+        Path newPath = null;
+        ILogicalData childEntry2Loaded;
+        ILogicalData parent = null;
+        try {
+
+            instance = new RDMSDLCatalog();
+            Path originalPath = Path.path("/oldResourceName/");
+            parent = new LogicalData(originalPath, Constants.LOGICAL_DATA);
+            instance.registerResourceEntry(parent);
+
+            Path originalChildPath1 = Path.path("/oldResourceName/" + childName1);
+            childEntry1 = new LogicalData(originalChildPath1, Constants.LOGICAL_DATA);
+            instance.registerResourceEntry(childEntry1);
+
+            Path originalChildPath2 = Path.path("/oldResourceName/" + childName1 + "/" + childName2);
+            childEntry2 = new LogicalData(originalChildPath2, Constants.LOGICAL_DATA);
+            instance.registerResourceEntry(childEntry2);
+
+            newPath = Path.path("/oldResourceName/" + childName1 + "/newChild2");
+            instance.renameEntry(originalChildPath2, newPath);
+
+            loaded = instance.getResourceEntryByLDRI(newPath);
+
+            assertNotNull(loaded);
+            assertEquals(newPath.toString(), loaded.getLDRI().toString());
+
+        } catch (Exception ex) {
+            fail("Unexpected Exception: " + ex.getMessage());
+        } finally {
+            try {
+                instance.unregisterResourceEntry(loaded);
+                childEntry2Loaded = instance.getResourceEntryByLDRI(loaded.getLDRI());
+                assertNull(childEntry2Loaded);
+
+                instance.unregisterResourceEntry(childEntry1);
+                childEntry1 = instance.getResourceEntryByLDRI(childEntry1.getLDRI());
+                assertNull(childEntry1);
+
+                instance.unregisterResourceEntry(parent);
+                parent = instance.getResourceEntryByLDRI(parent.getLDRI());
+                assertNull(parent);
+            } catch (Exception ex) {
+                fail("Unexpected Exception: " + ex.getMessage());
+            }
+        }
+    }
+
+    @Test
+    public void testMetadataPersistence() {
+        System.out.println("testMetadataPersistence");
+        RDMSDLCatalog instance = new RDMSDLCatalog();
+        Path originalPath = Path.path("/oldResourceName");
+        LogicalData e = new LogicalData(originalPath, Constants.LOGICAL_DATA);
+        Metadata meta = new Metadata();
+        String type = "text/plain";
+        meta.addContentType(type);
+        meta.setCreateDate(System.currentTimeMillis());
+        meta.setLength(new Long(0));
+        e.setMetadata(meta);
+
+        try {
+            instance.registerResourceEntry(e);
+
+
+            RDMSDLCatalog instance2 = new RDMSDLCatalog();
+            ILogicalData entry = instance2.getResourceEntryByLDRI(originalPath);
+            meta = entry.getMetadata();
+
+            assertNotNull(meta);
+
+            assertNotNull(meta.getContentTypes());
+
+            assertEquals(type, meta.getContentTypes().get(0));
+
+            assertNotNull(meta.getCreateDate());
+
+            assertNotNull(meta.getLength());
+
+            instance2.unregisterResourceEntry(entry);
+        } catch (Exception ex) {
+            fail("Unexpected Exception: " + ex.getMessage());
+        } finally {
+        }
+    }
+
+    @Test
+    public void testRegisterToNonExistiongParent() {
+        System.out.println("testRegisterToNonExistiongParent");
+        RDMSDLCatalog instance = null;
+        LogicalData lChild = null;
+        ILogicalData res;
+        try {
+
+            instance = new RDMSDLCatalog();
+            Path parentPath = Path.path("parent");
+            Path childPath = Path.path("parent/child");
+
+            LogicalData lParent = new LogicalData(parentPath, Constants.LOGICAL_FOLDER);
+            lChild = new LogicalData(childPath, Constants.LOGICAL_FILE);
+
+            instance.registerResourceEntry(lChild);
+
+            fail("Should throw NonExistingResourceException");
+
+        } catch (Exception ex) {
+            if (ex instanceof DuplicateResourceException) {
+                fail("Resource should not be registered: " + ex.getMessage());
+            } else if (ex instanceof NonExistingResourceException) {
+                //Test passed
+            } else {
+                fail("Not expected Exception: " + ex.getMessage());
+            }
+        } finally {
+            try {
+                //Since we got an exeption the entry should not be there 
+                res = instance.getResourceEntryByLDRI(lChild.getLDRI());
+                assertNull(res);
+            } catch (Exception ex) {
+                fail("Exception: " + ex.getMessage());
+            }
+
+        }
+    }
+
+    @Test
+    public void testRegisterToExistiongParent() {
+        System.out.println("testRegisterToExistiongParent");
+        RDMSDLCatalog instance = null;
+        LogicalData lChild = null;
+        LogicalData lParent = null;
+        try {
+
+            instance = new RDMSDLCatalog();
+            Path parentPath = Path.path("parent");
+            Path childPath = Path.path("parent/child");
+
+            lParent = new LogicalData(parentPath, Constants.LOGICAL_FOLDER);
+            lChild = new LogicalData(childPath, Constants.LOGICAL_FILE);
+
+            instance.registerResourceEntry(lParent);
+
+            instance.registerResourceEntry(lChild);
+            ILogicalData res = instance.getResourceEntryByLDRI(childPath);
+            boolean theSame = compareEntries(lChild, res);
+            assertTrue(theSame);
+
+        } catch (Exception ex) {
+            fail("Exception: " + ex.getMessage());
+        } finally {
+            try {
+                if (lChild != null) {
+                    new RDMSDLCatalog().unregisterResourceEntry(lChild);
+                }
+                if (lParent != null) {
+                    new RDMSDLCatalog().unregisterResourceEntry(lParent);
+                }
+            } catch (Exception ex) {
+                fail("Exception: " + ex.getMessage());
+            }
+        }
+    }
+
+    @Test
+    public void testRegisterWithStorageSite() {
+        System.out.println("testRegisterWithStorageSite");
+        RDMSDLCatalog instance = null;
+        ILogicalData lParent = null;
+        try {
+
+            instance = new RDMSDLCatalog();
+            Path parentPath = Path.path("parent");
+
+            lParent = new LogicalData(parentPath, Constants.LOGICAL_FOLDER);
+            ArrayList<IStorageSite> sites = new ArrayList<IStorageSite>();
+            sites.add(new StorageSite("file:///tmp", new Credential("user1")));
+            lParent.setStorageSites(sites);
+            Collection<IStorageSite> theSites = lParent.getStorageSites();
+
+            assertNotNull(theSites);
+            assertFalse(theSites.isEmpty());
+
+            //When registering the entry, the storage site is set to null
+            instance.registerResourceEntry(lParent);
+            lParent = instance.getResourceEntryByLDRI(parentPath);
+
+            theSites = lParent.getStorageSites();
+
+            assertNotNull(theSites);
+            assertFalse(theSites.isEmpty());
+
+        } catch (Exception ex) {
+            fail("Exception: " + ex.getMessage());
+        } finally {
+            try {
+                if (lParent != null) {
+                    new RDMSDLCatalog().unregisterResourceEntry(lParent);
+                }
+            } catch (Exception ex) {
+                fail("Exception: " + ex.getMessage());
+            }
+        }
+    }
+//
+//    /**
+//     * Test of getSites method, of class StorageSiteManager.
+//     */
+//    @Test
+//    public void testGetSitesByUnames() throws Exception {
+//        System.out.println("testGetSitesByUnames");
+//        populateStorageSites();
+//        RDMSDLCatalog instance = new RDMSDLCatalog();
+//        try {
+//            String uname = "uname2";
+//            Properties prop = new Properties();
+//            prop.setProperty(Constants.VPH_USERNAME, uname);
+//            prop.setProperty(Constants.STORAGE_SITE_USERNAME, "vph_dev:user");
+//            prop.setProperty(Constants.STORAGE_SITE_PASSWORD, "non");
+//            prop.setProperty(Constants.STORAGE_SITE_ENDPOINT, "file:///" + System.getProperty("user.home") + "/deleteMe/");
+//
+//            instance.registerStorageSite(prop);
+//            boolean exists = instance.storageSiteExists(prop);
+//            assertTrue(exists);
+//
+//            Collection<IStorageSite> result = instance.getSitesByUname(uname);
+//            assertNotNull(result);
+//            assertFalse(result.isEmpty());
+//
+//            for (IStorageSite s : result) {
+//                assertEquals(s.getVPHUsername(), uname);
+//            }
+//
+//        } finally {
+//            instance.clearAllSites();
+//            Collection<StorageSite> allSites = instance.getAllSites();
+//            assertEquals(allSites.size(), 0);
+//        }
+//    }
+//
+//    @Test
+//    public void testUpdateResourceEntry() {
+//        RDMSDLCatalog instance = new RDMSDLCatalog();
+//        ILogicalData loaded = null;
+//        try {
+//            System.out.println("testUpdateResourceEntry");
+//
+//
+//            LogicalData newEntry = new LogicalData(ConstantsAndSettings.TEST_FILE_PATH_1, Constants.LOGICAL_FILE);
+//            instance.registerResourceEntry(newEntry);
+//            loaded = instance.getResourceEntryByLDRI(newEntry.getLDRI());
+//            boolean same = compareEntries(newEntry, loaded);
+//            assertTrue(same);
+//
+//            Metadata meta = newEntry.getMetadata();
+//            String mime = "application/octet-stream";
+//            meta.addContentType(mime);
+//            long create = System.currentTimeMillis();
+//            meta.setCreateDate(create);
+//            Long len = new Long(32);
+//            meta.setLength(len);
+//            long mod = System.currentTimeMillis();
+//            meta.setModifiedDate(mod);
+//            newEntry.setMetadata(meta);
+//
+//
+//            Collection<String> children = new ArrayList<String>();
+//            children.add(ConstantsAndSettings.TEST_FILE_PATH_2.toString());
+//            newEntry.setChildren(children);
+//
+////            ArrayList<IStorageSite> sites = new ArrayList<IStorageSite>();
+////            sites.add(new StorageSite("file:///tmp", new Credential("user1")));
+////            newEntry.setStorageSites(sites);
+//
+//            instance.updateResourceEntry(newEntry);
+//            loaded = instance.getResourceEntryByLDRI(newEntry.getLDRI());
+//            same = compareEntries(newEntry, loaded);
+//            assertTrue(same);
+//
+//            Metadata loadedMeta = loaded.getMetadata();
+//            assertTrue(loadedMeta.getContentTypes().contains(mime));
+//            assertEquals(loadedMeta.getCreateDate(), new Long(create));
+//            assertEquals(loadedMeta.getModifiedDate(), new Long(mod));
+//            assertEquals(loadedMeta.getLength(), len);
+//
+//        } catch (Exception ex) {
+//            fail();
+//            Logger.getLogger(RDMSDLCatalogueTest.class.getName()).log(Level.SEVERE, null, ex);
+//        } finally {
+//            try {
+//                instance.unregisterResourceEntry(loaded);
+//
+//            } catch (CatalogueException ex) {
+//                Logger.getLogger(RDMSDLCatalogueTest.class.getName()).log(Level.SEVERE, null, ex);
+//            }
+//        }
+//    }
+//    
+//         
+//
+//    @Test
+//    public void testStorageSiteExistsy() {
+//        RDMSDLCatalog instance = new RDMSDLCatalog();
+//        try {
+//            String uname = "uname2";
+//            Properties prop = new Properties();
+//            prop.setProperty(Constants.VPH_USERNAME, uname);
+//            prop.setProperty(Constants.STORAGE_SITE_USERNAME, "vph_dev:user");
+//            prop.setProperty(Constants.STORAGE_SITE_PASSWORD, "non");
+//            prop.setProperty(Constants.STORAGE_SITE_ENDPOINT, "file:///" + System.getProperty("user.home") + "/deleteMe/");
+//
+//            instance.registerStorageSite(prop);
+//            boolean exists = instance.storageSiteExists(prop);
+//            assertTrue(exists);
+//
+//            Collection<IStorageSite> result = instance.getSitesByUname(uname);
+//            assertNotNull(result);
+//            assertFalse(result.isEmpty());
+//
+//            for (IStorageSite s : result) {
+//                assertEquals(s.getVPHUsername(), uname);
+//            }
+//        } catch (CatalogueException ex) {
+//            Logger.getLogger(RDMSDLCatalogueTest.class.getName()).log(Level.SEVERE, null, ex);
+//        } finally {
+//            instance.clearAllSites();
+//            Collection<StorageSite> allSites = instance.getAllSites();
+//            assertEquals(allSites.size(), 0);
+//        }
+//    }
+//
+//    @Test
+//    public void testMultiThread() {
+//        try {
+//            System.out.println("testMultiThread");
+//            Thread userThread1 = new UserThread(2);
+//            userThread1.setName("T1");
+//
+//            Thread userThread2 = new UserThread(2);
+//            userThread2.setName("T2");
+//
+//
+//            userThread1.start();
+//            userThread2.start();
+//
+//            userThread1.join();
+//            userThread2.join();
+//        } catch (InterruptedException ex) {
+//            Logger.getLogger(RDMSDLCatalogueTest.class.getName()).log(Level.SEVERE, null, ex);
+//        }
+//    }
+//
+//    private void populateStorageSites() throws FileNotFoundException, IOException, Exception {
+//        RDMSDLCatalog instance = new RDMSDLCatalog();
+//        instance.clearAllSites();
+//        String propBasePath = System.getProperty("user.home") + File.separator
+//                + "workspace" + File.separator + "lobcder"
+//                + File.separator + "etc" + File.separator;
+//        ArrayList<String> endpoints = new ArrayList<String>();
+//
+//
+//        for (String name : names) {
+//            Properties prop = getCloudProperties(propBasePath + name);
+//            endpoints.add(prop.getProperty(Constants.STORAGE_SITE_ENDPOINT));
+//            instance.registerStorageSite(prop);
+//            boolean exists = instance.storageSiteExists(prop);
+//            assertTrue(exists);
+//        }
+//    }
+//
+//    private static Properties getCloudProperties(String propPath)
+//            throws FileNotFoundException, IOException {
+//        Properties properties = new Properties();
+//
+//        File f = new File(propPath);
+//        properties.load(new FileInputStream(f));
+//        return properties;
+//    }
+//
+
+    private boolean compareEntries(ILogicalData entry, ILogicalData loadedEntry) {
+//        System.out.println("entry:          " + entry.getUID() + " " + entry.getLDRI());
+//        System.out.println("loadedEntry:    " + loadedEntry.getUID() + " " + loadedEntry.getLDRI());
+        if (entry.getLDRI().toString().equals(loadedEntry.getLDRI().toString()) && entry.getType().equals(loadedEntry.getType())) {
+//            if (entry.getUID().equals(loadedEntry.getUID())) {
+            if (entry.getPDRI().toString().equals(loadedEntry.getPDRI().toString())) {
+                return true;
+//            }
+            }
+        }
+        return false;
+    }
+}
