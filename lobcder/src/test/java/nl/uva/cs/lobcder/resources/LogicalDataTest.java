@@ -89,7 +89,7 @@ public class LogicalDataTest {
         LogicalData instance = new LogicalData(path,Constants.LOGICAL_DATA);
         instance.addChild(child);
 
-        Collection<Path> result = instance.getChildren();
+        Collection<String> result = instance.getChildren();
 
         assertNotNull(result);
         assertFalse(result.isEmpty());
@@ -157,8 +157,8 @@ public class LogicalDataTest {
     @Test
     public void testAddChildren() {
         System.out.println("addChildren");
-        ArrayList<Path> children = new ArrayList<Path>();
-        children.add(child);
+        ArrayList<String> children = new ArrayList<String>();
+        children.add(child.toString());
         LogicalData instance = new LogicalData(path,Constants.LOGICAL_DATA);
         instance.addChildren(children);
         assertTrue(instance.hasChildren());

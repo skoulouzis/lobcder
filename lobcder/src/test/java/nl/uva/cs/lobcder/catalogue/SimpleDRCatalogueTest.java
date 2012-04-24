@@ -332,12 +332,12 @@ public class SimpleDRCatalogueTest {
             assertNotNull(loaded);
             assertEquals(newPath.toString(), loaded.getLDRI().toString());
 
-            Collection<Path> children = loaded.getChildren();
+            Collection<String> children = loaded.getChildren();
             assertNotNull(children);
             assertFalse(children.isEmpty());
 
-            for (Path p : children) {
-                if (p.equals(Path.path(newPath, childName1)) || p.equals(Path.path(newPath, childName2))) {
+            for (String p : children) {
+                if (p.equals(Path.path(newPath, childName1).toString()) || p.equals(Path.path(newPath, childName2).toString())) {
                     foundIt++;
                 }
             }
@@ -714,8 +714,8 @@ public class SimpleDRCatalogueTest {
             newEntry.setMetadata(meta);
 
 
-            Collection<Path> children = new ArrayList<Path>();
-            children.add(ConstantsAndSettings.TEST_FILE_PATH_2);
+            Collection<String> children = new ArrayList<String>();
+            children.add(ConstantsAndSettings.TEST_FILE_PATH_2.toString());
             newEntry.setChildren(children);
 
 //            ArrayList<IStorageSite> sites = new ArrayList<IStorageSite>();

@@ -299,7 +299,9 @@ class WebDataDirResource implements FolderResource, CollectionResource {
             Collection<IStorageSite> sites = entry.getStorageSites();
             if (sites != null && !sites.isEmpty()) {
                 for (IStorageSite s : sites) {
-                    s.deleteVNode(entry.getLDRI());
+//                    this.catalogue.getSiteByUID(s.getUID());
+                    debug("SS uid: "+s.getUid());
+                    s.deleteVNode(entry.getPDRI());
                 }
             }
             List<? extends Resource> children = getChildren();
@@ -417,20 +419,20 @@ class WebDataDirResource implements FolderResource, CollectionResource {
     }
 
     private ArrayList<? extends Resource> getEntriesChildren() throws Exception {
-        Collection<Path> childrenPaths = entry.getChildren();
+        Collection<String> childrenPaths = entry.getChildren();
 //        if(childrenPaths == null){
 //             entry = catalogue.getResourceEntryByLDRI(this.entry.getLDRI());
 //        }
 //        childrenPaths = entry.getChildren();
         ArrayList<Resource> children = new ArrayList<Resource>();
         if (childrenPaths != null) {
-            for (Path p : childrenPaths) {
+            for (String p : childrenPaths) {
                 debug("Adding children: " + p);
-                ILogicalData ch = catalogue.getResourceEntryByLDRI(p);
+                ILogicalData ch = catalogue.getResourceEntryByLDRI(Path.path(p));
                 if (ch == null) {
                     //We have some kind of inconsistency. It can happend that someone else calls delete on the child, which removes it from the catalog. In this case we'll belive the catalog and retun null 
 //                    throw new NullPointerException("The Collection " + entry.getLDRI() + " has " + p + " registered as a child but the catalogue has no such entry");
-                    entry.removeChild(p);
+                    entry.removeChild(Path.path(p));
                     continue;
                 }
                 if (ch.getType().equals(Constants.LOGICAL_FOLDER)) {

@@ -208,11 +208,11 @@ public class SimpleDLCatalogue implements IDLCatalogue {
 
                 LogicalData result = (LogicalData) q.execute(strLogicalResourceName);
 
-                Collection<Path> childernPathForDeleition = result.getChildren();
+                Collection<String> childernPathForDeleition = result.getChildren();
 
                 if (childernPathForDeleition != null) {
                     Collection<ILogicalData> childernForDeleition = new ArrayList<ILogicalData>();
-                    for (Path p : childernPathForDeleition) {
+                    for (String p : childernPathForDeleition) {
                         strLogicalResourceName = p.toString();
                         q = pm.newQuery(LogicalData.class);
                         q.setFilter("strLDRI == strLogicalResourceName");
@@ -256,10 +256,11 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                 q.setUnique(true);
 
                 ILogicalData entry = (ILogicalData) q.execute(strLogicalResourceName);
-
+                ILogicalData copy = pm.detachCopy(entry);
                 if (entry == null) {
                     throw new NonExistingResourceException("Cannot add " + child.toString() + " child to non existing parent " + parent.toString());
                 }
+                copy.addChild(child);
                 entry.addChild(child);
                 tx.commit();
                 stupidBugLogicData(entry);
@@ -293,16 +294,19 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                 q.setUnique(true);
 
                 ILogicalData result = (ILogicalData) q.execute(strLogicalResourceName);
+                //Lazy loading ?
+                result.getChildren().size();
+                ILogicalData copy = pm.detachCopy(result);
 
-                if (result == null) {
+                if (copy == null) {
                     throw new NonExistingResourceException("Cannot remove " + child.toString() + " from non existing parent " + parent.toString());
                 }
 
-                Path theChild = result.getChild(child);
+                Path theChild = copy.getChild(child);
                 if (theChild == null) {
                     throw new NonExistingResourceException("Cannot remove " + child.toString() + ". Parent " + parent.toString() + " has no such child");
                 }
-
+                copy.removeChild(child);
                 result.removeChild(child);
 
                 tx.commit();
@@ -402,11 +406,11 @@ public class SimpleDLCatalogue implements IDLCatalogue {
 
                 entry = (ILogicalData) q.execute(strLogicalResourceName);
                 entry.setLDRI(newPath);
-                Collection<Path> children = entry.getChildren();
+                Collection<String> children = entry.getChildren();
                 if (children != null && !children.isEmpty()) {
-                    for (Path p : children) {
+                    for (String p : children) {
                         debug("Path: " + p);
-                        parts = p.getParts();
+                        parts = Path.path(p).getParts();
 
                         for (String part : parts) {
                             debug("Part: " + part);
@@ -419,9 +423,9 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                         }
                         newChildPath = Path.path(newPath, strNewChildPath);
                         debug("newChildPath: " + newChildPath);
-                        entry.removeChild(p);
+                        entry.removeChild(Path.path(p));
                         entry.addChild(newChildPath);
-                        renamedChildrenMap.put(p, newChildPath);
+                        renamedChildrenMap.put(Path.path(p), newChildPath);
                         strNewChildPath = "";
                     }
                 }
@@ -508,10 +512,12 @@ public class SimpleDLCatalogue implements IDLCatalogue {
     }
 
     @Override
-    public AbstractCollection<IStorageSite> getSitesByUname(String vphUname) {
-        AbstractCollection<IStorageSite> results = null;
+    public Collection<IStorageSite> getSitesByUname(String vphUname) {
+        Collection<IStorageSite> results = null;
+        Collection<IStorageSite> copy = null;
         synchronized (lock) {
-            PersistenceManager pm = pmf.getPersistenceManagerProxy();
+//            PersistenceManager pm = pmf.getPersistenceManagerProxy();
+            PersistenceManager pm = pmf.getPersistenceManager();
             Transaction tx = pm.currentTransaction();
             try {
                 tx.begin();
@@ -519,10 +525,12 @@ public class SimpleDLCatalogue implements IDLCatalogue {
 
                 q.setFilter("vphUsername == vphUname");
                 q.declareParameters(vphUname.getClass().getName() + " vphUname");
-
+                
                 results = (AbstractCollection<IStorageSite>) q.execute(vphUname);
+                copy = pm.detachCopyAll(results);
                 tx.commit();
-
+                
+                
                 //Stupid bug!
                 if (!results.isEmpty()) {
                     Iterator<IStorageSite> iter = results.iterator();
@@ -536,7 +544,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                 pm.close();
             }
         }
-        return results;
+        return copy;
     }
 
     public void clearAllSites() {
@@ -595,11 +603,10 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                 debug("Adding endpoint: " + endpoint);
                 StorageSite site = new StorageSite(endpoint, cred);
                 synchronized (lock) {
-                    PersistenceManager pm = pmf.getPersistenceManagerProxy();
+                    PersistenceManager pm = pmf.getPersistenceManager();
                     Transaction tx = pm.currentTransaction();
                     try {
                         tx.begin();
-
                         pm.makePersistent(site);
                         pm.detachCopy(site);
                         //stupidBugStorageSite(site);
@@ -667,7 +674,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
 
     @Override
     public void updateResourceEntry(ILogicalData entry) throws CatalogueException {
-        Collection<Path> children = entry.getChildren();
+        Collection<String> children = entry.getChildren();
         Path ldri = entry.getLDRI();
         Metadata meta = entry.getMetadata();
         Collection<IStorageSite> sites = entry.getStorageSites();
@@ -694,6 +701,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                 }
                 updated.setStorageSites(copySites);
             }
+            updated.setPDRI(entry.getPDRI());
         } catch (Exception ex) {
             throw new CatalogueException(ex.getMessage());
         }
@@ -720,26 +728,26 @@ public class SimpleDLCatalogue implements IDLCatalogue {
             //the EntityManager, then iterate through the list, this does not 
             //work. If you call size() before closing EntityManager things work, 
             //because the size() needs to retrieve all the results.
-            Collection<Path> rChildren = entry.getChildren();
+            Collection<String> rChildren = entry.getChildren();
             if (rChildren != null) {
                 rChildren.size();
             }
             ArrayList<String> types = entry.getMetadata().getContentTypes();
 ////                    debug("Got back: " + ldri);
             Collection<IStorageSite> ss = entry.getStorageSites();
-//            for (IStorageSite s : ss) {
-//                stupidBugStorageSite(s);
-//            }
+            for (IStorageSite s : ss) {
+                stupidBugStorageSite(s);
+            }
         }
     }
 
     private void stupidBugStorageSite(IStorageSite site) {
-//        String ep = site.getEndpoint();
-////        debug("Endpoint: " + ep);
-//        Credential cred = site.getCredentials();
-////        debug("Credentials: " + cred);
-////        site.getUID();
-//        site.getInfo();
-//        site.getLogicalPaths();
+        String ep = site.getEndpoint();
+//        debug("Endpoint: " + ep);
+        Credential cred = site.getCredentials();
+//        debug("Credentials: " + cred);
+//        site.getUID();
+        site.getInfo();
+        site.getLogicalPaths();
     }
 }

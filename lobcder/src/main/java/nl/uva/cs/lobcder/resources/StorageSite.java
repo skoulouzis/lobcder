@@ -69,7 +69,9 @@ public class StorageSite implements Serializable, IStorageSite {
     }
     
     
-       
+    @PrimaryKey
+    private long uid;
+    
     @Persistent
     private String endpoint;
     
@@ -249,5 +251,17 @@ public class StorageSite implements Serializable, IStorageSite {
             vrl = new VRL(endpoint + "/" + storagePrefix);
         }
         return vrl;
+    }
+
+    @Override
+    public long getUid() {
+        return uid;
+    }
+
+    /**
+     * @param uid the uid to set
+     */
+    public void setUid(long uid) {
+        this.uid = uid;
     }
 }

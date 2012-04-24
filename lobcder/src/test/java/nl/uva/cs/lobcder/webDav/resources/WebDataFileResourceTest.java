@@ -111,12 +111,12 @@ public class WebDataFileResourceTest {
 
             ILogicalData folderLData = catalogue.getResourceEntryByLDRI(testCollPath);
             assertEquals(testLogicalFolder.getType(), folderLData.getType());
-            Collection<Path> children = folderLData.getChildren();
+            Collection<String> children = folderLData.getChildren();
             assertNotNull(children);
 
             boolean foundIt = false;
-            for (Path p : children) {
-                chLData = catalogue.getResourceEntryByLDRI(p);
+            for (String p : children) {
+                chLData = catalogue.getResourceEntryByLDRI(Path.path(p));
                 System.out.println("LData:              " + chLData.getLDRI().getName() + "         " + chLData.getUID());
                 System.out.println("webDAVFile:         " + webDAVFile.getName() + "            " + webDAVFile.getUniqueId());
                 System.out.println("testLogicalData:    " + testLogicalFolder.getLDRI().getName() + "         " + testLogicalFolder.getUID());

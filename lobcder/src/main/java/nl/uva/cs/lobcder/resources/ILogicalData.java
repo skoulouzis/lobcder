@@ -18,9 +18,9 @@ public interface ILogicalData {
 
     public Path getLDRI();
     
-    public Collection<Path> getChildren();
+    public Collection<String> getChildren();
 
-    public void addChildren(Collection<Path> children);
+    public void addChildren(Collection<String> children);
 
     public void addChild(Path child);
 
@@ -38,7 +38,7 @@ public interface ILogicalData {
 
     public void removeChild(Path childPath);
     
-    public void removeChildren(Collection<Path> childPath);
+    public void removeChildren(Collection<String> childPath);
 
     public Path getChild(Path path);
 
@@ -54,7 +54,7 @@ public interface ILogicalData {
 
     public void removeStorageSites();
 
-    public void setChildren(Collection<Path> children);
+    public void setChildren(Collection<String> children);
     
     public String getType();
 

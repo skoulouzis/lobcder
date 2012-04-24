@@ -6,7 +6,6 @@ package nl.uva.cs.lobcder.resources;
 
 import com.bradmcevoy.common.Path;
 import java.io.Serializable;
-import java.util.AbstractCollection;
 import java.util.ArrayList;
 import java.util.Collection;
 import javax.jdo.annotations.*;
@@ -53,7 +52,7 @@ public class LogicalData implements ILogicalData, Serializable {
     private Metadata metadata;
     
     @Persistent(defaultFetchGroup="true")
-    private Collection<Path> children;
+    private Collection<String> children;
     @Persistent(defaultFetchGroup="true")
     private String type;
     private boolean debug = false;
@@ -80,7 +79,7 @@ public class LogicalData implements ILogicalData, Serializable {
     }
 
     @Override
-    public Collection<Path> getChildren() {
+    public Collection<String> getChildren() {
         return children;
     }
 
@@ -109,7 +108,7 @@ public class LogicalData implements ILogicalData, Serializable {
     }
 
     @Override
-    public void addChildren(Collection<Path> children) {
+    public void addChildren(Collection<String> children) {
         if (this.children == null) {
             this.children = children;
         } else {
@@ -128,9 +127,9 @@ public class LogicalData implements ILogicalData, Serializable {
     @Override
     public void addChild(Path child) {
         if (this.children == null) {
-            this.children = new ArrayList<Path>();
+            this.children = new ArrayList<String>();
         }
-        this.children.add(child);
+        this.children.add(child.toString());
     }
 
     private void debug(String msg) {
@@ -150,7 +149,7 @@ public class LogicalData implements ILogicalData, Serializable {
     @Override
     public void removeChild(Path childPath) {
         if (children != null && !children.isEmpty()) {
-            children.remove(childPath);
+            children.remove(childPath.toString());
         }
     }
 
@@ -158,9 +157,9 @@ public class LogicalData implements ILogicalData, Serializable {
     public Path getChild(Path path) {
 
         if (children != null && !children.isEmpty()) {
-            for (Path p : children) {
+            for (String p : children) {
                 if (p.toString().equals(path.toString())) {
-                    return p;
+                    return Path.path(p);
                 }
             }
         }
@@ -219,7 +218,7 @@ public class LogicalData implements ILogicalData, Serializable {
     }
 
     @Override
-    public void removeChildren(Collection<Path> childPath) {
+    public void removeChildren(Collection<String> childPath) {
         this.children.removeAll(children);
     }
 
@@ -229,7 +228,7 @@ public class LogicalData implements ILogicalData, Serializable {
     }
 
     @Override
-    public void setChildren(Collection<Path> children) {
+    public void setChildren(Collection<String> children) {
         this.children = children;
     }
 

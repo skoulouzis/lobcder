@@ -193,8 +193,8 @@ public class UserThread extends Thread {
             newEntry.setMetadata(meta);
 
 
-            Collection<Path> children = new ArrayList<Path>();
-            children.add(Path.path("child1"));
+            Collection<String> children = new ArrayList<String>();
+            children.add(Path.path("child1").toString());
             newEntry.setChildren(children);
 
 //            ArrayList<IStorageSite> sites = new ArrayList<IStorageSite>();
