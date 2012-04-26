@@ -68,10 +68,7 @@ public class StorageSite implements Serializable, IStorageSite {
         Global.init();
     }
     
-    
-    @PrimaryKey
-    private long uid;
-    
+       
     @Persistent
     private String endpoint;
     
@@ -88,7 +85,9 @@ public class StorageSite implements Serializable, IStorageSite {
     private ServerInfo info;
     private VRSContext context;
     private VFSClient vfsClient;
+    @NotPersistent
     public static final String storagePrefix = "LOBCDER-REPLICA";
+    @NotPersistent
     private static final boolean debug = false;
 
     public StorageSite(String endpoint, Credential cred) throws Exception {
@@ -251,17 +250,5 @@ public class StorageSite implements Serializable, IStorageSite {
             vrl = new VRL(endpoint + "/" + storagePrefix);
         }
         return vrl;
-    }
-
-    @Override
-    public long getUid() {
-        return uid;
-    }
-
-    /**
-     * @param uid the uid to set
-     */
-    public void setUid(long uid) {
-        this.uid = uid;
     }
 }

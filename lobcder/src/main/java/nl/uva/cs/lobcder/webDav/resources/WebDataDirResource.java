@@ -300,7 +300,6 @@ class WebDataDirResource implements FolderResource, CollectionResource {
             if (sites != null && !sites.isEmpty()) {
                 for (IStorageSite s : sites) {
 //                    this.catalogue.getSiteByUID(s.getUID());
-                    debug("SS uid: "+s.getUid());
                     s.deleteVNode(entry.getPDRI());
                 }
             }

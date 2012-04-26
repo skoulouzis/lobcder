@@ -6,11 +6,10 @@ package nl.uva.cs.lobcder.catalogue;
 
 import com.bradmcevoy.common.Path;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.jdo.*;
-import nl.uva.cs.lobcder.resources.ILogicalData;
-import nl.uva.cs.lobcder.resources.IStorageSite;
-import nl.uva.cs.lobcder.resources.LogicalData;
-import nl.uva.cs.lobcder.resources.StorageSite;
+import nl.uva.cs.lobcder.resources.*;
 import nl.uva.vlet.data.StringUtil;
 
 /**
@@ -60,7 +59,7 @@ public class RDMSDLCatalog implements IDLCatalogue {
                 q.setUnique(true);
                 ILogicalData parentEntry = (ILogicalData) q.execute(strLogicalResourceName);
                 if (parentEntry == null) {
-                    throw new NonExistingResourceException("Cannot add " + entry.getLDRI().toString() + " child to non existing parent " + parentEntry.getLDRI().toString());
+                    throw new NonExistingResourceException("Cannot add " + entry.getLDRI().toString() + " child to non existing parent " + parentPath.toString());
                 }
                 parentEntry.addChild(entry.getLDRI());
             }
@@ -68,7 +67,16 @@ public class RDMSDLCatalog implements IDLCatalogue {
             Collection<IStorageSite> storageSites = entry.getStorageSites();
             //work around to remove duplicated storage sites 
             if (storageSites != null && !storageSites.isEmpty()) {
-                pm.deletePersistentAll(storageSites);
+                for (IStorageSite s : storageSites) {
+                    String uname = s.getVPHUsername();
+                    String epoint = s.getEndpoint();
+                    q = pm.newQuery(StorageSite.class);
+
+                    q.setFilter("vphUsername == uname && endpoint == epoint");
+                    q.declareParameters(uname.getClass().getName() + " uname, " + epoint.getClass().getName() + " epoint");
+//                    Collection<StorageSite> results = (Collection<StorageSite>) q.execute(uname, epoint);
+                    Long number = (Long) q.deletePersistentAll(uname, epoint);
+                }
             }
 
             pm.makePersistent(entry);
@@ -77,8 +85,6 @@ public class RDMSDLCatalog implements IDLCatalogue {
             entry = null;
             entry = copy;
 
-        } catch (Exception ex) {
-            throw new CatalogueException(ex.getMessage());
         } finally {
             if (tx.isActive()) {
                 tx.rollback();
@@ -149,9 +155,23 @@ public class RDMSDLCatalog implements IDLCatalogue {
             Query q = pm.newQuery(LogicalData.class);
             //restrict to instances which have the field ldri equal to some logicalResourceName
             String parentsName = entry.getLDRI().toString();
-            q.setFilter("parent == parentsName || strLDRI == parentsName");
+
+            q.setFilter("strLDRI == parentsName");
             q.declareParameters(parentsName.getClass().getName() + " parentsName");
-            Long number = (Long) q.deletePersistentAll(parentsName);
+            q.setUnique(true);
+            LogicalData result = (LogicalData) q.execute(parentsName);
+            Path path = result.getLDRI();
+            if (path.isRoot()) {
+                q = pm.newQuery(LogicalData.class);
+                Long number = (Long) q.deletePersistentAll();
+            } else {
+                String name = "/" + path.getName();
+                Integer pos = Integer.valueOf(path.toString().indexOf(name));
+                q = pm.newQuery(LogicalData.class);
+                q.setFilter("strLDRI.indexOf(name)==pos");
+                q.declareParameters(name.getClass().getName() + " name, " + pos.getClass().getName() + " pos");
+                Long number = (Long) q.deletePersistentAll(name, pos);
+            }
             tx.commit();
 
         } catch (Exception ex) {
@@ -292,17 +312,102 @@ public class RDMSDLCatalog implements IDLCatalogue {
 
     @Override
     public Collection<IStorageSite> getSitesByUname(String vphUname) throws CatalogueException {
-        throw new UnsupportedOperationException("Not supported yet.");
+        Collection<IStorageSite> copy = null;
+        PersistenceManager pm = pmf.getPersistenceManager();
+        Transaction tx = pm.currentTransaction();
+        try {
+            tx.begin();
+            Query q = pm.newQuery(StorageSite.class);
+
+            q.setFilter("vphUsername == vphUname");
+            q.declareParameters(vphUname.getClass().getName() + " vphUname");
+            Collection<IStorageSite> results = (Collection<IStorageSite>) q.execute(vphUname);
+            copy = pm.detachCopyAll(results);
+            tx.commit();
+
+        } finally {
+            if (tx.isActive()) {
+                tx.rollback();
+            }
+            pm.close();
+        }
+        return copy;
     }
 
     @Override
     public boolean storageSiteExists(Properties prop) throws CatalogueException {
-        throw new UnsupportedOperationException("Not supported yet.");
+        String uname = prop.getProperty(nl.uva.cs.lobcder.webDav.resources.Constants.VPH_USERNAME);
+        String ePoint = prop.getProperty(nl.uva.cs.lobcder.webDav.resources.Constants.STORAGE_SITE_ENDPOINT);
+        Collection<StorageSite> ss;
+        StorageSite storageSite = null;
+        PersistenceManager pm = pmf.getPersistenceManagerProxy();
+        Transaction tx = pm.currentTransaction();
+
+        try {
+            tx.begin();
+            //This query, will return objects of type DataResourceEntry
+            Query q = pm.newQuery(StorageSite.class);
+
+            q.setFilter("endpoint == ePoint && vphUsername == uname");
+            q.declareParameters(ePoint.getClass().getName() + " ePoint, " + uname.getClass().getName() + " uname");
+            q.setUnique(true);
+            storageSite = (StorageSite) q.execute(ePoint, uname);
+            tx.commit();
+            StorageSite copy = pm.detachCopy(storageSite);
+            storageSite = copy;
+        } finally {
+            if (tx.isActive()) {
+                tx.rollback();
+            }
+
+            pm.close();
+        }
+
+        return storageSite != null ? true : false;
     }
 
     @Override
     public void registerStorageSite(Properties prop) throws CatalogueException {
-        throw new UnsupportedOperationException("Not supported yet.");
+        Credential cred = new Credential(prop.getProperty(nl.uva.cs.lobcder.webDav.resources.Constants.VPH_USERNAME));
+        cred.setStorageSiteUsername(prop.getProperty(nl.uva.cs.lobcder.webDav.resources.Constants.STORAGE_SITE_USERNAME));
+        cred.setStorageSitePassword(prop.getProperty(nl.uva.cs.lobcder.webDav.resources.Constants.STORAGE_SITE_PASSWORD));
+        String endpoint = prop.getProperty(nl.uva.cs.lobcder.webDav.resources.Constants.STORAGE_SITE_ENDPOINT);
+
+        PersistenceManager pm = null;
+        Transaction tx = null;
+
+        try {
+            debug("Adding endpoint: " + endpoint);
+            StorageSite site = new StorageSite(endpoint, cred);
+
+            pm = pmf.getPersistenceManager();
+            tx = pm.currentTransaction();
+
+            tx.begin();
+
+            Query q = pm.newQuery(StorageSite.class);
+            String ePoint = site.getEndpoint();
+            String uname = site.getVPHUsername();
+            q.setFilter("endpoint == ePoint && vphUsername == uname");
+            q.declareParameters(ePoint.getClass().getName() + " ePoint, " + uname.getClass().getName() + " uname");
+            q.setUnique(true);
+            StorageSite storageSite = (StorageSite) q.execute(ePoint, uname);
+            if (storageSite == null) {
+                pm.makePersistent(site);
+//                StorageSite copy = pm.detachCopy(site);
+//                site = copy;
+            }
+            tx.commit();
+            q.cancelAll();
+
+        } catch (Exception ex) {
+            throw new CatalogueException(ex.getMessage());
+        } finally {
+            if (tx.isActive()) {
+                tx.rollback();
+            }
+            pm.close();
+        }
     }
 
     @Override
@@ -316,11 +421,41 @@ public class RDMSDLCatalog implements IDLCatalogue {
     }
 
     void clearAllSites() {
-        throw new UnsupportedOperationException("Not yet implemented");
+        PersistenceManager pm = pmf.getPersistenceManagerProxy();
+        Transaction tx = pm.currentTransaction();
+        try {
+            tx.begin();
+            Query q = pm.newQuery(StorageSite.class);
+
+            long num = q.deletePersistentAll();
+//                pm.deletePersistentAll(results);
+            tx.commit();
+
+        } finally {
+            if (tx.isActive()) {
+                tx.rollback();
+            }
+            pm.close();
+        }
     }
 
     Collection<StorageSite> getAllSites() {
-        throw new UnsupportedOperationException("Not yet implemented");
+        PersistenceManager pm = pmf.getPersistenceManagerProxy();
+        Transaction tx = pm.currentTransaction();
+        try {
+            tx.begin();
+            Query q = pm.newQuery(StorageSite.class);
+            Collection<StorageSite> results = (Collection<StorageSite>) q.execute();
+            tx.commit();
+
+            return pm.detachCopyAll(results);
+
+        } finally {
+            if (tx.isActive()) {
+                tx.rollback();
+            }
+            pm.close();
+        }
     }
 
     private void debug(String msg) {

@@ -33,8 +33,6 @@ public interface IStorageSite {
 
     public Credential getCredentials();
 
-    public long getUid();
-
     public void deleteVNode(Path lDRI)throws VlException;
 
     public ServerInfo getInfo();
