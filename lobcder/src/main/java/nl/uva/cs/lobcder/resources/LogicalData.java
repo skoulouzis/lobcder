@@ -6,9 +6,10 @@ package nl.uva.cs.lobcder.resources;
 
 import com.bradmcevoy.common.Path;
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.concurrent.CopyOnWriteArrayList;
 import javax.jdo.annotations.*;
+import javax.jdo.identity.StringIdentity;
 import nl.uva.vlet.data.StringUtil;
 import nl.uva.vlet.exception.VlException;
 import nl.uva.vlet.vfs.VFSNode;
@@ -31,7 +32,8 @@ public class LogicalData implements ILogicalData, Serializable {
      */
     private static final long serialVersionUID = -1529997963561059214L;
     @PrimaryKey
-    @Persistent(customValueStrategy = "uuid")
+//    @Persistent(valueStrategy= IdGeneratorStrategy.UUIDSTRING)
+    @Persistent
     private String uid;
     //When an object is retrieved from the datastore by JDO typically not all 
     //fields are retrieved immediately. This is because for efficiency purposes 
@@ -66,7 +68,8 @@ public class LogicalData implements ILogicalData, Serializable {
         this.ldri = ldri;
         strLDRI = ldri.toString();
         ldriLen = ldri.getLength();
-//        uid = java.util.UUID.randomUUID().toString();
+        
+        uid = new StringIdentity(this.getClass(), java.util.UUID.randomUUID().toString()).getKey();
         this.type = type;
         //Data will hold the same pdri for ever.
         pdri = ldri;
@@ -133,7 +136,7 @@ public class LogicalData implements ILogicalData, Serializable {
     @Override
     public void addChild(Path child) {
         if (this.children == null) {
-            this.children = new ArrayList<String>();
+            this.children = new CopyOnWriteArrayList<String>();
         }
         this.children.add(child.toString());
     }

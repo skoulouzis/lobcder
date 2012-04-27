@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import nl.uva.cs.lobcder.catalogue.CatalogueException;
 import nl.uva.cs.lobcder.catalogue.RDMSDLCatalog;
 import nl.uva.cs.lobcder.catalogue.RDMSDLCatalogueTest;
@@ -194,7 +195,7 @@ public class UserThreadRDBMS extends Thread {
             newEntry.setMetadata(meta);
 
 
-            Collection<String> children = new ArrayList<String>();
+            Collection<String> children = new CopyOnWriteArrayList<String>();
             children.add(Path.path("child1").toString());
             newEntry.setChildren(children);
 

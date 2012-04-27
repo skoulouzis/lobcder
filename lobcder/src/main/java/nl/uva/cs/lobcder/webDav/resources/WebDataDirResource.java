@@ -82,7 +82,9 @@ class WebDataDirResource implements FolderResource, CollectionResource {
 //                throw new IOException("Storage Sites for " + newFolderEntry.getLDRI() + " are empty!");
 //            }
             catalogue.registerResourceEntry(newFolderEntry);
-
+            
+            //Should we add the newEntry to this entry??
+            //Why do we do that ?
             ILogicalData reloaded = catalogue.getResourceEntryByLDRI(newFolderEntry.getLDRI());
             sites = reloaded.getStorageSites();
             if (sites == null || sites.isEmpty()) {
@@ -419,10 +421,7 @@ class WebDataDirResource implements FolderResource, CollectionResource {
 
     private ArrayList<? extends Resource> getEntriesChildren() throws Exception {
         Collection<String> childrenPaths = entry.getChildren();
-//        if(childrenPaths == null){
-//             entry = catalogue.getResourceEntryByLDRI(this.entry.getLDRI());
-//        }
-//        childrenPaths = entry.getChildren();
+        
         ArrayList<Resource> children = new ArrayList<Resource>();
         if (childrenPaths != null) {
             for (String p : childrenPaths) {

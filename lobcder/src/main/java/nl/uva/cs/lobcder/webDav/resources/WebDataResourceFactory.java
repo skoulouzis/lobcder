@@ -12,7 +12,7 @@ import java.util.Collection;
 import java.util.Properties;
 import java.util.logging.Level;
 import nl.uva.cs.lobcder.catalogue.IDLCatalogue;
-import nl.uva.cs.lobcder.catalogue.SimpleDLCatalogue;
+import nl.uva.cs.lobcder.catalogue.RDMSDLCatalog;
 import nl.uva.cs.lobcder.resources.ILogicalData;
 import nl.uva.cs.lobcder.resources.IStorageSite;
 import nl.uva.cs.lobcder.resources.LogicalData;
@@ -27,7 +27,7 @@ public class WebDataResourceFactory implements ResourceFactory {
     private String uname = "uname1";
 
     public WebDataResourceFactory() throws Exception {
-        catalogue = new SimpleDLCatalogue();
+        catalogue = new RDMSDLCatalog();
         initStorageSites();
     }
 

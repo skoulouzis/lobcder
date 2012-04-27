@@ -17,11 +17,18 @@ import java.util.logging.Logger;
 import nl.uva.cs.lobcder.catalogue.CatalogueException;
 import nl.uva.cs.lobcder.resources.ILogicalData;
 import com.bradmcevoy.common.Path;
-import nl.uva.cs.lobcder.catalogue.SimpleDLCatalogue;
-import nl.uva.cs.lobcder.resources.Credential;
-import nl.uva.cs.lobcder.resources.LogicalData;
-import nl.uva.cs.lobcder.resources.LogicalData;
-import nl.uva.cs.lobcder.resources.StorageSite;
+import com.bradmcevoy.http.FileItem;
+import com.bradmcevoy.http.FileItemWrapper;
+import com.bradmcevoy.http.Range;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.OutputStream;
+import java.util.*;
+import nl.uva.cs.lobcder.catalogue.RDMSDLCatalog;
+import nl.uva.cs.lobcder.resources.*;
+import nl.uva.vlet.vfs.VFSNode;
+import nl.uva.vlet.vfs.VFile;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -35,10 +42,8 @@ import static org.junit.Assert.*;
  */
 public class WebDataFileResourceTest {
 
-    private SimpleDLCatalogue catalogue;
-    private LogicalData testLogicalFolder;
-    private Path testFolderPath;
-    private ArrayList<StorageSite> sites;
+    private RDMSDLCatalog catalogue;
+    private ArrayList<IStorageSite> sites;
     private StorageSite site;
 
     public WebDataFileResourceTest() {
@@ -55,20 +60,14 @@ public class WebDataFileResourceTest {
     @Before
     public void setUp() {
         try {
-            catalogue = new SimpleDLCatalogue();
-
-            testLogicalFolder = new LogicalData(ConstantsAndSettings.TEST_FILE_PATH_1, Constants.LOGICAL_FILE);
-
-            //For some reason 'testFolder' creates an exception with data nucleus
-            testFolderPath = Path.path(ConstantsAndSettings.TEST_FOLDER_NAME_1);
-            testLogicalFolder = new LogicalData(testFolderPath, Constants.LOGICAL_FOLDER);
+            catalogue = new RDMSDLCatalog();
 
             String endpoint = "file:///tmp/";
             String vphUser = "user1";
             Credential cred = new Credential(vphUser);
             site = new StorageSite(endpoint, cred);
 
-            sites = new ArrayList<StorageSite>();
+            sites = new ArrayList<IStorageSite>();
             sites.add(site);
 
         } catch (Exception ex) {
@@ -88,12 +87,13 @@ public class WebDataFileResourceTest {
      * Test of copyTo method, of class WebDataFileResource.
      */
     @Test
-    public void testCopyTo() {
+    public void testCopyTo() throws Exception {
         System.out.println("copyTo");
         WebDataDirResource collectionResource = null;
         WebDataFileResource webDAVFile = null;
         ILogicalData chLData = null;
         ILogicalData load;
+        LogicalData testLogicalFolder = null;
         try {
             String testColl = "testCopyToColl";
             Path testCollPath = Path.path(testColl);
@@ -119,7 +119,7 @@ public class WebDataFileResourceTest {
                 chLData = catalogue.getResourceEntryByLDRI(Path.path(p));
                 System.out.println("LData:              " + chLData.getLDRI().getName() + "         " + chLData.getUID());
                 System.out.println("webDAVFile:         " + webDAVFile.getName() + "            " + webDAVFile.getUniqueId());
-                System.out.println("testLogicalData:    " + testLogicalFolder.getLDRI().getName() + "         " + testLogicalFolder.getUID());
+                System.out.println("testLogicalFolder:    " + testLogicalFolder.getLDRI().getName() + "         " + testLogicalFolder.getUID());
                 if (chLData.getLDRI().getName().equals(ConstantsAndSettings.TEST_FILE_NAME_1)) {
                     foundIt = true;
                     break;
@@ -169,481 +169,495 @@ public class WebDataFileResourceTest {
             }
         }
     }
-//    /**
-//     * Test of delete method, of class WebDataFileResource.
-//     */
-//    @Test
-//    public void testDelete() {
-//        System.out.println("delete");
-//
-//        try {
-//            catalogue.registerResourceEntry(testLogicalData);
-//
-//            WebDataFileResource instance = new WebDataFileResource(catalogue, testLogicalData);
-//            instance.delete();
-//
-//            ILogicalData result = catalogue.getResourceEntryByLDRI(ContantsAndSettings.TEST_FILE_PATH);
-//            assertNull(result);
-//
-//        } catch (NotAuthorizedException ex) {
-//            fail(ex.getMessage());
-//        } catch (ConflictException ex) {
-//            fail(ex.getMessage());
-//        } catch (BadRequestException ex) {
-//            fail(ex.getMessage());
-//        } catch (CatalogueException ex) {
-//            fail(ex.getMessage());
-//        } finally {
-//        }
-//    }
-//
-//    /**
-//     * Test of getContentLength method, of class WebDataFileResource.
-//     */
-//    @Test
-//    public void testGetContentLength() {
-//        System.out.println("getContentLength");
-//        WebDataDirResource coll = null;
-//        WebDataFileResource instance = null;
-//        ILogicalData load;
-//        try {
-//            ByteArrayInputStream bais = new ByteArrayInputStream(ContantsAndSettings.TEST_DATA.getBytes());
-//
-//            testLogicalData.setStorageSites(sites);
-//            catalogue.registerResourceEntry(testLogicalData);
-//
-//            ILogicalData loaded = catalogue.getResourceEntryByLDRI(testFolderPath);
-//            coll = new WebDataDirResource(catalogue, loaded);
-//
-//            instance = (WebDataFileResource) coll.createNew(ContantsAndSettings.TEST_FILE_NAME, bais, new Long(ContantsAndSettings.TEST_DATA.getBytes().length), "text/plain");
-//
-//            Long result = instance.getContentLength();
-//
-//            Long exp = new Long(ContantsAndSettings.TEST_DATA.getBytes().length);
-//            assertEquals(exp, result);
-//
-//        } catch (Exception ex) {
-//            fail(ex.getMessage());
-//        } finally {
-//            try {
-//                instance.delete();
-//                coll.delete();
-//
-//                load = catalogue.getResourceEntryByLDRI(testLogicalData.getLDRI());
-//                assertNull(load);
-//
-//                load = catalogue.getResourceEntryByLDRI(testLogicalData.getLDRI());
-//                assertNull(load);
-//
-//                new StorageSiteManager().clearAllSites();
-//
-//            } catch (CatalogueException ex) {
-//                Logger.getLogger(WebDataFileResourceTest.class.getName()).log(Level.SEVERE, null, ex);
-//            } catch (NotAuthorizedException ex) {
-//                Logger.getLogger(WebDataFileResourceTest.class.getName()).log(Level.SEVERE, null, ex);
-//            } catch (ConflictException ex) {
-//                Logger.getLogger(WebDataFileResourceTest.class.getName()).log(Level.SEVERE, null, ex);
-//            } catch (BadRequestException ex) {
-//                Logger.getLogger(WebDataFileResourceTest.class.getName()).log(Level.SEVERE, null, ex);
-//            }
-//        }
-//    }
-//
-//    /**
-//     * Test of getContentType method, of class WebDataFileResource.
-//     */
-//    @Test
-//    public void testGetContentType() {
-//        System.out.println("getContentType");
-//        WebDataFileResource instance = null;
-//        String acceps = "text/html,text/*;q=0.9,image/jpeg;q=0.9,image/png;q=0.9,image/*;q=0.9,*/*;q=0.8";
-//        ILogicalData load;
-//        try {
-//            Metadata meta = testLogicalData.getMetadata();
-//            meta.addContentType("text/plain");
-//            testLogicalData.setMetadata(meta);
-//
-//            instance = new WebDataFileResource(catalogue, testLogicalData);
-//            String expResult = "text/*;q=0.9";
-//            String result = instance.getContentType(acceps);
-//
+
+    /**
+     * Test of delete method, of class WebDataFileResource.
+     */
+    @Test
+    public void testDelete() throws Exception {
+        System.out.println("delete");
+
+        try {
+            LogicalData testLogicalFile = new LogicalData(Path.path("testLogicalFile"), Constants.LOGICAL_FILE);
+            catalogue.registerResourceEntry(testLogicalFile);
+
+            WebDataFileResource instance = new WebDataFileResource(catalogue, testLogicalFile);
+            instance.delete();
+
+            ILogicalData result = catalogue.getResourceEntryByLDRI(ConstantsAndSettings.TEST_FILE_PATH_1);
+            assertNull(result);
+
+        } catch (NotAuthorizedException ex) {
+            fail(ex.getMessage());
+        } catch (ConflictException ex) {
+            fail(ex.getMessage());
+        } catch (BadRequestException ex) {
+            fail(ex.getMessage());
+        } catch (CatalogueException ex) {
+            fail(ex.getMessage());
+        } finally {
+        }
+    }
+
+    /**
+     * Test of getContentLength method, of class WebDataFileResource.
+     */
+    @Test
+    public void testGetContentLength() throws Exception {
+        System.out.println("getContentLength");
+        WebDataDirResource coll = null;
+        WebDataFileResource instance = null;
+        ILogicalData load;
+        try {
+            ByteArrayInputStream bais = new ByteArrayInputStream(ConstantsAndSettings.TEST_DATA.getBytes());
+            LogicalData testLogicalFolder = new LogicalData(Path.path("testCollPath"), Constants.LOGICAL_FOLDER);
+            testLogicalFolder.setStorageSites(sites);
+            catalogue.registerResourceEntry(testLogicalFolder);
+
+            ILogicalData loaded = catalogue.getResourceEntryByLDRI(testLogicalFolder.getLDRI());
+            coll = new WebDataDirResource(catalogue, loaded);
+
+            instance = (WebDataFileResource) coll.createNew(ConstantsAndSettings.TEST_FILE_NAME_1, bais, new Long(ConstantsAndSettings.TEST_DATA.getBytes().length), "text/plain");
+
+            Long result = instance.getContentLength();
+
+            Long exp = new Long(ConstantsAndSettings.TEST_DATA.getBytes().length);
+            assertEquals(exp, result);
+
+        } catch (Exception ex) {
+            fail(ex.getMessage());
+        } finally {
+            try {
+                instance.delete();
+                coll.delete();
+
+                load = catalogue.getResourceEntryByLDRI(instance.getPath());
+                assertNull(load);
+
+                load = catalogue.getResourceEntryByLDRI(coll.getPath());
+                assertNull(load);
+
+            } catch (CatalogueException ex) {
+                Logger.getLogger(WebDataFileResourceTest.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (NotAuthorizedException ex) {
+                Logger.getLogger(WebDataFileResourceTest.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (ConflictException ex) {
+                Logger.getLogger(WebDataFileResourceTest.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (BadRequestException ex) {
+                Logger.getLogger(WebDataFileResourceTest.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+
+    /**
+     * Test of getContentType method, of class WebDataFileResource.
+     */
+    @Test
+    public void testGetContentType() throws Exception {
+        System.out.println("getContentType");
+        WebDataFileResource instance = null;
+        String acceps = "text/html,text/*;q=0.9,image/jpeg;q=0.9,image/png;q=0.9,image/*;q=0.9,*/*;q=0.8";
+        ILogicalData load;
+        LogicalData testLogicalFile = null;
+        try {
+            testLogicalFile = new LogicalData(Path.path("testLogicalFile"), Constants.LOGICAL_FILE);
+            Metadata meta = testLogicalFile.getMetadata();
+            meta.addContentType("text/plain");
+            testLogicalFile.setMetadata(meta);
+            catalogue.registerResourceEntry(testLogicalFile);
+
+
+            instance = new WebDataFileResource(catalogue, testLogicalFile);
+            String expResult = "text/*;q=0.9";
+            String result = instance.getContentType(acceps);
+
+            assertEquals(expResult, result);
+
+
+            //@TODO Test more content types             
+//            meta = testLogicalFolder.getMetadata();
+//            meta.addContentType("text/html");
+//            testLogicalFolder.setMetadata(meta);
+//            
+//            instance = new WebDataFileResource(catalogue, testLogicalFolder);
+//            expResult = "text/*;q=0.9";
+//            result = instance.getContentType(acceps);            
 //            assertEquals(expResult, result);
-//
-//
-//            //@TODO Test more content types             
-////            meta = testLogicalData.getMetadata();
-////            meta.addContentType("text/html");
-////            testLogicalData.setMetadata(meta);
-////            
-////            instance = new WebDataFileResource(catalogue, testLogicalData);
-////            expResult = "text/*;q=0.9";
-////            result = instance.getContentType(acceps);            
-////            assertEquals(expResult, result);
-//        } catch (CatalogueException ex) {
-//            Logger.getLogger(WebDataFileResourceTest.class.getName()).log(Level.SEVERE, null, ex);
-//        } finally {
-//            try {
-//                instance.delete();
-////                catalogue.unregisterResourceEntry(testLogicalData);
-//                load = catalogue.getResourceEntryByLDRI(testLogicalData.getLDRI());
-//                assertNull(load);
-//
-//                new StorageSiteManager().clearAllSites();
-//            } catch (NotAuthorizedException ex) {
-//                Logger.getLogger(WebDataFileResourceTest.class.getName()).log(Level.SEVERE, null, ex);
-//            } catch (ConflictException ex) {
-//                Logger.getLogger(WebDataFileResourceTest.class.getName()).log(Level.SEVERE, null, ex);
-//            } catch (BadRequestException ex) {
-//                Logger.getLogger(WebDataFileResourceTest.class.getName()).log(Level.SEVERE, null, ex);
-//            } catch (CatalogueException ex) {
-//                Logger.getLogger(WebDataFileResourceTest.class.getName()).log(Level.SEVERE, null, ex);
-//            }
-//        }
-//    }
-//
-////    /**
-////     * Test of getMaxAgeSeconds method, of class WebDataFileResource.
-////     */
-////    @Test
-////    public void testGetMaxAgeSeconds() {
-////        System.out.println("getMaxAgeSeconds");
-////        Auth auth = null;
-////        WebDataFileResource instance = null;
-////        Long expResult = null;
-////        Long result = instance.getMaxAgeSeconds(auth);
-////        assertEquals(expResult, result);
-////        // TODO review the generated test code and remove the default call to fail.
-////        fail("The test case is a prototype.");
-////    }
-////
+        } catch (CatalogueException ex) {
+            Logger.getLogger(WebDataFileResourceTest.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            try {
+                instance.delete();
+                load = catalogue.getResourceEntryByLDRI(instance.getPath());
+                assertNull(load);
+
+
+            } catch (NotAuthorizedException ex) {
+                Logger.getLogger(WebDataFileResourceTest.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (ConflictException ex) {
+                Logger.getLogger(WebDataFileResourceTest.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (BadRequestException ex) {
+                Logger.getLogger(WebDataFileResourceTest.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (CatalogueException ex) {
+                Logger.getLogger(WebDataFileResourceTest.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+
 //    /**
-//     * Test of sendContent method, of class WebDataFileResource.
+//     * Test of getMaxAgeSeconds method, of class WebDataFileResource.
 //     */
 //    @Test
-//    public void testSendContent() throws Exception {
-//        System.out.println("sendContent");
-//        ByteArrayOutputStream out = null;
-//        Range range = null;
-//        Map<String, String> params = null;
-//        String contentType = "text/plain";
+//    public void testGetMaxAgeSeconds() {
+//        System.out.println("getMaxAgeSeconds");
+//        Auth auth = null;
 //        WebDataFileResource instance = null;
-//        try {
-//            VFSNode node = site.createVFSFile(ContantsAndSettings.TEST_FILE_PATH);
-//            ((VFile) node).setContents(ContantsAndSettings.TEST_DATA);
+//        Long expResult = null;
+//        Long result = instance.getMaxAgeSeconds(auth);
+//        assertEquals(expResult, result);
+//        // TODO review the generated test code and remove the default call to fail.
+//        fail("The test case is a prototype.");
+//    }
 //
-//            sites.add(site);
-//            testLogicalData.setStorageSites(sites);
-//            catalogue.registerResourceEntry(testLogicalData);
-//            //If we don't reload the logical file, metadata and storage sites are set to null
-//            ILogicalData loadedLFile = catalogue.getResourceEntryByLDRI(ContantsAndSettings.TEST_FILE_PATH);
-//
-//            out = new ByteArrayOutputStream();
-//
-//            instance = new WebDataFileResource(catalogue, loadedLFile);
-//            instance.sendContent(out, range, params, contentType);
-//            String result = new String(out.toByteArray());
-//            assertEquals(ContantsAndSettings.TEST_DATA, result);
-//
-//
-//            out.reset();
-//            range = new Range(0, 50);
-//            instance.sendContent(out, range, params, contentType);
-//            result = new String(out.toByteArray());
-//            assertEquals(ContantsAndSettings.TEST_DATA.subSequence(0, 50), result);
-//
-//        } finally {
-//            instance.delete();
-//            ILogicalData load = catalogue.getResourceEntryByLDRI(testLogicalData.getLDRI());
-//            assertNull(load);
-//
-//            new StorageSiteManager().clearAllSites();
-//        }
+    /**
+     * Test of sendContent method, of class WebDataFileResource.
+     */
+    @Test
+    public void testSendContent() throws Exception {
+        System.out.println("sendContent");
+        ByteArrayOutputStream out = null;
+        Range range = null;
+        Map<String, String> params = null;
+        String contentType = "text/plain";
+        WebDataFileResource instance = null;
+        try {
+            VFSNode node = site.createVFSFile(ConstantsAndSettings.TEST_FILE_PATH_1);
+            ((VFile) node).setContents(ConstantsAndSettings.TEST_DATA);
+            sites.add(site);
+            
+            LogicalData testLogicalFile = new LogicalData(ConstantsAndSettings.TEST_FILE_PATH_1, Constants.LOGICAL_FILE);
+            testLogicalFile.setStorageSites(sites);
+            catalogue.registerResourceEntry(testLogicalFile);
+            //If we don't reload the logical file, metadata and storage sites are set to null
+//            ILogicalData loadedLFile = catalogue.getResourceEntryByLDRI(ConstantsAndSettings.TEST_FILE_PATH_1);
+
+            out = new ByteArrayOutputStream();
+            instance = new WebDataFileResource(catalogue, testLogicalFile);
+            instance.sendContent(out, range, params, contentType);
+            String result = new String(out.toByteArray());
+            assertEquals(ConstantsAndSettings.TEST_DATA, result);
+
+
+            out.reset();
+            range = new Range(0, 50);
+            instance.sendContent(out, range, params, contentType);
+            result = new String(out.toByteArray());
+            assertEquals(ConstantsAndSettings.TEST_DATA.subSequence(0, 50), result);
+
+        } finally {
+            instance.delete();
+            ILogicalData load = catalogue.getResourceEntryByLDRI(instance.getPath());
+            assertNull(load);
+        }
+    }
+
+    /**
+     * Test of moveTo method, of class WebDataFileResource.
+     */
+    @Test
+    public void testMoveTo() throws Exception {
+        System.out.println("moveTo");
+        WebDataDirResource rDest = null;
+        WebDataFileResource instance = null;
+        Path path;
+
+        try {
+            LogicalData testLogicalFolder = new LogicalData(Path.path("testCollPath"), Constants.LOGICAL_FOLDER);
+            LogicalData testLogicalFile = new LogicalData(Path.path("testLogicalFile"), Constants.LOGICAL_FILE);
+            catalogue.registerResourceEntry(testLogicalFolder);
+            catalogue.registerResourceEntry(testLogicalFile);
+
+            rDest = new WebDataDirResource(catalogue, testLogicalFolder);
+            instance = new WebDataFileResource(catalogue, testLogicalFile);
+            instance.moveTo(rDest, "newFileName");
+
+
+            ILogicalData loadedLFolder = catalogue.getResourceEntryByLDRI(testLogicalFolder.getLDRI());
+            assertNotNull(loadedLFolder);
+            assertNotNull(loadedLFolder.getChild(Path.path(rDest.getPath(), "newFileName")));
+
+            ILogicalData loadedLFile = catalogue.getResourceEntryByLDRI(Path.path(rDest.getPath(), "newFileName"));
+            assertNotNull(loadedLFile);
+            assertNull(catalogue.getResourceEntryByLDRI(testLogicalFile.getLDRI()));
+
+            rDest = new WebDataDirResource(catalogue, loadedLFolder);
+            assertNotNull(rDest);
+            instance = new WebDataFileResource(catalogue, loadedLFile);
+            assertNotNull(instance);
+            List<? extends Resource> children = rDest.getChildren();
+
+            assertNotNull(children);
+            assertFalse(children.isEmpty());
+            boolean foundIt = false;
+            for (Resource r : children) {
+                path = ((WebDataFileResource) r).getPath();
+                if (path.equals(instance.getPath())) {
+                    foundIt = true;
+                }
+            }
+            assertTrue(foundIt);
+        } finally {
+            instance.delete();
+            rDest.delete();
+        }
+    }
+
+    /**
+     * Test of processForm method, of class WebDataFileResource.
+     */
+    @Test
+    public void testProcessForm() throws Exception {
+        System.out.println("processForm");
+        Map<String, String> params = new HashMap<String, String>();
+        Map<String, FileItem> files = new HashMap<String, FileItem>();
+        WebDataFileResource instance = null;
+        try {
+
+            boolean isFormField = false;
+            int sizeThreshold = -1;
+            File repository = new File(System.getProperty("java.io.tmpdir"));
+            String testFileName="testFileName";
+
+            org.apache.commons.fileupload.disk.DiskFileItem fItem = new org.apache.commons.fileupload.disk.DiskFileItem("file", "text/plain", isFormField, testFileName, sizeThreshold, repository);
+            OutputStream out = fItem.getOutputStream();
+            out.write(ConstantsAndSettings.TEST_DATA.getBytes());
+            out.flush();
+            out.close();
+
+            assertNotNull(fItem);
+            assertEquals(fItem.getSize(), new Long(ConstantsAndSettings.TEST_DATA.getBytes().length).longValue());
+            assertEquals(fItem.getContentType(), "text/plain");
+            assertEquals(fItem.getFieldName(), "file");
+            assertEquals(fItem.getString(), ConstantsAndSettings.TEST_DATA);
+
+            FileItemWrapper fIW = new FileItemWrapper(fItem);
+
+            files.put("file1", fIW);
+
+
+            fItem = new org.apache.commons.fileupload.disk.DiskFileItem("file", "text/plain", isFormField, testFileName, sizeThreshold, repository);
+            out = fItem.getOutputStream();
+            out.write(ConstantsAndSettings.TEST_DATA.getBytes());
+            out.flush();
+            out.close();
+            
+            assertNotNull(fItem);
+            assertEquals(fItem.getSize(), new Long(ConstantsAndSettings.TEST_DATA.getBytes().length).longValue());
+            assertEquals(fItem.getContentType(), "text/plain");
+            assertEquals(fItem.getFieldName(), "file");
+            assertEquals(fItem.getString(), ConstantsAndSettings.TEST_DATA);
+
+            fIW = new FileItemWrapper(fItem);
+            
+            files.put("file2", fIW);
+            LogicalData testLogicalfile = new LogicalData(Path.path("testFile"), Constants.LOGICAL_FILE);
+            catalogue.registerResourceEntry(testLogicalfile);
+            instance = new WebDataFileResource(catalogue, testLogicalfile);
+            String processForm = instance.processForm(params, files);
+
+        } finally {
+            instance.delete();
+            ILogicalData load = catalogue.getResourceEntryByLDRI(instance.getPath());
+            assertNull(load);
+        }
+    }
+    /**
+     * Test of getUniqueId method, of class WebDataFileResource.
+     */
+    @Test
+    public void testGetUniqueId() throws Exception {
+        WebDataFileResource instance = null;
+        try {
+            System.out.println("getUniqueId");
+            LogicalData testLogicalFile = new LogicalData(Path.path("testLogicalFile"), Constants.LOGICAL_FILE);
+            catalogue.registerResourceEntry(testLogicalFile);
+            
+            instance = new WebDataFileResource(catalogue, testLogicalFile);
+            String expResult = testLogicalFile.getUID();
+            String result = instance.getUniqueId();
+            assertEquals(expResult, result);
+            assertEquals(testLogicalFile.getUID(), result);
+        } catch (CatalogueException ex) {
+            Logger.getLogger(WebDataFileResourceTest.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            try {
+                instance.delete();
+                ILogicalData load = catalogue.getResourceEntryByLDRI(instance.getPath());
+                assertNull(load);
+            } catch (CatalogueException ex) {
+                Logger.getLogger(WebDataFileResourceTest.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (NotAuthorizedException ex) {
+                Logger.getLogger(WebDataFileResourceTest.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (ConflictException ex) {
+                Logger.getLogger(WebDataFileResourceTest.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (BadRequestException ex) {
+                Logger.getLogger(WebDataFileResourceTest.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+
+    /**
+     * Test of getName method, of class WebDataFileResource.
+     */
+    @Test
+    public void testGetName() throws Exception {
+        WebDataFileResource instance = null;
+        try {
+            System.out.println("getName");
+            LogicalData testLogicalFile = new LogicalData(Path.path("testLogicalFile"), Constants.LOGICAL_FILE);
+            catalogue.registerResourceEntry(testLogicalFile);
+            instance = new WebDataFileResource(catalogue, testLogicalFile);
+            String expResult = testLogicalFile.getLDRI().getName();
+            String result = instance.getName();
+            assertEquals(expResult, result);
+        } catch (CatalogueException ex) {
+            Logger.getLogger(WebDataFileResourceTest.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            try {
+                instance.delete();
+                ILogicalData load = catalogue.getResourceEntryByLDRI(instance.getPath());
+                assertNull(load);
+            } catch (CatalogueException ex) {
+                Logger.getLogger(WebDataFileResourceTest.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (NotAuthorizedException ex) {
+                Logger.getLogger(WebDataFileResourceTest.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (ConflictException ex) {
+                Logger.getLogger(WebDataFileResourceTest.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (BadRequestException ex) {
+                Logger.getLogger(WebDataFileResourceTest.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+//    /**
+//     * Test of authenticate method, of class WebDataFileResource.
+//     */
+//    @Test
+//    public void testAuthenticate() {
+//        System.out.println("authenticate");
+//        String user = "";
+//        String password = "";
+//        WebDataFileResource instance = null;
+//        Object expResult = null;
+//        Object result = instance.authenticate(user, password);
+//        assertEquals(expResult, result);
+//        // TODO review the generated test code and remove the default call to fail.
+//        fail("The test case is a prototype.");
 //    }
 //
 //    /**
-//     * Test of moveTo method, of class WebDataFileResource.
+//     * Test of authorise method, of class WebDataFileResource.
 //     */
 //    @Test
-//    public void testMoveTo() throws Exception {
-//        System.out.println("moveTo");
-//        WebDataDirResource rDest = null;
+//    public void testAuthorise() {
+//        System.out.println("authorise");
+//        Request request = null;
+//        Method method = null;
+//        Auth auth = null;
 //        WebDataFileResource instance = null;
-//        Path path;
-//
-//        try {
-//            catalogue.registerResourceEntry(testLogicalData);
-//            catalogue.registerResourceEntry(testLogicalData);
-//
-//            rDest = new WebDataDirResource(catalogue, testLogicalData);
-//            instance = new WebDataFileResource(catalogue, testLogicalData);
-//            instance.moveTo(rDest, ContantsAndSettings.TEST_FILE_NAME);
-//
-//
-//            ILogicalData loadedLFolder = catalogue.getResourceEntryByLDRI(testFolderPath);
-//            assertNotNull(loadedLFolder);
-//            ILogicalData loadedLFile = catalogue.getResourceEntryByLDRI(Path.path(testFolderPath, ContantsAndSettings.TEST_FILE_NAME));
-//            assertNotNull(loadedLFile);
-//
-//            rDest = new WebDataDirResource(catalogue, loadedLFolder);
-//            assertNotNull(rDest);
-//            instance = new WebDataFileResource(catalogue, loadedLFile);
-//            assertNotNull(rDest);
-//            List<? extends Resource> children = rDest.getChildren();
-//
-//            assertNotNull(children);
-//            assertFalse(children.isEmpty());
-//            boolean foundIt = false;
-//            for (Resource r : children) {
-//                path = ((WebDataFileResource) r).getPath();
-//                if (path.equals(instance.getPath())) {
-//                    foundIt = true;
-//                }
-//            }
-//            assertTrue(foundIt);
-//        } finally {
-//            instance.delete();
-//            rDest.delete();
-//        }
-//    }
-//
-////    /**
-////     * Test of processForm method, of class WebDataFileResource.
-////     */
-////    @Test
-////    public void testProcessForm() throws Exception {
-////        System.out.println("processForm");
-////        Map<String, String> params = new HashMap<String, String>();
-////        Map<String, FileItem> files = new HashMap<String, FileItem>();
-////        WebDataFileResource instance = null;
-////        try {
-////
-////            boolean isFormField = false;
-////            int sizeThreshold = -1;
-////            File repository = new File(System.getProperty("java.io.tmpdir"));
-////
-////            org.apache.commons.fileupload.disk.DiskFileItem fItem = new org.apache.commons.fileupload.disk.DiskFileItem("file", "text/plain", isFormField, testFileName, sizeThreshold, repository);
-////            OutputStream out = fItem.getOutputStream();
-////            out.write(testData.getBytes());
-////            out.flush();
-////            out.close();
-////
-////            assertNotNull(fItem);
-////            assertEquals(fItem.getSize(), new Long(testData.getBytes().length).longValue());
-////            assertEquals(fItem.getContentType(), "text/plain");
-////            assertEquals(fItem.getFieldName(), "file");
-////            assertEquals(fItem.getString(), testData);
-////
-////            FileItemWrapper fIW = new FileItemWrapper(fItem);
-////
-////            files.put("file1", fIW);
-////
-////
-////            fItem = new org.apache.commons.fileupload.disk.DiskFileItem("file", "text/plain", isFormField, testFileName, sizeThreshold, repository);
-////            out = fItem.getOutputStream();
-////            out.write(testData.getBytes());
-////            out.flush();
-////            out.close();
-////            
-////            assertNotNull(fItem);
-////            assertEquals(fItem.getSize(), new Long(testData.getBytes().length).longValue());
-////            assertEquals(fItem.getContentType(), "text/plain");
-////            assertEquals(fItem.getFieldName(), "file");
-////            assertEquals(fItem.getString(), testData);
-////
-////            fIW = new FileItemWrapper(fItem);
-////            
-////            files.put("file2", fIW);
-////
-////            instance = new WebDataFileResource(catalogue, testLogicalData);
-////            String processForm = instance.processForm(params, files);
-////
-////        } finally {
-////            instance.delete();
-////            ILogicalData load = catalogue.getResourceEntryByLDRI(testLogicalData.getLDRI());
-////            assertNull(load);
-////        }
-////    }
-//    /**
-//     * Test of getUniqueId method, of class WebDataFileResource.
-//     */
-//    @Test
-//    public void testGetUniqueId() {
-//        WebDataFileResource instance = null;
-//        try {
-//            System.out.println("getUniqueId");
-//            instance = new WebDataFileResource(catalogue, testLogicalData);
-//            String expResult = testLogicalData.getUID();
-//            String result = instance.getUniqueId();
-//            assertEquals(expResult, result);
-//            assertEquals(testLogicalData.getUID(), result);
-//        } catch (CatalogueException ex) {
-//            Logger.getLogger(WebDataFileResourceTest.class.getName()).log(Level.SEVERE, null, ex);
-//        } finally {
-//            try {
-//                instance.delete();
-//                ILogicalData load = catalogue.getResourceEntryByLDRI(testLogicalData.getLDRI());
-//                assertNull(load);
-//            } catch (CatalogueException ex) {
-//                Logger.getLogger(WebDataFileResourceTest.class.getName()).log(Level.SEVERE, null, ex);
-//            } catch (NotAuthorizedException ex) {
-//                Logger.getLogger(WebDataFileResourceTest.class.getName()).log(Level.SEVERE, null, ex);
-//            } catch (ConflictException ex) {
-//                Logger.getLogger(WebDataFileResourceTest.class.getName()).log(Level.SEVERE, null, ex);
-//            } catch (BadRequestException ex) {
-//                Logger.getLogger(WebDataFileResourceTest.class.getName()).log(Level.SEVERE, null, ex);
-//            }
-//        }
+//        boolean expResult = false;
+//        boolean result = instance.authorise(request, method, auth);
+//        assertEquals(expResult, result);
+//        // TODO review the generated test code and remove the default call to fail.
+//        fail("The test case is a prototype.");
 //    }
 //
 //    /**
-//     * Test of getName method, of class WebDataFileResource.
+//     * Test of getRealm method, of class WebDataFileResource.
 //     */
 //    @Test
-//    public void testGetName() {
+//    public void testGetRealm() {
+//        System.out.println("getRealm");
 //        WebDataFileResource instance = null;
-//        try {
-//            System.out.println("getName");
-//            instance = new WebDataFileResource(catalogue, testLogicalData);
-//            String expResult = testLogicalData.getLDRI().getName();
-//            String result = instance.getName();
-//            assertEquals(expResult, result);
-//        } catch (CatalogueException ex) {
-//            Logger.getLogger(WebDataFileResourceTest.class.getName()).log(Level.SEVERE, null, ex);
-//        } finally {
-//            try {
-//                instance.delete();
-//                ILogicalData load = catalogue.getResourceEntryByLDRI(testLogicalData.getLDRI());
-//                assertNull(load);
-//            } catch (CatalogueException ex) {
-//                Logger.getLogger(WebDataFileResourceTest.class.getName()).log(Level.SEVERE, null, ex);
-//            } catch (NotAuthorizedException ex) {
-//                Logger.getLogger(WebDataFileResourceTest.class.getName()).log(Level.SEVERE, null, ex);
-//            } catch (ConflictException ex) {
-//                Logger.getLogger(WebDataFileResourceTest.class.getName()).log(Level.SEVERE, null, ex);
-//            } catch (BadRequestException ex) {
-//                Logger.getLogger(WebDataFileResourceTest.class.getName()).log(Level.SEVERE, null, ex);
-//            }
-//        }
+//        String expResult = "";
+//        String result = instance.getRealm();
+//        assertEquals(expResult, result);
+//        // TODO review the generated test code and remove the default call to fail.
+//        fail("The test case is a prototype.");
 //    }
-////    /**
-////     * Test of authenticate method, of class WebDataFileResource.
-////     */
-////    @Test
-////    public void testAuthenticate() {
-////        System.out.println("authenticate");
-////        String user = "";
-////        String password = "";
-////        WebDataFileResource instance = null;
-////        Object expResult = null;
-////        Object result = instance.authenticate(user, password);
-////        assertEquals(expResult, result);
-////        // TODO review the generated test code and remove the default call to fail.
-////        fail("The test case is a prototype.");
-////    }
-////
-////    /**
-////     * Test of authorise method, of class WebDataFileResource.
-////     */
-////    @Test
-////    public void testAuthorise() {
-////        System.out.println("authorise");
-////        Request request = null;
-////        Method method = null;
-////        Auth auth = null;
-////        WebDataFileResource instance = null;
-////        boolean expResult = false;
-////        boolean result = instance.authorise(request, method, auth);
-////        assertEquals(expResult, result);
-////        // TODO review the generated test code and remove the default call to fail.
-////        fail("The test case is a prototype.");
-////    }
-////
-////    /**
-////     * Test of getRealm method, of class WebDataFileResource.
-////     */
-////    @Test
-////    public void testGetRealm() {
-////        System.out.println("getRealm");
-////        WebDataFileResource instance = null;
-////        String expResult = "";
-////        String result = instance.getRealm();
-////        assertEquals(expResult, result);
-////        // TODO review the generated test code and remove the default call to fail.
-////        fail("The test case is a prototype.");
-////    }
-////
+//
+
+    /**
+     * Test of getModifiedDate method, of class WebDataFileResource.
+     */
+    @Test
+    public void testGetModifiedDate() throws Exception {
+        WebDataFileResource instance = null;
+        try {
+            System.out.println("getModifiedDate");
+            LogicalData testLogicalFile = new LogicalData(Path.path("testLogicalFile"), Constants.LOGICAL_FILE);
+            catalogue.registerResourceEntry(testLogicalFile);
+            instance = new WebDataFileResource(catalogue, testLogicalFile);
+
+            Date result = instance.getModifiedDate();
+            assertNotNull(result);
+
+        } catch (CatalogueException ex) {
+            Logger.getLogger(WebDataFileResourceTest.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            try {
+                instance.delete();
+            } catch (NotAuthorizedException ex) {
+                Logger.getLogger(WebDataFileResourceTest.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (ConflictException ex) {
+                Logger.getLogger(WebDataFileResourceTest.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (BadRequestException ex) {
+                Logger.getLogger(WebDataFileResourceTest.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+
+    /**
+     * Test of getModifiedDate method, of class WebDataFileResource.
+     */
+    @Test
+    public void testGetCreateDate() throws Exception {
+        WebDataFileResource instance = null;
+        try {
+            System.out.println("getModifiedDate");
+            LogicalData testLogicalFile = new LogicalData(Path.path("testLogicalFile"), Constants.LOGICAL_FILE);
+            catalogue.registerResourceEntry(testLogicalFile);
+            instance = new WebDataFileResource(catalogue, testLogicalFile);
+
+            Date result = instance.getCreateDate();
+            assertNotNull(result);
+
+        } catch (CatalogueException ex) {
+            Logger.getLogger(WebDataFileResourceTest.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            try {
+                instance.delete();
+            } catch (NotAuthorizedException ex) {
+                Logger.getLogger(WebDataFileResourceTest.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (ConflictException ex) {
+                Logger.getLogger(WebDataFileResourceTest.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (BadRequestException ex) {
+                Logger.getLogger(WebDataFileResourceTest.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
 //
 //    /**
-//     * Test of getModifiedDate method, of class WebDataFileResource.
+//     * Test of checkRedirect method, of class WebDataFileResource.
 //     */
 //    @Test
-//    public void testGetModifiedDate() {
+//    public void testCheckRedirect() {
+//        System.out.println("checkRedirect");
+//        Request request = null;
 //        WebDataFileResource instance = null;
-//        try {
-//            System.out.println("getModifiedDate");
-//            instance = new WebDataFileResource(catalogue, testLogicalData);
-//
-//            Date result = instance.getModifiedDate();
-//            assertNotNull(result);
-//
-//        } catch (CatalogueException ex) {
-//            Logger.getLogger(WebDataFileResourceTest.class.getName()).log(Level.SEVERE, null, ex);
-//        } finally {
-//            try {
-//                instance.delete();
-//            } catch (NotAuthorizedException ex) {
-//                Logger.getLogger(WebDataFileResourceTest.class.getName()).log(Level.SEVERE, null, ex);
-//            } catch (ConflictException ex) {
-//                Logger.getLogger(WebDataFileResourceTest.class.getName()).log(Level.SEVERE, null, ex);
-//            } catch (BadRequestException ex) {
-//                Logger.getLogger(WebDataFileResourceTest.class.getName()).log(Level.SEVERE, null, ex);
-//            }
-//        }
+//        String expResult = "";
+//        String result = instance.checkRedirect(request);
+//        assertEquals(expResult, result);
+//        // TODO review the generated test code and remove the default call to fail.
+//        fail("The test case is a prototype.");
 //    }
-//    
-//    
-//    
-//    
-//    /**
-//     * Test of getModifiedDate method, of class WebDataFileResource.
-//     */
-//    @Test
-//    public void testGetCreateDate() {
-//        WebDataFileResource instance = null;
-//        try {
-//            System.out.println("getModifiedDate");
-//            instance = new WebDataFileResource(catalogue, testLogicalData);
-//
-//            Date result = instance.getCreateDate();
-//            assertNotNull(result);
-//
-//        } catch (CatalogueException ex) {
-//            Logger.getLogger(WebDataFileResourceTest.class.getName()).log(Level.SEVERE, null, ex);
-//        } finally {
-//            try {
-//                instance.delete();
-//            } catch (NotAuthorizedException ex) {
-//                Logger.getLogger(WebDataFileResourceTest.class.getName()).log(Level.SEVERE, null, ex);
-//            } catch (ConflictException ex) {
-//                Logger.getLogger(WebDataFileResourceTest.class.getName()).log(Level.SEVERE, null, ex);
-//            } catch (BadRequestException ex) {
-//                Logger.getLogger(WebDataFileResourceTest.class.getName()).log(Level.SEVERE, null, ex);
-//            }
-//        }
-//    }
-////
-////    /**
-////     * Test of checkRedirect method, of class WebDataFileResource.
-////     */
-////    @Test
-////    public void testCheckRedirect() {
-////        System.out.println("checkRedirect");
-////        Request request = null;
-////        WebDataFileResource instance = null;
-////        String expResult = "";
-////        String result = instance.checkRedirect(request);
-////        assertEquals(expResult, result);
-////        // TODO review the generated test code and remove the default call to fail.
-////        fail("The test case is a prototype.");
-////    }
 }

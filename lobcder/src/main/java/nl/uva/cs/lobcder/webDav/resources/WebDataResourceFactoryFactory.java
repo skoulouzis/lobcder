@@ -1,15 +1,13 @@
 package nl.uva.cs.lobcder.webDav.resources;
 
-import java.util.logging.Level;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.bradmcevoy.http.AuthenticationService;
 import com.bradmcevoy.http.ResourceFactory;
 import com.bradmcevoy.http.ResourceFactoryFactory;
 import com.bradmcevoy.http.webdav.DefaultWebDavResponseHandler;
 import com.bradmcevoy.http.webdav.WebDavResponseHandler;
+import java.util.logging.Level;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class WebDataResourceFactoryFactory implements ResourceFactoryFactory {
 

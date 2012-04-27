@@ -12,12 +12,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Properties;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import nl.uva.cs.lobcder.resources.*;
 import nl.uva.cs.lobcder.util.ConstantsAndSettings;
 import nl.uva.cs.lobcder.webDav.resources.Constants;
-import nl.uva.cs.lobcder.webDav.resources.UserThread;
 import nl.uva.cs.lobcder.webDav.resources.UserThreadRDBMS;
 import static org.junit.Assert.*;
 import org.junit.*;
@@ -458,17 +458,21 @@ public class RDMSDLCatalogueTest {
                 }
             }
             assertEquals(foundIt, 2);
-
             ILogicalData oldSubEntry1 = instance.getResourceEntryByLDRI(originalChildSubPath1);
             assertNull(oldSubEntry1);
             ILogicalData oldSubEntry2 = instance.getResourceEntryByLDRI(originalChildSubPath2);
             assertNull(oldSubEntry2);
 
-
             ILogicalData newSubEntry1 = instance.getResourceEntryByLDRI(newSubPath1);
             assertNotNull(newSubEntry1);
             ILogicalData newSubEntry2 = instance.getResourceEntryByLDRI(newSubPath2);
             assertNotNull(newSubEntry2);
+
+
+            loaded = instance.getResourceEntryByLDRI(originalPath);
+            assertNotNull(loaded.getChild(newPath));
+            assertNull(loaded.getChild(originalChildPath1));
+
 
             instance.unregisterResourceEntry(e);
             loaded = instance.getResourceEntryByLDRI(originalPath);
@@ -829,7 +833,7 @@ public class RDMSDLCatalogueTest {
             newEntry.setMetadata(meta);
 
 
-            Collection<String> children = new ArrayList<String>();
+            Collection<String> children = new CopyOnWriteArrayList<String>();
             children.add(ConstantsAndSettings.TEST_FILE_PATH_2.toString());
             newEntry.setChildren(children);
 
@@ -890,6 +894,71 @@ public class RDMSDLCatalogueTest {
             Collection<StorageSite> allSites = instance.getAllSites();
             assertEquals(allSites.size(), 0);
         }
+    }
+
+    @Test
+    public void testCreateFileDeleteItAndGetParent() throws FileNotFoundException, IOException, CatalogueException, Exception {
+        //The no such row bug. For some reason when we delete the file and then try 
+        //to get the parent we get  No such database row exception for the 
+        //StorageSite which makes the LogicalData not to detach properly
+        RDMSDLCatalog catalogue = new RDMSDLCatalog();
+
+        //Init with some storage sites 
+        String propBasePath = System.getProperty("user.home") + File.separator
+                + "workspace" + File.separator + "lobcder"
+                + File.separator + "etc" + File.separator;
+        ArrayList<String> endpoints = new ArrayList<String>();
+
+        Properties prop = null;
+        for (String name : names) {
+            prop = getCloudProperties(propBasePath + name);
+            endpoints.add(prop.getProperty(Constants.STORAGE_SITE_ENDPOINT));
+            catalogue.registerStorageSite(prop);
+        }
+
+        //Create root
+        LogicalData root = new LogicalData(Path.root, Constants.LOGICAL_FOLDER);
+        Collection<IStorageSite> sites;
+        sites = root.getStorageSites();
+        if (sites == null || sites.isEmpty()) {
+            sites = (Collection<IStorageSite>) catalogue.getSitesByUname(prop.getProperty(Constants.VPH_USERNAME));
+            root.setStorageSites(sites);
+            catalogue.registerResourceEntry(root);
+        }
+        assertNotNull(catalogue.getResourceEntryByLDRI(Path.root));
+        
+        
+
+        //Test collection 
+        Path newCollectionPath = Path.path(Path.root,ConstantsAndSettings.TEST_FOLDER_NAME_1);
+        LogicalData newFolderEntry = new LogicalData(newCollectionPath, Constants.LOGICAL_FOLDER);
+        newFolderEntry.getMetadata().setCreateDate(System.currentTimeMillis());
+        sites = root.getStorageSites();
+        newFolderEntry.setStorageSites(sites);
+        catalogue.registerResourceEntry(newFolderEntry);
+        assertNotNull(catalogue.getResourceEntryByLDRI(newCollectionPath));
+
+        //Test file 
+        Path newFilePath = Path.path(newCollectionPath,ConstantsAndSettings.TEST_FILE_NAME_1);
+        LogicalData newFileResource = (LogicalData) catalogue.getResourceEntryByLDRI(newFilePath);
+        if (newFileResource == null) {
+            newFileResource = new LogicalData(newFilePath, Constants.LOGICAL_FILE);
+            sites = newFolderEntry.getStorageSites();
+            newFileResource.setStorageSites(sites);
+            catalogue.registerResourceEntry(newFileResource);
+        }
+        assertNotNull(catalogue.getResourceEntryByLDRI(newFilePath));
+
+        //delete file 
+        catalogue.unregisterResourceEntry(newFileResource);
+        assertNull(catalogue.getResourceEntryByLDRI(newFilePath));
+
+        ILogicalData entry = catalogue.getResourceEntryByLDRI(newCollectionPath);
+        assertNotNull(entry);
+
+        catalogue.unregisterResourceEntry(entry);
+        assertNull(catalogue.getResourceEntryByLDRI(newCollectionPath));
+        
     }
 
     @Test

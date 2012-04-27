@@ -14,9 +14,10 @@ import java.io.*;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import nl.uva.cs.lobcder.catalogue.SimpleDLCatalogue;
+import nl.uva.cs.lobcder.catalogue.RDMSDLCatalog;
 import nl.uva.cs.lobcder.resources.ILogicalData;
 import nl.uva.cs.lobcder.resources.IStorageSite;
+import nl.uva.cs.lobcder.resources.StorageSite;
 import nl.uva.cs.lobcder.util.ConstantsAndSettings;
 import nl.uva.vlet.exception.VlException;
 import nl.uva.vlet.vfs.VFSNode;
@@ -204,18 +205,17 @@ public class WebDataResourceFactoryTest {
             }
         }
         assertTrue(foundIt);
-
+        RDMSDLCatalog cat = new RDMSDLCatalog();
+        Collection<StorageSite> all = cat.getAllSites();
+        
         file.delete();
-        SimpleDLCatalogue cat = new SimpleDLCatalogue();
+        
+//        RDMSDLCatalog cat = new RDMSDLCatalog();
         ILogicalData entry = cat.getResourceEntryByLDRI(file.getPath());
         assertNull(entry);
 
+        //At this point the collection should exist
         result = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH + ConstantsAndSettings.TEST_FOLDER_NAME_1);
-        if (result == null) {
-            WebDataDirResource root = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH);
-            assertNotNull(root);
-            result = (WebDataDirResource) root.createCollection(ConstantsAndSettings.TEST_FOLDER_NAME_1);
-        }
         checkResource(result);
         Collection<IStorageSite> sites = file.getStorageSites();
         assertFalse(sites.isEmpty());
@@ -248,251 +248,251 @@ public class WebDataResourceFactoryTest {
         result.delete();
 //        result = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH + ConstantsAndSettings.TEST_FOLDER_NAME_1);
 //        assertNull(result);
-        cat = new SimpleDLCatalogue();
+        cat = new RDMSDLCatalog();
         entry = cat.getResourceEntryByLDRI(result.getPath());
         assertNull(entry);
 
     }
-
-    @Test
-    public void testStorageSites() throws Exception {
-
-        System.out.println("testStorageSites");
-        String host = "localhost:8080";
-
-        WebDataResourceFactory instance = new WebDataResourceFactory();
-        WebDataDirResource result = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH + ConstantsAndSettings.TEST_FOLDER_NAME_1);
-        if (result == null) {
-            WebDataDirResource root = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH);
-            assertNotNull(root);
-            result = (WebDataDirResource) root.createCollection(ConstantsAndSettings.TEST_FOLDER_NAME_1);
-        }
-        checkResource(result);
-
-        instance = new WebDataResourceFactory();
-        result = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH + ConstantsAndSettings.TEST_FOLDER_NAME_1);
-        if (result == null) {
-            WebDataDirResource root = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH);
-            assertNotNull(root);
-            result = (WebDataDirResource) root.createCollection(ConstantsAndSettings.TEST_FOLDER_NAME_1);
-        }
-        checkResource(result);
-
-        result.delete();
-        result = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH + ConstantsAndSettings.TEST_FOLDER_NAME_1);
-        assertNull(result);
-    }
-
-    @Test
-    public void testCreateAndGetResourceContent() throws Exception {
-        System.out.println("testCreateAndGetResourceContent");
-        String host = "localhost:8080";
-
-        //1st PUT
-        WebDataResourceFactory instance = new WebDataResourceFactory();
-        WebDataDirResource result = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH + ConstantsAndSettings.TEST_FOLDER_NAME_1);
-        if (result == null) {
-            WebDataDirResource root = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH);
-            assertNotNull(root);
-            result = (WebDataDirResource) root.createCollection(ConstantsAndSettings.TEST_FOLDER_NAME_1);
-        }
-        checkResource(result);
-
-        ByteArrayInputStream bais = new ByteArrayInputStream(ConstantsAndSettings.TEST_DATA.getBytes());
-        WebDataFileResource file = (WebDataFileResource) result.createNew(ConstantsAndSettings.TEST_FILE_NAME_1, bais, new Long(ConstantsAndSettings.TEST_DATA.getBytes().length), "text/plain");
-        checkChildren(result, file);
-
-        Long len = file.getContentLength();
-        assertEquals(len, new Long(ConstantsAndSettings.TEST_DATA.getBytes().length));
-
-        //1st GET
-        instance = new WebDataResourceFactory();
-        file = (WebDataFileResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH + ConstantsAndSettings.TEST_FOLDER_NAME_1 + "/" + ConstantsAndSettings.TEST_FILE_NAME_1);
-        assertNotNull(file);
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        Range range = null;
-        Map<String, String> params = null;
-        String contentType = "text/plain";
-        file.sendContent(out, range, params, contentType);
-        String content = new String(out.toByteArray());
-        assertEquals(ConstantsAndSettings.TEST_DATA, content);
-
-
-        result.delete();
-        result = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH + ConstantsAndSettings.TEST_FOLDER_NAME_1);
-        assertNull(result);
-    }
-
-    @Test
-    public void testUpDownloadLargeFiles() throws NotAuthorizedException, ConflictException, BadRequestException {
-        System.out.println("testUpDownloadLargeFiles");
-        String host = "localhost:8080";
-        WebDataFileResource file = null;
-        WebDataDirResource dir = null;
-        try {
-            WebDataResourceFactory instance = new WebDataResourceFactory();
-            dir = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH + ConstantsAndSettings.TEST_FOLDER_NAME_1);
-            if (dir == null) {
-                WebDataDirResource root = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH);
-                assertNotNull(root);
-                dir = (WebDataDirResource) root.createCollection(ConstantsAndSettings.TEST_FOLDER_NAME_1);
-            }
-            checkResource(dir);
-
-            int count = 1;
-            for (int i = 0; i < count; i++) {
-                File tmpLocalFile = File.createTempFile(this.getClass().getName(), null);
-                byte[] data = new byte[1024 * 1024];//1MB
-                Random r = new Random();
-                r.nextBytes(data);
-
-                FileOutputStream fos = new FileOutputStream(tmpLocalFile);
-                fos.write(data);
-                fos.flush();
-                fos.close();
-
-                FileInputStream fins = new FileInputStream(tmpLocalFile);
-                file = (WebDataFileResource) dir.createNew(ConstantsAndSettings.TEST_FILE_NAME_1, fins, new Long(tmpLocalFile.length()), "application/octet-stream");
-                checkChildren(dir, file);
-
-                Long len = file.getContentLength();
-                assertEquals(len, new Long(tmpLocalFile.length()));
-            }
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        } finally {
-            dir.delete();
-        }
-    }
-
-    @Test
-    public void testMakeCollectionAddChildAndRenameChild() {
-        try {
-            System.out.println("testMakeCollectionAddChildAndRenameChild");
-            String host = "localhost:8080";
-            WebDataFileResource file = null;
-            WebDataDirResource dir = null;
-            SimpleDLCatalogue cat = new SimpleDLCatalogue();
-
-            WebDataResourceFactory instance = new WebDataResourceFactory();
-            dir = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH + ConstantsAndSettings.TEST_FOLDER_NAME_1);
-            if (dir == null) {
-                WebDataDirResource root = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH);
-                assertNotNull(root);
-                dir = (WebDataDirResource) root.createCollection(ConstantsAndSettings.TEST_FOLDER_NAME_1);
-            }
-            checkResource(dir);
-
-            ByteArrayInputStream bais = new ByteArrayInputStream(ConstantsAndSettings.TEST_DATA.getBytes());
-            file = (WebDataFileResource) dir.createNew(ConstantsAndSettings.TEST_FILE_NAME_1, bais, new Long(ConstantsAndSettings.TEST_DATA.getBytes().length), "text/plain");
-            checkChildren(dir, file);
-            //Check if catalogue has the child entry
-            ILogicalData childEntry = cat.getResourceEntryByLDRI(file.getPath());
-            assertEquals(childEntry.getLDRI().toString(), file.getPath().toString());
-            assertEquals(childEntry.getUID(), file.getUniqueId());
-
-            //Check if the collection has the child
-            ILogicalData collectionEntry = cat.getResourceEntryByLDRI(dir.getPath());
-            Path childPath = collectionEntry.getChild(file.getPath());
-            assertNotNull(childPath);
-            assertEquals(childPath.toString(), file.getPath().toString());
-            collectionEntry = cat.getResourceEntryByLDRI(file.getPath().getParent());
-            childPath = collectionEntry.getChild(file.getPath());
-            assertNotNull(childPath);
-            assertEquals(childPath.toString(), file.getPath().toString());
-
-            file.moveTo(dir, ConstantsAndSettings.TEST_FILE_NAME_2);
-            checkChildren(dir, file);
-            //Get data 
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            Range range = null;
-            Map<String, String> params = null;
-            String contentType = "text/plain";
-            file.sendContent(out, range, params, contentType);
-            String content = new String(out.toByteArray());
-            assertEquals(ConstantsAndSettings.TEST_DATA, content);
-
-            //Check if catalogue has the child entry with the new name 
-            //if we don't have new catalog we get back the old child entry
-            cat = new SimpleDLCatalogue();
-            childEntry = cat.getResourceEntryByLDRI(file.getPath());
-
-            assertEquals(childEntry.getLDRI().toString(), file.getPath().toString());
-            assertEquals(childEntry.getUID(), file.getUniqueId());
-
-            dir.delete();
-
-            //The child and the file should be gone 
-            ILogicalData lDir = cat.getResourceEntryByLDRI(Path.path(ConstantsAndSettings.TEST_FOLDER_NAME_1));
-            assertNull(lDir);
-            ILogicalData lf1 = cat.getResourceEntryByLDRI(Path.path(ConstantsAndSettings.TEST_FILE_NAME_1));
-            assertNull(lf1);
-            ILogicalData lf2 = cat.getResourceEntryByLDRI(Path.path(ConstantsAndSettings.TEST_FILE_NAME_2));
-            assertNull(lf2);
-
-
-        } catch (Exception ex) {
-            fail(ex.getMessage());
-            ex.printStackTrace();
-        }
-    }
-
-    @Test
-    public void testMake2Subcollections() throws Exception {
-        System.out.println("testMakeCollectionAddChildAndRenameChild");
-        String host = "localhost:8080";
-        WebDataFileResource file = null;
-        WebDataDirResource dir = null;
-
-        WebDataResourceFactory instance = new WebDataResourceFactory();
-        dir = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH + ConstantsAndSettings.TEST_FOLDER_NAME_1);
-        if (dir == null) {
-            WebDataDirResource root = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH);
-            assertNotNull(root);
-            dir = (WebDataDirResource) root.createCollection(ConstantsAndSettings.TEST_FOLDER_NAME_1);
-        }
-        checkResource(dir);
-        dir.createCollection("subCollection1");
-        WebDataDirResource sub1 = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH +"/"+ dir.getName()+"/subCollection1");
-        assertNotNull(sub1);
-        dir.createCollection("subCollection2");
-        WebDataDirResource sub2 = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH +"/"+ dir.getName()+"/subCollection2");
-        assertNotNull(sub2);
-        
-        ByteArrayInputStream bais = new ByteArrayInputStream(ConstantsAndSettings.TEST_DATA.getBytes());
-        file = (WebDataFileResource) sub1.createNew(ConstantsAndSettings.TEST_FILE_NAME_1, bais, new Long(ConstantsAndSettings.TEST_DATA.getBytes().length), "text/plain");
-        checkChildren(sub1, file);
-        
-        
-        dir.delete();
-    }
-
-    @Test
-    public void testMultiThread() {
-        try {
-            System.out.println("testMultiThread");
-            Thread userThread1 = new UserThread(1);
-            userThread1.setName("T1");
-
-            Thread userThread2 = new UserThread(1);
-            userThread2.setName("T2");
-
-            Thread userThread3 = new UserThread(2);
-            userThread3.setName("T3");
-
-
-            userThread1.start();
-            userThread2.start();
-            userThread3.start();
-
-            userThread1.join();
-            userThread2.join();
-            userThread3.join();
-        } catch (InterruptedException ex) {
-            fail();
-            ex.printStackTrace();
-        }
-    }
+//
+//    @Test
+//    public void testStorageSites() throws Exception {
+//
+//        System.out.println("testStorageSites");
+//        String host = "localhost:8080";
+//
+//        WebDataResourceFactory instance = new WebDataResourceFactory();
+//        WebDataDirResource result = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH + ConstantsAndSettings.TEST_FOLDER_NAME_1);
+//        if (result == null) {
+//            WebDataDirResource root = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH);
+//            assertNotNull(root);
+//            result = (WebDataDirResource) root.createCollection(ConstantsAndSettings.TEST_FOLDER_NAME_1);
+//        }
+//        checkResource(result);
+//
+//        instance = new WebDataResourceFactory();
+//        result = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH + ConstantsAndSettings.TEST_FOLDER_NAME_1);
+//        if (result == null) {
+//            WebDataDirResource root = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH);
+//            assertNotNull(root);
+//            result = (WebDataDirResource) root.createCollection(ConstantsAndSettings.TEST_FOLDER_NAME_1);
+//        }
+//        checkResource(result);
+//
+//        result.delete();
+//        result = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH + ConstantsAndSettings.TEST_FOLDER_NAME_1);
+//        assertNull(result);
+//    }
+//
+//    @Test
+//    public void testCreateAndGetResourceContent() throws Exception {
+//        System.out.println("testCreateAndGetResourceContent");
+//        String host = "localhost:8080";
+//
+//        //1st PUT
+//        WebDataResourceFactory instance = new WebDataResourceFactory();
+//        WebDataDirResource result = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH + ConstantsAndSettings.TEST_FOLDER_NAME_1);
+//        if (result == null) {
+//            WebDataDirResource root = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH);
+//            assertNotNull(root);
+//            result = (WebDataDirResource) root.createCollection(ConstantsAndSettings.TEST_FOLDER_NAME_1);
+//        }
+//        checkResource(result);
+//
+//        ByteArrayInputStream bais = new ByteArrayInputStream(ConstantsAndSettings.TEST_DATA.getBytes());
+//        WebDataFileResource file = (WebDataFileResource) result.createNew(ConstantsAndSettings.TEST_FILE_NAME_1, bais, new Long(ConstantsAndSettings.TEST_DATA.getBytes().length), "text/plain");
+//        checkChildren(result, file);
+//
+//        Long len = file.getContentLength();
+//        assertEquals(len, new Long(ConstantsAndSettings.TEST_DATA.getBytes().length));
+//
+//        //1st GET
+//        instance = new WebDataResourceFactory();
+//        file = (WebDataFileResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH + ConstantsAndSettings.TEST_FOLDER_NAME_1 + "/" + ConstantsAndSettings.TEST_FILE_NAME_1);
+//        assertNotNull(file);
+//        ByteArrayOutputStream out = new ByteArrayOutputStream();
+//        Range range = null;
+//        Map<String, String> params = null;
+//        String contentType = "text/plain";
+//        file.sendContent(out, range, params, contentType);
+//        String content = new String(out.toByteArray());
+//        assertEquals(ConstantsAndSettings.TEST_DATA, content);
+//
+//
+//        result.delete();
+//        result = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH + ConstantsAndSettings.TEST_FOLDER_NAME_1);
+//        assertNull(result);
+//    }
+//
+//    @Test
+//    public void testUpDownloadLargeFiles() throws NotAuthorizedException, ConflictException, BadRequestException {
+//        System.out.println("testUpDownloadLargeFiles");
+//        String host = "localhost:8080";
+//        WebDataFileResource file = null;
+//        WebDataDirResource dir = null;
+//        try {
+//            WebDataResourceFactory instance = new WebDataResourceFactory();
+//            dir = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH + ConstantsAndSettings.TEST_FOLDER_NAME_1);
+//            if (dir == null) {
+//                WebDataDirResource root = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH);
+//                assertNotNull(root);
+//                dir = (WebDataDirResource) root.createCollection(ConstantsAndSettings.TEST_FOLDER_NAME_1);
+//            }
+//            checkResource(dir);
+//
+//            int count = 1;
+//            for (int i = 0; i < count; i++) {
+//                File tmpLocalFile = File.createTempFile(this.getClass().getName(), null);
+//                byte[] data = new byte[1024 * 1024];//1MB
+//                Random r = new Random();
+//                r.nextBytes(data);
+//
+//                FileOutputStream fos = new FileOutputStream(tmpLocalFile);
+//                fos.write(data);
+//                fos.flush();
+//                fos.close();
+//
+//                FileInputStream fins = new FileInputStream(tmpLocalFile);
+//                file = (WebDataFileResource) dir.createNew(ConstantsAndSettings.TEST_FILE_NAME_1, fins, new Long(tmpLocalFile.length()), "application/octet-stream");
+//                checkChildren(dir, file);
+//
+//                Long len = file.getContentLength();
+//                assertEquals(len, new Long(tmpLocalFile.length()));
+//            }
+//        } catch (Exception ex) {
+//            ex.printStackTrace();
+//        } finally {
+//            dir.delete();
+//        }
+//    }
+//
+//    @Test
+//    public void testMakeCollectionAddChildAndRenameChild() {
+//        try {
+//            System.out.println("testMakeCollectionAddChildAndRenameChild");
+//            String host = "localhost:8080";
+//            WebDataFileResource file = null;
+//            WebDataDirResource dir = null;
+//            RDMSDLCatalog cat = new RDMSDLCatalog();
+//
+//            WebDataResourceFactory instance = new WebDataResourceFactory();
+//            dir = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH + ConstantsAndSettings.TEST_FOLDER_NAME_1);
+//            if (dir == null) {
+//                WebDataDirResource root = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH);
+//                assertNotNull(root);
+//                dir = (WebDataDirResource) root.createCollection(ConstantsAndSettings.TEST_FOLDER_NAME_1);
+//            }
+//            checkResource(dir);
+//
+//            ByteArrayInputStream bais = new ByteArrayInputStream(ConstantsAndSettings.TEST_DATA.getBytes());
+//            file = (WebDataFileResource) dir.createNew(ConstantsAndSettings.TEST_FILE_NAME_1, bais, new Long(ConstantsAndSettings.TEST_DATA.getBytes().length), "text/plain");
+//            checkChildren(dir, file);
+//            //Check if catalogue has the child entry
+//            ILogicalData childEntry = cat.getResourceEntryByLDRI(file.getPath());
+//            assertEquals(childEntry.getLDRI().toString(), file.getPath().toString());
+//            assertEquals(childEntry.getUID(), file.getUniqueId());
+//
+//            //Check if the collection has the child
+//            ILogicalData collectionEntry = cat.getResourceEntryByLDRI(dir.getPath());
+//            Path childPath = collectionEntry.getChild(file.getPath());
+//            assertNotNull(childPath);
+//            assertEquals(childPath.toString(), file.getPath().toString());
+//            collectionEntry = cat.getResourceEntryByLDRI(file.getPath().getParent());
+//            childPath = collectionEntry.getChild(file.getPath());
+//            assertNotNull(childPath);
+//            assertEquals(childPath.toString(), file.getPath().toString());
+//
+//            file.moveTo(dir, ConstantsAndSettings.TEST_FILE_NAME_2);
+//            checkChildren(dir, file);
+//            //Get data 
+//            ByteArrayOutputStream out = new ByteArrayOutputStream();
+//            Range range = null;
+//            Map<String, String> params = null;
+//            String contentType = "text/plain";
+//            file.sendContent(out, range, params, contentType);
+//            String content = new String(out.toByteArray());
+//            assertEquals(ConstantsAndSettings.TEST_DATA, content);
+//
+//            //Check if catalogue has the child entry with the new name 
+//            //if we don't have new catalog we get back the old child entry
+//            cat = new RDMSDLCatalog();
+//            childEntry = cat.getResourceEntryByLDRI(file.getPath());
+//
+//            assertEquals(childEntry.getLDRI().toString(), file.getPath().toString());
+//            assertEquals(childEntry.getUID(), file.getUniqueId());
+//
+//            dir.delete();
+//
+//            //The child and the file should be gone 
+//            ILogicalData lDir = cat.getResourceEntryByLDRI(Path.path(ConstantsAndSettings.TEST_FOLDER_NAME_1));
+//            assertNull(lDir);
+//            ILogicalData lf1 = cat.getResourceEntryByLDRI(Path.path(ConstantsAndSettings.TEST_FILE_NAME_1));
+//            assertNull(lf1);
+//            ILogicalData lf2 = cat.getResourceEntryByLDRI(Path.path(ConstantsAndSettings.TEST_FILE_NAME_2));
+//            assertNull(lf2);
+//
+//
+//        } catch (Exception ex) {
+//            fail(ex.getMessage());
+//            ex.printStackTrace();
+//        }
+//    }
+//
+//    @Test
+//    public void testMake2Subcollections() throws Exception {
+//        System.out.println("testMakeCollectionAddChildAndRenameChild");
+//        String host = "localhost:8080";
+//        WebDataFileResource file = null;
+//        WebDataDirResource dir = null;
+//
+//        WebDataResourceFactory instance = new WebDataResourceFactory();
+//        dir = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH + ConstantsAndSettings.TEST_FOLDER_NAME_1);
+//        if (dir == null) {
+//            WebDataDirResource root = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH);
+//            assertNotNull(root);
+//            dir = (WebDataDirResource) root.createCollection(ConstantsAndSettings.TEST_FOLDER_NAME_1);
+//        }
+//        checkResource(dir);
+//        dir.createCollection("subCollection1");
+//        WebDataDirResource sub1 = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH +"/"+ dir.getName()+"/subCollection1");
+//        assertNotNull(sub1);
+//        dir.createCollection("subCollection2");
+//        WebDataDirResource sub2 = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH +"/"+ dir.getName()+"/subCollection2");
+//        assertNotNull(sub2);
+//        
+//        ByteArrayInputStream bais = new ByteArrayInputStream(ConstantsAndSettings.TEST_DATA.getBytes());
+//        file = (WebDataFileResource) sub1.createNew(ConstantsAndSettings.TEST_FILE_NAME_1, bais, new Long(ConstantsAndSettings.TEST_DATA.getBytes().length), "text/plain");
+//        checkChildren(sub1, file);
+//        
+//        
+//        dir.delete();
+//    }
+//
+//    @Test
+//    public void testMultiThread() {
+//        try {
+//            System.out.println("testMultiThread");
+//            Thread userThread1 = new UserThread(1);
+//            userThread1.setName("T1");
+//
+//            Thread userThread2 = new UserThread(1);
+//            userThread2.setName("T2");
+//
+//            Thread userThread3 = new UserThread(2);
+//            userThread3.setName("T3");
+//
+//
+//            userThread1.start();
+//            userThread2.start();
+//            userThread3.start();
+//
+//            userThread1.join();
+//            userThread2.join();
+//            userThread3.join();
+//        } catch (InterruptedException ex) {
+//            fail();
+//            ex.printStackTrace();
+//        }
+//    }
 
     private void checkChildren(WebDataDirResource result, WebDataFileResource file) {
         List<? extends Resource> children = result.getChildren();

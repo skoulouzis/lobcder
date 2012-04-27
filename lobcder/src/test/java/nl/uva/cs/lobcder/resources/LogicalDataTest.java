@@ -93,7 +93,7 @@ public class LogicalDataTest {
 
         assertNotNull(result);
         assertFalse(result.isEmpty());
-        assertTrue(result.contains(child));
+        assertTrue(result.contains(child.toString()));
     }
 
     /**
@@ -148,7 +148,7 @@ public class LogicalDataTest {
         System.out.println("getUID");
         LogicalData instance = new LogicalData(path,Constants.LOGICAL_DATA);
         String result = instance.getUID();
-//        assertNotNull(result);
+        assertNotNull(result);
     }
 
     /**

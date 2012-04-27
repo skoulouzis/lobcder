@@ -38,4 +38,6 @@ public interface IStorageSite {
     public ServerInfo getInfo();
     
     public VFSClient getVfsClient() throws VlException;
+
+    public void removeLogicalPath(Path pdrI);
 }

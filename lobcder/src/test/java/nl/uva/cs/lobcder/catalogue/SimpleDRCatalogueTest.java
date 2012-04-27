@@ -13,6 +13,7 @@ import java.util.AbstractCollection;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Properties;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import nl.uva.cs.lobcder.resources.*;
@@ -714,7 +715,7 @@ public class SimpleDRCatalogueTest {
             newEntry.setMetadata(meta);
 
 
-            Collection<String> children = new ArrayList<String>();
+            Collection<String> children = new CopyOnWriteArrayList<String>();
             children.add(ConstantsAndSettings.TEST_FILE_PATH_2.toString());
             newEntry.setChildren(children);
 
