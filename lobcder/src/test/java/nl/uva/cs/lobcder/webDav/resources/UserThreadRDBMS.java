@@ -13,8 +13,6 @@ import java.util.Date;
 import java.util.List;
 import nl.uva.cs.lobcder.catalogue.CatalogueException;
 import nl.uva.cs.lobcder.catalogue.RDMSDLCatalog;
-import nl.uva.cs.lobcder.catalogue.RDMSDLCatalogueTest;
-import nl.uva.cs.lobcder.catalogue.SimpleDLCatalogue;
 import nl.uva.cs.lobcder.resources.*;
 import nl.uva.cs.lobcder.util.ConstantsAndSettings;
 import static org.junit.Assert.*;
@@ -22,14 +20,14 @@ import org.junit.Test;
 
 /**
  *
- * @author skoulouz
+ * @author alogo
  */
-public class UserThread extends Thread {
+public class UserThreadRDBMS extends Thread {
 
     private final int opNum;
     private static int counter = 0;
 
-    public UserThread(int opNmu) {
+    public UserThreadRDBMS(int opNmu) {
         this.opNum = opNmu;
     }
 
@@ -68,7 +66,7 @@ public class UserThread extends Thread {
                 fileName = "testFileThread3";//ConstantsAndSettings.TEST_FILE_NAME_3;
                 collectionName = ConstantsAndSettings.TEST_FOLDER_NAME_3;
             }
-
+            
             WebDataResourceFactory instance = new WebDataResourceFactory();
             WebDataDirResource result = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH + collectionName);
             if (result == null) {
@@ -154,8 +152,6 @@ public class UserThread extends Thread {
             testRegisterWithStorageSite();
             testRegisterMultipleResourceEntry();
             testUpdateResourceEntry();
-            RDMSDLCatalogueTest t = new RDMSDLCatalogueTest();
-            t.testGetTopLevelResourceEntries();
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -174,7 +170,7 @@ public class UserThread extends Thread {
     }
 
     public void testUpdateResourceEntry() {
-        SimpleDLCatalogue instance = new SimpleDLCatalogue();
+        RDMSDLCatalog instance = new RDMSDLCatalog();
         ILogicalData loaded = null;
         try {
             System.out.println("testUpdateResourceEntry");
@@ -188,7 +184,6 @@ public class UserThread extends Thread {
             } else if (this.getName().equals("T3")) {
 //                newEntry = new LogicalData(ConstantsAndSettings.TEST_FILE_PATH_3,Constants.LOGICAL_FILE);
                 newEntry = new LogicalData(Path.path("testFileThread3"), Constants.LOGICAL_FILE);
-
             }
             instance.registerResourceEntry(newEntry);
             loaded = instance.getResourceEntryByLDRI(newEntry.getLDRI());
@@ -254,7 +249,7 @@ public class UserThread extends Thread {
         Path parentPath = Path.path(ldri);
         ILogicalData parent = new LogicalData(parentPath, Constants.LOGICAL_DATA);
 
-        SimpleDLCatalogue instance = new SimpleDLCatalogue();
+        RDMSDLCatalog instance = new RDMSDLCatalog();
 
         instance.registerResourceEntry(parent);
 
@@ -320,8 +315,6 @@ public class UserThread extends Thread {
         }
     }
 
-    
-    
     private boolean compareEntries(ILogicalData entry, ILogicalData loadedEntry) {
 //        System.out.println("entry:          " + entry.getUID() + " " + entry.getLDRI());
 //        System.out.println("loadedEntry:    " + loadedEntry.getUID() + " " + loadedEntry.getLDRI());
@@ -333,5 +326,4 @@ public class UserThread extends Thread {
         }
         return false;
     }
-    
 }

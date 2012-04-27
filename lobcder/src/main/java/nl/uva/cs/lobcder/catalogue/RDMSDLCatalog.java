@@ -412,7 +412,39 @@ public class RDMSDLCatalog implements IDLCatalogue {
 
     @Override
     public void updateResourceEntry(ILogicalData newResource) throws CatalogueException {
-        throw new UnsupportedOperationException("Not supported yet.");
+
+        Transaction tx = null;
+        PersistenceManager pm = null;
+        try {
+            pm = pmf.getPersistenceManager();
+            tx = pm.currentTransaction();
+            tx.begin();
+            //Batch updates
+//            Query query = pm.newQuery("UPDATE " + newResource.getClass().getName() + "SET this.ldri=newLDRI WHERE strLDRI == strLogicalResourceName");
+//            Long number = (Long) query.execute();
+
+            Query q = pm.newQuery(LogicalData.class);
+//            String strLogicalResourceName = newResource.getLDRI().toString();
+//            q.setFilter("strLDRI == strLogicalResourceName");
+//            q.declareParameters(strLogicalResourceName.getClass().getName() + " strLogicalResourceName");
+//            q.setUnique(true);
+//            ILogicalData loaded = (ILogicalData) q.execute(strLogicalResourceName);
+
+//            loaded.setChildren(newResource.getChildren());
+//            loaded.setLDRI(newResource.getLDRI());
+//            loaded.setStorageSites(newResource.getStorageSites());
+            pm.makePersistent(newResource);
+            ILogicalData copy = pm.detachCopy(newResource);
+
+            tx.commit();
+        } finally {
+            if (tx.isActive()) {
+                tx.rollback();
+            }
+            pm.close();
+        }
+
+
     }
 
     @Override
