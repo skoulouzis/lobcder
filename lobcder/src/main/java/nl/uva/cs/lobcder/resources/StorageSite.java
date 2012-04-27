@@ -251,4 +251,8 @@ public class StorageSite implements Serializable, IStorageSite {
         }
         return vrl;
     }
+
+    public void setLogicalPaths(Collection<String> logicalPaths) {
+        this.logicalPaths = logicalPaths;
+    }
 }

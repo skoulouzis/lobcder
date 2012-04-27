@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import nl.uva.cs.lobcder.catalogue.SimpleDLCatalogue;
+import nl.uva.cs.lobcder.catalogue.RDMSDLCatalog;
 import nl.uva.cs.lobcder.resources.*;
 import nl.uva.cs.lobcder.util.ConstantsAndSettings;
 import static org.junit.Assert.*;
@@ -24,7 +24,7 @@ import org.junit.*;
  */
 public class WebDataDirResourceTest {
 
-    private SimpleDLCatalogue catalogue;
+    private RDMSDLCatalog catalogue;
     private LogicalData testLogicalData;
     private Path testFolderPath;
     private StorageSite site;
@@ -44,7 +44,7 @@ public class WebDataDirResourceTest {
     @Before
     public void setUp() {
         try {
-            catalogue = new SimpleDLCatalogue();
+            catalogue = new RDMSDLCatalog();
 
 
             testLogicalData = new LogicalData(ConstantsAndSettings.TEST_FILE_PATH_1,Constants.LOGICAL_FILE);

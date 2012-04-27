@@ -262,7 +262,7 @@ class WebDataDirResource implements FolderResource, CollectionResource {
             } else {
                 resource = createNonExistingFile(newPath, length, contentType, inputStream);
             }
-
+            
             ILogicalData reloaded = catalogue.getResourceEntryByLDRI(this.entry.getLDRI());
             this.entry = reloaded;
             return resource;
@@ -458,7 +458,7 @@ class WebDataDirResource implements FolderResource, CollectionResource {
         LogicalData newResource = new LogicalData(newPath, Constants.LOGICAL_FILE);
         //We have to make a copy of the member collection. The same collection 
         //can't be a member of the two different classes, the relationship is 1-N!!!
-        ArrayList<IStorageSite> copyStorageSites = new ArrayList<IStorageSite>();
+//        ArrayList<IStorageSite> copyStorageSites = new ArrayList<IStorageSite>();
         Collection<IStorageSite> sites = entry.getStorageSites();
 //        if (sites == null || sites.isEmpty()) {
 //            ILogicalData reloaded = this.catalogue.getResourceEntryByLDRI(entry.getLDRI());
@@ -470,10 +470,10 @@ class WebDataDirResource implements FolderResource, CollectionResource {
         }
         //Maybe we have a problem with shalow copy
         //copyStorageSites.addAll(entry.getStorageSites());
-        for (IStorageSite s : sites) {
-            copyStorageSites.add(new StorageSite(s.getEndpoint(), s.getCredentials()));
-        }
-        newResource.setStorageSites(copyStorageSites);
+//        for (IStorageSite s : sites) {
+//            copyStorageSites.add(new StorageSite(s.getEndpoint(), s.getCredentials()));
+//        }
+        newResource.setStorageSites(sites);
         VFSNode node;
         if (!newResource.hasPhysicalData()) {
             node = newResource.createPhysicalData();

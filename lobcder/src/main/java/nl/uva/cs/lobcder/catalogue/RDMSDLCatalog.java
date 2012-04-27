@@ -63,20 +63,28 @@ public class RDMSDLCatalog implements IDLCatalogue {
                 }
                 //Persisst entry
                 Collection<IStorageSite> storageSites = entry.getStorageSites();
-                //work around to remove duplicated storage sites 
+//                //work around to remove duplicated storage sites ??
                 if (storageSites != null && !storageSites.isEmpty()) {
                     for (IStorageSite s : storageSites) {
                         String uname = s.getVPHUsername();
                         String epoint = s.getEndpoint();
+                        Collection<String> newLogicalPaths = s.getLogicalPaths();
                         q = pm.newQuery(StorageSite.class);
-
-                        q.setFilter("vphUsername == uname && endpoint == epoint");
                         q.declareParameters(uname.getClass().getName() + " uname, " + epoint.getClass().getName() + " epoint");
-//                    Collection<StorageSite> results = (Collection<StorageSite>) q.execute(uname, epoint);
-                        Long number = (Long) q.deletePersistentAll(uname, epoint);
+                        q.setFilter("vphUsername == uname && endpoint == epoint");
+                        Collection<StorageSite> results =  (Collection<StorageSite>) q.execute(uname, epoint);
+                        Collection<StorageSite> updatedResults = new ArrayList<StorageSite>();
+                        if(results !=null){
+                            for(StorageSite loadedSite : results){
+                                loadedSite.setLogicalPaths(newLogicalPaths);
+                                updatedResults.add(loadedSite);
+                            }
+                            pm.makePersistentAll(updatedResults);
+                        }
+////                    Collection<StorageSite> results = (Collection<StorageSite>) q.execute(uname, epoint);
+//                        Long number = (Long) q.deletePersistentAll(uname, epoint);
                     }
                 }
-
                 pm.makePersistent(entry);
                 tx.commit();
                 ILogicalData copy = pm.detachCopy(entry);
@@ -140,8 +148,6 @@ public class RDMSDLCatalog implements IDLCatalogue {
                     String strLogicalResourceName = entriesParent.toString();
 
                     Query q = pm.newQuery(LogicalData.class);
-
-                    //restrict to instances which have the field ldri equal to some logicalResourceName
                     q.setFilter("strLDRI == strLogicalResourceName");
                     q.declareParameters(strLogicalResourceName.getClass().getName() + " strLogicalResourceName");
                     q.setUnique(true);
@@ -156,15 +162,20 @@ public class RDMSDLCatalog implements IDLCatalogue {
                     }
                     parentEntry.removeChild(entry.getLDRI());
                 }
+                
                 //Then remove it's children. Query for nodes that have that parent.. and the parent 
                 Query q = pm.newQuery(LogicalData.class);
-                //restrict to instances which have the field ldri equal to some logicalResourceName
                 String parentsName = entry.getLDRI().toString();
 
                 q.setFilter("strLDRI == parentsName");
                 q.declareParameters(parentsName.getClass().getName() + " parentsName");
                 q.setUnique(true);
                 LogicalData result = (LogicalData) q.execute(parentsName);
+                //Delete its storage sites, since every time we create a new 
+                //entry we add a new StorageSite, even a copy
+                Collection<IStorageSite> storageSites = result.getStorageSites();
+                pm.deletePersistentAll(storageSites);
+                
                 Path path = result.getLDRI();
                 if (path.isRoot()) {
                     q = pm.newQuery(LogicalData.class);
