@@ -13,6 +13,7 @@ import java.util.Date;
 import java.util.List;
 import nl.uva.cs.lobcder.catalogue.CatalogueException;
 import nl.uva.cs.lobcder.catalogue.RDMSDLCatalog;
+import nl.uva.cs.lobcder.catalogue.RDMSDLCatalogueTest;
 import nl.uva.cs.lobcder.resources.*;
 import nl.uva.cs.lobcder.util.ConstantsAndSettings;
 import static org.junit.Assert.*;
@@ -66,7 +67,7 @@ public class UserThreadRDBMS extends Thread {
                 fileName = "testFileThread3";//ConstantsAndSettings.TEST_FILE_NAME_3;
                 collectionName = ConstantsAndSettings.TEST_FOLDER_NAME_3;
             }
-            
+
             WebDataResourceFactory instance = new WebDataResourceFactory();
             WebDataDirResource result = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH + collectionName);
             if (result == null) {
@@ -140,7 +141,7 @@ public class UserThreadRDBMS extends Thread {
 
     private void op2() {
         try {
-            testUpdateResourceEntry();
+//            testUpdateResourceEntry();
             testRegisterMultipleResourceEntry();
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -149,9 +150,10 @@ public class UserThreadRDBMS extends Thread {
 
     private void op3() {
         try {
-            testRegisterWithStorageSite();
             testRegisterMultipleResourceEntry();
-            testUpdateResourceEntry();
+//            testUpdateResourceEntry();
+//            RDMSDLCatalogueTest t = new RDMSDLCatalogueTest();
+//            t.testGetTopLevelResourceEntries();
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -173,18 +175,8 @@ public class UserThreadRDBMS extends Thread {
         RDMSDLCatalog instance = new RDMSDLCatalog();
         ILogicalData loaded = null;
         try {
-            System.out.println("testUpdateResourceEntry");
-            LogicalData newEntry = null;
-            if (this.getName().equals("T1")) {
-//                newEntry = new LogicalData(ConstantsAndSettings.TEST_FILE_PATH_1,Constants.LOGICAL_FILE);
-                newEntry = new LogicalData(Path.path("testFileThread1"), Constants.LOGICAL_FILE);
-            } else if (this.getName().equals("T2")) {
-//                newEntry = new LogicalData(ConstantsAndSettings.TEST_FILE_PATH_2,Constants.LOGICAL_FILE);
-                newEntry = new LogicalData(Path.path("testFileThread2"), Constants.LOGICAL_FILE);
-            } else if (this.getName().equals("T3")) {
-//                newEntry = new LogicalData(ConstantsAndSettings.TEST_FILE_PATH_3,Constants.LOGICAL_FILE);
-                newEntry = new LogicalData(Path.path("testFileThread3"), Constants.LOGICAL_FILE);
-            }
+            debug("testUpdateResourceEntry");
+            LogicalData newEntry = new LogicalData(Path.path("testFileThread" + getName()), Constants.LOGICAL_FILE);
             instance.registerResourceEntry(newEntry);
             loaded = instance.getResourceEntryByLDRI(newEntry.getLDRI());
             boolean same = compareEntries(newEntry, loaded);
@@ -236,16 +228,10 @@ public class UserThreadRDBMS extends Thread {
     }
 
     public void testRegisterMultipleResourceEntry() throws Exception {
-        System.out.println("testRegisterMultipleResourceEntry");
-        String ldri = null;
-        String childLdri = null;
-        if (this.getName().equals("T1")) {
-            ldri = "/resource1";
-            childLdri = "/child1";
-        } else if (this.getName().equals("T2")) {
-            ldri = "/resource2";
-            childLdri = "/child2";
-        }
+        debug("testRegisterMultipleResourceEntry");
+        String ldri = "/resource" + getName();
+        String childLdri = "/child" + getName();
+
         Path parentPath = Path.path(ldri);
         ILogicalData parent = new LogicalData(parentPath, Constants.LOGICAL_DATA);
 
@@ -254,17 +240,18 @@ public class UserThreadRDBMS extends Thread {
         instance.registerResourceEntry(parent);
 
         //Add children to that resource
-
         Path childPath = Path.path(ldri + childLdri);
 
         LogicalData child = new LogicalData(childPath, Constants.LOGICAL_DATA);
+        debug("Unregister: " + child.getLDRI() + " " + child.getUID());
         instance.registerResourceEntry(child);
 
         ILogicalData loadedChildEntry = instance.getResourceEntryByLDRI(childPath);
         boolean theSame = compareEntries(child, loadedChildEntry);
+        debug("Loaded: " + loadedChildEntry.getLDRI() + " " + loadedChildEntry.getUID());
         assertTrue(theSame);
 
-        System.out.println("Unregister: " + child.getLDRI() + " " + child.getUID());
+        debug("Unregister: " + child.getLDRI() + " " + child.getUID());
         instance.unregisterResourceEntry(child);
         ILogicalData result = instance.getResourceEntryByLDRI(childPath);
         assertNull(result);
@@ -276,7 +263,7 @@ public class UserThreadRDBMS extends Thread {
 
     @Test
     public void testRegisterWithStorageSite() {
-        System.out.println("testRegisterWithStorageSite");
+        debug("testRegisterWithStorageSite");
         RDMSDLCatalog instance = null;
         ILogicalData lParent = null;
         try {
@@ -316,8 +303,8 @@ public class UserThreadRDBMS extends Thread {
     }
 
     private boolean compareEntries(ILogicalData entry, ILogicalData loadedEntry) {
-//        System.out.println("entry:          " + entry.getUID() + " " + entry.getLDRI());
-//        System.out.println("loadedEntry:    " + loadedEntry.getUID() + " " + loadedEntry.getLDRI());
+//        debug("entry:          " + entry.getUID() + " " + entry.getLDRI());
+//        debug("loadedEntry:    " + loadedEntry.getUID() + " " + loadedEntry.getLDRI());
         if (entry.getLDRI().getName().equals(loadedEntry.getLDRI().getName())) {
             //Due to very bad ptaches the UDIs are not the same any more 
             if (entry.getUID().equals(loadedEntry.getUID())) {
@@ -325,5 +312,9 @@ public class UserThreadRDBMS extends Thread {
             }
         }
         return false;
+    }
+
+    private void debug(String msg) {
+        System.err.println(this.getClass().getName() + "." + this.getName() + ": " + msg);
     }
 }

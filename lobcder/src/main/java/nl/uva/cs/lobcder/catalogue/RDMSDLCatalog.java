@@ -27,311 +27,328 @@ public class RDMSDLCatalog implements IDLCatalogue {
 
     @Override
     public void registerResourceEntry(ILogicalData entry) throws CatalogueException {
-
-        //Check if it exists 
-        String strLogicalResourceName = entry.getLDRI().toString();
-        PersistenceManager pm = pmf.getPersistenceManager();
-
-        Transaction tx = pm.currentTransaction();
-        try {
-            tx.begin();
-            //This query, will return objects of type DataResourceEntry
-            Query q = pm.newQuery(LogicalData.class);
-
-            //restrict to instances which have the field ldri equal to some logicalResourceName
-            q.setFilter("strLDRI == strLogicalResourceName");
-            q.declareParameters(strLogicalResourceName.getClass().getName() + " strLogicalResourceName");
-            q.setUnique(true);
-            ILogicalData loaded = (ILogicalData) q.execute(strLogicalResourceName);
-
-            if (loaded != null && comparePaths(loaded.getLDRI(), entry.getLDRI())) {
-                throw new DuplicateResourceException("Cannot register resource " + entry.getLDRI() + " resource exists");
-            }
-
-            //If it has a parent node, add this path to the parent node 
-            Path parentPath = entry.getLDRI().getParent();
-            if (parentPath != null && !StringUtil.isEmpty(parentPath.toString()) && !parentPath.isRoot()) {
-                strLogicalResourceName = parentPath.toString();
-                q = pm.newQuery(LogicalData.class);
-                //restrict to instances which have the field ldri equal to some logicalResourceName
+        synchronized (lock) {
+            //Check if it exists 
+            String strLogicalResourceName = entry.getLDRI().toString();
+            PersistenceManager pm = pmf.getPersistenceManager();
+            Transaction tx = pm.currentTransaction();
+            tx.setSerializeRead(Boolean.TRUE);
+            try {
+                tx.begin();
+                //This query, will return objects of type DataResourceEntry
+                Query q = pm.newQuery(LogicalData.class);
                 q.setFilter("strLDRI == strLogicalResourceName");
                 q.declareParameters(strLogicalResourceName.getClass().getName() + " strLogicalResourceName");
                 q.setUnique(true);
-                ILogicalData parentEntry = (ILogicalData) q.execute(strLogicalResourceName);
-                if (parentEntry == null) {
-                    throw new NonExistingResourceException("Cannot add " + entry.getLDRI().toString() + " child to non existing parent " + parentPath.toString());
-                }
-                parentEntry.addChild(entry.getLDRI());
-            }
-            //Persisst entry
-            Collection<IStorageSite> storageSites = entry.getStorageSites();
-            //work around to remove duplicated storage sites 
-            if (storageSites != null && !storageSites.isEmpty()) {
-                for (IStorageSite s : storageSites) {
-                    String uname = s.getVPHUsername();
-                    String epoint = s.getEndpoint();
-                    q = pm.newQuery(StorageSite.class);
+                ILogicalData loaded = (ILogicalData) q.execute(strLogicalResourceName);
 
-                    q.setFilter("vphUsername == uname && endpoint == epoint");
-                    q.declareParameters(uname.getClass().getName() + " uname, " + epoint.getClass().getName() + " epoint");
+                if (loaded != null && comparePaths(loaded.getLDRI(), entry.getLDRI())) {
+                    throw new DuplicateResourceException("Cannot register resource " + entry.getLDRI() + " resource exists");
+                }
+
+                //If it has a parent node, add this path to the parent node 
+                Path parentPath = entry.getLDRI().getParent();
+                if (parentPath != null && !StringUtil.isEmpty(parentPath.toString()) && !parentPath.isRoot()) {
+                    strLogicalResourceName = parentPath.toString();
+                    q = pm.newQuery(LogicalData.class);
+                    //restrict to instances which have the field ldri equal to some logicalResourceName
+                    q.setFilter("strLDRI == strLogicalResourceName");
+                    q.declareParameters(strLogicalResourceName.getClass().getName() + " strLogicalResourceName");
+                    q.setUnique(true);
+                    ILogicalData parentEntry = (ILogicalData) q.execute(strLogicalResourceName);
+                    if (parentEntry == null) {
+                        throw new NonExistingResourceException("Cannot add " + entry.getLDRI().toString() + " child to non existing parent " + parentPath.toString());
+                    }
+                    parentEntry.addChild(entry.getLDRI());
+                }
+                //Persisst entry
+                Collection<IStorageSite> storageSites = entry.getStorageSites();
+                //work around to remove duplicated storage sites 
+                if (storageSites != null && !storageSites.isEmpty()) {
+                    for (IStorageSite s : storageSites) {
+                        String uname = s.getVPHUsername();
+                        String epoint = s.getEndpoint();
+                        q = pm.newQuery(StorageSite.class);
+
+                        q.setFilter("vphUsername == uname && endpoint == epoint");
+                        q.declareParameters(uname.getClass().getName() + " uname, " + epoint.getClass().getName() + " epoint");
 //                    Collection<StorageSite> results = (Collection<StorageSite>) q.execute(uname, epoint);
-                    Long number = (Long) q.deletePersistentAll(uname, epoint);
+                        Long number = (Long) q.deletePersistentAll(uname, epoint);
+                    }
                 }
-            }
 
-            pm.makePersistent(entry);
-            tx.commit();
-            ILogicalData copy = pm.detachCopy(entry);
-            entry = null;
-            entry = copy;
+                pm.makePersistent(entry);
+                tx.commit();
+                ILogicalData copy = pm.detachCopy(entry);
+                entry = null;
+                entry = copy;
 
-        } finally {
-            if (tx.isActive()) {
-                tx.rollback();
+            } finally {
+                if (tx.isActive()) {
+                    tx.rollback();
+                }
+                pm.close();
             }
-            pm.close();
         }
     }
 
     @Override
     public ILogicalData getResourceEntryByLDRI(Path logicalResourceName) throws Exception {
+        synchronized (lock) {
+            PersistenceManager pm = pmf.getPersistenceManager();
+            Transaction tx = pm.currentTransaction();
+            tx.setSerializeRead(Boolean.TRUE);
+            ILogicalData copy = null;
+            try {
+                tx.begin();
+                //This query, will return objects of type DataResourceEntry
+                Query q = pm.newQuery(LogicalData.class);
+                //restrict to instances which have the field ldri equal to some logicalResourceName
+                String strLogicalResourceName = logicalResourceName.toString();
+                q.setFilter("strLDRI == strLogicalResourceName");
+                q.declareParameters(strLogicalResourceName.getClass().getName() + " strLogicalResourceName");
+                q.setUnique(true);
+                ILogicalData loaded = (ILogicalData) q.execute(strLogicalResourceName);
+                tx.commit();
+                copy = pm.detachCopy(loaded);
 
-        PersistenceManager pm = pmf.getPersistenceManager();
-        Transaction tx = pm.currentTransaction();
-        ILogicalData copy = null;
-        try {
-            tx.begin();
-            //This query, will return objects of type DataResourceEntry
-            Query q = pm.newQuery(LogicalData.class);
-            //restrict to instances which have the field ldri equal to some logicalResourceName
-            String strLogicalResourceName = logicalResourceName.toString();
-            q.setFilter("strLDRI == strLogicalResourceName");
-            q.declareParameters(strLogicalResourceName.getClass().getName() + " strLogicalResourceName");
-            q.setUnique(true);
-            ILogicalData loaded = (ILogicalData) q.execute(strLogicalResourceName);
-            tx.commit();
-            copy = pm.detachCopy(loaded);
-
-        } catch (Exception ex) {
-            throw new CatalogueException(ex.getMessage());
-        } finally {
-            if (tx.isActive()) {
-                tx.rollback();
+            } catch (Exception ex) {
+                throw new CatalogueException(ex.getMessage());
+            } finally {
+                if (tx.isActive()) {
+                    tx.rollback();
+                }
+                pm.close();
             }
-            pm.close();
+
+            return copy;
         }
-        return copy;
     }
 
     @Override
     public void unregisterResourceEntry(ILogicalData entry) throws CatalogueException {
-        //first remove this node from it's parent
-        Path entriesParent = entry.getLDRI().getParent();
-        PersistenceManager pm = pmf.getPersistenceManager();
-        Transaction tx = pm.currentTransaction();
-        try {
-            tx.begin();
-            if (entriesParent != null && !StringUtil.isEmpty(entriesParent.toString()) && !entry.getLDRI().isRoot()) {
-                String strLogicalResourceName = entriesParent.toString();
+        synchronized (lock) {
+            debug("Unregister " + entry.getLDRI());
+            //first remove this node from it's parent
+            Path entriesParent = entry.getLDRI().getParent();
+            PersistenceManager pm = pmf.getPersistenceManager();
+            Transaction tx = pm.currentTransaction();
+            tx.setSerializeRead(Boolean.TRUE);
+            try {
+                tx.begin();
+                if (entriesParent != null && !StringUtil.isEmpty(entriesParent.toString()) && !entry.getLDRI().isRoot()) {
+                    String strLogicalResourceName = entriesParent.toString();
 
+                    Query q = pm.newQuery(LogicalData.class);
+
+                    //restrict to instances which have the field ldri equal to some logicalResourceName
+                    q.setFilter("strLDRI == strLogicalResourceName");
+                    q.declareParameters(strLogicalResourceName.getClass().getName() + " strLogicalResourceName");
+                    q.setUnique(true);
+                    ILogicalData parentEntry = (ILogicalData) q.execute(strLogicalResourceName);
+                    if (parentEntry == null) {
+                        throw new NonExistingResourceException("Cannot remove " + entry.getLDRI().toString() + " from non existing parent " + entriesParent.toString());
+                    }
+
+                    Path theChild = parentEntry.getChild(entry.getLDRI());
+                    if (theChild == null) {
+                        throw new NonExistingResourceException("Cannot remove " + entry.getLDRI().toString() + ". Parent " + entriesParent.toString() + " has no such child");
+                    }
+                    parentEntry.removeChild(entry.getLDRI());
+                }
+                //Then remove it's children. Query for nodes that have that parent.. and the parent 
                 Query q = pm.newQuery(LogicalData.class);
-
                 //restrict to instances which have the field ldri equal to some logicalResourceName
-                q.setFilter("strLDRI == strLogicalResourceName");
-                q.declareParameters(strLogicalResourceName.getClass().getName() + " strLogicalResourceName");
+                String parentsName = entry.getLDRI().toString();
+
+                q.setFilter("strLDRI == parentsName");
+                q.declareParameters(parentsName.getClass().getName() + " parentsName");
                 q.setUnique(true);
-                ILogicalData parentEntry = (ILogicalData) q.execute(strLogicalResourceName);
-                if (parentEntry == null) {
-                    throw new NonExistingResourceException("Cannot remove " + entry.getLDRI().toString() + " from non existing parent " + entriesParent.toString());
+                LogicalData result = (LogicalData) q.execute(parentsName);
+                Path path = result.getLDRI();
+                if (path.isRoot()) {
+                    q = pm.newQuery(LogicalData.class);
+                    Long number = (Long) q.deletePersistentAll();
+                } else {
+                    String name = "/" + path.getName();
+                    Integer pos = Integer.valueOf(path.toString().indexOf(name));
+                    q = pm.newQuery(LogicalData.class);
+                    q.setFilter("strLDRI.indexOf(name)==pos");
+                    q.declareParameters(name.getClass().getName() + " name, " + pos.getClass().getName() + " pos");
+                    Long number = (Long) q.deletePersistentAll(name, pos);
                 }
+                tx.commit();
 
-                Path theChild = parentEntry.getChild(entry.getLDRI());
-                if (theChild == null) {
-                    throw new NonExistingResourceException("Cannot remove " + entry.getLDRI().toString() + ". Parent " + entriesParent.toString() + " has no such child");
+            } catch (Exception ex) {
+                throw new CatalogueException(ex.getMessage());
+            } finally {
+                if (tx.isActive()) {
+                    tx.rollback();
                 }
-                parentEntry.removeChild(entry.getLDRI());
+                pm.close();
             }
-            //Then remove it's children. Query for nodes that have that parent.. and the parent 
-            Query q = pm.newQuery(LogicalData.class);
-            //restrict to instances which have the field ldri equal to some logicalResourceName
-            String parentsName = entry.getLDRI().toString();
-
-            q.setFilter("strLDRI == parentsName");
-            q.declareParameters(parentsName.getClass().getName() + " parentsName");
-            q.setUnique(true);
-            LogicalData result = (LogicalData) q.execute(parentsName);
-            Path path = result.getLDRI();
-            if (path.isRoot()) {
-                q = pm.newQuery(LogicalData.class);
-                Long number = (Long) q.deletePersistentAll();
-            } else {
-                String name = "/" + path.getName();
-                Integer pos = Integer.valueOf(path.toString().indexOf(name));
-                q = pm.newQuery(LogicalData.class);
-                q.setFilter("strLDRI.indexOf(name)==pos");
-                q.declareParameters(name.getClass().getName() + " name, " + pos.getClass().getName() + " pos");
-                Long number = (Long) q.deletePersistentAll(name, pos);
-            }
-            tx.commit();
-
-        } catch (Exception ex) {
-            throw new CatalogueException(ex.getMessage());
-        } finally {
-            if (tx.isActive()) {
-                tx.rollback();
-            }
-            pm.close();
         }
     }
 
     @Override
     public Boolean resourceEntryExists(ILogicalData entry) throws CatalogueException {
-        PersistenceManager pm = pmf.getPersistenceManager();
-        Transaction tx = pm.currentTransaction();
-        ILogicalData copy = null;
-        try {
-            tx.begin();
-            //This query, will return objects of type DataResourceEntry
-            Query q = pm.newQuery(LogicalData.class);
-            //restrict to instances which have the field ldri equal to some logicalResourceName
-            String strLogicalResourceName = entry.getLDRI().toString();
-            q.setFilter("strLDRI == strLogicalResourceName");
-            q.declareParameters(strLogicalResourceName.getClass().getName() + " strLogicalResourceName");
-            q.setUnique(true);
-            ILogicalData loaded = (ILogicalData) q.execute(strLogicalResourceName);
-            tx.commit();
-            copy = pm.detachCopy(loaded);
-        } catch (Exception ex) {
-            throw new CatalogueException(ex.getMessage());
-        } finally {
-            if (tx.isActive()) {
-                tx.rollback();
+        synchronized (lock) {
+            PersistenceManager pm = pmf.getPersistenceManager();
+            Transaction tx = pm.currentTransaction();
+            tx.setSerializeRead(Boolean.TRUE);
+            ILogicalData copy = null;
+            try {
+                tx.begin();
+                //This query, will return objects of type DataResourceEntry
+                Query q = pm.newQuery(LogicalData.class);
+                //restrict to instances which have the field ldri equal to some logicalResourceName
+                String strLogicalResourceName = entry.getLDRI().toString();
+                q.setFilter("strLDRI == strLogicalResourceName");
+                q.declareParameters(strLogicalResourceName.getClass().getName() + " strLogicalResourceName");
+                q.setUnique(true);
+                ILogicalData loaded = (ILogicalData) q.execute(strLogicalResourceName);
+                tx.commit();
+                copy = pm.detachCopy(loaded);
+            } catch (Exception ex) {
+                throw new CatalogueException(ex.getMessage());
+            } finally {
+                if (tx.isActive()) {
+                    tx.rollback();
+                }
+                pm.close();
             }
-            pm.close();
+            return copy != null ? true : false;
         }
-        return copy != null ? true : false;
     }
 
     @Override
     public Collection<ILogicalData> getTopLevelResourceEntries() throws CatalogueException {
-        PersistenceManager pm = pmf.getPersistenceManager();
-        Transaction tx = pm.currentTransaction();
-        Collection<ILogicalData> copy = null;
-        try {
-            tx.begin();
+        synchronized (lock) {
+            PersistenceManager pm = pmf.getPersistenceManager();
+            Transaction tx = pm.currentTransaction();
+            tx.setSerializeRead(Boolean.TRUE);
+            Collection<ILogicalData> copy = null;
+            try {
+                tx.begin();
 
-            Query q = pm.newQuery("SELECT FROM " + LogicalData.class.getName()
-                    + " WHERE ldriLen == 1");
-            Collection<ILogicalData> results = (Collection<ILogicalData>) q.execute();
-            tx.commit();
-            copy = pm.detachCopyAll(results);
+                Query q = pm.newQuery("SELECT FROM " + LogicalData.class.getName()
+                        + " WHERE ldriLen == 1");
+                Collection<ILogicalData> results = (Collection<ILogicalData>) q.execute();
+                tx.commit();
+                copy = pm.detachCopyAll(results);
 
-        } finally {
-            if (tx.isActive()) {
-                tx.rollback();
+            } finally {
+                if (tx.isActive()) {
+                    tx.rollback();
+                }
+
+                pm.close();
             }
 
-            pm.close();
+            return copy;
         }
-
-        return copy;
     }
 
     @Override
     public void renameEntry(Path oldPath, Path newPath) throws CatalogueException {
-        //Check if oldPath exists 
-        PersistenceManager pm = pmf.getPersistenceManager();
-        Transaction tx = pm.currentTransaction();
-        ILogicalData copy = null;
-        try {
-            tx.begin();
-            //This query, will return objects of type DataResourceEntry
-            Query q = pm.newQuery(LogicalData.class);
-            //restrict to instances which have the field ldri equal to some logicalResourceName
-            String strLogicalResourceName = oldPath.toString();
-            q.setFilter("strLDRI == strLogicalResourceName");
-            q.declareParameters(strLogicalResourceName.getClass().getName() + " strLogicalResourceName");
-            q.setUnique(true);
-            ILogicalData toBeRenamed = (ILogicalData) q.execute(strLogicalResourceName);
-
-            if (toBeRenamed == null) {
-                throw new ResourceExistsException("Rename Entry: cannot rename resource " + oldPath + " resource doesn't exists");
-            }
-
-            //Remove this node from it's parent 
-            Path parent = oldPath.getParent();
-            if (parent != null && !StringUtil.isEmpty(parent.toString())) {
-                q = pm.newQuery(LogicalData.class);
-                String parentsName = parent.toString();
-                q.setFilter("strLDRI == parentsName");
-                q.declareParameters(strLogicalResourceName.getClass().getName() + " parentsName");
+        synchronized (lock) {
+            //Check if oldPath exists 
+            PersistenceManager pm = pmf.getPersistenceManager();
+            Transaction tx = pm.currentTransaction();
+            tx.setSerializeRead(Boolean.TRUE);
+            ILogicalData copy = null;
+            try {
+                tx.begin();
+                //This query, will return objects of type DataResourceEntry
+                Query q = pm.newQuery(LogicalData.class);
+                //restrict to instances which have the field ldri equal to some logicalResourceName
+                String strLogicalResourceName = oldPath.toString();
+                q.setFilter("strLDRI == strLogicalResourceName");
+                q.declareParameters(strLogicalResourceName.getClass().getName() + " strLogicalResourceName");
                 q.setUnique(true);
+                ILogicalData toBeRenamed = (ILogicalData) q.execute(strLogicalResourceName);
 
-                ILogicalData parentEntry = (ILogicalData) q.execute(parentsName);
-
-                if (parentEntry == null) {
-                    throw new NonExistingResourceException("Cannot remove " + oldPath.toString() + " from non existing parent " + parent.toString());
+                if (toBeRenamed == null) {
+                    throw new ResourceExistsException("Rename Entry: cannot rename resource " + oldPath + " resource doesn't exists");
                 }
 
-                Path theChild = parentEntry.getChild(oldPath);
-                if (theChild == null) {
-                    throw new NonExistingResourceException("Cannot remove " + oldPath.toString() + ". Parent " + parent.toString() + " has no such child");
-                }
-                parentEntry.removeChild(oldPath);
-                parentEntry.addChild(newPath);
-            }
-            toBeRenamed.setLDRI(newPath);
-            Collection<String> children = toBeRenamed.getChildren();
-            if (children != null) {
-                for (String ch : children) {
-                    String newChildName = ch.replace(oldPath.toString(), newPath.toString());
-                    toBeRenamed.removeChild(Path.path(ch));
-                    toBeRenamed.addChild(Path.path(newChildName));
-
+                //Remove this node from it's parent 
+                Path parent = oldPath.getParent();
+                if (parent != null && !StringUtil.isEmpty(parent.toString())) {
                     q = pm.newQuery(LogicalData.class);
-                    q.setFilter("strLDRI == ch");
-                    q.declareParameters(strLogicalResourceName.getClass().getName() + " ch");
+                    String parentsName = parent.toString();
+                    q.setFilter("strLDRI == parentsName");
+                    q.declareParameters(strLogicalResourceName.getClass().getName() + " parentsName");
                     q.setUnique(true);
-                    ILogicalData childEntry = (ILogicalData) q.execute(ch);
-                    childEntry.setLDRI(Path.path(newChildName));
-//                    debug("Old Name: " + ch + " new name: " + newChildName);
+
+                    ILogicalData parentEntry = (ILogicalData) q.execute(parentsName);
+
+                    if (parentEntry == null) {
+                        throw new NonExistingResourceException("Cannot remove " + oldPath.toString() + " from non existing parent " + parent.toString());
+                    }
+
+                    Path theChild = parentEntry.getChild(oldPath);
+                    if (theChild == null) {
+                        throw new NonExistingResourceException("Cannot remove " + oldPath.toString() + ". Parent " + parent.toString() + " has no such child");
+                    }
+                    parentEntry.removeChild(oldPath);
+                    parentEntry.addChild(newPath);
                 }
-            }
+                toBeRenamed.setLDRI(newPath);
+                Collection<String> children = toBeRenamed.getChildren();
+                if (children != null) {
+                    for (String ch : children) {
+                        String newChildName = ch.replace(oldPath.toString(), newPath.toString());
+                        toBeRenamed.removeChild(Path.path(ch));
+                        toBeRenamed.addChild(Path.path(newChildName));
 
-            tx.commit();
-        } catch (Exception ex) {
-            throw new CatalogueException(ex.getMessage());
-        } finally {
-            if (tx.isActive()) {
-                tx.rollback();
+                        q = pm.newQuery(LogicalData.class);
+                        q.setFilter("strLDRI == ch");
+                        q.declareParameters(strLogicalResourceName.getClass().getName() + " ch");
+                        q.setUnique(true);
+                        ILogicalData childEntry = (ILogicalData) q.execute(ch);
+                        childEntry.setLDRI(Path.path(newChildName));
+//                    debug("Old Name: " + ch + " new name: " + newChildName);
+                    }
+                }
+
+                tx.commit();
+            } catch (Exception ex) {
+                throw new CatalogueException(ex.getMessage());
+            } finally {
+                if (tx.isActive()) {
+                    tx.rollback();
+                }
+                pm.close();
             }
-            pm.close();
         }
-
     }
 
     @Override
     public Collection<IStorageSite> getSitesByUname(String vphUname) throws CatalogueException {
         Collection<IStorageSite> copy = null;
-        PersistenceManager pm = pmf.getPersistenceManager();
-        Transaction tx = pm.currentTransaction();
-        try {
-            tx.begin();
-            Query q = pm.newQuery(StorageSite.class);
+        synchronized (lock) {
+            PersistenceManager pm = pmf.getPersistenceManager();
+            Transaction tx = pm.currentTransaction();
+            tx.setSerializeRead(Boolean.TRUE);
+            try {
+                tx.begin();
+                Query q = pm.newQuery(StorageSite.class);
 
-            q.setFilter("vphUsername == vphUname");
-            q.declareParameters(vphUname.getClass().getName() + " vphUname");
-            Collection<IStorageSite> results = (Collection<IStorageSite>) q.execute(vphUname);
-            copy = pm.detachCopyAll(results);
-            tx.commit();
+                q.setFilter("vphUsername == vphUname");
+                q.declareParameters(vphUname.getClass().getName() + " vphUname");
+                Collection<IStorageSite> results = (Collection<IStorageSite>) q.execute(vphUname);
+                copy = pm.detachCopyAll(results);
+                tx.commit();
 
-        } finally {
-            if (tx.isActive()) {
-                tx.rollback();
+            } finally {
+                if (tx.isActive()) {
+                    tx.rollback();
+                }
+                pm.close();
             }
-            pm.close();
+            return copy;
         }
-        return copy;
     }
 
     @Override
@@ -340,30 +357,32 @@ public class RDMSDLCatalog implements IDLCatalogue {
         String ePoint = prop.getProperty(nl.uva.cs.lobcder.webDav.resources.Constants.STORAGE_SITE_ENDPOINT);
         Collection<StorageSite> ss;
         StorageSite storageSite = null;
-        PersistenceManager pm = pmf.getPersistenceManagerProxy();
-        Transaction tx = pm.currentTransaction();
+        synchronized (lock) {
+            PersistenceManager pm = pmf.getPersistenceManagerProxy();
+            Transaction tx = pm.currentTransaction();
+            tx.setSerializeRead(Boolean.TRUE);
+            try {
+                tx.begin();
+                //This query, will return objects of type DataResourceEntry
+                Query q = pm.newQuery(StorageSite.class);
 
-        try {
-            tx.begin();
-            //This query, will return objects of type DataResourceEntry
-            Query q = pm.newQuery(StorageSite.class);
+                q.setFilter("endpoint == ePoint && vphUsername == uname");
+                q.declareParameters(ePoint.getClass().getName() + " ePoint, " + uname.getClass().getName() + " uname");
+                q.setUnique(true);
+                storageSite = (StorageSite) q.execute(ePoint, uname);
+                tx.commit();
+                StorageSite copy = pm.detachCopy(storageSite);
+                storageSite = copy;
+            } finally {
+                if (tx.isActive()) {
+                    tx.rollback();
+                }
 
-            q.setFilter("endpoint == ePoint && vphUsername == uname");
-            q.declareParameters(ePoint.getClass().getName() + " ePoint, " + uname.getClass().getName() + " uname");
-            q.setUnique(true);
-            storageSite = (StorageSite) q.execute(ePoint, uname);
-            tx.commit();
-            StorageSite copy = pm.detachCopy(storageSite);
-            storageSite = copy;
-        } finally {
-            if (tx.isActive()) {
-                tx.rollback();
+                pm.close();
             }
 
-            pm.close();
+            return storageSite != null ? true : false;
         }
-
-        return storageSite != null ? true : false;
     }
 
     @Override
@@ -375,38 +394,40 @@ public class RDMSDLCatalog implements IDLCatalogue {
 
         PersistenceManager pm = null;
         Transaction tx = null;
+        synchronized (lock) {
 
-        try {
-            debug("Adding endpoint: " + endpoint);
-            StorageSite site = new StorageSite(endpoint, cred);
+            try {
+                debug("Adding endpoint: " + endpoint);
+                StorageSite site = new StorageSite(endpoint, cred);
 
-            pm = pmf.getPersistenceManager();
-            tx = pm.currentTransaction();
+                pm = pmf.getPersistenceManager();
+                tx = pm.currentTransaction();
+                tx.setSerializeRead(Boolean.TRUE);
+                tx.begin();
 
-            tx.begin();
-
-            Query q = pm.newQuery(StorageSite.class);
-            String ePoint = site.getEndpoint();
-            String uname = site.getVPHUsername();
-            q.setFilter("endpoint == ePoint && vphUsername == uname");
-            q.declareParameters(ePoint.getClass().getName() + " ePoint, " + uname.getClass().getName() + " uname");
-            q.setUnique(true);
-            StorageSite storageSite = (StorageSite) q.execute(ePoint, uname);
-            if (storageSite == null) {
-                pm.makePersistent(site);
+                Query q = pm.newQuery(StorageSite.class);
+                String ePoint = site.getEndpoint();
+                String uname = site.getVPHUsername();
+                q.setFilter("endpoint == ePoint && vphUsername == uname");
+                q.declareParameters(ePoint.getClass().getName() + " ePoint, " + uname.getClass().getName() + " uname");
+                q.setUnique(true);
+                StorageSite storageSite = (StorageSite) q.execute(ePoint, uname);
+                if (storageSite == null) {
+                    pm.makePersistent(site);
 //                StorageSite copy = pm.detachCopy(site);
 //                site = copy;
-            }
-            tx.commit();
-            q.cancelAll();
+                }
+                tx.commit();
+                q.cancelAll();
 
-        } catch (Exception ex) {
-            throw new CatalogueException(ex.getMessage());
-        } finally {
-            if (tx.isActive()) {
-                tx.rollback();
+            } catch (Exception ex) {
+                throw new CatalogueException(ex.getMessage());
+            } finally {
+                if (tx.isActive()) {
+                    tx.rollback();
+                }
+                pm.close();
             }
-            pm.close();
         }
     }
 
@@ -415,15 +436,17 @@ public class RDMSDLCatalog implements IDLCatalogue {
 
         Transaction tx = null;
         PersistenceManager pm = null;
-        try {
-            pm = pmf.getPersistenceManager();
-            tx = pm.currentTransaction();
-            tx.begin();
-            //Batch updates
+        synchronized (lock) {
+            try {
+                pm = pmf.getPersistenceManager();
+                tx = pm.currentTransaction();
+                tx.setSerializeRead(Boolean.TRUE);
+                tx.begin();
+                //Batch updates
 //            Query query = pm.newQuery("UPDATE " + newResource.getClass().getName() + "SET this.ldri=newLDRI WHERE strLDRI == strLogicalResourceName");
 //            Long number = (Long) query.execute();
 
-            Query q = pm.newQuery(LogicalData.class);
+                Query q = pm.newQuery(LogicalData.class);
 //            String strLogicalResourceName = newResource.getLDRI().toString();
 //            q.setFilter("strLDRI == strLogicalResourceName");
 //            q.declareParameters(strLogicalResourceName.getClass().getName() + " strLogicalResourceName");
@@ -433,18 +456,18 @@ public class RDMSDLCatalog implements IDLCatalogue {
 //            loaded.setChildren(newResource.getChildren());
 //            loaded.setLDRI(newResource.getLDRI());
 //            loaded.setStorageSites(newResource.getStorageSites());
-            pm.makePersistent(newResource);
-            ILogicalData copy = pm.detachCopy(newResource);
+                pm.makePersistent(newResource);
+                ILogicalData copy = pm.detachCopy(newResource);
 
-            tx.commit();
-        } finally {
-            if (tx.isActive()) {
-                tx.rollback();
+                tx.commit();
+            } finally {
+                if (tx.isActive()) {
+                    tx.rollback();
+                }
+                pm.close();
             }
-            pm.close();
+
         }
-
-
     }
 
     @Override
@@ -453,40 +476,46 @@ public class RDMSDLCatalog implements IDLCatalogue {
     }
 
     void clearAllSites() {
-        PersistenceManager pm = pmf.getPersistenceManagerProxy();
-        Transaction tx = pm.currentTransaction();
-        try {
-            tx.begin();
-            Query q = pm.newQuery(StorageSite.class);
+        synchronized (lock) {
+            PersistenceManager pm = pmf.getPersistenceManagerProxy();
+            Transaction tx = pm.currentTransaction();
+            tx.setSerializeRead(Boolean.TRUE);
+            try {
+                tx.begin();
+                Query q = pm.newQuery(StorageSite.class);
 
-            long num = q.deletePersistentAll();
+                long num = q.deletePersistentAll();
 //                pm.deletePersistentAll(results);
-            tx.commit();
+                tx.commit();
 
-        } finally {
-            if (tx.isActive()) {
-                tx.rollback();
+            } finally {
+                if (tx.isActive()) {
+                    tx.rollback();
+                }
+                pm.close();
             }
-            pm.close();
         }
     }
 
     Collection<StorageSite> getAllSites() {
-        PersistenceManager pm = pmf.getPersistenceManagerProxy();
-        Transaction tx = pm.currentTransaction();
-        try {
-            tx.begin();
-            Query q = pm.newQuery(StorageSite.class);
-            Collection<StorageSite> results = (Collection<StorageSite>) q.execute();
-            tx.commit();
+        synchronized (lock) {
+            PersistenceManager pm = pmf.getPersistenceManagerProxy();
+            Transaction tx = pm.currentTransaction();
+            tx.setSerializeRead(Boolean.TRUE);
+            try {
+                tx.begin();
+                Query q = pm.newQuery(StorageSite.class);
+                Collection<StorageSite> results = (Collection<StorageSite>) q.execute();
+                tx.commit();
 
-            return pm.detachCopyAll(results);
+                return pm.detachCopyAll(results);
 
-        } finally {
-            if (tx.isActive()) {
-                tx.rollback();
+            } finally {
+                if (tx.isActive()) {
+                    tx.rollback();
+                }
+                pm.close();
             }
-            pm.close();
         }
     }
 

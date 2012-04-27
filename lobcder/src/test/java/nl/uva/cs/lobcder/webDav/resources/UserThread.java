@@ -56,18 +56,8 @@ public class UserThread extends Thread {
     private void op1() {
         try {
             String host = "localhost:8080";
-            String fileName = null;
-            String collectionName = null;
-            if (this.getName().equals("T1")) {
-                fileName = "testFileThread1";//ConstantsAndSettings.TEST_FILE_NAME_1;
-                collectionName = ConstantsAndSettings.TEST_FOLDER_NAME_1;
-            } else if (this.getName().equals("T2")) {
-                fileName = "testFileThread2";///ConstantsAndSettings.TEST_FILE_NAME_2;
-                collectionName = ConstantsAndSettings.TEST_FOLDER_NAME_2;
-            } else if (this.getName().equals("T3")) {
-                fileName = "testFileThread3";//ConstantsAndSettings.TEST_FILE_NAME_3;
-                collectionName = ConstantsAndSettings.TEST_FOLDER_NAME_3;
-            }
+            String fileName = "testFileThread" + getName();//ConstantsAndSettings.TEST_FILE_NAME_1;
+            String collectionName = "testCollection" + getName();
 
             WebDataResourceFactory instance = new WebDataResourceFactory();
             WebDataDirResource result = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH + collectionName);
@@ -154,8 +144,8 @@ public class UserThread extends Thread {
             testRegisterWithStorageSite();
             testRegisterMultipleResourceEntry();
             testUpdateResourceEntry();
-            RDMSDLCatalogueTest t = new RDMSDLCatalogueTest();
-            t.testGetTopLevelResourceEntries();
+//            RDMSDLCatalogueTest t = new RDMSDLCatalogueTest();
+//            t.testGetTopLevelResourceEntries();
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -178,18 +168,8 @@ public class UserThread extends Thread {
         ILogicalData loaded = null;
         try {
             System.out.println("testUpdateResourceEntry");
-            LogicalData newEntry = null;
-            if (this.getName().equals("T1")) {
-//                newEntry = new LogicalData(ConstantsAndSettings.TEST_FILE_PATH_1,Constants.LOGICAL_FILE);
-                newEntry = new LogicalData(Path.path("testFileThread1"), Constants.LOGICAL_FILE);
-            } else if (this.getName().equals("T2")) {
-//                newEntry = new LogicalData(ConstantsAndSettings.TEST_FILE_PATH_2,Constants.LOGICAL_FILE);
-                newEntry = new LogicalData(Path.path("testFileThread2"), Constants.LOGICAL_FILE);
-            } else if (this.getName().equals("T3")) {
-//                newEntry = new LogicalData(ConstantsAndSettings.TEST_FILE_PATH_3,Constants.LOGICAL_FILE);
-                newEntry = new LogicalData(Path.path("testFileThread3"), Constants.LOGICAL_FILE);
-
-            }
+            LogicalData newEntry = new LogicalData(Path.path("testFileThread"+getName()), Constants.LOGICAL_FILE);
+            
             instance.registerResourceEntry(newEntry);
             loaded = instance.getResourceEntryByLDRI(newEntry.getLDRI());
             boolean same = compareEntries(newEntry, loaded);
@@ -320,8 +300,6 @@ public class UserThread extends Thread {
         }
     }
 
-    
-    
     private boolean compareEntries(ILogicalData entry, ILogicalData loadedEntry) {
 //        System.out.println("entry:          " + entry.getUID() + " " + entry.getLDRI());
 //        System.out.println("loadedEntry:    " + loadedEntry.getUID() + " " + loadedEntry.getLDRI());
@@ -333,5 +311,4 @@ public class UserThread extends Thread {
         }
         return false;
     }
-    
 }
