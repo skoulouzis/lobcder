@@ -56,8 +56,8 @@ public class UserThread extends Thread {
         try {
             String host = "localhost:8080";
             String fileName = "testFileThread" + getName();//ConstantsAndSettings.TEST_FILE_NAME_1;
-            String collectionName = "testCollection" + getName();
-
+            String collectionName = "/testCollection" + getName();
+            
             WebDataResourceFactory instance = new WebDataResourceFactory();
             WebDataDirResource result = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH + collectionName);
             if (result == null) {
@@ -223,13 +223,9 @@ public class UserThread extends Thread {
         System.out.println("testRegisterMultipleResourceEntry");
         String ldri = null;
         String childLdri = null;
-        if (this.getName().equals("T1")) {
-            ldri = "/resource1";
-            childLdri = "/child1";
-        } else if (this.getName().equals("T2")) {
-            ldri = "/resource2";
-            childLdri = "/child2";
-        }
+         ldri = "/resource"+getName();
+         childLdri = "/child"+getName();
+         
         Path parentPath = Path.path(ldri);
         ILogicalData parent = new LogicalData(parentPath, Constants.LOGICAL_DATA);
 

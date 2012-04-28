@@ -16,7 +16,7 @@
 <!--        <webdav.test.url>http://localhost:8080/lobcder-1.0-SNAPSHOT/</webdav.test.url>
         <webdav.test.username>user</webdav.test.username>
         <webdav.test.password>passwd</webdav.test.password>-->
-        <skipTests>true</skipTests>
+        <skipTests>false</skipTests>
     </properties>
 
     <dependencies>
@@ -211,10 +211,36 @@ there are no implementations to enhance
             <version>3.0.1</version>
         </dependency>
 
+
+<!--Connection pool to solve too many connections error-->
         <dependency>
             <groupId>org.datanucleus</groupId>
             <artifactId>datanucleus-rdbms</artifactId>
             <version>3.0.8</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>commons-dbcp</groupId>
+            <artifactId>commons-dbcp</artifactId>
+            <version>1.4</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.datanucleus</groupId>
+            <artifactId>datanucleus-connectionpool</artifactId>
+            <version>2.0.3</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>commons-pool</groupId>
+            <artifactId>commons-pool</artifactId>
+            <version>1.6</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>commons-collections</groupId>
+            <artifactId>commons-collections</artifactId>
+            <version>3.2.1</version>
         </dependency>
         
         <dependency>
@@ -223,6 +249,7 @@ there are no implementations to enhance
             <version>5.1.18</version>
             <scope>runtime</scope>
         </dependency>
+        
 <!--        <dependency>
             <groupId>commons-httpclient</groupId>
             <artifactId>commons-httpclient</artifactId>

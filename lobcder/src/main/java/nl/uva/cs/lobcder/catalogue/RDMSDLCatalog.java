@@ -112,7 +112,7 @@ public class RDMSDLCatalog implements IDLCatalogue {
             tx.setSerializeRead(Boolean.TRUE);
             ILogicalData copy = null;
             try {
-                tx.begin();
+                tx.begin();                
                 //This query, will return objects of type DataResourceEntry
                 Query q = pm.newQuery(LogicalData.class);
                 //restrict to instances which have the field ldri equal to some logicalResourceName
@@ -182,18 +182,18 @@ public class RDMSDLCatalog implements IDLCatalogue {
                 //Make sure we dont clear all the storage sites. If the storage 
                 //site dosn't belong to any othe entry,  then  delete
 //                SELECT FOMRM LOGICALDATA WHERE storageSite.contains(storageSite)
-                 Collection<LogicalData> res = null;
-                 Collection<IStorageSite> toBeDeleted = new ArrayList<IStorageSite>();
-                 Collection<IStorageSite> toBeUpdated = new ArrayList<IStorageSite>();
+                Collection<LogicalData> res = null;
+                Collection<IStorageSite> toBeDeleted = new ArrayList<IStorageSite>();
+                Collection<IStorageSite> toBeUpdated = new ArrayList<IStorageSite>();
                 for (IStorageSite s : storageSites) {
                     q = pm.newQuery(LogicalData.class);
                     q.setFilter("storageSites.contains(s) && strLDRI != parentsName");
-                    q.declareParameters(s.getClass().getName() + " s, "+parentsName.getClass().getName() + " parentsName");
+                    q.declareParameters(s.getClass().getName() + " s, " + parentsName.getClass().getName() + " parentsName");
                     res = (Collection<LogicalData>) q.execute(s, parentsName);
                     //Only if no one else is using it delete it 
-                    if(res ==null || res.isEmpty()){
+                    if (res == null || res.isEmpty()) {
                         toBeDeleted.add(s);
-                    }else{
+                    } else {
                         s.removeLogicalPath(result.getPDRI());
                         toBeUpdated.add(s);
                     }
@@ -403,8 +403,7 @@ public class RDMSDLCatalog implements IDLCatalogue {
     public boolean storageSiteExists(Properties prop) throws CatalogueException {
         String uname = prop.getProperty(nl.uva.cs.lobcder.webDav.resources.Constants.VPH_USERNAME);
         String ePoint = prop.getProperty(nl.uva.cs.lobcder.webDav.resources.Constants.STORAGE_SITE_ENDPOINT);
-        Collection<StorageSite> ss;
-        StorageSite storageSite = null;
+        Collection<StorageSite> copy;
         synchronized (lock) {
             PersistenceManager pm = pmf.getPersistenceManagerProxy();
             Transaction tx = pm.currentTransaction();
@@ -416,10 +415,9 @@ public class RDMSDLCatalog implements IDLCatalogue {
 
                 q.setFilter("endpoint == ePoint && vphUsername == uname");
                 q.declareParameters(ePoint.getClass().getName() + " ePoint, " + uname.getClass().getName() + " uname");
-                q.setUnique(true);
-                storageSite = (StorageSite) q.execute(ePoint, uname);
-                StorageSite copy = pm.detachCopy(storageSite);
-                storageSite = copy;
+                //                q.setUnique(true);
+                Collection<StorageSite> StorageSites = (Collection<StorageSite>) q.execute(ePoint, uname);
+                copy = pm.detachCopyAll(StorageSites);
                 tx.commit();
             } finally {
                 if (tx.isActive()) {
@@ -428,8 +426,11 @@ public class RDMSDLCatalog implements IDLCatalogue {
 
                 pm.close();
             }
-
-            return storageSite != null ? true : false;
+            if (copy == null || copy.isEmpty()) {
+                return false;
+            } else {
+                return true;
+            }
         }
     }
 
@@ -456,16 +457,22 @@ public class RDMSDLCatalog implements IDLCatalogue {
                 Query q = pm.newQuery(StorageSite.class);
                 String ePoint = site.getEndpoint();
                 String uname = site.getVPHUsername();
-                q.setFilter("endpoint == ePoint && vphUsername == uname");
+
+                q.setFilter(
+                        "endpoint == ePoint && vphUsername == uname");
                 q.declareParameters(ePoint.getClass().getName() + " ePoint, " + uname.getClass().getName() + " uname");
-                q.setUnique(true);
+                q.setUnique(
+                        true);
                 StorageSite storageSite = (StorageSite) q.execute(ePoint, uname);
+
                 pm.detachCopy(storageSite);
-                if (storageSite == null) {
+                if (storageSite
+                        == null) {
                     pm.makePersistent(site);
                     StorageSite copy = pm.detachCopy(site);
                     site = copy;
                 }
+
                 tx.commit();
             } catch (Exception ex) {
                 throw new CatalogueException(ex.getMessage());
@@ -533,8 +540,8 @@ public class RDMSDLCatalog implements IDLCatalogue {
 
                 long num = q.deletePersistentAll();
 //                pm.deletePersistentAll(results);
-                tx.commit();
 
+                tx.commit();
             } finally {
                 if (tx.isActive()) {
                     tx.rollback();
@@ -553,10 +560,10 @@ public class RDMSDLCatalog implements IDLCatalogue {
                 tx.begin();
                 Query q = pm.newQuery(StorageSite.class);
                 Collection<StorageSite> results = (Collection<StorageSite>) q.execute();
+
                 tx.commit();
 
                 return pm.detachCopyAll(results);
-
             } finally {
                 if (tx.isActive()) {
                     tx.rollback();
