@@ -58,56 +58,12 @@ class WebDataDirResource implements FolderResource, CollectionResource {
                 debug("\t Storage Sites for " + this.entry.getLDRI() + " are empty!");
                 throw new IOException("Storage Sites for " + this.entry.getLDRI() + " are empty!");
             }
-
-            //Maybe we have a problem with shalow copy
-            //copyStorageSites.addAll(entry.getStorageSites());
-            ArrayList<IStorageSite> copyStorageSites = new ArrayList<IStorageSite>();
-            for (IStorageSite s : sites) {
-                String ep = s.getEndpoint();
-                if (ep == null) {
-                    throw new NullPointerException("Endpoint is null");
-                }
-                Credential cred = s.getCredentials();
-                if (cred == null) {
-                    throw new NullPointerException("Credentials is null");
-                }
-                StorageSite ss = new StorageSite(ep, cred);
-                copyStorageSites.add(ss);
-            }
-
-            newFolderEntry.setStorageSites(copyStorageSites);
-//            sites = newFolderEntry.getStorageSites();
-//            if (sites == null || sites.isEmpty()) {
-//                debug("\t Storage Sites for " + newFolderEntry.getLDRI() + " are empty!");
-//                throw new IOException("Storage Sites for " + newFolderEntry.getLDRI() + " are empty!");
-//            }
-            catalogue.registerResourceEntry(newFolderEntry);
             
-            //Should we add the newEntry to this entry??
-            //Why do we do that ?
-            ILogicalData reloaded = catalogue.getResourceEntryByLDRI(newFolderEntry.getLDRI());
-            sites = reloaded.getStorageSites();
-            if (sites == null || sites.isEmpty()) {
-                debug("\t Storage Sites for (reloaded)" + reloaded.getLDRI() + " are empty!");
-                //Bad bad horrible patch!
-                sites = entry.getStorageSites();
-                copyStorageSites = new ArrayList<IStorageSite>();
-                for (IStorageSite s : sites) {
-                    copyStorageSites.add(new StorageSite(s.getEndpoint(), s.getCredentials()));
-                }
-                newFolderEntry.setStorageSites(copyStorageSites);
-                catalogue.updateResourceEntry(newFolderEntry);
-                reloaded = catalogue.getResourceEntryByLDRI(newFolderEntry.getLDRI());
-//                throw new IOException("Storage Sites for " + reloaded.getLDRI() + " are empty!");
-            }
-            WebDataDirResource resource = new WebDataDirResource(catalogue, reloaded);
-
-            //Why do we do that ?
-//            reloaded = catalogue.getResourceEntryByLDRI(this.entry.getLDRI());
-//            if(reloaded==null){
-//                throw new BadRequestException(this, "Logical resource queried from catalogue is null");
-//            }
-//            this.entry = reloaded;
+            newFolderEntry.setStorageSites(sites);
+            
+            catalogue.registerResourceEntry(newFolderEntry);
+//            ILogicalData reloaded = catalogue.getResourceEntryByLDRI(newFolderEntry.getLDRI());
+            WebDataDirResource resource = new WebDataDirResource(catalogue, newFolderEntry);
 
             return resource;
         } catch (Exception ex) {
@@ -264,7 +220,7 @@ class WebDataDirResource implements FolderResource, CollectionResource {
             } else {
                 resource = createNonExistingFile(newPath, length, contentType, inputStream);
             }
-            
+
             ILogicalData reloaded = catalogue.getResourceEntryByLDRI(this.entry.getLDRI());
             this.entry = reloaded;
             return resource;
@@ -301,7 +257,6 @@ class WebDataDirResource implements FolderResource, CollectionResource {
             Collection<IStorageSite> sites = entry.getStorageSites();
             if (sites != null && !sites.isEmpty()) {
                 for (IStorageSite s : sites) {
-//                    this.catalogue.getSiteByUID(s.getUID());
                     s.deleteVNode(entry.getPDRI());
                 }
             }
@@ -313,10 +268,6 @@ class WebDataDirResource implements FolderResource, CollectionResource {
                     }
                 }
             }
-//            Collection<Path> childrenPaths = entry.getChildren();
-//            for (Path p : childrenPaths) {
-//                entry.removeChild(p);
-//            }
             catalogue.unregisterResourceEntry(entry);
         } catch (CatalogueException ex) {
             throw new BadRequestException(this, ex.toString());
@@ -372,10 +323,6 @@ class WebDataDirResource implements FolderResource, CollectionResource {
         try {
             debug("moveTo.");
             debug("\t rDestgetName: " + rDest.getName() + " name: " + name);
-//            if(rDest == null || rDest.getName() == null){
-//                debug("----------------Will throw forbidden ");
-//                throw new com.bradmcevoy.http.exceptions.BadRequestException(this);
-//            }
             catalogue.renameEntry(entry.getLDRI(), Path.path(name));
         } catch (Exception ex) {
             Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, ex);
@@ -421,7 +368,7 @@ class WebDataDirResource implements FolderResource, CollectionResource {
 
     private ArrayList<? extends Resource> getEntriesChildren() throws Exception {
         Collection<String> childrenPaths = entry.getChildren();
-        
+
         ArrayList<Resource> children = new ArrayList<Resource>();
         if (childrenPaths != null) {
             for (String p : childrenPaths) {
@@ -455,23 +402,11 @@ class WebDataDirResource implements FolderResource, CollectionResource {
 
     private Resource createNonExistingFile(Path newPath, Long length, String contentType, InputStream inputStream) throws IOException, Exception {
         LogicalData newResource = new LogicalData(newPath, Constants.LOGICAL_FILE);
-        //We have to make a copy of the member collection. The same collection 
-        //can't be a member of the two different classes, the relationship is 1-N!!!
-//        ArrayList<IStorageSite> copyStorageSites = new ArrayList<IStorageSite>();
         Collection<IStorageSite> sites = entry.getStorageSites();
-//        if (sites == null || sites.isEmpty()) {
-//            ILogicalData reloaded = this.catalogue.getResourceEntryByLDRI(entry.getLDRI());
-//            sites = reloaded.getStorageSites();
-//        }
         if (sites == null || sites.isEmpty()) {
             debug("\t Storage Sites for " + this.entry.getLDRI() + " are empty!");
             throw new IOException("Storage Sites for " + this.entry.getLDRI() + " are empty!");
         }
-        //Maybe we have a problem with shalow copy
-        //copyStorageSites.addAll(entry.getStorageSites());
-//        for (IStorageSite s : sites) {
-//            copyStorageSites.add(new StorageSite(s.getEndpoint(), s.getCredentials()));
-//        }
         newResource.setStorageSites(sites);
         VFSNode node;
         if (!newResource.hasPhysicalData()) {
@@ -490,16 +425,16 @@ class WebDataDirResource implements FolderResource, CollectionResource {
                 out.close();
             }
         }
-        
+
         Metadata meta = new Metadata();
         meta.setLength(length);
         meta.addContentType(contentType);
         meta.setCreateDate(System.currentTimeMillis());
         newResource.setMetadata(meta);
         catalogue.registerResourceEntry(newResource);
-        LogicalData relodedResource = (LogicalData) catalogue.getResourceEntryByLDRI(newResource.getLDRI());
+//        LogicalData relodedResource = (LogicalData) catalogue.getResourceEntryByLDRI(newResource.getLDRI());
 
-        return new WebDataFileResource(catalogue, relodedResource);
+        return new WebDataFileResource(catalogue, newResource);
     }
 
     private Resource updateExistingFile(LogicalData newResource, Long length, String contentType, InputStream inputStream) throws VlException, IOException, Exception {
@@ -530,8 +465,8 @@ class WebDataDirResource implements FolderResource, CollectionResource {
         newResource.setMetadata(meta);
 
         catalogue.updateResourceEntry(newResource);
-        LogicalData relodedResource = (LogicalData) catalogue.getResourceEntryByLDRI(newResource.getLDRI());
-        return new WebDataFileResource(catalogue, relodedResource);
+//        LogicalData relodedResource = (LogicalData) catalogue.getResourceEntryByLDRI(newResource.getLDRI());
+        return new WebDataFileResource(catalogue, newResource);
     }
 
     void setLogicalData(ILogicalData updatedLogicalData) {

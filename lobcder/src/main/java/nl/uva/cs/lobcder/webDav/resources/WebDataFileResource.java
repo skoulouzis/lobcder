@@ -58,8 +58,7 @@ public class WebDataFileResource implements
             debug("\t name: " + name);
             Path toCollectionLDRI = Path.path(collectionResource.getName());
             Path newLDRI = Path.path(toCollectionLDRI, name);
-
-//            FIX ME!Why do we crate new LogicalData
+            
             LogicalData newFolderEntry = new LogicalData(newLDRI, Constants.LOGICAL_FOLDER);
             newFolderEntry.getMetadata().setModifiedDate(System.currentTimeMillis());
             catalogue.registerResourceEntry(newFolderEntry);
@@ -111,7 +110,6 @@ public class WebDataFileResource implements
 
             for (String fileContentType : fileContentTypes) {
                 type = MMTypeTools.bestMatch(acceptsList, fileContentType);
-//                    return ContentTypeUtils.findAcceptableContentType(type, accepts);
                 debug("\t type: " + type);
                 if (!StringUtil.isEmpty(type)) {
                     return type;
@@ -189,13 +187,8 @@ public class WebDataFileResource implements
         debug("\t name: " + name);
         Path parent;
         Path tmpPath;
-
-
+        
         debug("\t rDestgetName: " + rDest.getName() + " name: " + name);
-//        if (rDest == null) {
-//            debug("----------------Have to throw forbidden ");
-//            throw new ForbiddenException(this);
-//        }
 
         Path dirPath = ((WebDataDirResource) rDest).getPath();
         debug("\t rDestgetUniqueId: " + rDest.getUniqueId());
@@ -211,14 +204,10 @@ public class WebDataFileResource implements
             catalogue.renameEntry(logicalData.getLDRI(), newPath);
             ILogicalData newLogicData = catalogue.getResourceEntryByLDRI(newPath);
             logicalData = newLogicData;
-            debug("NEw ldata: ldri: "+logicalData.getLDRI());
             
             WebDataDirResource dir = (WebDataDirResource) rDest;
             dir.setLogicalData(catalogue.getResourceEntryByLDRI(dirPath));
-//            List<? extends Resource> children = dir.getChildren();
-//            for (Resource r : children) {
-//                debug("Children: " + r.getName());
-//            }
+
             
         } catch (Exception ex) {
             Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, ex);
