@@ -35,9 +35,11 @@ import org.apache.jackrabbit.webdav.client.methods.MkColMethod;
 import org.apache.jackrabbit.webdav.client.methods.PropFindMethod;
 import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
 import org.apache.jackrabbit.webdav.DavException;
+import org.apache.jackrabbit.webdav.bind.BindConstants;
 import org.apache.jackrabbit.webdav.client.methods.DeleteMethod;
 import org.apache.jackrabbit.webdav.client.methods.MoveMethod;
 import org.apache.jackrabbit.webdav.client.methods.VersionControlMethod;
+import org.apache.jackrabbit.webdav.property.DavProperty;
 import org.apache.jackrabbit.webdav.property.DavPropertySet;
 import org.apache.jackrabbit.webdav.version.DeltaVConstants;
 import org.w3c.dom.Element;
@@ -45,7 +47,8 @@ import org.w3c.dom.Node;
 
 /**
  *
- * source taken from: http://svn.apache.org/repos/asf/jackrabbit/trunk/jackrabbit-webdav/
+ * source taken from:
+ * http://svn.apache.org/repos/asf/jackrabbit/trunk/jackrabbit-webdav/
  */
 public class WebDAVTest {
 
@@ -121,11 +124,13 @@ public class WebDAVTest {
             allow.add(method);
         }
 
-        /*The BIND method for is creating multiple bindings to the same resource.
-        Creating a new binding to a resource causes at least one new URI to be
-        mapped to that resource. Servers are required to ensure the integrity
-        of any bindings that they allow to be created.
-        Milton dosn't support that yet*/
+        /*
+         * The BIND method for is creating multiple bindings to the same
+         * resource. Creating a new binding to a resource causes at least one
+         * new URI to be mapped to that resource. Servers are required to ensure
+         * the integrity of any bindings that they allow to be created. Milton
+         * dosn't support that yet
+         */
 
 //        assertTrue("DAV header should include 'bind' feature", options.hasComplianceClass("bind"));
 //        assertTrue("Allow header should include BIND method", allow.contains("BIND"));
@@ -143,8 +148,7 @@ public class WebDAVTest {
         assertTrue("Allow header should include PROPPATCH method", allow.contains("MOVE"));
         assertTrue("Allow header should include HEAD method", allow.contains("PUT"));
     }
-    
-    
+
     //     create test resource, make it referenceable, check resource id, move resource, check again
     @Test
     public void testResourceId() throws HttpException, IOException, DavException, URISyntaxException {
@@ -162,6 +166,7 @@ public class WebDAVTest {
             status = this.client.executeMethod(put);
             assertEquals(HttpStatus.SC_CREATED, status);
 
+
             // enabling version control always makes the resource referenceable
             //No version control yet
 //            VersionControlMethod versioncontrol = new VersionControlMethod(testuri1);
@@ -173,6 +178,14 @@ public class WebDAVTest {
             MoveMethod move = new MoveMethod(testuri1, testuri2, true);
             status = this.client.executeMethod(move);
             assertEquals(HttpStatus.SC_CREATED, status);
+
+            GetMethod get = new GetMethod(testuri2);
+            this.client.executeMethod(get);
+            status = get.getStatusCode();
+            assertEquals(HttpStatus.SC_OK, status);
+            assertEquals("foo", get.getResponseBodyAsString());
+            System.out.println("Resp: " + get.getResponseBodyAsString());
+
 //            URI resourceId2 = getResourceId(testuri2);
 //            assertEquals(resourceId, resourceId2);
         } finally {
@@ -181,7 +194,7 @@ public class WebDAVTest {
             assertTrue("DeleteMethod status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
         }
     }
-
+    
     @Test
     public void testSimpleBind() throws Exception {
         String testcol = this.root + "testSimpleBind/";
@@ -191,19 +204,22 @@ public class WebDAVTest {
         String testres2 = subcol2 + "res2";
         int status;
         try {
+            //Create testSimpleBind/
             MkColMethod mkcol = new MkColMethod(testcol);
             status = this.client.executeMethod(mkcol);
             assertEquals(HttpStatus.SC_CREATED, status);
 
+            //Create testSimpleBind/bindtest1
             mkcol = new MkColMethod(subcol1);
             status = this.client.executeMethod(mkcol);
             assertEquals(HttpStatus.SC_CREATED, status);
 
+            //Create testSimpleBind/bindtest2
             mkcol = new MkColMethod(subcol2);
             status = this.client.executeMethod(mkcol);
             assertEquals(HttpStatus.SC_CREATED, status);
 
-            //create new resource R with path bindtest1/res1
+            //create new resource R with path testSimpleBind/bindtest1/res1
             PutMethod put = new PutMethod(testres1);
             put.setRequestEntity(new StringRequestEntity("foo", "text/plain", "UTF-8"));
             status = this.client.executeMethod(put);
@@ -217,7 +233,7 @@ public class WebDAVTest {
             //check if both bindings report the same DAV:resource-id
 //            assertEquals(this.getResourceId(testres1), this.getResourceId(testres2));
 
-            //compare representations retrieved with both paths
+            
             GetMethod get = new GetMethod(testres1);
             status = this.client.executeMethod(get);
             assertEquals(HttpStatus.SC_OK, status);
@@ -854,45 +870,45 @@ public class WebDAVTest {
             assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT || status == HttpStatus.SC_NOT_FOUND);
         }
     }
-//    // utility methods
-//    // see http://greenbytes.de/tech/webdav/rfc5842.html#rfc.section.3.1
-//    private URI getResourceId(String uri) throws IOException, DavException, URISyntaxException {
-//        DavPropertyNameSet names = new DavPropertyNameSet();
-//        names.add(BindConstants.RESOURCEID);
-//        PropFindMethod propfind = new PropFindMethod(uri, names, 0);
-//        int status = this.client.executeMethod(propfind);
-//        assertEquals(207, status);
-//
-//        MultiStatus multistatus = propfind.getResponseBodyAsMultiStatus();
-//
-//        MultiStatusResponse[] responses = multistatus.getResponses();
-//        assertEquals(1, responses.length);
-//
-//        DavProperty resourceId = responses[0].getProperties(HttpStatus.SC_OK).get(BindConstants.RESOURCEID);
-//
-//        assertNotNull(resourceId);
-//        assertTrue(resourceId.getValue() instanceof Element);
-//
-//        Element href = (Element) resourceId.getValue();
-//
-//        assertEquals("href", href.getLocalName());
-//        String text = getUri(href);
-//        URI resid = new URI(text);
-//        return resid;
-//    }
-//
-//    private DavProperty getParentSet(String uri) throws IOException, DavException, URISyntaxException {
-//        DavPropertyNameSet names = new DavPropertyNameSet();
-//        names.add(BindConstants.PARENTSET);
-//        PropFindMethod propfind = new PropFindMethod(uri, names, 0);
-//        int status = this.client.executeMethod(propfind);
-//        assertEquals(207, status);
-//        MultiStatus multistatus = propfind.getResponseBodyAsMultiStatus();
-//        MultiStatusResponse[] responses = multistatus.getResponses();
-//        assertEquals(1, responses.length);
-//        DavProperty parentset = responses[0].getProperties(HttpStatus.SC_OK).get(BindConstants.PARENTSET);
-//        assertNotNull(parentset);
-//        return parentset;
-//    }
-//
+    // utility methods
+    // see http://greenbytes.de/tech/webdav/rfc5842.html#rfc.section.3.1
+    private URI getResourceId(String uri) throws IOException, DavException, URISyntaxException {
+        DavPropertyNameSet names = new DavPropertyNameSet();
+        names.add(BindConstants.RESOURCEID);
+        PropFindMethod propfind = new PropFindMethod(uri, names, 0);
+        int status = this.client.executeMethod(propfind);
+        assertEquals(207, status);
+
+        MultiStatus multistatus = propfind.getResponseBodyAsMultiStatus();
+
+        MultiStatusResponse[] responses = multistatus.getResponses();
+        assertEquals(1, responses.length);
+
+        DavProperty resourceId = responses[0].getProperties(HttpStatus.SC_OK).get(BindConstants.RESOURCEID);
+
+        assertNotNull(resourceId);
+        assertTrue(resourceId.getValue() instanceof Element);
+
+        Element href = (Element) resourceId.getValue();
+
+        assertEquals("href", href.getLocalName());
+        String text = getUri(href);
+        URI resid = new URI(text);
+        return resid;
+    }
+
+    private DavProperty getParentSet(String uri) throws IOException, DavException, URISyntaxException {
+        DavPropertyNameSet names = new DavPropertyNameSet();
+        names.add(BindConstants.PARENTSET);
+        PropFindMethod propfind = new PropFindMethod(uri, names, 0);
+        int status = this.client.executeMethod(propfind);
+        assertEquals(207, status);
+        MultiStatus multistatus = propfind.getResponseBodyAsMultiStatus();
+        MultiStatusResponse[] responses = multistatus.getResponses();
+        assertEquals(1, responses.length);
+        DavProperty parentset = responses[0].getProperties(HttpStatus.SC_OK).get(BindConstants.PARENTSET);
+        assertNotNull(parentset);
+        return parentset;
+    }
+
 }
