@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import nl.uva.cs.lobcder.catalogue.CatalogueException;
@@ -99,7 +100,7 @@ class WebDataDirResource implements FolderResource, CollectionResource {
             if (entry.getLDRI().isRoot()) {
                 children = getTopLevelChildren();
             } else {
-                children = getEntriesChildren();
+                children = new ArrayList<Resource>(getEntriesChildren());
             }
         } catch (Exception ex) {
             Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, ex);
@@ -366,10 +367,10 @@ class WebDataDirResource implements FolderResource, CollectionResource {
         return children;
     }
 
-    private ArrayList<? extends Resource> getEntriesChildren() throws Exception {
+    private Collection<Resource> getEntriesChildren() throws Exception {
         Collection<String> childrenPaths = entry.getChildren();
 
-        ArrayList<Resource> children = new ArrayList<Resource>();
+        Collection<Resource> children = new CopyOnWriteArrayList<Resource>();
         if (childrenPaths != null) {
             for (String p : childrenPaths) {
                 debug("Adding children: " + p);

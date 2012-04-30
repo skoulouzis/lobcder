@@ -112,7 +112,7 @@ public class RDMSDLCatalog implements IDLCatalogue {
             tx.setSerializeRead(Boolean.TRUE);
             ILogicalData copy = null;
             try {
-                tx.begin();                
+                tx.begin();
                 //This query, will return objects of type DataResourceEntry
                 Query q = pm.newQuery(LogicalData.class);
                 //restrict to instances which have the field ldri equal to some logicalResourceName
@@ -185,13 +185,17 @@ public class RDMSDLCatalog implements IDLCatalogue {
                 Collection<LogicalData> res = null;
                 Collection<IStorageSite> toBeDeleted = new ArrayList<IStorageSite>();
                 Collection<IStorageSite> toBeUpdated = new ArrayList<IStorageSite>();
+
+                q = pm.newQuery(StorageSite.class);
+                Collection<StorageSite> sites = (Collection<StorageSite>) q.execute();
+
                 for (IStorageSite s : storageSites) {
                     q = pm.newQuery(LogicalData.class);
                     q.setFilter("storageSites.contains(s) && strLDRI != parentsName");
                     q.declareParameters(s.getClass().getName() + " s, " + parentsName.getClass().getName() + " parentsName");
                     res = (Collection<LogicalData>) q.execute(s, parentsName);
-                    //Only if no one else is using it delete it 
-                    if (res == null || res.isEmpty()) {
+                    //Only if no one else is using it delete it
+                    if (res == null || res.isEmpty() && sites.size() > 1) {
                         toBeDeleted.add(s);
                     } else {
                         s.removeLogicalPath(result.getPDRI());
@@ -500,7 +504,7 @@ public class RDMSDLCatalog implements IDLCatalogue {
 //            Query query = pm.newQuery("UPDATE " + newResource.getClass().getName() + "SET this.ldri=newLDRI WHERE strLDRI == strLogicalResourceName");
 //            Long number = (Long) query.execute();
 
-                Query q = pm.newQuery(LogicalData.class);
+//                Query q = pm.newQuery(LogicalData.class);
 //            String strLogicalResourceName = newResource.getLDRI().toString();
 //            q.setFilter("strLDRI == strLogicalResourceName");
 //            q.declareParameters(strLogicalResourceName.getClass().getName() + " strLogicalResourceName");
