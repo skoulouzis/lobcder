@@ -34,6 +34,7 @@ class WebDataDirResource implements FolderResource, CollectionResource {
     private ILogicalData entry;
     private final IDLCatalogue catalogue;
     private boolean debug = true;
+    private static final Object lock = new Object();
 
     public WebDataDirResource(IDLCatalogue catalogue, ILogicalData entry) throws IOException, Exception {
         this.entry = entry;
@@ -59,9 +60,9 @@ class WebDataDirResource implements FolderResource, CollectionResource {
                 debug("\t Storage Sites for " + this.entry.getLDRI() + " are empty!");
                 throw new IOException("Storage Sites for " + this.entry.getLDRI() + " are empty!");
             }
-            
+
             newFolderEntry.setStorageSites(sites);
-            
+
             catalogue.registerResourceEntry(newFolderEntry);
 //            ILogicalData reloaded = catalogue.getResourceEntryByLDRI(newFolderEntry.getLDRI());
             WebDataDirResource resource = new WebDataDirResource(catalogue, newFolderEntry);
@@ -371,14 +372,18 @@ class WebDataDirResource implements FolderResource, CollectionResource {
         Collection<String> childrenPaths = entry.getChildren();
 
         Collection<Resource> children = new CopyOnWriteArrayList<Resource>();
+        ArrayList<String> toBeRemoved = new ArrayList<String>();
         if (childrenPaths != null) {
+
             for (String p : childrenPaths) {
                 debug("Adding children: " + p);
                 ILogicalData ch = catalogue.getResourceEntryByLDRI(Path.path(p));
                 if (ch == null) {
                     //We have some kind of inconsistency. It can happend that someone else calls delete on the child, which removes it from the catalog. In this case we'll belive the catalog and retun null 
 //                    throw new NullPointerException("The Collection " + entry.getLDRI() + " has " + p + " registered as a child but the catalogue has no such entry");
-                    entry.removeChild(Path.path(p));
+                    //This throws java.util.ConcurrentModificationException because we change the list while iteratting 
+//                    entry.removeChild();
+                    toBeRemoved.add(p);
                     continue;
                 }
                 if (ch.getType().equals(Constants.LOGICAL_FOLDER)) {
@@ -389,6 +394,7 @@ class WebDataDirResource implements FolderResource, CollectionResource {
                     children.add(new WebDataResource(catalogue, ch));
                 }
             }
+            entry.removeChildren(toBeRemoved);
         }
         return children;
     }

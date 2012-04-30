@@ -68,7 +68,7 @@ public class LogicalData implements ILogicalData, Serializable {
         this.ldri = ldri;
         strLDRI = ldri.toString();
         ldriLen = ldri.getLength();
-        
+
         uid = new StringIdentity(this.getClass(), java.util.UUID.randomUUID().toString()).getKey();
         this.type = type;
         //Data will hold the same pdri for ever.
@@ -228,7 +228,9 @@ public class LogicalData implements ILogicalData, Serializable {
 
     @Override
     public void removeChildren(Collection<String> childPath) {
-        this.children.removeAll(children);
+        if (children != null || !children.isEmpty()) {
+            this.children.removeAll(children);
+        }
     }
 
     @Override
