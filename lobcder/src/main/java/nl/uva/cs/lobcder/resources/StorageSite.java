@@ -151,8 +151,9 @@ public class StorageSite implements Serializable, IStorageSite {
     }
 
     private void initVFS() throws VlException, MalformedURLException {
-        setVfsClient(new VFSClient());
-        context = getVfsClient().getVRSContext();
+        this.vfsClient = new VFSClient();
+        
+        context = this.vfsClient.getVRSContext();
         //Bug in sftp: We have to put the username in the url 
         info = context.getServerInfoFor(getVrl(), true);
         String authScheme = info.getAuthScheme();
@@ -206,7 +207,8 @@ public class StorageSite implements Serializable, IStorageSite {
     @Override
     public void deleteVNode(Path permenantDRI) throws VlException {
         debug("Exists?: " + permenantDRI);
-        boolean exists = this.getVfsClient().existsPath(getVrl().append(permenantDRI.toString()));
+        VRL theVRL = getVrl().append(permenantDRI.toString());
+        boolean exists = getVfsClient().existsPath(theVRL);
         if (exists) {
             VFSNode node = this.getVNode(permenantDRI);
             if (node != null && node.delete()) {

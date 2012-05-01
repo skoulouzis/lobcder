@@ -298,7 +298,7 @@ class WebDataDirResource implements FolderResource, CollectionResource {
         ArrayList<String> mimeTypes;
         if (accepts != null) {
             String[] acceptsTypes = accepts.split(",");
-            if (entry.getMetadata() != null) {
+            if (entry.getMetadata() != null && entry.getMetadata().getContentTypes() !=null) {
                 mimeTypes = entry.getMetadata().getContentTypes();
                 for (String accessType : acceptsTypes) {
                     for (String mimeType : mimeTypes) {
