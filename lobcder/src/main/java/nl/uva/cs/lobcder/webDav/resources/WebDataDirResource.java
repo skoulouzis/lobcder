@@ -19,7 +19,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import nl.uva.cs.lobcder.catalogue.CatalogueException;
 import nl.uva.cs.lobcder.catalogue.IDLCatalogue;
-import nl.uva.cs.lobcder.resources.*;
+import nl.uva.cs.lobcder.resources.ILogicalData;
+import nl.uva.cs.lobcder.resources.IStorageSite;
+import nl.uva.cs.lobcder.resources.LogicalData;
+import nl.uva.cs.lobcder.resources.Metadata;
 import nl.uva.vlet.exception.VlException;
 import nl.uva.vlet.vfs.VFSNode;
 import nl.uva.vlet.vfs.VFile;
@@ -34,7 +37,6 @@ class WebDataDirResource implements FolderResource, CollectionResource {
     private ILogicalData entry;
     private final IDLCatalogue catalogue;
     private boolean debug = true;
-    private static final Object lock = new Object();
 
     public WebDataDirResource(IDLCatalogue catalogue, ILogicalData entry) throws IOException, Exception {
         this.entry = entry;
