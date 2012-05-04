@@ -17,7 +17,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import nl.uva.cs.lobcder.resources.*;
 import nl.uva.cs.lobcder.util.ConstantsAndSettings;
-import nl.uva.cs.lobcder.webDav.resources.Constants;
+import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.cs.lobcder.webDav.resources.UserThreadRDBMS;
 import static org.junit.Assert.*;
 import org.junit.*;

@@ -4,6 +4,7 @@
  */
 package nl.uva.cs.lobcder.webDav.resources;
 
+import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.cs.lobcder.util.ConstantsAndSettings;
 import java.util.Collection;
 import java.util.List;

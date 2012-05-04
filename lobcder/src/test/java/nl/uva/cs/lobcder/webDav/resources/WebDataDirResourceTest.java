@@ -4,6 +4,7 @@
  */
 package nl.uva.cs.lobcder.webDav.resources;
 
+import nl.uva.cs.lobcder.util.Constants;
 import com.bradmcevoy.common.Path;
 import com.bradmcevoy.http.Range;
 import java.io.ByteArrayInputStream;

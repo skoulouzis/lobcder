@@ -405,8 +405,8 @@ public class RDMSDLCatalog implements IDLCatalogue {
 
     @Override
     public boolean storageSiteExists(Properties prop) throws CatalogueException {
-        String uname = prop.getProperty(nl.uva.cs.lobcder.webDav.resources.Constants.VPH_USERNAME);
-        String ePoint = prop.getProperty(nl.uva.cs.lobcder.webDav.resources.Constants.STORAGE_SITE_ENDPOINT);
+        String uname = prop.getProperty(nl.uva.cs.lobcder.util.Constants.VPH_USERNAME);
+        String ePoint = prop.getProperty(nl.uva.cs.lobcder.util.Constants.STORAGE_SITE_ENDPOINT);
         Collection<StorageSite> copy;
         synchronized (lock) {
             PersistenceManager pm = pmf.getPersistenceManagerProxy();
@@ -440,10 +440,10 @@ public class RDMSDLCatalog implements IDLCatalogue {
 
     @Override
     public void registerStorageSite(Properties prop) throws CatalogueException {
-        Credential cred = new Credential(prop.getProperty(nl.uva.cs.lobcder.webDav.resources.Constants.VPH_USERNAME));
-        cred.setStorageSiteUsername(prop.getProperty(nl.uva.cs.lobcder.webDav.resources.Constants.STORAGE_SITE_USERNAME));
-        cred.setStorageSitePassword(prop.getProperty(nl.uva.cs.lobcder.webDav.resources.Constants.STORAGE_SITE_PASSWORD));
-        String endpoint = prop.getProperty(nl.uva.cs.lobcder.webDav.resources.Constants.STORAGE_SITE_ENDPOINT);
+        Credential cred = new Credential(prop.getProperty(nl.uva.cs.lobcder.util.Constants.VPH_USERNAME));
+        cred.setStorageSiteUsername(prop.getProperty(nl.uva.cs.lobcder.util.Constants.STORAGE_SITE_USERNAME));
+        cred.setStorageSitePassword(prop.getProperty(nl.uva.cs.lobcder.util.Constants.STORAGE_SITE_PASSWORD));
+        String endpoint = prop.getProperty(nl.uva.cs.lobcder.util.Constants.STORAGE_SITE_ENDPOINT);
 
         PersistenceManager pm = null;
         Transaction tx = null;

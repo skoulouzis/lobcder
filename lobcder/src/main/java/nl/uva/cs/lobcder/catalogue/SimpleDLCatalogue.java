@@ -15,7 +15,7 @@ import java.util.logging.Logger;
 import javax.jdo.*;
 import javax.jdo.annotations.Transactional;
 import nl.uva.cs.lobcder.resources.*;
-import nl.uva.cs.lobcder.webDav.resources.Constants;
+import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.vlet.data.StringUtil;
 import org.datanucleus.api.jdo.NucleusJDOHelper;
 

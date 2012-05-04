@@ -9,7 +9,7 @@ import com.bradmcevoy.common.Path;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import nl.uva.cs.lobcder.webDav.resources.Constants;
+import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.vlet.exception.VlException;
 import nl.uva.vlet.vfs.VChecksum;
 import nl.uva.vlet.vfs.VFSNode;

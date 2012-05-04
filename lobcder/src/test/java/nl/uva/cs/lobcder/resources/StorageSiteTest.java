@@ -11,7 +11,7 @@ import java.util.Properties;
 import java.io.File;
 import com.bradmcevoy.common.Path;
 import java.util.Collection;
-import nl.uva.cs.lobcder.webDav.resources.Constants;
+import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.vlet.vfs.VFSNode;
 import org.junit.After;
 import org.junit.AfterClass;

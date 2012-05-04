@@ -5,6 +5,7 @@
 package nl.uva.cs.lobcder.resources;
 
 import com.bradmcevoy.common.Path;
+import java.io.File;
 import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -15,6 +16,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.jdo.annotations.*;
 import javax.jdo.identity.StringIdentity;
+import nl.uva.cs.lobcder.util.Constants;
+import nl.uva.cs.lobcder.util.PropertiesLoader;
 import nl.uva.vlet.Global;
 import nl.uva.vlet.GlobalConfig;
 import nl.uva.vlet.data.StringUtil;
@@ -87,7 +90,7 @@ public class StorageSite implements Serializable, IStorageSite {
     private VRSContext context;
     private VFSClient vfsClient;
     @NotPersistent
-    public static final String storagePrefix = "LOBCDER-REPLICA";
+    public static String storagePrefix = "LOBCDER-REPLICA";
     @NotPersistent
     private static final boolean debug = false;
 
@@ -105,6 +108,9 @@ public class StorageSite implements Serializable, IStorageSite {
                 throw new NullPointerException("vph Username is null");
             }
             vphUsername = cred.getVPHUsername();
+                     
+            storagePrefix = PropertiesLoader.getLobcderProperties().getProperty(Constants.LOBCDER_STORAGE_PREFIX);
+            
             vrl = new VRL(endpoint + "/" + storagePrefix);
 
             prop = new Properties();
