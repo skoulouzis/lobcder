@@ -5,12 +5,15 @@
 package nl.uva.cs.lobcder.catalogue;
 
 import com.bradmcevoy.common.Path;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Properties;
 import java.util.Set;
 import javax.jdo.*;
 import nl.uva.cs.lobcder.resources.*;
+import nl.uva.cs.lobcder.util.PropertiesLoader;
 import nl.uva.vlet.data.StringUtil;
 
 /**
@@ -21,6 +24,7 @@ public class RDMSDLCatalog implements IDLCatalogue {
 
     private static final Object lock = new Object();
     private final PersistenceManagerFactory pmf;
+    
 
     public RDMSDLCatalog() {
         pmf = JDOHelper.getPersistenceManagerFactory("datanucleus.properties");
@@ -195,7 +199,7 @@ public class RDMSDLCatalog implements IDLCatalogue {
                     q.declareParameters(s.getClass().getName() + " s, " + parentsName.getClass().getName() + " parentsName");
                     res = (Collection<LogicalData>) q.execute(s, parentsName);
                     //Only if no one else is using it delete it
-                    if (res == null || res.isEmpty() && sites.size() > 1) {
+                    if (res == null || res.isEmpty() && sites.size() > PropertiesLoader.getNumOfStorageSites()) {
                         toBeDeleted.add(s);
                     } else {
                         s.removeLogicalPath(result.getPDRI());

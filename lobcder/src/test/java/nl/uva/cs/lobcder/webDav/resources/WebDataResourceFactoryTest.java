@@ -446,6 +446,24 @@ public class WebDataResourceFactoryTest {
         }
     }
 
+    
+    @Test
+    public void testGetTopLevel() throws Exception {
+                System.out.println("testMakeCollectionAddChildAndRenameChild");
+        String host = "localhost:8080";
+        WebDataFileResource file = null;
+        WebDataDirResource dir = null;
+
+        WebDataResourceFactory instance = new WebDataResourceFactory();
+        WebDataDirResource root = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH);
+        assertNotNull(root);
+        
+        ByteArrayInputStream bais = new ByteArrayInputStream(ConstantsAndSettings.TEST_DATA.getBytes());
+        file = (WebDataFileResource) root.createNew(ConstantsAndSettings.TEST_FILE_NAME_1, bais, new Long(ConstantsAndSettings.TEST_DATA.getBytes().length), "text/plain");
+        checkChildren(root, file);
+        
+        file.delete();
+    }
     @Test
     public void testMake2Subcollections() throws Exception {
         System.out.println("testMakeCollectionAddChildAndRenameChild");

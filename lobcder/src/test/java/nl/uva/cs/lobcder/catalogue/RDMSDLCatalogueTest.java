@@ -619,7 +619,7 @@ public class RDMSDLCatalogueTest {
     @Test
     public void testMetadataPersistence() {
         System.out.println("testMetadataPersistence");
-        RDMSDLCatalog instance = new RDMSDLCatalog();
+        RDMSDLCatalog instance = null;
         Path originalPath = Path.path("/oldResourceName");
         LogicalData e = new LogicalData(originalPath, Constants.LOGICAL_DATA);
         Metadata meta = new Metadata();
@@ -630,6 +630,7 @@ public class RDMSDLCatalogueTest {
         e.setMetadata(meta);
 
         try {
+            instance = new RDMSDLCatalog();
             instance.registerResourceEntry(e);
 
 
@@ -809,12 +810,12 @@ public class RDMSDLCatalogueTest {
 
     @Test
     public void testUpdateResourceEntry() {
-        RDMSDLCatalog instance = new RDMSDLCatalog();
+        RDMSDLCatalog instance = null;
         ILogicalData loaded = null;
         try {
             System.out.println("testUpdateResourceEntry");
 
-
+            instance = new RDMSDLCatalog();
             LogicalData newEntry = new LogicalData(ConstantsAndSettings.TEST_FILE_PATH_1, Constants.LOGICAL_FILE);
             instance.registerResourceEntry(newEntry);
             loaded = instance.getResourceEntryByLDRI(newEntry.getLDRI());
@@ -867,8 +868,9 @@ public class RDMSDLCatalogueTest {
 
     @Test
     public void testStorageSiteExistsy() {
-        RDMSDLCatalog instance = new RDMSDLCatalog();
+        RDMSDLCatalog instance = null;
         try {
+            instance = new RDMSDLCatalog();
             String uname = "uname2";
             Properties prop = new Properties();
             prop.setProperty(Constants.VPH_USERNAME, uname);
@@ -926,11 +928,11 @@ public class RDMSDLCatalogueTest {
             catalogue.registerResourceEntry(root);
         }
         assertNotNull(catalogue.getResourceEntryByLDRI(Path.root));
-        
-        
+
+
 
         //Test collection 
-        Path newCollectionPath = Path.path(Path.root,ConstantsAndSettings.TEST_FOLDER_NAME_1);
+        Path newCollectionPath = Path.path(Path.root, ConstantsAndSettings.TEST_FOLDER_NAME_1);
         LogicalData newFolderEntry = new LogicalData(newCollectionPath, Constants.LOGICAL_FOLDER);
         newFolderEntry.getMetadata().setCreateDate(System.currentTimeMillis());
         sites = root.getStorageSites();
@@ -939,7 +941,7 @@ public class RDMSDLCatalogueTest {
         assertNotNull(catalogue.getResourceEntryByLDRI(newCollectionPath));
 
         //Test file 
-        Path newFilePath = Path.path(newCollectionPath,ConstantsAndSettings.TEST_FILE_NAME_1);
+        Path newFilePath = Path.path(newCollectionPath, ConstantsAndSettings.TEST_FILE_NAME_1);
         LogicalData newFileResource = (LogicalData) catalogue.getResourceEntryByLDRI(newFilePath);
         if (newFileResource == null) {
             newFileResource = new LogicalData(newFilePath, Constants.LOGICAL_FILE);
@@ -958,7 +960,7 @@ public class RDMSDLCatalogueTest {
 
         catalogue.unregisterResourceEntry(entry);
         assertNull(catalogue.getResourceEntryByLDRI(newCollectionPath));
-        
+
     }
 
     @Test

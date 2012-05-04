@@ -17,6 +17,7 @@ import java.util.Properties;
 public class PropertiesLoader {
 
     private static final Object lock = new Object();
+    private static int numOfStorgeSites = -1;
 
     public static Properties getLobcderProperties()
             throws FileNotFoundException, IOException {
@@ -44,7 +45,15 @@ public class PropertiesLoader {
                 }
                 properties[i].load(new FileInputStream(f));
             }
+            numOfStorgeSites = properties.length;
             return properties;
         }
+    }
+
+    public static int getNumOfStorageSites() throws FileNotFoundException, IOException {
+        if (numOfStorgeSites < 0) {
+            numOfStorgeSites = getStorageSitesProps().length;
+        }
+        return numOfStorgeSites;
     }
 }
