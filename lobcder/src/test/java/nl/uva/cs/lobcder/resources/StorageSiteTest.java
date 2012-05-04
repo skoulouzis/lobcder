@@ -39,7 +39,7 @@ public class StorageSiteTest {
 
         Properties prop = getCloudProperties(propBasePath + name);
         testEndpoint = prop.getProperty(Constants.STORAGE_SITE_ENDPOINT);
-        vphUser = prop.getProperty(Constants.STORAGE_SITE_USERNAME);
+        vphUser = prop.getProperty(Constants.VPH_USERNAME);
 
         testCred = new Credential(vphUser);
         String siteUname = prop.getProperty(Constants.STORAGE_SITE_USERNAME);
@@ -79,7 +79,7 @@ public class StorageSiteTest {
      */
     @Test
     public void testCreateAndGetVFSNode() throws Exception {
-        System.out.println("createVFSNode");
+        System.out.println("testCreateAndGetVFSNode");
         String strPath = "file1";
         Path path = Path.path(strPath);
         StorageSite instance = new StorageSite(testEndpoint, testCred);
