@@ -7,8 +7,6 @@ package nl.uva.cs.lobcder.tests;
 import org.apache.commons.httpclient.methods.GetMethod;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.apache.jackrabbit.webdav.security.AclProperty.Ace;
-import org.apache.jackrabbit.webdav.security.AclResource;
 import org.apache.jackrabbit.webdav.security.Privilege;
 import org.apache.jackrabbit.webdav.security.Principal;
 import org.apache.jackrabbit.webdav.Status;
@@ -28,10 +26,8 @@ import java.net.URI;
 import java.util.Properties;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpStatus;
-import org.apache.jackrabbit.webdav.DavResourceIteratorImpl;
 import org.apache.jackrabbit.webdav.client.methods.DeleteMethod;
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
-import org.apache.jackrabbit.webdav.security.AclProperty;
 import org.junit.Before;
 
 import org.junit.Test;
@@ -64,6 +60,10 @@ public class TestWebWAVFS {
             testURL = "http://localhost:8080/lobcder-1.0-SNAPSHOT/";
         }
         assertTrue(testURL != null);
+        if(!testURL.endsWith("/")){
+            testURL=testURL+"/";
+        }
+            
 
         this.uri = URI.create(testURL);
         this.root = this.uri.toASCIIString();

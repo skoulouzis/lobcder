@@ -70,6 +70,9 @@ public class WebDAVTest {
             testURL = "http://localhost:8080/lobcder-1.0-SNAPSHOT/";
         }
         assertTrue(testURL != null);
+        if (!testURL.endsWith("/")) {
+            testURL = testURL + "/";
+        }
 
         this.uri = URI.create(testURL);
         this.root = this.uri.toASCIIString();
