@@ -226,8 +226,12 @@ class WebDataDirResource implements FolderResource, CollectionResource {
                 resource = createNonExistingFile(newPath, length, contentType, inputStream);
             }
 
-            ILogicalData reloaded = catalogue.getResourceEntryByLDRI(this.entry.getLDRI());
-            this.entry = reloaded;
+            ILogicalData reloaded = null;
+            if (!entry.getLDRI().isRoot()) {
+                reloaded = catalogue.getResourceEntryByLDRI(this.entry.getLDRI());
+                this.entry = reloaded;
+            }
+
             return resource;
         } catch (Exception ex) {
             throw new BadRequestException(this, ex.getMessage());
@@ -299,7 +303,7 @@ class WebDataDirResource implements FolderResource, CollectionResource {
         ArrayList<String> mimeTypes;
         if (accepts != null) {
             String[] acceptsTypes = accepts.split(",");
-            if (entry.getMetadata() != null && entry.getMetadata().getContentTypes() !=null) {
+            if (entry.getMetadata() != null && entry.getMetadata().getContentTypes() != null) {
                 mimeTypes = entry.getMetadata().getContentTypes();
                 for (String accessType : acceptsTypes) {
                     for (String mimeType : mimeTypes) {
@@ -360,9 +364,9 @@ class WebDataDirResource implements FolderResource, CollectionResource {
         Collection<ILogicalData> topEntries = catalogue.getTopLevelResourceEntries();
         ArrayList<Resource> children = new ArrayList<Resource>();
         for (ILogicalData e : topEntries) {
-            if (e instanceof LogicalData) {
+            if (e.getType().equals(Constants.LOGICAL_FOLDER)) {
                 children.add(new WebDataDirResource(catalogue, e));
-            } else if (e instanceof LogicalData) {
+            } else if (e.getType().equals(Constants.LOGICAL_FILE)) {
                 children.add(new WebDataFileResource(catalogue, e));
             } else {
                 children.add(new WebDataResource(catalogue, e));

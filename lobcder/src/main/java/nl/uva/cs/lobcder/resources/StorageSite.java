@@ -90,7 +90,7 @@ public class StorageSite implements Serializable, IStorageSite {
     private VRSContext context;
     private VFSClient vfsClient;
     @NotPersistent
-    public static String storagePrefix = "LOBCDER-REPLICA";
+    public static String storagePrefix="LOBCDER-REPLICA-v1.1";
     @NotPersistent
     private static final boolean debug = false;
 

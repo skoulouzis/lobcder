@@ -21,33 +21,29 @@ public class PropertiesLoader {
 
     public static Properties getLobcderProperties()
             throws FileNotFoundException, IOException {
-        synchronized (lock) {
-            Properties properties = new Properties();
-            File f = new File(Constants.LOBCDER_CONF_DIR + "lobcder.prop");
-            if (!f.exists()) {
-                throw new FileNotFoundException("Configuration file " + f.getAbsolutePath() + " not found");
-            }
-            properties.load(new FileInputStream(f));
-            return properties;
+        Properties properties = new Properties();
+        File f = new File(Constants.LOBCDER_CONF_DIR + "lobcder.prop");
+        if (!f.exists()) {
+            throw new FileNotFoundException("Configuration file " + f.getAbsolutePath() + " not found");
         }
+        properties.load(new FileInputStream(f));
+        return properties;
     }
 
     public static Properties[] getStorageSitesProps() throws FileNotFoundException, IOException {
         String storageSitesFilesPaths = getLobcderProperties().getProperty(Constants.STORAGE_SITES_PROP_FILES);
-        synchronized (lock) {
-            String[] paths = storageSitesFilesPaths.split(",");
-            Properties[] properties = new Properties[paths.length];
-            for (int i = 0; i < paths.length; i++) {
-                properties[i] = new Properties();
-                File f = new File(paths[i]);
-                if (!f.exists()) {
-                    throw new FileNotFoundException("Configuration file " + f.getAbsolutePath() + " not found");
-                }
-                properties[i].load(new FileInputStream(f));
+        String[] paths = storageSitesFilesPaths.split(",");
+        Properties[] properties = new Properties[paths.length];
+        for (int i = 0; i < paths.length; i++) {
+            properties[i] = new Properties();
+            File f = new File(paths[i]);
+            if (!f.exists()) {
+                throw new FileNotFoundException("Configuration file " + f.getAbsolutePath() + " not found");
             }
-            numOfStorgeSites = properties.length;
-            return properties;
+            properties[i].load(new FileInputStream(f));
         }
+        numOfStorgeSites = properties.length;
+        return properties;
     }
 
     public static int getNumOfStorageSites() throws FileNotFoundException, IOException {
