@@ -229,7 +229,7 @@ public class LogicalData implements ILogicalData, Serializable {
     @Override
     public void removeChildren(Collection<String> childPath) {
         if (children != null || !children.isEmpty()) {
-            this.children.removeAll(children);
+            this.children.removeAll(childPath);
         }
     }
 
