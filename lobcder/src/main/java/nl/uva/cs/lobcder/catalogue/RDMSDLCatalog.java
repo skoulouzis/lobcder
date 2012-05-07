@@ -5,12 +5,9 @@
 package nl.uva.cs.lobcder.catalogue;
 
 import com.bradmcevoy.common.Path;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Properties;
-import java.util.Set;
 import javax.jdo.*;
 import nl.uva.cs.lobcder.resources.*;
 import nl.uva.cs.lobcder.util.PropertiesLoader;
@@ -24,10 +21,10 @@ public class RDMSDLCatalog implements IDLCatalogue {
 
     private static final Object lock = new Object();
     private final PersistenceManagerFactory pmf;
-    
 
     public RDMSDLCatalog() {
-        pmf = JDOHelper.getPersistenceManagerFactory("datanucleus.properties");
+//        pmf = JDOHelper.getPersistenceManagerFactory("datanucleus.properties");
+        pmf = JDOHelper.getPersistenceManagerFactory(nl.uva.cs.lobcder.util.Constants.LOBCDER_CONF_DIR + "/datanucleus.properties");
     }
 
     @Override
