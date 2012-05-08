@@ -8,6 +8,7 @@ import nl.uva.cs.lobcder.util.Constants;
 import com.bradmcevoy.common.Path;
 import com.bradmcevoy.http.Resource;
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -174,7 +175,7 @@ public class UserThreadRDBMS extends Thread {
     }
 
     public void testUpdateResourceEntry() {
-        RDMSDLCatalog instance = new RDMSDLCatalog();
+        RDMSDLCatalog instance = new RDMSDLCatalog(new File(nl.uva.cs.lobcder.util.Constants.LOBCDER_CONF_DIR + "/datanucleus.properties"));
         ILogicalData loaded = null;
         try {
             debug("testUpdateResourceEntry");
@@ -237,7 +238,7 @@ public class UserThreadRDBMS extends Thread {
         Path parentPath = Path.path(ldri);
         ILogicalData parent = new LogicalData(parentPath, Constants.LOGICAL_DATA);
 
-        RDMSDLCatalog instance = new RDMSDLCatalog();
+        RDMSDLCatalog instance = new RDMSDLCatalog(new File(nl.uva.cs.lobcder.util.Constants.LOBCDER_CONF_DIR + "/datanucleus.properties"));
 
         instance.registerResourceEntry(parent);
 
@@ -270,7 +271,7 @@ public class UserThreadRDBMS extends Thread {
         ILogicalData lParent = null;
         try {
 
-            instance = new RDMSDLCatalog();
+            instance = new RDMSDLCatalog(new File(nl.uva.cs.lobcder.util.Constants.LOBCDER_CONF_DIR + "/datanucleus.properties"));
             Path parentPath = Path.path("parent");
 
             lParent = new LogicalData(parentPath, Constants.LOGICAL_FOLDER);
@@ -296,7 +297,7 @@ public class UserThreadRDBMS extends Thread {
         } finally {
             try {
                 if (lParent != null) {
-                    new RDMSDLCatalog().unregisterResourceEntry(lParent);
+                    new RDMSDLCatalog(new File(nl.uva.cs.lobcder.util.Constants.LOBCDER_CONF_DIR + "/datanucleus.properties")).unregisterResourceEntry(lParent);
                 }
             } catch (Exception ex) {
                 fail("Exception: " + ex.getMessage());

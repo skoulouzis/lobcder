@@ -61,7 +61,7 @@ public class WebDataFileResourceTest {
     @Before
     public void setUp() {
         try {
-            catalogue = new RDMSDLCatalog();
+            catalogue = new RDMSDLCatalog(new File(nl.uva.cs.lobcder.util.Constants.LOBCDER_CONF_DIR + "/datanucleus.properties"));
 
             String endpoint = "file:///tmp/";
             String vphUser = "user1";

@@ -29,7 +29,12 @@ public class WebDataResourceFactory implements ResourceFactory {
     private String uname = "uname1";
 
     public WebDataResourceFactory() throws Exception {
-        catalogue = new RDMSDLCatalog();
+        String confDir = nl.uva.cs.lobcder.util.Constants.LOBCDER_CONF_DIR;
+        File propFile = new File(confDir + "/datanucleus.properties");
+        if (!propFile.exists()) {
+            throw new IOException("Properties file " + propFile.getAbsolutePath() + " is missing");
+        }
+        catalogue = new RDMSDLCatalog(propFile);
         initStorageSites();
     }
 
@@ -118,7 +123,6 @@ public class WebDataResourceFactory implements ResourceFactory {
 //            }
 //        }
     }
-
 //    private static Properties getCloudProperties(String propPath)
 //            throws FileNotFoundException, IOException {
 //        Properties properties = new Properties();

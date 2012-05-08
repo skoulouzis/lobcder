@@ -9,6 +9,7 @@ import com.bradmcevoy.common.Path;
 import com.bradmcevoy.http.Range;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.logging.Level;
@@ -45,13 +46,15 @@ public class WebDataDirResourceTest {
     @Before
     public void setUp() {
         try {
-            catalogue = new RDMSDLCatalog();
+            String confDir = nl.uva.cs.lobcder.util.Constants.LOBCDER_CONF_DIR;
+            File propFile = new File(confDir + "/datanucleus.properties");
+            catalogue = new RDMSDLCatalog(propFile);
 
 
-            testLogicalData = new LogicalData(ConstantsAndSettings.TEST_FILE_PATH_1,Constants.LOGICAL_FILE);
+            testLogicalData = new LogicalData(ConstantsAndSettings.TEST_FILE_PATH_1, Constants.LOGICAL_FILE);
 
             testFolderPath = Path.path(ConstantsAndSettings.TEST_FOLDER_NAME_1);
-            testLogicalData = new LogicalData(testFolderPath,Constants.LOGICAL_FOLDER);
+            testLogicalData = new LogicalData(testFolderPath, Constants.LOGICAL_FOLDER);
 
             String endpoint = "file:///tmp/";
             String vphUser = "user1";
@@ -260,7 +263,6 @@ public class WebDataDirResourceTest {
         loaded = catalogue.getResourceEntryByLDRI(Path.path(testFolderPath, ConstantsAndSettings.TEST_FILE_NAME_1));
         assertNull(loaded);
     }
-    
 //
 //    /**
 //     * Test of copyTo method, of class WebDataDirResource.

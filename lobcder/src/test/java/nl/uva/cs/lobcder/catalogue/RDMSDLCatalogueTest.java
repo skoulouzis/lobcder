@@ -58,7 +58,7 @@ public class RDMSDLCatalogueTest {
         Path path = Path.path(ldri);
         ILogicalData entry = new LogicalData(path, Constants.LOGICAL_DATA);
 
-        RDMSDLCatalog instance = new RDMSDLCatalog();
+        RDMSDLCatalog instance = new RDMSDLCatalog(new File(nl.uva.cs.lobcder.util.Constants.LOBCDER_CONF_DIR + "/datanucleus.properties"));
         try {
 //            StorageSite s = new StorageSite("", new Credential(""));
             Collection<IStorageSite> ss = new ArrayList<IStorageSite>();
@@ -89,7 +89,7 @@ public class RDMSDLCatalogueTest {
 
     @Test
     public void testUnregisterResourceEntry() throws Exception {
-        RDMSDLCatalog instance = new RDMSDLCatalog();
+        RDMSDLCatalog instance = new RDMSDLCatalog(new File(nl.uva.cs.lobcder.util.Constants.LOBCDER_CONF_DIR + "/datanucleus.properties"));
 
         String ldri = "/resource1";
         Path path = Path.path(ldri);
@@ -132,7 +132,7 @@ public class RDMSDLCatalogueTest {
         Path parentPath = Path.path(ldri);
         ILogicalData parent = new LogicalData(parentPath, Constants.LOGICAL_DATA);
 
-        RDMSDLCatalog instance = new RDMSDLCatalog();
+        RDMSDLCatalog instance = new RDMSDLCatalog(new File(nl.uva.cs.lobcder.util.Constants.LOBCDER_CONF_DIR + "/datanucleus.properties"));
 
         instance.registerResourceEntry(parent);
 
@@ -169,7 +169,7 @@ public class RDMSDLCatalogueTest {
         String ldri = "/resource";
         Path path = Path.path(ldri);
         ILogicalData entry = new LogicalData(path, Constants.LOGICAL_DATA);
-        RDMSDLCatalog instance = new RDMSDLCatalog();
+        RDMSDLCatalog instance = new RDMSDLCatalog(new File(nl.uva.cs.lobcder.util.Constants.LOBCDER_CONF_DIR + "/datanucleus.properties"));
 
         Boolean expResult = false;
         Boolean result = instance.resourceEntryExists(entry);
@@ -207,7 +207,7 @@ public class RDMSDLCatalogueTest {
         ILogicalData loaded;
         try {
 
-            instance = new RDMSDLCatalog();
+            instance = new RDMSDLCatalog(new File(nl.uva.cs.lobcder.util.Constants.LOBCDER_CONF_DIR + "/datanucleus.properties"));
             instance.registerResourceEntry(topEntry1);
             instance.registerResourceEntry(topEntry2);
             instance.registerResourceEntry(topEntry3);
@@ -303,7 +303,7 @@ public class RDMSDLCatalogueTest {
         Path newPath = null;
         try {
 
-            instance = new RDMSDLCatalog();
+            instance = new RDMSDLCatalog(new File(nl.uva.cs.lobcder.util.Constants.LOBCDER_CONF_DIR + "/datanucleus.properties"));
             Path originalPath = Path.path("/oldResourceName");
             LogicalData e = new LogicalData(originalPath, Constants.LOGICAL_DATA);
 
@@ -351,7 +351,7 @@ public class RDMSDLCatalogueTest {
         Path newPath = null;
         try {
 
-            instance = new RDMSDLCatalog();
+            instance = new RDMSDLCatalog(new File(nl.uva.cs.lobcder.util.Constants.LOBCDER_CONF_DIR + "/datanucleus.properties"));
             Path originalPath = Path.path("/oldResourceName/");
             LogicalData e = new LogicalData(originalPath, Constants.LOGICAL_DATA);
             instance.registerResourceEntry(e);
@@ -417,7 +417,7 @@ public class RDMSDLCatalogueTest {
         System.out.println("testRenameWithChildren");
         RDMSDLCatalog instance = null;
         try {
-            instance = new RDMSDLCatalog();
+            instance = new RDMSDLCatalog(new File(nl.uva.cs.lobcder.util.Constants.LOBCDER_CONF_DIR + "/datanucleus.properties"));
             Path originalPath = Path.path("/testCollection/");
             LogicalData e = new LogicalData(originalPath, Constants.LOGICAL_FOLDER);
             instance.registerResourceEntry(e);
@@ -503,7 +503,7 @@ public class RDMSDLCatalogueTest {
 
             tesCollectionPath = Path.path("/testCollection");
             logicalCollection = new LogicalData(tesCollectionPath, Constants.LOGICAL_FOLDER);
-            instance = new RDMSDLCatalog();
+            instance = new RDMSDLCatalog(new File(nl.uva.cs.lobcder.util.Constants.LOBCDER_CONF_DIR + "/datanucleus.properties"));
             instance.registerResourceEntry(logicalCollection);
             //Check if the collection is registered
             ILogicalData loadedLogicalCollection = instance.getResourceEntryByLDRI(tesCollectionPath);
@@ -574,7 +574,7 @@ public class RDMSDLCatalogueTest {
         ILogicalData parent = null;
         try {
 
-            instance = new RDMSDLCatalog();
+            instance = new RDMSDLCatalog(new File(nl.uva.cs.lobcder.util.Constants.LOBCDER_CONF_DIR + "/datanucleus.properties"));
             Path originalPath = Path.path("/oldResourceName/");
             parent = new LogicalData(originalPath, Constants.LOGICAL_DATA);
             instance.registerResourceEntry(parent);
@@ -630,11 +630,11 @@ public class RDMSDLCatalogueTest {
         e.setMetadata(meta);
 
         try {
-            instance = new RDMSDLCatalog();
+            instance = new RDMSDLCatalog(new File(nl.uva.cs.lobcder.util.Constants.LOBCDER_CONF_DIR + "/datanucleus.properties"));
             instance.registerResourceEntry(e);
 
 
-            RDMSDLCatalog instance2 = new RDMSDLCatalog();
+            RDMSDLCatalog instance2 = new RDMSDLCatalog(new File(nl.uva.cs.lobcder.util.Constants.LOBCDER_CONF_DIR + "/datanucleus.properties"));
             ILogicalData entry = instance2.getResourceEntryByLDRI(originalPath);
             meta = entry.getMetadata();
 
@@ -663,7 +663,7 @@ public class RDMSDLCatalogueTest {
         ILogicalData res;
         try {
 
-            instance = new RDMSDLCatalog();
+            instance = new RDMSDLCatalog(new File(nl.uva.cs.lobcder.util.Constants.LOBCDER_CONF_DIR + "/datanucleus.properties"));
             Path parentPath = Path.path("parent");
             Path childPath = Path.path("parent/child");
 
@@ -702,7 +702,7 @@ public class RDMSDLCatalogueTest {
         LogicalData lParent = null;
         try {
 
-            instance = new RDMSDLCatalog();
+            instance = new RDMSDLCatalog(new File(nl.uva.cs.lobcder.util.Constants.LOBCDER_CONF_DIR + "/datanucleus.properties"));
             Path parentPath = Path.path("parent");
             Path childPath = Path.path("parent/child");
 
@@ -721,10 +721,10 @@ public class RDMSDLCatalogueTest {
         } finally {
             try {
                 if (lChild != null) {
-                    new RDMSDLCatalog().unregisterResourceEntry(lChild);
+                    new RDMSDLCatalog(new File(nl.uva.cs.lobcder.util.Constants.LOBCDER_CONF_DIR + "/datanucleus.properties")).unregisterResourceEntry(lChild);
                 }
                 if (lParent != null) {
-                    new RDMSDLCatalog().unregisterResourceEntry(lParent);
+                    new RDMSDLCatalog(new File(nl.uva.cs.lobcder.util.Constants.LOBCDER_CONF_DIR + "/datanucleus.properties")).unregisterResourceEntry(lParent);
                 }
             } catch (Exception ex) {
                 fail("Exception: " + ex.getMessage());
@@ -739,7 +739,7 @@ public class RDMSDLCatalogueTest {
         ILogicalData lParent = null;
         try {
 
-            instance = new RDMSDLCatalog();
+            instance = new RDMSDLCatalog(new File(nl.uva.cs.lobcder.util.Constants.LOBCDER_CONF_DIR + "/datanucleus.properties"));
             Path parentPath = Path.path("parent");
 
             lParent = new LogicalData(parentPath, Constants.LOGICAL_FOLDER);
@@ -765,7 +765,7 @@ public class RDMSDLCatalogueTest {
         } finally {
             try {
                 if (lParent != null) {
-                    new RDMSDLCatalog().unregisterResourceEntry(lParent);
+                    new RDMSDLCatalog(new File(nl.uva.cs.lobcder.util.Constants.LOBCDER_CONF_DIR + "/datanucleus.properties")).unregisterResourceEntry(lParent);
                 }
             } catch (Exception ex) {
                 fail("Exception: " + ex.getMessage());
@@ -780,7 +780,7 @@ public class RDMSDLCatalogueTest {
     public void testGetSitesByUnames() throws Exception {
         System.out.println("testGetSitesByUnames");
         populateStorageSites();
-        RDMSDLCatalog instance = new RDMSDLCatalog();
+        RDMSDLCatalog instance = new RDMSDLCatalog(new File(nl.uva.cs.lobcder.util.Constants.LOBCDER_CONF_DIR + "/datanucleus.properties"));
         try {
             String uname = "uname2";
             Properties prop = new Properties();
@@ -815,7 +815,7 @@ public class RDMSDLCatalogueTest {
         try {
             System.out.println("testUpdateResourceEntry");
 
-            instance = new RDMSDLCatalog();
+            instance = new RDMSDLCatalog(new File(nl.uva.cs.lobcder.util.Constants.LOBCDER_CONF_DIR + "/datanucleus.properties"));
             LogicalData newEntry = new LogicalData(ConstantsAndSettings.TEST_FILE_PATH_1, Constants.LOGICAL_FILE);
             instance.registerResourceEntry(newEntry);
             loaded = instance.getResourceEntryByLDRI(newEntry.getLDRI());
@@ -870,7 +870,7 @@ public class RDMSDLCatalogueTest {
     public void testStorageSiteExistsy() {
         RDMSDLCatalog instance = null;
         try {
-            instance = new RDMSDLCatalog();
+            instance = new RDMSDLCatalog(new File(nl.uva.cs.lobcder.util.Constants.LOBCDER_CONF_DIR + "/datanucleus.properties"));
             String uname = "uname2";
             Properties prop = new Properties();
             prop.setProperty(Constants.VPH_USERNAME, uname);
@@ -903,7 +903,7 @@ public class RDMSDLCatalogueTest {
         //The no such row bug. For some reason when we delete the file and then try 
         //to get the parent we get  No such database row exception for the 
         //StorageSite which makes the LogicalData not to detach properly
-        RDMSDLCatalog catalogue = new RDMSDLCatalog();
+        RDMSDLCatalog catalogue = new RDMSDLCatalog(new File(nl.uva.cs.lobcder.util.Constants.LOBCDER_CONF_DIR + "/datanucleus.properties"));
 
         //Init with some storage sites 
         String propBasePath = System.getProperty("user.home") + File.separator
@@ -999,7 +999,7 @@ public class RDMSDLCatalogueTest {
     }
 
     private void populateStorageSites() throws FileNotFoundException, IOException, Exception {
-        RDMSDLCatalog instance = new RDMSDLCatalog();
+        RDMSDLCatalog instance = new RDMSDLCatalog(new File(nl.uva.cs.lobcder.util.Constants.LOBCDER_CONF_DIR + "/datanucleus.properties"));
         instance.clearAllSites();
         String propBasePath = System.getProperty("user.home") + File.separator
                 + "workspace" + File.separator + "lobcder"

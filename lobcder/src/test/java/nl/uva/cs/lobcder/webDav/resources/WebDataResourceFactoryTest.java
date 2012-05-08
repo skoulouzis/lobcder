@@ -208,12 +208,12 @@ public class WebDataResourceFactoryTest {
                 }
             }
             assertTrue(foundIt);
-            cat = new RDMSDLCatalog();
+            cat = new RDMSDLCatalog(new File(nl.uva.cs.lobcder.util.Constants.LOBCDER_CONF_DIR + "/datanucleus.properties"));
             Collection<StorageSite> all = cat.getAllSites();
 
             file.delete();
 
-//        RDMSDLCatalog cat = new RDMSDLCatalog();
+//        RDMSDLCatalog cat = new RDMSDLCatalog(new File(nl.uva.cs.lobcder.util.Constants.LOBCDER_CONF_DIR + "/datanucleus.properties"));
             entry = cat.getResourceEntryByLDRI(file.getPath());
             assertNull(entry);
 
@@ -253,7 +253,7 @@ public class WebDataResourceFactoryTest {
                 result.delete();
                 //        result = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH + ConstantsAndSettings.TEST_FOLDER_NAME_1);
                 //        assertNull(result);
-                cat = new RDMSDLCatalog();
+                cat = new RDMSDLCatalog(new File(nl.uva.cs.lobcder.util.Constants.LOBCDER_CONF_DIR + "/datanucleus.properties"));
                 entry = cat.getResourceEntryByLDRI(result.getPath());
                 assertNull(entry);
             } catch (Exception ex) {
@@ -381,7 +381,7 @@ public class WebDataResourceFactoryTest {
             String host = "localhost:8080";
             WebDataFileResource file = null;
             WebDataDirResource dir = null;
-            RDMSDLCatalog cat = new RDMSDLCatalog();
+            RDMSDLCatalog cat = new RDMSDLCatalog(new File(nl.uva.cs.lobcder.util.Constants.LOBCDER_CONF_DIR + "/datanucleus.properties"));
 
             WebDataResourceFactory instance = new WebDataResourceFactory();
             dir = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH + ConstantsAndSettings.TEST_FOLDER_NAME_1);
@@ -423,7 +423,7 @@ public class WebDataResourceFactoryTest {
 
             //Check if catalogue has the child entry with the new name 
             //if we don't have new catalog we get back the old child entry
-            cat = new RDMSDLCatalog();
+            cat = new RDMSDLCatalog(new File(nl.uva.cs.lobcder.util.Constants.LOBCDER_CONF_DIR + "/datanucleus.properties"));
             childEntry = cat.getResourceEntryByLDRI(file.getPath());
 
             assertEquals(childEntry.getLDRI().toString(), file.getPath().toString());

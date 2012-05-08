@@ -5,6 +5,7 @@
 package nl.uva.cs.lobcder.catalogue;
 
 import com.bradmcevoy.common.Path;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Properties;
@@ -22,9 +23,9 @@ public class RDMSDLCatalog implements IDLCatalogue {
     private static final Object lock = new Object();
     private final PersistenceManagerFactory pmf;
 
-    public RDMSDLCatalog() {
+    public RDMSDLCatalog(File propFile) {
 //        pmf = JDOHelper.getPersistenceManagerFactory("datanucleus.properties");
-        pmf = JDOHelper.getPersistenceManagerFactory(nl.uva.cs.lobcder.util.Constants.LOBCDER_CONF_DIR + "/datanucleus.properties");
+        pmf = JDOHelper.getPersistenceManagerFactory(propFile);//Path.path(nl.uva.cs.lobcder.util.Constants.LOBCDER_CONF_DIR + "/datanucleus.properties").toString());
     }
 
     @Override
