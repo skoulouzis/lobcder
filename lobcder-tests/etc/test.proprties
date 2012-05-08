@@ -1,4 +1,4 @@
-webdav.test.url=http://localhost:8080/lobcder-1.1-SNAPSHOT
+webdav.test.url=http://elab.lab.uvalight.net:8080/lobcder-1.1-SNAPSHOT
 webdav.test.username1=user1
 webdav.test.password1=passwd1
 
