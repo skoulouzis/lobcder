@@ -16,8 +16,9 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import nl.uva.cs.lobcder.resources.*;
-import nl.uva.cs.lobcder.util.ConstantsAndSettings;
 import nl.uva.cs.lobcder.util.Constants;
+import nl.uva.cs.lobcder.util.ConstantsAndSettings;
+import nl.uva.cs.lobcder.util.PropertiesLoader;
 import nl.uva.cs.lobcder.webDav.resources.UserThreadRDBMS;
 import static org.junit.Assert.*;
 import org.junit.*;
@@ -29,8 +30,7 @@ import org.junit.*;
 public class RDMSDLCatalogueTest {
 
 //    private static String[] names = new String[]{"storage1.prop", "storage2.prop", "storage3.prop"};
-    private static String[] names = new String[]{"storage1.prop"};
-
+//    private static String[] names = new String[]{"storage1.prop"};
     @BeforeClass
     public static void setUpClass() throws Exception {
     }
@@ -785,7 +785,7 @@ public class RDMSDLCatalogueTest {
             String uname = "uname2";
             Properties prop = new Properties();
             prop.setProperty(Constants.VPH_USERNAME, uname);
-            prop.setProperty(Constants.STORAGE_SITE_USERNAME, "vph_dev:user");
+            prop.setProperty(Constants.STORAGE_SITE_USERNAME, "non");
             prop.setProperty(Constants.STORAGE_SITE_PASSWORD, "non");
             prop.setProperty(Constants.STORAGE_SITE_ENDPOINT, "file:///" + System.getProperty("user.home") + "/deleteMe/");
 
@@ -874,7 +874,7 @@ public class RDMSDLCatalogueTest {
             String uname = "uname2";
             Properties prop = new Properties();
             prop.setProperty(Constants.VPH_USERNAME, uname);
-            prop.setProperty(Constants.STORAGE_SITE_USERNAME, "vph_dev:user");
+            prop.setProperty(Constants.STORAGE_SITE_USERNAME, "non");
             prop.setProperty(Constants.STORAGE_SITE_PASSWORD, "non");
             prop.setProperty(Constants.STORAGE_SITE_ENDPOINT, "file:///" + System.getProperty("user.home") + "/deleteMe/");
 
@@ -904,18 +904,19 @@ public class RDMSDLCatalogueTest {
         //to get the parent we get  No such database row exception for the 
         //StorageSite which makes the LogicalData not to detach properly
         RDMSDLCatalog catalogue = new RDMSDLCatalog(new File(nl.uva.cs.lobcder.util.Constants.LOBCDER_CONF_DIR + "/datanucleus.properties"));
-
-        //Init with some storage sites 
-        String propBasePath = System.getProperty("user.home") + File.separator
-                + "workspace" + File.separator + "lobcder"
-                + File.separator + "etc" + File.separator;
-        ArrayList<String> endpoints = new ArrayList<String>();
-
+        //Init with some storage sites
+        //        String propBasePath = System.getProperty("user.home") + File.separator
+        //                + "workspace" + File.separator + "lobcder"
+        //                + File.separator + "etc" + File.separator;
+        Properties[] props = PropertiesLoader.getStorageSitesProps();
+//        ArrayList<String> endpoints = new ArrayList<String>();
+        
         Properties prop = null;
-        for (String name : names) {
-            prop = getCloudProperties(propBasePath + name);
-            endpoints.add(prop.getProperty(Constants.STORAGE_SITE_ENDPOINT));
-            catalogue.registerStorageSite(prop);
+        for (Properties p : props) {
+//            prop = getCloudProperties(propBasePath + name);
+//            endpoints.add(prop.getProperty(Constants.STORAGE_SITE_ENDPOINT));
+            catalogue.registerStorageSite(p);
+             prop = p;
         }
 
         //Create root
@@ -1001,17 +1002,17 @@ public class RDMSDLCatalogueTest {
     private void populateStorageSites() throws FileNotFoundException, IOException, Exception {
         RDMSDLCatalog instance = new RDMSDLCatalog(new File(nl.uva.cs.lobcder.util.Constants.LOBCDER_CONF_DIR + "/datanucleus.properties"));
         instance.clearAllSites();
-        String propBasePath = System.getProperty("user.home") + File.separator
-                + "workspace" + File.separator + "lobcder"
-                + File.separator + "etc" + File.separator;
-        ArrayList<String> endpoints = new ArrayList<String>();
+//        String propBasePath = System.getProperty("user.home") + File.separator
+//                + "workspace" + File.separator + "lobcder"
+//                + File.separator + "etc" + File.separator;
+//        ArrayList<String> endpoints = new ArrayList<String>();
+        Properties[] props = PropertiesLoader.getStorageSitesProps();
 
-
-        for (String name : names) {
-            Properties prop = getCloudProperties(propBasePath + name);
-            endpoints.add(prop.getProperty(Constants.STORAGE_SITE_ENDPOINT));
-            instance.registerStorageSite(prop);
-            boolean exists = instance.storageSiteExists(prop);
+        for (Properties p : props) {
+//            Properties prop = getCloudProperties(propBasePath + name);
+//            endpoints.add(prop.getProperty(Constants.STORAGE_SITE_ENDPOINT));
+            instance.registerStorageSite(p);
+            boolean exists = instance.storageSiteExists(p);
             assertTrue(exists);
         }
     }

@@ -21,11 +21,12 @@ import nl.uva.vlet.data.StringUtil;
 public class RDMSDLCatalog implements IDLCatalogue {
 
     private static final Object lock = new Object();
-    private final PersistenceManagerFactory pmf;
+    private static PersistenceManagerFactory pmf;
+    private final File propFile;
 
     public RDMSDLCatalog(File propFile) {
 //        pmf = JDOHelper.getPersistenceManagerFactory("datanucleus.properties");
-        pmf = JDOHelper.getPersistenceManagerFactory(propFile);//Path.path(nl.uva.cs.lobcder.util.Constants.LOBCDER_CONF_DIR + "/datanucleus.properties").toString());
+        this.propFile = propFile;
     }
 
     @Override
@@ -33,7 +34,7 @@ public class RDMSDLCatalog implements IDLCatalogue {
         synchronized (lock) {
             //Check if it exists 
             String strLogicalResourceName = entry.getLDRI().toString();
-            PersistenceManager pm = pmf.getPersistenceManager();
+            PersistenceManager pm = getPmf().getPersistenceManager();
             Transaction tx = pm.currentTransaction();
             tx.setSerializeRead(Boolean.TRUE);
             try {
@@ -109,7 +110,7 @@ public class RDMSDLCatalog implements IDLCatalogue {
     @Override
     public ILogicalData getResourceEntryByLDRI(Path logicalResourceName) throws Exception {
         synchronized (lock) {
-            PersistenceManager pm = pmf.getPersistenceManager();
+            PersistenceManager pm = getPmf().getPersistenceManager();
             Transaction tx = pm.currentTransaction();
             tx.setSerializeRead(Boolean.TRUE);
             ILogicalData copy = null;
@@ -145,7 +146,7 @@ public class RDMSDLCatalog implements IDLCatalogue {
             debug("Unregister " + entry.getLDRI());
             //first remove this node from it's parent
             Path entriesParent = entry.getLDRI().getParent();
-            PersistenceManager pm = pmf.getPersistenceManager();
+            PersistenceManager pm = getPmf().getPersistenceManager();
             Transaction tx = pm.currentTransaction();
             tx.setSerializeRead(Boolean.TRUE);
             try {
@@ -235,7 +236,7 @@ public class RDMSDLCatalog implements IDLCatalogue {
     @Override
     public Boolean resourceEntryExists(ILogicalData entry) throws CatalogueException {
         synchronized (lock) {
-            PersistenceManager pm = pmf.getPersistenceManager();
+            PersistenceManager pm = getPmf().getPersistenceManager();
             Transaction tx = pm.currentTransaction();
             tx.setSerializeRead(Boolean.TRUE);
             ILogicalData copy = null;
@@ -266,7 +267,7 @@ public class RDMSDLCatalog implements IDLCatalogue {
     @Override
     public Collection<ILogicalData> getTopLevelResourceEntries() throws CatalogueException {
         synchronized (lock) {
-            PersistenceManager pm = pmf.getPersistenceManager();
+            PersistenceManager pm = getPmf().getPersistenceManager();
             Transaction tx = pm.currentTransaction();
             tx.setSerializeRead(Boolean.TRUE);
             Collection<ILogicalData> copy = null;
@@ -295,7 +296,7 @@ public class RDMSDLCatalog implements IDLCatalogue {
     public void renameEntry(Path oldPath, Path newPath) throws CatalogueException {
         synchronized (lock) {
             //Check if oldPath exists 
-            PersistenceManager pm = pmf.getPersistenceManager();
+            PersistenceManager pm = getPmf().getPersistenceManager();
             Transaction tx = pm.currentTransaction();
             tx.setSerializeRead(Boolean.TRUE);
             ILogicalData copy = null;
@@ -382,7 +383,7 @@ public class RDMSDLCatalog implements IDLCatalogue {
     public Collection<IStorageSite> getSitesByUname(String vphUname) throws CatalogueException {
         Collection<IStorageSite> copy = null;
         synchronized (lock) {
-            PersistenceManager pm = pmf.getPersistenceManager();
+            PersistenceManager pm = getPmf().getPersistenceManager();
             Transaction tx = pm.currentTransaction();
             tx.setSerializeRead(Boolean.TRUE);
             try {
@@ -411,7 +412,7 @@ public class RDMSDLCatalog implements IDLCatalogue {
         String ePoint = prop.getProperty(nl.uva.cs.lobcder.util.Constants.STORAGE_SITE_ENDPOINT);
         Collection<StorageSite> copy;
         synchronized (lock) {
-            PersistenceManager pm = pmf.getPersistenceManagerProxy();
+            PersistenceManager pm = getPmf().getPersistenceManagerProxy();
             Transaction tx = pm.currentTransaction();
             tx.setSerializeRead(Boolean.TRUE);
             try {
@@ -455,7 +456,7 @@ public class RDMSDLCatalog implements IDLCatalogue {
                 debug("Adding endpoint: " + endpoint);
                 StorageSite site = new StorageSite(endpoint, cred);
 
-                pm = pmf.getPersistenceManager();
+                pm = getPmf().getPersistenceManager();
                 tx = pm.currentTransaction();
                 tx.setSerializeRead(Boolean.TRUE);
                 tx.begin();
@@ -498,7 +499,7 @@ public class RDMSDLCatalog implements IDLCatalogue {
         PersistenceManager pm = null;
         synchronized (lock) {
             try {
-                pm = pmf.getPersistenceManager();
+                pm = getPmf().getPersistenceManager();
                 tx = pm.currentTransaction();
                 tx.setSerializeRead(Boolean.TRUE);
                 tx.begin();
@@ -537,7 +538,7 @@ public class RDMSDLCatalog implements IDLCatalogue {
 
     void clearAllSites() {
         synchronized (lock) {
-            PersistenceManager pm = pmf.getPersistenceManagerProxy();
+            PersistenceManager pm = getPmf().getPersistenceManagerProxy();
             Transaction tx = pm.currentTransaction();
             tx.setSerializeRead(Boolean.TRUE);
             try {
@@ -559,7 +560,7 @@ public class RDMSDLCatalog implements IDLCatalogue {
 
     public Collection<StorageSite> getAllSites() {
         synchronized (lock) {
-            PersistenceManager pm = pmf.getPersistenceManagerProxy();
+            PersistenceManager pm = getPmf().getPersistenceManagerProxy();
             Transaction tx = pm.currentTransaction();
             tx.setSerializeRead(Boolean.TRUE);
             try {
@@ -588,5 +589,15 @@ public class RDMSDLCatalog implements IDLCatalogue {
             return true;
         }
         return false;
+    }
+
+    /**
+     * @return the pmf
+     */
+    private PersistenceManagerFactory getPmf() {
+        if(pmf == null){
+            pmf = JDOHelper.getPersistenceManagerFactory(propFile);//Path.path(nl.uva.cs.lobcder.util.Constants.LOBCDER_CONF_DIR + "/datanucleus.properties").toString());
+        }
+        return pmf;
     }
 }

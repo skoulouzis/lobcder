@@ -12,6 +12,7 @@ import java.io.File;
 import com.bradmcevoy.common.Path;
 import java.util.Collection;
 import nl.uva.cs.lobcder.util.Constants;
+import nl.uva.cs.lobcder.util.PropertiesLoader;
 import nl.uva.vlet.vfs.VFSNode;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -26,18 +27,19 @@ import static org.junit.Assert.*;
  */
 public class StorageSiteTest {
 
-    private static String name = "storage1.prop";
+//    private static String name = "storage1.prop";
     private final String testEndpoint;
     private final Credential testCred;
     private final String vphUser;
 
     public StorageSiteTest() throws FileNotFoundException, IOException {
-        String propBasePath = System.getProperty("user.home") + File.separator
-                + "workspace" + File.separator + "lobcder"
-                + File.separator + "etc" + File.separator;
+//        String propBasePath = System.getProperty("user.home") + File.separator
+//                + "workspace" + File.separator + "lobcder"
+//                + File.separator + "etc" + File.separator;
 
 
-        Properties prop = getCloudProperties(propBasePath + name);
+//        Properties prop = getCloudProperties(propBasePath + name);
+        Properties prop = PropertiesLoader.getStorageSitesProps()[0];
         testEndpoint = prop.getProperty(Constants.STORAGE_SITE_ENDPOINT);
         vphUser = prop.getProperty(Constants.VPH_USERNAME);
 
@@ -87,10 +89,10 @@ public class StorageSiteTest {
         assertNotNull(result);
         VFSNode node = instance.getVNode(Path.path(strPath));
         assertNotNull(node);
-        
+
         assertEquals(node.getVRL(), result.getVRL());
     }
-    
+
     /**
      * Test of getEndpoint method, of class StorageSite.
      */
@@ -99,7 +101,7 @@ public class StorageSiteTest {
         System.out.println("getEndpoint");
         StorageSite instance = new StorageSite(testEndpoint, testCred);
         String result = instance.getEndpoint();
-        System.out.println("endpoint: "+result);
+        System.out.println("endpoint: " + result);
         assertEquals(testEndpoint, result);
     }
 
@@ -125,19 +127,18 @@ public class StorageSiteTest {
         Path path1 = Path.path(strPath1);
         String strPath2 = "file2";
         Path path2 = Path.path(strPath2);
-        
+
         instance.createVFSFile(path1);
         instance.createVFSFile(path2);
-        
+
         Collection<String> result = instance.getLogicalPaths();
         assertNotNull(result);
-        
+
         assertTrue(result.contains(strPath1));
         assertTrue(result.contains(strPath2));
-        
+
     }
-    
-    
+
     /**
      * Test of createVFSNode method, of class StorageSite.
      */
@@ -152,11 +153,11 @@ public class StorageSiteTest {
         VFSNode node = instance.getVNode(Path.path(strPath));
         assertNotNull(node);
         assertEquals(node.getVRL(), result.getVRL());
-        
-        
+
+
         strPath = "file3/file4";
         path = Path.path(strPath);
-        
+
         result = instance.createVFSFile(path);
         assertNotNull(result);
         node = instance.getVNode(Path.path(strPath));

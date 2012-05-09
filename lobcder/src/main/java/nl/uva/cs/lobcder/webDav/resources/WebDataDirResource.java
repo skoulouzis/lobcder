@@ -4,7 +4,6 @@
  */
 package nl.uva.cs.lobcder.webDav.resources;
 
-import nl.uva.cs.lobcder.util.Constants;
 import com.bradmcevoy.common.Path;
 import com.bradmcevoy.http.Request.Method;
 import com.bradmcevoy.http.*;
@@ -24,6 +23,7 @@ import nl.uva.cs.lobcder.resources.ILogicalData;
 import nl.uva.cs.lobcder.resources.IStorageSite;
 import nl.uva.cs.lobcder.resources.LogicalData;
 import nl.uva.cs.lobcder.resources.Metadata;
+import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.vlet.exception.VlException;
 import nl.uva.vlet.vfs.VFSNode;
 import nl.uva.vlet.vfs.VFile;
@@ -52,7 +52,7 @@ class WebDataDirResource implements FolderResource, CollectionResource {
     public CollectionResource createCollection(String newName) throws NotAuthorizedException, ConflictException, BadRequestException {
         try {
             debug("createCollection.");
-
+            
             Path newCollectionPath = Path.path(entry.getLDRI(), newName);
             debug("\t newCollectionPath: " + newCollectionPath);
             LogicalData newFolderEntry = new LogicalData(newCollectionPath, Constants.LOGICAL_FOLDER);

@@ -16,7 +16,7 @@
 <!--        <webdav.test.url>http://localhost:8080/lobcder-1.0-SNAPSHOT/</webdav.test.url>
         <webdav.test.username>user</webdav.test.username>
         <webdav.test.password>passwd</webdav.test.password>-->
-        <skipTests>false</skipTests>
+        <skipTests>true</skipTests>
     </properties>
 
     <dependencies>
@@ -71,52 +71,6 @@ there are no implementations to enhance
             <groupId>com.ettrema</groupId>
             <artifactId>milton-servlet</artifactId>
             <version>1.7.2</version>
-        </dependency>
-        
-        <dependency>
-            <groupId>nl.uva.vlet</groupId>
-            <artifactId>nl.uva.vlet.lbl.srm</artifactId>
-            <version>0.3</version>
-            <scope>runtime</scope>
-        </dependency>
-        
-        <dependency>
-            <groupId>nl.uva.vlet</groupId>
-            <artifactId>nl.uva.vlet.vfs.gftp</artifactId>
-            <version>1</version>
-            <scope>runtime</scope>
-        </dependency>
-
-        
-        
-
-        <dependency>
-            <groupId>nl.uva.vlet</groupId>
-            <artifactId>nl.uva.vlet.vfs.lfc</artifactId>
-            <version>1</version>
-            <scope>runtime</scope>
-        </dependency>
-        
-        <dependency>
-            <groupId>nl.uva.vlet</groupId>
-            <artifactId>nl.uva.vlet.vfs.srm</artifactId>
-            <version>1</version>
-            <scope>runtime</scope>
-        </dependency>
-        
-        
-        <dependency>
-            <groupId>nl.uva.vlet</groupId>
-            <artifactId>nl.uva.vlet.vfs.jcraft.ssh</artifactId>
-            <version>1</version>
-            <scope>runtime</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>nl.uva.vlet</groupId>
-            <artifactId>vlet-grid-globus-4.1</artifactId>
-            <version>4.1</version>
-            <scope>runtime</scope>
         </dependency>
 
         <dependency>
@@ -287,6 +241,54 @@ there are no implementations to enhance
             <groupId>nl.uva.vlet</groupId>
             <artifactId>vlet-vfs.cloud</artifactId>
             <version>1.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>nl.uva.vlet</groupId>
+            <artifactId>vlet-vfs.jcraft.ssh</artifactId>
+            <version>1.5.0-dev-0</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>nl.uva.vlet</groupId>
+            <artifactId>vlet-vfs.lfc</artifactId>
+            <version>1.5.0-dev-0</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>nl.uva.vlet</groupId>
+            <artifactId>vlet-vfs.srm</artifactId>
+            <version>1.5.0-dev-0</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>nl.uva.vlet</groupId>
+            <artifactId>vlet-grid.globus</artifactId>
+            <version>1.5.0-dev-0</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>nl.uva.vlet</groupId>
+            <artifactId>vlet-lbl.srm</artifactId>
+            <version>1.5.0-dev-0</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>nl.uva.vlet</groupId>
+            <artifactId>vlet-vfs.irods</artifactId>
+            <version>1.5.0-dev-0</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>nl.uva.vlet</groupId>
+            <artifactId>vlet-glite.lfc</artifactId>
+            <version>1.5.0-dev-0</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>nl.uva.vlet</groupId>
+            <artifactId>vlet-vfs.gftp</artifactId>
+            <version>1.5.0-dev-0</version>
+            <scope>runtime</scope>
         </dependency>
     </dependencies>
     
