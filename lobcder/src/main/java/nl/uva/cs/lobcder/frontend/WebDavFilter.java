@@ -8,7 +8,10 @@ import com.bradmcevoy.http.*;
 import com.bradmcevoy.http.exceptions.BadRequestException;
 import com.bradmcevoy.http.exceptions.ConflictException;
 import com.bradmcevoy.http.exceptions.NotAuthorizedException;
+import com.bradmcevoy.http.exceptions.NotFoundException;
 import com.bradmcevoy.http.http11.Http11ResponseHandler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import nl.uva.cs.lobcder.webDav.exceptions.ForbiddenException;
 import nl.uva.cs.lobcder.webDav.exceptions.UnauthorizedException;
 import nl.uva.cs.lobcder.webDav.exceptions.WebDavException;
@@ -20,10 +23,9 @@ import nl.uva.cs.lobcder.webDav.resources.WebDataResource;
  */
 class WebDavFilter implements Filter {
 
-
     @Override
-        public void process(FilterChain chain, Request request, Response response){
-            HttpManager manager = chain.getHttpManager();
+    public void process(FilterChain chain, Request request, Response response) {
+        HttpManager manager = chain.getHttpManager();
         Http11ResponseHandler responseHandler = manager.getResponseHandler();
 
         try {
@@ -36,16 +38,20 @@ class WebDavFilter implements Filter {
             }
 
             try {
-                handler.process(manager,request,response);
+                try {
+                    handler.process(manager, request, response);
+                } catch (NotFoundException ex) {
+                    throw new RuntimeException(ex);
+                }
             } catch (RuntimeException e) {
-                /* Milton wraps our WebDavException in a
-                 * RuntimeException.
+                /*
+                 * Milton wraps our WebDavException in a RuntimeException.
                  */
                 if (e.getCause() instanceof WebDavException) {
                     throw (WebDavException) e.getCause();
                 }
-                /* Milton also wraps critical errors that should not
-                 * be caught.
+                /*
+                 * Milton also wraps critical errors that should not be caught.
                  */
                 if (e.getCause() instanceof Error) {
                     throw (Error) e.getCause();
@@ -70,5 +76,4 @@ class WebDavFilter implements Filter {
             response.close();
         }
     }
-
 }
