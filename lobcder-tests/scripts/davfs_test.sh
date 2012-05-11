@@ -1,17 +1,18 @@
 #!/bin/bash
 
 
-LOBCDER_URL=http://localhost:8080/lobcder-1.0-SNAPSHOT/
+LOBCDER_URL=http://elab.lab.uvalight.net:8080/lobcder-1.0-SNAPSHOT
 MOUNT_POINT=/media/LOBCDER-TEST
+# MOUNT_POINT=/media/webdav.elab/skoulouz/
 DAV_USER=davuser
 DAV_PASS=dav_secret
 DIRNAME=lobcderTest
 TMP_TEST_DIR=/tmp/$DIRNAME
 
 
-USER_NAME1=$USER
+USER_NAME1=skoulouz
 HOST1=localhost
-PASS1=secret
+PASS1=hondos
 #------------------------------for client 1 -------------------------------------
 #Make mount point 
 # sshpass -p "$PASS1" ssh $USER_NAME1@$HOST1 "echo $PASS1 | sudo -S mkdir $MOUNT_POINT"
@@ -71,9 +72,9 @@ echo "----------------->$HOST1 Process time: $((END_TIME - START_TIME)) secs."
 #HOST2 
 #Process data in $MOUNT_POINT
 #Delete 
-USER_NAME2=$USER
-HOST2=localhost
-PASS2=secret2
+USER_NAME2=skoulouzis
+HOST2=149.156.10.138
+PASS2=pass@Amstel
 
 echo "Process pdf"
 START_TIME=$(date +%s)
