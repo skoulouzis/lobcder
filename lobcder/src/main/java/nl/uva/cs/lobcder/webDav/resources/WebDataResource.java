@@ -9,9 +9,12 @@ import com.bradmcevoy.http.PropFindableResource;
 import com.bradmcevoy.http.Request;
 import com.bradmcevoy.http.Request.Method;
 import com.bradmcevoy.http.Resource;
+import java.util.Collection;
 import java.util.Date;
+import nl.uva.cs.lobcder.catalogue.CatalogueException;
 import nl.uva.cs.lobcder.catalogue.IDLCatalogue;
 import nl.uva.cs.lobcder.resources.ILogicalData;
+import nl.uva.cs.lobcder.resources.IStorageSite;
 
 /**
  *
@@ -52,9 +55,22 @@ public class WebDataResource implements PropFindableResource, Resource {
 
     @Override
     public Object authenticate(String user, String password) {
-        debug("authenticate.");
-        debug("\t user: " + user);
-        debug("\t password: " + password);
+        try {
+            debug("authenticate.\n"
+                    + "\t user: " + user
+                    + "\t password: " + password);
+            Collection<IStorageSite> sites = logicalData.getStorageSites();
+            if (sites == null || sites.isEmpty()) {
+                sites = (Collection<IStorageSite>) catalogue.getSitesByUname(user);
+                if (sites == null || sites.isEmpty()) {
+                    debug("\t StorageSites for " + this.getName() + " are empty!");
+                    throw new RuntimeException("StorageSites for " + this.getName() + " are empty!");
+                }
+                logicalData.setStorageSites(sites);
+            }
+        } catch (CatalogueException ex) {
+            throw new RuntimeException(ex.getMessage());
+        }
         return user;
     }
 

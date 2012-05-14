@@ -39,27 +39,27 @@ public class WebDavServlet implements Servlet {
             javax.servlet.ServletResponse servletResponse) throws ServletException, IOException {
         HttpServletRequest req = (HttpServletRequest) servletRequest;
         HttpServletResponse resp = (HttpServletResponse) servletResponse;
-        
-        debug("HttpServletRequest \n" +
-                "\t getAuthType: "+req.getAuthType()+"\n"+
-                "\t getContentType: "+req.getContentType()+"\n"+
-                "\t getContextPath: "+req.getContextPath()+"\n"+
-                "\t getMethod: "+req.getMethod()+"\n"+
-                "\t getPathInfo: "+req.getPathInfo()+"\n"+
-                "\t getPathTranslated: "+req.getPathTranslated()+"\n"+
-                "\t getQueryString: "+req.getQueryString()+"\n"+
-                "\t getRemoteUser: "+req.getRemoteUser()+"\n"+
-                "\t getRequestURI: "+req.getRequestURI()+"\n"+
-                "\t getRequestedSessionId: "+req.getRequestedSessionId() );
-        
+
+        debug("HttpServletRequest \n"
+                + "\t getAuthType: " + req.getAuthType() + "\n"
+                + "\t getContentType: " + req.getContentType() + "\n"
+                + "\t getContextPath: " + req.getContextPath() + "\n"
+                + "\t getMethod: " + req.getMethod() + "\n"
+                + "\t getPathInfo: " + req.getPathInfo() + "\n"
+                + "\t getPathTranslated: " + req.getPathTranslated() + "\n"
+                + "\t getQueryString: " + req.getQueryString() + "\n"
+                + "\t getRemoteUser: " + req.getRemoteUser() + "\n"
+                + "\t getRequestURI: " + req.getRequestURI() + "\n"
+                + "\t getRequestedSessionId: " + req.getRequestedSessionId());
+
         try {
             originalRequest.set(req);
             originalResponse.set(resp);
             com.bradmcevoy.http.Request request = new com.bradmcevoy.http.ServletRequest(req);
             com.bradmcevoy.http.Response response = new com.bradmcevoy.http.ServletResponse(resp);
-                        
+
             httpManager.process(request, response);
-            
+
         } finally {
             originalRequest.remove();
             originalResponse.remove();
@@ -68,7 +68,6 @@ public class WebDavServlet implements Servlet {
         }
     }
 
-
     @Override
     public void init(ServletConfig config) throws ServletException {
         try {
@@ -76,17 +75,9 @@ public class WebDavServlet implements Servlet {
             // Note that the config variable may be null, in which case default handlers will be used
             // If present and blank, NO handlers will be configed
             List<String> authHandlers = loadAuthHandlersIfAny(config.getInitParameter("authentication.handler.classes"));
-            
+
             initFromFactoryFactory(authHandlers);
-//            if (resourceFactoryFactoryClassName != null && resourceFactoryFactoryClassName.length() > 0) {
-//                
-//            } else {
-//                
-//                String responseHandlerClassName = config.getInitParameter("response.handler.class");
-//                
-//                debug("responseHandlerClassName: " + responseHandlerClassName);
-//                init( responseHandlerClassName, authHandlers);
-//            }
+
             httpManager.init(new ApplicationConfig(config), httpManager);
         } catch (Exception ex) {
             debug("Exception starting WebDavServlet servlet " + ex);
@@ -95,8 +86,7 @@ public class WebDavServlet implements Servlet {
     }
 
     protected void init(String responseHandlerClassName, List<String> authHandlers) throws Exception {
-
-        ResourceFactory rf = new WebDataResourceFactory();
+        WebDataResourceFactory rf = new WebDataResourceFactory();
 
         WebDavResponseHandler responseHandler;
         if (responseHandlerClassName == null) {
@@ -141,7 +131,7 @@ public class WebDavServlet implements Servlet {
         } else {
             httpManager = new com.bradmcevoy.http.ServletHttpManager(rf, responseHandler, authService);
         }
-        
+
         httpManager.addFilter(0, new WebDavFilter());
     }
 
@@ -175,8 +165,8 @@ public class WebDavServlet implements Servlet {
     }
 
     private void debug(String msg) {
-        if(debug){
-        System.err.println(this.getClass().getSimpleName() + ": " + msg);
+        if (debug) {
+            System.err.println(this.getClass().getSimpleName() + ": " + msg);
 //        log.debug(msg);
         }
     }
@@ -184,7 +174,8 @@ public class WebDavServlet implements Servlet {
     /**
      * Returns null, or a list of configured authentication handler class names
      *
-     * @param initParameter - null, or the (possibly empty) list of comma seperated class names
+     * @param initParameter - null, or the (possibly empty) list of comma
+     * seperated class names
      * @return - null, or a possibly empty list of class names
      */
     private List<String> loadAuthHandlersIfAny(String initParameter) {

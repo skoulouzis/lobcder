@@ -23,4 +23,41 @@
             index.jsp
         </welcome-file>
     </welcome-file-list>
+    
+    
+    <security-constraint>
+        <web-resource-collection>
+            <web-resource-name>WebDavServlet</web-resource-name>
+            <url-pattern>/*</url-pattern>
+        </web-resource-collection>
+        <auth-constraint>
+            <role-name>betaTester</role-name>
+            <role-name>manager</role-name>
+        </auth-constraint>
+    </security-constraint>
+
+
+  <!-- Define the Login Configuration for this Application -->
+    <login-config>
+        <auth-method>BASIC</auth-method>
+        <realm-name>Tomcat Manager Application</realm-name>
+    </login-config>
+
+  <!-- Security roles referenced by this web application -->
+    <security-role>
+        <description>
+            The role that is required to access the HTML Manager pages
+        </description>
+        <role-name>manager</role-name>
+    </security-role>
+    
+    
+      <!-- Security roles referenced by this web application -->
+    <security-role>
+        <description>
+            The role that is required to access the HTML Manager pages
+        </description>
+        <role-name>betaTester</role-name>
+    </security-role>
+    
 </web-app>

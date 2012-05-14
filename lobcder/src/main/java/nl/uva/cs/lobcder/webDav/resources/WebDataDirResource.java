@@ -52,7 +52,7 @@ class WebDataDirResource implements FolderResource, CollectionResource {
     public CollectionResource createCollection(String newName) throws NotAuthorizedException, ConflictException, BadRequestException {
         try {
             debug("createCollection.");
-            
+
             Path newCollectionPath = Path.path(entry.getLDRI(), newName);
             debug("\t newCollectionPath: " + newCollectionPath);
             LogicalData newFolderEntry = new LogicalData(newCollectionPath, Constants.LOGICAL_FOLDER);
@@ -127,9 +127,23 @@ class WebDataDirResource implements FolderResource, CollectionResource {
 
     @Override
     public Object authenticate(String user, String password) {
-        debug("authenticate.\n"
-                + "\t user: " + user
-                + "\t password: " + password);
+        try {
+            debug("authenticate.\n"
+                    + "\t user: " + user
+                    + "\t password: " + password);
+            Collection<IStorageSite> sites = entry.getStorageSites();
+            if (sites == null || sites.isEmpty()) {
+                sites = (Collection<IStorageSite>) catalogue.getSitesByUname(user);
+
+                if (sites == null || sites.isEmpty()) {
+                    debug("\t StorageSites for " + this.getName() + " are empty!");
+                    throw new RuntimeException("StorageSites for " + this.getName() + " are empty!");
+                }
+                entry.setStorageSites(sites);
+            }
+        } catch (CatalogueException ex) {
+            throw new RuntimeException(ex.getMessage());
+        }
         return user;
     }
 
@@ -287,7 +301,7 @@ class WebDataDirResource implements FolderResource, CollectionResource {
 
     @Override
     public void sendContent(OutputStream out, Range range, Map<String, String> params, String contentType) throws IOException, NotAuthorizedException, BadRequestException {
-        //Not sure what it does
+        //List contents. Fix this to work with browsers 
         debug("sendContent.");
     }
 

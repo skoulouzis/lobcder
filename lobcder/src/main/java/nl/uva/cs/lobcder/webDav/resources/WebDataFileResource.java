@@ -59,7 +59,7 @@ public class WebDataFileResource implements
             debug("\t name: " + name);
             Path toCollectionLDRI = Path.path(collectionResource.getName());
             Path newLDRI = Path.path(toCollectionLDRI, name);
-            
+
             LogicalData newFolderEntry = new LogicalData(newLDRI, Constants.LOGICAL_FOLDER);
             newFolderEntry.getMetadata().setModifiedDate(System.currentTimeMillis());
             catalogue.registerResourceEntry(newFolderEntry);
@@ -188,7 +188,7 @@ public class WebDataFileResource implements
         debug("\t name: " + name);
         Path parent;
         Path tmpPath;
-        
+
         debug("\t rDestgetName: " + rDest.getName() + " name: " + name);
 
         Path dirPath = ((WebDataDirResource) rDest).getPath();
@@ -205,11 +205,11 @@ public class WebDataFileResource implements
             catalogue.renameEntry(logicalData.getLDRI(), newPath);
             ILogicalData newLogicData = catalogue.getResourceEntryByLDRI(newPath);
             logicalData = newLogicData;
-            
+
             WebDataDirResource dir = (WebDataDirResource) rDest;
             dir.setLogicalData(catalogue.getResourceEntryByLDRI(dirPath));
 
-            
+
         } catch (Exception ex) {
             Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, ex);
             if (ex.getMessage().contains("resource exists")) {
@@ -288,9 +288,22 @@ public class WebDataFileResource implements
 
     @Override
     public Object authenticate(String user, String password) {
-        debug("authenticate.\n"
-                + "\t user: " + user
-                + "\t password: " + password);
+        try {
+            debug("authenticate.\n"
+                    + "\t user: " + user
+                    + "\t password: " + password);
+            Collection<IStorageSite> sites = logicalData.getStorageSites();
+            if (sites == null || sites.isEmpty()) {
+                sites = (Collection<IStorageSite>) catalogue.getSitesByUname(user);
+                if (sites == null || sites.isEmpty()) {
+                    debug("\t StorageSites for " + this.getName() + " are empty!");
+                    throw new RuntimeException("StorageSites for " + this.getName() + " are empty!");
+                }
+                logicalData.setStorageSites(sites);
+            }
+        } catch (CatalogueException ex) {
+            throw new RuntimeException(ex.getMessage());
+        }
         return user;
     }
 

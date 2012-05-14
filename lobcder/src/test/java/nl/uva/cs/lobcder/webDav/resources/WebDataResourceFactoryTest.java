@@ -30,8 +30,17 @@ import org.junit.*;
  */
 public class WebDataResourceFactoryTest {
 
+    private static String vphUserName;
+    private static String passwd;
+
     @BeforeClass
     public static void setUpClass() throws Exception {
+        String propBasePath = System.getProperty("user.home") + File.separator
+                + "workspace" + File.separator + "lobcder-tests"
+                + File.separator + "etc" + File.separator + "test.proprties";
+        Properties prop = TestSettings.getTestProperties(propBasePath);
+        vphUserName = prop.getProperty("vph.username1");
+        passwd = prop.getProperty("vph.password1");
     }
 
     @AfterClass
@@ -70,13 +79,16 @@ public class WebDataResourceFactoryTest {
         WebDataDirResource result = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH + ConstantsAndSettings.TEST_FOLDER_NAME_1);
         if (result == null) {
             WebDataDirResource root = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH);
+            root.authenticate(vphUserName, passwd);
             assertNotNull(root);
             result = (WebDataDirResource) root.createCollection(ConstantsAndSettings.TEST_FOLDER_NAME_1);
         }
+        result.authenticate(vphUserName, passwd);
         checkResource(result);
 
         ByteArrayInputStream bais = new ByteArrayInputStream(ConstantsAndSettings.TEST_DATA.getBytes());
         WebDataFileResource file = (WebDataFileResource) result.createNew(ConstantsAndSettings.TEST_FILE_NAME_1, bais, new Long(ConstantsAndSettings.TEST_DATA.getBytes().length), "text/plain");
+        file.authenticate(vphUserName, passwd);
         checkChildren(result, file);
 
         result.delete();
@@ -97,9 +109,11 @@ public class WebDataResourceFactoryTest {
         WebDataDirResource result = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH + ConstantsAndSettings.TEST_FOLDER_NAME_1);
         if (result == null) {
             WebDataDirResource root = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH);
+            root.authenticate(vphUserName, passwd);
             assertNotNull(root);
             result = (WebDataDirResource) root.createCollection(ConstantsAndSettings.TEST_FOLDER_NAME_1);
         }
+        result.authenticate(vphUserName, passwd);
         checkResource(result);
 
         ByteArrayInputStream bais = new ByteArrayInputStream(ConstantsAndSettings.TEST_DATA.getBytes());
@@ -175,9 +189,11 @@ public class WebDataResourceFactoryTest {
             result = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH + ConstantsAndSettings.TEST_FOLDER_NAME_1);
             if (result == null) {
                 WebDataDirResource root = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH);
+                root.authenticate(vphUserName, passwd);
                 assertNotNull(root);
                 result = (WebDataDirResource) root.createCollection(ConstantsAndSettings.TEST_FOLDER_NAME_1);
             }
+            result.authenticate(vphUserName, passwd);
             checkResource(result);
 
 
@@ -273,9 +289,11 @@ public class WebDataResourceFactoryTest {
         WebDataDirResource result = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH + ConstantsAndSettings.TEST_FOLDER_NAME_1);
         if (result == null) {
             WebDataDirResource root = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH);
+            root.authenticate(vphUserName, passwd);
             assertNotNull(root);
             result = (WebDataDirResource) root.createCollection(ConstantsAndSettings.TEST_FOLDER_NAME_1);
         }
+        result.authenticate(vphUserName, passwd);
         checkResource(result);
 
         instance = new WebDataResourceFactory();
@@ -302,9 +320,11 @@ public class WebDataResourceFactoryTest {
         WebDataDirResource result = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH + ConstantsAndSettings.TEST_FOLDER_NAME_1);
         if (result == null) {
             WebDataDirResource root = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH);
+            root.authenticate(vphUserName, passwd);
             assertNotNull(root);
             result = (WebDataDirResource) root.createCollection(ConstantsAndSettings.TEST_FOLDER_NAME_1);
         }
+        result.authenticate(vphUserName, passwd);
         checkResource(result);
 
         ByteArrayInputStream bais = new ByteArrayInputStream(ConstantsAndSettings.TEST_DATA.getBytes());
@@ -343,9 +363,11 @@ public class WebDataResourceFactoryTest {
             dir = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH + ConstantsAndSettings.TEST_FOLDER_NAME_1);
             if (dir == null) {
                 WebDataDirResource root = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH);
+                root.authenticate(vphUserName, passwd);
                 assertNotNull(root);
                 dir = (WebDataDirResource) root.createCollection(ConstantsAndSettings.TEST_FOLDER_NAME_1);
             }
+            dir.authenticate(vphUserName, passwd);
             checkResource(dir);
 
             int count = 1;
@@ -387,9 +409,11 @@ public class WebDataResourceFactoryTest {
             dir = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH + ConstantsAndSettings.TEST_FOLDER_NAME_1);
             if (dir == null) {
                 WebDataDirResource root = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH);
+                root.authenticate(vphUserName, passwd);
                 assertNotNull(root);
                 dir = (WebDataDirResource) root.createCollection(ConstantsAndSettings.TEST_FOLDER_NAME_1);
             }
+            dir.authenticate(vphUserName, passwd);
             checkResource(dir);
 
             ByteArrayInputStream bais = new ByteArrayInputStream(ConstantsAndSettings.TEST_DATA.getBytes());
@@ -446,10 +470,9 @@ public class WebDataResourceFactoryTest {
         }
     }
 
-    
     @Test
     public void testGetTopLevel() throws Exception {
-                System.out.println("testMakeCollectionAddChildAndRenameChild");
+        System.out.println("testMakeCollectionAddChildAndRenameChild");
         String host = "localhost:8080";
         WebDataFileResource file = null;
         WebDataDirResource dir = null;
@@ -457,13 +480,14 @@ public class WebDataResourceFactoryTest {
         WebDataResourceFactory instance = new WebDataResourceFactory();
         WebDataDirResource root = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH);
         assertNotNull(root);
-        
+
         ByteArrayInputStream bais = new ByteArrayInputStream(ConstantsAndSettings.TEST_DATA.getBytes());
         file = (WebDataFileResource) root.createNew(ConstantsAndSettings.TEST_FILE_NAME_1, bais, new Long(ConstantsAndSettings.TEST_DATA.getBytes().length), "text/plain");
         checkChildren(root, file);
-        
+
         file.delete();
     }
+
     @Test
     public void testMake2Subcollections() throws Exception {
         System.out.println("testMakeCollectionAddChildAndRenameChild");
@@ -475,9 +499,11 @@ public class WebDataResourceFactoryTest {
         dir = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH + ConstantsAndSettings.TEST_FOLDER_NAME_1);
         if (dir == null) {
             WebDataDirResource root = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH);
+            root.authenticate(vphUserName, passwd);
             assertNotNull(root);
             dir = (WebDataDirResource) root.createCollection(ConstantsAndSettings.TEST_FOLDER_NAME_1);
         }
+        dir.authenticate(vphUserName, passwd);
         checkResource(dir);
         dir.createCollection("subCollection1");
         WebDataDirResource sub1 = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH + "/" + dir.getName() + "/subCollection1");
@@ -495,7 +521,7 @@ public class WebDataResourceFactoryTest {
     }
 
     @Test
-    public void testMultiThread() {
+    public void testMultiThread() throws FileNotFoundException, IOException {
         try {
             System.out.println("testMultiThread");
             Thread userThread1 = new UserThread(1);

@@ -9,10 +9,9 @@ import com.bradmcevoy.common.Path;
 import com.bradmcevoy.http.Resource;
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import nl.uva.cs.lobcder.catalogue.CatalogueException;
 import nl.uva.cs.lobcder.catalogue.RDMSDLCatalog;
@@ -29,9 +28,17 @@ public class UserThread extends Thread {
 
     private final int opNum;
     private static int counter = 0;
+    private final String vphUserName;
+    private final String passwd;
 
-    public UserThread(int opNmu) {
+    public UserThread(int opNmu) throws FileNotFoundException, IOException {
         this.opNum = opNmu;
+        String propBasePath = System.getProperty("user.home") + File.separator
+                + "workspace" + File.separator + "lobcder-tests"
+                + File.separator + "etc" + File.separator + "test.proprties";
+        Properties prop = TestSettings.getTestProperties(propBasePath);
+        vphUserName = prop.getProperty("vph.username1");
+        passwd = prop.getProperty("vph.password1");
     }
 
     @Override
@@ -59,17 +66,16 @@ public class UserThread extends Thread {
             String host = "localhost:8080";
             String fileName = "testFileThread" + getName();//ConstantsAndSettings.TEST_FILE_NAME_1;
             String collectionName = "/testCollection" + getName();
-            
+
             WebDataResourceFactory instance = new WebDataResourceFactory();
             WebDataDirResource result = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH + collectionName);
             if (result == null) {
                 WebDataDirResource root = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH);
+                root.authenticate(vphUserName, passwd);
                 assertNotNull(root);
-                Collection<IStorageSite> sites = root.getStorageSites();
-                assertFalse(sites.isEmpty());
-
-                result = (WebDataDirResource) root.createCollection(collectionName);
+                result = (WebDataDirResource) root.createCollection(ConstantsAndSettings.TEST_FOLDER_NAME_1);
             }
+            result.authenticate(vphUserName, passwd);
 
             assertNotNull(result);
             Collection<IStorageSite> sites = result.getStorageSites();
@@ -169,8 +175,8 @@ public class UserThread extends Thread {
         ILogicalData loaded = null;
         try {
             System.out.println("testUpdateResourceEntry");
-            LogicalData newEntry = new LogicalData(Path.path("testFileThread"+getName()), Constants.LOGICAL_FILE);
-            
+            LogicalData newEntry = new LogicalData(Path.path("testFileThread" + getName()), Constants.LOGICAL_FILE);
+
             instance.registerResourceEntry(newEntry);
             loaded = instance.getResourceEntryByLDRI(newEntry.getLDRI());
             boolean same = compareEntries(newEntry, loaded);
@@ -225,9 +231,9 @@ public class UserThread extends Thread {
         System.out.println("testRegisterMultipleResourceEntry");
         String ldri = null;
         String childLdri = null;
-         ldri = "/resource"+getName();
-         childLdri = "/child"+getName();
-         
+        ldri = "/resource" + getName();
+        childLdri = "/child" + getName();
+
         Path parentPath = Path.path(ldri);
         ILogicalData parent = new LogicalData(parentPath, Constants.LOGICAL_DATA);
 

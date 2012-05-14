@@ -110,8 +110,8 @@ public class StorageSite implements Serializable, IStorageSite {
                      
             storagePrefix = PropertiesLoader.getLobcderProperties().getProperty(Constants.LOBCDER_STORAGE_PREFIX);
             
-            vrl = new VRL(endpoint + "/" + storagePrefix);
-
+            vrl = new VRL(endpoint + "/" + storagePrefix+"/"+cred.getVPHUsername());
+            
             prop = new Properties();
 
             this.credentials = cred;
