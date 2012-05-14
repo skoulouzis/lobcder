@@ -154,16 +154,16 @@ public class WebDAVTest {
         //assertTrue("Allow header should include REBIND method", allow.contains("REBIND"));
         //assertTrue("Allow header should include UNBIND method", allow.contains("UNBIND"));
 
-        assertTrue("Allow header should include MKCOL method", allow.contains("COPY"));
-        assertTrue("Allow header should include GET method", allow.contains("DELETE"));
-        assertTrue("Allow header should include DELETE method", allow.contains("MKCOL"));
-        assertTrue("Allow header should include MOVE method", allow.contains("PROPFIND"));
-        assertTrue("Allow header should include PROPFIND method", allow.contains("GET"));
-        assertTrue("Allow header should include COPY method", allow.contains("HEAD"));
-        assertTrue("Allow header should include OPTIONS method", allow.contains("PROPPATCH"));
-        assertTrue("Allow header should include PUT method", allow.contains("OPTIONS"));
-        assertTrue("Allow header should include PROPPATCH method", allow.contains("MOVE"));
-        assertTrue("Allow header should include HEAD method", allow.contains("PUT"));
+        assertTrue("Allow header should include COPY method", allow.contains("COPY"));
+        assertTrue("Allow header should include DELETE method", allow.contains("DELETE"));
+        assertTrue("Allow header should include MKCOL method", allow.contains("MKCOL"));
+        assertTrue("Allow header should include PROPFIND method", allow.contains("PROPFIND"));
+        assertTrue("Allow header should include GET method", allow.contains("GET"));
+        assertTrue("Allow header should include HEAD method", allow.contains("HEAD"));
+        assertTrue("Allow header should include PROPPATCH method", allow.contains("PROPPATCH"));
+        assertTrue("Allow header should include OPTIONS method", allow.contains("OPTIONS"));
+        assertTrue("Allow header should include MOVE method", allow.contains("MOVE"));
+        assertTrue("Allow header should include PUT method", allow.contains("PUT"));
     }
 
     //     create test resource, make it referenceable, check resource id, move resource, check again
