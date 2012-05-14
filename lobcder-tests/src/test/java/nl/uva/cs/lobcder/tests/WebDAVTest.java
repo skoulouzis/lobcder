@@ -5,6 +5,7 @@
 package nl.uva.cs.lobcder.tests;
 
 import java.io.File;
+import org.apache.commons.httpclient.contrib.ssl.EasySSLProtocolSocketFactory;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -28,6 +29,8 @@ import org.apache.commons.httpclient.methods.HeadMethod;
 import org.apache.commons.httpclient.methods.OptionsMethod;
 import org.apache.commons.httpclient.methods.PutMethod;
 import org.apache.commons.httpclient.methods.StringRequestEntity;
+import org.apache.commons.httpclient.protocol.Protocol;
+import org.apache.commons.httpclient.protocol.ProtocolSocketFactory;
 import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.MultiStatus;
 import org.apache.jackrabbit.webdav.MultiStatusResponse;
@@ -80,16 +83,27 @@ public class WebDAVTest {
             this.root += "/";
         }
 
-        this.username = prop.getProperty(("webdav.test.username"), "");
+        this.username = prop.getProperty(("webdav.test.username1"), "");
         if (username == null) {
             username = "user";
         }
         assertTrue(username != null);
-        this.password = prop.getProperty(("webdav.test.password"), "");
+        this.password = prop.getProperty(("webdav.test.password1"), "");
         if (password == null) {
             password = "passwd";
         }
         assertTrue(password != null);
+
+        int port = uri.getPort();
+        if (port == -1) {
+            port = 443;
+        }
+
+        ProtocolSocketFactory socketFactory =
+                new EasySSLProtocolSocketFactory();
+        Protocol https = new Protocol("https", socketFactory, port);
+        Protocol.registerProtocol("https", https);
+
         this.client = new HttpClient();
         this.client.getState().setCredentials(
                 new AuthScope(this.uri.getHost(), this.uri.getPort()),
