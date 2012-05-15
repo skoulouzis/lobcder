@@ -38,6 +38,7 @@ class WebDataDirResource implements FolderResource, CollectionResource {
     private ILogicalData entry;
     private final IDLCatalogue catalogue;
     private boolean debug = true;
+    private String user;
 
     public WebDataDirResource(IDLCatalogue catalogue, ILogicalData entry) throws IOException, Exception {
         this.entry = entry;
@@ -186,18 +187,21 @@ class WebDataDirResource implements FolderResource, CollectionResource {
                 + "\t auth.getUser(): " + user + "\n"
                 + "\t auth.getTag(): " + tag);
 
-        Collection<IStorageSite> sites = entry.getStorageSites();
-        if (sites == null || sites.isEmpty()) {
-            try {
-                sites = (Collection<IStorageSite>) catalogue.getSitesByUname(user);
-                
-                if (sites == null || sites.isEmpty()) {
-                    debug("\t StorageSites for " + this.getName() + " are empty!");
-                    throw new RuntimeException("User "+user+" has StorageSites for " + this.getName());
+        if (canUseResource(user)) {
+            this.user = user;
+            Collection<IStorageSite> sites = entry.getStorageSites();
+            if (sites == null || sites.isEmpty()) {
+                try {
+                    sites = (Collection<IStorageSite>) catalogue.getSitesByUname(user);
+
+                    if (sites == null || sites.isEmpty()) {
+                        debug("\t StorageSites for " + this.getName() + " are empty!");
+                        throw new RuntimeException("User " + user + " has StorageSites for " + this.getName());
+                    }
+                    entry.setStorageSites(sites);
+                } catch (CatalogueException ex) {
+                    throw new RuntimeException(ex.getMessage());
                 }
-                entry.setStorageSites(sites);
-            } catch (CatalogueException ex) {
-                throw new RuntimeException(ex.getMessage());
             }
         }
         return true;
@@ -500,5 +504,13 @@ class WebDataDirResource implements FolderResource, CollectionResource {
 
     void setLogicalData(ILogicalData updatedLogicalData) {
         this.entry = updatedLogicalData;
+    }
+
+    private boolean canUseResource(String user) {
+        return true;
+    }
+
+    void setUser(String uname) {
+        this.user = uname;
     }
 }

@@ -25,7 +25,7 @@ public class WebDataResourceFactory implements ResourceFactory {
     private IDLCatalogue catalogue;
     private boolean debug = false;
     //Hardcoded for now. We need to find a way to get the username
-//    private String uname = "uname1";
+    private String uname;
 
     public WebDataResourceFactory() throws Exception {
         String confDir = nl.uva.cs.lobcder.util.Constants.LOBCDER_CONF_DIR;
@@ -47,22 +47,24 @@ public class WebDataResourceFactory implements ResourceFactory {
             //Gets the root path. If instead we called :'ldri = Path.path(strPath);' we get back '/lobcder-1.0-SNAPSHOT'
             debug("getResource:  strPath: " + strPath + " path: " + Path.path(strPath) + " ldri: " + ldri);
             debug("getResource:  host: " + host + " path: " + ldri);
-//            debug("getResource:  uname : " + this.uname);
+            debug("getResource:  uname : " + this.uname);
             
-//            Collection<IStorageSite> sites;
+            Collection<IStorageSite> sites;
             if (ldri.isRoot() || ldri.toString().equals("")) {
                 root = new LogicalData(ldri, Constants.LOGICAL_FOLDER);
-//                sites = root.getStorageSites();
-//                if (sites == null || sites.isEmpty()) {
-//                    sites = (Collection<IStorageSite>) catalogue.getSitesByUname(uname);
-//
-//                    if (sites == null || sites.isEmpty()) {
-//                        debug("\t StorageSites for " + ldri + " are empty!");
-//                        throw new IOException("StorageSites for " + ldri + " are empty!");
-//                    }
-//                    root.setStorageSites(sites);
-//                }
-                return new WebDataDirResource(catalogue, root);
+                sites = root.getStorageSites();
+                if (sites == null || sites.isEmpty()) {
+                    sites = (Collection<IStorageSite>) catalogue.getSitesByUname(uname);
+
+                    if (sites == null || sites.isEmpty()) {
+                        debug("\t StorageSites for " + ldri + " are empty!");
+                        throw new IOException("StorageSites for " + ldri + " are empty!");
+                    }
+                    root.setStorageSites(sites);
+                }
+                WebDataDirResource webRoot = new WebDataDirResource(catalogue, root);
+                webRoot.setUser(uname);
+                return webRoot;
             }
 
             ILogicalData entry = catalogue.getResourceEntryByLDRI(ldri);
@@ -134,4 +136,8 @@ public class WebDataResourceFactory implements ResourceFactory {
 //        properties.load(new FileInputStream(f));
 //        return properties;
 //    }
+
+    public void setUserName(String remoteUser) {
+        this.uname = remoteUser;
+    }
 }

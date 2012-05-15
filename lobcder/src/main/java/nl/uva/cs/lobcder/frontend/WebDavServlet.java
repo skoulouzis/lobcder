@@ -33,6 +33,7 @@ public class WebDavServlet implements Servlet {
     private ServletConfig config;
 //    private Logger log = LoggerFactory.getLogger(this.getClass());
     private static final boolean debug = true;
+    private ResourceFactory rf;
 
     @Override
     public void service(javax.servlet.ServletRequest servletRequest,
@@ -55,8 +56,12 @@ public class WebDavServlet implements Servlet {
         try {
             originalRequest.set(req);
             originalResponse.set(resp);
+            if (rf != null && rf instanceof WebDataResourceFactory) {
+                ((WebDataResourceFactory) rf).setUserName(req.getRemoteUser());
+            }
             com.bradmcevoy.http.Request request = new com.bradmcevoy.http.ServletRequest(req);
             com.bradmcevoy.http.Response response = new com.bradmcevoy.http.ServletResponse(resp);
+
 
             httpManager.process(request, response);
 
@@ -86,7 +91,7 @@ public class WebDavServlet implements Servlet {
     }
 
     protected void init(String responseHandlerClassName, List<String> authHandlers) throws Exception {
-        WebDataResourceFactory rf = new WebDataResourceFactory();
+        rf = new WebDataResourceFactory();
 
         WebDavResponseHandler responseHandler;
         if (responseHandlerClassName == null) {
@@ -196,7 +201,7 @@ public class WebDavServlet implements Servlet {
     protected void initFromFactoryFactory(List<String> authHandlers) throws ServletException {
         com.bradmcevoy.http.ResourceFactoryFactory rff = new WebDataResourceFactoryFactory();
         rff.init();
-        ResourceFactory rf = rff.createResourceFactory();
+        rf = rff.createResourceFactory();
         WebDavResponseHandler responseHandler = rff.createResponseHandler();
         init(rf, responseHandler, authHandlers);
     }

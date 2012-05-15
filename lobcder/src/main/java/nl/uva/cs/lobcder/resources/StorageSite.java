@@ -142,7 +142,7 @@ public class StorageSite implements Serializable, IStorageSite {
     public VFSNode getVNode(Path path) throws VlException {
         return getVfsClient().openLocation(getVrl().append(path.toString()));
     }
-
+    
     @Override
     public VFSNode createVFSFile(Path path) throws VlException {
         getVfsClient().mkdirs(getVrl(), true);

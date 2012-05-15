@@ -39,12 +39,13 @@ public class WebDataFileResource implements
         com.bradmcevoy.http.FileResource {
 
     private final IDLCatalogue catalogue;
-    private ILogicalData logicalData;
+    private ILogicalData entry;
     private static final boolean debug = true;
+    private String user;
 
     public WebDataFileResource(IDLCatalogue catalogue, ILogicalData logicalData) throws CatalogueException, Exception {
         this.catalogue = catalogue;
-        this.logicalData = logicalData;
+        this.entry = logicalData;
         if (!logicalData.getType().equals(Constants.LOGICAL_FILE)) {
             throw new Exception("The logical data has the wonrg type: " + logicalData.getType());
         }
@@ -71,13 +72,13 @@ public class WebDataFileResource implements
     @Override
     public void delete() throws NotAuthorizedException, ConflictException, BadRequestException {
         try {
-            Collection<IStorageSite> sites = logicalData.getStorageSites();
+            Collection<IStorageSite> sites = entry.getStorageSites();
             if (sites != null && !sites.isEmpty()) {
                 for (IStorageSite s : sites) {
-                    s.deleteVNode(logicalData.getPDRI());
+                    s.deleteVNode(entry.getPDRI());
                 }
             }
-            catalogue.unregisterResourceEntry(logicalData);
+            catalogue.unregisterResourceEntry(entry);
         } catch (CatalogueException ex) {
             throw new BadRequestException(this, ex.toString());
         } catch (VlException ex) {
@@ -87,7 +88,7 @@ public class WebDataFileResource implements
 
     @Override
     public Long getContentLength() {
-        Metadata meta = logicalData.getMetadata();
+        Metadata meta = entry.getMetadata();
         if (meta != null) {
             return meta.getLength();
         }
@@ -100,8 +101,8 @@ public class WebDataFileResource implements
 
         String type = "";
         ArrayList<String> fileContentTypes = null;
-        if (logicalData.getMetadata() != null) {
-            fileContentTypes = logicalData.getMetadata().getContentTypes();
+        if (entry.getMetadata() != null) {
+            fileContentTypes = entry.getMetadata().getContentTypes();
         }
 
         if (accepts != null && fileContentTypes != null && !fileContentTypes.isEmpty()) {
@@ -150,13 +151,13 @@ public class WebDataFileResource implements
         try {
 
             VFile vFile;
-            if (!logicalData.hasPhysicalData()) {
-                vFile = (VFile) logicalData.createPhysicalData();
+            if (!entry.hasPhysicalData()) {
+                vFile = (VFile) entry.createPhysicalData();
             } else {
-                vFile = (VFile) logicalData.getVFSNode();
+                vFile = (VFile) entry.getVFSNode();
             }
             if (vFile == null) {
-                throw new IOException("Could not locate physical data source for " + logicalData.getLDRI());
+                throw new IOException("Could not locate physical data source for " + entry.getLDRI());
             }
 
             in = vFile.getInputStream();
@@ -195,16 +196,16 @@ public class WebDataFileResource implements
         debug("\t rDestgetUniqueId: " + rDest.getUniqueId());
 
         Path newPath = Path.path(dirPath, name);
-        parent = logicalData.getLDRI().getParent();
+        parent = entry.getLDRI().getParent();
         if (newPath.isRelative() && parent != null) {
             tmpPath = Path.path(parent, name);
             newPath = tmpPath;
         }
         try {
-            debug("\t rename: " + logicalData.getLDRI() + " to " + newPath);
-            catalogue.renameEntry(logicalData.getLDRI(), newPath);
+            debug("\t rename: " + entry.getLDRI() + " to " + newPath);
+            catalogue.renameEntry(entry.getLDRI(), newPath);
             ILogicalData newLogicData = catalogue.getResourceEntryByLDRI(newPath);
-            logicalData = newLogicData;
+            entry = newLogicData;
 
             WebDataDirResource dir = (WebDataDirResource) rDest;
             dir.setLogicalData(catalogue.getResourceEntryByLDRI(dirPath));
@@ -270,7 +271,7 @@ public class WebDataFileResource implements
 
     protected void debug(String msg) {
         if (debug) {
-            System.err.println(this.getClass().getSimpleName() + "." + logicalData.getLDRI() + ": " + msg);
+            System.err.println(this.getClass().getSimpleName() + "." + entry.getLDRI() + ": " + msg);
         }
 
 //        log.debug(msg);
@@ -278,32 +279,20 @@ public class WebDataFileResource implements
 
     @Override
     public String getUniqueId() {
-        return String.valueOf(logicalData.getUID());
+        return String.valueOf(entry.getUID());
     }
 
     @Override
     public String getName() {
-        return logicalData.getLDRI().getName();
+        return entry.getLDRI().getName();
     }
 
     @Override
     public Object authenticate(String user, String password) {
-        try {
-            debug("authenticate.\n"
-                    + "\t user: " + user
-                    + "\t password: " + password);
-            Collection<IStorageSite> sites = logicalData.getStorageSites();
-            if (sites == null || sites.isEmpty()) {
-                sites = (Collection<IStorageSite>) catalogue.getSitesByUname(user);
-                if (sites == null || sites.isEmpty()) {
-                    debug("\t StorageSites for " + this.getName() + " are empty!");
-                    throw new RuntimeException("StorageSites for " + this.getName() + " are empty!");
-                }
-                logicalData.setStorageSites(sites);
-            }
-        } catch (CatalogueException ex) {
-            throw new RuntimeException(ex.getMessage());
-        }
+
+        debug("authenticate.\n"
+                + "\t user: " + user
+                + "\t password: " + password);
         return user;
     }
 
@@ -359,6 +348,23 @@ public class WebDataFileResource implements
                 + "\t auth.getUri(): " + uri + "\n"
                 + "\t auth.getUser(): " + user + "\n"
                 + "\t auth.getTag(): " + tag);
+
+        if (canUseResource(user)) {
+            this.user = user;
+            Collection<IStorageSite> sites = entry.getStorageSites();
+            if (sites == null || sites.isEmpty()) {
+                try {
+                    sites = (Collection<IStorageSite>) catalogue.getSitesByUname(user);
+                    if (sites == null || sites.isEmpty()) {
+                        debug("\t StorageSites for " + this.getName() + " are empty!");
+                        throw new RuntimeException("User " + user + " has StorageSites for " + this.getName());
+                    }
+                    entry.setStorageSites(sites);
+                } catch (CatalogueException ex) {
+                    throw new RuntimeException(ex.getMessage());
+                }
+            }
+        }
         return true;
     }
 
@@ -370,8 +376,8 @@ public class WebDataFileResource implements
     @Override
     public Date getModifiedDate() {
         debug("getModifiedDate.");
-        if (logicalData.getMetadata() != null && logicalData.getMetadata().getModifiedDate() != null) {
-            return new Date(logicalData.getMetadata().getModifiedDate());
+        if (entry.getMetadata() != null && entry.getMetadata().getModifiedDate() != null) {
+            return new Date(entry.getMetadata().getModifiedDate());
         }
         return null;
     }
@@ -381,7 +387,7 @@ public class WebDataFileResource implements
         debug("checkRedirect.");
         switch (request.getMethod()) {
             case GET:
-                if (logicalData.isRedirectAllowed()) {
+                if (entry.isRedirectAllowed()) {
                     //Replica selection algorithm 
                     return null;
                 }
@@ -395,32 +401,36 @@ public class WebDataFileResource implements
     @Override
     public Date getCreateDate() {
         debug("getCreateDate.");
-        if (logicalData.getMetadata() != null && logicalData.getMetadata().getCreateDate() != null) {
-            return new Date(logicalData.getMetadata().getCreateDate());
+        if (entry.getMetadata() != null && entry.getMetadata().getCreateDate() != null) {
+            return new Date(entry.getMetadata().getCreateDate());
         }
         return null;
     }
 
     Path getPath() {
-        return this.logicalData.getLDRI();
+        return this.entry.getLDRI();
     }
 
     private void initMetadata() {
 
-        Metadata meta = this.logicalData.getMetadata();
+        Metadata meta = this.entry.getMetadata();
         Long createDate = meta.getCreateDate();
         if (createDate == null) {
             meta.setCreateDate(System.currentTimeMillis());
-            logicalData.setMetadata(meta);
+            entry.setMetadata(meta);
         }
         Long modifiedDate = meta.getModifiedDate();
         if (modifiedDate == null) {
             meta.setModifiedDate(System.currentTimeMillis());
-            logicalData.setMetadata(meta);
+            entry.setMetadata(meta);
         }
     }
 
     Collection<IStorageSite> getStorageSites() {
-        return this.logicalData.getStorageSites();
+        return this.entry.getStorageSites();
+    }
+
+    private boolean canUseResource(String user) {
+        return true;
     }
 }
