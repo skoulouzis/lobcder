@@ -30,7 +30,7 @@ public class StorageSiteTest {
 //    private static String name = "storage1.prop";
     private final String testEndpoint;
     private final Credential testCred;
-    private final String vphUser;
+    private final String[] vphUsers;
 
     public StorageSiteTest() throws FileNotFoundException, IOException {
 //        String propBasePath = System.getProperty("user.home") + File.separator
@@ -41,9 +41,9 @@ public class StorageSiteTest {
 //        Properties prop = getCloudProperties(propBasePath + name);
         Properties prop = PropertiesLoader.getStorageSitesProps()[0];
         testEndpoint = prop.getProperty(Constants.STORAGE_SITE_ENDPOINT);
-        vphUser = prop.getProperty(Constants.VPH_USERNAME);
+        vphUsers = prop.getProperty(Constants.VPH_USERNAMES).split(",");
 
-        testCred = new Credential(vphUser);
+        testCred = new Credential(vphUsers);
         String siteUname = prop.getProperty(Constants.STORAGE_SITE_USERNAME);
         testCred.setStorageSiteUsername(siteUname);
         String passwd = prop.getProperty(Constants.STORAGE_SITE_PASSWORD);
@@ -112,8 +112,10 @@ public class StorageSiteTest {
     public void testGetVPHUsername() throws Exception {
         System.out.println("getVPHUsername");
         StorageSite instance = new StorageSite(testEndpoint, testCred);
-        String result = instance.getVPHUsername();
-        assertEquals(vphUser, result);
+        Collection<String> result = instance.getVPHUsernames();
+        for(String s : vphUsers){
+            assertTrue(result.contains(s));
+        }
     }
 
     /**

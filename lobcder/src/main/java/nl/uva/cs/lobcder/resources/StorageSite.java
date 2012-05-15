@@ -9,6 +9,7 @@ import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Properties;
 import java.util.logging.Level;
@@ -79,8 +80,13 @@ public class StorageSite implements Serializable, IStorageSite {
     @Persistent(defaultFetchGroup = "true")
     @Element
     private Collection<String> logicalPaths;
+    @Join
+    @Persistent(defaultFetchGroup="true")
+    @Element(types = String.class)
+    @Order(column = "VPH_USERNAMES")
+    private Collection<String> vphUsernames;
     @Persistent
-    private String vphUsername;
+    private String vphUsernamesCSV;
     @Persistent(defaultFetchGroup = "true")
     private Credential credentials;
     private Properties prop;
@@ -89,7 +95,7 @@ public class StorageSite implements Serializable, IStorageSite {
     private VRSContext context;
     private VFSClient vfsClient;
     @NotPersistent
-    public static String storagePrefix="LOBCDER-REPLICA-v1.1";
+    public static String storagePrefix = "LOBCDER-REPLICA-v1.1";
     @NotPersistent
     private static final boolean debug = false;
 
@@ -103,15 +109,23 @@ public class StorageSite implements Serializable, IStorageSite {
             if (cred == null) {
                 throw new NullPointerException("Credentials are null");
             }
-            if (cred.getVPHUsername() == null) {
+            if (cred.getVPHUsernames() == null) {
                 throw new NullPointerException("vph Username is null");
             }
-            vphUsername = cred.getVPHUsername();
-                     
+            vphUsernames = Arrays.asList(cred.getVPHUsernames());
+
+            vphUsernamesCSV = "";
+            String prefix = "";
+            for (String n : vphUsernames) {
+                vphUsernamesCSV += prefix;
+                prefix = ",";
+                vphUsernamesCSV += n;
+            }
+
             storagePrefix = PropertiesLoader.getLobcderProperties().getProperty(Constants.LOBCDER_STORAGE_PREFIX);
-            
-            vrl = new VRL(endpoint + "/" + storagePrefix+"/"+cred.getVPHUsername());
-            
+
+            vrl = new VRL(endpoint + "/" + storagePrefix);
+
             prop = new Properties();
 
             this.credentials = cred;
@@ -151,13 +165,13 @@ public class StorageSite implements Serializable, IStorageSite {
     }
 
     @Override
-    public String getVPHUsername() {
-        return vphUsername;
+    public Collection<String> getVPHUsernames() {
+        return this.vphUsernames;
     }
 
     private void initVFS() throws VlException, MalformedURLException {
         this.vfsClient = new VFSClient();
-        
+
         context = this.vfsClient.getVRSContext();
         //Bug in sftp: We have to put the username in the url 
         info = context.getServerInfoFor(getVrl(), true);
@@ -195,7 +209,11 @@ public class StorageSite implements Serializable, IStorageSite {
     public boolean LDRIHasPhysicalData(Path ldri) throws VlException {
         if (!logicalPaths.contains(ldri.toString())) {
             VRL newVRL = getVrl().append(ldri.toString());
-            return getVfsClient().existsPath(newVRL);
+            boolean hasPhysicalData = getVfsClient().existsPath(newVRL);
+            if(hasPhysicalData){
+                logicalPaths.add(ldri.toString());
+            }
+            return hasPhysicalData;
         }
         return logicalPaths.contains(ldri.toString());
     }
@@ -258,7 +276,7 @@ public class StorageSite implements Serializable, IStorageSite {
         }
         return vrl;
     }
-    
+
     public void setLogicalPaths(Collection<String> logicalPaths) {
         this.logicalPaths = logicalPaths;
     }
@@ -280,5 +298,10 @@ public class StorageSite implements Serializable, IStorageSite {
     @Override
     public void removeLogicalPath(Path pdrI) {
         this.logicalPaths.remove(pdrI.toString());
+    }
+
+    @Override
+    public String getVPHUsernamesCSV() {
+        return vphUsernamesCSV;
     }
 }

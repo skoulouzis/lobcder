@@ -7,6 +7,9 @@ package nl.uva.cs.lobcder.webDav.resources;
 import nl.uva.cs.lobcder.util.Constants;
 import com.bradmcevoy.common.Path;
 import com.bradmcevoy.http.Resource;
+import com.bradmcevoy.http.exceptions.BadRequestException;
+import com.bradmcevoy.http.exceptions.ConflictException;
+import com.bradmcevoy.http.exceptions.NotAuthorizedException;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.util.ArrayList;
@@ -58,31 +61,11 @@ public class UserThreadRDBMS extends Thread {
     private void op1() {
         try {
             String host = "localhost:8080";
-            String fileName = null;
-            String collectionName = null;
-            if (this.getName().equals("T1")) {
-                fileName = "testFileThread1";//ConstantsAndSettings.TEST_FILE_NAME_1;
-                collectionName = ConstantsAndSettings.TEST_FOLDER_NAME_1;
-            } else if (this.getName().equals("T2")) {
-                fileName = "testFileThread2";///ConstantsAndSettings.TEST_FILE_NAME_2;
-                collectionName = ConstantsAndSettings.TEST_FOLDER_NAME_2;
-            } else if (this.getName().equals("T3")) {
-                fileName = "testFileThread3";//ConstantsAndSettings.TEST_FILE_NAME_3;
-                collectionName = ConstantsAndSettings.TEST_FOLDER_NAME_3;
-            }
+            String fileName = "testFileThread"+getName();
+            String collectionName = "/testCollection"+getName();
 
             WebDataResourceFactory instance = new WebDataResourceFactory();
-            WebDataDirResource result = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH + collectionName);
-            if (result == null) {
-                WebDataDirResource root = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH);
-                assertNotNull(root);
-                Collection<IStorageSite> sites = root.getStorageSites();
-                assertFalse(sites.isEmpty());
-
-                result = (WebDataDirResource) root.createCollection(collectionName);
-            }
-
-            assertNotNull(result);
+            WebDataDirResource result = getTestDir(instance, host, collectionName);
             Collection<IStorageSite> sites = result.getStorageSites();
             assertFalse(sites.isEmpty());
 
@@ -276,7 +259,7 @@ public class UserThreadRDBMS extends Thread {
 
             lParent = new LogicalData(parentPath, Constants.LOGICAL_FOLDER);
             ArrayList<IStorageSite> sites = new ArrayList<IStorageSite>();
-            sites.add(new StorageSite("file:///tmp", new Credential("user1")));
+            sites.add(new StorageSite("file:///tmp", new Credential("user1".split(","))));
             lParent.setStorageSites(sites);
             Collection<IStorageSite> theSites = lParent.getStorageSites();
 
@@ -319,5 +302,22 @@ public class UserThreadRDBMS extends Thread {
 
     private void debug(String msg) {
         System.err.println(this.getClass().getName() + "." + this.getName() + ": " + msg);
+    }
+
+    private WebDataDirResource getTestDir(WebDataResourceFactory instance, String host, String collectionName) throws NotAuthorizedException, ConflictException, BadRequestException {
+        WebDataDirResource result = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH + collectionName);
+        if (result == null) {
+            WebDataDirResource root = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH);
+            assertNotNull(root);
+            Collection<IStorageSite> sites = root.getStorageSites();
+            assertFalse(sites.isEmpty());
+
+            result = (WebDataDirResource) root.createCollection(collectionName);
+        }
+
+        assertNotNull(result);
+        Collection<IStorageSite> sites = result.getStorageSites();
+        assertFalse(sites.isEmpty());
+        return result;
     }
 }

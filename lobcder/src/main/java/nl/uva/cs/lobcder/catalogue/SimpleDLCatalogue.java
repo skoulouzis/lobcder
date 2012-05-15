@@ -87,24 +87,23 @@ public class SimpleDLCatalogue implements IDLCatalogue {
             Collection<StorageSite> results;
             Collection<StorageSite> deleteStorageSites = new ArrayList<StorageSite>();
             String epoint;
-            String uname;
             try {
                 tx.begin();
 //            debug("persistEntry. DB UID class: " + id.getClass().getName() + " UID: " + id);
                 //work around to remove duplicated storage sites 
                 if (storageSites != null && !storageSites.isEmpty()) {
                     for (IStorageSite s : storageSites) {
-                        uname = s.getVPHUsername();
+                        Collection<String> uname = s.getVPHUsernames();
                         epoint = s.getEndpoint();
                         Query q = pm.newQuery(StorageSite.class);
 
-                        q.setFilter("vphUsername == uname && endpoint == epoint");
+                        q.setFilter("vphUsernames == uname && endpoint == epoint");
                         q.declareParameters(uname.getClass().getName() + " uname, " + epoint.getClass().getName() + " epoint");
 
 
                         results = (Collection<StorageSite>) q.execute(uname, epoint);
                         for (StorageSite ss : results) {
-                            if (s.getVPHUsername().equals(ss.getVPHUsername()) && s.getEndpoint().equals(ss.getEndpoint())) {
+                            if (s.getVPHUsernames().equals(ss.getVPHUsernames()) && s.getEndpoint().equals(ss.getEndpoint())) {
                                 deleteStorageSites.add(ss);
                             }
                         }
@@ -523,7 +522,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                 tx.begin();
                 Query q = pm.newQuery(StorageSite.class);
 
-                q.setFilter("vphUsername == vphUname");
+                q.setFilter("vphUsernames == vphUname");
                 q.declareParameters(vphUname.getClass().getName() + " vphUname");
                 
                 results = (AbstractCollection<IStorageSite>) q.execute(vphUname);
@@ -594,7 +593,8 @@ public class SimpleDLCatalogue implements IDLCatalogue {
 
     @Override
     public void registerStorageSite(Properties prop) throws CatalogueException {
-        Credential cred = new Credential(prop.getProperty(Constants.VPH_USERNAME));
+        String[] vphUsers = prop.getProperty(nl.uva.cs.lobcder.util.Constants.VPH_USERNAMES).split(",");
+        Credential cred = new Credential(vphUsers);
         cred.setStorageSiteUsername(prop.getProperty(Constants.STORAGE_SITE_USERNAME));
         cred.setStorageSitePassword(prop.getProperty(Constants.STORAGE_SITE_PASSWORD));
         String endpoint = prop.getProperty(Constants.STORAGE_SITE_ENDPOINT);
@@ -628,7 +628,7 @@ public class SimpleDLCatalogue implements IDLCatalogue {
 
     @Override
     public boolean storageSiteExists(Properties prop) throws CatalogueException {
-        String uname = prop.getProperty(Constants.VPH_USERNAME);
+        String uname = prop.getProperty(Constants.VPH_USERNAMES);
         String ssUname = Constants.STORAGE_SITE_USERNAME;
         String ePoint = prop.getProperty(Constants.STORAGE_SITE_ENDPOINT);
 
@@ -646,11 +646,11 @@ public class SimpleDLCatalogue implements IDLCatalogue {
                 //This query, will return objects of type DataResourceEntry
                 Query q = pm.newQuery(StorageSite.class);
 
-                q.setFilter("endpoint == ePoint && vphUsername == uname");
+                q.setFilter("endpoint == ePoint && vphUsernames == uname");
                 q.declareParameters(ePoint.getClass().getName() + " ePoint, " + uname.getClass().getName() + " uname");
                 ss = (Collection<StorageSite>) q.execute(ePoint, uname);
                 for (StorageSite s : ss) {
-                    if (s.getEndpoint().equals(ePoint) && s.getVPHUsername().equals(uname)) {
+                    if (s.getEndpoint().equals(ePoint) && s.getVPHUsernames().equals(uname)) {
                         hit++;
                         storageSite = s;
                     }
@@ -694,7 +694,9 @@ public class SimpleDLCatalogue implements IDLCatalogue {
             if (sites != null && !sites.isEmpty()) {
                 AbstractCollection<IStorageSite> copySites = new ArrayList<IStorageSite>();
                 for (IStorageSite s : sites) {
-                    cred = new Credential(s.getVPHUsername());
+                    String[] names =new String[s.getVPHUsernames().size()];
+                    names = s.getVPHUsernames().toArray(names);
+                    cred = new Credential(names);
                     cred.setStorageSitePassword(s.getCredentials().getStorageSitePassword());
                     cred.setStorageSiteUsername(s.getCredentials().getStorageSiteUsername());
                     copySites.add(new StorageSite(s.getEndpoint(), cred));

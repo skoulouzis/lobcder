@@ -54,7 +54,7 @@ public class LogicalDataTest {
             }
             if (sites == null) {
                 sites = new ArrayList<IStorageSite>();
-                site = new StorageSite("file:///" + System.getProperty("java.io.tmpdir"), new Credential("user1"));
+                site = new StorageSite("file:///" + System.getProperty("java.io.tmpdir"), new Credential("user1".split(",")));
                 sites.add(site);
             }
 

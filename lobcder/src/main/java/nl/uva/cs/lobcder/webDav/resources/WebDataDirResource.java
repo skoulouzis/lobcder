@@ -127,23 +127,9 @@ class WebDataDirResource implements FolderResource, CollectionResource {
 
     @Override
     public Object authenticate(String user, String password) {
-        try {
-            debug("authenticate.\n"
-                    + "\t user: " + user
-                    + "\t password: " + password);
-            Collection<IStorageSite> sites = entry.getStorageSites();
-            if (sites == null || sites.isEmpty()) {
-                sites = (Collection<IStorageSite>) catalogue.getSitesByUname(user);
-
-                if (sites == null || sites.isEmpty()) {
-                    debug("\t StorageSites for " + this.getName() + " are empty!");
-                    throw new RuntimeException("StorageSites for " + this.getName() + " are empty!");
-                }
-                entry.setStorageSites(sites);
-            }
-        } catch (CatalogueException ex) {
-            throw new RuntimeException(ex.getMessage());
-        }
+        debug("authenticate.\n"
+                + "\t user: " + user
+                + "\t password: " + password);
         return user;
     }
 
@@ -199,6 +185,21 @@ class WebDataDirResource implements FolderResource, CollectionResource {
                 + "\t auth.getUri(): " + uri + "\n"
                 + "\t auth.getUser(): " + user + "\n"
                 + "\t auth.getTag(): " + tag);
+
+        Collection<IStorageSite> sites = entry.getStorageSites();
+        if (sites == null || sites.isEmpty()) {
+            try {
+                sites = (Collection<IStorageSite>) catalogue.getSitesByUname(user);
+                
+                if (sites == null || sites.isEmpty()) {
+                    debug("\t StorageSites for " + this.getName() + " are empty!");
+                    throw new RuntimeException("User "+user+" has StorageSites for " + this.getName());
+                }
+                entry.setStorageSites(sites);
+            } catch (CatalogueException ex) {
+                throw new RuntimeException(ex.getMessage());
+            }
+        }
         return true;
     }
 

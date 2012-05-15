@@ -58,7 +58,7 @@ public class WebDataDirResourceTest {
 
             String endpoint = "file:///tmp/";
             String vphUser = "user1";
-            Credential cred = new Credential(vphUser);
+            Credential cred = new Credential(vphUser.split(","));
             site = new StorageSite(endpoint, cred);
 
             sites = new ArrayList<IStorageSite>();

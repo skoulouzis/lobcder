@@ -20,15 +20,14 @@ public interface IStorageSite {
 
     String getEndpoint();
 
-    String getVPHUsername();
+    Collection<String> getVPHUsernames();
 
     Collection<String> getLogicalPaths();
     
     boolean LDRIHasPhysicalData(Path ldri)throws VlException;
     
     VFSNode getVNode(Path path) throws VlException;
-    
-    
+        
     VFSNode createVFSFile(Path path) throws VlException;
 
     public Credential getCredentials();
@@ -40,4 +39,6 @@ public interface IStorageSite {
     public VFSClient getVfsClient() throws VlException;
 
     public void removeLogicalPath(Path pdrI);
+    
+    public String getVPHUsernamesCSV();
 }

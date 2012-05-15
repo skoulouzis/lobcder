@@ -744,7 +744,7 @@ public class RDMSDLCatalogueTest {
 
             lParent = new LogicalData(parentPath, Constants.LOGICAL_FOLDER);
             ArrayList<IStorageSite> sites = new ArrayList<IStorageSite>();
-            sites.add(new StorageSite("file:///tmp", new Credential("user1")));
+            sites.add(new StorageSite("file:///tmp", new Credential("user1".split(","))));
             lParent.setStorageSites(sites);
             Collection<IStorageSite> theSites = lParent.getStorageSites();
 
@@ -784,7 +784,7 @@ public class RDMSDLCatalogueTest {
         try {
             String uname = "uname2";
             Properties prop = new Properties();
-            prop.setProperty(Constants.VPH_USERNAME, uname);
+            prop.setProperty(Constants.VPH_USERNAMES, uname);
             prop.setProperty(Constants.STORAGE_SITE_USERNAME, "non");
             prop.setProperty(Constants.STORAGE_SITE_PASSWORD, "non");
             prop.setProperty(Constants.STORAGE_SITE_ENDPOINT, "file:///" + System.getProperty("user.home") + "/deleteMe/");
@@ -798,7 +798,7 @@ public class RDMSDLCatalogueTest {
             assertFalse(result.isEmpty());
 
             for (IStorageSite s : result) {
-                assertEquals(s.getVPHUsername(), uname);
+                assertTrue(s.getVPHUsernames().contains(uname));
             }
 
         } finally {
@@ -873,7 +873,7 @@ public class RDMSDLCatalogueTest {
             instance = new RDMSDLCatalog(new File(nl.uva.cs.lobcder.util.Constants.LOBCDER_CONF_DIR + "/datanucleus.properties"));
             String uname = "uname2";
             Properties prop = new Properties();
-            prop.setProperty(Constants.VPH_USERNAME, uname);
+            prop.setProperty(Constants.VPH_USERNAMES, uname);
             prop.setProperty(Constants.STORAGE_SITE_USERNAME, "non");
             prop.setProperty(Constants.STORAGE_SITE_PASSWORD, "non");
             prop.setProperty(Constants.STORAGE_SITE_ENDPOINT, "file:///" + System.getProperty("user.home") + "/deleteMe/");
@@ -887,7 +887,7 @@ public class RDMSDLCatalogueTest {
             assertFalse(result.isEmpty());
 
             for (IStorageSite s : result) {
-                assertEquals(s.getVPHUsername(), uname);
+                assertTrue(s.getVPHUsernames().contains(uname));
             }
         } catch (CatalogueException ex) {
             Logger.getLogger(RDMSDLCatalogueTest.class.getName()).log(Level.SEVERE, null, ex);
@@ -924,7 +924,7 @@ public class RDMSDLCatalogueTest {
         Collection<IStorageSite> sites;
         sites = root.getStorageSites();
         if (sites == null || sites.isEmpty()) {
-            sites = (Collection<IStorageSite>) catalogue.getSitesByUname(prop.getProperty(Constants.VPH_USERNAME));
+            sites = (Collection<IStorageSite>) catalogue.getSitesByUname(prop.getProperty(Constants.VPH_USERNAMES));
             root.setStorageSites(sites);
             catalogue.registerResourceEntry(root);
         }

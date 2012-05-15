@@ -6,7 +6,12 @@ package nl.uva.cs.lobcder.webDav.resources;
 
 import nl.uva.cs.lobcder.util.Constants;
 import com.bradmcevoy.common.Path;
+import com.bradmcevoy.http.Auth;
+import com.bradmcevoy.http.Request;
 import com.bradmcevoy.http.Resource;
+import com.bradmcevoy.http.exceptions.BadRequestException;
+import com.bradmcevoy.http.exceptions.ConflictException;
+import com.bradmcevoy.http.exceptions.NotAuthorizedException;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -34,7 +39,7 @@ public class UserThread extends Thread {
     public UserThread(int opNmu) throws FileNotFoundException, IOException {
         this.opNum = opNmu;
         String propBasePath = System.getProperty("user.home") + File.separator
-                + "workspace" + File.separator + "lobcder-tests"
+                + "workspace" + File.separator + "lobcder"
                 + File.separator + "etc" + File.separator + "test.proprties";
         Properties prop = TestSettings.getTestProperties(propBasePath);
         vphUserName = prop.getProperty("vph.username1");
@@ -65,19 +70,11 @@ public class UserThread extends Thread {
         try {
             String host = "localhost:8080";
             String fileName = "testFileThread" + getName();//ConstantsAndSettings.TEST_FILE_NAME_1;
-            String collectionName = "/testCollection" + getName();
+            String collectionName = "/testCollectionThread" + getName();
 
             WebDataResourceFactory instance = new WebDataResourceFactory();
-            WebDataDirResource result = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH + collectionName);
-            if (result == null) {
-                WebDataDirResource root = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH);
-                root.authenticate(vphUserName, passwd);
-                assertNotNull(root);
-                result = (WebDataDirResource) root.createCollection(ConstantsAndSettings.TEST_FOLDER_NAME_1);
-            }
-            result.authenticate(vphUserName, passwd);
 
-            assertNotNull(result);
+            WebDataDirResource result = getTestDir(instance, host, collectionName);
             Collection<IStorageSite> sites = result.getStorageSites();
             assertFalse(sites.isEmpty());
 
@@ -102,6 +99,7 @@ public class UserThread extends Thread {
 
             instance = new WebDataResourceFactory();
             result = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH + collectionName);
+            result.authorise(null, Request.Method.HEAD, new Auth(vphUserName, new Object()));
             assertNotNull(result);
             sites = result.getStorageSites();
             assertFalse(sites.isEmpty());
@@ -131,6 +129,9 @@ public class UserThread extends Thread {
 
             result.delete();
             result = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH + collectionName);
+            if (result != null) {
+                result.authorise(null, Request.Method.HEAD, new Auth(vphUserName, new Object()));
+            }
             assertNull(result);
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -274,7 +275,7 @@ public class UserThread extends Thread {
 
             lParent = new LogicalData(parentPath, Constants.LOGICAL_FOLDER);
             ArrayList<IStorageSite> sites = new ArrayList<IStorageSite>();
-            sites.add(new StorageSite("file:///tmp", new Credential("user1")));
+            sites.add(new StorageSite("file:///tmp", new Credential("user1".split(","))));
             lParent.setStorageSites(sites);
             Collection<IStorageSite> theSites = lParent.getStorageSites();
 
@@ -313,5 +314,20 @@ public class UserThread extends Thread {
             }
         }
         return false;
+    }
+
+    private WebDataDirResource getTestDir(WebDataResourceFactory instance, String host, String collectionName) throws NotAuthorizedException, ConflictException, BadRequestException {
+        WebDataDirResource result = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH + collectionName);
+        if (result == null) {
+            WebDataDirResource root = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH);
+            root.authorise(null, Request.Method.HEAD, new Auth(vphUserName, new Object()));
+            assertNotNull(root);
+            result = (WebDataDirResource) root.createCollection(collectionName);
+        }
+        result.authorise(null, Request.Method.HEAD, new Auth(vphUserName, new Object()));
+        assertNotNull(result);
+        Collection<IStorageSite> sites = result.getStorageSites();
+        assertFalse(sites.isEmpty());
+        return result;
     }
 }

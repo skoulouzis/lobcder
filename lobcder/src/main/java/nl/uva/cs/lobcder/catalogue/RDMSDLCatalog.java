@@ -72,13 +72,14 @@ public class RDMSDLCatalog implements IDLCatalogue {
 //                //work around to remove duplicated storage sites ??
                 if (storageSites != null && !storageSites.isEmpty()) {
                     for (IStorageSite s : storageSites) {
-                        String uname = s.getVPHUsername();
+                        String unamesCSV = s.getVPHUsernamesCSV();
+                        
                         String epoint = s.getEndpoint();
                         Collection<String> newLogicalPaths = s.getLogicalPaths();
                         q = pm.newQuery(StorageSite.class);
-                        q.declareParameters(uname.getClass().getName() + " uname, " + epoint.getClass().getName() + " epoint");
-                        q.setFilter("vphUsername == uname && endpoint == epoint");
-                        Collection<StorageSite> results = (Collection<StorageSite>) q.execute(uname, epoint);
+                        q.declareParameters(unamesCSV.getClass().getName() + " unamesCSV, " + epoint.getClass().getName() + " epoint");
+                        q.setFilter("vphUsernamesCSV == unamesCSV && endpoint == epoint");
+                        Collection<StorageSite> results = (Collection<StorageSite>) q.execute(unamesCSV, epoint);
                         Collection<StorageSite> updatedResults = new ArrayList<StorageSite>();
                         if (results != null) {
                             for (StorageSite loadedSite : results) {
@@ -390,7 +391,7 @@ public class RDMSDLCatalog implements IDLCatalogue {
                 tx.begin();
                 Query q = pm.newQuery(StorageSite.class);
 
-                q.setFilter("vphUsername == vphUname");
+                q.setFilter("vphUsernames.contains(vphUname)");
                 q.declareParameters(vphUname.getClass().getName() + " vphUname");
                 Collection<IStorageSite> results = (Collection<IStorageSite>) q.execute(vphUname);
                 copy = pm.detachCopyAll(results);
@@ -408,7 +409,7 @@ public class RDMSDLCatalog implements IDLCatalogue {
 
     @Override
     public boolean storageSiteExists(Properties prop) throws CatalogueException {
-        String uname = prop.getProperty(nl.uva.cs.lobcder.util.Constants.VPH_USERNAME);
+        String unameCSV = prop.getProperty(nl.uva.cs.lobcder.util.Constants.VPH_USERNAMES);
         String ePoint = prop.getProperty(nl.uva.cs.lobcder.util.Constants.STORAGE_SITE_ENDPOINT);
         Collection<StorageSite> copy;
         synchronized (lock) {
@@ -419,11 +420,11 @@ public class RDMSDLCatalog implements IDLCatalogue {
                 tx.begin();
                 //This query, will return objects of type DataResourceEntry
                 Query q = pm.newQuery(StorageSite.class);
-
-                q.setFilter("endpoint == ePoint && vphUsername == uname");
-                q.declareParameters(ePoint.getClass().getName() + " ePoint, " + uname.getClass().getName() + " uname");
+                
+                q.setFilter("endpoint == ePoint && vphUsernamesCSV == unameCSV");
+                q.declareParameters(ePoint.getClass().getName() + " ePoint, " + unameCSV.getClass().getName() + " unameCSV");
                 //                q.setUnique(true);
-                Collection<StorageSite> StorageSites = (Collection<StorageSite>) q.execute(ePoint, uname);
+                Collection<StorageSite> StorageSites = (Collection<StorageSite>) q.execute(ePoint, unameCSV);
                 copy = pm.detachCopyAll(StorageSites);
                 tx.commit();
             } finally {
@@ -443,7 +444,8 @@ public class RDMSDLCatalog implements IDLCatalogue {
 
     @Override
     public void registerStorageSite(Properties prop) throws CatalogueException {
-        Credential cred = new Credential(prop.getProperty(nl.uva.cs.lobcder.util.Constants.VPH_USERNAME));
+        String[] vphUsers = prop.getProperty(nl.uva.cs.lobcder.util.Constants.VPH_USERNAMES).split(",");
+        Credential cred = new Credential(vphUsers);
         cred.setStorageSiteUsername(prop.getProperty(nl.uva.cs.lobcder.util.Constants.STORAGE_SITE_USERNAME));
         cred.setStorageSitePassword(prop.getProperty(nl.uva.cs.lobcder.util.Constants.STORAGE_SITE_PASSWORD));
         String endpoint = prop.getProperty(nl.uva.cs.lobcder.util.Constants.STORAGE_SITE_ENDPOINT);
@@ -463,14 +465,14 @@ public class RDMSDLCatalog implements IDLCatalogue {
 
                 Query q = pm.newQuery(StorageSite.class);
                 String ePoint = site.getEndpoint();
-                String uname = site.getVPHUsername();
-
+                Collection<String> unameCSV = site.getVPHUsernames();
+                
                 q.setFilter(
-                        "endpoint == ePoint && vphUsername == uname");
-                q.declareParameters(ePoint.getClass().getName() + " ePoint, " + uname.getClass().getName() + " uname");
+                        "endpoint == ePoint && vphUsernamesCSV == unameCSV");
+                q.declareParameters(ePoint.getClass().getName() + " ePoint, " + unameCSV.getClass().getName() + " unameCSV");
                 q.setUnique(
                         true);
-                StorageSite storageSite = (StorageSite) q.execute(ePoint, uname);
+                StorageSite storageSite = (StorageSite) q.execute(ePoint, unameCSV);
 
                 pm.detachCopy(storageSite);
                 if (storageSite
