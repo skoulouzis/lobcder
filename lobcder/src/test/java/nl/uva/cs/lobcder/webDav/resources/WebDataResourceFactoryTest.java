@@ -411,6 +411,7 @@ public class WebDataResourceFactoryTest {
         WebDataDirResource dir = null;
 
         WebDataResourceFactory instance = new WebDataResourceFactory();
+        instance.setUserName(vphUserName);
         WebDataDirResource root = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH);
         root.authorise(null, Request.Method.HEAD, new Auth(vphUserName, new Object()));
         assertNotNull(root);
@@ -511,6 +512,7 @@ public class WebDataResourceFactoryTest {
     }
 
     private WebDataDirResource getTestDir(WebDataResourceFactory instance, String host) throws NotAuthorizedException, ConflictException, BadRequestException, VlException {
+        instance.setUserName(vphUserName);
         WebDataDirResource result = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH + ConstantsAndSettings.TEST_FOLDER_NAME_1);
         if (result == null) {
             WebDataDirResource root = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH);

@@ -50,7 +50,7 @@ public class WebDataResourceFactory implements ResourceFactory {
             debug("getResource:  uname : " + this.uname);
             
             Collection<IStorageSite> sites;
-            if (ldri.isRoot() || ldri.toString().equals("")) {
+            if (ldri.isRoot() || ldri.toString().equals("") ) {
                 root = new LogicalData(ldri, Constants.LOGICAL_FOLDER);
                 sites = root.getStorageSites();
                 if (sites == null || sites.isEmpty()) {
