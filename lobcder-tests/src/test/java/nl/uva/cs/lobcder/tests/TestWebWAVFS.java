@@ -4,34 +4,29 @@
  */
 package nl.uva.cs.lobcder.tests;
 
-import org.apache.commons.httpclient.methods.GetMethod;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import org.apache.jackrabbit.webdav.security.Privilege;
-import org.apache.jackrabbit.webdav.security.Principal;
-import org.apache.jackrabbit.webdav.Status;
-import org.apache.jackrabbit.webdav.MultiStatusResponse;
-import org.apache.jackrabbit.webdav.DavException;
-import org.apache.jackrabbit.webdav.MultiStatus;
-import org.apache.commons.httpclient.methods.StringRequestEntity;
-import org.apache.jackrabbit.webdav.client.methods.PutMethod;
-import java.io.IOException;
-import org.apache.jackrabbit.webdav.client.methods.PropFindMethod;
-import org.apache.jackrabbit.webdav.DavConstants;
-import org.apache.jackrabbit.webdav.property.DavPropertySet;
-import org.apache.commons.httpclient.UsernamePasswordCredentials;
-import org.apache.commons.httpclient.auth.AuthScope;
 import java.io.File;
+import java.io.IOException;
 import java.net.URI;
 import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpStatus;
+import org.apache.commons.httpclient.UsernamePasswordCredentials;
+import org.apache.commons.httpclient.auth.AuthScope;
+import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.httpclient.methods.StringRequestEntity;
+import org.apache.jackrabbit.webdav.*;
 import org.apache.jackrabbit.webdav.client.methods.DeleteMethod;
+import org.apache.jackrabbit.webdav.client.methods.PropFindMethod;
+import org.apache.jackrabbit.webdav.client.methods.PutMethod;
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
-import org.junit.Before;
-
-import org.junit.Test;
+import org.apache.jackrabbit.webdav.property.DavPropertySet;
+import org.apache.jackrabbit.webdav.security.Principal;
+import org.apache.jackrabbit.webdav.security.Privilege;
 import static org.junit.Assert.*;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  *
