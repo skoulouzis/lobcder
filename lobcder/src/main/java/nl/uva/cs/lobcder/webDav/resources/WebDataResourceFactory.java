@@ -23,7 +23,7 @@ public class WebDataResourceFactory implements ResourceFactory {
 //    private Logger log = LoggerFactory.getLogger(WebDataResourceFactory.class);
     public static final String REALM = "vph-share";
     private IDLCatalogue catalogue;
-    private boolean debug = false;
+    private boolean debug = true;
     //Hardcoded for now. We need to find a way to get the username
     private String uname;
 
@@ -40,8 +40,7 @@ public class WebDataResourceFactory implements ResourceFactory {
     @Override
     public Resource getResource(String host, String strPath) {
 
-        Path ldri = Path.path(strPath).getStripFirst();
-        LogicalData root;
+        Path ldri = Path.path(new File(strPath).getPath()).getStripFirst();
         try {
 
             //Gets the root path. If instead we called :'ldri = Path.path(strPath);' we get back '/lobcder-1.0-SNAPSHOT'
@@ -51,7 +50,7 @@ public class WebDataResourceFactory implements ResourceFactory {
             
             Collection<IStorageSite> sites;
             if (ldri.isRoot() || ldri.toString().equals("") ) {
-                root = new LogicalData(ldri, Constants.LOGICAL_FOLDER);
+                LogicalData root = new LogicalData(ldri, Constants.LOGICAL_FOLDER);
                 sites = root.getStorageSites();
                 if (sites == null || sites.isEmpty()) {
                     sites = (Collection<IStorageSite>) catalogue.getSitesByUname(uname);
