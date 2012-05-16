@@ -1,13 +1,10 @@
 package nl.uva.cs.lobcder.webDav.resources;
 
-import nl.uva.cs.lobcder.util.Constants;
 import com.bradmcevoy.common.Path;
 import com.bradmcevoy.http.Resource;
 import com.bradmcevoy.http.ResourceFactory;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.AbstractCollection;
 import java.util.Collection;
 import java.util.Properties;
 import java.util.logging.Level;
@@ -16,6 +13,7 @@ import nl.uva.cs.lobcder.catalogue.RDMSDLCatalog;
 import nl.uva.cs.lobcder.resources.ILogicalData;
 import nl.uva.cs.lobcder.resources.IStorageSite;
 import nl.uva.cs.lobcder.resources.LogicalData;
+import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.cs.lobcder.util.PropertiesLoader;
 
 public class WebDataResourceFactory implements ResourceFactory {
@@ -23,7 +21,7 @@ public class WebDataResourceFactory implements ResourceFactory {
 //    private Logger log = LoggerFactory.getLogger(WebDataResourceFactory.class);
     public static final String REALM = "vph-share";
     private IDLCatalogue catalogue;
-    private boolean debug = true;
+    private boolean debug = false;
     //Hardcoded for now. We need to find a way to get the username
     private String uname;
 
