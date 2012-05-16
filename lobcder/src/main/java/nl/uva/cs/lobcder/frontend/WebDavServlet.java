@@ -8,7 +8,6 @@ import com.bradmcevoy.http.ApplicationConfig;
 import com.bradmcevoy.http.AuthenticationService;
 import com.bradmcevoy.http.ResourceFactory;
 import com.bradmcevoy.http.webdav.WebDavResponseHandler;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,7 +16,6 @@ import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
 import nl.uva.cs.lobcder.webDav.resources.WebDataResourceFactory;
 import nl.uva.cs.lobcder.webDav.resources.WebDataResourceFactoryFactory;
 
