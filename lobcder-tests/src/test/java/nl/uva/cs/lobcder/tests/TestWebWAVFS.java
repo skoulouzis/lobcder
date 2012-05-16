@@ -322,15 +322,15 @@ public class TestWebWAVFS {
     @Test
     public void testMultiThread() throws IOException, DavException {
         try {
-//            Thread userThread1 = new UserThread(this.client1, this.uri.toASCIIString(), 1);
-//            userThread1.setName("T1");
+            Thread userThread1 = new UserThread(this.client1, this.uri.toASCIIString(), 1);
+            userThread1.setName("T1");
             Thread userThread2 = new UserThread(this.client2, this.uri.toASCIIString(), 2);
             userThread2.setName("T2");
 
-//            userThread1.start();
+            userThread1.start();
             userThread2.start();
 
-//            userThread1.join();
+            userThread1.join();
             userThread2.join();
         } catch (InterruptedException ex) {
             Logger.getLogger(TestWebWAVFS.class.getName()).log(Level.SEVERE, null, ex);
