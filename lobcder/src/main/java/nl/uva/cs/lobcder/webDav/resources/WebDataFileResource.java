@@ -4,7 +4,6 @@
  */
 package nl.uva.cs.lobcder.webDav.resources;
 
-import nl.uva.cs.lobcder.util.Constants;
 import com.bradmcevoy.common.Path;
 import com.bradmcevoy.http.*;
 import com.bradmcevoy.http.Request.Method;
@@ -24,6 +23,8 @@ import nl.uva.cs.lobcder.resources.ILogicalData;
 import nl.uva.cs.lobcder.resources.IStorageSite;
 import nl.uva.cs.lobcder.resources.LogicalData;
 import nl.uva.cs.lobcder.resources.Metadata;
+import nl.uva.cs.lobcder.util.Constants;
+import nl.uva.cs.lobcder.util.LobIOUtils;
 import nl.uva.cs.lobcder.util.MMTypeTools;
 import nl.uva.vlet.data.StringUtil;
 import nl.uva.vlet.exception.VlException;
@@ -147,9 +148,9 @@ public class WebDataFileResource implements
         debug("\t range: " + range);
         debug("\t params: " + params);
         debug("\t contentType: " + contentType);
-
+        
         try {
-
+            
             VFile vFile;
             if (!entry.hasPhysicalData()) {
                 vFile = (VFile) entry.createPhysicalData();
@@ -164,7 +165,7 @@ public class WebDataFileResource implements
 
             if (range != null) {
                 debug("sendContent: ranged content: " + vFile.getVRL());
-                PartialGetHelper.writeRange(in, range, out);
+                LobIOUtils.writeRange(in, range, out);
             } else {
                 debug("sendContent: send whole file to " + vFile.getVRL());
                 IOUtils.copy(in, out);
@@ -179,7 +180,6 @@ public class WebDataFileResource implements
                 in.close();
             }
         }
-
     }
 
     @Override
@@ -349,20 +349,18 @@ public class WebDataFileResource implements
                 + "\t auth.getUser(): " + user + "\n"
                 + "\t auth.getTag(): " + tag);
 
-        if (canUseResource(user)) {
-            this.user = user;
-            Collection<IStorageSite> sites = entry.getStorageSites();
-            if (sites == null || sites.isEmpty()) {
-                try {
-                    sites = (Collection<IStorageSite>) catalogue.getSitesByUname(user);
-                    if (sites == null || sites.isEmpty()) {
-                        debug("\t StorageSites for " + this.getName() + " are empty!");
-                        throw new RuntimeException("User " + user + " has StorageSites for " + this.getName());
-                    }
-                    entry.setStorageSites(sites);
-                } catch (CatalogueException ex) {
-                    throw new RuntimeException(ex.getMessage());
+        this.user = user;
+        Collection<IStorageSite> sites = entry.getStorageSites();
+        if (sites == null || sites.isEmpty()) {
+            try {
+                sites = (Collection<IStorageSite>) catalogue.getSitesByUname(user);
+                if (sites == null || sites.isEmpty()) {
+                    debug("\t StorageSites for " + this.getName() + " are empty!");
+                    throw new RuntimeException("User " + user + " has StorageSites for " + this.getName());
                 }
+                entry.setStorageSites(sites);
+            } catch (CatalogueException ex) {
+                throw new RuntimeException(ex.getMessage());
             }
         }
         return true;
@@ -392,7 +390,7 @@ public class WebDataFileResource implements
                     return null;
                 }
                 return null;
-
+                
             default:
                 return null;
         }
@@ -428,9 +426,5 @@ public class WebDataFileResource implements
 
     Collection<IStorageSite> getStorageSites() {
         return this.entry.getStorageSites();
-    }
-
-    private boolean canUseResource(String user) {
-        return true;
     }
 }

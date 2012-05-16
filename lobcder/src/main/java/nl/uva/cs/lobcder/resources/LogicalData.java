@@ -183,23 +183,19 @@ public class LogicalData implements ILogicalData, Serializable {
 
     @Override
     public VFSNode getVFSNode() throws VlException {
-        IStorageSite site = null;
         for (IStorageSite s : this.storageSites) {
-            if (s != null) {
-                site = s;
-                break;
+            if (s != null && s.LDRIHasPhysicalData(pdri)) {
+                return s.getVNode(pdri);
             }
         }
-        return site.getVNode(pdri);
+        return null;
     }
 
     @Override
     public boolean hasPhysicalData() throws VlException {
         if (storageSites != null && !storageSites.isEmpty()) {
             for (IStorageSite s : storageSites) {
-                if (s.LDRIHasPhysicalData(pdri)) {
-                    return true;
-                }
+                return s.LDRIHasPhysicalData(pdri);
             }
         }
         return false;
@@ -207,17 +203,15 @@ public class LogicalData implements ILogicalData, Serializable {
 
     @Override
     public VFSNode createPhysicalData() throws VlException {
-        IStorageSite site = null;
         if (this.storageSites == null || this.storageSites.isEmpty()) {
             return null;
         }
         for (IStorageSite s : this.storageSites) {
             if (s != null) {
-                site = s;
-                break;
+                return s.createVFSFile(pdri);
             }
         }
-        return site.createVFSFile(pdri);
+        return null;
     }
 
     @Override

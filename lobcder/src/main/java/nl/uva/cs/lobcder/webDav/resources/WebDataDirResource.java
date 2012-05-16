@@ -53,24 +53,23 @@ class WebDataDirResource implements FolderResource, CollectionResource {
     public CollectionResource createCollection(String newName) throws NotAuthorizedException, ConflictException, BadRequestException {
         try {
             debug("createCollection.");
-
             Path newCollectionPath = Path.path(entry.getLDRI(), newName);
+            LogicalData newFolderEntry = (LogicalData) catalogue.getResourceEntryByLDRI(newCollectionPath);
             debug("\t newCollectionPath: " + newCollectionPath);
-            LogicalData newFolderEntry = new LogicalData(newCollectionPath, Constants.LOGICAL_FOLDER);
-            newFolderEntry.getMetadata().setCreateDate(System.currentTimeMillis());
+            if (newFolderEntry == null) {
+                newFolderEntry = new LogicalData(newCollectionPath, Constants.LOGICAL_FOLDER);
+                newFolderEntry.getMetadata().setCreateDate(System.currentTimeMillis());
+                Collection<IStorageSite> sites = entry.getStorageSites();
+                if (sites == null || sites.isEmpty()) {
+                    debug("\t Storage Sites for " + this.entry.getLDRI() + " are empty!");
+                    throw new IOException("Storage Sites for " + this.entry.getLDRI() + " are empty!");
+                }
 
-            Collection<IStorageSite> sites = entry.getStorageSites();
-            if (sites == null || sites.isEmpty()) {
-                debug("\t Storage Sites for " + this.entry.getLDRI() + " are empty!");
-                throw new IOException("Storage Sites for " + this.entry.getLDRI() + " are empty!");
+                newFolderEntry.setStorageSites(sites);
+                catalogue.registerResourceEntry(newFolderEntry);
             }
 
-            newFolderEntry.setStorageSites(sites);
-
-            catalogue.registerResourceEntry(newFolderEntry);
-//            ILogicalData reloaded = catalogue.getResourceEntryByLDRI(newFolderEntry.getLDRI());
             WebDataDirResource resource = new WebDataDirResource(catalogue, newFolderEntry);
-
             return resource;
         } catch (Exception ex) {
             Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, ex);
@@ -187,21 +186,19 @@ class WebDataDirResource implements FolderResource, CollectionResource {
                 + "\t auth.getUser(): " + user + "\n"
                 + "\t auth.getTag(): " + tag);
 
-        if (canUseResource(user)) {
-            this.user = user;
-            Collection<IStorageSite> sites = entry.getStorageSites();
-            if (sites == null || sites.isEmpty()) {
-                try {
-                    sites = (Collection<IStorageSite>) catalogue.getSitesByUname(user);
+        this.user = user;
+        Collection<IStorageSite> sites = entry.getStorageSites();
+        if (sites == null || sites.isEmpty()) {
+            try {
+                sites = (Collection<IStorageSite>) catalogue.getSitesByUname(user);
 
-                    if (sites == null || sites.isEmpty()) {
-                        debug("\t StorageSites for " + this.getName() + " are empty!");
-                        throw new RuntimeException("User " + user + " has StorageSites for " + this.getName());
-                    }
-                    entry.setStorageSites(sites);
-                } catch (CatalogueException ex) {
-                    throw new RuntimeException(ex.getMessage());
+                if (sites == null || sites.isEmpty()) {
+                    debug("\t StorageSites for " + this.getName() + " are empty!");
+                    throw new RuntimeException("User " + user + " has StorageSites for " + this.getName());
                 }
+                entry.setStorageSites(sites);
+            } catch (CatalogueException ex) {
+                throw new RuntimeException(ex.getMessage());
             }
         }
         return true;
@@ -237,20 +234,18 @@ class WebDataDirResource implements FolderResource, CollectionResource {
             debug("\t length: " + length);
             debug("\t contentType: " + contentType);
             Path newPath = Path.path(entry.getLDRI(), newName);
-
+            
             LogicalData newResource = (LogicalData) catalogue.getResourceEntryByLDRI(newPath);
             if (newResource != null) {
                 resource = updateExistingFile(newResource, length, contentType, inputStream);
             } else {
                 resource = createNonExistingFile(newPath, length, contentType, inputStream);
             }
-
             ILogicalData reloaded = null;
             if (!entry.getLDRI().isRoot()) {
                 reloaded = catalogue.getResourceEntryByLDRI(this.entry.getLDRI());
                 this.entry = reloaded;
             }
-
             return resource;
         } catch (Exception ex) {
             throw new BadRequestException(this, ex.getMessage());
@@ -442,10 +437,9 @@ class WebDataDirResource implements FolderResource, CollectionResource {
         }
         newResource.setStorageSites(sites);
         VFSNode node;
-        if (!newResource.hasPhysicalData()) {
+        node = newResource.getVFSNode();
+        if (node == null) {
             node = newResource.createPhysicalData();
-        } else {
-            node = newResource.getVFSNode();
         }
         if (node != null) {
             OutputStream out = ((VFile) node).getOutputStream();
@@ -478,7 +472,6 @@ class WebDataDirResource implements FolderResource, CollectionResource {
         } else {
             node = newResource.getVFSNode();
         }
-
         if (node != null) {
             OutputStream out = ((VFile) node).getOutputStream();
             IOUtils.copy(inputStream, out);
@@ -504,10 +497,6 @@ class WebDataDirResource implements FolderResource, CollectionResource {
 
     void setLogicalData(ILogicalData updatedLogicalData) {
         this.entry = updatedLogicalData;
-    }
-
-    private boolean canUseResource(String user) {
-        return true;
     }
 
     void setUser(String uname) {
