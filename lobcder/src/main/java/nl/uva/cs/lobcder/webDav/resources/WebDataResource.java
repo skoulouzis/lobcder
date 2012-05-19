@@ -4,6 +4,7 @@
  */
 package nl.uva.cs.lobcder.webDav.resources;
 
+import com.bradmcevoy.common.Path;
 import com.bradmcevoy.http.Auth;
 import com.bradmcevoy.http.PropFindableResource;
 import com.bradmcevoy.http.Request;
@@ -22,9 +23,10 @@ import nl.uva.cs.lobcder.resources.IStorageSite;
  */
 public class WebDataResource implements PropFindableResource, Resource {
 
-    private final ILogicalData logicalData;
+    private ILogicalData logicalData;
     private final IDLCatalogue catalogue;
     private static final boolean debug = false;
+    private String user;
 
     public WebDataResource(IDLCatalogue catalogue, ILogicalData logicalData) {
         this.logicalData = logicalData;
@@ -37,59 +39,123 @@ public class WebDataResource implements PropFindableResource, Resource {
     @Override
     public Date getCreateDate() {
         debug("getCreateDate.");
-        if (logicalData.getMetadata() != null && logicalData.getMetadata().getCreateDate() != null) {
-            return new Date(logicalData.getMetadata().getCreateDate());
+        if (getLogicalData().getMetadata() != null && getLogicalData().getMetadata().getCreateDate() != null) {
+            return new Date(getLogicalData().getMetadata().getCreateDate());
         }
         return null;
     }
 
     @Override
     public String getUniqueId() {
-        return String.valueOf(logicalData.getUID());
+        debug("getUniqueId.");
+        return String.valueOf(getLogicalData().getUID());
     }
 
     @Override
     public String getName() {
-        return logicalData.getLDRI().getName();
+        debug("getName.");
+        return getLogicalData().getLDRI().getName();
     }
 
     @Override
     public Object authenticate(String user, String password) {
-        try {
-            debug("authenticate.\n"
-                    + "\t user: " + user
-                    + "\t password: " + password);
-            Collection<IStorageSite> sites = logicalData.getStorageSites();
-            if (sites == null || sites.isEmpty()) {
-                sites = (Collection<IStorageSite>) catalogue.getSitesByUname(user);
-                if (sites == null || sites.isEmpty()) {
-                    debug("\t StorageSites for " + this.getName() + " are empty!");
-                    throw new RuntimeException("StorageSites for " + this.getName() + " are empty!");
-                }
-                logicalData.setStorageSites(sites);
-            }
-        } catch (CatalogueException ex) {
-            throw new RuntimeException(ex.getMessage());
-        }
+        debug("authenticate.\n"
+                + "\t user: " + user
+                + "\t password: " + password);
+//            Collection<IStorageSite> sites = getLogicalData().getStorageSites();
+//            if (sites == null || sites.isEmpty()) {
+//                sites = (Collection<IStorageSite>) getCatalogue().getSitesByUname(user);
+//                if (sites == null || sites.isEmpty()) {
+//                    debug("\t StorageSites for " + this.getName() + " are empty!");
+//                    throw new RuntimeException("StorageSites for " + this.getName() + " are empty!");
+//                }
+//                getLogicalData().setStorageSites(sites);
+//            }
         return user;
     }
 
     @Override
     public boolean authorise(Request request, Method method, Auth auth) {
-        debug("authorise.");
+        String absPath = null;
+        String absURL = null;
+        String acceptHeader = null;
+        String fromAddress = null;
+        String remoteAddr = null;
+        String cnonce = null;
+        String nc = null;
+        String nonce = null;
+        String password = null;
+        String qop = null;
+        String relm = null;
+        String responseDigest = null;
+        String uri = null;
+        String user = null;
+        Object tag = null;
+        if (request != null) {
+            absPath = request.getAbsolutePath();
+            absURL = request.getAbsoluteUrl();
+            acceptHeader = request.getAcceptHeader();
+            fromAddress = request.getFromAddress();
+            remoteAddr = request.getRemoteAddr();
+        }
+        if (auth != null) {
+            cnonce = auth.getCnonce();
+            nc = auth.getNc();
+            nonce = auth.getNonce();
+            password = auth.getPassword();
+            qop = auth.getQop();
+            relm = auth.getRealm();
+            responseDigest = auth.getResponseDigest();
+            uri = auth.getUri();
+            user = auth.getUser();
+            tag = auth.getTag();
+        }
+        debug("authorise. \n"
+                + "\t request.getAbsolutePath(): " + absPath + "\n"
+                + "\t request.getAbsoluteUrl(): " + absURL + "\n"
+                + "\t request.getAcceptHeader(): " + acceptHeader + "\n"
+                + "\t request.getFromAddress(): " + fromAddress + "\n"
+                + "\t request.getRemoteAddr(): " + remoteAddr + "\n"
+                + "\t auth.getCnonce(): " + cnonce + "\n"
+                + "\t auth.getNc(): " + nc + "\n"
+                + "\t auth.getNonce(): " + nonce + "\n"
+                + "\t auth.getPassword(): " + password + "\n"
+                + "\t auth.getQop(): " + qop + "\n"
+                + "\t auth.getRealm(): " + relm + "\n"
+                + "\t auth.getResponseDigest(): " + responseDigest + "\n"
+                + "\t auth.getUri(): " + uri + "\n"
+                + "\t auth.getUser(): " + user + "\n"
+                + "\t auth.getTag(): " + tag);
+
+        this.user = user;
+        Collection<IStorageSite> sites = getLogicalData().getStorageSites();
+        if (sites == null || sites.isEmpty()) {
+            try {
+                sites = (Collection<IStorageSite>) getCatalogue().getSitesByUname(user);
+
+                if (sites == null || sites.isEmpty()) {
+                    debug("\t StorageSites for " + this.getName() + " are empty!");
+                    throw new RuntimeException("User " + user + " has StorageSites for " + this.getName());
+                }
+                getLogicalData().setStorageSites(sites);
+            } catch (CatalogueException ex) {
+                throw new RuntimeException(ex.getMessage());
+            }
+        }
         return true;
     }
 
     @Override
     public String getRealm() {
+        debug("getRealm.");
         return "realm";
     }
 
     @Override
     public Date getModifiedDate() {
         debug("getModifiedDate.");
-        if (logicalData.getMetadata() != null && logicalData.getMetadata().getModifiedDate() != null) {
-            return new Date(logicalData.getMetadata().getModifiedDate());
+        if (getLogicalData().getMetadata() != null && getLogicalData().getMetadata().getModifiedDate() != null) {
+            return new Date(getLogicalData().getMetadata().getModifiedDate());
         }
         return null;
     }
@@ -99,7 +165,7 @@ public class WebDataResource implements PropFindableResource, Resource {
         debug("checkRedirect.");
         switch (request.getMethod()) {
             case GET:
-                if (logicalData.isRedirectAllowed()) {
+                if (getLogicalData().isRedirectAllowed()) {
                     //Replica selection algorithm 
                     return null;
                 }
@@ -112,7 +178,7 @@ public class WebDataResource implements PropFindableResource, Resource {
 
     protected void debug(String msg) {
         if (debug) {
-            System.err.println(this.getClass().getSimpleName() + "." + logicalData.getLDRI() + ": " + msg);
+            System.err.println(this.getClass().getSimpleName() + "." + getLogicalData().getLDRI() + ": " + msg);
         }
 //        log.debug(msg);
     }
@@ -132,4 +198,29 @@ public class WebDataResource implements PropFindableResource, Resource {
 //            throw new BadRequestException(this, ex.toString());
 //        }
 //    }
+
+    /**
+     * @return the catalogue
+     */
+    public IDLCatalogue getCatalogue() {
+        return catalogue;
+    }
+
+    /**
+     * @return the logicalData
+     */
+    public ILogicalData getLogicalData() {
+        return logicalData;
+    }
+
+    /**
+     * @return the logicalData
+     */
+    public void setLogicalData(ILogicalData logicalData) {
+        this.logicalData = logicalData;
+    }
+    
+    public Path getPath(){
+        return getLogicalData().getLDRI();
+    }
 }
