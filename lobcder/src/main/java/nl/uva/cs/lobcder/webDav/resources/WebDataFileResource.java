@@ -6,10 +6,10 @@ package nl.uva.cs.lobcder.webDav.resources;
 
 import com.bradmcevoy.common.Path;
 import com.bradmcevoy.http.*;
-import com.bradmcevoy.http.Request.Method;
 import com.bradmcevoy.http.exceptions.BadRequestException;
 import com.bradmcevoy.http.exceptions.ConflictException;
 import com.bradmcevoy.http.exceptions.NotAuthorizedException;
+import com.bradmcevoy.http.exceptions.NotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -142,7 +142,7 @@ public class WebDataFileResource extends WebDataResource implements
     @Override
     public void sendContent(OutputStream out, Range range,
             Map<String, String> params, String contentType) throws IOException,
-            NotAuthorizedException, BadRequestException {
+            NotAuthorizedException, BadRequestException, NotFoundException {
         InputStream in = null;
         debug("sendContent.");
         debug("\t range: " + range);
@@ -172,7 +172,8 @@ public class WebDataFileResource extends WebDataResource implements
             }
 
         } catch (VlException ex) {
-            throw new IOException(ex);
+            throw new com.bradmcevoy.http.exceptions.NotFoundException(ex.getMessage());
+//            throw new IOException(ex);
         } finally {
             out.flush();
             out.close();

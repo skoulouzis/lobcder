@@ -4,7 +4,6 @@
  */
 package nl.uva.cs.lobcder.webDav.resources;
 
-import nl.uva.cs.lobcder.util.Constants;
 import com.bradmcevoy.common.Path;
 import com.bradmcevoy.http.Auth;
 import com.bradmcevoy.http.Request;
@@ -21,6 +20,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import nl.uva.cs.lobcder.catalogue.CatalogueException;
 import nl.uva.cs.lobcder.catalogue.RDMSDLCatalog;
 import nl.uva.cs.lobcder.resources.*;
+import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.cs.lobcder.util.ConstantsAndSettings;
 import static org.junit.Assert.*;
 import org.junit.Test;

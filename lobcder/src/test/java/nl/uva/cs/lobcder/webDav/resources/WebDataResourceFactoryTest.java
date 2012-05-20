@@ -5,10 +5,7 @@
 package nl.uva.cs.lobcder.webDav.resources;
 
 import com.bradmcevoy.common.Path;
-import com.bradmcevoy.http.Auth;
-import com.bradmcevoy.http.Range;
-import com.bradmcevoy.http.Request;
-import com.bradmcevoy.http.Resource;
+import com.bradmcevoy.http.*;
 import com.bradmcevoy.http.exceptions.BadRequestException;
 import com.bradmcevoy.http.exceptions.ConflictException;
 import com.bradmcevoy.http.exceptions.NotAuthorizedException;
@@ -347,7 +344,7 @@ public class WebDataResourceFactoryTest {
             RDMSDLCatalog cat = new RDMSDLCatalog(new File(nl.uva.cs.lobcder.util.Constants.LOBCDER_CONF_DIR + "/datanucleus.properties"));
 
             WebDataResourceFactory instance = new WebDataResourceFactory();
-            dir = getTestDir(instance,host);
+            dir = getTestDir(instance, host);
 
             ByteArrayInputStream bais = new ByteArrayInputStream(ConstantsAndSettings.TEST_DATA.getBytes());
             file = (WebDataFileResource) dir.createNew(ConstantsAndSettings.TEST_FILE_NAME_1, bais, new Long(ConstantsAndSettings.TEST_DATA.getBytes().length), "text/plain");
@@ -424,6 +421,41 @@ public class WebDataResourceFactoryTest {
     }
 
     @Test
+    public void testInconsistency() {
+        String host = "localhost:8080";
+        WebDataFileResource file = null;
+        WebDataDirResource dir = null;
+        CollectionResource dir2 = null;
+
+        WebDataResourceFactory instance;
+        try {
+            instance = new WebDataResourceFactory();
+            dir = getTestDir(instance, host);
+            dir2 = dir.createCollection(ConstantsAndSettings.TEST_FOLDER_NAME_2);
+            ByteArrayInputStream bais = new ByteArrayInputStream(ConstantsAndSettings.TEST_DATA.getBytes());
+            file = (WebDataFileResource) dir.createNew(ConstantsAndSettings.TEST_FILE_NAME_1, bais, new Long(ConstantsAndSettings.TEST_DATA.getBytes().length), "text/plain");
+            VFSNode node = file.getLogicalData().getVFSNode();
+            node.delete();
+        } catch (Exception ex) {
+            Logger.getLogger(WebDataResourceFactoryTest.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        Range range = null;
+        Map<String, String> params = null;
+        String contentType = "text/plain";
+        try {
+            file.sendContent(out, range, params, contentType);
+        } catch (Exception ex) {
+            if (!(ex instanceof com.bradmcevoy.http.exceptions.NotFoundException)) {
+                fail("Wrong exception");
+            }
+        }
+    }
+
+    @Test
     public void testMake2Subcollections() throws Exception {
         System.out.println("testMakeCollectionAddChildAndRenameChild");
         String host = "localhost:8080";
@@ -431,7 +463,7 @@ public class WebDataResourceFactoryTest {
         WebDataDirResource dir = null;
 
         WebDataResourceFactory instance = new WebDataResourceFactory();
-        dir = getTestDir(instance,host);
+        dir = getTestDir(instance, host);
         dir.createCollection("subCollection1");
         WebDataDirResource sub1 = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH + "/" + dir.getName() + "/subCollection1");
         sub1.authorise(null, Request.Method.HEAD, new Auth(vphUserName, new Object()));
