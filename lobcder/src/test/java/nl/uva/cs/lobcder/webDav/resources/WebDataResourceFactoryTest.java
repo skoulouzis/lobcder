@@ -422,36 +422,45 @@ public class WebDataResourceFactoryTest {
 
     @Test
     public void testInconsistency() {
-        String host = "localhost:8080";
-        WebDataFileResource file = null;
-        WebDataDirResource dir = null;
-        CollectionResource dir2 = null;
-
-        WebDataResourceFactory instance;
         try {
-            instance = new WebDataResourceFactory();
-            dir = getTestDir(instance, host);
-            dir2 = dir.createCollection(ConstantsAndSettings.TEST_FOLDER_NAME_2);
-            ByteArrayInputStream bais = new ByteArrayInputStream(ConstantsAndSettings.TEST_DATA.getBytes());
-            file = (WebDataFileResource) dir.createNew(ConstantsAndSettings.TEST_FILE_NAME_1, bais, new Long(ConstantsAndSettings.TEST_DATA.getBytes().length), "text/plain");
-            VFSNode node = file.getLogicalData().getVFSNode();
-            node.delete();
-        } catch (Exception ex) {
-            Logger.getLogger(WebDataResourceFactoryTest.class.getName()).log(Level.SEVERE, null, ex);
-        }
+            String host = "localhost:8080";
+            WebDataFileResource file = null;
+            WebDataDirResource dir = null;
+            CollectionResource dir2 = null;
 
-
-
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        Range range = null;
-        Map<String, String> params = null;
-        String contentType = "text/plain";
-        try {
-            file.sendContent(out, range, params, contentType);
-        } catch (Exception ex) {
-            if (!(ex instanceof com.bradmcevoy.http.exceptions.NotFoundException)) {
-                fail("Wrong exception");
+            WebDataResourceFactory instance;
+            try {
+                instance = new WebDataResourceFactory();
+                dir = getTestDir(instance, host);
+                dir2 = dir.createCollection(ConstantsAndSettings.TEST_FOLDER_NAME_2);
+                ByteArrayInputStream bais = new ByteArrayInputStream(ConstantsAndSettings.TEST_DATA.getBytes());
+                file = (WebDataFileResource) dir.createNew(ConstantsAndSettings.TEST_FILE_NAME_1, bais, new Long(ConstantsAndSettings.TEST_DATA.getBytes().length), "text/plain");
+                VFSNode node = file.getLogicalData().getVFSNode();
+                node.delete();
+            } catch (Exception ex) {
+                Logger.getLogger(WebDataResourceFactoryTest.class.getName()).log(Level.SEVERE, null, ex);
             }
+
+
+
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            Range range = null;
+            Map<String, String> params = null;
+            String contentType = "text/plain";
+            try {
+                file.sendContent(out, range, params, contentType);
+            } catch (Exception ex) {
+                if (!(ex instanceof com.bradmcevoy.http.exceptions.NotFoundException)) {
+                    fail("Wrong exception");
+                }
+            }
+            dir.delete();
+        } catch (NotAuthorizedException ex) {
+            Logger.getLogger(WebDataResourceFactoryTest.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (ConflictException ex) {
+            Logger.getLogger(WebDataResourceFactoryTest.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (BadRequestException ex) {
+            Logger.getLogger(WebDataResourceFactoryTest.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
