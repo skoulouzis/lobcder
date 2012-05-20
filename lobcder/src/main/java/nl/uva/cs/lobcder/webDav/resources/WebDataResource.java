@@ -5,13 +5,14 @@
 package nl.uva.cs.lobcder.webDav.resources;
 
 import com.bradmcevoy.common.Path;
-import com.bradmcevoy.http.Auth;
-import com.bradmcevoy.http.PropFindableResource;
-import com.bradmcevoy.http.Request;
+import com.bradmcevoy.http.*;
 import com.bradmcevoy.http.Request.Method;
-import com.bradmcevoy.http.Resource;
-import java.util.Collection;
-import java.util.Date;
+import com.bradmcevoy.http.exceptions.NotAuthorizedException;
+import com.bradmcevoy.property.MultiNamespaceCustomPropertyResource;
+import com.bradmcevoy.property.PropertySource.PropertyMetaData;
+import com.bradmcevoy.property.PropertySource.PropertySetException;
+import java.util.*;
+import javax.xml.namespace.QName;
 import nl.uva.cs.lobcder.catalogue.CatalogueException;
 import nl.uva.cs.lobcder.catalogue.IDLCatalogue;
 import nl.uva.cs.lobcder.resources.ILogicalData;
@@ -21,12 +22,13 @@ import nl.uva.cs.lobcder.resources.IStorageSite;
  *
  * @author S. Koulouzis
  */
-public class WebDataResource implements PropFindableResource, Resource {
+public class WebDataResource implements PropFindableResource, Resource, MultiNamespaceCustomPropertyResource {
 
     private ILogicalData logicalData;
     private final IDLCatalogue catalogue;
     private static final boolean debug = false;
     private String user;
+    private Map<String, CustomProperty> properties;
 
     public WebDataResource(IDLCatalogue catalogue, ILogicalData logicalData) {
         this.logicalData = logicalData;
@@ -34,6 +36,7 @@ public class WebDataResource implements PropFindableResource, Resource {
 //            throw new Exception("The logical data has the wonrg type: " + logicalData.getType());
 //        }
         this.catalogue = catalogue;
+        properties = new HashMap<String, CustomProperty>();
     }
 
     @Override
@@ -219,8 +222,32 @@ public class WebDataResource implements PropFindableResource, Resource {
     public void setLogicalData(ILogicalData logicalData) {
         this.logicalData = logicalData;
     }
-    
-    public Path getPath(){
+
+    public Path getPath() {
         return getLogicalData().getLDRI();
+    }
+
+    @Override
+    public Object getProperty(QName qname) {
+        if (qname.getNamespaceURI().equals("NS_EXAMPLE")) {
+            return properties.get(qname.getLocalPart());
+        } else {
+            return PropertyMetaData.UNKNOWN;
+        }
+    }
+
+    @Override
+    public void setProperty(QName qname, Object o) throws PropertySetException, NotAuthorizedException {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public PropertyMetaData getPropertyMetaData(QName qname) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public List<QName> getAllPropertyNames() {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 }
