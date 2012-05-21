@@ -218,7 +218,7 @@ public class RDMSDLCatalog implements IDLCatalogue {
                     q.setFilter("logicalPaths.contains(path)");
                     q.declareParameters(path.getClass().getName() + " path");
                     Collection<IStorageSite> results = (Collection<IStorageSite>) q.execute(path);
-                    for(IStorageSite s : results){
+                    for (IStorageSite s : results) {
                         s.removeLogicalPath(entry.getLDRI());
                     }
                 }
@@ -228,14 +228,21 @@ public class RDMSDLCatalog implements IDLCatalogue {
                     Long number = (Long) q.deletePersistentAll();
                 } else {
                     String name = "/" + path.getName();
-                    Integer pos = Integer.valueOf(path.toString().indexOf(name));
+                    Integer start = Integer.valueOf(path.toString().indexOf(name));
+                    Integer end = Integer.valueOf(path.toString().indexOf(name)) + name.length();
                     q = pm.newQuery(LogicalData.class);
-                    q.setFilter("strLDRI.indexOf(name)==pos");
-                    q.declareParameters(name.getClass().getName() + " name, " + pos.getClass().getName() + " pos");
-                    //                    Long number = (Long) q.deletePersistentAll(name, pos);
-                    Collection<ILogicalData> delete = (Collection<ILogicalData>) q.execute(name, pos);
-                    for(ILogicalData d : delete){
-                        debug("Will delete: "+d.getLDRI());
+                    q.setFilter("strLDRI.indexOf(name)==start");
+                    q.declareParameters(name.getClass().getName() + " name, " + start.getClass().getName() + " start");
+                    //Long number = (Long) q.deletePersistentAll(name, start);
+                    Collection<ILogicalData> res = (Collection<ILogicalData>) q.execute(name, start);
+                    int pos = path.getParts().length - 1;
+                    Collection<ILogicalData> delete = new ArrayList<ILogicalData>();
+                    for (ILogicalData d : res) {
+                        String[] parts = d.getLDRI().getParts();
+                        if (parts[pos].equals(path.getName())) {
+                            debug("Will delete: " + d.getLDRI());
+                            delete.add(d);
+                        }
                     }
                     pm.deletePersistentAll(delete);
                 }

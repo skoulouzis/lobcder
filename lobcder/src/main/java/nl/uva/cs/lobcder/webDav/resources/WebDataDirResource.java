@@ -88,9 +88,17 @@ class WebDataDirResource extends WebDataResource implements FolderResource, Coll
             debug("child.");
             Path childPath = Path.path(getLogicalData().getLDRI(), childName);
             ILogicalData child = getCatalogue().getResourceEntryByLDRI(childPath);
-            
+
             if (child != null) {
-                return new WebDataDirResource(getCatalogue(), child);
+                if (child.getType().equals(Constants.LOGICAL_FOLDER)) {
+                    return new WebDataDirResource(getCatalogue(), child);
+                }
+                if (child.getType().equals(Constants.LOGICAL_FILE)) {
+                    return new WebDataFileResource(getCatalogue(), child);
+                }
+                if (child.getType().equals(Constants.LOGICAL_DATA)) {
+                    return new WebDataResource(getCatalogue(), child);
+                }
             }
         } catch (Exception ex) {
             Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, ex);
@@ -192,7 +200,7 @@ class WebDataDirResource extends WebDataResource implements FolderResource, Coll
         try {
             debug("createNew.");
             debug("\t newName: " + newName);
-            if(newName.contains("file10")){
+            if (newName.contains("file10")) {
                 debug("");
             }
             debug("\t length: " + length);
