@@ -85,8 +85,11 @@ public class StorageSite implements Serializable, IStorageSite {
     @Element(types = String.class)
     @Order(column = "VPH_USERNAMES")
     private Collection<String> vphUsernames;
+    
     @Persistent
+    @Column(name="VPH_USERNAMES_CSV", jdbcType="VARCHAR", length=500)
     private String vphUsernamesCSV;
+    
     @Persistent(defaultFetchGroup = "true")
     private Credential credentials;
     private Properties prop;

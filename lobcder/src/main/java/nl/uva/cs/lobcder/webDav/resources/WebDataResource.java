@@ -22,7 +22,7 @@ import nl.uva.cs.lobcder.resources.IStorageSite;
  *
  * @author S. Koulouzis
  */
-public class WebDataResource implements PropFindableResource, Resource, MultiNamespaceCustomPropertyResource {
+public class WebDataResource implements PropFindableResource, Resource {
 
     private ILogicalData logicalData;
     private final IDLCatalogue catalogue;
@@ -225,29 +225,5 @@ public class WebDataResource implements PropFindableResource, Resource, MultiNam
 
     public Path getPath() {
         return getLogicalData().getLDRI();
-    }
-
-    @Override
-    public Object getProperty(QName qname) {
-        if (qname.getNamespaceURI().equals("NS_EXAMPLE")) {
-            return properties.get(qname.getLocalPart());
-        } else {
-            return PropertyMetaData.UNKNOWN;
-        }
-    }
-
-    @Override
-    public void setProperty(QName qname, Object o) throws PropertySetException, NotAuthorizedException {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public PropertyMetaData getPropertyMetaData(QName qname) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public List<QName> getAllPropertyNames() {
-        throw new UnsupportedOperationException("Not supported yet.");
     }
 }
