@@ -489,6 +489,35 @@ public class WebDataResourceFactoryTest {
 
         dir.delete();
     }
+    
+    
+     @Test
+    public void testDeleteFileWithSameStartingName() throws Exception {
+        System.out.println("testDeleteFileWithSameStartingName");
+        String host = "localhost:8080";
+        WebDataFileResource file1 = null;
+        WebDataDirResource dir = null;
+
+        WebDataResourceFactory instance = new WebDataResourceFactory();
+        dir = getTestDir(instance, host);
+     
+
+        ByteArrayInputStream bais = new ByteArrayInputStream(ConstantsAndSettings.TEST_DATA.getBytes());
+        file1 = (WebDataFileResource) dir.createNew("testFile1", bais, new Long(ConstantsAndSettings.TEST_DATA.getBytes().length), "text/plain");
+        checkChildren(dir, file1);
+        
+        
+        WebDataFileResource file10 = (WebDataFileResource) dir.createNew("testFile10", bais, new Long(ConstantsAndSettings.TEST_DATA.getBytes().length), "text/plain");
+        checkChildren(dir, file10);
+        
+        
+        file1.delete();
+        //file10 should still be there
+        Resource res = dir.child(file10.getName());
+        assertNotNull(res);
+
+        dir.delete();
+    }
 
     @Test
     public void testMultiThread() throws FileNotFoundException, IOException {

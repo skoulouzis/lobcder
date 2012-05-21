@@ -13,7 +13,6 @@ import com.bradmcevoy.http.exceptions.NotAuthorizedException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Level;
@@ -25,13 +24,10 @@ import nl.uva.cs.lobcder.resources.IStorageSite;
 import nl.uva.cs.lobcder.resources.LogicalData;
 import nl.uva.cs.lobcder.resources.Metadata;
 import nl.uva.cs.lobcder.util.Constants;
+import nl.uva.vlet.exception.ResourceNotFoundException;
 import nl.uva.vlet.exception.VlException;
 import nl.uva.vlet.vfs.VFSNode;
 import nl.uva.vlet.vfs.VFile;
-import org.antlr.stringtemplate.AutoIndentWriter;
-import org.antlr.stringtemplate.StringTemplate;
-import org.antlr.stringtemplate.StringTemplateGroup;
-import org.antlr.stringtemplate.StringTemplateWriter;
 import org.apache.commons.io.IOUtils;
 
 /**
@@ -92,7 +88,7 @@ class WebDataDirResource extends WebDataResource implements FolderResource, Coll
             debug("child.");
             Path childPath = Path.path(getLogicalData().getLDRI(), childName);
             ILogicalData child = getCatalogue().getResourceEntryByLDRI(childPath);
-
+            
             if (child != null) {
                 return new WebDataDirResource(getCatalogue(), child);
             }
@@ -189,7 +185,6 @@ class WebDataDirResource extends WebDataResource implements FolderResource, Coll
         }
         return true;
     }
-    
 
     @Override
     public Resource createNew(String newName, InputStream inputStream, Long length, String contentType) throws IOException, ConflictException, NotAuthorizedException, BadRequestException {
@@ -197,6 +192,9 @@ class WebDataDirResource extends WebDataResource implements FolderResource, Coll
         try {
             debug("createNew.");
             debug("\t newName: " + newName);
+            if(newName.contains("file10")){
+                debug("");
+            }
             debug("\t length: " + length);
             debug("\t contentType: " + contentType);
             Path newPath = Path.path(getLogicalData().getLDRI(), newName);
@@ -276,13 +274,13 @@ class WebDataDirResource extends WebDataResource implements FolderResource, Coll
 //        t.setAttribute("subject", new SubjectWrapper(getSubject()));
 //        t.setAttribute("base", UrlPathWrapper.forEmptyPath());
 //         template.write(new AutoIndentWriter(new OutputStreamWriter(out, "UTF-8")));
-        
-        for(Resource r:getChildren() ){
-            String s = r.getName()+" - "+r.getUniqueId();
+
+        for (Resource r : getChildren()) {
+            String s = r.getName() + " - " + r.getUniqueId();
             out.write(s.getBytes());
         }
-         out.flush();
-         out.close();
+        out.flush();
+        out.close();
     }
 
     @Override
@@ -412,8 +410,14 @@ class WebDataDirResource extends WebDataResource implements FolderResource, Coll
             throw new IOException("Storage Sites for " + this.getLogicalData().getLDRI() + " are empty!");
         }
         newResource.setStorageSites(sites);
-        VFSNode node;
-        node = newResource.getVFSNode();
+        VFSNode node = null;
+        try {
+            node = newResource.getVFSNode();
+        } catch (Exception ex) {
+            if (!(ex instanceof ResourceNotFoundException)) {
+                throw ex;
+            }
+        }
         if (node == null) {
             node = newResource.createPhysicalData();
         }

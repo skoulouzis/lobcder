@@ -5,14 +5,12 @@
 package nl.uva.cs.lobcder.webDav.resources;
 
 import com.bradmcevoy.common.Path;
-import com.bradmcevoy.http.*;
 import com.bradmcevoy.http.Request.Method;
-import com.bradmcevoy.http.exceptions.NotAuthorizedException;
-import com.bradmcevoy.property.MultiNamespaceCustomPropertyResource;
-import com.bradmcevoy.property.PropertySource.PropertyMetaData;
-import com.bradmcevoy.property.PropertySource.PropertySetException;
-import java.util.*;
-import javax.xml.namespace.QName;
+import com.bradmcevoy.http.*;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import nl.uva.cs.lobcder.catalogue.CatalogueException;
 import nl.uva.cs.lobcder.catalogue.IDLCatalogue;
 import nl.uva.cs.lobcder.resources.ILogicalData;

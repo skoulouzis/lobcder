@@ -148,9 +148,9 @@ public class WebDataFileResource extends WebDataResource implements
         debug("\t range: " + range);
         debug("\t params: " + params);
         debug("\t contentType: " + contentType);
-        
+
         try {
-            
+
             VFile vFile;
             if (!getLogicalData().hasPhysicalData()) {
                 vFile = (VFile) getLogicalData().createPhysicalData();
@@ -207,7 +207,7 @@ public class WebDataFileResource extends WebDataResource implements
             getCatalogue().renameEntry(getLogicalData().getLDRI(), newPath);
             ILogicalData newLogicData = getCatalogue().getResourceEntryByLDRI(newPath);
             setLogicalData(newLogicData);
-            
+
             WebDataDirResource dir = (WebDataDirResource) rDest;
             dir.setLogicalData(getCatalogue().getResourceEntryByLDRI(dirPath));
 
@@ -278,7 +278,6 @@ public class WebDataFileResource extends WebDataResource implements
 //        log.debug(msg);
     }
 
-
     @Override
     public String checkRedirect(Request request) {
         debug("checkRedirect.");
@@ -289,7 +288,7 @@ public class WebDataFileResource extends WebDataResource implements
                     return null;
                 }
                 return null;
-                
+
             default:
                 return null;
         }
@@ -303,7 +302,7 @@ public class WebDataFileResource extends WebDataResource implements
         }
         return null;
     }
-    
+
     private void initMetadata() {
 
         Metadata meta = this.getLogicalData().getMetadata();

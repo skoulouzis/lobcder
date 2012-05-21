@@ -73,7 +73,7 @@ public class RDMSDLCatalog implements IDLCatalogue {
                 if (storageSites != null && !storageSites.isEmpty()) {
                     for (IStorageSite s : storageSites) {
                         String unamesCSV = s.getVPHUsernamesCSV();
-                        
+
                         String epoint = s.getEndpoint();
                         Collection<String> newLogicalPaths = s.getLogicalPaths();
                         q = pm.newQuery(StorageSite.class);
@@ -180,36 +180,49 @@ public class RDMSDLCatalog implements IDLCatalogue {
                 q.declareParameters(parentsName.getClass().getName() + " parentsName");
                 q.setUnique(true);
                 LogicalData result = (LogicalData) q.execute(parentsName);
-                //Delete its storage sites, since every time we create a new 
-                //entry we add a new StorageSite, even a copy
-                Collection<IStorageSite> storageSites = result.getStorageSites();
-                //Make sure we dont clear all the storage sites. If the storage 
-                //site dosn't belong to any othe entry,  then  delete
+                //Maybe it's already gone 
+                if (result != null) {
+                    //Delete its storage sites, since every time we create a new 
+                    //entry we add a new StorageSite, even a copy
+                    Collection<IStorageSite> storageSites = result.getStorageSites();
+                    //Make sure we dont clear all the storage sites. If the storage 
+                    //site dosn't belong to any othe entry,  then  delete
 //                SELECT FOMRM LOGICALDATA WHERE storageSite.contains(storageSite)
-                Collection<LogicalData> res = null;
-                Collection<IStorageSite> toBeDeleted = new ArrayList<IStorageSite>();
-                Collection<IStorageSite> toBeUpdated = new ArrayList<IStorageSite>();
+                    Collection<LogicalData> res = null;
+                    Collection<IStorageSite> toBeDeleted = new ArrayList<IStorageSite>();
+                    Collection<IStorageSite> toBeUpdated = new ArrayList<IStorageSite>();
 
-                q = pm.newQuery(StorageSite.class);
-                Collection<StorageSite> sites = (Collection<StorageSite>) q.execute();
+                    q = pm.newQuery(StorageSite.class);
+                    Collection<StorageSite> sites = (Collection<StorageSite>) q.execute();
 
-                for (IStorageSite s : storageSites) {
-                    q = pm.newQuery(LogicalData.class);
-                    q.setFilter("storageSites.contains(s) && strLDRI != parentsName");
-                    q.declareParameters(s.getClass().getName() + " s, " + parentsName.getClass().getName() + " parentsName");
-                    res = (Collection<LogicalData>) q.execute(s, parentsName);
-                    //Only if no one else is using it delete it
-                    if (res == null || res.isEmpty() && sites.size() > PropertiesLoader.getNumOfStorageSites()) {
-                        toBeDeleted.add(s);
-                    } else {
-                        s.removeLogicalPath(result.getPDRI());
-                        toBeUpdated.add(s);
+                    for (IStorageSite s : storageSites) {
+                        q = pm.newQuery(LogicalData.class);
+                        q.setFilter("storageSites.contains(s) && strLDRI != parentsName");
+                        q.declareParameters(s.getClass().getName() + " s, " + parentsName.getClass().getName() + " parentsName");
+                        res = (Collection<LogicalData>) q.execute(s, parentsName);
+                        //Only if no one else is using it delete it
+                        if (res == null || res.isEmpty() && sites.size() > PropertiesLoader.getNumOfStorageSites()) {
+                            toBeDeleted.add(s);
+                        } else {
+                            s.removeLogicalPath(result.getPDRI());
+                            toBeUpdated.add(s);
+                        }
+                    }
+                    pm.deletePersistentAll(toBeDeleted);
+                    pm.makePersistentAll(toBeUpdated);
+                } else {
+                    String path = entry.getLDRI().toString();
+                    debug("Entry " + entry.getLDRI() + " is not in catalog");
+                    //We need to remove this ldri from the storage site that has it cached 
+                    q = pm.newQuery(StorageSite.class);
+                    q.setFilter("logicalPaths.contains(path)");
+                    q.declareParameters(path.getClass().getName() + " path");
+                    Collection<IStorageSite> results = (Collection<IStorageSite>) q.execute(path);
+                    for(IStorageSite s : results){
+                        s.removeLogicalPath(entry.getLDRI());
                     }
                 }
-                pm.deletePersistentAll(toBeDeleted);
-                pm.makePersistentAll(toBeUpdated);
-
-                Path path = result.getLDRI();
+                Path path = entry.getLDRI();
                 if (path.isRoot()) {
                     q = pm.newQuery(LogicalData.class);
                     Long number = (Long) q.deletePersistentAll();
@@ -219,7 +232,12 @@ public class RDMSDLCatalog implements IDLCatalogue {
                     q = pm.newQuery(LogicalData.class);
                     q.setFilter("strLDRI.indexOf(name)==pos");
                     q.declareParameters(name.getClass().getName() + " name, " + pos.getClass().getName() + " pos");
-                    Long number = (Long) q.deletePersistentAll(name, pos);
+                    //                    Long number = (Long) q.deletePersistentAll(name, pos);
+                    Collection<ILogicalData> delete = (Collection<ILogicalData>) q.execute(name, pos);
+                    for(ILogicalData d : delete){
+                        debug("Will delete: "+d.getLDRI());
+                    }
+                    pm.deletePersistentAll(delete);
                 }
                 tx.commit();
 
@@ -420,7 +438,7 @@ public class RDMSDLCatalog implements IDLCatalogue {
                 tx.begin();
                 //This query, will return objects of type DataResourceEntry
                 Query q = pm.newQuery(StorageSite.class);
-                
+
                 q.setFilter("endpoint == ePoint && vphUsernamesCSV == unameCSV");
                 q.declareParameters(ePoint.getClass().getName() + " ePoint, " + unameCSV.getClass().getName() + " unameCSV");
                 //                q.setUnique(true);
@@ -466,7 +484,7 @@ public class RDMSDLCatalog implements IDLCatalogue {
                 Query q = pm.newQuery(StorageSite.class);
                 String ePoint = site.getEndpoint();
                 Collection<String> unameCSV = site.getVPHUsernames();
-                
+
                 q.setFilter(
                         "endpoint == ePoint && vphUsernamesCSV == unameCSV");
                 q.declareParameters(ePoint.getClass().getName() + " ePoint, " + unameCSV.getClass().getName() + " unameCSV");
@@ -597,7 +615,7 @@ public class RDMSDLCatalog implements IDLCatalogue {
      * @return the pmf
      */
     private PersistenceManagerFactory getPmf() {
-        if(pmf == null){
+        if (pmf == null) {
             pmf = JDOHelper.getPersistenceManagerFactory(propFile);//Path.path(nl.uva.cs.lobcder.util.Constants.LOBCDER_CONF_DIR + "/datanucleus.properties").toString());
         }
         return pmf;

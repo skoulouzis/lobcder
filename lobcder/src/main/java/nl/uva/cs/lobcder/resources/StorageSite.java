@@ -21,6 +21,7 @@ import nl.uva.cs.lobcder.util.PropertiesLoader;
 import nl.uva.vlet.Global;
 import nl.uva.vlet.GlobalConfig;
 import nl.uva.vlet.data.StringUtil;
+import nl.uva.vlet.exception.ResourceNotFoundException;
 import nl.uva.vlet.exception.VRLSyntaxException;
 import nl.uva.vlet.exception.VlException;
 import nl.uva.vlet.util.cog.GridProxy;
@@ -77,19 +78,19 @@ public class StorageSite implements Serializable, IStorageSite {
     private String uid;
     @Persistent
     private String endpoint;
+    @Join
     @Persistent(defaultFetchGroup = "true")
-    @Element
+    @Element(types = String.class)
+    @Order(column = "LOGICAL_PATHS")
     private Collection<String> logicalPaths;
     @Join
-    @Persistent(defaultFetchGroup="true")
+    @Persistent(defaultFetchGroup = "true")
     @Element(types = String.class)
     @Order(column = "VPH_USERNAMES")
     private Collection<String> vphUsernames;
-    
     @Persistent
-    @Column(name="VPH_USERNAMES_CSV", jdbcType="VARCHAR", length=500)
+    @Column(name = "VPH_USERNAMES_CSV", jdbcType = "VARCHAR", length = 500)
     private String vphUsernamesCSV;
-    
     @Persistent(defaultFetchGroup = "true")
     private Credential credentials;
     private Properties prop;
@@ -100,7 +101,7 @@ public class StorageSite implements Serializable, IStorageSite {
     @NotPersistent
     public static String storagePrefix = "LOBCDER-REPLICA-v1.1";
     @NotPersistent
-    private static final boolean debug = false;
+    private static final boolean debug = true;
 
     public StorageSite(String endpoint, Credential cred) throws Exception {
         try {
@@ -143,9 +144,19 @@ public class StorageSite implements Serializable, IStorageSite {
 
     @Override
     public VFSNode getVNode(Path path) throws VlException {
-        return getVfsClient().openLocation(getVrl().append(path.toString()));
+        try {
+            return getVfsClient().openLocation(getVrl().append(path.toString()));
+        } catch (VlException ex) {
+            if (ex instanceof ResourceNotFoundException) {
+                //wrong cache 
+                while (logicalPaths.contains(path.toString())) {
+                    logicalPaths.remove(path.toString());
+                }
+            }
+            throw ex;
+        }
     }
-    
+
     @Override
     public VFSNode createVFSFile(Path path) throws VlException {
         getVfsClient().mkdirs(getVrl(), true);
@@ -158,7 +169,9 @@ public class StorageSite implements Serializable, IStorageSite {
 
         VRL newVRL = getVrl().append(path.toString());
         VFile node = getVfsClient().createFile(newVRL, true);
-        logicalPaths.add(path.toString());
+        if (!logicalPaths.contains(path.toString())) {
+            logicalPaths.add(path.toString());
+        }
         return node;
     }
 
@@ -213,7 +226,7 @@ public class StorageSite implements Serializable, IStorageSite {
         if (!logicalPaths.contains(ldri.toString())) {
             VRL newVRL = getVrl().append(ldri.toString());
             boolean hasPhysicalData = getVfsClient().existsPath(newVRL);
-            if(hasPhysicalData){
+            if (hasPhysicalData && !logicalPaths.contains(ldri.toString())) {
                 logicalPaths.add(ldri.toString());
             }
             return hasPhysicalData;
@@ -301,6 +314,10 @@ public class StorageSite implements Serializable, IStorageSite {
     @Override
     public void removeLogicalPath(Path pdrI) {
         this.logicalPaths.remove(pdrI.toString());
+        //We have to remove children as well 
+        for(String s :logicalPaths){       
+            debug("Remove?? "+s);
+        }
     }
 
     @Override
