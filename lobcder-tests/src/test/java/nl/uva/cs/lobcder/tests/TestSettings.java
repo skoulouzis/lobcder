@@ -30,7 +30,7 @@ public class TestSettings {
             + "home.";
     
     public static final String TEST_TXT_FILE_NAME = "testTxtFileName.txt";
-
+    
     public static Properties getTestProperties(String propPath)
             throws FileNotFoundException, IOException {
         Properties properties = new Properties();

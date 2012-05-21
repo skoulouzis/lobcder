@@ -58,8 +58,8 @@ public class TestWebWAVFS {
         if (!testURL.endsWith("/")) {
             testURL = testURL + "/";
         }
-
-
+        
+        
         this.uri = URI.create(testURL);
         this.root = this.uri.toASCIIString();
         if (!this.root.endsWith("/")) {
