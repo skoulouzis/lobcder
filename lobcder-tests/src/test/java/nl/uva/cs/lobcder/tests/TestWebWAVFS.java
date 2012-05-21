@@ -6,22 +6,28 @@ package nl.uva.cs.lobcder.tests;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.StringRequestEntity;
 import org.apache.jackrabbit.webdav.*;
+import org.apache.jackrabbit.webdav.client.methods.AclMethod;
 import org.apache.jackrabbit.webdav.client.methods.DeleteMethod;
 import org.apache.jackrabbit.webdav.client.methods.PropFindMethod;
 import org.apache.jackrabbit.webdav.client.methods.PutMethod;
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
 import org.apache.jackrabbit.webdav.property.DavPropertySet;
+import org.apache.jackrabbit.webdav.security.AclProperty;
+import org.apache.jackrabbit.webdav.security.AclProperty.Ace;
+import org.apache.jackrabbit.webdav.security.AclResource;
 import org.apache.jackrabbit.webdav.security.Principal;
 import org.apache.jackrabbit.webdav.security.Privilege;
 import static org.junit.Assert.*;
@@ -153,7 +159,7 @@ public class TestWebWAVFS {
 
     @Test
     public void testSetGetPropertySet() throws IOException, DavException {
-        String testFileURI1 = this.uri.toASCIIString() + TestSettings.TEST_FILE_NAME1+".txt";
+        String testFileURI1 = this.uri.toASCIIString() + TestSettings.TEST_FILE_NAME1 + ".txt";
         PutMethod put = new PutMethod(testFileURI1);
         put.setRequestEntity(new StringRequestEntity(TestSettings.TEST_DATA, "text/plain", "UTF-8"));
         int status = client1.executeMethod(put);
@@ -213,7 +219,6 @@ public class TestWebWAVFS {
 
     @Test
     public void testSetGetACL() throws IOException, DavException {
-
         String testFileURI1 = this.uri.toASCIIString() + TestSettings.TEST_FILE_NAME1;
         PutMethod put = new PutMethod(testFileURI1);
         put.setRequestEntity(new StringRequestEntity(TestSettings.TEST_DATA, "text/plain", "UTF-8"));
@@ -228,15 +233,17 @@ public class TestWebWAVFS {
         boolean isProtected = false;
 
 
-//        AclResource inheritedFrom = null;
-//        Ace ace = AclProperty.createGrantAce(principal, privileges, invert, isProtected, inheritedFrom);
-//        Ace[] accessControlElements = new Ace[1];
-//        accessControlElements[0] = ace;
+        AclResource inheritedFrom = null;
+        Ace ace = AclProperty.createGrantAce(principal, privileges, invert, isProtected, inheritedFrom);
+        Ace[] accessControlElements = new Ace[1];
+        accessControlElements[0] = ace;
 //        AclProperty aclProp = new AclProperty(accessControlElements);
 
-        //       org.apache.jackrabbit.webdav.client.methods.AclMethod acl = new AclMethod(testFileURI1, new AclProperty(accessControlElements)); 
-
-
+        org.apache.jackrabbit.webdav.client.methods.AclMethod acl = new AclMethod(testFileURI1, new AclProperty(accessControlElements));
+        status = client1.executeMethod(acl);
+        
+        System.out.println("Status : "+status);
+        
         delete(testFileURI1);
 
 
@@ -246,7 +253,7 @@ public class TestWebWAVFS {
     public void testPROPFIND_PUT_PROPFIND_GET_PUT() throws IOException, DavException {
 
         //PROPFIND file is not there 
-        String testFileURI1 = this.uri.toASCIIString() + TestSettings.TEST_FILE_NAME1+".txt";
+        String testFileURI1 = this.uri.toASCIIString() + TestSettings.TEST_FILE_NAME1 + ".txt";
         PropFindMethod propFind = new PropFindMethod(testFileURI1, DavConstants.PROPFIND_ALL_PROP_INCLUDE, DavConstants.DEPTH_0);
         int status = client1.executeMethod(propFind);
         assertEquals(HttpStatus.SC_NOT_FOUND, status);
@@ -317,6 +324,30 @@ public class TestWebWAVFS {
 
 
         delete(testFileURI1);
+    }
+
+    @Test
+    public void testInconsistency() {
+        try {
+            String testFileURI1 = this.uri.toASCIIString() + TestSettings.TEST_FILE_NAME1 + ".txt";
+            PutMethod put = new PutMethod(testFileURI1);
+            put.setRequestEntity(new StringRequestEntity(TestSettings.TEST_DATA, "text/plain", "UTF-8"));
+            int status = client1.executeMethod(put);
+            assertEquals(HttpStatus.SC_CREATED, status);
+
+            //Delete the physical data 
+            File f = new File(System.getProperty("user.home") + "/deleteMe/LOBCDER-REPLICA-v1.1");
+            for (File files : f.listFiles()) {
+                files.delete();
+            }
+
+            GetMethod get = new GetMethod(testFileURI1);
+            status = this.client1.executeMethod(get);
+            System.out.println("Status: " + status);
+
+        } catch (IOException ex) {
+            Logger.getLogger(TestWebWAVFS.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     @Test
