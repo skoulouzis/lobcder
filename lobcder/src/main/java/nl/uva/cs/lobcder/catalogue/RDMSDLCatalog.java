@@ -228,23 +228,19 @@ public class RDMSDLCatalog implements IDLCatalogue {
                     Long number = (Long) q.deletePersistentAll();
                 } else {
                     String name = "/" + path.getName();
+                    String nameWithSlash = name + "/";
+                    String strPath = path.toString();
                     Integer start = Integer.valueOf(path.toString().indexOf(name));
-                    Integer end = Integer.valueOf(path.toString().indexOf(name)) + name.length();
+                    Integer end = Integer.valueOf(path.toString().indexOf(name)) + name.length() + 1;
                     q = pm.newQuery(LogicalData.class);
-                    q.setFilter("strLDRI.indexOf(name)==start");
-                    q.declareParameters(name.getClass().getName() + " name, " + start.getClass().getName() + " start");
-                    //Long number = (Long) q.deletePersistentAll(name, start);
-                    Collection<ILogicalData> res = (Collection<ILogicalData>) q.execute(name, start);
-                    int pos = path.getParts().length - 1;
-                    Collection<ILogicalData> delete = new ArrayList<ILogicalData>();
-                    for (ILogicalData d : res) {
-                        String[] parts = d.getLDRI().getParts();
-                        if (parts[pos].equals(path.getName())) {
-                            debug("Will delete: " + d.getLDRI());
-                            delete.add(d);
-                        }
-                    }
-                    pm.deletePersistentAll(delete);
+//                    
+                    q.setFilter("strLDRI.indexOf(name)==start && strLDRI.substring(start,end)==nameWithSlash || strLDRI==strPath");
+                    q.declareParameters(name.getClass().getName() + " name, "
+                            + start.getClass().getName() + " start, "
+                            + end.getClass().getName() + " end, "
+                            + nameWithSlash.getClass().getName() + " nameWithSlash, "
+                            + strPath.getClass().getName() + " strPath");
+                    Long number = q.deletePersistentAll(name, start, end, nameWithSlash, strPath);
                 }
                 tx.commit();
 

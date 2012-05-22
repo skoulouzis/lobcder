@@ -116,6 +116,7 @@ public class StorageSite implements Serializable, IStorageSite {
             if (cred.getVPHUsernames() == null) {
                 throw new NullPointerException("vph Username is null");
             }
+
             vphUsernames = Arrays.asList(cred.getVPHUsernames());
 
             vphUsernamesCSV = "";
@@ -143,7 +144,7 @@ public class StorageSite implements Serializable, IStorageSite {
     }
 
     @Override
-    public VFSNode getVNode(Path path) throws VlException {
+    public VFSNode getVNode(Path path) {
         try {
             return getVfsClient().openLocation(getVrl().append(path.toString()));
         } catch (VlException ex) {
@@ -153,13 +154,17 @@ public class StorageSite implements Serializable, IStorageSite {
                     logicalPaths.remove(path.toString());
                 }
             }
-            throw ex;
         }
+        return null;
     }
 
     @Override
     public VFSNode createVFSFile(Path path) throws VlException {
-        getVfsClient().mkdirs(getVrl(), true);
+        try {
+            getVfsClient().mkdirs(getVrl(), true);
+        } catch (Exception ex) {
+            throw new VlException(ex);
+        }
         String[] parts = path.getParts();
         if (parts.length > 1) {
             String parent = path.getParent().toString();
@@ -201,8 +206,16 @@ public class StorageSite implements Serializable, IStorageSite {
         if (StringUtil.equals(authScheme, ServerInfo.PASSWORD_AUTH)
                 || StringUtil.equals(authScheme, ServerInfo.PASSWORD_OR_PASSPHRASE_AUTH)
                 || StringUtil.equals(authScheme, ServerInfo.PASSPHRASE_AUTH)) {
-            info.setUsername(credentials.getStorageSiteUsername());
-            info.setPassword(credentials.getStorageSitePassword());
+            String username = credentials.getStorageSiteUsername();
+            if (username == null) {
+                throw new NullPointerException("Username is null!");
+            }
+            info.setUsername(username);
+            String password = credentials.getStorageSitePassword();
+            if (password == null) {
+                throw new NullPointerException("password is null!");
+            }
+            info.setPassword(password);
         }
 
         info.setAttribute(ServerInfo.ATTR_DEFAULT_YES_NO_ANSWER, true);
@@ -268,6 +281,10 @@ public class StorageSite implements Serializable, IStorageSite {
                 throw new nl.uva.vlet.exception.VRLSyntaxException(ex);
             }
         }
+        String username = getCredentials().getStorageSiteUsername();
+        if (username == null) {
+            throw new NullPointerException("Username is null");
+        }
         return vfsClient;
     }
 
@@ -315,9 +332,9 @@ public class StorageSite implements Serializable, IStorageSite {
     public void removeLogicalPath(Path pdrI) {
         this.logicalPaths.remove(pdrI.toString());
         //We have to remove children as well 
-        for(String s :logicalPaths){       
-            debug("Remove?? "+s);
-        }
+//        for (String s : logicalPaths) {
+//            debug("Remove?? " + s);
+//        }
     }
 
     @Override

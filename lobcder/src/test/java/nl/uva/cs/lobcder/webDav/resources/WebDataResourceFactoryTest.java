@@ -18,8 +18,10 @@ import nl.uva.cs.lobcder.resources.ILogicalData;
 import nl.uva.cs.lobcder.resources.IStorageSite;
 import nl.uva.cs.lobcder.resources.StorageSite;
 import nl.uva.cs.lobcder.util.ConstantsAndSettings;
+import nl.uva.vlet.exception.ResourceNotFoundException;
 import nl.uva.vlet.exception.VlException;
 import nl.uva.vlet.vfs.VFSNode;
+import nl.uva.vlet.vfs.VFile;
 import static org.junit.Assert.*;
 import org.junit.*;
 
@@ -86,7 +88,6 @@ public class WebDataResourceFactoryTest {
         assertNull(result);
 
     }
-
     /**
      * Test of getResource method, of class WebDataResourceFactory.
      */
@@ -491,30 +492,48 @@ public class WebDataResourceFactoryTest {
     }
     
     
-     @Test
+    @Test
     public void testDeleteFileWithSameStartingName() throws Exception {
         System.out.println("testDeleteFileWithSameStartingName");
         String host = "localhost:8080";
-        WebDataFileResource file1 = null;
         WebDataDirResource dir = null;
 
         WebDataResourceFactory instance = new WebDataResourceFactory();
         dir = getTestDir(instance, host);
-     
 
-        ByteArrayInputStream bais = new ByteArrayInputStream(ConstantsAndSettings.TEST_DATA.getBytes());
-        file1 = (WebDataFileResource) dir.createNew("testFile1", bais, new Long(ConstantsAndSettings.TEST_DATA.getBytes().length), "text/plain");
-        checkChildren(dir, file1);
-        
-        
-        WebDataFileResource file10 = (WebDataFileResource) dir.createNew("testFile10", bais, new Long(ConstantsAndSettings.TEST_DATA.getBytes().length), "text/plain");
+
+        WebDataDirResource coll1 = (WebDataDirResource) dir.createCollection("testFile1");
+        WebDataDirResource sub1 = (WebDataDirResource) coll1.createCollection("subCollection");
+        WebDataDirResource sub2 = (WebDataDirResource) sub1.createCollection("subSubCollection2");
+        WebDataDirResource sub3 = (WebDataDirResource) sub1.createCollection("subSubCollection3");
+        WebDataDirResource sub4 = (WebDataDirResource) sub3.createCollection("subSubSubCollection4");
+
+
+        ByteArrayInputStream bais10 = new ByteArrayInputStream(ConstantsAndSettings.TEST_DATA.getBytes());
+        WebDataFileResource file10 = (WebDataFileResource) dir.createNew("testFile10", bais10, new Long(ConstantsAndSettings.TEST_DATA.getBytes().length), "text/plain");
         checkChildren(dir, file10);
-        
-        
-        file1.delete();
-        //file10 should still be there
-        Resource res = dir.child(file10.getName());
-        assertNotNull(res);
+
+        ByteArrayInputStream bais100 = new ByteArrayInputStream(ConstantsAndSettings.TEST_DATA.getBytes());
+        WebDataFileResource file100 = (WebDataFileResource) dir.createNew("testFile100", bais100, new Long(ConstantsAndSettings.TEST_DATA.getBytes().length), "text/plain");
+        checkChildren(dir, file100);
+
+
+        coll1.delete();
+
+        //file10 and file100 should still be there
+        assertNotNull(dir.child(file10.getName()));
+        checkIfResourceExists(file10, ConstantsAndSettings.TEST_DATA);
+
+        assertNotNull(dir.child(file100.getName()));
+        checkIfResourceExists(file100, ConstantsAndSettings.TEST_DATA);
+
+
+        //sub1, sub2, sub3, sub4 should not be there
+        RDMSDLCatalog cat = new RDMSDLCatalog(new File(nl.uva.cs.lobcder.util.Constants.LOBCDER_CONF_DIR + "/datanucleus.properties"));
+        assertNull(cat.getResourceEntryByLDRI(sub1.getPath()));
+        assertNull(cat.getResourceEntryByLDRI(sub2.getPath()));
+        assertNull(cat.getResourceEntryByLDRI(sub3.getPath()));
+        assertNull(cat.getResourceEntryByLDRI(sub4.getPath()));
 
         dir.delete();
     }
@@ -566,6 +585,7 @@ public class WebDataResourceFactoryTest {
             assertNotNull(s.getCredentials());
             assertNotNull(s.getEndpoint());
             assertNotNull(s.getVPHUsernames());
+            assertNotNull(s.getCredentials().getStorageSiteUsername());
             VFSNode node = s.createVFSFile(ConstantsAndSettings.TEST_FILE_PATH_1);
             assertNotNull(node);
             assertTrue(node.exists());
@@ -593,5 +613,32 @@ public class WebDataResourceFactoryTest {
         result.authorise(null, Request.Method.HEAD, new Auth(vphUserName, new Object()));
         checkResource(result);
         return result;
+    }
+
+    private void checkIfResourceExists(WebDataFileResource file10, String TEST_DATA) throws VlException {
+        Collection<IStorageSite> sites = file10.getStorageSites();
+        boolean foundIt = false;
+        VFSNode node=null;
+        for (IStorageSite s : sites) {
+            try {
+                node = s.getVNode(file10.getPath());
+            } catch (ResourceNotFoundException ex) {
+                //That's ok
+                node=null;
+            }
+            Collection<String> lp = s.getLogicalPaths();
+            if (node != null && node.exists()) {
+                assertTrue(lp.contains(file10.getPath().toString()));
+                assertTrue(s.LDRIHasPhysicalData(file10.getPath()));
+                assertEquals(((VFile) node).getContentsAsString(), TEST_DATA);
+                foundIt = true;
+            } else {
+                assertFalse(lp.contains(file10.getPath().toString()));
+                assertFalse(s.LDRIHasPhysicalData(file10.getPath()));
+            }
+
+        }
+        assertTrue(foundIt);
+
     }
 }
