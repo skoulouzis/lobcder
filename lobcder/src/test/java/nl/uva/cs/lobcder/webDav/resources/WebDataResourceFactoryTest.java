@@ -88,6 +88,7 @@ public class WebDataResourceFactoryTest {
         assertNull(result);
 
     }
+
     /**
      * Test of getResource method, of class WebDataResourceFactory.
      */
@@ -450,10 +451,9 @@ public class WebDataResourceFactoryTest {
             String contentType = "text/plain";
             try {
                 file.sendContent(out, range, params, contentType);
+                 fail("No exception");
             } catch (Exception ex) {
-                if (!(ex instanceof com.bradmcevoy.http.exceptions.NotFoundException)) {
-                    fail("Wrong exception");
-                }
+                
             }
             dir.delete();
         } catch (NotAuthorizedException ex) {
@@ -490,8 +490,7 @@ public class WebDataResourceFactoryTest {
 
         dir.delete();
     }
-    
-    
+
     @Test
     public void testDeleteFileWithSameStartingName() throws Exception {
         System.out.println("testDeleteFileWithSameStartingName");
@@ -536,6 +535,18 @@ public class WebDataResourceFactoryTest {
         assertNull(cat.getResourceEntryByLDRI(sub4.getPath()));
 
         dir.delete();
+    }
+
+    @Test
+    public void testDeleteAndCheckLogicalPaths() throws Exception {
+        String host = "localhost:8080";
+        WebDataDirResource dir = null;
+
+        WebDataResourceFactory instance = new WebDataResourceFactory();
+        dir = getTestDir(instance, host);
+
+        ByteArrayInputStream bais1 = new ByteArrayInputStream(ConstantsAndSettings.TEST_DATA.getBytes());
+        WebDataFileResource file1 = (WebDataFileResource) dir.createNew("testFile1", bais1, new Long(ConstantsAndSettings.TEST_DATA.getBytes().length), "text/plain");
     }
 
     @Test
@@ -618,13 +629,13 @@ public class WebDataResourceFactoryTest {
     private void checkIfResourceExists(WebDataFileResource file10, String TEST_DATA) throws VlException {
         Collection<IStorageSite> sites = file10.getStorageSites();
         boolean foundIt = false;
-        VFSNode node=null;
+        VFSNode node = null;
         for (IStorageSite s : sites) {
             try {
                 node = s.getVNode(file10.getPath());
             } catch (ResourceNotFoundException ex) {
                 //That's ok
-                node=null;
+                node = null;
             }
             Collection<String> lp = s.getLogicalPaths();
             if (node != null && node.exists()) {

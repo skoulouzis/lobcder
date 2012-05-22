@@ -200,9 +200,6 @@ class WebDataDirResource extends WebDataResource implements FolderResource, Coll
         try {
             debug("createNew.");
             debug("\t newName: " + newName);
-            if (newName.contains("file10")) {
-                debug("");
-            }
             debug("\t length: " + length);
             debug("\t contentType: " + contentType);
             Path newPath = Path.path(getLogicalData().getLDRI(), newName);

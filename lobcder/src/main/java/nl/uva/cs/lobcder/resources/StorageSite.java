@@ -281,10 +281,6 @@ public class StorageSite implements Serializable, IStorageSite {
                 throw new nl.uva.vlet.exception.VRLSyntaxException(ex);
             }
         }
-        String username = getCredentials().getStorageSiteUsername();
-        if (username == null) {
-            throw new NullPointerException("Username is null");
-        }
         return vfsClient;
     }
 
