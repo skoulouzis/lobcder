@@ -16,8 +16,11 @@ import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
+import org.apache.commons.httpclient.contrib.ssl.EasySSLProtocolSocketFactory;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.StringRequestEntity;
+import org.apache.commons.httpclient.protocol.Protocol;
+import org.apache.commons.httpclient.protocol.ProtocolSocketFactory;
 import org.apache.jackrabbit.webdav.*;
 import org.apache.jackrabbit.webdav.client.methods.AclMethod;
 import org.apache.jackrabbit.webdav.client.methods.DeleteMethod;
@@ -64,8 +67,8 @@ public class TestWebWAVFS {
         if (!testURL.endsWith("/")) {
             testURL = testURL + "/";
         }
-        
-        
+
+
         this.uri = URI.create(testURL);
         this.root = this.uri.toASCIIString();
         if (!this.root.endsWith("/")) {
@@ -101,6 +104,17 @@ public class TestWebWAVFS {
         assertNotNull(this.uri.getHost());
         assertNotNull(this.uri.getPort());
         assertNotNull(this.client1);
+
+
+        int port = uri.getPort();
+        if (port == -1) {
+            port = 443;
+        }
+
+        ProtocolSocketFactory socketFactory =
+                new EasySSLProtocolSocketFactory();
+        Protocol https = new Protocol("https", socketFactory, port);
+        Protocol.registerProtocol("https", https);
 
         this.client1.getState().setCredentials(
                 new AuthScope(this.uri.getHost(), this.uri.getPort()),
@@ -241,9 +255,9 @@ public class TestWebWAVFS {
 
         org.apache.jackrabbit.webdav.client.methods.AclMethod acl = new AclMethod(testFileURI1, new AclProperty(accessControlElements));
         status = client1.executeMethod(acl);
-        
-        System.out.println("Status : "+status);
-        
+
+        System.out.println("Status : " + status);
+
         delete(testFileURI1);
 
 
