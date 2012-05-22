@@ -123,6 +123,8 @@ public class RDMSDLCatalogueTest {
         assertNull(instance.getResourceEntryByLDRI(r4.getLDRI()));
         assertNull(instance.getResourceEntryByLDRI(r3.getLDRI()));
         assertNull(instance.getResourceEntryByLDRI(r2.getLDRI()));
+
+        instance.unregisterResourceEntry(resource1);
     }
 
     @Test
@@ -867,7 +869,7 @@ public class RDMSDLCatalogueTest {
     }
 
     @Test
-    public void testStorageSiteExistsy() {
+    public void testStorageSiteExists() {
         RDMSDLCatalog instance = null;
         try {
             instance = new RDMSDLCatalog(new File(nl.uva.cs.lobcder.util.Constants.LOBCDER_CONF_DIR + "/datanucleus.properties"));
@@ -910,13 +912,13 @@ public class RDMSDLCatalogueTest {
         //                + File.separator + "etc" + File.separator;
         Properties[] props = PropertiesLoader.getStorageSitesProps();
 //        ArrayList<String> endpoints = new ArrayList<String>();
-        
+
         Properties prop = null;
         for (Properties p : props) {
 //            prop = getCloudProperties(propBasePath + name);
 //            endpoints.add(prop.getProperty(Constants.STORAGE_SITE_ENDPOINT));
             catalogue.registerStorageSite(p);
-             prop = p;
+            prop = p;
         }
 
         //Create root
@@ -961,6 +963,9 @@ public class RDMSDLCatalogueTest {
 
         catalogue.unregisterResourceEntry(entry);
         assertNull(catalogue.getResourceEntryByLDRI(newCollectionPath));
+
+        catalogue.unregisterResourceEntry(root);
+        assertNull(catalogue.getResourceEntryByLDRI(root.getLDRI()));
 
     }
 
