@@ -254,18 +254,6 @@ public class LobcderScalabilityTest {
                     assertEquals(HttpStatus.SC_CREATED, put.getStatusCode());
                 }
             }
-
-//            File[] files = dataset.listFiles();
-//            for (File f : files) {
-//                String path = testDatasetPath + "/" + f.getName();
-//                debug("PUT: " + path);
-//                PutMethod put = new PutMethod(path);
-//                RequestEntity requestEntity = new InputStreamRequestEntity(
-//                        new FileInputStream(f));
-//                put.setRequestEntity(requestEntity);
-//                client.executeMethod(put);
-//                assertEquals(HttpStatus.SC_CREATED, put.getStatusCode());
-//            }
         }
 
         private void setDataset(ArrayList<File> datasets) {
