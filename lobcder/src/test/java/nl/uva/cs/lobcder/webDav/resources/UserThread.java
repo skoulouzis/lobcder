@@ -316,7 +316,7 @@ public class UserThread extends Thread {
         return false;
     }
 
-    private WebDataDirResource getTestDir(WebDataResourceFactory instance, String host, String collectionName) throws NotAuthorizedException, ConflictException, BadRequestException {
+    private WebDataDirResource getTestDir(WebDataResourceFactory instance, String host, String collectionName) throws NotAuthorizedException, ConflictException, BadRequestException, CatalogueException, IOException {
         instance.setUserName(vphUserName);
         WebDataDirResource result = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH + collectionName);
         if (result == null) {

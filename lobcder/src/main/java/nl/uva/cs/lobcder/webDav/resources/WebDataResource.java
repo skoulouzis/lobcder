@@ -7,10 +7,17 @@ package nl.uva.cs.lobcder.webDav.resources;
 import com.bradmcevoy.common.Path;
 import com.bradmcevoy.http.Request.Method;
 import com.bradmcevoy.http.*;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import nl.uva.cs.lobcder.auth.MyPrincipal;
+import nl.uva.cs.lobcder.auth.MyPrincipal.Exception;
+import nl.uva.cs.lobcder.auth.test.MyAuth;
 import nl.uva.cs.lobcder.catalogue.CatalogueException;
 import nl.uva.cs.lobcder.catalogue.IDLCatalogue;
 import nl.uva.cs.lobcder.resources.ILogicalData;
@@ -25,8 +32,9 @@ public class WebDataResource implements PropFindableResource, Resource {
     private ILogicalData logicalData;
     private final IDLCatalogue catalogue;
     private static final boolean debug = false;
-    private String user;
     private Map<String, CustomProperty> properties;
+    //Collection<Integer> roles = null;
+    protected MyPrincipal principal = null;
 
     public WebDataResource(IDLCatalogue catalogue, ILogicalData logicalData) {
         this.logicalData = logicalData;
@@ -72,78 +80,92 @@ public class WebDataResource implements PropFindableResource, Resource {
 //                }
 //                getLogicalData().setStorageSites(sites);
 //            }
-        return user;
+//  
+        try {
+            ArrayList<Integer> roles = new ArrayList<Integer>();
+            roles.add(0);
+            principal = new MyPrincipal(user + password, roles);
+        } catch (Exception ex) {
+            Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return user;//principal;
     }
 
     @Override
     public boolean authorise(Request request, Method method, Auth auth) {
-        String absPath = null;
-        String absURL = null;
-        String acceptHeader = null;
-        String fromAddress = null;
-        String remoteAddr = null;
-        String cnonce = null;
-        String nc = null;
-        String nonce = null;
-        String password = null;
-        String qop = null;
-        String relm = null;
-        String responseDigest = null;
-        String uri = null;
-        String user = null;
-        Object tag = null;
-        if (request != null) {
-            absPath = request.getAbsolutePath();
-            absURL = request.getAbsoluteUrl();
-            acceptHeader = request.getAcceptHeader();
-            fromAddress = request.getFromAddress();
-            remoteAddr = request.getRemoteAddr();
-        }
-        if (auth != null) {
-            cnonce = auth.getCnonce();
-            nc = auth.getNc();
-            nonce = auth.getNonce();
-            password = auth.getPassword();
-            qop = auth.getQop();
-            relm = auth.getRealm();
-            responseDigest = auth.getResponseDigest();
-            uri = auth.getUri();
-            user = auth.getUser();
-            tag = auth.getTag();
-        }
-        debug("authorise. \n"
-                + "\t request.getAbsolutePath(): " + absPath + "\n"
-                + "\t request.getAbsoluteUrl(): " + absURL + "\n"
-                + "\t request.getAcceptHeader(): " + acceptHeader + "\n"
-                + "\t request.getFromAddress(): " + fromAddress + "\n"
-                + "\t request.getRemoteAddr(): " + remoteAddr + "\n"
-                + "\t auth.getCnonce(): " + cnonce + "\n"
-                + "\t auth.getNc(): " + nc + "\n"
-                + "\t auth.getNonce(): " + nonce + "\n"
-                + "\t auth.getPassword(): " + password + "\n"
-                + "\t auth.getQop(): " + qop + "\n"
-                + "\t auth.getRealm(): " + relm + "\n"
-                + "\t auth.getResponseDigest(): " + responseDigest + "\n"
-                + "\t auth.getUri(): " + uri + "\n"
-                + "\t auth.getUser(): " + user + "\n"
-                + "\t auth.getTag(): " + tag);
 
-        this.user = user;
-        Collection<IStorageSite> sites = getLogicalData().getStorageSites();
-        if (sites == null || sites.isEmpty()) {
-            try {
-                sites = (Collection<IStorageSite>) getCatalogue().getSitesByUname(user);
+        //Object permission = getPermissionForTheLogicalData();
+        boolean authorized = true;
+        if (authorized) {
+            String absPath = null;
+            String absURL = null;
+            String acceptHeader = null;
+            String fromAddress = null;
+            String remoteAddr = null;
+            String cnonce = null;
+            String nc = null;
+            String nonce = null;
+            String password = null;
+            String qop = null;
+            String relm = null;
+            String responseDigest = null;
+            String uri = null;
+            String user = null;
+            Object tag = null;
+            if (request != null) {
+                absPath = request.getAbsolutePath();
+                absURL = request.getAbsoluteUrl();
+                acceptHeader = request.getAcceptHeader();
+                fromAddress = request.getFromAddress();
+                remoteAddr = request.getRemoteAddr();
+            }
+            if (auth != null) {
+                cnonce = auth.getCnonce();
+                nc = auth.getNc();
+                nonce = auth.getNonce();
+                password = auth.getPassword();
+                qop = auth.getQop();
+                relm = auth.getRealm();
+                responseDigest = auth.getResponseDigest();
+                uri = auth.getUri();
+                user = auth.getUser();
+                tag = auth.getTag();
+            }
+            debug("authorise. \n"
+                    + "\t request.getAbsolutePath(): " + absPath + "\n"
+                    + "\t request.getAbsoluteUrl(): " + absURL + "\n"
+                    + "\t request.getAcceptHeader(): " + acceptHeader + "\n"
+                    + "\t request.getFromAddress(): " + fromAddress + "\n"
+                    + "\t request.getRemoteAddr(): " + remoteAddr + "\n"
+                    + "\t auth.getCnonce(): " + cnonce + "\n"
+                    + "\t auth.getNc(): " + nc + "\n"
+                    + "\t auth.getNonce(): " + nonce + "\n"
+                    + "\t auth.getPassword(): " + password + "\n"
+                    + "\t auth.getQop(): " + qop + "\n"
+                    + "\t auth.getRealm(): " + relm + "\n"
+                    + "\t auth.getResponseDigest(): " + responseDigest + "\n"
+                    + "\t auth.getUri(): " + uri + "\n"
+                    + "\t auth.getUser(): " + user + "\n"
+                    + "\t auth.getTag(): " + tag);
 
-                if (sites == null || sites.isEmpty()) {
-                    debug("\t StorageSites for " + this.getName() + " are empty!");
-                    throw new RuntimeException("User " + user + " has StorageSites for " + this.getName());
+            Collection<IStorageSite> sites = getLogicalData().getStorageSites();
+            if (sites == null || sites.isEmpty()) {
+                try {
+                    sites = (Collection<IStorageSite>) getCatalogue().getSitesByUname(user);
+
+                    if (sites == null || sites.isEmpty()) {
+                        debug("\t StorageSites for " + this.getName() + " are empty!");
+                        throw new RuntimeException("User " + user + " has StorageSites for " + this.getName());
+                    }
+                    getLogicalData().setStorageSites(sites);
+                } catch (CatalogueException ex) {
+                    throw new RuntimeException(ex.getMessage());
                 }
-                getLogicalData().setStorageSites(sites);
-            } catch (CatalogueException ex) {
-                throw new RuntimeException(ex.getMessage());
             }
         }
-        return true;
+
+        //return auth.getUser() == null ? false : true;
+        return authorized;
     }
 
     @Override
@@ -223,5 +245,30 @@ public class WebDataResource implements PropFindableResource, Resource {
 
     public Path getPath() {
         return getLogicalData().getLDRI();
+    }
+
+    private Object getPermissionForTheLogicalData() {
+        return null;
+    }
+
+    private boolean checkPermission(Object permission, Collection<Integer> roles) {
+        for (Integer i : roles) {
+            debug("Role: " + i);
+        }
+        return true;
+    }
+
+    Collection<IStorageSite> getStorageSites() throws CatalogueException, IOException {
+        Collection<IStorageSite> sites = getLogicalData().getStorageSites();
+        if (sites == null || sites.isEmpty()) {
+//            String uname = String.valueOf(principal.getUid());
+            String uname = "uname1";
+            sites = getCatalogue().getSitesByUname(uname);
+        }
+        if (sites == null || sites.isEmpty()) {
+            debug("\t Storage Sites for " + this.getLogicalData().getLDRI() + " are empty!");
+            throw new IOException("Storage Sites for " + this.getLogicalData().getLDRI() + " are empty!");
+        }
+        return sites;
     }
 }

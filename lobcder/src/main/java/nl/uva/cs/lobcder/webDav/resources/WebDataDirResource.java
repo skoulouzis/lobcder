@@ -39,7 +39,6 @@ class WebDataDirResource extends WebDataResource implements FolderResource, Coll
 //    private ILogicalData entry;
 //    private final IDLCatalogue catalogue;
     private boolean debug = true;
-    private String user;
 
     public WebDataDirResource(IDLCatalogue catalogue, ILogicalData entry) throws IOException, Exception {
         super(catalogue, entry);
@@ -61,12 +60,9 @@ class WebDataDirResource extends WebDataResource implements FolderResource, Coll
             if (newFolderEntry == null) {
                 newFolderEntry = new LogicalData(newCollectionPath, Constants.LOGICAL_FOLDER);
                 newFolderEntry.getMetadata().setCreateDate(System.currentTimeMillis());
-                Collection<IStorageSite> sites = getLogicalData().getStorageSites();
-                if (sites == null || sites.isEmpty()) {
-                    debug("\t Storage Sites for " + this.getLogicalData().getLDRI() + " are empty!");
-                    throw new IOException("Storage Sites for " + this.getLogicalData().getLDRI() + " are empty!");
-                }
-
+                
+                Collection<IStorageSite> sites = getStorageSites();
+                
                 newFolderEntry.setStorageSites(sites);
                 getCatalogue().registerResourceEntry(newFolderEntry);
             }
@@ -121,77 +117,6 @@ class WebDataDirResource extends WebDataResource implements FolderResource, Coll
         }
         debug("Returning children: " + children);
         return children;
-    }
-
-    @Override
-    public boolean authorise(Request request, Method method, Auth auth) {
-        String absPath = null;
-        String absURL = null;
-        String acceptHeader = null;
-        String fromAddress = null;
-        String remoteAddr = null;
-        String cnonce = null;
-        String nc = null;
-        String nonce = null;
-        String password = null;
-        String qop = null;
-        String relm = null;
-        String responseDigest = null;
-        String uri = null;
-        String user = null;
-        Object tag = null;
-        if (request != null) {
-            absPath = request.getAbsolutePath();
-            absURL = request.getAbsoluteUrl();
-            acceptHeader = request.getAcceptHeader();
-            fromAddress = request.getFromAddress();
-            remoteAddr = request.getRemoteAddr();
-        }
-        if (auth != null) {
-            cnonce = auth.getCnonce();
-            nc = auth.getNc();
-            nonce = auth.getNonce();
-            password = auth.getPassword();
-            qop = auth.getQop();
-            relm = auth.getRealm();
-            responseDigest = auth.getResponseDigest();
-            uri = auth.getUri();
-            user = auth.getUser();
-            tag = auth.getTag();
-        }
-        debug("authorise. \n"
-                + "\t request.getAbsolutePath(): " + absPath + "\n"
-                + "\t request.getAbsoluteUrl(): " + absURL + "\n"
-                + "\t request.getAcceptHeader(): " + acceptHeader + "\n"
-                + "\t request.getFromAddress(): " + fromAddress + "\n"
-                + "\t request.getRemoteAddr(): " + remoteAddr + "\n"
-                + "\t auth.getCnonce(): " + cnonce + "\n"
-                + "\t auth.getNc(): " + nc + "\n"
-                + "\t auth.getNonce(): " + nonce + "\n"
-                + "\t auth.getPassword(): " + password + "\n"
-                + "\t auth.getQop(): " + qop + "\n"
-                + "\t auth.getRealm(): " + relm + "\n"
-                + "\t auth.getResponseDigest(): " + responseDigest + "\n"
-                + "\t auth.getUri(): " + uri + "\n"
-                + "\t auth.getUser(): " + user + "\n"
-                + "\t auth.getTag(): " + tag);
-
-        this.user = user;
-        Collection<IStorageSite> sites = getLogicalData().getStorageSites();
-        if (sites == null || sites.isEmpty()) {
-            try {
-                sites = (Collection<IStorageSite>) getCatalogue().getSitesByUname(user);
-
-                if (sites == null || sites.isEmpty()) {
-                    debug("\t StorageSites for " + this.getName() + " are empty!");
-                    throw new RuntimeException("User " + user + " has StorageSites for " + this.getName());
-                }
-                getLogicalData().setStorageSites(sites);
-            } catch (CatalogueException ex) {
-                throw new RuntimeException(ex.getMessage());
-            }
-        }
-        return true;
     }
 
     @Override
@@ -403,17 +328,9 @@ class WebDataDirResource extends WebDataResource implements FolderResource, Coll
         return children;
     }
 
-    Collection<IStorageSite> getStorageSites() {
-        return this.getLogicalData().getStorageSites();
-    }
-
     private Resource createNonExistingFile(Path newPath, Long length, String contentType, InputStream inputStream) throws IOException, Exception {
         LogicalData newResource = new LogicalData(newPath, Constants.LOGICAL_FILE);
-        Collection<IStorageSite> sites = getLogicalData().getStorageSites();
-        if (sites == null || sites.isEmpty()) {
-            debug("\t Storage Sites for " + this.getLogicalData().getLDRI() + " are empty!");
-            throw new IOException("Storage Sites for " + this.getLogicalData().getLDRI() + " are empty!");
-        }
+        Collection<IStorageSite> sites = getStorageSites();
         newResource.setStorageSites(sites);
         VFSNode node = null;
         try {
@@ -478,9 +395,5 @@ class WebDataDirResource extends WebDataResource implements FolderResource, Coll
         getCatalogue().updateResourceEntry(newResource);
 //        LogicalData relodedResource = (LogicalData) getCatalogue().getResourceEntryByLDRI(newResource.getLDRI());
         return new WebDataFileResource(getCatalogue(), newResource);
-    }
-
-    void setUser(String uname) {
-        this.user = uname;
     }
 }

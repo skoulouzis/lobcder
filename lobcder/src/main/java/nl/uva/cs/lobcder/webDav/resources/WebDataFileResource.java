@@ -148,7 +148,7 @@ public class WebDataFileResource extends WebDataResource implements
         debug("\t range: " + range);
         debug("\t params: " + params);
         debug("\t contentType: " + contentType);
-
+        
         try {
 
             VFile vFile;
@@ -316,9 +316,5 @@ public class WebDataFileResource extends WebDataResource implements
             meta.setModifiedDate(System.currentTimeMillis());
             getLogicalData().setMetadata(meta);
         }
-    }
-
-    Collection<IStorageSite> getStorageSites() {
-        return this.getLogicalData().getStorageSites();
     }
 }

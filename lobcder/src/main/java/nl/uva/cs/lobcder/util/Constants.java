@@ -9,7 +9,7 @@ package nl.uva.cs.lobcder.util;
  * @author S. Koulouzis
  */
 public class Constants {
-    public static final String LOBCDER_CONF_DIR = System.getProperty("user.home")+"/.lobcder/";
+    public static final String LOBCDER_CONF_DIR = System.getProperty("user.home")+"/.lobcder-test/";
     public static final String VPH_USERNAMES="vph.users"; 
     public static final String STORAGE_SITE_USERNAME="storage.site.username"; 
     public static final String STORAGE_SITE_PASSWORD="storage.site.password";

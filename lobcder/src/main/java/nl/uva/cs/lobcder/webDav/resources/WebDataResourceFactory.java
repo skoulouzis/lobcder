@@ -23,7 +23,7 @@ public class WebDataResourceFactory implements ResourceFactory {
     private IDLCatalogue catalogue;
     private boolean debug = false;
     //Hardcoded for now. We need to find a way to get the username
-    private String uname;
+    private String uname = "skoulouz";
 
     public WebDataResourceFactory() throws Exception {
         String confDir = nl.uva.cs.lobcder.util.Constants.LOBCDER_CONF_DIR;
@@ -40,27 +40,15 @@ public class WebDataResourceFactory implements ResourceFactory {
 
         Path ldri = Path.path(new File(strPath).getPath()).getStripFirst();
         try {
-
             //Gets the root path. If instead we called :'ldri = Path.path(strPath);' we get back '/lobcder-1.0-SNAPSHOT'
             debug("getResource:  strPath: " + strPath + " path: " + Path.path(strPath) + " ldri: " + ldri);
             debug("getResource:  host: " + host + " path: " + ldri);
             debug("getResource:  uname : " + this.uname);
-            
-            Collection<IStorageSite> sites;
-            if (ldri.isRoot() || ldri.toString().equals("") ) {
-                LogicalData root = new LogicalData(ldri, Constants.LOGICAL_FOLDER);
-                sites = root.getStorageSites();
-                if (sites == null || sites.isEmpty()) {
-                    sites = (Collection<IStorageSite>) catalogue.getSitesByUname(uname);
 
-                    if (sites == null || sites.isEmpty()) {
-                        debug("\t StorageSites for " + ldri + " are empty!");
-                        throw new IOException("StorageSites for " + ldri + " are empty!");
-                    }
-                    root.setStorageSites(sites);
-                }
+            Collection<IStorageSite> sites;
+            if (ldri.isRoot() || ldri.toString().equals("")) {
+                LogicalData root = new LogicalData(ldri, Constants.LOGICAL_FOLDER);
                 WebDataDirResource webRoot = new WebDataDirResource(catalogue, root);
-                webRoot.setUser(uname);
                 return webRoot;
             }
 
@@ -69,16 +57,6 @@ public class WebDataResourceFactory implements ResourceFactory {
                 debug("Didn't find " + ldri + ". returning null");
                 return null;
             }
-
-//            sites = entry.getStorageSites();
-//            if (sites == null || sites.isEmpty()) {
-//                sites = (AbstractCollection<IStorageSite>) catalogue.getSitesByUname(uname);
-//                if (sites == null || sites.isEmpty()) {
-//                    debug("\t StorageSites for " + ldri + " are empty!");
-//                    throw new IOException("StorageSites for " + ldri + " are empty!");
-//                }
-//                entry.setStorageSites(sites);
-//            }
 
             if (entry.getType().equals(Constants.LOGICAL_FOLDER)) {
                 return new WebDataDirResource(catalogue, entry);
@@ -110,29 +88,7 @@ public class WebDataResourceFactory implements ResourceFactory {
                 catalogue.registerStorageSite(p);
             }
         }
-//        String[] names = new String[]{"storage1.prop"};
-//        String propBasePath = System.getProperty("user.home") + File.separator
-//                + "workspace" + File.separator + "lobcder"
-//                + File.separator + "etc" + File.separator;
-//
-//        for (String name : names) {
-//            Properties prop = getCloudProperties(propBasePath + name);
-//            if (!catalogue.storageSiteExists(prop)) {
-//                catalogue.registerStorageSite(prop);
-//            }
-//        }
     }
-//    private static Properties getCloudProperties(String propPath)
-//            throws FileNotFoundException, IOException {
-//        Properties properties = new Properties();
-//
-//        File f = new File(propPath);
-//        if (!f.exists()) {
-//            throw new FileNotFoundException("Configuration file " + f.getAbsolutePath() + " not found");
-//        }
-//        properties.load(new FileInputStream(f));
-//        return properties;
-//    }
 
     public void setUserName(String remoteUser) {
         this.uname = remoteUser;

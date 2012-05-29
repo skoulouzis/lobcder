@@ -38,6 +38,11 @@ public class WebDavServlet implements Servlet {
             javax.servlet.ServletResponse servletResponse) throws ServletException, IOException {
         HttpServletRequest req = (HttpServletRequest) servletRequest;
         HttpServletResponse resp = (HttpServletResponse) servletResponse;
+        final String auth = req.getHeader( "Authorization" );
+        if ( auth == null ) {
+            resp.setHeader( "WWW-Authenticate", "Basic realm=\"" + "SECRET" + "\"" );
+            resp.sendError( HttpServletResponse.SC_UNAUTHORIZED );
+        } else {
 
         debug("HttpServletRequest \n"
                 + "\t getAuthType: " + req.getAuthType() + "\n"
@@ -68,6 +73,7 @@ public class WebDavServlet implements Servlet {
             originalResponse.remove();
             servletResponse.getOutputStream().flush();
             servletResponse.flushBuffer();
+        }
         }
     }
 
@@ -119,6 +125,11 @@ public class WebDavServlet implements Servlet {
             authService = new AuthenticationService(list);
         }
 
+        authService = new AuthenticationService();
+        authService.setDisableDigest(true);
+        authService.setDisableBasic(false);
+        authService.setDisableExternal(true);
+        
         // log the auth handler config
         debug("Configured authentication handlers: " + authService.getAuthenticationHandlers().size());
         if (authService.getAuthenticationHandlers().size() > 0) {

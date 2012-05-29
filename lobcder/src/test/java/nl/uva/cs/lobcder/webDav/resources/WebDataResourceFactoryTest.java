@@ -13,6 +13,7 @@ import java.io.*;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import nl.uva.cs.lobcder.catalogue.CatalogueException;
 import nl.uva.cs.lobcder.catalogue.RDMSDLCatalog;
 import nl.uva.cs.lobcder.resources.ILogicalData;
 import nl.uva.cs.lobcder.resources.IStorageSite;
@@ -588,7 +589,7 @@ public class WebDataResourceFactoryTest {
         assertTrue(foundIt);
     }
 
-    private void checkResource(WebDataDirResource result) throws VlException {
+    private void checkResource(WebDataDirResource result) throws VlException, CatalogueException, IOException {
         assertNotNull(result);
         Collection<IStorageSite> sites = result.getStorageSites();
         assertFalse(sites.isEmpty());
@@ -612,7 +613,7 @@ public class WebDataResourceFactoryTest {
         }
     }
 
-    private WebDataDirResource getTestDir(WebDataResourceFactory instance, String host) throws NotAuthorizedException, ConflictException, BadRequestException, VlException {
+    private WebDataDirResource getTestDir(WebDataResourceFactory instance, String host) throws NotAuthorizedException, ConflictException, BadRequestException, VlException, CatalogueException, IOException {
         instance.setUserName(vphUserName);
         WebDataDirResource result = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH + ConstantsAndSettings.TEST_FOLDER_NAME_1);
         if (result == null) {
@@ -626,7 +627,7 @@ public class WebDataResourceFactoryTest {
         return result;
     }
 
-    private void checkIfResourceExists(WebDataFileResource file10, String TEST_DATA) throws VlException {
+    private void checkIfResourceExists(WebDataFileResource file10, String TEST_DATA) throws VlException, CatalogueException, IOException {
         Collection<IStorageSite> sites = file10.getStorageSites();
         boolean foundIt = false;
         VFSNode node = null;
