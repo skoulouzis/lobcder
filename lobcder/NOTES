@@ -17,19 +17,48 @@ locally
 
 
 
-Create MySQL DB 
-
+Create MySQL DB
 #
 # Connect to the local database server as user root
 # You will be prompted for a password.
 #
 mysql -h localhost  -u root -p
-
-
 mysql> create database mydb;
-
-
 #
 # Now we create the user paul and give him full 
 # permissions on the new database
 mysql> grant CREATE,INSERT,DELETE,UPDATE,SELECT on mydb.* to username@localhost identified by 'password';
+
+
+
+
+Lobcder configuration files
+
+All configuration file should be located at ~/.lobcder/
+In there we have 3 types of files.
+The ~/.lobcder-test/lobcder.prop that sets the values:  
+lobcder.storage.prefix=LOBCDER-REPLICA-v1.1 which is the name of the folder which 
+lobcder will create on the storage sites and use for storing the physical data.
+So if for example we use as a storage site the endpoint sftp://host/path the file 
+with the logical name file1 will be loacted at
+sftp://host/path/LOBCDER-REPLICA-v1.1/file1
+
+lobcder.storage.site.prop.files=/home/user/.lobcder/storage1.prop,/home/user/.lobcder/storage2.prop,/home/user/.lobcder/storage3.prop
+This is the name that specifies the location of storage sites description that lobcder can use.
+They must be comma separated absolute paths 
+
+The ~/.lobcder/datanucleus.properties that configures datanucleus 
+(see http://www.datanucleus.org/products/datanucleus/guides/jdo/tutorial.html)
+The most important values for this file are: 
+datanucleus.ConnectionDriverName=com.mysql.jdbc.Driver
+datanucleus.ConnectionURL=jdbc:mysql://localhost/lobcderFSTest
+datanucleus.ConnectionUserName=lobcder
+datanucleus.ConnectionPassword=password
+
+The  ~/.lobcder/storageX.prop which has the following form 
+vph.users=uname1,uname2,uname2,unameN #The name of vph users that have the right to use this storage site 
+storage.site.username=user #The username for the credentials for this storage site 
+storage.site.password=password #The password for the credentials for this storage site 
+storage.site.grid.proxy=notyet #Not imlemented yet
+storage.site.endpoint=sftp://host/ #The host endpoint. At the moment we accept these schemas: file://, swift://, sftp:// 
+
