@@ -11,10 +11,12 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import nl.uva.cs.lobcder.auth.Permissions;
 import nl.uva.cs.lobcder.resources.*;
 import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.cs.lobcder.util.ConstantsAndSettings;
@@ -651,6 +653,42 @@ public class RDMSDLCatalogueTest {
             assertNotNull(meta.getLength());
 
             instance2.unregisterResourceEntry(entry);
+        } catch (Exception ex) {
+            fail("Unexpected Exception: " + ex.getMessage());
+        } finally {
+        }
+    }
+    
+    
+    
+     @Test
+    public void testPermissions() {
+        RDMSDLCatalog instance = null;
+        Path originalPath = Path.path("/resource");
+        LogicalData e = new LogicalData(originalPath, Constants.LOGICAL_DATA);
+        Metadata meta = new Metadata();
+        ArrayList<Integer> permArray1 = new ArrayList<Integer>();
+        permArray1.add(0);
+        permArray1.add(1);
+        permArray1.add(5);
+        meta.setPermissionArray(permArray1);
+        e.setMetadata(meta);
+
+        try {
+            instance = new RDMSDLCatalog(new File(nl.uva.cs.lobcder.util.Constants.LOBCDER_CONF_DIR + "/datanucleus.properties"));
+            instance.registerResourceEntry(e);
+
+
+            ILogicalData entry = instance.getResourceEntryByLDRI(originalPath);
+            meta = entry.getMetadata();
+
+            assertNotNull(meta);
+            List<Integer> permArray2 = meta.getPermissionArray();
+            assertNotNull(permArray2);
+            assertEquals(permArray1,permArray2);
+            Permissions perm2 = new Permissions(permArray2);
+
+            instance.unregisterResourceEntry(entry);
         } catch (Exception ex) {
             fail("Unexpected Exception: " + ex.getMessage());
         } finally {
