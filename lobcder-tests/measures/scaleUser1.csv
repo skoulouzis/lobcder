@@ -1,0 +1,3 @@
+DatasetID,UploadTime(msec),sizeUploaded(kb),Speed(kb/msec),putWaitTotalTime(msec),putAverageTime(msec),
+dataset20MB,3191.0,200.0,0.06267627702914447,3189.0,159.45
+dataset80MB,14841.0,800.0,0.05390472340138805,14828.0,185.35

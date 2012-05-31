@@ -9,6 +9,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Properties;
 import java.util.Random;
+import java.util.StringTokenizer;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -44,6 +45,7 @@ public class LobcderScalabilityTest {
     private ArrayList<File> datasets;
     public static final int TEST_UPLOAD = 0;
     public static final int CREATE_DATASET = 1;
+    public static final String[] meanLables = new String[]{ScaleTest.userMeasureLables[0], ScaleTest.userMeasureLables[1], ScaleTest.userMeasureLables[2], ScaleTest.userMeasureLables[3], ScaleTest.userMeasureLables[4], ScaleTest.userMeasureLables[5], "NumOfUsers"};
 
     @Before
     public void setUp() throws Exception {
@@ -135,13 +137,26 @@ public class LobcderScalabilityTest {
                 } else {
                     testDatasetPath += "/" + parts[i];
                 }
-                System.out.println("MkCol: " + testDatasetPath);
+//                System.out.println("MkCol: " + testDatasetPath);
                 MkColMethod mkcol = new MkColMethod(testDatasetPath);
                 clients[0].executeMethod(mkcol);
                 assertTrue("status: " + mkcol.getStatusCode(), mkcol.getStatusCode() == HttpStatus.SC_CREATED || mkcol.getStatusCode() == HttpStatus.SC_METHOD_NOT_ALLOWED);
             }
-            
-            upload(testDatasetPath, 5);
+//            FileWriter writer = new FileWriter("measures" + File.separator + "UploadTimes" + ".csv");
+//            writer.append("NumOfClients,UploadTime(msec),sizeUploaded(kb),Speed(kb/msec)\n");
+            for (int i = 1; i < 4; i++) {
+                double startUploadTime = System.currentTimeMillis();
+                upload(testDatasetPath, i);
+                measureMean();
+                double endUploadTime = System.currentTimeMillis();
+                double elapsedUploadTime = (endUploadTime - startUploadTime);
+                double sizeUploaded = (getDirSize(datasets.get(0).getParentFile()) / 1024.0);
+                double speed = sizeUploaded / elapsedUploadTime;
+//                writer.append(i + "," + elapsedUploadTime + "," + sizeUploaded + "," + speed + "\n");
+            }
+//            writer.flush();
+//            writer.close();
+
         } finally {
         }
     }
@@ -169,7 +184,6 @@ public class LobcderScalabilityTest {
         execSvc.shutdown();
         execSvc.awaitTermination(30, TimeUnit.MINUTES);
         long endTime = System.currentTimeMillis();
-        System.out.println(threads + " , " + (endTime - startTime));
     }
 
     void delete(File f) throws IOException {
@@ -184,7 +198,6 @@ public class LobcderScalabilityTest {
     }
 
     private void upload(String testDatasetPath, int threads) throws IOException, InterruptedException {
-
         ExecutorService execSvc = Executors.newFixedThreadPool(threads);
         for (int i = 0; i < threads; i++) {
             ScaleTest user = new ScaleTest(TEST_UPLOAD);
@@ -198,6 +211,74 @@ public class LobcderScalabilityTest {
         execSvc.awaitTermination(30, TimeUnit.MINUTES);
     }
 
+    public static long getDirSize(File dir) {
+        long size = 0;
+        if (dir.isFile()) {
+            size = dir.length();
+        } else {
+            File[] subFiles = dir.listFiles();
+
+            for (File file : subFiles) {
+                if (file.isFile()) {
+                    size += file.length();
+                } else {
+                    size += getDirSize(file);
+                }
+
+            }
+        }
+
+        return size;
+    }
+
+    private void measureMean() throws FileNotFoundException, IOException {
+        File measureDir = new File("measures");
+        FileFilter filter = new FileFilter() {
+
+            @Override
+            public boolean accept(File pathname) {
+                if (pathname.getName().contains("scaleUser")) {
+                    return true;
+                }
+                return false;
+            }
+        };
+
+        File[] measureFiles = measureDir.listFiles(filter);
+        System.out.println("measureFilesNum------------: " + measureFiles.length);
+        String line;
+        int universalLine = 0;
+        double last = 0;
+        double res = 0;
+        int labaleIndex =0;
+        for (File f : measureFiles) {
+            BufferedReader bufRdr = new BufferedReader(new FileReader(f));
+            System.out.println("Open: " + f.getName());
+            int fileLineNumber = 0;
+            while ((line = bufRdr.readLine()) != null) {
+                StringTokenizer st = new StringTokenizer(line, ",");
+                int fileColumnNumber = 0;
+                while (st.hasMoreTokens()) {
+                    String token = st.nextToken();
+                    if (fileLineNumber == 1) {
+                        if (fileColumnNumber == 2) {
+                            last +=( Double.valueOf(token));
+                            res = (last) / measureFiles.length;
+                            labaleIndex = fileColumnNumber;
+                        }
+                    }
+//                    System.out.println("Line # " + fileLineNumber
+//                            + ", Column # " + fileColumnNumber
+//                            + ", Token : " + token);
+                    fileColumnNumber++;
+                }
+                fileLineNumber++;
+            }
+            universalLine++;
+        }
+        System.out.println(meanLables[labaleIndex] + ": " + last + " / " + measureFiles.length+" = "+res);
+    }
+
     private static class ScaleTest implements Runnable {
 
         private ArrayList<File> datasets;
@@ -208,6 +289,8 @@ public class LobcderScalabilityTest {
         private final int op;
         private File dataset;
         private int fileID;
+        private FileWriter writer;
+        public static String[] userMeasureLables = new String[]{"DatasetID", "UploadTime(msec)", "sizeUploaded(kb)", "Speed(kb/msec)", "putWaitTotalTime(msec)", "putAverageTime(msec)"};
 
         private ScaleTest(int op) {
             this.op = op;
@@ -233,25 +316,46 @@ public class LobcderScalabilityTest {
         }
 
         private void upload() throws IOException {
+            writer = new FileWriter("measures" + File.separator + username + ".csv");
+            for (String l : userMeasureLables) {
+                writer.append(l);
+                writer.append(",");
+            }
+            writer.append("\n");
             for (File d : datasets) {
                 File[] files = d.listFiles();
-                String parent = files[0].getParentFile().getName();
-                String path1 = testDatasetPath + "/" + parent;
-                debug("Mkol: " + path1);
+                String datasetName = files[0].getParentFile().getName();
+                String path1 = testDatasetPath + "/" + datasetName;
+//                debug("Mkol: " + path1);
                 MkColMethod mkcol = new MkColMethod(path1);
                 client.executeMethod(mkcol);
+                double startUpload = System.currentTimeMillis();
+                double bytesUploaded = 0;
+                double putWaitTotalTime = 0;
                 assertTrue("status: " + mkcol.getStatusCode(), mkcol.getStatusCode() == HttpStatus.SC_CREATED || mkcol.getStatusCode() == HttpStatus.SC_METHOD_NOT_ALLOWED);
                 for (File f : files) {
                     String path2 = path1 + "/" + f.getName();
-                    debug("PUT: " + path2);
+//                    debug("PUT: " + path2);
                     PutMethod put = new PutMethod(path2);
                     RequestEntity requestEntity = new InputStreamRequestEntity(
                             new FileInputStream(f));
                     put.setRequestEntity(requestEntity);
+                    double putStart = System.currentTimeMillis();
                     client.executeMethod(put);
+                    double putEnd = System.currentTimeMillis();
+                    bytesUploaded += f.length();
+                    putWaitTotalTime += (putEnd - putStart);
                     assertEquals(HttpStatus.SC_CREATED, put.getStatusCode());
                 }
+                double putAverageTime = (double) (putWaitTotalTime / files.length);
+                double endUpload = System.currentTimeMillis();
+                double elapsedUploadTime = endUpload - startUpload;
+                double kBytesUploaded = (double) (bytesUploaded / 1024.0);
+                double speed = (double) (kBytesUploaded / elapsedUploadTime);
+                writer.append(datasetName + "," + elapsedUploadTime + "," + kBytesUploaded + "," + speed + "," + putWaitTotalTime + "," + putAverageTime + "\n");
             }
+            writer.flush();
+            writer.close();
         }
 
         private void setDataset(ArrayList<File> datasets) {
