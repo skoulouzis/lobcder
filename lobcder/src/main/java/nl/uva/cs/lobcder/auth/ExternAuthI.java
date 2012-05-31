@@ -4,7 +4,7 @@
  */
 package nl.uva.cs.lobcder.auth;
 
-import java.util.Collection;
+import java.util.ArrayList;
 
 /**
  *
@@ -21,5 +21,5 @@ public interface ExternAuthI {
      * it returns collection of integers. The first one is WPH-User identifier,
      * the rest are identifiers of the groups (roles) the user belongs to
      */
-    public Collection<Integer> checkToken(String token);    
+    public ArrayList<Integer> checkToken(String token);    
 }

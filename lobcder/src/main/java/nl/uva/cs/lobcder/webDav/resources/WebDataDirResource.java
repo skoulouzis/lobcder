@@ -17,6 +17,8 @@ import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import nl.uva.cs.lobcder.auth.MyPrincipal;
+import nl.uva.cs.lobcder.auth.Permissions;
 import nl.uva.cs.lobcder.catalogue.CatalogueException;
 import nl.uva.cs.lobcder.catalogue.IDLCatalogue;
 import nl.uva.cs.lobcder.resources.ILogicalData;
@@ -53,6 +55,11 @@ class WebDataDirResource extends WebDataResource implements FolderResource, Coll
     @Override
     public CollectionResource createCollection(String newName) throws NotAuthorizedException, ConflictException, BadRequestException {
         try {
+            Permissions p = new Permissions(getLogicalData().getMetadata().getPermissionArray());
+            MyPrincipal principal = (MyPrincipal) (MiltonServlet.request().getAttribute("vph-user"));
+            if(!p.canWrite(principal)){
+                throw new NotAuthorizedException();
+            }
             debug("createCollection.");
             Path newCollectionPath = Path.path(getLogicalData().getLDRI(), newName);
             LogicalData newFolderEntry = (LogicalData) getCatalogue().getResourceEntryByLDRI(newCollectionPath);
@@ -60,15 +67,20 @@ class WebDataDirResource extends WebDataResource implements FolderResource, Coll
             if (newFolderEntry == null) {
                 newFolderEntry = new LogicalData(newCollectionPath, Constants.LOGICAL_FOLDER);
                 newFolderEntry.getMetadata().setCreateDate(System.currentTimeMillis());
-                
+
                 Collection<IStorageSite> sites = getStorageSites();
-                
+
                 newFolderEntry.setStorageSites(sites);
                 getCatalogue().registerResourceEntry(newFolderEntry);
             }
 
+            newFolderEntry.getMetadata().setPermissionArray((new Permissions(principal).getRolesPerm()));
             WebDataDirResource resource = new WebDataDirResource(getCatalogue(), newFolderEntry);
             return resource;
+        } catch (Permissions.Exception e) {
+            throw new NotAuthorizedException();
+        } catch (NotAuthorizedException e){
+            throw e;
         } catch (Exception ex) {
             Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, ex);
             if (ex.getMessage().contains("resource exists")) {
@@ -79,7 +91,20 @@ class WebDataDirResource extends WebDataResource implements FolderResource, Coll
     }
 
     @Override
-    public Resource child(String childName) {
+    public Resource child(String childName) throws NotAuthorizedException {
+        try {
+            Permissions p = new Permissions(getLogicalData().getMetadata().getPermissionArray());
+            MyPrincipal principal = (MyPrincipal) (MiltonServlet.request().getAttribute("vph-user"));
+            if (!p.canRead(principal)) {
+                throw new NotAuthorizedException();
+            }
+        } catch (Permissions.Exception e) {
+            throw new NotAuthorizedException();
+        } catch (NotAuthorizedException e){
+            throw e;
+        } catch (Exception e) {
+            throw new NotAuthorizedException();
+        }
         try {
             debug("child.");
             Path childPath = Path.path(getLogicalData().getLDRI(), childName);
@@ -103,15 +128,25 @@ class WebDataDirResource extends WebDataResource implements FolderResource, Coll
     }
 
     @Override
-    public List<? extends Resource> getChildren() {
+    public List<? extends Resource> getChildren() throws NotAuthorizedException {
         debug("getChildren.");
         ArrayList<? extends Resource> children = null;
         try {
+            Permissions p = new Permissions(getLogicalData().getMetadata().getPermissionArray());
+            MyPrincipal principal = (MyPrincipal) (MiltonServlet.request().getAttribute("vph-user"));
+            if(!p.canRead(principal)) {
+                throw new NotAuthorizedException(); 
+            }
             if (getLogicalData().getLDRI().isRoot()) {
                 children = getTopLevelChildren();
             } else {
                 children = new ArrayList<Resource>(getEntriesChildren());
             }
+            
+        } catch (Permissions.Exception e) {
+            throw new NotAuthorizedException();
+        } catch (NotAuthorizedException e){
+            throw e;
         } catch (Exception ex) {
             Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -123,10 +158,15 @@ class WebDataDirResource extends WebDataResource implements FolderResource, Coll
     public Resource createNew(String newName, InputStream inputStream, Long length, String contentType) throws IOException, ConflictException, NotAuthorizedException, BadRequestException {
         Resource resource;
         try {
+            Permissions p = new Permissions(getLogicalData().getMetadata().getPermissionArray());
+            MyPrincipal principal = (MyPrincipal) (MiltonServlet.request().getAttribute("vph-user"));
             debug("createNew.");
             debug("\t newName: " + newName);
             debug("\t length: " + length);
             debug("\t contentType: " + contentType);
+            if(!p.canWrite(principal)) {
+                throw new NotAuthorizedException();      
+            }
             Path newPath = Path.path(getLogicalData().getLDRI(), newName);
 
             LogicalData newResource = (LogicalData) getCatalogue().getResourceEntryByLDRI(newPath);
@@ -140,7 +180,12 @@ class WebDataDirResource extends WebDataResource implements FolderResource, Coll
                 reloaded = getCatalogue().getResourceEntryByLDRI(this.getLogicalData().getLDRI());
                 setLogicalData(reloaded);
             }
+            ((WebDataResource)resource).getLogicalData().getMetadata().setPermissionArray((new Permissions(principal)).getRolesPerm());
             return resource;
+        } catch (Permissions.Exception e) {
+            throw new NotAuthorizedException();
+        } catch (NotAuthorizedException e){
+            throw e;
         } catch (Exception ex) {
             throw new BadRequestException(this, ex.getMessage());
         } finally {
@@ -153,12 +198,26 @@ class WebDataDirResource extends WebDataResource implements FolderResource, Coll
             debug("copyTo.");
             debug("\t toCollection: " + toCollection.getName());
             debug("\t name: " + name);
+            Permissions p = new Permissions(getLogicalData().getMetadata().getPermissionArray());
+            MyPrincipal principal = (MyPrincipal) (MiltonServlet.request().getAttribute("vph-user"));
+            if(!p.canRead(principal)){
+                throw new NotAuthorizedException();
+            }
+            Permissions parentPerm = new Permissions(((WebDataResource)toCollection).getLogicalData().getMetadata().getPermissionArray());
+            if(!parentPerm.canWrite(principal)){
+                throw new NotAuthorizedException();
+            }
             Path toCollectionLDRI = Path.path(toCollection.getName());
             Path newLDRI = Path.path(toCollectionLDRI, name);
             LogicalData newFolderEntry = new LogicalData(newLDRI, Constants.LOGICAL_FOLDER);
             newFolderEntry.getMetadata().setModifiedDate(System.currentTimeMillis());
+            newFolderEntry.getMetadata().setPermissionArray((ArrayList<Integer>)p.getRolesPerm().clone());
             getCatalogue().registerResourceEntry(newFolderEntry);
-
+                    
+        } catch (Permissions.Exception e) {
+            throw new NotAuthorizedException();
+        } catch (NotAuthorizedException e){
+            throw e;
         } catch (Exception ex) {
             if (ex.getMessage().contains("resource exists")) {
                 throw new ConflictException(this, ex.getMessage());
@@ -169,8 +228,25 @@ class WebDataDirResource extends WebDataResource implements FolderResource, Coll
 
     @Override
     public void delete() throws NotAuthorizedException, ConflictException, BadRequestException {
-        try {
+        try {            
+            MyPrincipal principal = (MyPrincipal) (MiltonServlet.request().getAttribute("vph-user"));
+            if(getLogicalData().getLDRI().isRoot()){
+                throw new NotAuthorizedException();
+            } else {                
+                if(getPath().getParent().isRoot()) {
+                    if(!principal.getRoles().contains(Permissions.ROOT_ADMIN))
+                        throw new NotAuthorizedException();
+                } else {
+                    ArrayList<Integer> pai = getCatalogue().getResourceEntryByLDRI(getPath().getParent()).getMetadata().getPermissionArray();
+                    Permissions p = new Permissions(pai);
+                    if(!p.canWrite(principal)){
+                        throw new NotAuthorizedException();
+                    }
+                }
+            }
             debug("delete.");
+            //TODO: physical data shall be removed AFTER we delete logical structures. All permissions checks are
+            //performed on logical level 
             Collection<IStorageSite> sites = getLogicalData().getStorageSites();
             if (sites != null && !sites.isEmpty()) {
                 for (IStorageSite s : sites) {
@@ -186,15 +262,32 @@ class WebDataDirResource extends WebDataResource implements FolderResource, Coll
                 }
             }
             getCatalogue().unregisterResourceEntry(getLogicalData());
+                
+        } catch (Permissions.Exception e) {
+            throw new NotAuthorizedException();
+        } catch (NotAuthorizedException e){
+            throw e;    
         } catch (CatalogueException ex) {
             throw new BadRequestException(this, ex.toString());
         } catch (VlException ex) {
             throw new BadRequestException(this, ex.toString());
+        } catch (Exception ex) {
+            throw new BadRequestException(this, ex.toString());
         }
     }
 
-    @Override
+    @Override    
     public void sendContent(OutputStream out, Range range, Map<String, String> params, String contentType) throws IOException, NotAuthorizedException, BadRequestException {
+        try{
+            Permissions p = new Permissions(getLogicalData().getMetadata().getPermissionArray());
+            MyPrincipal principal = (MyPrincipal) (MiltonServlet.request().getAttribute("vph-user"));
+            if(!p.canRead(principal)){
+                throw new NotAuthorizedException();
+            } 
+        } catch (Exception e) {
+            throw new NotAuthorizedException();
+        }
+        
         //List contents. Fix this to work with browsers 
         debug("sendContent.");
 //        StringTemplateGroup t = new StringTemplateGroup("page");
@@ -252,10 +345,32 @@ class WebDataDirResource extends WebDataResource implements FolderResource, Coll
     @Override
     public void moveTo(CollectionResource rDest, String name) throws ConflictException, NotAuthorizedException, BadRequestException {
         try {
+            MyPrincipal principal = (MyPrincipal) (MiltonServlet.request().getAttribute("vph-user"));
+            if(getLogicalData().getLDRI().isRoot()){
+                throw new NotAuthorizedException();
+            } else {                
+                if(getPath().getParent().isRoot()) {
+                    if(!principal.getRoles().contains(Permissions.ROOT_ADMIN))
+                        throw new NotAuthorizedException();
+                } else {
+                    ArrayList<Integer> pai = getCatalogue().getResourceEntryByLDRI(getPath().getParent()).getMetadata().getPermissionArray();
+                    Permissions p = new Permissions(pai);
+                    if(!p.canWrite(principal)){
+                        throw new NotAuthorizedException();
+                    }
+                }
+            }
+            Permissions parentPerm = new Permissions(((WebDataResource)rDest).getLogicalData().getMetadata().getPermissionArray());
+            if(!parentPerm.canWrite(principal)){
+                throw new NotAuthorizedException();
+            }
             debug("moveTo.");
             debug("\t rDestgetName: " + rDest.getName() + " name: " + name);
-            
-            getCatalogue().renameEntry(getLogicalData().getLDRI(), Path.path(getLogicalData().getLDRI(), name));
+            getCatalogue().renameEntry(getLogicalData().getLDRI(), Path.path(getLogicalData().getLDRI(), name));            
+        } catch (Permissions.Exception e) {
+            throw new NotAuthorizedException();
+        } catch (NotAuthorizedException e){
+            throw e;  
         } catch (Exception ex) {
             Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, ex);
             if (ex.getMessage().contains("resource exists")) {

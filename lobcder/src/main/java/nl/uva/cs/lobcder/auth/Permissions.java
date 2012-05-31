@@ -16,6 +16,7 @@ public class Permissions {
 
     public static final int OWNER_ROLE = 0;
     public static final int REST_ROLE = 1;
+    public static final int ROOT_ADMIN = 2;
     public static final int READWRITE = 3 << 30;
     public static final int READ = 2 << 30;
     public static final int WRITE = 1 << 30;

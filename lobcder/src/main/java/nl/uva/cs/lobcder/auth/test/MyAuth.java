@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import nl.uva.cs.lobcder.auth.ExternAuthI;
+import nl.uva.cs.lobcder.auth.Permissions;
 
 /**
  *
@@ -23,11 +24,11 @@ public class MyAuth implements ExternAuthI{
     
     
     @Override
-    public Collection<Integer> checkToken(String token) {        
-        List<Integer> roles = new ArrayList<Integer> ();
-        roles.add(4);
+    public ArrayList<Integer> checkToken(String token) {        
+        ArrayList<Integer> roles = new ArrayList<Integer> ();
+        roles.add(token.hashCode());
         roles.add(2);
-        roles.add(3);
+        roles.add(Permissions.ROOT_ADMIN);
         return roles;
     }
     

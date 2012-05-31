@@ -5,9 +5,11 @@ import com.bradmcevoy.http.Resource;
 import com.bradmcevoy.http.ResourceFactory;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Properties;
 import java.util.logging.Level;
+import nl.uva.cs.lobcder.auth.Permissions;
 import nl.uva.cs.lobcder.catalogue.IDLCatalogue;
 import nl.uva.cs.lobcder.catalogue.RDMSDLCatalog;
 import nl.uva.cs.lobcder.resources.ILogicalData;
@@ -48,7 +50,13 @@ public class WebDataResourceFactory implements ResourceFactory {
             Collection<IStorageSite> sites;
             if (ldri.isRoot() || ldri.toString().equals("")) {
                 LogicalData root = new LogicalData(ldri, Constants.LOGICAL_FOLDER);
-                WebDataDirResource webRoot = new WebDataDirResource(catalogue, root);
+                ArrayList<Integer> permArr = new ArrayList<Integer>();
+                permArr.add(0);
+                permArr.add(Permissions.OWNER_ROLE | Permissions.READWRITE);
+                permArr.add(Permissions.REST_ROLE | Permissions.NOACCESS);
+                permArr.add(Permissions.ROOT_ADMIN | Permissions.READWRITE);
+                root.getMetadata().setPermissionArray(permArr);
+                WebDataDirResource webRoot = new WebDataDirResource(catalogue, root);                
                 return webRoot;
             }
 

@@ -17,6 +17,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import nl.uva.cs.lobcder.auth.MyPrincipal;
 import nl.uva.cs.lobcder.auth.MyPrincipal.Exception;
+import nl.uva.cs.lobcder.auth.PrincipalCache;
 import nl.uva.cs.lobcder.auth.test.MyAuth;
 import nl.uva.cs.lobcder.catalogue.CatalogueException;
 import nl.uva.cs.lobcder.catalogue.IDLCatalogue;
@@ -67,6 +68,7 @@ public class WebDataResource implements PropFindableResource, Resource {
 
     @Override
     public Object authenticate(String user, String password) {
+        MyPrincipal principal = null;
         debug("authenticate.\n"
                 + "\t user: " + user
                 + "\t password: " + password);
@@ -83,12 +85,17 @@ public class WebDataResource implements PropFindableResource, Resource {
         try {
             ArrayList<Integer> roles = new ArrayList<Integer>();
             roles.add(0);
-            MyPrincipal principal = new MyPrincipal(user + password, roles);
+            String token = user + password;
+            principal = PrincipalCache.pcache.getPrincipal(token);
+            if(principal == null) {
+                principal = new MyPrincipal(token, MyAuth.getInstance().checkToken(token));
+                PrincipalCache.pcache.putPrincipal(principal);
+            }
             MiltonServlet.request().setAttribute("vph-user", principal);
         } catch (Exception ex) {
             Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
         }
-        return user;//principal;
+        return principal;
     }
 
     @Override

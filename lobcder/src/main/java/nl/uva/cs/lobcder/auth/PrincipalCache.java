@@ -13,10 +13,13 @@ import java.util.Map;
  * @author dvasunin
  */
 public class PrincipalCache {
+    
+    
     private Map<String, MyPrincipal> cache = new HashMap<String, MyPrincipal>();
     private long timeout; // msec
     
-        
+    public final static PrincipalCache pcache = new PrincipalCache();
+    
     public synchronized  MyPrincipal getPrincipal(String token){
         MyPrincipal res = cache.get(token);
         if(res != null){

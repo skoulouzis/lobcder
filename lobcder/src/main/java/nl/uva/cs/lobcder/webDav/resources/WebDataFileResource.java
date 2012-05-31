@@ -76,7 +76,7 @@ public class WebDataFileResource extends WebDataResource implements
             Path newLDRI = Path.path(toCollectionLDRI, name);
 
             LogicalData newFolderEntry = new LogicalData(newLDRI, Constants.LOGICAL_FILE);
-            newFolderEntry.getMetadata().setPermissionArray(new Permissions(principal).getRolesPerm());
+            newFolderEntry.getMetadata().setPermissionArray((ArrayList<Integer>)p.getRolesPerm().clone());
             newFolderEntry.getMetadata().setModifiedDate(System.currentTimeMillis());
             getCatalogue().registerResourceEntry(newFolderEntry);
         } catch (CatalogueException ex) {
@@ -88,12 +88,17 @@ public class WebDataFileResource extends WebDataResource implements
 
     @Override
     public void delete() throws NotAuthorizedException, ConflictException, BadRequestException {        
-        try {
-            Permissions p = new Permissions(getLogicalData().getMetadata().getPermissionArray());
-            if(!p.canWrite((MyPrincipal)(MiltonServlet.request().getAttribute("vph-user")))){
-                throw new NotAuthorizedException();
+        try {     
+            MyPrincipal principal = (MyPrincipal)(MiltonServlet.request().getAttribute("vph-user"));
+            if(getPath().getParent().isRoot()) {
+                if(!principal.getRoles().contains(Permissions.ROOT_ADMIN))
+                    throw new NotAuthorizedException();
+            } else {
+                Permissions p = new Permissions(getCatalogue().getResourceEntryByLDRI(getPath().getParent()).getMetadata().getPermissionArray());
+                if(!p.canWrite(principal)){
+                    throw new NotAuthorizedException();
+                }
             }
-            
             Collection<IStorageSite> sites = getLogicalData().getStorageSites();
             if (sites != null && !sites.isEmpty()) {
                 for (IStorageSite s : sites) {
@@ -219,11 +224,15 @@ public class WebDataFileResource extends WebDataResource implements
         debug("moveTo.");
         debug("\t name: " + name);
         try{
-            // check if request is authorized to read and write the resource
-            Permissions p = new Permissions(getLogicalData().getMetadata().getPermissionArray());
             MyPrincipal principal = (MyPrincipal)(MiltonServlet.request().getAttribute("vph-user"));
-            if(!(p.canRead(principal) && p.canWrite(principal))){
-                throw new NotAuthorizedException();
+            if(getPath().getParent().isRoot()) {
+                if(!principal.getRoles().contains(Permissions.ROOT_ADMIN))
+                    throw new NotAuthorizedException();
+            } else {
+                Permissions p = new Permissions(getCatalogue().getResourceEntryByLDRI(getPath().getParent()).getMetadata().getPermissionArray());
+                if(!p.canWrite(principal)){
+                    throw new NotAuthorizedException();
+                }
             }
             // check if we can write to the destination
             Permissions parentPerm = new Permissions(((WebDataResource)rDest).getLogicalData().getMetadata().getPermissionArray());
