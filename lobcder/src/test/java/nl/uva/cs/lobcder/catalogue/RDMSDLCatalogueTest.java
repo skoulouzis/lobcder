@@ -686,7 +686,6 @@ public class RDMSDLCatalogueTest {
             List<Integer> permArray2 = meta.getPermissionArray();
             assertNotNull(permArray2);
             assertEquals(permArray1,permArray2);
-            Permissions perm2 = new Permissions(permArray2);
 
             instance.unregisterResourceEntry(entry);
         } catch (Exception ex) {
