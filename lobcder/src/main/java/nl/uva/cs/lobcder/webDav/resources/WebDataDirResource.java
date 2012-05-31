@@ -254,7 +254,8 @@ class WebDataDirResource extends WebDataResource implements FolderResource, Coll
         try {
             debug("moveTo.");
             debug("\t rDestgetName: " + rDest.getName() + " name: " + name);
-            getCatalogue().renameEntry(getLogicalData().getLDRI(), Path.path(name));
+            
+            getCatalogue().renameEntry(getLogicalData().getLDRI(), Path.path(getLogicalData().getLDRI(), name));
         } catch (Exception ex) {
             Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, ex);
             if (ex.getMessage().contains("resource exists")) {
