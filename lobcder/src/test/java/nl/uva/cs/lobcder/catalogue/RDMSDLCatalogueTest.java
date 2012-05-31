@@ -308,11 +308,11 @@ public class RDMSDLCatalogueTest {
         try {
 
             instance = new RDMSDLCatalog(new File(nl.uva.cs.lobcder.util.Constants.LOBCDER_CONF_DIR + "/datanucleus.properties"));
-            Path originalPath = Path.path("/oldResourceName");
+            Path originalPath = Path.path("/ResourceName/oldResourceName");
             LogicalData e = new LogicalData(originalPath, Constants.LOGICAL_DATA);
 
             instance.registerResourceEntry(e);
-            newPath = Path.path("/newResourceName");
+            newPath = Path.path("/ResourceName/newResourceName");
 
             instance.renameEntry(originalPath, newPath);
 
