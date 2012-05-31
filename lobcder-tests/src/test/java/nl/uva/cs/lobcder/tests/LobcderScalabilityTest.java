@@ -144,7 +144,7 @@ public class LobcderScalabilityTest {
             }
 //            FileWriter writer = new FileWriter("measures" + File.separator + "UploadTimes" + ".csv");
 //            writer.append("NumOfClients,UploadTime(msec),sizeUploaded(kb),Speed(kb/msec)\n");
-            for (int i = 1; i < 4; i++) {
+            for (int i = 1; i < 3; i++) {
                 double startUploadTime = System.currentTimeMillis();
                 upload(testDatasetPath, i);
                 measureMean();
@@ -248,9 +248,11 @@ public class LobcderScalabilityTest {
         System.out.println("measureFilesNum------------: " + measureFiles.length);
         String line;
         int universalLine = 0;
-        double last = 0;
-        double res = 0;
-        int labaleIndex =0;
+        double[][] res = new double[datasets.size() + 1][meanLables.length];
+//        for(int i=0;i<res.length;i++){
+//            res[i] = 0;
+//        }
+        int labaleIndex = 0;
         for (File f : measureFiles) {
             BufferedReader bufRdr = new BufferedReader(new FileReader(f));
             System.out.println("Open: " + f.getName());
@@ -260,23 +262,30 @@ public class LobcderScalabilityTest {
                 int fileColumnNumber = 0;
                 while (st.hasMoreTokens()) {
                     String token = st.nextToken();
-                    if (fileLineNumber == 1) {
-                        if (fileColumnNumber == 2) {
-                            last +=( Double.valueOf(token));
-                            res = (last) / measureFiles.length;
+                    if (fileLineNumber > 0 ) {
+                        if (fileColumnNumber > 0) {
+                            res[fileLineNumber][fileColumnNumber] += (Double.valueOf(token)) / measureFiles.length;
                             labaleIndex = fileColumnNumber;
                         }
                     }
-//                    System.out.println("Line # " + fileLineNumber
-//                            + ", Column # " + fileColumnNumber
-//                            + ", Token : " + token);
+                    System.out.println("Line # " + fileLineNumber
+                            + ", Column # " + fileColumnNumber
+                            + ", Token : " + token);
                     fileColumnNumber++;
                 }
                 fileLineNumber++;
             }
             universalLine++;
         }
-        System.out.println(meanLables[labaleIndex] + ": " + last + " / " + measureFiles.length+" = "+res);
+        
+         System.out.println(meanLables[1] + ":\t\t\t" + res[1][1]);
+         
+//        for (int i = 0; i < res.length; i++) {
+//            for (int j = 0; j < res[0].length; j++) {
+//                System.out.println(meanLables[j] + ":\t\t\t" + res[i][j]);
+//                System.out.println("res["+i+"]["+j + "] : " + res[i][j]);
+//            }
+//        }
     }
 
     private static class ScaleTest implements Runnable {
