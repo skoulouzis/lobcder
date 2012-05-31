@@ -16,6 +16,8 @@ import java.io.OutputStream;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import nl.uva.cs.lobcder.auth.MyPrincipal;
+import nl.uva.cs.lobcder.auth.Permissions;
 import nl.uva.cs.lobcder.catalogue.CatalogueException;
 import nl.uva.cs.lobcder.catalogue.IDLCatalogue;
 import nl.uva.cs.lobcder.resources.ILogicalData;
@@ -54,25 +56,44 @@ public class WebDataFileResource extends WebDataResource implements
     }
 
     @Override
-    public void copyTo(CollectionResource collectionResource, String name) throws ConflictException {
+    public void copyTo(CollectionResource collectionResource, String name) throws ConflictException, NotAuthorizedException {
         try {
             debug("copyTo.");
             debug("\t toCollection: " + collectionResource.getName());
             debug("\t name: " + name);
+            // check if request is authorized to read the resource
+            Permissions p = new Permissions(getLogicalData().getMetadata().getPermissionArray());
+            MyPrincipal principal = (MyPrincipal)(MiltonServlet.request().getAttribute("vph-user"));
+            if(!p.canRead(principal)){
+                throw new NotAuthorizedException();
+            }
+            // check if we can write to the destination
+            Permissions parentPerm = new Permissions(((WebDataResource)collectionResource).getLogicalData().getMetadata().getPermissionArray());
+            if(!parentPerm.canWrite(principal)){
+                throw new NotAuthorizedException();
+            }
             Path toCollectionLDRI = Path.path(collectionResource.getName());
             Path newLDRI = Path.path(toCollectionLDRI, name);
 
-            LogicalData newFolderEntry = new LogicalData(newLDRI, Constants.LOGICAL_FOLDER);
+            LogicalData newFolderEntry = new LogicalData(newLDRI, Constants.LOGICAL_FILE);
+            newFolderEntry.getMetadata().setPermissionArray(new Permissions(principal).getRolesPerm());
             newFolderEntry.getMetadata().setModifiedDate(System.currentTimeMillis());
             getCatalogue().registerResourceEntry(newFolderEntry);
         } catch (CatalogueException ex) {
             throw new ConflictException(this, ex.toString());
+        } catch(Exception e) {
+            throw new NotAuthorizedException();
         }
     }
 
     @Override
-    public void delete() throws NotAuthorizedException, ConflictException, BadRequestException {
+    public void delete() throws NotAuthorizedException, ConflictException, BadRequestException {        
         try {
+            Permissions p = new Permissions(getLogicalData().getMetadata().getPermissionArray());
+            if(!p.canWrite((MyPrincipal)(MiltonServlet.request().getAttribute("vph-user")))){
+                throw new NotAuthorizedException();
+            }
+            
             Collection<IStorageSite> sites = getLogicalData().getStorageSites();
             if (sites != null && !sites.isEmpty()) {
                 for (IStorageSite s : sites) {
@@ -84,6 +105,8 @@ public class WebDataFileResource extends WebDataResource implements
             throw new BadRequestException(this, ex.toString());
         } catch (VlException ex) {
             throw new BadRequestException(this, ex.toString());
+        } catch (Exception e){
+            throw new NotAuthorizedException();
         }
     }
 
@@ -150,6 +173,11 @@ public class WebDataFileResource extends WebDataResource implements
         debug("\t contentType: " + contentType);
         
         try {
+            Permissions p = new Permissions(getLogicalData().getMetadata().getPermissionArray());
+            MyPrincipal principal = (MyPrincipal)(MiltonServlet.request().getAttribute("vph-user"));
+            if(!p.canRead(principal)){
+                throw new NotAuthorizedException();
+            }
 
             VFile vFile;
             if (!getLogicalData().hasPhysicalData()) {
@@ -174,6 +202,8 @@ public class WebDataFileResource extends WebDataResource implements
         } catch (VlException ex) {
             throw new com.bradmcevoy.http.exceptions.NotFoundException(ex.getMessage());
 //            throw new IOException(ex);
+        } catch (Exception e) {
+            throw new NotAuthorizedException();
         } finally {
             out.flush();
             out.close();
@@ -188,6 +218,21 @@ public class WebDataFileResource extends WebDataResource implements
             throws ConflictException, NotAuthorizedException, BadRequestException {
         debug("moveTo.");
         debug("\t name: " + name);
+        try{
+            // check if request is authorized to read and write the resource
+            Permissions p = new Permissions(getLogicalData().getMetadata().getPermissionArray());
+            MyPrincipal principal = (MyPrincipal)(MiltonServlet.request().getAttribute("vph-user"));
+            if(!(p.canRead(principal) && p.canWrite(principal))){
+                throw new NotAuthorizedException();
+            }
+            // check if we can write to the destination
+            Permissions parentPerm = new Permissions(((WebDataResource)rDest).getLogicalData().getMetadata().getPermissionArray());
+            if(!parentPerm.canWrite(principal)){
+                throw new NotAuthorizedException();
+            }
+        } catch (Exception e){
+            throw new NotAuthorizedException();
+        }
         Path parent;
         Path tmpPath;
 

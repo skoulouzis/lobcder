@@ -78,7 +78,7 @@ public class Metadata implements Serializable {
 
     }
 
-    public List<Integer> getPermissionArray() {
+    public ArrayList<Integer> getPermissionArray() {
         return permissionArray;
     }
 

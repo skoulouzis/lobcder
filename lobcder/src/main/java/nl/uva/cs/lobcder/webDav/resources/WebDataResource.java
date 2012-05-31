@@ -34,7 +34,6 @@ public class WebDataResource implements PropFindableResource, Resource {
     private static final boolean debug = false;
     private Map<String, CustomProperty> properties;
     //Collection<Integer> roles = null;
-    protected MyPrincipal principal = null;
 
     public WebDataResource(IDLCatalogue catalogue, ILogicalData logicalData) {
         this.logicalData = logicalData;
@@ -84,7 +83,8 @@ public class WebDataResource implements PropFindableResource, Resource {
         try {
             ArrayList<Integer> roles = new ArrayList<Integer>();
             roles.add(0);
-            principal = new MyPrincipal(user + password, roles);
+            MyPrincipal principal = new MyPrincipal(user + password, roles);
+            MiltonServlet.request().setAttribute("vph-user", principal);
         } catch (Exception ex) {
             Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -247,16 +247,6 @@ public class WebDataResource implements PropFindableResource, Resource {
         return getLogicalData().getLDRI();
     }
 
-    private Object getPermissionForTheLogicalData() {
-        return null;
-    }
-
-    private boolean checkPermission(Object permission, Collection<Integer> roles) {
-        for (Integer i : roles) {
-            debug("Role: " + i);
-        }
-        return true;
-    }
 
     Collection<IStorageSite> getStorageSites() throws CatalogueException, IOException {
         Collection<IStorageSite> sites = getLogicalData().getStorageSites();

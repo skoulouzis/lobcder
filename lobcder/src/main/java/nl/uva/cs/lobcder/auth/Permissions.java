@@ -4,8 +4,8 @@
  */
 package nl.uva.cs.lobcder.auth;
 
+import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -28,17 +28,17 @@ public class Permissions {
             super(reason);
         }
     }
-    private List<Integer> rolesPerm;
+    private ArrayList<Integer> rolesPerm;
 
     // first int = owner's user ID
     // role 0 = owner, 1 = rest
-    public Permissions(List<Integer> rolesPerm) throws Exception {
+    public Permissions(ArrayList<Integer> rolesPerm) throws Exception {
         setRolesPerm(rolesPerm);
     }
 
     //Create a default one for new resource
     public Permissions(MyPrincipal mp) {
-        rolesPerm = new LinkedList<Integer>();
+        rolesPerm = new ArrayList<Integer>();
         rolesPerm.add(mp.getUid());
         rolesPerm.add(OWNER_ROLE | READWRITE);
         rolesPerm.add(REST_ROLE | NOACCESS);
@@ -47,14 +47,14 @@ public class Permissions {
         } 
     }
 
-    public final synchronized void setRolesPerm(List<Integer> rolesPerm) throws Exception {
+    public final synchronized void setRolesPerm(ArrayList<Integer> rolesPerm) throws Exception {
         if (rolesPerm == null || rolesPerm.size() < 3) {
             throw new Exception("Wrong parameter");
         }
         this.rolesPerm = rolesPerm;
     }
 
-    public synchronized List<Integer> getRolesPerm() {
+    public synchronized ArrayList<Integer> getRolesPerm() {
         return rolesPerm;
     }
 
@@ -76,6 +76,8 @@ public class Permissions {
     }
 
     public synchronized boolean canRead(MyPrincipal mp) {
+        if(mp == null)
+            return false;
         if (mp.getUid().equals(getOwnerId())) {
             Iterator<Integer> it = rolesPerm.iterator();
             it.next(); // first rolePerm        
@@ -119,6 +121,8 @@ public class Permissions {
     }
 
     public synchronized boolean canWrite(MyPrincipal mp) {
+        if(mp == null)
+            return false;
         if (mp.getUid().equals(getOwnerId())) {
             Iterator<Integer> it = rolesPerm.iterator();
             it.next(); // first rolePerm        
