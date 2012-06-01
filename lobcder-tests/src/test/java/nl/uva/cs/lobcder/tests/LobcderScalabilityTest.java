@@ -27,6 +27,7 @@ import org.apache.commons.httpclient.protocol.Protocol;
 import org.apache.commons.httpclient.protocol.ProtocolSocketFactory;
 import org.apache.jackrabbit.webdav.client.methods.MkColMethod;
 import org.apache.jackrabbit.webdav.client.methods.PutMethod;
+import org.junit.After;
 import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Test;
@@ -45,7 +46,11 @@ public class LobcderScalabilityTest {
     private ArrayList<File> datasets;
     public static final int TEST_UPLOAD = 0;
     public static final int CREATE_DATASET = 1;
-    public static final String[] meanLables = new String[]{ScaleTest.userMeasureLables[0], ScaleTest.userMeasureLables[1], ScaleTest.userMeasureLables[2], ScaleTest.userMeasureLables[3], ScaleTest.userMeasureLables[4], ScaleTest.userMeasureLables[5], "NumOfUsers"};
+    public static final  int TEST_DOWNLOAD=2;
+    public static final String[] meanLables = new String[]{ScaleTest.userMeasureLables[0], "NumOfUsers", ScaleTest.userMeasureLables[1], ScaleTest.userMeasureLables[2], ScaleTest.userMeasureLables[3], ScaleTest.userMeasureLables[4], ScaleTest.userMeasureLables[5]};
+    public static String measuresPath = "measures";
+    private String hostMeasuresPath;
+
 
     @Before
     public void setUp() throws Exception {
@@ -79,6 +84,9 @@ public class LobcderScalabilityTest {
         if (!this.lobcderRoot.endsWith("/")) {
             this.lobcderRoot += "/";
         }
+
+        hostMeasuresPath = measuresPath + File.separator + uri.getHost();
+        new File(hostMeasuresPath).mkdir();
     }
 
     private void initUsers(Properties prop) {
@@ -124,48 +132,28 @@ public class LobcderScalabilityTest {
         createFiles(32, start, end, dataSetFolderBase);
     }
 
-    @Test
-    public void testUpload() throws FileNotFoundException, IOException, InterruptedException {
-        try {
-            //Create the folder stucture 
-            File dataset = datasets.get(0);
-            String[] parts = dataset.getAbsolutePath().split("/");
-            String testDatasetPath = this.lobcderRoot;
-            for (int i = 1; i < parts.length - 1; i++) {
-                if (testDatasetPath.endsWith("/")) {
-                    testDatasetPath += parts[i];
-                } else {
-                    testDatasetPath += "/" + parts[i];
-                }
-//                System.out.println("MkCol: " + testDatasetPath);
-                MkColMethod mkcol = new MkColMethod(testDatasetPath);
-                clients[0].executeMethod(mkcol);
-                assertTrue("status: " + mkcol.getStatusCode(), mkcol.getStatusCode() == HttpStatus.SC_CREATED || mkcol.getStatusCode() == HttpStatus.SC_METHOD_NOT_ALLOWED);
-            }
-//            FileWriter writer = new FileWriter("measures" + File.separator + "UploadTimes" + ".csv");
-//            writer.append("NumOfClients,UploadTime(msec),sizeUploaded(kb),Speed(kb/msec)\n");
-            for (int i = 1; i < 3; i++) {
-                double startUploadTime = System.currentTimeMillis();
-                upload(testDatasetPath, i);
-                measureMean();
-                double endUploadTime = System.currentTimeMillis();
-                double elapsedUploadTime = (endUploadTime - startUploadTime);
-                double sizeUploaded = (getDirSize(datasets.get(0).getParentFile()) / 1024.0);
-                double speed = sizeUploaded / elapsedUploadTime;
-//                writer.append(i + "," + elapsedUploadTime + "," + sizeUploaded + "," + speed + "\n");
-            }
-//            writer.flush();
-//            writer.close();
-
-        } finally {
+    public void benchmarkDownload() throws FileNotFoundException, IOException, InterruptedException {
+        String path = hostMeasuresPath + File.separator + "download";
+        new File(path).mkdir();
+        for (int i = 1; i <= 3; i++) {
+            runTest("", i, path, TEST_DOWNLOAD);
+            measureMean(path);
         }
+    }
+
+    @Test
+    public void benchmarkTest() throws FileNotFoundException, IOException, InterruptedException {
+        benchmarkUpload();
+
+        benchmarkDownload();
+
     }
 
     private void createFiles(int threads, int start, int end, File dataSetFolderBase) throws IOException, InterruptedException {
         ExecutorService execSvc = Executors.newFixedThreadPool(threads);
         long startTime = System.currentTimeMillis();
         for (int i = start; i < end; i *= 4) {
-            String datasetName = "dataset" + i + "MB";
+            String datasetName = String.valueOf(i);
             String datasetPath = dataSetFolderBase.getAbsolutePath() + "/" + datasetName;
             File dataset = new File(datasetPath);
             if (!dataset.exists()) {
@@ -197,14 +185,15 @@ public class LobcderScalabilityTest {
         }
     }
 
-    private void upload(String testDatasetPath, int threads) throws IOException, InterruptedException {
+    private void runTest(String testDatasetPath, int threads, String path, int OP) throws IOException, InterruptedException {
         ExecutorService execSvc = Executors.newFixedThreadPool(threads);
         for (int i = 0; i < threads; i++) {
-            ScaleTest user = new ScaleTest(TEST_UPLOAD);
+            ScaleTest user = new ScaleTest(OP);
             user.setClient(clients[i]);
             user.setDataset(datasets);
             user.setLobcderURL(lobcderRoot);
             user.setWorkingPath(testDatasetPath);
+            user.setSaveMeasurePath(path);
             execSvc.execute(user);
         }
         execSvc.shutdown();
@@ -231,8 +220,8 @@ public class LobcderScalabilityTest {
         return size;
     }
 
-    private void measureMean() throws FileNotFoundException, IOException {
-        File measureDir = new File("measures");
+    private void measureMean(String path) throws FileNotFoundException, IOException {
+        File measureDir = new File(path);
         FileFilter filter = new FileFilter() {
 
             @Override
@@ -245,47 +234,88 @@ public class LobcderScalabilityTest {
         };
 
         File[] measureFiles = measureDir.listFiles(filter);
-        System.out.println("measureFilesNum------------: " + measureFiles.length);
         String line;
         int universalLine = 0;
         double[][] res = new double[datasets.size() + 1][meanLables.length];
-//        for(int i=0;i<res.length;i++){
-//            res[i] = 0;
-//        }
-        int labaleIndex = 0;
         for (File f : measureFiles) {
             BufferedReader bufRdr = new BufferedReader(new FileReader(f));
-            System.out.println("Open: " + f.getName());
+//            System.out.println("Open: " + f.getName());
             int fileLineNumber = 0;
             while ((line = bufRdr.readLine()) != null) {
                 StringTokenizer st = new StringTokenizer(line, ",");
                 int fileColumnNumber = 0;
                 while (st.hasMoreTokens()) {
                     String token = st.nextToken();
-                    if (fileLineNumber > 0 ) {
-                        if (fileColumnNumber > 0) {
-                            res[fileLineNumber][fileColumnNumber] += (Double.valueOf(token)) / measureFiles.length;
-                            labaleIndex = fileColumnNumber;
-                        }
+                    if (fileLineNumber > 0) {
+                        res[fileLineNumber][fileColumnNumber] += (Double.valueOf(token)) / measureFiles.length;
                     }
-                    System.out.println("Line # " + fileLineNumber
-                            + ", Column # " + fileColumnNumber
-                            + ", Token : " + token);
                     fileColumnNumber++;
                 }
                 fileLineNumber++;
             }
             universalLine++;
         }
-        
-         System.out.println(meanLables[1] + ":\t\t\t" + res[1][1]);
-         
-//        for (int i = 0; i < res.length; i++) {
-//            for (int j = 0; j < res[0].length; j++) {
-//                System.out.println(meanLables[j] + ":\t\t\t" + res[i][j]);
-//                System.out.println("res["+i+"]["+j + "] : " + res[i][j]);
-//            }
-//        }
+
+        File f = new File(path + File.separator + "meanMeasures" + ".csv");
+        FileWriter writer;
+        if (!f.exists()) {
+            writer = new FileWriter(f);
+            for (String l : meanLables) {
+                writer.append(l);
+                writer.append(",");
+            }
+            writer.append("\n");
+        } else {
+            writer = new FileWriter(f, true);
+        }
+
+        for (int i = 1; i < res.length; i++) {
+            for (int j = 0; j < res[0].length; j++) {
+
+                if (j == 6) {
+                    res[i][6] = measureFiles.length;
+                }
+//                System.out.println(meanLables[j] + "res[" + i + "][" + j + "]" + ":\t\t\t\t\t" + res[i][j]);
+////                System.out.println("res[" + i + "][" + j + "] : " + res[i][j]);
+//                System.out.print(res[i][j] + ",");
+                writer.append(String.valueOf(res[i][j]));
+                writer.append(",");
+            }
+//            System.out.print("\n");
+            writer.append("\n");
+        }
+
+        writer.flush();
+        writer.close();
+    }
+
+    private void benchmarkUpload() throws IOException, InterruptedException {
+        try {
+            String path = hostMeasuresPath + File.separator + "upload";
+            new File(path).mkdir();
+
+            //Create the folder stucture 
+            File dataset = datasets.get(0);
+            String[] parts = dataset.getAbsolutePath().split("/");
+            String testDatasetPath = this.lobcderRoot;
+            for (int i = 1; i < parts.length - 1; i++) {
+                if (testDatasetPath.endsWith("/")) {
+                    testDatasetPath += parts[i];
+                } else {
+                    testDatasetPath += "/" + parts[i];
+                }
+//                System.out.println("MkCol: " + testDatasetPath);
+                MkColMethod mkcol = new MkColMethod(testDatasetPath);
+                clients[0].executeMethod(mkcol);
+                assertTrue("status: " + mkcol.getStatusCode(), mkcol.getStatusCode() == HttpStatus.SC_CREATED || mkcol.getStatusCode() == HttpStatus.SC_METHOD_NOT_ALLOWED);
+            }
+            for (int i = 1; i <= 3; i++) {
+                runTest(testDatasetPath, i, path, TEST_UPLOAD);
+                measureMean(path);
+            }
+
+        } finally {
+        }
     }
 
     private static class ScaleTest implements Runnable {
@@ -299,7 +329,8 @@ public class LobcderScalabilityTest {
         private File dataset;
         private int fileID;
         private FileWriter writer;
-        public static String[] userMeasureLables = new String[]{"DatasetID", "UploadTime(msec)", "sizeUploaded(kb)", "Speed(kb/msec)", "putWaitTotalTime(msec)", "putAverageTime(msec)"};
+        public static String[] userMeasureLables = new String[]{"DatasetID", "sizeUploaded(kb)", "UploadTime(msec)", "Speed(kb/msec)", "putWaitTotalTime(msec)", "putAverageTime(msec)"};
+        private String path;
 
         private ScaleTest(int op) {
             this.op = op;
@@ -311,7 +342,7 @@ public class LobcderScalabilityTest {
                 switch (op) {
                     case TEST_UPLOAD:
                         initWorkingURL();
-                        upload();
+                        upload(path);
                         break;
                     case CREATE_DATASET:
                         createDataset(10);
@@ -324,8 +355,8 @@ public class LobcderScalabilityTest {
             }
         }
 
-        private void upload() throws IOException {
-            writer = new FileWriter("measures" + File.separator + username + ".csv");
+        private void upload(String path) throws IOException {
+            writer = new FileWriter(path + File.separator + username + ".csv");
             for (String l : userMeasureLables) {
                 writer.append(l);
                 writer.append(",");
@@ -361,7 +392,7 @@ public class LobcderScalabilityTest {
                 double elapsedUploadTime = endUpload - startUpload;
                 double kBytesUploaded = (double) (bytesUploaded / 1024.0);
                 double speed = (double) (kBytesUploaded / elapsedUploadTime);
-                writer.append(datasetName + "," + elapsedUploadTime + "," + kBytesUploaded + "," + speed + "," + putWaitTotalTime + "," + putAverageTime + "\n");
+                writer.append(datasetName + "," + kBytesUploaded + "," + elapsedUploadTime + "," + speed + "," + putWaitTotalTime + "," + putAverageTime + "\n");
             }
             writer.flush();
             writer.close();
@@ -417,6 +448,10 @@ public class LobcderScalabilityTest {
 
         private void setFileID(int j) {
             this.fileID = j;
+        }
+
+        private void setSaveMeasurePath(String path) {
+            this.path = path;
         }
     }
 }
