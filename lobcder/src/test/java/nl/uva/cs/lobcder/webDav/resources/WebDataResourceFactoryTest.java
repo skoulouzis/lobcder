@@ -577,7 +577,7 @@ public class WebDataResourceFactoryTest {
         }
     }
 
-    private void checkChildren(WebDataDirResource result, WebDataFileResource file) {
+    private void checkChildren(WebDataDirResource result, WebDataFileResource file) throws NotAuthorizedException {
         List<? extends Resource> children = result.getChildren();
         assertFalse(children.isEmpty());
         boolean foundIt = false;
