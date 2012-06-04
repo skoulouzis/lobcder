@@ -46,11 +46,14 @@ public class LobcderScalabilityTest {
     private ArrayList<File> datasets;
     public static final int TEST_UPLOAD = 0;
     public static final int CREATE_DATASET = 1;
-    public static final  int TEST_DOWNLOAD=2;
+    public static final int TEST_DOWNLOAD = 2;
+    public static final int FILE_SIZE_IN_KB = 1;
+    public static final int STEP_SIZE_DATASET = 4;
+    public static final int MIN_SIZE_DATASET = 20;
+    public static final int MAX_SIZE_DATASET = 500;
     public static final String[] meanLables = new String[]{ScaleTest.userMeasureLables[0], "NumOfUsers", ScaleTest.userMeasureLables[1], ScaleTest.userMeasureLables[2], ScaleTest.userMeasureLables[3], ScaleTest.userMeasureLables[4], ScaleTest.userMeasureLables[5]};
     public static String measuresPath = "measures";
     private String hostMeasuresPath;
-
 
     @Before
     public void setUp() throws Exception {
@@ -118,8 +121,6 @@ public class LobcderScalabilityTest {
 
     private void initDatasets() throws IOException, InterruptedException {
         //Init a synthetic datasets from 50MB to 4GB
-        int start = 20;
-        int end = 100;
         String dirPath = System.getProperty("java.io.tmpdir") + "/testDatasets";
         File dataSetFolderBase = new File(dirPath);
         if (!dataSetFolderBase.exists()) {
@@ -129,16 +130,16 @@ public class LobcderScalabilityTest {
         }
 
         datasets = new ArrayList<File>();
-        createFiles(32, start, end, dataSetFolderBase);
+        createFiles(32, MIN_SIZE_DATASET, MAX_SIZE_DATASET, dataSetFolderBase);
     }
 
     public void benchmarkDownload() throws FileNotFoundException, IOException, InterruptedException {
-        String path = hostMeasuresPath + File.separator + "download";
-        new File(path).mkdir();
-        for (int i = 1; i <= 3; i++) {
-            runTest("", i, path, TEST_DOWNLOAD);
-            measureMean(path);
-        }
+//        String path = hostMeasuresPath + File.separator + "download";
+//        new File(path).mkdir();
+//        for (int i = 1; i <= 3; i++) {
+//            runTest("", i, path, TEST_DOWNLOAD);
+//            measureMean(path);
+//        }
     }
 
     @Test
@@ -152,7 +153,7 @@ public class LobcderScalabilityTest {
     private void createFiles(int threads, int start, int end, File dataSetFolderBase) throws IOException, InterruptedException {
         ExecutorService execSvc = Executors.newFixedThreadPool(threads);
         long startTime = System.currentTimeMillis();
-        for (int i = start; i < end; i *= 4) {
+        for (int i = start; i < end; i *= STEP_SIZE_DATASET) {
             String datasetName = String.valueOf(i);
             String datasetPath = dataSetFolderBase.getAbsolutePath() + "/" + datasetName;
             File dataset = new File(datasetPath);
@@ -309,7 +310,7 @@ public class LobcderScalabilityTest {
                 clients[0].executeMethod(mkcol);
                 assertTrue("status: " + mkcol.getStatusCode(), mkcol.getStatusCode() == HttpStatus.SC_CREATED || mkcol.getStatusCode() == HttpStatus.SC_METHOD_NOT_ALLOWED);
             }
-            for (int i = 1; i <= 3; i++) {
+            for (int i = 1; i <= this.clients.length; i++) {
                 runTest(testDatasetPath, i, path, TEST_UPLOAD);
                 measureMean(path);
             }
@@ -345,7 +346,7 @@ public class LobcderScalabilityTest {
                         upload(path);
                         break;
                     case CREATE_DATASET:
-                        createDataset(10);
+                        createDataset(FILE_SIZE_IN_KB);
                     default:
                         break;
                 }
