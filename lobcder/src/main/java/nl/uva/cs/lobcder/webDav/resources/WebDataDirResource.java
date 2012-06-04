@@ -158,7 +158,9 @@ class WebDataDirResource extends WebDataResource implements FolderResource, Coll
     public Resource createNew(String newName, InputStream inputStream, Long length, String contentType) throws IOException, ConflictException, NotAuthorizedException, BadRequestException {
         Resource resource;
         try {
-            Permissions p = new Permissions(getLogicalData().getMetadata().getPermissionArray());
+            Metadata meta = getLogicalData().getMetadata();
+            ArrayList<Integer> array = meta.getPermissionArray();
+            Permissions p = new Permissions(array);
             MyPrincipal principal = (MyPrincipal) (MiltonServlet.request().getAttribute("vph-user"));
             debug("createNew.");
             debug("\t newName: " + newName);
@@ -232,8 +234,9 @@ class WebDataDirResource extends WebDataResource implements FolderResource, Coll
             MyPrincipal principal = (MyPrincipal) (MiltonServlet.request().getAttribute("vph-user"));
             if(getLogicalData().getLDRI().isRoot()){
                 throw new NotAuthorizedException();
-            } else {                
-                if(getPath().getParent().isRoot()) {
+            } else {     
+                Path parentPath = getPath().getParent();
+                if(parentPath == null || parentPath.isRoot()) {
                     if(!principal.getRoles().contains(Permissions.ROOT_ADMIN))
                         throw new NotAuthorizedException();
                 } else {

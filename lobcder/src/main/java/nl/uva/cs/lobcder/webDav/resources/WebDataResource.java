@@ -7,14 +7,18 @@ package nl.uva.cs.lobcder.webDav.resources;
 import com.bradmcevoy.common.Path;
 import com.bradmcevoy.http.Request.Method;
 import com.bradmcevoy.http.*;
+import java.io.BufferedReader;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.io.UnsupportedEncodingException;
+import java.security.Principal;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.servlet.RequestDispatcher;
+import javax.servlet.ServletInputStream;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletRequestWrapper;
+import javax.servlet.http.HttpSession;
 import nl.uva.cs.lobcder.auth.MyPrincipal;
 import nl.uva.cs.lobcder.auth.MyPrincipal.Exception;
 import nl.uva.cs.lobcder.auth.PrincipalCache;
@@ -23,13 +27,16 @@ import nl.uva.cs.lobcder.catalogue.CatalogueException;
 import nl.uva.cs.lobcder.catalogue.IDLCatalogue;
 import nl.uva.cs.lobcder.resources.ILogicalData;
 import nl.uva.cs.lobcder.resources.IStorageSite;
+import nl.uva.cs.lobcder.util.DummyHttpServletRequest;
+import org.apache.http.HttpRequest;
+import org.apache.http.client.methods.HttpRequestBase;
 
 /**
  *
  * @author S. Koulouzis
  */
 public class WebDataResource implements PropFindableResource, Resource {
-
+    
     private ILogicalData logicalData;
     private final IDLCatalogue catalogue;
     private static final boolean debug = false;
@@ -44,7 +51,7 @@ public class WebDataResource implements PropFindableResource, Resource {
         this.catalogue = catalogue;
         properties = new HashMap<String, CustomProperty>();
     }
-
+    
     @Override
     public Date getCreateDate() {
         debug("getCreateDate.");
@@ -53,19 +60,19 @@ public class WebDataResource implements PropFindableResource, Resource {
         }
         return null;
     }
-
+    
     @Override
     public String getUniqueId() {
         debug("getUniqueId.");
         return String.valueOf(getLogicalData().getUID());
     }
-
+    
     @Override
     public String getName() {
         debug("getName.");
         return getLogicalData().getLDRI().getName();
     }
-
+    
     @Override
     public Object authenticate(String user, String password) {
         MyPrincipal principal = null;
@@ -87,7 +94,7 @@ public class WebDataResource implements PropFindableResource, Resource {
             roles.add(0);
             String token = user + password;
             principal = PrincipalCache.pcache.getPrincipal(token);
-            if(principal == null) {
+            if (principal == null) {
                 principal = new MyPrincipal(token, MyAuth.getInstance().checkToken(token));
                 PrincipalCache.pcache.putPrincipal(principal);
             }
@@ -97,7 +104,7 @@ public class WebDataResource implements PropFindableResource, Resource {
         }
         return principal;
     }
-
+    
     @Override
     public boolean authorise(Request request, Method method, Auth auth) {
 
@@ -154,12 +161,12 @@ public class WebDataResource implements PropFindableResource, Resource {
                     + "\t auth.getUri(): " + uri + "\n"
                     + "\t auth.getUser(): " + user + "\n"
                     + "\t auth.getTag(): " + tag);
-
+            
             Collection<IStorageSite> sites = getLogicalData().getStorageSites();
             if (sites == null || sites.isEmpty()) {
                 try {
                     sites = (Collection<IStorageSite>) getCatalogue().getSitesByUname(user);
-
+                    
                     if (sites == null || sites.isEmpty()) {
                         debug("\t StorageSites for " + this.getName() + " are empty!");
                         throw new RuntimeException("User " + user + " has StorageSites for " + this.getName());
@@ -174,13 +181,13 @@ public class WebDataResource implements PropFindableResource, Resource {
         //return auth.getUser() == null ? false : true;
         return authorized;
     }
-
+    
     @Override
     public String getRealm() {
         debug("getRealm.");
         return "realm";
     }
-
+    
     @Override
     public Date getModifiedDate() {
         debug("getModifiedDate.");
@@ -189,7 +196,7 @@ public class WebDataResource implements PropFindableResource, Resource {
         }
         return null;
     }
-
+    
     @Override
     public String checkRedirect(Request request) {
         debug("checkRedirect.");
@@ -200,12 +207,12 @@ public class WebDataResource implements PropFindableResource, Resource {
                     return null;
                 }
                 return null;
-
+            
             default:
                 return null;
         }
     }
-
+    
     protected void debug(String msg) {
         if (debug) {
             System.err.println(this.getClass().getSimpleName() + "." + getLogicalData().getLDRI() + ": " + msg);
@@ -249,12 +256,11 @@ public class WebDataResource implements PropFindableResource, Resource {
     public void setLogicalData(ILogicalData logicalData) {
         this.logicalData = logicalData;
     }
-
+    
     public Path getPath() {
         return getLogicalData().getLDRI();
     }
-
-
+    
     Collection<IStorageSite> getStorageSites() throws CatalogueException, IOException {
         Collection<IStorageSite> sites = getLogicalData().getStorageSites();
         if (sites == null || sites.isEmpty()) {

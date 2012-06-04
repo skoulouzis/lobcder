@@ -6,9 +6,11 @@ package nl.uva.cs.lobcder.resources;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import javax.jdo.annotations.PersistenceCapable;
 import javax.jdo.annotations.Persistent;
+import nl.uva.cs.lobcder.auth.Permissions;
 
 /**
  *

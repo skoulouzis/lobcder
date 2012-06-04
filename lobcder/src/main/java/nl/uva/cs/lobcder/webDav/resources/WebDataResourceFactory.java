@@ -15,6 +15,7 @@ import nl.uva.cs.lobcder.catalogue.RDMSDLCatalog;
 import nl.uva.cs.lobcder.resources.ILogicalData;
 import nl.uva.cs.lobcder.resources.IStorageSite;
 import nl.uva.cs.lobcder.resources.LogicalData;
+import nl.uva.cs.lobcder.resources.Metadata;
 import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.cs.lobcder.util.PropertiesLoader;
 
@@ -55,7 +56,10 @@ public class WebDataResourceFactory implements ResourceFactory {
                 permArr.add(Permissions.OWNER_ROLE | Permissions.READWRITE);
                 permArr.add(Permissions.REST_ROLE | Permissions.NOACCESS);
                 permArr.add(Permissions.ROOT_ADMIN | Permissions.READWRITE);
-                root.getMetadata().setPermissionArray(permArr);
+                Metadata meta = root.getMetadata();
+                meta.setPermissionArray(permArr);
+                root.setMetadata(meta);
+                
                 WebDataDirResource webRoot = new WebDataDirResource(catalogue, root);                
                 return webRoot;
             }

@@ -6,17 +6,23 @@ package nl.uva.cs.lobcder.webDav.resources;
 
 import nl.uva.cs.lobcder.util.Constants;
 import com.bradmcevoy.common.Path;
+import com.bradmcevoy.http.MiltonServlet;
 import com.bradmcevoy.http.Range;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.servlet.http.HttpServletRequest;
+import nl.uva.cs.lobcder.auth.Permissions;
+import nl.uva.cs.lobcder.catalogue.IDLCatalogue;
 import nl.uva.cs.lobcder.catalogue.RDMSDLCatalog;
 import nl.uva.cs.lobcder.resources.*;
 import nl.uva.cs.lobcder.util.ConstantsAndSettings;
+import nl.uva.cs.lobcder.util.DummyHttpServletRequest;
 import static org.junit.Assert.*;
 import org.junit.*;
 
@@ -236,8 +242,7 @@ public class WebDataDirResourceTest {
 
 
         ILogicalData loaded = catalogue.getResourceEntryByLDRI(testFolderPath);
-        WebDataDirResource instance = new WebDataDirResource(catalogue, loaded);
-
+        WebDataDirResource instance = createDirResource(catalogue, loaded);
         WebDataFileResource result = (WebDataFileResource) instance.createNew(ConstantsAndSettings.TEST_FILE_NAME_1, bais, new Long(ConstantsAndSettings.TEST_DATA.getBytes().length), "text/plain");
         assertNotNull(result);
         assertEquals(new Long(ConstantsAndSettings.TEST_DATA.getBytes().length), result.getContentLength());
@@ -404,4 +409,23 @@ public class WebDataDirResourceTest {
 //        // TODO review the generated test code and remove the default call to fail.
 //        fail("The test case is a prototype.");
 //    }
+
+    private WebDataDirResource createDirResource(IDLCatalogue catalogue, ILogicalData logicalData) throws IOException, Exception {
+        ArrayList<Integer> permArr = new ArrayList<Integer>();
+        permArr.add(0);
+        permArr.add(Permissions.OWNER_ROLE | Permissions.READWRITE);
+        permArr.add(Permissions.REST_ROLE | Permissions.NOACCESS);
+        permArr.add(Permissions.ROOT_ADMIN | Permissions.READWRITE);
+        Metadata meta =logicalData.getMetadata();
+        meta.setPermissionArray(permArr);
+        logicalData.setMetadata(meta);
+        catalogue.updateResourceEntry(logicalData);
+        
+        WebDataDirResource instance = new WebDataDirResource(catalogue, logicalData);
+
+        HttpServletRequest r = new DummyHttpServletRequest();
+        MiltonServlet.setThreadlocals(r, null);
+        instance.authenticate("user", "pass");
+        return instance;
+    }
 }
