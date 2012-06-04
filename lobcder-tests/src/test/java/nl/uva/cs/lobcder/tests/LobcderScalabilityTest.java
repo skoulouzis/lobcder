@@ -27,6 +27,7 @@ import org.apache.commons.httpclient.protocol.Protocol;
 import org.apache.commons.httpclient.protocol.ProtocolSocketFactory;
 import org.apache.jackrabbit.webdav.client.methods.MkColMethod;
 import org.apache.jackrabbit.webdav.client.methods.PutMethod;
+import org.jacorb.transaction.Sleeper;
 import org.junit.After;
 import static org.junit.Assert.*;
 import org.junit.Before;
@@ -47,11 +48,12 @@ public class LobcderScalabilityTest {
     public static final int TEST_UPLOAD = 0;
     public static final int CREATE_DATASET = 1;
     public static final int TEST_DOWNLOAD = 2;
-    public static final int FILE_SIZE_IN_KB = 1;
+    public static final int FILE_SIZE_IN_KB = 1024*10;
     public static final int STEP_SIZE_DATASET = 4;
     public static final int MIN_SIZE_DATASET = 20;
-    public static final int MAX_SIZE_DATASET = 500;
-    public static final String[] meanLables = new String[]{ScaleTest.userMeasureLables[0], "NumOfUsers", ScaleTest.userMeasureLables[1], ScaleTest.userMeasureLables[2], ScaleTest.userMeasureLables[3], ScaleTest.userMeasureLables[4], ScaleTest.userMeasureLables[5]};
+    public static final int MAX_SIZE_DATASET = 40;
+    public static final int NUM_OF_CLIENTS = 2;
+    public static final String[] meanLables = new String[]{ScaleTest.userMeasureLables[0], ScaleTest.userMeasureLables[1], ScaleTest.userMeasureLables[2], ScaleTest.userMeasureLables[3], ScaleTest.userMeasureLables[4], ScaleTest.userMeasureLables[5],"NumOfUsers"};
     public static String measuresPath = "measures";
     private String hostMeasuresPath;
 
@@ -310,9 +312,10 @@ public class LobcderScalabilityTest {
                 clients[0].executeMethod(mkcol);
                 assertTrue("status: " + mkcol.getStatusCode(), mkcol.getStatusCode() == HttpStatus.SC_CREATED || mkcol.getStatusCode() == HttpStatus.SC_METHOD_NOT_ALLOWED);
             }
-            for (int i = 1; i <= this.clients.length; i++) {
+            for (int i = 1; i <= NUM_OF_CLIENTS;i++){//this.clients.length; i++) {
                 runTest(testDatasetPath, i, path, TEST_UPLOAD);
                 measureMean(path);
+                System.out.println("Running client "+i);
             }
 
         } finally {
