@@ -25,6 +25,7 @@ import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
 import org.apache.commons.httpclient.methods.RequestEntity;
 import org.apache.commons.httpclient.protocol.Protocol;
 import org.apache.commons.httpclient.protocol.ProtocolSocketFactory;
+import org.apache.jackrabbit.webdav.client.methods.DeleteMethod;
 import org.apache.jackrabbit.webdav.client.methods.MkColMethod;
 import org.apache.jackrabbit.webdav.client.methods.PutMethod;
 import org.jacorb.transaction.Sleeper;
@@ -48,12 +49,13 @@ public class LobcderScalabilityTest {
     public static final int TEST_UPLOAD = 0;
     public static final int CREATE_DATASET = 1;
     public static final int TEST_DOWNLOAD = 2;
-    public static final int FILE_SIZE_IN_KB = 1024*10;
+    public static final int DELETE = 3;
+    public static final int FILE_SIZE_IN_KB = 10;
     public static final int STEP_SIZE_DATASET = 4;
     public static final int MIN_SIZE_DATASET = 20;
     public static final int MAX_SIZE_DATASET = 40;
     public static final int NUM_OF_CLIENTS = 2;
-    public static final String[] meanLables = new String[]{ScaleTest.userMeasureLables[0], ScaleTest.userMeasureLables[1], ScaleTest.userMeasureLables[2], ScaleTest.userMeasureLables[3], ScaleTest.userMeasureLables[4], ScaleTest.userMeasureLables[5],"NumOfUsers"};
+    public static final String[] meanLables = new String[]{ScaleTest.userMeasureLables[0], ScaleTest.userMeasureLables[1], ScaleTest.userMeasureLables[2], ScaleTest.userMeasureLables[3], ScaleTest.userMeasureLables[4], ScaleTest.userMeasureLables[5], "NumOfUsers"};
     public static String measuresPath = "measures";
     private String hostMeasuresPath;
 
@@ -312,14 +314,21 @@ public class LobcderScalabilityTest {
                 clients[0].executeMethod(mkcol);
                 assertTrue("status: " + mkcol.getStatusCode(), mkcol.getStatusCode() == HttpStatus.SC_CREATED || mkcol.getStatusCode() == HttpStatus.SC_METHOD_NOT_ALLOWED);
             }
-            for (int i = 1; i <= NUM_OF_CLIENTS;i++){//this.clients.length; i++) {
+            for (int i = 1; i <= NUM_OF_CLIENTS; i++) {//this.clients.length; i++) {
                 runTest(testDatasetPath, i, path, TEST_UPLOAD);
                 measureMean(path);
-                System.out.println("Running client "+i);
+                System.out.println("Running client " + i);
+                runTest(testDatasetPath, i, path, DELETE);
             }
 
         } finally {
         }
+    }
+
+    private void delete(HttpClient client1, String testFileURI1) throws IOException {
+        DeleteMethod del = new DeleteMethod(testFileURI1);
+        int status = client1.executeMethod(del);
+        assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
     }
 
     private static class ScaleTest implements Runnable {
@@ -350,6 +359,10 @@ public class LobcderScalabilityTest {
                         break;
                     case CREATE_DATASET:
                         createDataset(FILE_SIZE_IN_KB);
+                        break;
+                    case DELETE:
+                        delete(testDatasetPath += "/" + username);
+                        break;
                     default:
                         break;
                 }
@@ -400,6 +413,27 @@ public class LobcderScalabilityTest {
             }
             writer.flush();
             writer.close();
+        }
+
+        public void delete(String path) throws IOException {
+//            writer = new FileWriter(path + File.separator + username + "delete.csv");
+//            for (String l : userDeleteMeasureLables) {
+//                writer.append(l);
+//                writer.append(",");
+//            }
+//            writer.append("\n");
+
+            DeleteMethod delete = new DeleteMethod(path);
+            client.executeMethod(delete);
+            double startDelete = System.currentTimeMillis();
+
+            assertTrue("status: " + delete.getStatusCode(), delete.getStatusCode() == HttpStatus.SC_NO_CONTENT);
+
+            double endDelete = System.currentTimeMillis();
+            double elapsedDeleteTime = endDelete - startDelete;
+//            writer.append(deletePath + "," + userDeleteMeasureLables +"\n");
+//            writer.flush();
+//            writer.close();
         }
 
         private void setDataset(ArrayList<File> datasets) {
