@@ -66,7 +66,9 @@ class WebDataDirResource extends WebDataResource implements FolderResource, Coll
             debug("\t newCollectionPath: " + newCollectionPath);
             if (newFolderEntry == null) {
                 newFolderEntry = new LogicalData(newCollectionPath, Constants.LOGICAL_FOLDER);
-                newFolderEntry.getMetadata().setCreateDate(System.currentTimeMillis());
+                Metadata meta = newFolderEntry.getMetadata();
+                meta.setCreateDate(System.currentTimeMillis());
+                newFolderEntry.setMetadata(meta);
 
                 Collection<IStorageSite> sites = getStorageSites();
 
@@ -74,7 +76,12 @@ class WebDataDirResource extends WebDataResource implements FolderResource, Coll
                 getCatalogue().registerResourceEntry(newFolderEntry);
             }
 
-            newFolderEntry.getMetadata().setPermissionArray((new Permissions(principal).getRolesPerm()));
+            
+            Metadata meta = newFolderEntry.getMetadata();
+            meta.setPermissionArray((new Permissions(principal).getRolesPerm()));
+            newFolderEntry.setMetadata(meta);
+            getCatalogue().updateResourceEntry(newFolderEntry);
+            
             WebDataDirResource resource = new WebDataDirResource(getCatalogue(), newFolderEntry);
             return resource;
         } catch (Permissions.Exception e) {
@@ -132,7 +139,8 @@ class WebDataDirResource extends WebDataResource implements FolderResource, Coll
         debug("getChildren.");
         ArrayList<? extends Resource> children = null;
         try {
-            Permissions p = new Permissions(getLogicalData().getMetadata().getPermissionArray());
+            ArrayList<Integer> perm = getLogicalData().getMetadata().getPermissionArray();
+            Permissions p = new Permissions(perm);
             MyPrincipal principal = (MyPrincipal) (MiltonServlet.request().getAttribute("vph-user"));
             if(!p.canRead(principal)) {
                 throw new NotAuthorizedException(); 
@@ -177,12 +185,18 @@ class WebDataDirResource extends WebDataResource implements FolderResource, Coll
             } else {
                 resource = createNonExistingFile(newPath, length, contentType, inputStream);
             }
-            ILogicalData reloaded = null;
+            
+            
             if (!getLogicalData().getLDRI().isRoot()) {
-                reloaded = getCatalogue().getResourceEntryByLDRI(this.getLogicalData().getLDRI());
+                ILogicalData reloaded = getCatalogue().getResourceEntryByLDRI(this.getLogicalData().getLDRI());
                 setLogicalData(reloaded);
             }
-            ((WebDataResource)resource).getLogicalData().getMetadata().setPermissionArray((new Permissions(principal)).getRolesPerm());
+            
+            meta = ((WebDataResource)resource).getLogicalData().getMetadata();
+            meta.setPermissionArray((new Permissions(principal)).getRolesPerm());
+            ((WebDataResource)resource).getLogicalData().setMetadata(meta);
+            getCatalogue().updateResourceEntry(((WebDataResource)resource).getLogicalData());
+            
             return resource;
         } catch (Permissions.Exception e) {
             throw new NotAuthorizedException();

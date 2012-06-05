@@ -226,7 +226,8 @@ public class WebDataFileResource extends WebDataResource implements
         debug("\t name: " + name);
         try{
             MyPrincipal principal = (MyPrincipal)(MiltonServlet.request().getAttribute("vph-user"));
-            if(getPath().getParent().isRoot()) {
+            Path parentPath = getPath().getParent();
+            if(parentPath == null || parentPath.isRoot()) {
                 if(!principal.getRoles().contains(Permissions.ROOT_ADMIN))
                     throw new NotAuthorizedException();
             } else {

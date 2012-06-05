@@ -13,12 +13,15 @@ import java.io.*;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.servlet.http.HttpServletRequest;
 import nl.uva.cs.lobcder.catalogue.CatalogueException;
 import nl.uva.cs.lobcder.catalogue.RDMSDLCatalog;
 import nl.uva.cs.lobcder.resources.ILogicalData;
 import nl.uva.cs.lobcder.resources.IStorageSite;
+import nl.uva.cs.lobcder.resources.Metadata;
 import nl.uva.cs.lobcder.resources.StorageSite;
 import nl.uva.cs.lobcder.util.ConstantsAndSettings;
+import nl.uva.cs.lobcder.util.DummyHttpServletRequest;
 import nl.uva.vlet.exception.ResourceNotFoundException;
 import nl.uva.vlet.exception.VlException;
 import nl.uva.vlet.vfs.VFSNode;
@@ -286,7 +289,9 @@ public class WebDataResourceFactoryTest {
         //1st GET
         instance = new WebDataResourceFactory();
         file = (WebDataFileResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH + ConstantsAndSettings.TEST_FOLDER_NAME_1 + "/" + ConstantsAndSettings.TEST_FILE_NAME_1);
-        assertNotNull(file);
+        file.authenticate("user", "password");
+        checkResource(file);
+        
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         Range range = null;
         Map<String, String> params = null;
@@ -452,9 +457,8 @@ public class WebDataResourceFactoryTest {
             String contentType = "text/plain";
             try {
                 file.sendContent(out, range, params, contentType);
-                 fail("No exception");
+                fail("No exception");
             } catch (Exception ex) {
-                
             }
             dir.delete();
         } catch (NotAuthorizedException ex) {
@@ -589,7 +593,7 @@ public class WebDataResourceFactoryTest {
         assertTrue(foundIt);
     }
 
-    private void checkResource(WebDataDirResource result) throws VlException, CatalogueException, IOException {
+    private void checkResource(WebDataResource result) throws VlException, CatalogueException, IOException {
         assertNotNull(result);
         Collection<IStorageSite> sites = result.getStorageSites();
         assertFalse(sites.isEmpty());
@@ -611,6 +615,9 @@ public class WebDataResourceFactoryTest {
             boolean hasData = s.LDRIHasPhysicalData(ConstantsAndSettings.TEST_FILE_PATH_1);
             assertFalse(hasData);
         }
+        Metadata meta = result.getLogicalData().getMetadata();
+        assertNotNull(meta);
+        assertNotNull(meta.getPermissionArray());
     }
 
     private WebDataDirResource getTestDir(WebDataResourceFactory instance, String host) throws NotAuthorizedException, ConflictException, BadRequestException, VlException, CatalogueException, IOException {
@@ -618,15 +625,20 @@ public class WebDataResourceFactoryTest {
         WebDataDirResource result = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH + ConstantsAndSettings.TEST_FOLDER_NAME_1);
         if (result == null) {
             WebDataDirResource root = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH);
-            root.authorise(null, Request.Method.HEAD, new Auth(vphUserName, new Object()));
+//            root.authorise(null, Request.Method.HEAD, new Auth(vphUserName, new Object()));
+            HttpServletRequest r = new DummyHttpServletRequest();
+            MiltonServlet.setThreadlocals(r, null);
+            root.authenticate("user", "pass");
+            
             assertNotNull(root);
             result = (WebDataDirResource) root.createCollection(ConstantsAndSettings.TEST_FOLDER_NAME_1);
         }
-        result.authorise(null, Request.Method.HEAD, new Auth(vphUserName, new Object()));
+//        result.authorise(null, Request.Method.HEAD, new Auth(vphUserName, new Object()));
+        result.authenticate("user", "pass");
         checkResource(result);
         return result;
     }
-
+    
     private void checkIfResourceExists(WebDataFileResource file10, String TEST_DATA) throws VlException, CatalogueException, IOException {
         Collection<IStorageSite> sites = file10.getStorageSites();
         boolean foundIt = false;

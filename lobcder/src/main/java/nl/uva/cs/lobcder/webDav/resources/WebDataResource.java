@@ -7,18 +7,10 @@ package nl.uva.cs.lobcder.webDav.resources;
 import com.bradmcevoy.common.Path;
 import com.bradmcevoy.http.Request.Method;
 import com.bradmcevoy.http.*;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.security.Principal;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.servlet.RequestDispatcher;
-import javax.servlet.ServletInputStream;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletRequestWrapper;
-import javax.servlet.http.HttpSession;
 import nl.uva.cs.lobcder.auth.MyPrincipal;
 import nl.uva.cs.lobcder.auth.MyPrincipal.Exception;
 import nl.uva.cs.lobcder.auth.PrincipalCache;
@@ -27,9 +19,6 @@ import nl.uva.cs.lobcder.catalogue.CatalogueException;
 import nl.uva.cs.lobcder.catalogue.IDLCatalogue;
 import nl.uva.cs.lobcder.resources.ILogicalData;
 import nl.uva.cs.lobcder.resources.IStorageSite;
-import nl.uva.cs.lobcder.util.DummyHttpServletRequest;
-import org.apache.http.HttpRequest;
-import org.apache.http.client.methods.HttpRequestBase;
 
 /**
  *
