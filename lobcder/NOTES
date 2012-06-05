@@ -15,8 +15,6 @@ click and select 'Manually install artifact' browse to
 ${project.basedir}/src/main/webapp/WEB-INF/lib/ select the jar and press install
 locally
 
-
-
 Create MySQL DB
 #
 # Connect to the local database server as user root
