@@ -27,7 +27,7 @@ public class MyAuth implements ExternAuthI{
     public ArrayList<Integer> checkToken(String token) {        
         ArrayList<Integer> roles = new ArrayList<Integer> ();
         roles.add(token.hashCode());
-        roles.add(2);
+        roles.add(3);
         roles.add(Permissions.ROOT_ADMIN);
         return roles;
     }

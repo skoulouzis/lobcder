@@ -26,7 +26,7 @@ public class WebDataResourceFactory implements ResourceFactory {
     private IDLCatalogue catalogue;
     private boolean debug = false;
     //Hardcoded for now. We need to find a way to get the username
-    private String uname = "skoulouz";
+//    private String uname = "skoulouz";
 
     public WebDataResourceFactory() throws Exception {
         String confDir = nl.uva.cs.lobcder.util.Constants.LOBCDER_CONF_DIR;
@@ -46,7 +46,6 @@ public class WebDataResourceFactory implements ResourceFactory {
             //Gets the root path. If instead we called :'ldri = Path.path(strPath);' we get back '/lobcder-1.0-SNAPSHOT'
             debug("getResource:  strPath: " + strPath + " path: " + Path.path(strPath) + " ldri: " + ldri);
             debug("getResource:  host: " + host + " path: " + ldri);
-            debug("getResource:  uname : " + this.uname);
 
             Collection<IStorageSite> sites;
             if (ldri.isRoot() || ldri.toString().equals("")) {
@@ -102,7 +101,7 @@ public class WebDataResourceFactory implements ResourceFactory {
         }
     }
 
-    public void setUserName(String remoteUser) {
-        this.uname = remoteUser;
-    }
+//    public void setUserName(String remoteUser) {
+//        this.uname = remoteUser;
+//    }
 }

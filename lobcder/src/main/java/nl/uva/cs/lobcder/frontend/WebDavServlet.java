@@ -59,9 +59,9 @@ public class WebDavServlet implements Servlet {
         try {
             originalRequest.set(req);
             originalResponse.set(resp);
-            if (rf != null && rf instanceof WebDataResourceFactory) {
-                ((WebDataResourceFactory) rf).setUserName(req.getRemoteUser());
-            }
+//            if (rf != null && rf instanceof WebDataResourceFactory) {
+//                ((WebDataResourceFactory) rf).setUserName(req.getRemoteUser());
+//            }
             com.bradmcevoy.http.Request request = new com.bradmcevoy.http.ServletRequest(req);
             com.bradmcevoy.http.Response response = new com.bradmcevoy.http.ServletResponse(resp);
 
