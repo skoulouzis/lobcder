@@ -6,6 +6,7 @@ package nl.uva.cs.lobcder.webDav.resources;
 
 import com.bradmcevoy.common.Path;
 import com.bradmcevoy.http.Auth;
+import com.bradmcevoy.http.MiltonServlet;
 import com.bradmcevoy.http.Request;
 import com.bradmcevoy.http.Resource;
 import com.bradmcevoy.http.exceptions.BadRequestException;
@@ -17,11 +18,14 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
+import javax.servlet.http.HttpServletRequest;
 import nl.uva.cs.lobcder.catalogue.CatalogueException;
 import nl.uva.cs.lobcder.catalogue.RDMSDLCatalog;
 import nl.uva.cs.lobcder.resources.*;
 import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.cs.lobcder.util.ConstantsAndSettings;
+import nl.uva.cs.lobcder.util.DummyHttpServletRequest;
+import nl.uva.vlet.exception.VlException;
 import static org.junit.Assert.*;
 import org.junit.Test;
 
@@ -34,7 +38,7 @@ public class UserThread extends Thread {
     private final int opNum;
     private static int counter = 0;
     private final String vphUserName;
-    private final String passwd;
+    private final String vphPassword;
 
     public UserThread(int opNmu) throws FileNotFoundException, IOException {
         this.opNum = opNmu;
@@ -43,7 +47,7 @@ public class UserThread extends Thread {
                 + File.separator + "etc" + File.separator + "test.proprties";
         Properties prop = TestSettings.getTestProperties(propBasePath);
         vphUserName = prop.getProperty("vph.username1");
-        passwd = prop.getProperty("vph.password1");
+        vphPassword = prop.getProperty("vph.password1");
     }
 
     @Override
@@ -98,8 +102,10 @@ public class UserThread extends Thread {
             assertEquals(fileName, name);
 
             instance = new WebDataResourceFactory();
-            result = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH + collectionName);
-            result.authorise(null, Request.Method.HEAD, new Auth(vphUserName, new Object()));
+
+            
+            result = (WebDataDirResource) getResource(instance, host, ConstantsAndSettings.CONTEXT_PATH + collectionName);
+            
             assertNotNull(result);
             sites = result.getStorageSites();
             assertFalse(sites.isEmpty());
@@ -128,10 +134,9 @@ public class UserThread extends Thread {
 //            assertEquals(fileName, name);
 
             result.delete();
-            result = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH + collectionName);
-            if (result != null) {
-                result.authorise(null, Request.Method.HEAD, new Auth(vphUserName, new Object()));
-            }
+            
+            result = (WebDataDirResource) getResource(instance, host, ConstantsAndSettings.CONTEXT_PATH + collectionName);
+            
             assertNull(result);
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -316,19 +321,31 @@ public class UserThread extends Thread {
         return false;
     }
 
-    private WebDataDirResource getTestDir(WebDataResourceFactory instance, String host, String collectionName) throws NotAuthorizedException, ConflictException, BadRequestException, CatalogueException, IOException {
+    private WebDataDirResource getTestDir(WebDataResourceFactory instance, String host, String collectionName) throws NotAuthorizedException, ConflictException, BadRequestException, VlException, CatalogueException, IOException {
 //        instance.setUserName(vphUserName);
         WebDataDirResource result = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH + collectionName);
+        HttpServletRequest r = new DummyHttpServletRequest();
+        MiltonServlet.setThreadlocals(r, null);
         if (result == null) {
             WebDataDirResource root = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH);
-            root.authorise(null, Request.Method.HEAD, new Auth(vphUserName, new Object()));
+//            root.authorise(null, Request.Method.HEAD, new Auth(vphUserName, new Object()));
+            root.authenticate(vphUserName, vphPassword);
             assertNotNull(root);
             result = (WebDataDirResource) root.createCollection(collectionName);
         }
-        result.authorise(null, Request.Method.HEAD, new Auth(vphUserName, new Object()));
-        assertNotNull(result);
-        Collection<IStorageSite> sites = result.getStorageSites();
-        assertFalse(sites.isEmpty());
+//        result.authorise(null, Request.Method.HEAD, new Auth(vphUserName, new Object()));
+        result.authenticate(vphUserName, vphPassword);
+//        checkResource(result);
         return result;
+    }
+
+    private WebDataResource getResource(WebDataResourceFactory instance, String host, String path) {
+        WebDataResource resource = (WebDataResource) instance.getResource(host, path);
+        if (resource != null) {
+            HttpServletRequest r = new DummyHttpServletRequest();
+            MiltonServlet.setThreadlocals(r, null);
+            resource.authenticate(vphUserName, vphPassword);
+        }
+        return resource;
     }
 }
