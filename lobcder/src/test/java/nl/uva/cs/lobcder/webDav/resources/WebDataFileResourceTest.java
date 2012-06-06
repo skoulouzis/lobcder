@@ -6,17 +6,12 @@ package nl.uva.cs.lobcder.webDav.resources;
 
 import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.cs.lobcder.util.ConstantsAndSettings;
-import java.util.Collection;
-import java.util.List;
-import com.bradmcevoy.http.Resource;
 import com.bradmcevoy.http.exceptions.BadRequestException;
 import com.bradmcevoy.http.exceptions.ConflictException;
 import com.bradmcevoy.http.exceptions.NotAuthorizedException;
-import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import nl.uva.cs.lobcder.catalogue.CatalogueException;
-import nl.uva.cs.lobcder.resources.ILogicalData;
 import com.bradmcevoy.common.Path;
 import com.bradmcevoy.http.*;
 import java.io.*;
