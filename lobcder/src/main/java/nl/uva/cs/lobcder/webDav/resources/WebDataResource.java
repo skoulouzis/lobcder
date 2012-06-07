@@ -16,6 +16,7 @@ import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import nl.uva.cs.lobcder.auth.MyPrincipal;
 import nl.uva.cs.lobcder.auth.MyPrincipal.Exception;
+import nl.uva.cs.lobcder.auth.Permissions;
 import nl.uva.cs.lobcder.auth.PrincipalCache;
 import nl.uva.cs.lobcder.auth.test.MyAuth;
 import nl.uva.cs.lobcder.catalogue.CatalogueException;
@@ -258,8 +259,8 @@ public class WebDataResource implements PropFindableResource, Resource {
         }
         return sites;
     }
-    
-    public MyPrincipal getPrincipal(){
+
+    public MyPrincipal getPrincipal() {
         HttpServletRequest r = WebDavServlet.request();
         MyPrincipal pr = (MyPrincipal) (r.getAttribute("vph-user"));
         return pr;
