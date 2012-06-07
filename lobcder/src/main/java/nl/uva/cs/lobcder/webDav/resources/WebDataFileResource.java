@@ -63,21 +63,21 @@ public class WebDataFileResource extends WebDataResource implements
             debug("\t toCollection: " + collectionResource.getName());
             debug("\t name: " + name);
             // check if request is authorized to read the resource
-            Permissions p = new Permissions(getLogicalData().getMetadata().getPermissionArray());
-            MyPrincipal principal = getPrincipal();
-            if(!p.canRead(principal)){
-                throw new NotAuthorizedException();
-            }
-            // check if we can write to the destination
-            Permissions parentPerm = new Permissions(((WebDataResource)collectionResource).getLogicalData().getMetadata().getPermissionArray());
-            if(!parentPerm.canWrite(principal)){
-                throw new NotAuthorizedException();
-            }
+//            Permissions p = new Permissions(getLogicalData().getMetadata().getPermissionArray());
+//            MyPrincipal principal = getPrincipal();
+//            if(!p.canRead(principal)){
+//                throw new NotAuthorizedException();
+//            }
+//            // check if we can write to the destination
+//            Permissions parentPerm = new Permissions(((WebDataResource)collectionResource).getLogicalData().getMetadata().getPermissionArray());
+//            if(!parentPerm.canWrite(principal)){
+//                throw new NotAuthorizedException();
+//            }
             Path toCollectionLDRI = Path.path(collectionResource.getName());
             Path newLDRI = Path.path(toCollectionLDRI, name);
 
             LogicalData newFolderEntry = new LogicalData(newLDRI, Constants.LOGICAL_FILE);
-            newFolderEntry.getMetadata().setPermissionArray((ArrayList<Integer>)p.getRolesPerm().clone());
+//            newFolderEntry.getMetadata().setPermissionArray((ArrayList<Integer>)p.getRolesPerm().clone());
             newFolderEntry.getMetadata().setModifiedDate(System.currentTimeMillis());
             getCatalogue().registerResourceEntry(newFolderEntry);
         } catch (CatalogueException ex) {
@@ -90,17 +90,17 @@ public class WebDataFileResource extends WebDataResource implements
     @Override
     public void delete() throws NotAuthorizedException, ConflictException, BadRequestException {        
         try {     
-            MyPrincipal principal = getPrincipal();
-            Path parentPath = getPath().getParent();
-            if(parentPath ==null || parentPath.isRoot()) {
-                if(!principal.getRoles().contains(Permissions.ROOT_ADMIN))
-                    throw new NotAuthorizedException();
-            } else {
-                Permissions p = new Permissions(getCatalogue().getResourceEntryByLDRI(getPath().getParent()).getMetadata().getPermissionArray());
-                if(!p.canWrite(principal)){
-                    throw new NotAuthorizedException();
-                }
-            }
+//            MyPrincipal principal = getPrincipal();
+//            Path parentPath = getPath().getParent();
+//            if(parentPath ==null || parentPath.isRoot()) {
+//                if(!principal.getRoles().contains(Permissions.ROOT_ADMIN))
+//                    throw new NotAuthorizedException();
+//            } else {
+//                Permissions p = new Permissions(getCatalogue().getResourceEntryByLDRI(getPath().getParent()).getMetadata().getPermissionArray());
+//                if(!p.canWrite(principal)){
+//                    throw new NotAuthorizedException();
+//                }
+//            }
             Collection<IStorageSite> sites = getLogicalData().getStorageSites();
             if (sites != null && !sites.isEmpty()) {
                 for (IStorageSite s : sites) {
@@ -180,11 +180,11 @@ public class WebDataFileResource extends WebDataResource implements
         debug("\t contentType: " + contentType);
         
         try {
-            Permissions p = new Permissions(getLogicalData().getMetadata().getPermissionArray());
-            MyPrincipal principal = getPrincipal();
-            if(!p.canRead(principal)){
-                throw new NotAuthorizedException();
-            }
+//            Permissions p = new Permissions(getLogicalData().getMetadata().getPermissionArray());
+//            MyPrincipal principal = getPrincipal();
+//            if(!p.canRead(principal)){
+//                throw new NotAuthorizedException();
+//            }
 
             VFile vFile;
             if (!getLogicalData().hasPhysicalData()) {
@@ -225,26 +225,26 @@ public class WebDataFileResource extends WebDataResource implements
             throws ConflictException, NotAuthorizedException, BadRequestException {
         debug("moveTo.");
         debug("\t name: " + name);
-        try{
-            MyPrincipal principal = getPrincipal();
-            Path parentPath = getPath().getParent();
-            if(parentPath == null || parentPath.isRoot()) {
-                if(!principal.getRoles().contains(Permissions.ROOT_ADMIN))
-                    throw new NotAuthorizedException();
-            } else {
-                Permissions p = new Permissions(getCatalogue().getResourceEntryByLDRI(getPath().getParent()).getMetadata().getPermissionArray());
-                if(!p.canWrite(principal)){
-                    throw new NotAuthorizedException();
-                }
-            }
-            // check if we can write to the destination
-            Permissions parentPerm = new Permissions(((WebDataResource)rDest).getLogicalData().getMetadata().getPermissionArray());
-            if(!parentPerm.canWrite(principal)){
-                throw new NotAuthorizedException();
-            }
-        } catch (Exception e){
-            throw new NotAuthorizedException();
-        }
+//        try{
+//            MyPrincipal principal = getPrincipal();
+//            Path parentPath = getPath().getParent();
+//            if(parentPath == null || parentPath.isRoot()) {
+//                if(!principal.getRoles().contains(Permissions.ROOT_ADMIN))
+//                    throw new NotAuthorizedException();
+//            } else {
+//                Permissions p = new Permissions(getCatalogue().getResourceEntryByLDRI(getPath().getParent()).getMetadata().getPermissionArray());
+//                if(!p.canWrite(principal)){
+//                    throw new NotAuthorizedException();
+//                }
+//            }
+//            // check if we can write to the destination
+//            Permissions parentPerm = new Permissions(((WebDataResource)rDest).getLogicalData().getMetadata().getPermissionArray());
+//            if(!parentPerm.canWrite(principal)){
+//                throw new NotAuthorizedException();
+//            }
+//        } catch (Exception e){
+//            throw new NotAuthorizedException();
+//        }
         Path parent;
         Path tmpPath;
 
