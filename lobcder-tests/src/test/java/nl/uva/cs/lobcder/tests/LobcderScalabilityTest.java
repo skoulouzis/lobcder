@@ -75,7 +75,7 @@ public class LobcderScalabilityTest {
         initDatasets();
     }
 
-    private void initURL(Properties prop) {
+    private void initURL(Properties prop) throws FileNotFoundException {
         String testURL = prop.getProperty("webdav.test.url");
         //Some problem with the pom.xml. The properties are set but System.getProperty gets null
         if (testURL == null) {
@@ -92,8 +92,11 @@ public class LobcderScalabilityTest {
             this.lobcderRoot += "/";
         }
 
-        hostMeasuresPath = measuresPath + File.separator + uri.getHost();
-        new File(hostMeasuresPath).mkdir();
+        hostMeasuresPath = measuresPath + File.separator + uri.getHost()+File.separator+uri.getPath();
+        File measureDir = new File(hostMeasuresPath);
+        if(measureDir.mkdirs()){
+            throw new FileNotFoundException("Could not create "+measureDir.getAbsolutePath()+" dir");
+        }
     }
 
     private void initUsers(Properties prop) {
