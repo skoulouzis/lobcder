@@ -1,0 +1,5 @@
+vph.username=uname1
+storage.site.username=user
+storage.site.password=secret
+storage.site.grid.proxy=notyet
+storage.site.endpoint=swift://149.156.10.131:8443/auth/v1.0/
