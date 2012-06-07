@@ -308,20 +308,23 @@ public class RDMSDLCatalogueTest {
         try {
 
             instance = new RDMSDLCatalog(new File(nl.uva.cs.lobcder.util.Constants.LOBCDER_CONF_DIR + "/datanucleus.properties"));
-            Path originalPath = Path.path("/ResourceName/oldResourceName");
-            LogicalData e = new LogicalData(originalPath, Constants.LOGICAL_DATA);
+            Path originalParentPath = Path.path("/ResourceName/");
+            Path originalChildPath = Path.path("/ResourceName/oldResourceName");
+            LogicalData parent = new LogicalData(originalParentPath, Constants.LOGICAL_DATA);
+            LogicalData child = new LogicalData(originalChildPath, Constants.LOGICAL_DATA);
 
-            instance.registerResourceEntry(e);
+            instance.registerResourceEntry(parent);
+            instance.registerResourceEntry(child);
             newPath = Path.path("/ResourceName/newResourceName");
 
-            instance.renameEntry(originalPath, newPath);
+            instance.renameEntry(originalChildPath, newPath);
 
             loaded = instance.getResourceEntryByLDRI(newPath);
             assertNotNull(loaded);
             assertEquals(newPath.toString(), loaded.getLDRI().toString());
 
 
-            ILogicalData loadedOriginal = instance.getResourceEntryByLDRI(originalPath);
+            ILogicalData loadedOriginal = instance.getResourceEntryByLDRI(originalChildPath);
             assertNull(loadedOriginal);
 
 
