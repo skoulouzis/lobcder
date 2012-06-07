@@ -153,7 +153,7 @@ public class WebDataResource implements PropFindableResource, Resource {
                     sites = (Collection<IStorageSite>) getCatalogue().getSitesByUname(user);
 
                     if (sites == null || sites.isEmpty()) {
-                        debug("\t StorageSites for " + this.getName() + " are empty!");
+                        debug("\t StorageSites for " + this.getName() + " are empty! Make sure that the user has the right to use these storage sites");
                         throw new RuntimeException("User " + user + " has StorageSites for " + this.getName());
                     }
                     getLogicalData().setStorageSites(sites);
