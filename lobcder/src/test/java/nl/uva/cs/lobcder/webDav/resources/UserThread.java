@@ -21,6 +21,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import javax.servlet.http.HttpServletRequest;
 import nl.uva.cs.lobcder.catalogue.CatalogueException;
 import nl.uva.cs.lobcder.catalogue.RDMSDLCatalog;
+import nl.uva.cs.lobcder.frontend.WebDavServlet;
 import nl.uva.cs.lobcder.resources.*;
 import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.cs.lobcder.util.ConstantsAndSettings;
@@ -325,7 +326,7 @@ public class UserThread extends Thread {
 //        instance.setUserName(vphUserName);
         WebDataDirResource result = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH + collectionName);
         HttpServletRequest r = new DummyHttpServletRequest();
-        MiltonServlet.setThreadlocals(r, null);
+        WebDavServlet.setThreadlocals(r, null);
         if (result == null) {
             WebDataDirResource root = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH);
 //            root.authorise(null, Request.Method.HEAD, new Auth(vphUserName, new Object()));
@@ -343,7 +344,7 @@ public class UserThread extends Thread {
         WebDataResource resource = (WebDataResource) instance.getResource(host, path);
         if (resource != null) {
             HttpServletRequest r = new DummyHttpServletRequest();
-            MiltonServlet.setThreadlocals(r, null);
+            WebDavServlet.setThreadlocals(r, null);
             resource.authenticate(vphUserName, vphPassword);
         }
         return resource;

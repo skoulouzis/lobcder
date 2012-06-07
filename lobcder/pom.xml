@@ -13,10 +13,7 @@
     <properties>
         <endorsed.dir>${project.build.directory}/endorsed</endorsed.dir>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-<!--        <webdav.test.url>http://localhost:8080/lobcder-1.0-SNAPSHOT/</webdav.test.url>
-        <webdav.test.username>user</webdav.test.username>
-        <webdav.test.password>passwd</webdav.test.password>-->
-        <skipTests>true</skipTests>
+        <skipTests>false</skipTests>
     </properties>
 
     <dependencies>

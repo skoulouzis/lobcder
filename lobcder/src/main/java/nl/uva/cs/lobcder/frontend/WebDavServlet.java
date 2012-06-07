@@ -24,7 +24,7 @@ import nl.uva.cs.lobcder.webDav.resources.WebDataResourceFactoryFactory;
  *
  * @author S. Koulouzis
  */
-public class WebDavServlet implements Servlet{
+public class WebDavServlet implements Servlet {
 
     private static final ThreadLocal<HttpServletRequest> originalRequest = new ThreadLocal<HttpServletRequest>();
     private static final ThreadLocal<HttpServletResponse> originalResponse = new ThreadLocal<HttpServletResponse>();
@@ -36,6 +36,11 @@ public class WebDavServlet implements Servlet{
 
     public static HttpServletRequest request() {
         return originalRequest.get();
+    }
+
+    public static void setThreadlocals(HttpServletRequest req, HttpServletResponse resp) {
+        originalRequest.set(req);
+        originalResponse.set(resp);
     }
 
     @Override
@@ -64,10 +69,10 @@ public class WebDavServlet implements Servlet{
             try {
                 originalRequest.set(req);
                 originalResponse.set(resp);
-                
+
                 com.bradmcevoy.http.Request request = new com.bradmcevoy.http.ServletRequest(req);
                 com.bradmcevoy.http.Response response = new com.bradmcevoy.http.ServletResponse(resp);
-                
+
                 httpManager.process(request, response);
 
             } finally {
@@ -108,7 +113,6 @@ public class WebDavServlet implements Servlet{
         init(rf, responseHandler, authHandlers);
     }
 
-    
     protected void init(ResourceFactory rf, WebDavResponseHandler responseHandler, List<String> authHandlers) throws ServletException {
         AuthenticationService authService;
 
@@ -151,7 +155,7 @@ public class WebDavServlet implements Servlet{
 
         httpManager.addFilter(0, new WebDavFilter());
     }
-    
+
     protected <T> T instantiate(String className) throws ServletException {
         try {
             Class c = Class.forName(className);

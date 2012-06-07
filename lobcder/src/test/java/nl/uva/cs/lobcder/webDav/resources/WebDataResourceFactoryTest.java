@@ -16,6 +16,7 @@ import java.util.logging.Logger;
 import javax.servlet.http.HttpServletRequest;
 import nl.uva.cs.lobcder.catalogue.CatalogueException;
 import nl.uva.cs.lobcder.catalogue.RDMSDLCatalog;
+import nl.uva.cs.lobcder.frontend.WebDavServlet;
 import nl.uva.cs.lobcder.resources.ILogicalData;
 import nl.uva.cs.lobcder.resources.IStorageSite;
 import nl.uva.cs.lobcder.resources.Metadata;
@@ -627,7 +628,7 @@ public class WebDataResourceFactoryTest {
             WebDataDirResource root = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH);
 //            root.authorise(null, Request.Method.HEAD, new Auth(vphUserName, new Object()));
             HttpServletRequest r = new DummyHttpServletRequest();
-            MiltonServlet.setThreadlocals(r, null);
+            WebDavServlet.setThreadlocals(r, null);
             root.authenticate(vphUserName, vphPassword);
             assertNotNull(root);
             result = (WebDataDirResource) root.createCollection(ConstantsAndSettings.TEST_FOLDER_NAME_1);
@@ -684,7 +685,7 @@ public class WebDataResourceFactoryTest {
         WebDataResource resource = (WebDataResource) instance.getResource(host, path);
         if (resource != null) {
             HttpServletRequest r = new DummyHttpServletRequest();
-            MiltonServlet.setThreadlocals(r, null);
+            WebDavServlet.setThreadlocals(r, null);
             resource.authenticate(vphUserName, vphPassword);
         }
         return resource;

@@ -20,6 +20,7 @@ import javax.servlet.http.HttpServletRequest;
 import nl.uva.cs.lobcder.auth.Permissions;
 import nl.uva.cs.lobcder.catalogue.IDLCatalogue;
 import nl.uva.cs.lobcder.catalogue.RDMSDLCatalog;
+import nl.uva.cs.lobcder.frontend.WebDavServlet;
 import nl.uva.cs.lobcder.resources.*;
 import nl.uva.cs.lobcder.util.ConstantsAndSettings;
 import nl.uva.cs.lobcder.util.DummyHttpServletRequest;
@@ -424,7 +425,7 @@ public class WebDataDirResourceTest {
         WebDataDirResource instance = new WebDataDirResource(catalogue, logicalData);
 
         HttpServletRequest r = new DummyHttpServletRequest();
-        MiltonServlet.setThreadlocals(r, null);
+        WebDavServlet.setThreadlocals(r, null);
         instance.authenticate("user", "pass");
         return instance;
     }

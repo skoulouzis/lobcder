@@ -19,6 +19,7 @@ import java.util.*;
 import javax.servlet.http.HttpServletRequest;
 import nl.uva.cs.lobcder.auth.Permissions;
 import nl.uva.cs.lobcder.catalogue.RDMSDLCatalog;
+import nl.uva.cs.lobcder.frontend.WebDavServlet;
 import nl.uva.cs.lobcder.resources.*;
 import nl.uva.cs.lobcder.util.DummyHttpServletRequest;
 import nl.uva.vlet.vfs.VFSNode;
@@ -678,7 +679,7 @@ public class WebDataFileResourceTest {
 
         WebDataDirResource collectionResource = new WebDataDirResource(catalogue, ld);
         HttpServletRequest r = new DummyHttpServletRequest();
-        MiltonServlet.setThreadlocals(r, null);
+        WebDavServlet.setThreadlocals(r, null);
         collectionResource.authenticate("user", "pass");
 
         return collectionResource;
@@ -696,7 +697,7 @@ public class WebDataFileResourceTest {
         catalogue.updateResourceEntry(lf);
         WebDataFileResource webDAVFile = new WebDataFileResource(catalogue, lf);
         HttpServletRequest r = new DummyHttpServletRequest();
-        MiltonServlet.setThreadlocals(r, null);
+        WebDavServlet.setThreadlocals(r, null);
         webDAVFile.authenticate("user", "pass");
 
         return webDAVFile;
