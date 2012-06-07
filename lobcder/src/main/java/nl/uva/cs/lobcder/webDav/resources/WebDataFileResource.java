@@ -20,6 +20,7 @@ import nl.uva.cs.lobcder.auth.MyPrincipal;
 import nl.uva.cs.lobcder.auth.Permissions;
 import nl.uva.cs.lobcder.catalogue.CatalogueException;
 import nl.uva.cs.lobcder.catalogue.IDLCatalogue;
+import nl.uva.cs.lobcder.frontend.WebDavServlet;
 import nl.uva.cs.lobcder.resources.ILogicalData;
 import nl.uva.cs.lobcder.resources.IStorageSite;
 import nl.uva.cs.lobcder.resources.LogicalData;
@@ -63,7 +64,7 @@ public class WebDataFileResource extends WebDataResource implements
             debug("\t name: " + name);
             // check if request is authorized to read the resource
             Permissions p = new Permissions(getLogicalData().getMetadata().getPermissionArray());
-            MyPrincipal principal = (MyPrincipal)(MiltonServlet.request().getAttribute("vph-user"));
+            MyPrincipal principal = getPrincipal();
             if(!p.canRead(principal)){
                 throw new NotAuthorizedException();
             }
@@ -89,7 +90,7 @@ public class WebDataFileResource extends WebDataResource implements
     @Override
     public void delete() throws NotAuthorizedException, ConflictException, BadRequestException {        
         try {     
-            MyPrincipal principal = (MyPrincipal)(MiltonServlet.request().getAttribute("vph-user"));
+            MyPrincipal principal = getPrincipal();
             Path parentPath = getPath().getParent();
             if(parentPath ==null || parentPath.isRoot()) {
                 if(!principal.getRoles().contains(Permissions.ROOT_ADMIN))
@@ -180,7 +181,7 @@ public class WebDataFileResource extends WebDataResource implements
         
         try {
             Permissions p = new Permissions(getLogicalData().getMetadata().getPermissionArray());
-            MyPrincipal principal = (MyPrincipal)(MiltonServlet.request().getAttribute("vph-user"));
+            MyPrincipal principal = getPrincipal();
             if(!p.canRead(principal)){
                 throw new NotAuthorizedException();
             }
@@ -225,7 +226,7 @@ public class WebDataFileResource extends WebDataResource implements
         debug("moveTo.");
         debug("\t name: " + name);
         try{
-            MyPrincipal principal = (MyPrincipal)(MiltonServlet.request().getAttribute("vph-user"));
+            MyPrincipal principal = getPrincipal();
             Path parentPath = getPath().getParent();
             if(parentPath == null || parentPath.isRoot()) {
                 if(!principal.getRoles().contains(Permissions.ROOT_ADMIN))

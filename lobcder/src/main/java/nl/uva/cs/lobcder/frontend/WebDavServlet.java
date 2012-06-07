@@ -6,6 +6,7 @@ package nl.uva.cs.lobcder.frontend;
 
 import com.bradmcevoy.http.ApplicationConfig;
 import com.bradmcevoy.http.AuthenticationService;
+import com.bradmcevoy.http.MiltonServlet;
 import com.bradmcevoy.http.ResourceFactory;
 import com.bradmcevoy.http.webdav.WebDavResponseHandler;
 import java.io.IOException;
@@ -23,7 +24,7 @@ import nl.uva.cs.lobcder.webDav.resources.WebDataResourceFactoryFactory;
  *
  * @author S. Koulouzis
  */
-public class WebDavServlet implements Servlet {
+public class WebDavServlet implements Servlet{
 
     private static final ThreadLocal<HttpServletRequest> originalRequest = new ThreadLocal<HttpServletRequest>();
     private static final ThreadLocal<HttpServletResponse> originalResponse = new ThreadLocal<HttpServletResponse>();
@@ -33,47 +34,48 @@ public class WebDavServlet implements Servlet {
     private static final boolean debug = true;
     private ResourceFactory rf;
 
+    public static HttpServletRequest request() {
+        return originalRequest.get();
+    }
+
     @Override
     public void service(javax.servlet.ServletRequest servletRequest,
             javax.servlet.ServletResponse servletResponse) throws ServletException, IOException {
         HttpServletRequest req = (HttpServletRequest) servletRequest;
         HttpServletResponse resp = (HttpServletResponse) servletResponse;
-        final String auth = req.getHeader( "Authorization" );
-        if ( auth == null ) {
-            resp.setHeader( "WWW-Authenticate", "Basic realm=\"" + "SECRET" + "\"" );
-            resp.sendError( HttpServletResponse.SC_UNAUTHORIZED );
+        final String auth = req.getHeader("Authorization");
+        if (auth == null) {
+            resp.setHeader("WWW-Authenticate", "Basic realm=\"" + "SECRET" + "\"");
+            resp.sendError(HttpServletResponse.SC_UNAUTHORIZED);
         } else {
 
-        debug("HttpServletRequest \n"
-                + "\t getAuthType: " + req.getAuthType() + "\n"
-                + "\t getContentType: " + req.getContentType() + "\n"
-                + "\t getContextPath: " + req.getContextPath() + "\n"
-                + "\t getMethod: " + req.getMethod() + "\n"
-                + "\t getPathInfo: " + req.getPathInfo() + "\n"
-                + "\t getPathTranslated: " + req.getPathTranslated() + "\n"
-                + "\t getQueryString: " + req.getQueryString() + "\n"
-                + "\t getRemoteUser: " + req.getRemoteUser() + "\n"
-                + "\t getRequestURI: " + req.getRequestURI() + "\n"
-                + "\t getRequestedSessionId: " + req.getRequestedSessionId());
+            debug("HttpServletRequest \n"
+                    + "\t getAuthType: " + req.getAuthType() + "\n"
+                    + "\t getContentType: " + req.getContentType() + "\n"
+                    + "\t getContextPath: " + req.getContextPath() + "\n"
+                    + "\t getMethod: " + req.getMethod() + "\n"
+                    + "\t getPathInfo: " + req.getPathInfo() + "\n"
+                    + "\t getPathTranslated: " + req.getPathTranslated() + "\n"
+                    + "\t getQueryString: " + req.getQueryString() + "\n"
+                    + "\t getRemoteUser: " + req.getRemoteUser() + "\n"
+                    + "\t getRequestURI: " + req.getRequestURI() + "\n"
+                    + "\t getRequestedSessionId: " + req.getRequestedSessionId());
 
-        try {
-            originalRequest.set(req);
-            originalResponse.set(resp);
-//            if (rf != null && rf instanceof WebDataResourceFactory) {
-//                ((WebDataResourceFactory) rf).setUserName(req.getRemoteUser());
-//            }
-            com.bradmcevoy.http.Request request = new com.bradmcevoy.http.ServletRequest(req);
-            com.bradmcevoy.http.Response response = new com.bradmcevoy.http.ServletResponse(resp);
+            try {
+                originalRequest.set(req);
+                originalResponse.set(resp);
+                
+                com.bradmcevoy.http.Request request = new com.bradmcevoy.http.ServletRequest(req);
+                com.bradmcevoy.http.Response response = new com.bradmcevoy.http.ServletResponse(resp);
+                
+                httpManager.process(request, response);
 
-
-            httpManager.process(request, response);
-
-        } finally {
-            originalRequest.remove();
-            originalResponse.remove();
-            servletResponse.getOutputStream().flush();
-            servletResponse.flushBuffer();
-        }
+            } finally {
+                originalRequest.remove();
+                originalResponse.remove();
+                servletResponse.getOutputStream().flush();
+                servletResponse.flushBuffer();
+            }
         }
     }
 
@@ -106,6 +108,7 @@ public class WebDavServlet implements Servlet {
         init(rf, responseHandler, authHandlers);
     }
 
+    
     protected void init(ResourceFactory rf, WebDavResponseHandler responseHandler, List<String> authHandlers) throws ServletException {
         AuthenticationService authService;
 
@@ -129,7 +132,7 @@ public class WebDavServlet implements Servlet {
         authService.setDisableDigest(true);
         authService.setDisableBasic(false);
         authService.setDisableExternal(true);
-        
+
         // log the auth handler config
         debug("Configured authentication handlers: " + authService.getAuthenticationHandlers().size());
         if (authService.getAuthenticationHandlers().size() > 0) {
@@ -148,7 +151,7 @@ public class WebDavServlet implements Servlet {
 
         httpManager.addFilter(0, new WebDavFilter());
     }
-
+    
     protected <T> T instantiate(String className) throws ServletException {
         try {
             Class c = Class.forName(className);

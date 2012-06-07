@@ -31,7 +31,7 @@ public class LogicalData implements ILogicalData, Serializable {
      *
      */
     private static final long serialVersionUID = -1529997963561059214L;
-    @PrimaryKey
+//    @PrimaryKey
 //    @Persistent(valueStrategy= IdGeneratorStrategy.UUIDSTRING)
     @Persistent
     private String uid;
@@ -45,6 +45,7 @@ public class LogicalData implements ILogicalData, Serializable {
     private Path ldri;
     @Persistent(defaultFetchGroup = "true")
     private Path pdri;
+//    @PrimaryKey
     @Persistent
     private String strLDRI;
     @Persistent

@@ -11,12 +11,16 @@ import java.io.IOException;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
 import nl.uva.cs.lobcder.auth.MyPrincipal;
 import nl.uva.cs.lobcder.auth.MyPrincipal.Exception;
 import nl.uva.cs.lobcder.auth.PrincipalCache;
 import nl.uva.cs.lobcder.auth.test.MyAuth;
 import nl.uva.cs.lobcder.catalogue.CatalogueException;
 import nl.uva.cs.lobcder.catalogue.IDLCatalogue;
+import nl.uva.cs.lobcder.frontend.WebDavServlet;
 import nl.uva.cs.lobcder.resources.ILogicalData;
 import nl.uva.cs.lobcder.resources.IStorageSite;
 
@@ -25,7 +29,7 @@ import nl.uva.cs.lobcder.resources.IStorageSite;
  * @author S. Koulouzis
  */
 public class WebDataResource implements PropFindableResource, Resource {
-    
+
     private ILogicalData logicalData;
     private final IDLCatalogue catalogue;
     private static final boolean debug = false;
@@ -40,7 +44,7 @@ public class WebDataResource implements PropFindableResource, Resource {
         this.catalogue = catalogue;
         properties = new HashMap<String, CustomProperty>();
     }
-    
+
     @Override
     public Date getCreateDate() {
         debug("getCreateDate.");
@@ -49,35 +53,25 @@ public class WebDataResource implements PropFindableResource, Resource {
         }
         return null;
     }
-    
+
     @Override
     public String getUniqueId() {
         debug("getUniqueId.");
         return String.valueOf(getLogicalData().getUID());
     }
-    
+
     @Override
     public String getName() {
         debug("getName.");
         return getLogicalData().getLDRI().getName();
     }
-    
+
     @Override
     public Object authenticate(String user, String password) {
         MyPrincipal principal = null;
         debug("authenticate.\n"
                 + "\t user: " + user
                 + "\t password: " + password);
-//            Collection<IStorageSite> sites = getLogicalData().getStorageSites();
-//            if (sites == null || sites.isEmpty()) {
-//                sites = (Collection<IStorageSite>) getCatalogue().getSitesByUname(user);
-//                if (sites == null || sites.isEmpty()) {
-//                    debug("\t StorageSites for " + this.getName() + " are empty!");
-//                    throw new RuntimeException("StorageSites for " + this.getName() + " are empty!");
-//                }
-//                getLogicalData().setStorageSites(sites);
-//            }
-//  
         try {
             ArrayList<Integer> roles = new ArrayList<Integer>();
             roles.add(0);
@@ -87,13 +81,14 @@ public class WebDataResource implements PropFindableResource, Resource {
                 principal = new MyPrincipal(token, MyAuth.getInstance().checkToken(token));
                 PrincipalCache.pcache.putPrincipal(principal);
             }
-            MiltonServlet.request().setAttribute("vph-user", principal);
+            WebDavServlet.request().setAttribute("vph-user", principal);
         } catch (Exception ex) {
             Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
+
         }
         return principal;
     }
-    
+
     @Override
     public boolean authorise(Request request, Method method, Auth auth) {
 
@@ -150,12 +145,12 @@ public class WebDataResource implements PropFindableResource, Resource {
                     + "\t auth.getUri(): " + uri + "\n"
                     + "\t auth.getUser(): " + user + "\n"
                     + "\t auth.getTag(): " + tag);
-            
+
             Collection<IStorageSite> sites = getLogicalData().getStorageSites();
             if (sites == null || sites.isEmpty()) {
                 try {
                     sites = (Collection<IStorageSite>) getCatalogue().getSitesByUname(user);
-                    
+
                     if (sites == null || sites.isEmpty()) {
                         debug("\t StorageSites for " + this.getName() + " are empty!");
                         throw new RuntimeException("User " + user + " has StorageSites for " + this.getName());
@@ -170,13 +165,13 @@ public class WebDataResource implements PropFindableResource, Resource {
         //return auth.getUser() == null ? false : true;
         return authorized;
     }
-    
+
     @Override
     public String getRealm() {
         debug("getRealm.");
         return "realm";
     }
-    
+
     @Override
     public Date getModifiedDate() {
         debug("getModifiedDate.");
@@ -185,7 +180,7 @@ public class WebDataResource implements PropFindableResource, Resource {
         }
         return null;
     }
-    
+
     @Override
     public String checkRedirect(Request request) {
         debug("checkRedirect.");
@@ -196,12 +191,12 @@ public class WebDataResource implements PropFindableResource, Resource {
                     return null;
                 }
                 return null;
-            
+
             default:
                 return null;
         }
     }
-    
+
     protected void debug(String msg) {
         if (debug) {
             System.err.println(this.getClass().getSimpleName() + "." + getLogicalData().getLDRI() + ": " + msg);
@@ -245,11 +240,11 @@ public class WebDataResource implements PropFindableResource, Resource {
     public void setLogicalData(ILogicalData logicalData) {
         this.logicalData = logicalData;
     }
-    
+
     public Path getPath() {
         return getLogicalData().getLDRI();
     }
-    
+
     Collection<IStorageSite> getStorageSites() throws CatalogueException, IOException {
         Collection<IStorageSite> sites = getLogicalData().getStorageSites();
         if (sites == null || sites.isEmpty()) {
@@ -262,5 +257,11 @@ public class WebDataResource implements PropFindableResource, Resource {
             throw new IOException("Storage Sites for " + this.getLogicalData().getLDRI() + " are empty!");
         }
         return sites;
+    }
+    
+    public MyPrincipal getPrincipal(){
+        HttpServletRequest r = WebDavServlet.request();
+        MyPrincipal pr = (MyPrincipal) (r.getAttribute("vph-user"));
+        return pr;
     }
 }

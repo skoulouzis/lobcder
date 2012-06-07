@@ -20,13 +20,9 @@ import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.cs.lobcder.util.PropertiesLoader;
 
 public class WebDataResourceFactory implements ResourceFactory {
-
-//    private Logger log = LoggerFactory.getLogger(WebDataResourceFactory.class);
-    public static final String REALM = "vph-share";
+    
     private IDLCatalogue catalogue;
     private boolean debug = false;
-    //Hardcoded for now. We need to find a way to get the username
-//    private String uname = "skoulouz";
 
     public WebDataResourceFactory() throws Exception {
         String confDir = nl.uva.cs.lobcder.util.Constants.LOBCDER_CONF_DIR;
@@ -65,7 +61,6 @@ public class WebDataResourceFactory implements ResourceFactory {
 
             ILogicalData entry = catalogue.getResourceEntryByLDRI(ldri);
             if (entry == null) {
-                debug("Didn't find " + ldri + ". returning null");
                 return null;
             }
 

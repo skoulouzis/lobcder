@@ -10,8 +10,6 @@ import com.bradmcevoy.http.exceptions.ConflictException;
 import com.bradmcevoy.http.exceptions.NotAuthorizedException;
 import com.bradmcevoy.http.exceptions.NotFoundException;
 import com.bradmcevoy.http.http11.Http11ResponseHandler;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import nl.uva.cs.lobcder.webDav.exceptions.ForbiddenException;
 import nl.uva.cs.lobcder.webDav.exceptions.UnauthorizedException;
 import nl.uva.cs.lobcder.webDav.exceptions.WebDavException;
