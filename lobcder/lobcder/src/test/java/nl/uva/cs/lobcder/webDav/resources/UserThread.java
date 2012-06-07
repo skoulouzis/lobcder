@@ -104,9 +104,9 @@ public class UserThread extends Thread {
 
             instance = new WebDataResourceFactory();
 
-            
+
             result = (WebDataDirResource) getResource(instance, host, ConstantsAndSettings.CONTEXT_PATH + collectionName);
-            
+
             assertNotNull(result);
             sites = result.getStorageSites();
             assertFalse(sites.isEmpty());
@@ -135,9 +135,9 @@ public class UserThread extends Thread {
 //            assertEquals(fileName, name);
 
             result.delete();
-            
+
             result = (WebDataDirResource) getResource(instance, host, ConstantsAndSettings.CONTEXT_PATH + collectionName);
-            
+
             assertNull(result);
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -315,7 +315,8 @@ public class UserThread extends Thread {
 //        System.out.println("loadedEntry:    " + loadedEntry.getUID() + " " + loadedEntry.getLDRI());
         if (entry.getLDRI().getName().equals(loadedEntry.getLDRI().getName())) {
             //Due to very bad ptaches the UDIs are not the same any more 
-            if (entry.getUID().equals(loadedEntry.getUID())) {
+//            if (entry.getUID().equals(loadedEntry.getUID())) {
+            if (entry.getUID() == loadedEntry.getUID()) {
                 return true;
             }
         }

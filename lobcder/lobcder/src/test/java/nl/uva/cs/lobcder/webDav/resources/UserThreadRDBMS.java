@@ -62,8 +62,8 @@ public class UserThreadRDBMS extends Thread {
     private void op1() {
         try {
             String host = "localhost:8080";
-            String fileName = "testFileThread"+getName();
-            String collectionName = "/testCollection"+getName();
+            String fileName = "testFileThread" + getName();
+            String collectionName = "/testCollection" + getName();
 
             WebDataResourceFactory instance = new WebDataResourceFactory();
             WebDataDirResource result = getTestDir(instance, host, collectionName);
@@ -294,7 +294,7 @@ public class UserThreadRDBMS extends Thread {
 //        debug("loadedEntry:    " + loadedEntry.getUID() + " " + loadedEntry.getLDRI());
         if (entry.getLDRI().getName().equals(loadedEntry.getLDRI().getName())) {
             //Due to very bad ptaches the UDIs are not the same any more 
-            if (entry.getUID().equals(loadedEntry.getUID())) {
+            if (entry.getUID() == loadedEntry.getUID()) {
                 return true;
             }
         }

@@ -1076,7 +1076,8 @@ public class RDMSDLCatalogueTest {
 //        System.out.println("entry:          " + entry.getUID() + " " + entry.getLDRI());
 //        System.out.println("loadedEntry:    " + loadedEntry.getUID() + " " + loadedEntry.getLDRI());
         if (entry.getLDRI().toString().equals(loadedEntry.getLDRI().toString()) && entry.getType().equals(loadedEntry.getType())) {
-            if (entry.getUID().equals(loadedEntry.getUID())) {
+//            if (entry.getUID().equals(loadedEntry.getUID())) {
+            if (entry.getUID() == loadedEntry.getUID()) {
                 if (entry.getPDRI().toString().equals(loadedEntry.getPDRI().toString())) {
                     return true;
                 }

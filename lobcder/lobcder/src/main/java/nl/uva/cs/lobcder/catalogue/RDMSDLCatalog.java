@@ -127,7 +127,7 @@ public class RDMSDLCatalog implements IDLCatalogue {
                 ILogicalData loaded = (ILogicalData) q.execute(strLogicalResourceName);
                 copy = pm.detachCopy(loaded);
                 tx.commit();
-
+                
             } catch (Exception ex) {
                 throw new CatalogueException(ex.getMessage());
             } finally {
