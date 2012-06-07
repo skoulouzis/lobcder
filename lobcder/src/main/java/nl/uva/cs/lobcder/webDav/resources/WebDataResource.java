@@ -36,6 +36,7 @@ public class WebDataResource implements PropFindableResource, Resource {
     private static final boolean debug = false;
     private Map<String, CustomProperty> properties;
     //Collection<Integer> roles = null;
+    private String uname;
 
     public WebDataResource(IDLCatalogue catalogue, ILogicalData logicalData) {
         this.logicalData = logicalData;
@@ -73,6 +74,7 @@ public class WebDataResource implements PropFindableResource, Resource {
         debug("authenticate.\n"
                 + "\t user: " + user
                 + "\t password: " + password);
+        uname = user;
         try {
             ArrayList<Integer> roles = new ArrayList<Integer>();
             roles.add(0);
@@ -146,21 +148,6 @@ public class WebDataResource implements PropFindableResource, Resource {
                     + "\t auth.getUri(): " + uri + "\n"
                     + "\t auth.getUser(): " + user + "\n"
                     + "\t auth.getTag(): " + tag);
-
-            Collection<IStorageSite> sites = getLogicalData().getStorageSites();
-            if (sites == null || sites.isEmpty()) {
-                try {
-                    sites = (Collection<IStorageSite>) getCatalogue().getSitesByUname(user);
-
-                    if (sites == null || sites.isEmpty()) {
-                        debug("\t StorageSites for " + this.getName() + " are empty! Make sure that the user has the right to use these storage sites");
-                        throw new RuntimeException("User " + user + " has StorageSites for " + this.getName());
-                    }
-                    getLogicalData().setStorageSites(sites);
-                } catch (CatalogueException ex) {
-                    throw new RuntimeException(ex.getMessage());
-                }
-            }
         }
 
         //return auth.getUser() == null ? false : true;
@@ -249,8 +236,8 @@ public class WebDataResource implements PropFindableResource, Resource {
     Collection<IStorageSite> getStorageSites() throws CatalogueException, IOException {
         Collection<IStorageSite> sites = getLogicalData().getStorageSites();
         if (sites == null || sites.isEmpty()) {
-//            String uname = String.valueOf(principal.getUid());
-            String uname = "uname1";
+            
+//            String uname = String.valueOf(getPrincipal().getUid());
             sites = getCatalogue().getSitesByUname(uname);
         }
         if (sites == null || sites.isEmpty()) {
