@@ -10,8 +10,10 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.Properties;
 import org.apache.commons.httpclient.*;
+import org.apache.commons.httpclient.auth.AuthPolicy;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.contrib.ssl.EasySSLProtocolSocketFactory;
 import org.apache.commons.httpclient.methods.OptionsMethod;
@@ -92,6 +94,11 @@ public class WebDAVTest {
                 new EasySSLProtocolSocketFactory();
         Protocol https = new Protocol("https", socketFactory, port);
         Protocol.registerProtocol("https", https);
+
+
+//        List authPrefs = new ArrayList();
+//        authPrefs.add(AuthPolicy.BASIC);
+//        client.getParams().setParameter(AuthPolicy.AUTH_SCHEME_PRIORITY, authPrefs);
 
         this.client = new HttpClient();
         this.client.getState().setCredentials(
