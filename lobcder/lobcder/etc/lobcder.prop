@@ -1,0 +1,3 @@
+lobcder.storage.prefix=LOBCDER-REPLICA-v1.1
+#Only absolute comma separated paths 
+lobcder.storage.site.prop.files=${user.home}/.lobcder/storage1.prop,${user.home}/.lobcder/storage2.prop";
