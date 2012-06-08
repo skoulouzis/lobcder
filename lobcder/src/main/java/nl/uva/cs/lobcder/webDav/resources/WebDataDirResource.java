@@ -56,11 +56,11 @@ class WebDataDirResource extends WebDataResource implements FolderResource, Coll
     @Override
     public CollectionResource createCollection(String newName) throws NotAuthorizedException, ConflictException, BadRequestException {
         try {
-            Permissions p = new Permissions(getLogicalData().getMetadata().getPermissionArray());
-            MyPrincipal principal = getPrincipal();
-            if(!p.canWrite(principal)){
-                throw new NotAuthorizedException();
-            }
+//            Permissions p = new Permissions(getLogicalData().getMetadata().getPermissionArray());
+//            MyPrincipal principal = getPrincipal();
+//            if(!p.canWrite(principal)){
+//                throw new NotAuthorizedException();
+//            }
             debug("createCollection.");
             Path newCollectionPath = Path.path(getLogicalData().getLDRI(), newName);
             LogicalData newFolderEntry = (LogicalData) getCatalogue().getResourceEntryByLDRI(newCollectionPath);
@@ -79,7 +79,7 @@ class WebDataDirResource extends WebDataResource implements FolderResource, Coll
 
 
             Metadata meta = newFolderEntry.getMetadata();
-            meta.setPermissionArray((new Permissions(principal).getRolesPerm()));
+//            meta.setPermissionArray((new Permissions(principal).getRolesPerm()));
             newFolderEntry.setMetadata(meta);
             getCatalogue().updateResourceEntry(newFolderEntry);
 
@@ -172,13 +172,13 @@ class WebDataDirResource extends WebDataResource implements FolderResource, Coll
         debug("\t contentType: " + contentType);
 
         try {
-            Metadata meta = getLogicalData().getMetadata();
-            ArrayList<Integer> array = meta.getPermissionArray();
-            Permissions p = new Permissions(array);
-            MyPrincipal principal = getPrincipal();
-            if (!p.canWrite(principal)) {
-                throw new NotAuthorizedException();
-            }
+//            Metadata meta = getLogicalData().getMetadata();
+//            ArrayList<Integer> array = meta.getPermissionArray();
+//            Permissions p = new Permissions(array);
+//            MyPrincipal principal = getPrincipal();
+//            if (!p.canWrite(principal)) {
+//                throw new NotAuthorizedException();
+//            }
             Path newPath = Path.path(getLogicalData().getLDRI(), newName);
 
             LogicalData newResource = (LogicalData) getCatalogue().getResourceEntryByLDRI(newPath);
@@ -194,9 +194,9 @@ class WebDataDirResource extends WebDataResource implements FolderResource, Coll
                 setLogicalData(reloaded);
             }
 
-            meta = ((WebDataResource) resource).getLogicalData().getMetadata();
-            meta.setPermissionArray((new Permissions(principal)).getRolesPerm());
-            ((WebDataResource) resource).getLogicalData().setMetadata(meta);
+//            meta = ((WebDataResource) resource).getLogicalData().getMetadata();
+//            meta.setPermissionArray((new Permissions(principal)).getRolesPerm());
+//            ((WebDataResource) resource).getLogicalData().setMetadata(meta);
             
             getCatalogue().updateResourceEntry(((WebDataResource) resource).getLogicalData());
 
