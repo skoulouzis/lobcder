@@ -63,6 +63,7 @@ public class RDMSDLCatalog implements IDLCatalogue {
                     if (parentEntry == null) {
                         throw new NonExistingResourceException("Cannot add " + entry.getLDRI().toString() + " child to non existing parent " + parentPath.toString());
                     }
+                    //parentEntry.getMetadata().getPermissionArray()
                     parentEntry.addChild(entry.getLDRI());
                     pm.detachCopy(parentEntry);
 
