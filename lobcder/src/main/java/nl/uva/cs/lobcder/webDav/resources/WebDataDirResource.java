@@ -78,10 +78,10 @@ class WebDataDirResource extends WebDataResource implements FolderResource, Coll
             }
 
 
-            Metadata meta = newFolderEntry.getMetadata();
+//            Metadata meta = newFolderEntry.getMetadata();
 //            meta.setPermissionArray((new Permissions(principal).getRolesPerm()));
-            newFolderEntry.setMetadata(meta);
-            getCatalogue().updateResourceEntry(newFolderEntry);
+//            newFolderEntry.setMetadata(meta);
+//            getCatalogue().updateResourceEntry(newFolderEntry);
 
             WebDataDirResource resource = new WebDataDirResource(getCatalogue(), newFolderEntry);
             return resource;

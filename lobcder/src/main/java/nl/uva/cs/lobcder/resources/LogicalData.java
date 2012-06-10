@@ -45,7 +45,8 @@ public class LogicalData implements ILogicalData, Serializable {
     private Path ldri;
     @Persistent(defaultFetchGroup = "true")
     private Path pdri;
-//    @PrimaryKey
+    
+    @PrimaryKey
     @Persistent
     private String strLDRI;
     @Persistent

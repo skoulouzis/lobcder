@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Properties;
 import javax.jdo.*;
+import javax.jdo.identity.StringIdentity;
 import nl.uva.cs.lobcder.resources.*;
 import nl.uva.cs.lobcder.util.PropertiesLoader;
 import nl.uva.vlet.data.StringUtil;
@@ -119,17 +120,22 @@ public class RDMSDLCatalog implements IDLCatalogue {
             try {
                 tx.begin();
                 //This query, will return objects of type DataResourceEntry
-                Query q = pm.newQuery(LogicalData.class);
+//                Query q = pm.newQuery(LogicalData.class);
                 //restrict to instances which have the field ldri equal to some logicalResourceName
                 String strLogicalResourceName = logicalResourceName.toString();
-                q.setFilter("strLDRI == strLogicalResourceName");
-                q.declareParameters(strLogicalResourceName.getClass().getName() + " strLogicalResourceName");
-                q.setUnique(true);
-                ILogicalData loaded = (ILogicalData) q.execute(strLogicalResourceName);
+//                q.setFilter("strLDRI == strLogicalResourceName");
+//                q.declareParameters(strLogicalResourceName.getClass().getName() + " strLogicalResourceName");
+//                q.setUnique(true);
+//                ILogicalData loaded = (ILogicalData) q.execute(strLogicalResourceName);
+                StringIdentity id = new StringIdentity(LogicalData.class, strLogicalResourceName);
+                ILogicalData loaded =(ILogicalData) pm.getObjectById(id);
                 copy = pm.detachCopy(loaded);
                 tx.commit();
 
             } catch (Exception ex) {
+                if(ex instanceof JDOObjectNotFoundException){
+                    return null;
+                }
                 throw new CatalogueException(ex.getMessage());
             } finally {
                 if (tx.isActive()) {
@@ -322,7 +328,6 @@ public class RDMSDLCatalog implements IDLCatalogue {
             PersistenceManager pm = getPmf().getPersistenceManager();
             Transaction tx = pm.currentTransaction();
             tx.setSerializeRead(Boolean.TRUE);
-            ILogicalData copy = null;
             try {
                 tx.begin();
                 //This query, will return objects of type DataResourceEntry
@@ -336,7 +341,6 @@ public class RDMSDLCatalog implements IDLCatalogue {
                 if (toBeRenamed == null) {
                     throw new ResourceExistsException("Rename Entry: cannot rename resource " + oldPath + " resource doesn't exists");
                 }
-                ILogicalData copytoBeRenamed = pm.detachCopy(toBeRenamed);
 
                 //Remove this node from it's parent 
                 Path parent = oldPath.getParent();
@@ -356,12 +360,13 @@ public class RDMSDLCatalog implements IDLCatalogue {
                     if (theChild == null) {
                         throw new NonExistingResourceException("Cannot remove " + oldPath.toString() + ". Parent " + parent.toString() + " has no such child");
                     }
-                    pm.detachCopy(parentEntry);
+//                    pm.detachCopy(parentEntry);
                     parentEntry.removeChild(oldPath);
                     parentEntry.addChild(newPath);
                 }
                 toBeRenamed.setLDRI(newPath);
-                Collection<String> children = copytoBeRenamed.getChildren();
+                
+                Collection<String> children = toBeRenamed.getChildren();
                 if (children != null) {
                     for (String ch : children) {
                         String newChildName = ch.replace(oldPath.toString(), newPath.toString());
@@ -374,7 +379,7 @@ public class RDMSDLCatalog implements IDLCatalogue {
                         q.setUnique(true);
                         ILogicalData childEntry = (ILogicalData) q.execute(ch);
                         childEntry.setLDRI(Path.path(newChildName));
-                        pm.detachCopy(childEntry);
+//                        pm.detachCopy(childEntry);
 //                    debug("Old Name: " + ch + " new name: " + newChildName);
                     }
                 }
@@ -388,7 +393,7 @@ public class RDMSDLCatalog implements IDLCatalogue {
                     q.setUnique(true);
                     ILogicalData newParentEntry = (ILogicalData) q.execute(path);
                     newParentEntry.addChild(newPath);
-                    pm.detachCopy(newParentEntry);
+//                    pm.detachCopy(newParentEntry);
                 }
                 tx.commit();
             } catch (Exception ex) {
