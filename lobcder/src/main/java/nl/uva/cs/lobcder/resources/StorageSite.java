@@ -63,7 +63,7 @@ public class StorageSite implements Serializable, IStorageSite {
         GlobalConfig.setIsService(true);
         GlobalConfig.setInitURLStreamFactory(false);
         GlobalConfig.setAllowUserInteraction(false);
-
+        
         // user configuration 
         GlobalConfig.setUsePersistantUserConfiguration(false);
 //        GlobalConfig.setUserHomeLocation(new URL("file:////" + this.tmpVPHuserHome.getAbsolutePath()));

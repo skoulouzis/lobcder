@@ -100,19 +100,19 @@ class WebDataDirResource extends WebDataResource implements FolderResource, Coll
 
     @Override
     public Resource child(String childName) throws NotAuthorizedException {
-        try {
-            Permissions p = new Permissions(getLogicalData().getMetadata().getPermissionArray());
-            MyPrincipal principal = getPrincipal();
-            if (!p.canRead(principal)) {
-                throw new NotAuthorizedException();
-            }
-        } catch (Permissions.Exception e) {
-            throw new NotAuthorizedException();
-        } catch (NotAuthorizedException e){
-            throw e;
-        } catch (Exception e) {
-            throw new NotAuthorizedException();
-        }
+//        try {
+//            Permissions p = new Permissions(getLogicalData().getMetadata().getPermissionArray());
+//            MyPrincipal principal = getPrincipal();
+//            if (!p.canRead(principal)) {
+//                throw new NotAuthorizedException();
+//            }
+//        } catch (Permissions.Exception e) {
+//            throw new NotAuthorizedException();
+//        } catch (NotAuthorizedException e){
+//            throw e;
+//        } catch (Exception e) {
+//            throw new NotAuthorizedException();
+//        }
         try {
             debug("child.");
             Path childPath = Path.path(getLogicalData().getLDRI(), childName);
