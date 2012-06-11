@@ -322,12 +322,11 @@ public class RDMSDLCatalogueTest {
             loaded = instance.getResourceEntryByLDRI(newPath);
             assertNotNull(loaded);
             assertEquals(newPath.toString(), loaded.getLDRI().toString());
-
-
+            
             ILogicalData loadedOriginal = instance.getResourceEntryByLDRI(originalChildPath);
             assertNull(loadedOriginal);
-
-
+            
+            
         } catch (Exception ex) {
             fail("Unexpected Exception: " + ex.getMessage());
         } finally {
@@ -442,7 +441,7 @@ public class RDMSDLCatalogueTest {
             Path originalChildSubPath2 = Path.path("/testCollection/childName1/" + sub2);
             LogicalData childSubEntry2 = new LogicalData(originalChildSubPath2, Constants.LOGICAL_FILE);
             instance.registerResourceEntry(childSubEntry2);
-
+            
             Path newPath = Path.path("/testCollection/NewChildName1/");
             instance.renameEntry(originalChildPath1, newPath);
 

@@ -6,9 +6,7 @@ package nl.uva.cs.lobcder.catalogue;
 
 import com.bradmcevoy.common.Path;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Properties;
+import java.util.*;
 import javax.jdo.*;
 import javax.jdo.identity.StringIdentity;
 import nl.uva.cs.lobcder.resources.*;
@@ -40,12 +38,14 @@ public class RDMSDLCatalog implements IDLCatalogue {
             tx.setSerializeRead(Boolean.TRUE);
             try {
                 tx.begin();
+                ILogicalData loaded = null;
+                Query q;
                 //This query, will return objects of type DataResourceEntry
-                Query q = pm.newQuery(LogicalData.class);
+                q = pm.newQuery(LogicalData.class);
                 q.setFilter("strLDRI == strLogicalResourceName");
                 q.declareParameters(strLogicalResourceName.getClass().getName() + " strLogicalResourceName");
                 q.setUnique(true);
-                ILogicalData loaded = (ILogicalData) q.execute(strLogicalResourceName);
+                loaded = (ILogicalData) q.execute(strLogicalResourceName);
 
                 if (loaded != null && comparePaths(loaded.getLDRI(), entry.getLDRI())) {
                     throw new DuplicateResourceException("Cannot register resource " + entry.getLDRI() + " resource exists");
@@ -55,12 +55,18 @@ public class RDMSDLCatalog implements IDLCatalogue {
                 Path parentPath = entry.getLDRI().getParent();
                 if (parentPath != null && !StringUtil.isEmpty(parentPath.toString()) && !parentPath.isRoot()) {
                     strLogicalResourceName = parentPath.toString();
+
+
+                    ILogicalData parentEntry;
+
                     q = pm.newQuery(LogicalData.class);
                     //restrict to instances which have the field ldri equal to some logicalResourceName
                     q.setFilter("strLDRI == strLogicalResourceName");
                     q.declareParameters(strLogicalResourceName.getClass().getName() + " strLogicalResourceName");
                     q.setUnique(true);
-                    ILogicalData parentEntry = (ILogicalData) q.execute(strLogicalResourceName);
+                    parentEntry = (ILogicalData) q.execute(strLogicalResourceName);
+
+
                     if (parentEntry == null) {
                         throw new NonExistingResourceException("Cannot add " + entry.getLDRI().toString() + " child to non existing parent " + parentPath.toString());
                     }
@@ -117,25 +123,36 @@ public class RDMSDLCatalog implements IDLCatalogue {
             Transaction tx = pm.currentTransaction();
             tx.setSerializeRead(Boolean.TRUE);
             ILogicalData copy = null;
+            String strLogicalResourceName = logicalResourceName.toString();
             try {
                 tx.begin();
-                //This query, will return objects of type DataResourceEntry
-//                Query q = pm.newQuery(LogicalData.class);
-                //restrict to instances which have the field ldri equal to some logicalResourceName
-                String strLogicalResourceName = logicalResourceName.toString();
-//                q.setFilter("strLDRI == strLogicalResourceName");
-//                q.declareParameters(strLogicalResourceName.getClass().getName() + " strLogicalResourceName");
-//                q.setUnique(true);
-//                ILogicalData loaded = (ILogicalData) q.execute(strLogicalResourceName);
-                StringIdentity id = new StringIdentity(LogicalData.class, strLogicalResourceName);
-                ILogicalData loaded =(ILogicalData) pm.getObjectById(id);
-                copy = pm.detachCopy(loaded);
-                tx.commit();
+                ILogicalData loaded=null;
 
-            } catch (Exception ex) {
-                if(ex instanceof JDOObjectNotFoundException){
-                    return null;
+//                try {
+//                    StringIdentity id = new StringIdentity(LogicalData.class, strLogicalResourceName);
+//                    loaded = (ILogicalData) pm.getObjectById(id);
+//                    if(!loaded.getLDRI().toString().equals(logicalResourceName.toString())){
+//                        loaded = null;
+//                    }
+//                } catch (JDOObjectNotFoundException ex) {
+//                    loaded = null;
+//                }
+//                copy = loaded;
+                if (loaded == null) {
+                    //This query, will return objects of type DataResourceEntry
+                    Query q = pm.newQuery(LogicalData.class);
+//                restrict to instances which have the field ldri equal to some logicalResourceName
+                    q.setFilter("strLDRI == strLogicalResourceName");
+                    q.declareParameters(strLogicalResourceName.getClass().getName() + " strLogicalResourceName");
+                    q.setUnique(true);
+                    loaded = (ILogicalData) q.execute(strLogicalResourceName);
+
+                    copy = pm.detachCopy(loaded);
                 }
+                
+                tx.commit();
+                
+            } catch (Exception ex) {
                 throw new CatalogueException(ex.getMessage());
             } finally {
                 if (tx.isActive()) {
@@ -161,7 +178,6 @@ public class RDMSDLCatalog implements IDLCatalogue {
                 tx.begin();
                 if (entriesParent != null && !StringUtil.isEmpty(entriesParent.toString()) && !entry.getLDRI().isRoot()) {
                     String strLogicalResourceName = entriesParent.toString();
-
                     Query q = pm.newQuery(LogicalData.class);
                     q.setFilter("strLDRI == strLogicalResourceName");
                     q.declareParameters(strLogicalResourceName.getClass().getName() + " strLogicalResourceName");
@@ -365,7 +381,8 @@ public class RDMSDLCatalog implements IDLCatalogue {
                     parentEntry.addChild(newPath);
                 }
                 toBeRenamed.setLDRI(newPath);
-                
+                pm.makePersistent(toBeRenamed);
+
                 Collection<String> children = toBeRenamed.getChildren();
                 if (children != null) {
                     for (String ch : children) {
