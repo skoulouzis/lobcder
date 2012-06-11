@@ -22,7 +22,7 @@ public class RDMSDLCatalog implements IDLCatalogue {
     private static final Object lock = new Object();
     private static PersistenceManagerFactory pmf;
     private final File propFile;
-//    private final Map<Path, String> cahce = new HashMap<Path, String>();
+    private final Map<Path, ILogicalData> cahce = new HashMap<Path, ILogicalData>();
 
     public RDMSDLCatalog(File propFile) {
 //        pmf = JDOHelper.getPersistenceManagerFactory("datanucleus.properties");
@@ -58,7 +58,6 @@ public class RDMSDLCatalog implements IDLCatalogue {
                 if (parentPath != null && !StringUtil.isEmpty(parentPath.toString()) && !parentPath.isRoot()) {
                     strLogicalResourceName = parentPath.toString();
 
-
                     ILogicalData parentEntry = getEntryById(parentPath, pm);
                     if (parentEntry == null) {
                         q = pm.newQuery(LogicalData.class);
@@ -73,6 +72,7 @@ public class RDMSDLCatalog implements IDLCatalogue {
                     }
                     //parentEntry.getMetadata().getPermissionArray()
                     parentEntry.addChild(entry.getLDRI());
+                    cahce.put(parentEntry.getLDRI(), parentEntry);
                     pm.detachCopy(parentEntry);
 
                 }
@@ -107,7 +107,7 @@ public class RDMSDLCatalog implements IDLCatalogue {
                 tx.commit();
                 entry = null;
                 entry = copy;
-
+                cahce.put(copy.getLDRI(), copy);
             } finally {
                 if (tx.isActive()) {
                     tx.rollback();
@@ -120,14 +120,16 @@ public class RDMSDLCatalog implements IDLCatalogue {
     @Override
     public ILogicalData getResourceEntryByLDRI(Path logicalResourceName) throws Exception {
         synchronized (lock) {
+            ILogicalData copy = cahce.get(logicalResourceName);
+            if (copy != null) {
+                return copy;
+            }
             PersistenceManager pm = getPmf().getPersistenceManager();
             Transaction tx = pm.currentTransaction();
             tx.setSerializeRead(Boolean.TRUE);
-            ILogicalData copy = null;
             String strLogicalResourceName = logicalResourceName.toString();
             try {
                 tx.begin();
-
                 ILogicalData loaded = getEntryById(logicalResourceName, pm);
                 copy = loaded;
                 if (loaded == null) {
@@ -150,7 +152,9 @@ public class RDMSDLCatalog implements IDLCatalogue {
                 }
                 pm.close();
             }
-
+            if (copy != null) {
+                cahce.put(copy.getLDRI(), copy);
+            }
             return copy;
         }
     }
@@ -169,7 +173,6 @@ public class RDMSDLCatalog implements IDLCatalogue {
                 if (entriesParent != null && !StringUtil.isEmpty(entriesParent.toString()) && !entry.getLDRI().isRoot()) {
                     String strLogicalResourceName = entriesParent.toString();
                     ILogicalData parentEntry = getEntryById(entriesParent, pm);
-
                     if (parentEntry == null) {
                         Query q = pm.newQuery(LogicalData.class);
                         q.setFilter("strLDRI == strLogicalResourceName");
@@ -244,6 +247,7 @@ public class RDMSDLCatalog implements IDLCatalogue {
                 if (path.isRoot()) {
                     q = pm.newQuery(LogicalData.class);
                     Long number = (Long) q.deletePersistentAll();
+                    cahce.clear();
                 } else {
                     String name = "/" + path.getName();
                     String nameWithSlash = name + "/";
@@ -258,10 +262,14 @@ public class RDMSDLCatalog implements IDLCatalogue {
                             + end.getClass().getName() + " end, "
                             + nameWithSlash.getClass().getName() + " nameWithSlash, "
                             + strPath.getClass().getName() + " strPath");
-                    Long number = q.deletePersistentAll(name, start, end, nameWithSlash, strPath);
+                    //                    Long number = q.deletePersistentAll(name, start, end, nameWithSlash, strPath);
+                    Collection<ILogicalData> res = (Collection<ILogicalData>) q.executeWithArray(new Object[]{name, start, end, nameWithSlash, strPath});
+                    for(ILogicalData ld : res){
+                        cahce.remove(ld.getLDRI());
+                    }
+                    pm.deletePersistentAll(res);
                 }
                 tx.commit();
-
             } catch (Exception ex) {
                 throw new CatalogueException(ex.getMessage());
             } finally {
@@ -276,10 +284,14 @@ public class RDMSDLCatalog implements IDLCatalogue {
     @Override
     public Boolean resourceEntryExists(ILogicalData entry) throws CatalogueException {
         synchronized (lock) {
+            ILogicalData copy = cahce.get(entry.getLDRI());
+            if (copy != null) {
+                return true;
+            }
             PersistenceManager pm = getPmf().getPersistenceManager();
             Transaction tx = pm.currentTransaction();
             tx.setSerializeRead(Boolean.TRUE);
-            ILogicalData copy = null;
+
             try {
                 tx.begin();
                 ILogicalData loaded = getEntryById(entry.getLDRI(), pm);
@@ -303,6 +315,9 @@ public class RDMSDLCatalog implements IDLCatalogue {
                     tx.rollback();
                 }
                 pm.close();
+            }
+            if (copy == null) {
+                cahce.remove(entry.getLDRI());
             }
             return copy != null ? true : false;
         }
@@ -331,7 +346,9 @@ public class RDMSDLCatalog implements IDLCatalogue {
 
                 pm.close();
             }
-
+            for (ILogicalData ld : copy) {
+                cahce.put(ld.getLDRI(), ld);
+            }
             return copy;
         }
     }
@@ -345,7 +362,6 @@ public class RDMSDLCatalog implements IDLCatalogue {
             tx.setSerializeRead(Boolean.TRUE);
             try {
                 tx.begin();
-
                 ILogicalData toBeRenamed = getEntryById(oldPath, pm);
                 Query q;
                 String strLogicalResourceName = oldPath.toString();
@@ -358,7 +374,6 @@ public class RDMSDLCatalog implements IDLCatalogue {
                     q.setUnique(true);
                     toBeRenamed = (ILogicalData) q.execute(strLogicalResourceName);
                 }
-
                 if (toBeRenamed == null) {
                     throw new ResourceExistsException("Rename Entry: cannot rename resource " + oldPath + " resource doesn't exists");
                 }
@@ -384,9 +399,10 @@ public class RDMSDLCatalog implements IDLCatalogue {
 //                    pm.detachCopy(parentEntry);
                     parentEntry.removeChild(oldPath);
                     parentEntry.addChild(newPath);
+                    cahce.put(parentEntry.getLDRI(), parentEntry);
                 }
-                toBeRenamed.setLDRI(newPath);
-                pm.makePersistent(toBeRenamed);
+                cahce.remove(toBeRenamed.getLDRI());
+                toBeRenamed.setLDRI(newPath); 
 
                 Collection<String> children = toBeRenamed.getChildren();
                 if (children != null) {
@@ -394,7 +410,7 @@ public class RDMSDLCatalog implements IDLCatalogue {
                         String newChildName = ch.replace(oldPath.toString(), newPath.toString());
                         toBeRenamed.removeChild(Path.path(ch));
                         toBeRenamed.addChild(Path.path(newChildName));
-
+                        
                         ILogicalData childEntry = getEntryById(Path.path(ch), pm);
                         if (childEntry == null) {
                             q = pm.newQuery(LogicalData.class);
@@ -403,11 +419,16 @@ public class RDMSDLCatalog implements IDLCatalogue {
                             q.setUnique(true);
                             childEntry = (ILogicalData) q.execute(ch);
                         }
+                        cahce.remove(childEntry.getLDRI());
                         childEntry.setLDRI(Path.path(newChildName));
+                        cahce.put(childEntry.getLDRI(), childEntry);
 //                        pm.detachCopy(childEntry);
 //                    debug("Old Name: " + ch + " new name: " + newChildName);
                     }
                 }
+                pm.makePersistent(toBeRenamed);
+                Path ldri = toBeRenamed.getLDRI();
+                cahce.put(ldri, toBeRenamed);
                 //Add this to new Parent
                 Path newParent = newPath.getParent();
                 if (newParent != null && !StringUtil.isEmpty(newParent.toString())) {
@@ -421,6 +442,7 @@ public class RDMSDLCatalog implements IDLCatalogue {
                         newParentEntry = (ILogicalData) q.execute(path);
                     }
                     newParentEntry.addChild(newPath);
+                    cahce.put(newParentEntry.getLDRI(), newParentEntry);
                 }
                 tx.commit();
             } catch (Exception ex) {
@@ -550,7 +572,6 @@ public class RDMSDLCatalog implements IDLCatalogue {
 
     @Override
     public void updateResourceEntry(ILogicalData newResource) throws CatalogueException {
-
         Transaction tx = null;
         PersistenceManager pm = null;
         synchronized (lock) {
@@ -564,16 +585,17 @@ public class RDMSDLCatalog implements IDLCatalogue {
 //            Long number = (Long) query.execute();
                 pm.makePersistent(newResource);
                 ILogicalData copy = pm.detachCopy(newResource);
-
                 tx.commit();
+
             } finally {
                 if (tx.isActive()) {
                     tx.rollback();
                 }
                 pm.close();
             }
-
+            cahce.put(newResource.getLDRI(), newResource);
         }
+
     }
 
     @Override
@@ -665,11 +687,12 @@ public class RDMSDLCatalog implements IDLCatalogue {
                 }
                 pm.close();
             }
+            cahce.clear();
         }
     }
 
     private ILogicalData getEntryById(Path logicalResourceName, PersistenceManager pm) {
-        
+
         StringIdentity id = new StringIdentity(LogicalData.class, logicalResourceName.toString());
         ILogicalData loaded;
         try {
