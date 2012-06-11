@@ -7,6 +7,8 @@ package nl.uva.cs.lobcder.resources;
 import com.bradmcevoy.common.Path;
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import javax.jdo.annotations.*;
 import javax.jdo.identity.StringIdentity;
@@ -31,7 +33,7 @@ public class LogicalData implements ILogicalData, Serializable {
      *
      */
     private static final long serialVersionUID = -1529997963561059214L;
-//    @PrimaryKey
+    @PrimaryKey
 //    @Persistent(valueStrategy= IdGeneratorStrategy.UUIDSTRING)
     @Persistent
     private String uid;
@@ -45,7 +47,7 @@ public class LogicalData implements ILogicalData, Serializable {
     private Path ldri;
     @Persistent(defaultFetchGroup = "true")
     private Path pdri;
-//    @PrimaryKey
+    
     @Persistent
     private String strLDRI;
     @Persistent
@@ -69,11 +71,11 @@ public class LogicalData implements ILogicalData, Serializable {
         this.ldri = ldri;
         strLDRI = ldri.toString();
         ldriLen = ldri.getLength();
-
-        uid = new StringIdentity(this.getClass(), java.util.UUID.randomUUID().toString()).getKey();
+        
         this.type = type;
         //Data will hold the same pdri for ever.
         pdri = ldri;
+        uid = pdri.toString();//new StringIdentity(this.getClass(), java.util.UUID.randomUUID().toString()).getKey();
         Path parentPath = ldri.getParent();
         if (parentPath != null && !StringUtil.isEmpty(parentPath.toString())) {
             parent = parentPath.toString();
@@ -270,5 +272,14 @@ public class LogicalData implements ILogicalData, Serializable {
      */
     public void setParent(String parent) {
         this.parent = parent;
+    }
+
+    public String getStrLDRI() {
+        return strLDRI;
+    }
+
+    @Override
+    public void setUID(String uid) {
+        this.uid = uid;
     }
 }

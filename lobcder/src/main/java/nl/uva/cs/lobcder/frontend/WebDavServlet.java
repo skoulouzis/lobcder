@@ -12,11 +12,15 @@ import com.bradmcevoy.http.webdav.WebDavResponseHandler;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.servlet.Servlet;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import nl.uva.cs.lobcder.auth.MyPrincipal;
+import nl.uva.cs.lobcder.auth.test.MyAuth;
 import nl.uva.cs.lobcder.webDav.resources.WebDataResourceFactory;
 import nl.uva.cs.lobcder.webDav.resources.WebDataResourceFactoryFactory;
 
@@ -67,13 +71,19 @@ public class WebDavServlet implements Servlet {
                     + "\t getRequestedSessionId: " + req.getRequestedSessionId());
 
             try {
-                originalRequest.set(req);
-                originalResponse.set(resp);
+                try {
+                    req.getSession().setAttribute("vph-user", new MyPrincipal(auth, MyAuth.getInstance().checkToken(auth)));
 
-                com.bradmcevoy.http.Request request = new com.bradmcevoy.http.ServletRequest(req);
-                com.bradmcevoy.http.Response response = new com.bradmcevoy.http.ServletResponse(resp);
+                    originalRequest.set(req);
+                    originalResponse.set(resp);
 
-                httpManager.process(request, response);
+                    com.bradmcevoy.http.Request request = new com.bradmcevoy.http.ServletRequest(req);
+                    com.bradmcevoy.http.Response response = new com.bradmcevoy.http.ServletResponse(resp);
+
+                    httpManager.process(request, response);
+                } catch (MyPrincipal.Exception ex) {
+                    resp.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+                }
 
             } finally {
                 originalRequest.remove();

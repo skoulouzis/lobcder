@@ -14,6 +14,7 @@ import java.util.logging.Logger;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 import nl.uva.cs.lobcder.auth.MyPrincipal;
 import nl.uva.cs.lobcder.auth.MyPrincipal.Exception;
 import nl.uva.cs.lobcder.auth.Permissions;
@@ -36,6 +37,7 @@ public class WebDataResource implements PropFindableResource, Resource {
     private static final boolean debug = false;
     private Map<String, CustomProperty> properties;
     //Collection<Integer> roles = null;
+    private String uname;
 
     public WebDataResource(IDLCatalogue catalogue, ILogicalData logicalData) {
         this.logicalData = logicalData;
@@ -69,25 +71,27 @@ public class WebDataResource implements PropFindableResource, Resource {
 
     @Override
     public Object authenticate(String user, String password) {
-        MyPrincipal principal = null;
-        debug("authenticate.\n"
-                + "\t user: " + user
-                + "\t password: " + password);
-        try {
-            ArrayList<Integer> roles = new ArrayList<Integer>();
-            roles.add(0);
-            String token = user + password;
-            principal = PrincipalCache.pcache.getPrincipal(token);
-            if (principal == null) {
-                principal = new MyPrincipal(token, MyAuth.getInstance().checkToken(token));
-                PrincipalCache.pcache.putPrincipal(principal);
-            }
-            WebDavServlet.request().setAttribute("vph-user", principal);
-        } catch (Exception ex) {
-            Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
-
-        }
-        return principal;
+        return "Authenticated";
+//        MyPrincipal principal = null;
+//        debug("authenticate.\n"
+//                + "\t user: " + user
+//                + "\t password: " + password);
+//        uname = user;
+//        try {
+//            ArrayList<Integer> roles = new ArrayList<Integer>();
+//            roles.add(0);
+//            String token = user + password;
+//            principal = PrincipalCache.pcache.getPrincipal(token);
+//            if (principal == null) {
+//                principal = new MyPrincipal(token, MyAuth.getInstance().checkToken(token));
+//                PrincipalCache.pcache.putPrincipal(principal);
+//            }
+//            WebDavServlet.request().setAttribute("vph-user", principal);
+//        } catch (Exception ex) {
+//            Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
+//
+//        }
+//        return principal;
     }
 
     @Override
@@ -146,21 +150,6 @@ public class WebDataResource implements PropFindableResource, Resource {
                     + "\t auth.getUri(): " + uri + "\n"
                     + "\t auth.getUser(): " + user + "\n"
                     + "\t auth.getTag(): " + tag);
-
-            Collection<IStorageSite> sites = getLogicalData().getStorageSites();
-            if (sites == null || sites.isEmpty()) {
-                try {
-                    sites = (Collection<IStorageSite>) getCatalogue().getSitesByUname(user);
-
-                    if (sites == null || sites.isEmpty()) {
-                        debug("\t StorageSites for " + this.getName() + " are empty!");
-                        throw new RuntimeException("User " + user + " has StorageSites for " + this.getName());
-                    }
-                    getLogicalData().setStorageSites(sites);
-                } catch (CatalogueException ex) {
-                    throw new RuntimeException(ex.getMessage());
-                }
-            }
         }
 
         //return auth.getUser() == null ? false : true;
@@ -249,9 +238,9 @@ public class WebDataResource implements PropFindableResource, Resource {
     Collection<IStorageSite> getStorageSites() throws CatalogueException, IOException {
         Collection<IStorageSite> sites = getLogicalData().getStorageSites();
         if (sites == null || sites.isEmpty()) {
-//            String uname = String.valueOf(principal.getUid());
-            String uname = "uname1";
-            sites = getCatalogue().getSitesByUname(uname);
+            
+//            String uname = String.valueOf(getPrincipal().getUid());
+            sites = getCatalogue().getSitesByUname("uname1");
         }
         if (sites == null || sites.isEmpty()) {
             debug("\t Storage Sites for " + this.getLogicalData().getLDRI() + " are empty!");
@@ -261,8 +250,8 @@ public class WebDataResource implements PropFindableResource, Resource {
     }
 
     public MyPrincipal getPrincipal() {
-        HttpServletRequest r = WebDavServlet.request();
-        MyPrincipal pr = (MyPrincipal) (r.getAttribute("vph-user"));
+        HttpSession s = WebDavServlet.request().getSession();
+        MyPrincipal pr = (MyPrincipal) (s.getAttribute("vph-user"));
         return pr;
     }
 }

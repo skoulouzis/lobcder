@@ -127,6 +127,7 @@ public class RDMSDLCatalogueTest {
         assertNull(instance.getResourceEntryByLDRI(r2.getLDRI()));
 
         instance.unregisterResourceEntry(resource1);
+        assertNull(instance.getResourceEntryByLDRI(resource1.getLDRI()));
     }
 
     @Test
@@ -305,12 +306,14 @@ public class RDMSDLCatalogueTest {
         RDMSDLCatalog instance = null;
         ILogicalData loaded = null;
         Path newPath = null;
+        LogicalData parent =null;
+        
         try {
 
             instance = new RDMSDLCatalog(new File(nl.uva.cs.lobcder.util.Constants.LOBCDER_CONF_DIR + "/datanucleus.properties"));
             Path originalParentPath = Path.path("/ResourceName/");
             Path originalChildPath = Path.path("/ResourceName/oldResourceName");
-            LogicalData parent = new LogicalData(originalParentPath, Constants.LOGICAL_DATA);
+            parent = new LogicalData(originalParentPath, Constants.LOGICAL_DATA);
             LogicalData child = new LogicalData(originalChildPath, Constants.LOGICAL_DATA);
 
             instance.registerResourceEntry(parent);
@@ -322,12 +325,11 @@ public class RDMSDLCatalogueTest {
             loaded = instance.getResourceEntryByLDRI(newPath);
             assertNotNull(loaded);
             assertEquals(newPath.toString(), loaded.getLDRI().toString());
-
-
+            
             ILogicalData loadedOriginal = instance.getResourceEntryByLDRI(originalChildPath);
             assertNull(loadedOriginal);
-
-
+            
+            
         } catch (Exception ex) {
             fail("Unexpected Exception: " + ex.getMessage());
         } finally {
@@ -335,6 +337,8 @@ public class RDMSDLCatalogueTest {
                 instance.unregisterResourceEntry(loaded);
                 loaded = instance.getResourceEntryByLDRI(newPath);
                 assertNull(loaded);
+                instance.unregisterResourceEntry(parent);
+                assertNull(instance.getResourceEntryByLDRI(parent.getLDRI()));
 
             } catch (Exception ex) {
                 fail("Unexpected Exception: " + ex.getMessage());
@@ -442,7 +446,7 @@ public class RDMSDLCatalogueTest {
             Path originalChildSubPath2 = Path.path("/testCollection/childName1/" + sub2);
             LogicalData childSubEntry2 = new LogicalData(originalChildSubPath2, Constants.LOGICAL_FILE);
             instance.registerResourceEntry(childSubEntry2);
-
+            
             Path newPath = Path.path("/testCollection/NewChildName1/");
             instance.renameEntry(originalChildPath1, newPath);
 
@@ -1062,19 +1066,7 @@ public class RDMSDLCatalogueTest {
         }
     }
 
-    private static Properties getCloudProperties(String propPath)
-            throws FileNotFoundException, IOException {
-        Properties properties = new Properties();
-
-        File f = new File(propPath);
-        properties.load(new FileInputStream(f));
-        return properties;
-    }
-//
-
     private boolean compareEntries(ILogicalData entry, ILogicalData loadedEntry) {
-//        System.out.println("entry:          " + entry.getUID() + " " + entry.getLDRI());
-//        System.out.println("loadedEntry:    " + loadedEntry.getUID() + " " + loadedEntry.getLDRI());
         if (entry.getLDRI().toString().equals(loadedEntry.getLDRI().toString()) && entry.getType().equals(loadedEntry.getType())) {
             if (entry.getUID().equals(loadedEntry.getUID())) {
                 if (entry.getPDRI().toString().equals(loadedEntry.getPDRI().toString())) {

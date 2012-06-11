@@ -6,10 +6,9 @@ package nl.uva.cs.lobcder.catalogue;
 
 import com.bradmcevoy.common.Path;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Properties;
+import java.util.*;
 import javax.jdo.*;
+import javax.jdo.identity.StringIdentity;
 import nl.uva.cs.lobcder.resources.*;
 import nl.uva.cs.lobcder.util.PropertiesLoader;
 import nl.uva.vlet.data.StringUtil;
@@ -23,6 +22,7 @@ public class RDMSDLCatalog implements IDLCatalogue {
     private static final Object lock = new Object();
     private static PersistenceManagerFactory pmf;
     private final File propFile;
+    private final Map<Path, ILogicalData> cahce = new HashMap<Path, ILogicalData>();
 
     public RDMSDLCatalog(File propFile) {
 //        pmf = JDOHelper.getPersistenceManagerFactory("datanucleus.properties");
@@ -39,13 +39,16 @@ public class RDMSDLCatalog implements IDLCatalogue {
             tx.setSerializeRead(Boolean.TRUE);
             try {
                 tx.begin();
-                //This query, will return objects of type DataResourceEntry
-                Query q = pm.newQuery(LogicalData.class);
-                q.setFilter("strLDRI == strLogicalResourceName");
-                q.declareParameters(strLogicalResourceName.getClass().getName() + " strLogicalResourceName");
-                q.setUnique(true);
-                ILogicalData loaded = (ILogicalData) q.execute(strLogicalResourceName);
-
+                ILogicalData loaded = getEntryById(entry.getLDRI(), pm);
+                Query q;
+                if (loaded == null) {
+                    //This query, will return objects of type DataResourceEntry
+                    q = pm.newQuery(LogicalData.class);
+                    q.setFilter("strLDRI == strLogicalResourceName");
+                    q.declareParameters(strLogicalResourceName.getClass().getName() + " strLogicalResourceName");
+                    q.setUnique(true);
+                    loaded = (ILogicalData) q.execute(strLogicalResourceName);
+                }
                 if (loaded != null && comparePaths(loaded.getLDRI(), entry.getLDRI())) {
                     throw new DuplicateResourceException("Cannot register resource " + entry.getLDRI() + " resource exists");
                 }
@@ -54,16 +57,22 @@ public class RDMSDLCatalog implements IDLCatalogue {
                 Path parentPath = entry.getLDRI().getParent();
                 if (parentPath != null && !StringUtil.isEmpty(parentPath.toString()) && !parentPath.isRoot()) {
                     strLogicalResourceName = parentPath.toString();
-                    q = pm.newQuery(LogicalData.class);
-                    //restrict to instances which have the field ldri equal to some logicalResourceName
-                    q.setFilter("strLDRI == strLogicalResourceName");
-                    q.declareParameters(strLogicalResourceName.getClass().getName() + " strLogicalResourceName");
-                    q.setUnique(true);
-                    ILogicalData parentEntry = (ILogicalData) q.execute(strLogicalResourceName);
+
+                    ILogicalData parentEntry = getEntryById(parentPath, pm);
+                    if (parentEntry == null) {
+                        q = pm.newQuery(LogicalData.class);
+                        //restrict to instances which have the field ldri equal to some logicalResourceName
+                        q.setFilter("strLDRI == strLogicalResourceName");
+                        q.declareParameters(strLogicalResourceName.getClass().getName() + " strLogicalResourceName");
+                        q.setUnique(true);
+                        parentEntry = (ILogicalData) q.execute(strLogicalResourceName);
+                    }
                     if (parentEntry == null) {
                         throw new NonExistingResourceException("Cannot add " + entry.getLDRI().toString() + " child to non existing parent " + parentPath.toString());
                     }
+                    //parentEntry.getMetadata().getPermissionArray()
                     parentEntry.addChild(entry.getLDRI());
+                    cahce.put(parentEntry.getLDRI(), parentEntry);
                     pm.detachCopy(parentEntry);
 
                 }
@@ -98,7 +107,7 @@ public class RDMSDLCatalog implements IDLCatalogue {
                 tx.commit();
                 entry = null;
                 entry = copy;
-
+                cahce.put(copy.getLDRI(), copy);
             } finally {
                 if (tx.isActive()) {
                     tx.rollback();
@@ -111,21 +120,28 @@ public class RDMSDLCatalog implements IDLCatalogue {
     @Override
     public ILogicalData getResourceEntryByLDRI(Path logicalResourceName) throws Exception {
         synchronized (lock) {
+            ILogicalData copy = cahce.get(logicalResourceName);
+            if (copy != null) {
+                return copy;
+            }
             PersistenceManager pm = getPmf().getPersistenceManager();
             Transaction tx = pm.currentTransaction();
             tx.setSerializeRead(Boolean.TRUE);
-            ILogicalData copy = null;
+            String strLogicalResourceName = logicalResourceName.toString();
             try {
                 tx.begin();
-                //This query, will return objects of type DataResourceEntry
-                Query q = pm.newQuery(LogicalData.class);
-                //restrict to instances which have the field ldri equal to some logicalResourceName
-                String strLogicalResourceName = logicalResourceName.toString();
-                q.setFilter("strLDRI == strLogicalResourceName");
-                q.declareParameters(strLogicalResourceName.getClass().getName() + " strLogicalResourceName");
-                q.setUnique(true);
-                ILogicalData loaded = (ILogicalData) q.execute(strLogicalResourceName);
-                copy = pm.detachCopy(loaded);
+                ILogicalData loaded = getEntryById(logicalResourceName, pm);
+                copy = loaded;
+                if (loaded == null) {
+                    //This query, will return objects of type DataResourceEntry
+                    Query q = pm.newQuery(LogicalData.class);
+//                restrict to instances which have the field ldri equal to some logicalResourceName
+                    q.setFilter("strLDRI == strLogicalResourceName");
+                    q.declareParameters(strLogicalResourceName.getClass().getName() + " strLogicalResourceName");
+                    q.setUnique(true);
+                    loaded = (ILogicalData) q.execute(strLogicalResourceName);
+                    copy = pm.detachCopy(loaded);
+                }
                 tx.commit();
 
             } catch (Exception ex) {
@@ -136,7 +152,9 @@ public class RDMSDLCatalog implements IDLCatalogue {
                 }
                 pm.close();
             }
-
+            if (copy != null) {
+                cahce.put(copy.getLDRI(), copy);
+            }
             return copy;
         }
     }
@@ -154,16 +172,17 @@ public class RDMSDLCatalog implements IDLCatalogue {
                 tx.begin();
                 if (entriesParent != null && !StringUtil.isEmpty(entriesParent.toString()) && !entry.getLDRI().isRoot()) {
                     String strLogicalResourceName = entriesParent.toString();
-
-                    Query q = pm.newQuery(LogicalData.class);
-                    q.setFilter("strLDRI == strLogicalResourceName");
-                    q.declareParameters(strLogicalResourceName.getClass().getName() + " strLogicalResourceName");
-                    q.setUnique(true);
-                    ILogicalData parentEntry = (ILogicalData) q.execute(strLogicalResourceName);
+                    ILogicalData parentEntry = getEntryById(entriesParent, pm);
+                    if (parentEntry == null) {
+                        Query q = pm.newQuery(LogicalData.class);
+                        q.setFilter("strLDRI == strLogicalResourceName");
+                        q.declareParameters(strLogicalResourceName.getClass().getName() + " strLogicalResourceName");
+                        q.setUnique(true);
+                        parentEntry = (ILogicalData) q.execute(strLogicalResourceName);
+                    }
                     if (parentEntry == null) {
                         throw new NonExistingResourceException("Cannot remove " + entry.getLDRI().toString() + " from non existing parent " + entriesParent.toString());
                     }
-
                     Path theChild = parentEntry.getChild(entry.getLDRI());
                     if (theChild == null) {
                         throw new NonExistingResourceException("Cannot remove " + entry.getLDRI().toString() + ". Parent " + entriesParent.toString() + " has no such child");
@@ -171,15 +190,17 @@ public class RDMSDLCatalog implements IDLCatalogue {
                     parentEntry.removeChild(entry.getLDRI());
                     pm.detachCopy(parentEntry);
                 }
-
-                //Then remove it's children. Query for nodes that have that parent.. and the parent 
-                Query q = pm.newQuery(LogicalData.class);
+                //Then remove it's children. Query for nodes that have that parent.. and the parent
+                ILogicalData result = getEntryById(entry.getLDRI(), pm);
+                Query q;
                 String parentsName = entry.getLDRI().toString();
-
-                q.setFilter("strLDRI == parentsName");
-                q.declareParameters(parentsName.getClass().getName() + " parentsName");
-                q.setUnique(true);
-                LogicalData result = (LogicalData) q.execute(parentsName);
+                if (result == null) {
+                    q = pm.newQuery(LogicalData.class);
+                    q.setFilter("strLDRI == parentsName");
+                    q.declareParameters(parentsName.getClass().getName() + " parentsName");
+                    q.setUnique(true);
+                    result = (LogicalData) q.execute(parentsName);
+                }
                 //Maybe it's already gone 
                 if (result != null) {
                     //Delete its storage sites, since every time we create a new 
@@ -226,6 +247,7 @@ public class RDMSDLCatalog implements IDLCatalogue {
                 if (path.isRoot()) {
                     q = pm.newQuery(LogicalData.class);
                     Long number = (Long) q.deletePersistentAll();
+                    cahce.clear();
                 } else {
                     String name = "/" + path.getName();
                     String nameWithSlash = name + "/";
@@ -240,10 +262,14 @@ public class RDMSDLCatalog implements IDLCatalogue {
                             + end.getClass().getName() + " end, "
                             + nameWithSlash.getClass().getName() + " nameWithSlash, "
                             + strPath.getClass().getName() + " strPath");
-                    Long number = q.deletePersistentAll(name, start, end, nameWithSlash, strPath);
+                    //                    Long number = q.deletePersistentAll(name, start, end, nameWithSlash, strPath);
+                    Collection<ILogicalData> res = (Collection<ILogicalData>) q.executeWithArray(new Object[]{name, start, end, nameWithSlash, strPath});
+                    for(ILogicalData ld : res){
+                        cahce.remove(ld.getLDRI());
+                    }
+                    pm.deletePersistentAll(res);
                 }
                 tx.commit();
-
             } catch (Exception ex) {
                 throw new CatalogueException(ex.getMessage());
             } finally {
@@ -258,20 +284,28 @@ public class RDMSDLCatalog implements IDLCatalogue {
     @Override
     public Boolean resourceEntryExists(ILogicalData entry) throws CatalogueException {
         synchronized (lock) {
+            ILogicalData copy = cahce.get(entry.getLDRI());
+            if (copy != null) {
+                return true;
+            }
             PersistenceManager pm = getPmf().getPersistenceManager();
             Transaction tx = pm.currentTransaction();
             tx.setSerializeRead(Boolean.TRUE);
-            ILogicalData copy = null;
+
             try {
                 tx.begin();
-                //This query, will return objects of type DataResourceEntry
-                Query q = pm.newQuery(LogicalData.class);
-                //restrict to instances which have the field ldri equal to some logicalResourceName
-                String strLogicalResourceName = entry.getLDRI().toString();
-                q.setFilter("strLDRI == strLogicalResourceName");
-                q.declareParameters(strLogicalResourceName.getClass().getName() + " strLogicalResourceName");
-                q.setUnique(true);
-                ILogicalData loaded = (ILogicalData) q.execute(strLogicalResourceName);
+                ILogicalData loaded = getEntryById(entry.getLDRI(), pm);
+                if (loaded == null) {
+                    //This query, will return objects of type DataResourceEntry
+                    Query q = pm.newQuery(LogicalData.class);
+                    //restrict to instances which have the field ldri equal to some logicalResourceName
+                    String strLogicalResourceName = entry.getLDRI().toString();
+                    q.setFilter("strLDRI == strLogicalResourceName");
+                    q.declareParameters(strLogicalResourceName.getClass().getName() + " strLogicalResourceName");
+                    q.setUnique(true);
+                    loaded = (ILogicalData) q.execute(strLogicalResourceName);
+                }
+
                 copy = pm.detachCopy(loaded);
                 tx.commit();
             } catch (Exception ex) {
@@ -281,6 +315,9 @@ public class RDMSDLCatalog implements IDLCatalogue {
                     tx.rollback();
                 }
                 pm.close();
+            }
+            if (copy == null) {
+                cahce.remove(entry.getLDRI());
             }
             return copy != null ? true : false;
         }
@@ -309,7 +346,9 @@ public class RDMSDLCatalog implements IDLCatalogue {
 
                 pm.close();
             }
-
+            for (ILogicalData ld : copy) {
+                cahce.put(ld.getLDRI(), ld);
+            }
             return copy;
         }
     }
@@ -321,73 +360,89 @@ public class RDMSDLCatalog implements IDLCatalogue {
             PersistenceManager pm = getPmf().getPersistenceManager();
             Transaction tx = pm.currentTransaction();
             tx.setSerializeRead(Boolean.TRUE);
-            ILogicalData copy = null;
             try {
                 tx.begin();
-                //This query, will return objects of type DataResourceEntry
-                Query q = pm.newQuery(LogicalData.class);
-                //restrict to instances which have the field ldri equal to some logicalResourceName
+                ILogicalData toBeRenamed = getEntryById(oldPath, pm);
+                Query q;
                 String strLogicalResourceName = oldPath.toString();
-                q.setFilter("strLDRI == strLogicalResourceName");
-                q.declareParameters(strLogicalResourceName.getClass().getName() + " strLogicalResourceName");
-                q.setUnique(true);
-                ILogicalData toBeRenamed = (ILogicalData) q.execute(strLogicalResourceName);
+                if (toBeRenamed == null) {
+                    //This query, will return objects of type DataResourceEntry
+                    q = pm.newQuery(LogicalData.class);
+                    //restrict to instances which have the field ldri equal to some logicalResourceName
+                    q.setFilter("strLDRI == strLogicalResourceName");
+                    q.declareParameters(strLogicalResourceName.getClass().getName() + " strLogicalResourceName");
+                    q.setUnique(true);
+                    toBeRenamed = (ILogicalData) q.execute(strLogicalResourceName);
+                }
                 if (toBeRenamed == null) {
                     throw new ResourceExistsException("Rename Entry: cannot rename resource " + oldPath + " resource doesn't exists");
                 }
-                ILogicalData copytoBeRenamed = pm.detachCopy(toBeRenamed);
-
                 //Remove this node from it's parent 
                 Path parent = oldPath.getParent();
                 if (parent != null && !StringUtil.isEmpty(parent.toString())) {
-                    q = pm.newQuery(LogicalData.class);
-                    String parentsName = parent.toString();
-                    q.setFilter("strLDRI == parentsName");
-                    q.declareParameters(strLogicalResourceName.getClass().getName() + " parentsName");
-                    q.setUnique(true);
-                    ILogicalData parentEntry = (ILogicalData) q.execute(parentsName);
-
+                    ILogicalData parentEntry = getEntryById(parent, pm);
+                    if (parentEntry == null) {
+                        q = pm.newQuery(LogicalData.class);
+                        String parentsName = parent.toString();
+                        q.setFilter("strLDRI == parentsName");
+                        q.declareParameters(strLogicalResourceName.getClass().getName() + " parentsName");
+                        q.setUnique(true);
+                        parentEntry = (ILogicalData) q.execute(parentsName);
+                    }
                     if (parentEntry == null) {
                         throw new NonExistingResourceException("Cannot remove " + oldPath.toString() + " from non existing parent " + parent.toString());
                     }
-
                     Path theChild = parentEntry.getChild(oldPath);
                     if (theChild == null) {
                         throw new NonExistingResourceException("Cannot remove " + oldPath.toString() + ". Parent " + parent.toString() + " has no such child");
                     }
-                    pm.detachCopy(parentEntry);
+//                    pm.detachCopy(parentEntry);
                     parentEntry.removeChild(oldPath);
                     parentEntry.addChild(newPath);
+                    cahce.put(parentEntry.getLDRI(), parentEntry);
                 }
-                toBeRenamed.setLDRI(newPath);
-                Collection<String> children = copytoBeRenamed.getChildren();
+                cahce.remove(toBeRenamed.getLDRI());
+                toBeRenamed.setLDRI(newPath); 
+
+                Collection<String> children = toBeRenamed.getChildren();
                 if (children != null) {
                     for (String ch : children) {
                         String newChildName = ch.replace(oldPath.toString(), newPath.toString());
                         toBeRenamed.removeChild(Path.path(ch));
                         toBeRenamed.addChild(Path.path(newChildName));
-
-                        q = pm.newQuery(LogicalData.class);
-                        q.setFilter("strLDRI == ch");
-                        q.declareParameters(strLogicalResourceName.getClass().getName() + " ch");
-                        q.setUnique(true);
-                        ILogicalData childEntry = (ILogicalData) q.execute(ch);
+                        
+                        ILogicalData childEntry = getEntryById(Path.path(ch), pm);
+                        if (childEntry == null) {
+                            q = pm.newQuery(LogicalData.class);
+                            q.setFilter("strLDRI == ch");
+                            q.declareParameters(strLogicalResourceName.getClass().getName() + " ch");
+                            q.setUnique(true);
+                            childEntry = (ILogicalData) q.execute(ch);
+                        }
+                        cahce.remove(childEntry.getLDRI());
                         childEntry.setLDRI(Path.path(newChildName));
-                        pm.detachCopy(childEntry);
+                        cahce.put(childEntry.getLDRI(), childEntry);
+//                        pm.detachCopy(childEntry);
 //                    debug("Old Name: " + ch + " new name: " + newChildName);
                     }
                 }
+                pm.makePersistent(toBeRenamed);
+                Path ldri = toBeRenamed.getLDRI();
+                cahce.put(ldri, toBeRenamed);
                 //Add this to new Parent
                 Path newParent = newPath.getParent();
                 if (newParent != null && !StringUtil.isEmpty(newParent.toString())) {
                     String path = newParent.toString();
-                    q = pm.newQuery(LogicalData.class);
-                    q.setFilter("strLDRI == path");
-                    q.declareParameters(path.getClass().getName() + " path");
-                    q.setUnique(true);
-                    ILogicalData newParentEntry = (ILogicalData) q.execute(path);
+                    ILogicalData newParentEntry = getEntryById(newParent, pm);
+                    if (newParentEntry == null) {
+                        q = pm.newQuery(LogicalData.class);
+                        q.setFilter("strLDRI == path");
+                        q.declareParameters(path.getClass().getName() + " path");
+                        q.setUnique(true);
+                        newParentEntry = (ILogicalData) q.execute(path);
+                    }
                     newParentEntry.addChild(newPath);
-                    pm.detachCopy(newParentEntry);
+                    cahce.put(newParentEntry.getLDRI(), newParentEntry);
                 }
                 tx.commit();
             } catch (Exception ex) {
@@ -517,7 +572,6 @@ public class RDMSDLCatalog implements IDLCatalogue {
 
     @Override
     public void updateResourceEntry(ILogicalData newResource) throws CatalogueException {
-
         Transaction tx = null;
         PersistenceManager pm = null;
         synchronized (lock) {
@@ -529,29 +583,19 @@ public class RDMSDLCatalog implements IDLCatalogue {
                 //Batch updates
 //            Query query = pm.newQuery("UPDATE " + newResource.getClass().getName() + "SET this.ldri=newLDRI WHERE strLDRI == strLogicalResourceName");
 //            Long number = (Long) query.execute();
-
-//                Query q = pm.newQuery(LogicalData.class);
-//            String strLogicalResourceName = newResource.getLDRI().toString();
-//            q.setFilter("strLDRI == strLogicalResourceName");
-//            q.declareParameters(strLogicalResourceName.getClass().getName() + " strLogicalResourceName");
-//            q.setUnique(true);
-//            ILogicalData loaded = (ILogicalData) q.execute(strLogicalResourceName);
-
-//            loaded.setChildren(newResource.getChildren());
-//            loaded.setLDRI(newResource.getLDRI());
-//            loaded.setStorageSites(newResource.getStorageSites());
                 pm.makePersistent(newResource);
                 ILogicalData copy = pm.detachCopy(newResource);
-
                 tx.commit();
+
             } finally {
                 if (tx.isActive()) {
                     tx.rollback();
                 }
                 pm.close();
             }
-
+            cahce.put(newResource.getLDRI(), newResource);
         }
+
     }
 
     @Override
@@ -622,5 +666,43 @@ public class RDMSDLCatalog implements IDLCatalogue {
             pmf = JDOHelper.getPersistenceManagerFactory(propFile);//Path.path(nl.uva.cs.lobcder.util.Constants.LOBCDER_CONF_DIR + "/datanucleus.properties").toString());
         }
         return pmf;
+    }
+
+    void clearLogicalData() {
+        synchronized (lock) {
+            PersistenceManager pm = getPmf().getPersistenceManagerProxy();
+            Transaction tx = pm.currentTransaction();
+            tx.setSerializeRead(Boolean.TRUE);
+            try {
+                tx.begin();
+                Query q = pm.newQuery(LogicalData.class);
+
+                long num = q.deletePersistentAll();
+//                pm.deletePersistentAll(results);
+
+                tx.commit();
+            } finally {
+                if (tx.isActive()) {
+                    tx.rollback();
+                }
+                pm.close();
+            }
+            cahce.clear();
+        }
+    }
+
+    private ILogicalData getEntryById(Path logicalResourceName, PersistenceManager pm) {
+
+        StringIdentity id = new StringIdentity(LogicalData.class, logicalResourceName.toString());
+        ILogicalData loaded;
+        try {
+            loaded = (ILogicalData) pm.getObjectById(id);
+            if (!loaded.getLDRI().toString().equals(logicalResourceName.toString())) {
+                loaded = null;
+            }
+        } catch (JDOObjectNotFoundException ex) {
+            loaded = null;
+        }
+        return loaded;
     }
 }

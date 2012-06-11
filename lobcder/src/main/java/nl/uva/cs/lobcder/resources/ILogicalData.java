@@ -33,6 +33,8 @@ public interface ILogicalData {
     public void setMetadata(Metadata metadata);
 
     public String getUID();
+    
+    public void setUID(String uid);
 
     public boolean hasChildren();
 

@@ -14,6 +14,8 @@ import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.servlet.http.HttpServletRequest;
+import nl.uva.cs.lobcder.auth.MyPrincipal;
+import nl.uva.cs.lobcder.auth.test.MyAuth;
 import nl.uva.cs.lobcder.catalogue.CatalogueException;
 import nl.uva.cs.lobcder.catalogue.RDMSDLCatalog;
 import nl.uva.cs.lobcder.frontend.WebDavServlet;
@@ -621,8 +623,10 @@ public class WebDataResourceFactoryTest {
 //        assertNotNull(meta.getPermissionArray());
     }
 
-    private WebDataDirResource getTestDir(WebDataResourceFactory instance, String host) throws NotAuthorizedException, ConflictException, BadRequestException, VlException, CatalogueException, IOException {
-//        instance.setUserName(vphUserName);
+    private WebDataDirResource getTestDir(WebDataResourceFactory instance, String host) throws NotAuthorizedException, ConflictException, BadRequestException, VlException, CatalogueException, IOException, MyPrincipal.Exception {
+        //        instance.setUserName(vphUserName);
+//        DummyHttpServletRequest req = new DummyHttpServletRequest();
+//        req.getSession().setAttribute("vph-user", new MyPrincipal(vphUserName+vphPassword, MyAuth.getInstance().checkToken(vphUserName+vphPassword)));
         WebDataDirResource result = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH + ConstantsAndSettings.TEST_FOLDER_NAME_1);
         if (result == null) {
             WebDataDirResource root = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH);
