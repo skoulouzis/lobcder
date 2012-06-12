@@ -196,10 +196,10 @@ public class WebDavServlet implements Servlet {
     }
 
     private void debug(String msg) {
-        if (debug) {
-            System.err.println(this.getClass().getSimpleName() + ": " + msg);
-//        log.debug(msg);
-        }
+//        if (debug) {
+//            System.err.println(this.getClass().getSimpleName() + ": " + msg);
+////        log.debug(msg);
+//        }
     }
 
     /**

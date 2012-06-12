@@ -78,10 +78,10 @@ public class WebDataResourceFactory implements ResourceFactory {
     }
 
     private void debug(String msg) {
-        if (debug) {
-            System.err.println(this.getClass().getSimpleName() + ": " + msg);
-//        log.debug(msg);
-        }
+//        if (debug) {
+//            System.err.println(this.getClass().getSimpleName() + ": " + msg);
+////        log.debug(msg);
+//        }
     }
 
     private void initStorageSites() throws Exception {

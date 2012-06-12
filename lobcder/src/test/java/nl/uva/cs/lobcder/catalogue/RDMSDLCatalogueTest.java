@@ -913,7 +913,7 @@ public class RDMSDLCatalogueTest {
     }
 
     @Test
-    public void testStorageSiteExists() {
+    public void testStorageSiteExists() throws CatalogueException {
         RDMSDLCatalog instance = null;
         try {
             instance = new RDMSDLCatalog(new File(nl.uva.cs.lobcder.util.Constants.LOBCDER_CONF_DIR + "/datanucleus.properties"));

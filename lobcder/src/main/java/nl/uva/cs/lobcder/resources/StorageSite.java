@@ -105,7 +105,6 @@ public class StorageSite implements Serializable, IStorageSite {
 
     public StorageSite(String endpoint, Credential cred) throws Exception {
         try {
-            uid = new StringIdentity(this.getClass(), java.util.UUID.randomUUID().toString()).getKey();
             if (endpoint == null) {
                 throw new NullPointerException("Endpoint is null");
             }
@@ -130,11 +129,11 @@ public class StorageSite implements Serializable, IStorageSite {
             storagePrefix = PropertiesLoader.getLobcderProperties().getProperty(Constants.LOBCDER_STORAGE_PREFIX);
 
             vrl = new VRL(endpoint + "/" + storagePrefix);
-
+            
             prop = new Properties();
 
             this.credentials = cred;
-
+            uid = new StringIdentity(this.getClass(), java.util.UUID.randomUUID().toString()).getKey();//vrl.toString()+prop.getProperty(Constants.STORAGE_SITE_USERNAME);//
             initVFS();
         } catch (VlException ex) {
             throw new Exception(ex);
@@ -229,9 +228,9 @@ public class StorageSite implements Serializable, IStorageSite {
     }
 
     private void debug(String msg) {
-        if (debug) {
-            System.err.println(this.getClass().getSimpleName() + ": " + msg);
-        }
+//        if (debug) {
+//            System.err.println(this.getClass().getSimpleName() + ": " + msg);
+//        }
     }
 
     @Override

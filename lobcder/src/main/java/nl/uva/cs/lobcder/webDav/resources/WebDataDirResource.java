@@ -5,7 +5,6 @@
 package nl.uva.cs.lobcder.webDav.resources;
 
 import com.bradmcevoy.common.Path;
-import com.bradmcevoy.http.Request.Method;
 import com.bradmcevoy.http.*;
 import com.bradmcevoy.http.exceptions.BadRequestException;
 import com.bradmcevoy.http.exceptions.ConflictException;
@@ -17,11 +16,9 @@ import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import nl.uva.cs.lobcder.auth.MyPrincipal;
 import nl.uva.cs.lobcder.auth.Permissions;
 import nl.uva.cs.lobcder.catalogue.CatalogueException;
 import nl.uva.cs.lobcder.catalogue.IDLCatalogue;
-import nl.uva.cs.lobcder.frontend.WebDavServlet;
 import nl.uva.cs.lobcder.resources.ILogicalData;
 import nl.uva.cs.lobcder.resources.IStorageSite;
 import nl.uva.cs.lobcder.resources.LogicalData;
@@ -197,8 +194,8 @@ class WebDataDirResource extends WebDataResource implements FolderResource, Coll
 //            meta = ((WebDataResource) resource).getLogicalData().getMetadata();
 //            meta.setPermissionArray((new Permissions(principal)).getRolesPerm());
 //            ((WebDataResource) resource).getLogicalData().setMetadata(meta);
-            
-            getCatalogue().updateResourceEntry(((WebDataResource) resource).getLogicalData());
+
+//            getCatalogue().updateResourceEntry(((WebDataResource) resource).getLogicalData());
 
             return resource;
         } catch (Permissions.Exception e) {
@@ -228,7 +225,7 @@ class WebDataDirResource extends WebDataResource implements FolderResource, Coll
 //            }
             Path toCollectionLDRI = Path.path(toCollection.getName());
             Path newLDRI = Path.path(toCollectionLDRI, name);
-            
+
             LogicalData newFolderEntry = new LogicalData(newLDRI, Constants.LOGICAL_FOLDER);
             newFolderEntry.getMetadata().setModifiedDate(System.currentTimeMillis());
 //            newFolderEntry.getMetadata().setPermissionArray((ArrayList<Integer>) p.getRolesPerm().clone());
@@ -269,18 +266,18 @@ class WebDataDirResource extends WebDataResource implements FolderResource, Coll
             debug("delete.");
             //TODO: physical data shall be removed AFTER we delete logical structures. All permissions checks are
             //performed on logical level 
-            Collection<IStorageSite> sites = getLogicalData().getStorageSites();
-            if (sites != null && !sites.isEmpty()) {
-                for (IStorageSite s : sites) {
-                    s.deleteVNode(getLogicalData().getPDRI());
-                }
-            }
             List<? extends Resource> children = getChildren();
             if (children != null) {
                 for (Resource r : children) {
                     if (r instanceof DeletableResource) {
                         ((DeletableResource) r).delete();
                     }
+                }
+            }
+            Collection<IStorageSite> sites = getLogicalData().getStorageSites();
+            if (sites != null && !sites.isEmpty()) {
+                for (IStorageSite s : sites) {
+                    s.deleteVNode(getLogicalData().getPDRI());
                 }
             }
             getCatalogue().unregisterResourceEntry(getLogicalData());
@@ -415,10 +412,11 @@ class WebDataDirResource extends WebDataResource implements FolderResource, Coll
         return null;
     }
 
+    @Override
     protected void debug(String msg) {
-        if (debug) {
-            System.err.println(this.getClass().getSimpleName() + "." + getLogicalData().getLDRI() + ": " + msg);
-        }
+//        if (debug) {
+//            System.err.println(this.getClass().getSimpleName() + "." + getLogicalData().getLDRI() + ": " + msg);
+//        }
     }
 
     private ArrayList<? extends Resource> getTopLevelChildren() throws Exception {

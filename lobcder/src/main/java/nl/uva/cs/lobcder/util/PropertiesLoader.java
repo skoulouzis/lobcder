@@ -52,4 +52,15 @@ public class PropertiesLoader {
         }
         return numOfStorgeSites;
     }
+
+    public static Properties getProperties(File file)
+            throws FileNotFoundException, IOException {
+        Properties properties = new Properties();
+
+        if (!file.exists()) {
+            throw new FileNotFoundException("Configuration file " + file.getAbsolutePath() + " not found");
+        }
+        properties.load(new FileInputStream(file));
+        return properties;
+    }
 }
