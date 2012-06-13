@@ -96,7 +96,7 @@ public class RDMSDLCatalog implements IDLCatalogue {
                                 updatedResults.add(loadedSite);
                             }
                             pm.makePersistentAll(updatedResults);
-                            pm.detachCopyAll(updatedResults);
+//                            pm.detachCopyAll(updatedResults);
                         }
 ////                    Collection<StorageSite> results = (Collection<StorageSite>) q.execute(uname, epoint);
 //                        Long number = (Long) q.deletePersistentAll(uname, epoint);
@@ -108,6 +108,11 @@ public class RDMSDLCatalog implements IDLCatalogue {
                 entry = null;
                 entry = copy;
                 cahce.put(copy.getLDRI(), copy);
+            }catch(Exception ex){
+                if(ex instanceof NonExistingResourceException){
+                    throw (NonExistingResourceException)ex;
+                }
+                throw new CatalogueException(ex.getMessage());
             } finally {
                 if (tx.isActive()) {
                     tx.rollback();
