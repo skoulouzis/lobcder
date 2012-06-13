@@ -18,7 +18,7 @@ import nl.uva.vlet.data.StringUtil;
  * @author S. Koulouzis
  */
 public class RDMSDLCatalog implements IDLCatalogue {
-    
+
     private static final Object lock = new Object();
     private static PersistenceManagerFactory pmf;
     private final File propFile;
@@ -31,6 +31,10 @@ public class RDMSDLCatalog implements IDLCatalogue {
 
     @Override
     public void registerResourceEntry(ILogicalData entry) throws CatalogueException {
+        ILogicalData loaded = cahce.get(entry.getLDRI());
+        if (loaded != null && comparePaths(loaded.getLDRI(), entry.getLDRI())) {
+            throw new DuplicateResourceException("Cannot register resource " + entry.getLDRI() + " resource exists");
+        }
         synchronized (lock) {
             //Check if it exists 
             String strLogicalResourceName = entry.getLDRI().toString();
@@ -39,7 +43,7 @@ public class RDMSDLCatalog implements IDLCatalogue {
             tx.setSerializeRead(Boolean.TRUE);
             try {
                 tx.begin();
-                ILogicalData loaded = getEntryById(entry.getLDRI(), pm);
+                loaded = getEntryById(entry.getLDRI(), pm);
                 Query q;
                 if (loaded == null) {
                     //This query, will return objects of type DataResourceEntry
@@ -57,7 +61,6 @@ public class RDMSDLCatalog implements IDLCatalogue {
                 Path parentPath = entry.getLDRI().getParent();
                 if (parentPath != null && !StringUtil.isEmpty(parentPath.toString()) && !parentPath.isRoot()) {
                     strLogicalResourceName = parentPath.toString();
-
                     ILogicalData parentEntry = getEntryById(parentPath, pm);
                     if (parentEntry == null) {
                         q = pm.newQuery(LogicalData.class);
@@ -82,7 +85,6 @@ public class RDMSDLCatalog implements IDLCatalogue {
                 if (storageSites != null && !storageSites.isEmpty()) {
                     for (IStorageSite s : storageSites) {
                         String unamesCSV = s.getVPHUsernamesCSV();
-
                         String epoint = s.getEndpoint();
                         Collection<String> newLogicalPaths = s.getLogicalPaths();
                         q = pm.newQuery(StorageSite.class);
@@ -108,9 +110,9 @@ public class RDMSDLCatalog implements IDLCatalogue {
                 entry = null;
                 entry = copy;
                 cahce.put(copy.getLDRI(), copy);
-            }catch(Exception ex){
-                if(ex instanceof NonExistingResourceException){
-                    throw (NonExistingResourceException)ex;
+            } catch (Exception ex) {
+                if (ex instanceof NonExistingResourceException) {
+                    throw (NonExistingResourceException) ex;
                 }
                 throw new CatalogueException(ex.getMessage());
             } finally {
@@ -271,7 +273,7 @@ public class RDMSDLCatalog implements IDLCatalogue {
                             + strPath.getClass().getName() + " strPath");
                     //                    Long number = q.deletePersistentAll(name, start, end, nameWithSlash, strPath);
                     Collection<ILogicalData> res = (Collection<ILogicalData>) q.executeWithArray(new Object[]{name, start, end, nameWithSlash, strPath});
-                    for(ILogicalData ld : res){
+                    for (ILogicalData ld : res) {
                         cahce.remove(ld.getLDRI());
                     }
                     pm.deletePersistentAll(res);
@@ -410,7 +412,7 @@ public class RDMSDLCatalog implements IDLCatalogue {
                     cahce.put(parentEntry.getLDRI(), parentEntry);
                 }
                 cahce.remove(toBeRenamed.getLDRI());
-                toBeRenamed.setLDRI(newPath); 
+                toBeRenamed.setLDRI(newPath);
 
                 Collection<String> children = toBeRenamed.getChildren();
                 if (children != null) {
@@ -418,7 +420,7 @@ public class RDMSDLCatalog implements IDLCatalogue {
                         String newChildName = ch.replace(oldPath.toString(), newPath.toString());
                         toBeRenamed.removeChild(Path.path(ch));
                         toBeRenamed.addChild(Path.path(newChildName));
-                        
+
                         ILogicalData childEntry = getEntryById(Path.path(ch), pm);
                         if (childEntry == null) {
                             q = pm.newQuery(LogicalData.class);

@@ -127,7 +127,7 @@ public class StorageSite implements Serializable, IStorageSite {
             }
 
             storagePrefix = PropertiesLoader.getLobcderProperties().getProperty(Constants.LOBCDER_STORAGE_PREFIX);
-
+            
             vrl = new VRL(endpoint + "/" + storagePrefix);
             
             prop = new Properties();
