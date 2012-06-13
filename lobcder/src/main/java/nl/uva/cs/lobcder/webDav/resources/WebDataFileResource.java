@@ -370,6 +370,7 @@ public class WebDataFileResource extends WebDataResource implements
         if (modifiedDate == null) {
             meta.setModifiedDate(System.currentTimeMillis());
             getLogicalData().setMetadata(meta);
+            
         }
     }
 }

@@ -496,6 +496,7 @@ class WebDataDirResource extends WebDataResource implements FolderResource, Coll
         meta.setLength(length);
         meta.addContentType(contentType);
         meta.setCreateDate(System.currentTimeMillis());
+        meta.setModifiedDate(System.currentTimeMillis());
         newResource.setMetadata(meta);
         getCatalogue().registerResourceEntry(newResource);
 //        LogicalData relodedResource = (LogicalData) getCatalogue().getResourceEntryByLDRI(newResource.getLDRI());
