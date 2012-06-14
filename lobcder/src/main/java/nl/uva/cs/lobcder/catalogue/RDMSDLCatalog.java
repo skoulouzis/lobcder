@@ -73,37 +73,12 @@ public class RDMSDLCatalog implements IDLCatalogue {
                     if (parentEntry == null) {
                         throw new NonExistingResourceException("Cannot add " + entry.getLDRI().toString() + " child to non existing parent " + parentPath.toString());
                     }
-                    //parentEntry.getMetadata().getPermissionArray()
                     parentEntry.addChild(entry.getLDRI());
                     cahce.put(parentEntry.getLDRI(), parentEntry);
                     pm.detachCopy(parentEntry);
 
                 }
-                //Persisst entry
-                Collection<IStorageSite> storageSites = entry.getStorageSites();
-//                //work around to remove duplicated storage sites ??
-                if (storageSites != null && !storageSites.isEmpty()) {
-                    for (IStorageSite s : storageSites) {
-                        String unamesCSV = s.getVPHUsernamesCSV();
-                        String epoint = s.getEndpoint();
-                        Collection<String> newLogicalPaths = s.getLogicalPaths();
-                        q = pm.newQuery(StorageSite.class);
-                        q.declareParameters(unamesCSV.getClass().getName() + " unamesCSV, " + epoint.getClass().getName() + " epoint");
-                        q.setFilter("vphUsernamesCSV == unamesCSV && endpoint == epoint");
-                        Collection<StorageSite> results = (Collection<StorageSite>) q.execute(unamesCSV, epoint);
-                        Collection<StorageSite> updatedResults = new ArrayList<StorageSite>();
-                        if (results != null) {
-                            for (StorageSite loadedSite : results) {
-                                loadedSite.setLogicalPaths(newLogicalPaths);
-                                updatedResults.add(loadedSite);
-                            }
-                            pm.makePersistentAll(updatedResults);
-//                            pm.detachCopyAll(updatedResults);
-                        }
-////                    Collection<StorageSite> results = (Collection<StorageSite>) q.execute(uname, epoint);
-//                        Long number = (Long) q.deletePersistentAll(uname, epoint);
-                    }
-                }
+//                //Persisst entry
                 pm.makePersistent(entry);
                 ILogicalData copy = pm.detachCopy(entry);
                 tx.commit();

@@ -41,4 +41,6 @@ public interface IStorageSite {
     public void removeLogicalPath(Path pdrI);
     
     public String getVPHUsernamesCSV();
+    
+    public String getUid();
 }
