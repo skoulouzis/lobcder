@@ -75,16 +75,16 @@ public class RDMSDLCatalog implements IDLCatalogue {
                     }
                     parentEntry.addChild(entry.getLDRI());
                     cahce.put(parentEntry.getLDRI(), parentEntry);
-                    pm.detachCopy(parentEntry);
+//                    pm.detachCopy(parentEntry);
 
                 }
 //                //Persisst entry
                 pm.makePersistent(entry);
-                ILogicalData copy = pm.detachCopy(entry);
+//                ILogicalData copy = pm.detachCopy(entry);
                 tx.commit();
-                entry = null;
-                entry = copy;
-                cahce.put(copy.getLDRI(), copy);
+//                entry = null;
+//                entry = copy;
+                cahce.put(entry.getLDRI(), entry);
             } catch (Exception ex) {
                 if (ex instanceof NonExistingResourceException) {
                     throw (NonExistingResourceException) ex;
