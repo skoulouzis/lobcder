@@ -38,7 +38,7 @@ public class TestCatalogPerformance {
         entry.setStorageSites(sites);
         instance.registerResourceEntry(entry);
 
-        double N = 100;
+        double N = 2;
         double total = 0;
         //Query N times for the entry and measure time
         for (int i = 0; i < N; i++) {

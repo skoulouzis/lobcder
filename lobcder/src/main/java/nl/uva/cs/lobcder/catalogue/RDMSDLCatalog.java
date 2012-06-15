@@ -31,10 +31,13 @@ public class RDMSDLCatalog implements IDLCatalogue {
 
     @Override
     public void registerResourceEntry(ILogicalData entry) throws CatalogueException {
+        double checkExistsStart = System.currentTimeMillis();
         ILogicalData loaded = cahce.get(entry.getLDRI());
         if (loaded != null && comparePaths(loaded.getLDRI(), entry.getLDRI())) {
             throw new DuplicateResourceException("Cannot register resource " + entry.getLDRI() + " resource exists");
         }
+        double checkExistsStop = System.currentTimeMillis();
+        debug("checkExists: " + (checkExistsStop - checkExistsStart));
         synchronized (lock) {
             //Check if it exists 
             String strLogicalResourceName = entry.getLDRI().toString();
@@ -43,21 +46,19 @@ public class RDMSDLCatalog implements IDLCatalogue {
             tx.setSerializeRead(Boolean.TRUE);
             try {
                 tx.begin();
-                loaded = getEntryById(entry.getLDRI(), pm);
+//                loaded = getEntryById(entry.getLDRI(), pm);
                 Query q;
-                if (loaded == null) {
-                    //This query, will return objects of type DataResourceEntry
-                    q = pm.newQuery(LogicalData.class);
-                    q.setFilter("strLDRI == strLogicalResourceName");
-                    q.declareParameters(strLogicalResourceName.getClass().getName() + " strLogicalResourceName");
-                    q.setUnique(true);
-                    loaded = (ILogicalData) q.execute(strLogicalResourceName);
-                }
-                if (loaded != null && comparePaths(loaded.getLDRI(), entry.getLDRI())) {
-                    throw new DuplicateResourceException("Cannot register resource " + entry.getLDRI() + " resource exists");
-                }
-
+//                if (loaded == null) {
+//                    //This query, will return objects of type DataResourceEntry
+//                    q = pm.newQuery(LogicalData.class);
+//                    q.setFilter("strLDRI == strLogicalResourceName");
+//                    q.declareParameters(strLogicalResourceName.getClass().getName() + " strLogicalResourceName");
+//                    q.setUnique(true);
+//                    loaded = (ILogicalData) q.execute(strLogicalResourceName);
+//                }
                 //If it has a parent node, add this path to the parent node 
+
+                double removeFromParentStart = System.currentTimeMillis();
                 Path parentPath = entry.getLDRI().getParent();
                 if (parentPath != null && !StringUtil.isEmpty(parentPath.toString()) && !parentPath.isRoot()) {
                     strLogicalResourceName = parentPath.toString();
@@ -76,12 +77,22 @@ public class RDMSDLCatalog implements IDLCatalogue {
                     parentEntry.addChild(entry.getLDRI());
                     cahce.put(parentEntry.getLDRI(), parentEntry);
 //                    pm.detachCopy(parentEntry);
-
                 }
+                double removeFromParentStop = System.currentTimeMillis();
+                debug("removeFromParent: " + (removeFromParentStop - removeFromParentStart));
+
+                double persistStart = System.currentTimeMillis();
 //                //Persisst entry
                 pm.makePersistent(entry);
+
+                double persistStop = System.currentTimeMillis();
+                debug("persist: " + (persistStop - persistStart));
 //                ILogicalData copy = pm.detachCopy(entry);
+
+                double comitStart = System.currentTimeMillis();
                 tx.commit();
+                double comitStop = System.currentTimeMillis();
+                debug("commit: " + (comitStop - comitStart));
 //                entry = null;
 //                entry = copy;
                 cahce.put(entry.getLDRI(), entry);
@@ -214,7 +225,7 @@ public class RDMSDLCatalog implements IDLCatalogue {
                             toBeUpdated.add(s);
                         }
                     }
-                    
+
                     pm.deletePersistentAll(toBeDeleted);
                     pm.makePersistentAll(toBeUpdated);
 //                    pm.detachCopyAll(toBeUpdated);
