@@ -185,14 +185,15 @@ public class RDMSDLCatalog implements IDLCatalogue {
                     q.setUnique(true);
                     result = (LogicalData) q.execute(parentsName);
                 }
+                ILogicalData copy = pm.detachCopy(result);
                 //Maybe it's already gone 
-                if (result != null) {
+                if (copy != null) {
                     //Delete its storage sites, since every time we create a new 
                     //entry we add a new StorageSite, even a copy
-                    Collection<IStorageSite> storageSites = result.getStorageSites();
+                    Collection<IStorageSite> storageSites = copy.getStorageSites();
                     //Make sure we dont clear all the storage sites. If the storage 
                     //site dosn't belong to any othe entry,  then  delete
-//                SELECT FOMRM LOGICALDATA WHERE storageSite.contains(storageSite)
+                    //SELECT FOMRM LOGICALDATA WHERE storageSite.contains(storageSite)
                     Collection<LogicalData> res = null;
                     Collection<IStorageSite> toBeDeleted = new ArrayList<IStorageSite>();
                     Collection<IStorageSite> toBeUpdated = new ArrayList<IStorageSite>();
@@ -209,12 +210,14 @@ public class RDMSDLCatalog implements IDLCatalogue {
                         if (res == null || res.isEmpty() && sites.size() > PropertiesLoader.getNumOfStorageSites()) {
                             toBeDeleted.add(s);
                         } else {
-                            s.removeLogicalPath(result.getPDRI());
+                            s.removeLogicalPath(copy.getPDRI());
                             toBeUpdated.add(s);
                         }
                     }
+                    
                     pm.deletePersistentAll(toBeDeleted);
                     pm.makePersistentAll(toBeUpdated);
+//                    pm.detachCopyAll(toBeUpdated);
                 } else {
                     String path = entry.getLDRI().toString();
                     debug("Entry " + entry.getLDRI() + " is not in catalog");
@@ -246,7 +249,7 @@ public class RDMSDLCatalog implements IDLCatalogue {
                             + end.getClass().getName() + " end, "
                             + nameWithSlash.getClass().getName() + " nameWithSlash, "
                             + strPath.getClass().getName() + " strPath");
-                    //                    Long number = q.deletePersistentAll(name, start, end, nameWithSlash, strPath);
+//                    Long number = q.deletePersistentAll(name, start, end, nameWithSlash, strPath);
                     Collection<ILogicalData> res = (Collection<ILogicalData>) q.executeWithArray(new Object[]{name, start, end, nameWithSlash, strPath});
                     for (ILogicalData ld : res) {
                         cahce.remove(ld.getLDRI());
@@ -254,7 +257,6 @@ public class RDMSDLCatalog implements IDLCatalogue {
                     pm.deletePersistentAll(res);
                 }
                 tx.commit();
-
             } catch (Exception ex) {
                 throw new CatalogueException(ex.getMessage());
             } finally {

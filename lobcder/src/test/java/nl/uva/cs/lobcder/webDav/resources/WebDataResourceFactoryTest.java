@@ -262,7 +262,6 @@ public class WebDataResourceFactoryTest {
                 Logger.getLogger(WebDataResourceFactoryTest.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-
     }
 
     @Test
