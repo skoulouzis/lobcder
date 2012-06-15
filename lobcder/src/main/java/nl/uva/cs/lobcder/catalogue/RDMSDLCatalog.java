@@ -40,27 +40,17 @@ public class RDMSDLCatalog implements IDLCatalogue {
         debug("checkExists: " + (checkExistsStop - checkExistsStart));
         synchronized (lock) {
             //Check if it exists 
-            String strLogicalResourceName = entry.getLDRI().toString();
             PersistenceManager pm = getPmf().getPersistenceManager();
             Transaction tx = pm.currentTransaction();
             tx.setSerializeRead(Boolean.TRUE);
             try {
                 tx.begin();
-//                loaded = getEntryById(entry.getLDRI(), pm);
                 Query q;
-//                if (loaded == null) {
-//                    //This query, will return objects of type DataResourceEntry
-//                    q = pm.newQuery(LogicalData.class);
-//                    q.setFilter("strLDRI == strLogicalResourceName");
-//                    q.declareParameters(strLogicalResourceName.getClass().getName() + " strLogicalResourceName");
-//                    q.setUnique(true);
-//                    loaded = (ILogicalData) q.execute(strLogicalResourceName);
-//                }
                 //If it has a parent node, add this path to the parent node 
-
                 double removeFromParentStart = System.currentTimeMillis();
                 Path parentPath = entry.getLDRI().getParent();
                 if (parentPath != null && !StringUtil.isEmpty(parentPath.toString()) && !parentPath.isRoot()) {
+                    String strLogicalResourceName = entry.getLDRI().toString();
                     strLogicalResourceName = parentPath.toString();
                     ILogicalData parentEntry = getEntryById(parentPath, pm);
                     if (parentEntry == null) {
