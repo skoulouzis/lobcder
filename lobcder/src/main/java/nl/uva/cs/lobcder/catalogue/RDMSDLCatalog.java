@@ -35,18 +35,20 @@ import org.datanucleus.store.rdbms.datasource.dbcp.pool.impl.StackKeyedObjectPoo
  */
 public class RDMSDLCatalog implements IDLCatalogue {
 
-    private Object lock = new Object();
+    private static final Object lock = new Object();
     private static PersistenceManagerFactory pmf;
     private final File propFile;
     private final Map<Path, ILogicalData> cahce = new HashMap<Path, ILogicalData>();
 
-    public RDMSDLCatalog(File propFile) {
+    public RDMSDLCatalog(File propFile) throws CatalogueException {
 //        pmf = JDOHelper.getPersistenceManagerFactory("datanucleus.properties");
         this.propFile = propFile;
+        getPmf();
     }
 
     @Override
     public void registerResourceEntry(ILogicalData entry) throws CatalogueException {
+        
         double checkExistsStart = System.currentTimeMillis();
         ILogicalData loaded = cahce.get(entry.getLDRI());
         if (loaded != null && comparePaths(loaded.getLDRI(), entry.getLDRI())) {
@@ -105,6 +107,9 @@ public class RDMSDLCatalog implements IDLCatalogue {
             } catch (Exception ex) {
                 if (ex instanceof NonExistingResourceException) {
                     throw (NonExistingResourceException) ex;
+                }
+                if(ex.getMessage().contains("Duplicate entry")){
+                    throw new DuplicateResourceException("Cannot register resource " + entry.getLDRI() + " resource exists");
                 }
                 throw new CatalogueException(ex.getMessage());
             } finally {
@@ -666,6 +671,7 @@ public class RDMSDLCatalog implements IDLCatalogue {
      * @return the pmf
      */
     private PersistenceManagerFactory getPmf() throws CatalogueException {
+        long startGetPmf = System.currentTimeMillis();
 
 //            if (pmf == null) {
 //                pmf = JDOHelper.getPersistenceManagerFactory(propFile);//Path.path(nl.uva.cs.lobcder.util.Constants.LOBCDER_CONF_DIR + "/datanucleus.properties").toString());
@@ -716,7 +722,8 @@ public class RDMSDLCatalog implements IDLCatalogue {
         } catch (IOException ex) {
             throw new CatalogueException(ex.getMessage());
         }
-
+        long endGetPmf = System.currentTimeMillis();
+        debug("Elapsed get pmf: " + (endGetPmf - startGetPmf));
         return pmf;
     }
 

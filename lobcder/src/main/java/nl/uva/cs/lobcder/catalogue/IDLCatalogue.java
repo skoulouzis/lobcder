@@ -16,6 +16,7 @@ import nl.uva.cs.lobcder.resources.IStorageSite;
  */
 public interface IDLCatalogue {
 
+       
     public void registerResourceEntry(ILogicalData entry) throws CatalogueException;
 
     public ILogicalData getResourceEntryByLDRI(Path logicalResourceName)

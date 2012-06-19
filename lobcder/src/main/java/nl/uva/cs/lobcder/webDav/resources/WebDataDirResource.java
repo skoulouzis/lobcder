@@ -69,7 +69,7 @@ class WebDataDirResource extends WebDataResource implements FolderResource, Coll
                 newFolderEntry.setMetadata(meta);
 
                 Collection<IStorageSite> sites = getStorageSites();
-                
+
                 newFolderEntry.setStorageSites(sites);
                 getCatalogue().registerResourceEntry(newFolderEntry);
             }
@@ -466,67 +466,13 @@ class WebDataDirResource extends WebDataResource implements FolderResource, Coll
     }
 
     private Resource createNonExistingFile(Path newPath, Long length, String contentType, InputStream inputStream) throws IOException, Exception {
-        
-        LogicalData newResource = new LogicalData(newPath, Constants.LOGICAL_FILE);
-        Collection<IStorageSite> sites = getStorageSites();
-        newResource.setStorageSites(sites);
-        Worker w1 = new Worker(Worker.CREATE_PHYSICAL_FILE);
-        w1.setLogicalData(newResource);
-        w1.setInputStream(inputStream);
-        Thread t1 = new Thread(w1);
-        t1.run();
-        
-        
-//        VFSNode node = null;newResource
-//        try {
-//            node = newResource.getVFSNode();
-//        } catch (Exception ex) {
-//            if (!(ex instanceof ResourceNotFoundException)) {
-//                throw ex;
-//            }
-//        }
-//        if (node == null) {
-//            node = newResource.createPhysicalData();
-//        }
-//        if (node != null) {
-//            OutputStream out = ((VFile) node).getOutputStream();
-//            IOUtils.copy(inputStream, out);
-//            if (inputStream != null) {
-//                inputStream.close();
-//            }
-//            if (out != null) {
-//                out.flush();
-//                out.close();
-//            }
-//        }
-        
-        Worker w2 = new Worker(Worker.REGISTER_DATA);
-        w2.setLogicalData(newResource);
-        w2.setContentType(contentType);
-        w2.setLength(length);
-        w2.setCatalog(getCatalogue());
-        Thread t2 = new Thread(w2);
-        t2.run();
-        
-//                Metadata meta = new Metadata();
-//        meta.setLength(length);
-//        meta.addContentType(contentType);
-//        meta.setCreateDate(System.currentTimeMillis());
-//        meta.setModifiedDate(System.currentTimeMillis());
-//        newResource.setMetadata(meta);
-//        getCatalogue().registerResourceEntry(newResource);
-        
 
-        t1.join();
-        if(w1.getException()!=null){
-            throw w1.getException();
-        }
-        t2.join();
-        if(w2.getException()!=null){
-            throw w2.getException();
-        }
-        
-        return new WebDataFileResource(getCatalogue(), newResource);
+
+        return asyncCreateNonExistingFile(newPath, length, contentType, inputStream);
+
+//        return syncCreateNonExistingFile(newPath, length, contentType, inputStream);
+
+
     }
 
     private Resource updateExistingFile(LogicalData newResource, Long length, String contentType, InputStream inputStream) throws VlException, IOException, Exception {
@@ -557,6 +503,77 @@ class WebDataDirResource extends WebDataResource implements FolderResource, Coll
 
         getCatalogue().updateResourceEntry(newResource);
 //        LogicalData relodedResource = (LogicalData) getCatalogue().getResourceEntryByLDRI(newResource.getLDRI());
+        return new WebDataFileResource(getCatalogue(), newResource);
+    }
+
+    private Resource asyncCreateNonExistingFile(Path newPath, Long length, String contentType, InputStream inputStream) throws CatalogueException, IOException, InterruptedException, Exception {
+        LogicalData newResource = new LogicalData(newPath, Constants.LOGICAL_FILE);
+        Collection<IStorageSite> sites = getStorageSites();
+        newResource.setStorageSites(sites);
+
+        Worker w1 = new Worker(Worker.CREATE_PHYSICAL_FILE);
+        w1.setLogicalData(newResource);
+        w1.setInputStream(inputStream);
+        Thread t1 = new Thread(w1);
+        t1.start();
+
+
+        Worker w2 = new Worker(Worker.REGISTER_DATA);
+        w2.setLogicalData(newResource);
+        w2.setContentType(contentType);
+        w2.setLength(length);
+        w2.setCatalog(getCatalogue());
+        Thread t2 = new Thread(w2);
+        t2.start();
+
+
+        t1.join();
+        if (w1.getException() != null) {
+            throw w1.getException();
+        }
+        t2.join();
+        if (w2.getException() != null) {
+            throw w2.getException();
+        }
+        return new WebDataFileResource(getCatalogue(), newResource);
+    }
+
+    private Resource syncCreateNonExistingFile(Path newPath, Long length, String contentType, InputStream inputStream) throws CatalogueException, IOException, Exception {
+        LogicalData newResource = new LogicalData(newPath, Constants.LOGICAL_FILE);
+        Collection<IStorageSite> sites = getStorageSites();
+        newResource.setStorageSites(sites);
+
+        VFSNode node = null;
+        try {
+            node = newResource.getVFSNode();
+        } catch (Exception ex) {
+            if (!(ex instanceof ResourceNotFoundException)) {
+                throw (ResourceNotFoundException) ex;
+            }
+        }
+        if (node == null) {
+            node = newResource.createPhysicalData();
+        }
+        if (node != null) {
+            OutputStream out = ((VFile) node).getOutputStream();
+            IOUtils.copy(inputStream, out);
+            if (inputStream != null) {
+                inputStream.close();
+            }
+            if (out != null) {
+                out.flush();
+                out.close();
+            }
+        }
+
+        Metadata meta = new Metadata();
+        meta.setLength(length);
+        meta.addContentType(contentType);
+        meta.setCreateDate(System.currentTimeMillis());
+        meta.setModifiedDate(System.currentTimeMillis());
+        newResource.setMetadata(meta);
+        getCatalogue().registerResourceEntry(newResource);
+
         return new WebDataFileResource(getCatalogue(), newResource);
     }
 }

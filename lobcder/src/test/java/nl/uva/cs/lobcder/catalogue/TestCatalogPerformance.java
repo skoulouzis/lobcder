@@ -42,12 +42,13 @@ public class TestCatalogPerformance {
         double total = 0;
         //Query N times for the entry and measure time
         for (int i = 0; i < N; i++) {
-            double start = System.currentTimeMillis();
+
             Path path = Path.path(parentPath, "/r" + i);
             LogicalData entry = new LogicalData(path, Constants.LOGICAL_FOLDER);
             ArrayList<IStorageSite> sites = new ArrayList<IStorageSite>();
             sites.add(new StorageSite("file:///tmp", new Credential("user1".split(","))));
             entry.setStorageSites(sites);
+            double start = System.currentTimeMillis();
             instance.registerResourceEntry(entry);
             double end = System.currentTimeMillis();
             total += (end - start);
