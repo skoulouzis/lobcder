@@ -6,12 +6,28 @@ package nl.uva.cs.lobcder.catalogue;
 
 import com.bradmcevoy.common.Path;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.*;
+import java.util.Map.Entry;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.jdo.*;
 import javax.jdo.identity.StringIdentity;
+import javax.sql.DataSource;
 import nl.uva.cs.lobcder.resources.*;
 import nl.uva.cs.lobcder.util.PropertiesLoader;
 import nl.uva.vlet.data.StringUtil;
+import org.datanucleus.store.rdbms.datasource.dbcp.ConnectionFactory;
+import org.datanucleus.store.rdbms.datasource.dbcp.DriverManagerConnectionFactory;
+import org.datanucleus.store.rdbms.datasource.dbcp.PoolableConnectionFactory;
+import org.datanucleus.store.rdbms.datasource.dbcp.PoolingDataSource;
+import org.datanucleus.store.rdbms.datasource.dbcp.pool.KeyedObjectPoolFactory;
+import org.datanucleus.store.rdbms.datasource.dbcp.pool.ObjectPool;
+import org.datanucleus.store.rdbms.datasource.dbcp.pool.PoolableObjectFactory;
+import org.datanucleus.store.rdbms.datasource.dbcp.pool.impl.GenericKeyedObjectPool.Config;
+import org.datanucleus.store.rdbms.datasource.dbcp.pool.impl.GenericObjectPool;
+import org.datanucleus.store.rdbms.datasource.dbcp.pool.impl.StackKeyedObjectPoolFactory;
 
 /**
  *
@@ -19,7 +35,7 @@ import nl.uva.vlet.data.StringUtil;
  */
 public class RDMSDLCatalog implements IDLCatalogue {
 
-    private static final Object lock = new Object();
+    private Object lock = new Object();
     private static PersistenceManagerFactory pmf;
     private final File propFile;
     private final Map<Path, ILogicalData> cahce = new HashMap<Path, ILogicalData>();
@@ -591,7 +607,7 @@ public class RDMSDLCatalog implements IDLCatalogue {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
-    void clearAllSites() {
+    void clearAllSites() throws CatalogueException {
         synchronized (lock) {
             PersistenceManager pm = getPmf().getPersistenceManagerProxy();
             Transaction tx = pm.currentTransaction();
@@ -613,7 +629,7 @@ public class RDMSDLCatalog implements IDLCatalogue {
         }
     }
 
-    public Collection<StorageSite> getAllSites() {
+    public Collection<StorageSite> getAllSites() throws CatalogueException {
         synchronized (lock) {
             PersistenceManager pm = getPmf().getPersistenceManagerProxy();
             Transaction tx = pm.currentTransaction();
@@ -649,14 +665,62 @@ public class RDMSDLCatalog implements IDLCatalogue {
     /**
      * @return the pmf
      */
-    private PersistenceManagerFactory getPmf() {
-        if (pmf == null) {
-            pmf = JDOHelper.getPersistenceManagerFactory(propFile);//Path.path(nl.uva.cs.lobcder.util.Constants.LOBCDER_CONF_DIR + "/datanucleus.properties").toString());
+    private PersistenceManagerFactory getPmf() throws CatalogueException {
+
+//            if (pmf == null) {
+//                pmf = JDOHelper.getPersistenceManagerFactory(propFile);//Path.path(nl.uva.cs.lobcder.util.Constants.LOBCDER_CONF_DIR + "/datanucleus.properties").toString());
+//            }
+//            return pmf;
+        try {
+            if (pmf == null) {
+                Properties props = PropertiesLoader.getProperties(propFile);
+                // Load the JDBC driver
+                Class.forName(props.getProperty("datanucleus.ConnectionDriverName"));
+
+                // Create the actual pool of connections 
+                ObjectPool connectionPool = new GenericObjectPool(null);
+
+
+                // Create the factory to be used by the pool to create the connections
+                String dbURL = props.getProperty("datanucleus.ConnectionURL");
+                String dbUser = props.getProperty("datanucleus.ConnectionUserName");
+                String dbPassword = props.getProperty("datanucleus.ConnectionPassword");
+                ConnectionFactory connectionFactory = new DriverManagerConnectionFactory(dbURL, dbUser, dbPassword);
+
+                // Create a factory for caching the PreparedStatements
+                KeyedObjectPoolFactory kpf = new StackKeyedObjectPoolFactory(null, 20);
+
+                // Wrap the connections with pooled variants
+                PoolableConnectionFactory pcf =
+                        new PoolableConnectionFactory(connectionFactory, connectionPool, kpf, null, false, true);
+
+                // Create the datasource
+                DataSource ds = new PoolingDataSource(connectionPool);
+
+
+                Map properties = new HashMap();
+                properties.put("javax.jdo.option.ConnectionFactory", ds);
+                Set<Entry<Object, Object>> set = props.entrySet();
+                Iterator<Entry<Object, Object>> iter = set.iterator();
+                while (iter.hasNext()) {
+                    Entry<Object, Object> entry = iter.next();
+                    properties.put(entry.getKey(), entry.getValue());
+                }
+                pmf = JDOHelper.getPersistenceManagerFactory(properties);
+            }
+
+        } catch (ClassNotFoundException ex) {
+            throw new CatalogueException(ex.getMessage());
+        } catch (FileNotFoundException ex) {
+            throw new CatalogueException(ex.getMessage());
+        } catch (IOException ex) {
+            throw new CatalogueException(ex.getMessage());
         }
+
         return pmf;
     }
 
-    void clearLogicalData() {
+    void clearLogicalData() throws CatalogueException {
         synchronized (lock) {
             PersistenceManager pm = getPmf().getPersistenceManagerProxy();
             Transaction tx = pm.currentTransaction();

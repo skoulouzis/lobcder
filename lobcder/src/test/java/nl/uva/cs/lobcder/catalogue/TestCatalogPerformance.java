@@ -24,28 +24,28 @@ public class TestCatalogPerformance {
 
     static void testRegisterResourceTime() throws Exception {
         RDMSDLCatalog instance = new RDMSDLCatalog(new File(nl.uva.cs.lobcder.util.Constants.LOBCDER_CONF_DIR + "/datanucleus.properties"));
-        Path parentPath = Path.path("/r00/");
-        LogicalData entry = new LogicalData(parentPath, Constants.LOGICAL_FOLDER);
-        ArrayList<IStorageSite> sites = new ArrayList<IStorageSite>();
-        sites.add(new StorageSite("file:///tmp", new Credential("user1".split(","))));
-        entry.setStorageSites(sites);
-        instance.registerResourceEntry(entry);
-
-        parentPath = Path.path("/r00/r01");
-        entry = new LogicalData(parentPath, Constants.LOGICAL_FOLDER);
-        sites = new ArrayList<IStorageSite>();
-        sites.add(new StorageSite("file:///tmp", new Credential("user1".split(","))));
-        entry.setStorageSites(sites);
-        instance.registerResourceEntry(entry);
-
-        double N = 2;
+//        Path parentPath = Path.path("/r00/");
+//        LogicalData entry = new LogicalData(parentPath, Constants.LOGICAL_FOLDER);
+//        ArrayList<IStorageSite> sites = new ArrayList<IStorageSite>();
+//        sites.add(new StorageSite("file:///tmp", new Credential("user1".split(","))));
+//        entry.setStorageSites(sites);
+//        instance.registerResourceEntry(entry);
+//
+//        parentPath = Path.path("/r00/r01");
+//        entry = new LogicalData(parentPath, Constants.LOGICAL_FOLDER);
+//        sites = new ArrayList<IStorageSite>();
+//        sites.add(new StorageSite("file:///tmp", new Credential("user1".split(","))));
+//        entry.setStorageSites(sites);
+//        instance.registerResourceEntry(entry);
+        Path parentPath = Path.root;
+        double N = 1;
         double total = 0;
         //Query N times for the entry and measure time
         for (int i = 0; i < N; i++) {
             double start = System.currentTimeMillis();
             Path path = Path.path(parentPath, "/r" + i);
-            entry = new LogicalData(path, Constants.LOGICAL_FOLDER);
-            sites = new ArrayList<IStorageSite>();
+            LogicalData entry = new LogicalData(path, Constants.LOGICAL_FOLDER);
+            ArrayList<IStorageSite> sites = new ArrayList<IStorageSite>();
             sites.add(new StorageSite("file:///tmp", new Credential("user1".split(","))));
             entry.setStorageSites(sites);
             instance.registerResourceEntry(entry);
