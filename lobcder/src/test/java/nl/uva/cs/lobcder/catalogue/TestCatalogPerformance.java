@@ -38,7 +38,7 @@ public class TestCatalogPerformance {
 //        entry.setStorageSites(sites);
 //        instance.registerResourceEntry(entry);
         Path parentPath = Path.root;
-        double N = 1;
+        double N = 10.0;
         double total = 0;
         //Query N times for the entry and measure time
         for (int i = 0; i < N; i++) {

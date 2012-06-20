@@ -185,7 +185,6 @@ class WebDataDirResource extends WebDataResource implements FolderResource, Coll
                 resource = createNonExistingFile(newPath, length, contentType, inputStream);
             }
 
-
             if (!getLogicalData().getLDRI().isRoot()) {
                 ILogicalData reloaded = getCatalogue().getResourceEntryByLDRI(this.getLogicalData().getLDRI());
                 setLogicalData(reloaded);
@@ -466,18 +465,46 @@ class WebDataDirResource extends WebDataResource implements FolderResource, Coll
     }
 
     private Resource createNonExistingFile(Path newPath, Long length, String contentType, InputStream inputStream) throws IOException, Exception {
-
-
         return asyncCreateNonExistingFile(newPath, length, contentType, inputStream);
-
 //        return syncCreateNonExistingFile(newPath, length, contentType, inputStream);
 
 
     }
 
     private Resource updateExistingFile(LogicalData newResource, Long length, String contentType, InputStream inputStream) throws VlException, IOException, Exception {
-        VFSNode node;
+        return asyncUpdateExistingFile(newResource, length, contentType, inputStream);
+//        return syncUpdateExistingFile(newResource, length, contentType, inputStream);
+    }
 
+    private Resource asyncUpdateExistingFile(LogicalData newResource, Long length, String contentType, InputStream inputStream) throws InterruptedException, Exception {
+        Worker w2 = new Worker(Worker.UPDATE_DATA);
+        w2.setLogicalData(newResource);
+        w2.setCatalog(getCatalogue());
+        w2.setLength(length);
+        w2.setContentType(contentType);
+        Thread t2 = new Thread(w2);
+        t2.start();
+
+        Worker w1 = new Worker(Worker.CREATE_PHYSICAL_FILE);
+        w1.setLogicalData(newResource);
+        w1.setInputStream(inputStream);
+        Thread t1 = new Thread(w1);
+        t1.start();
+
+        t2.join();
+        t1.join();
+        if (w1.getException() != null) {
+            throw w1.getException();
+        }
+        if (w2.getException() != null) {
+            throw w2.getException();
+        }
+
+        return new WebDataFileResource(getCatalogue(), newResource);
+    }
+
+    private Resource syncUpdateExistingFile(LogicalData newResource, Long length, String contentType, InputStream inputStream) throws CatalogueException, Exception {
+        VFSNode node;
         if (!newResource.hasPhysicalData()) {
             node = newResource.createPhysicalData();
         } else {
@@ -527,11 +554,11 @@ class WebDataDirResource extends WebDataResource implements FolderResource, Coll
         t2.start();
 
 
+        t2.join();
         t1.join();
         if (w1.getException() != null) {
             throw w1.getException();
         }
-        t2.join();
         if (w2.getException() != null) {
             throw w2.getException();
         }

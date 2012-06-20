@@ -27,6 +27,7 @@ class Worker implements Runnable {
 
     public static final int CREATE_PHYSICAL_FILE = 0;
     public static final int REGISTER_DATA = 1;
+    static final int UPDATE_DATA = 2;
     private final int op;
     private LogicalData logicalData;
     private InputStream inputStream;
@@ -50,6 +51,9 @@ class Worker implements Runnable {
 
                 case REGISTER_DATA:
                     registerData();
+                    break;
+                case UPDATE_DATA:
+                    updeateData();
                     break;
                 default:
                     break;
@@ -117,5 +121,15 @@ class Worker implements Runnable {
 
     void setCatalog(IDLCatalogue catalogue) {
         this.catalogue = catalogue;
+    }
+
+    private void updeateData() throws CatalogueException {
+        Metadata meta = logicalData.getMetadata();
+        meta.setLength(length);
+        meta.addContentType(contentType);
+        meta.setModifiedDate(System.currentTimeMillis());
+        logicalData.setMetadata(meta);
+
+        catalogue.updateResourceEntry(logicalData);
     }
 }
