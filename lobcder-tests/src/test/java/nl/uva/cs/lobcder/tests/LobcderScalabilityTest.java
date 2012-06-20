@@ -28,8 +28,6 @@ import org.apache.commons.httpclient.protocol.ProtocolSocketFactory;
 import org.apache.jackrabbit.webdav.client.methods.DeleteMethod;
 import org.apache.jackrabbit.webdav.client.methods.MkColMethod;
 import org.apache.jackrabbit.webdav.client.methods.PutMethod;
-import org.jacorb.transaction.Sleeper;
-import org.junit.After;
 import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Test;
