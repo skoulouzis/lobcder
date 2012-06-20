@@ -5,7 +5,6 @@
 package nl.uva.cs.lobcder.webDav.resources;
 
 import com.bradmcevoy.common.Path;
-import com.sun.xml.internal.ws.api.ha.StickyFeature;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
