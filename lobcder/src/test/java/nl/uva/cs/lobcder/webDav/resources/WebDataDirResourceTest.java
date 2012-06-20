@@ -6,12 +6,11 @@ package nl.uva.cs.lobcder.webDav.resources;
 
 import nl.uva.cs.lobcder.util.Constants;
 import com.bradmcevoy.common.Path;
+import com.bradmcevoy.http.Auth;
+import com.bradmcevoy.http.CollectionResource;
 import com.bradmcevoy.http.MiltonServlet;
 import com.bradmcevoy.http.Range;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.logging.Level;
@@ -34,10 +33,12 @@ import org.junit.*;
 public class WebDataDirResourceTest {
 
     private RDMSDLCatalog catalogue;
-    private LogicalData testLogicalData;
+//    private LogicalData testLogicalData;
     private Path testFolderPath;
     private StorageSite site;
     private ArrayList<IStorageSite> sites;
+    private LogicalData testLogicalFile;
+    private LogicalData testLogicalFolder;
 
     public WebDataDirResourceTest() {
     }
@@ -58,10 +59,10 @@ public class WebDataDirResourceTest {
             catalogue = new RDMSDLCatalog(propFile);
 
 
-            testLogicalData = new LogicalData(ConstantsAndSettings.TEST_FILE_PATH_1, Constants.LOGICAL_FILE);
+            testLogicalFile = new LogicalData(ConstantsAndSettings.TEST_FILE_PATH_1, Constants.LOGICAL_FILE);
 
-            testFolderPath = Path.path(ConstantsAndSettings.TEST_FOLDER_NAME_1);
-            testLogicalData = new LogicalData(testFolderPath, Constants.LOGICAL_FOLDER);
+            testFolderPath = Path.path("/WebDataDirResourceTestCollection1");
+            testLogicalFolder = new LogicalData(testFolderPath, Constants.LOGICAL_FOLDER);
 
             String endpoint = "file:///tmp/";
             String vphUser = "user1";
@@ -238,16 +239,16 @@ public class WebDataDirResourceTest {
 
         ByteArrayInputStream bais = new ByteArrayInputStream(ConstantsAndSettings.TEST_DATA.getBytes());
 
-        testLogicalData.setStorageSites(sites);
-        catalogue.registerResourceEntry(testLogicalData);
+        testLogicalFolder.setStorageSites(sites);
+        catalogue.registerResourceEntry(testLogicalFolder);
 
 
-        ILogicalData loaded = catalogue.getResourceEntryByLDRI(testFolderPath);
+        ILogicalData loaded = catalogue.getResourceEntryByLDRI(testLogicalFolder.getLDRI());
         WebDataDirResource instance = createDirResource(catalogue, loaded);
         WebDataFileResource result = (WebDataFileResource) instance.createNew(ConstantsAndSettings.TEST_FILE_NAME_1, bais, new Long(ConstantsAndSettings.TEST_DATA.getBytes().length), "text/plain");
         assertNotNull(result);
         assertEquals(new Long(ConstantsAndSettings.TEST_DATA.getBytes().length), result.getContentLength());
-        loaded = catalogue.getResourceEntryByLDRI(Path.path(testFolderPath, ConstantsAndSettings.TEST_FILE_NAME_1));
+        loaded = catalogue.getResourceEntryByLDRI(Path.path(testLogicalFolder.getLDRI(), ConstantsAndSettings.TEST_FILE_NAME_1));
         assertNotNull(loaded);
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -259,17 +260,17 @@ public class WebDataDirResourceTest {
         assertEquals(ConstantsAndSettings.TEST_DATA, content);
 
 
-        loaded = catalogue.getResourceEntryByLDRI(testFolderPath);
+        loaded = catalogue.getResourceEntryByLDRI(testLogicalFolder.getLDRI());
         instance = new WebDataDirResource(catalogue, loaded);
         instance.delete();
 
-        loaded = catalogue.getResourceEntryByLDRI(testFolderPath);
+        loaded = catalogue.getResourceEntryByLDRI(testLogicalFolder.getLDRI());
         assertNull(loaded);
 
-        loaded = catalogue.getResourceEntryByLDRI(Path.path(testFolderPath, ConstantsAndSettings.TEST_FILE_NAME_1));
+        loaded = catalogue.getResourceEntryByLDRI(Path.path(testLogicalFolder.getLDRI(), ConstantsAndSettings.TEST_FILE_NAME_1));
         assertNull(loaded);
     }
-//
+
 //    /**
 //     * Test of copyTo method, of class WebDataDirResource.
 //     */
@@ -311,7 +312,7 @@ public class WebDataDirResourceTest {
 //        // TODO review the generated test code and remove the default call to fail.
 //        fail("The test case is a prototype.");
 //    }
-//
+
 //    /**
 //     * Test of getMaxAgeSeconds method, of class WebDataDirResource.
 //     */
@@ -369,7 +370,7 @@ public class WebDataDirResourceTest {
 //        // TODO review the generated test code and remove the default call to fail.
 //        fail("The test case is a prototype.");
 //    }
-//
+
 //    /**
 //     * Test of getCreateDate method, of class WebDataDirResource.
 //     */

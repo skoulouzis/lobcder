@@ -16,11 +16,8 @@ import java.io.OutputStream;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import nl.uva.cs.lobcder.auth.MyPrincipal;
-import nl.uva.cs.lobcder.auth.Permissions;
 import nl.uva.cs.lobcder.catalogue.CatalogueException;
 import nl.uva.cs.lobcder.catalogue.IDLCatalogue;
-import nl.uva.cs.lobcder.frontend.WebDavServlet;
 import nl.uva.cs.lobcder.resources.ILogicalData;
 import nl.uva.cs.lobcder.resources.IStorageSite;
 import nl.uva.cs.lobcder.resources.LogicalData;
@@ -327,10 +324,11 @@ public class WebDataFileResource extends WebDataResource implements
         return null;
     }
 
+    @Override
     protected void debug(String msg) {
-        if (debug) {
-            System.err.println(this.getClass().getSimpleName() + "." + getLogicalData().getLDRI() + ": " + msg);
-        }
+//        if (debug) {
+//            System.err.println(this.getClass().getSimpleName() + "." + getLogicalData().getLDRI() + ": " + msg);
+//        }
 
 //        log.debug(msg);
     }
@@ -372,6 +370,7 @@ public class WebDataFileResource extends WebDataResource implements
         if (modifiedDate == null) {
             meta.setModifiedDate(System.currentTimeMillis());
             getLogicalData().setMetadata(meta);
+            
         }
     }
 }

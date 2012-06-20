@@ -7,11 +7,8 @@ package nl.uva.cs.lobcder.resources;
 import com.bradmcevoy.common.Path;
 import java.io.Serializable;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import javax.jdo.annotations.*;
-import javax.jdo.identity.StringIdentity;
 import nl.uva.vlet.data.StringUtil;
 import nl.uva.vlet.exception.VlException;
 import nl.uva.vlet.vfs.VFSNode;
@@ -145,9 +142,9 @@ public class LogicalData implements ILogicalData, Serializable {
     }
 
     private void debug(String msg) {
-        if (debug) {
-            System.err.println(this.getClass().getName() + "." + this.ldri + ": " + msg);
-        }
+//        if (debug) {
+//            System.err.println(this.getClass().getName() + "." + this.ldri + ": " + msg);
+//        }
     }
 
     @Override

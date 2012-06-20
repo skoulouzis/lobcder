@@ -6,12 +6,28 @@ package nl.uva.cs.lobcder.catalogue;
 
 import com.bradmcevoy.common.Path;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.*;
+import java.util.Map.Entry;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.jdo.*;
 import javax.jdo.identity.StringIdentity;
+import javax.sql.DataSource;
 import nl.uva.cs.lobcder.resources.*;
 import nl.uva.cs.lobcder.util.PropertiesLoader;
 import nl.uva.vlet.data.StringUtil;
+import org.datanucleus.store.rdbms.datasource.dbcp.ConnectionFactory;
+import org.datanucleus.store.rdbms.datasource.dbcp.DriverManagerConnectionFactory;
+import org.datanucleus.store.rdbms.datasource.dbcp.PoolableConnectionFactory;
+import org.datanucleus.store.rdbms.datasource.dbcp.PoolingDataSource;
+import org.datanucleus.store.rdbms.datasource.dbcp.pool.KeyedObjectPoolFactory;
+import org.datanucleus.store.rdbms.datasource.dbcp.pool.ObjectPool;
+import org.datanucleus.store.rdbms.datasource.dbcp.pool.PoolableObjectFactory;
+import org.datanucleus.store.rdbms.datasource.dbcp.pool.impl.GenericKeyedObjectPool.Config;
+import org.datanucleus.store.rdbms.datasource.dbcp.pool.impl.GenericObjectPool;
+import org.datanucleus.store.rdbms.datasource.dbcp.pool.impl.StackKeyedObjectPoolFactory;
 
 /**
  *
@@ -24,40 +40,36 @@ public class RDMSDLCatalog implements IDLCatalogue {
     private final File propFile;
     private final Map<Path, ILogicalData> cahce = new HashMap<Path, ILogicalData>();
 
-    public RDMSDLCatalog(File propFile) {
+    public RDMSDLCatalog(File propFile) throws CatalogueException {
 //        pmf = JDOHelper.getPersistenceManagerFactory("datanucleus.properties");
         this.propFile = propFile;
+        getPmf();
     }
 
     @Override
     public void registerResourceEntry(ILogicalData entry) throws CatalogueException {
+        
+        double checkExistsStart = System.currentTimeMillis();
+        ILogicalData loaded = cahce.get(entry.getLDRI());
+        if (loaded != null && comparePaths(loaded.getLDRI(), entry.getLDRI())) {
+            throw new DuplicateResourceException("Cannot register resource " + entry.getLDRI() + " resource exists");
+        }
+        double checkExistsStop = System.currentTimeMillis();
+        debug("checkExists: " + (checkExistsStop - checkExistsStart));
         synchronized (lock) {
             //Check if it exists 
-            String strLogicalResourceName = entry.getLDRI().toString();
             PersistenceManager pm = getPmf().getPersistenceManager();
             Transaction tx = pm.currentTransaction();
             tx.setSerializeRead(Boolean.TRUE);
             try {
                 tx.begin();
-                ILogicalData loaded = getEntryById(entry.getLDRI(), pm);
                 Query q;
-                if (loaded == null) {
-                    //This query, will return objects of type DataResourceEntry
-                    q = pm.newQuery(LogicalData.class);
-                    q.setFilter("strLDRI == strLogicalResourceName");
-                    q.declareParameters(strLogicalResourceName.getClass().getName() + " strLogicalResourceName");
-                    q.setUnique(true);
-                    loaded = (ILogicalData) q.execute(strLogicalResourceName);
-                }
-                if (loaded != null && comparePaths(loaded.getLDRI(), entry.getLDRI())) {
-                    throw new DuplicateResourceException("Cannot register resource " + entry.getLDRI() + " resource exists");
-                }
-
                 //If it has a parent node, add this path to the parent node 
+                double removeFromParentStart = System.currentTimeMillis();
                 Path parentPath = entry.getLDRI().getParent();
                 if (parentPath != null && !StringUtil.isEmpty(parentPath.toString()) && !parentPath.isRoot()) {
+                    String strLogicalResourceName = entry.getLDRI().toString();
                     strLogicalResourceName = parentPath.toString();
-
                     ILogicalData parentEntry = getEntryById(parentPath, pm);
                     if (parentEntry == null) {
                         q = pm.newQuery(LogicalData.class);
@@ -70,44 +82,36 @@ public class RDMSDLCatalog implements IDLCatalogue {
                     if (parentEntry == null) {
                         throw new NonExistingResourceException("Cannot add " + entry.getLDRI().toString() + " child to non existing parent " + parentPath.toString());
                     }
-                    //parentEntry.getMetadata().getPermissionArray()
                     parentEntry.addChild(entry.getLDRI());
                     cahce.put(parentEntry.getLDRI(), parentEntry);
-                    pm.detachCopy(parentEntry);
-
+//                    pm.detachCopy(parentEntry);
                 }
-                //Persisst entry
-                Collection<IStorageSite> storageSites = entry.getStorageSites();
-//                //work around to remove duplicated storage sites ??
-                if (storageSites != null && !storageSites.isEmpty()) {
-                    for (IStorageSite s : storageSites) {
-                        String unamesCSV = s.getVPHUsernamesCSV();
+                double removeFromParentStop = System.currentTimeMillis();
+                debug("removeFromParent: " + (removeFromParentStop - removeFromParentStart));
 
-                        String epoint = s.getEndpoint();
-                        Collection<String> newLogicalPaths = s.getLogicalPaths();
-                        q = pm.newQuery(StorageSite.class);
-                        q.declareParameters(unamesCSV.getClass().getName() + " unamesCSV, " + epoint.getClass().getName() + " epoint");
-                        q.setFilter("vphUsernamesCSV == unamesCSV && endpoint == epoint");
-                        Collection<StorageSite> results = (Collection<StorageSite>) q.execute(unamesCSV, epoint);
-                        Collection<StorageSite> updatedResults = new ArrayList<StorageSite>();
-                        if (results != null) {
-                            for (StorageSite loadedSite : results) {
-                                loadedSite.setLogicalPaths(newLogicalPaths);
-                                updatedResults.add(loadedSite);
-                            }
-                            pm.makePersistentAll(updatedResults);
-                            pm.detachCopyAll(updatedResults);
-                        }
-////                    Collection<StorageSite> results = (Collection<StorageSite>) q.execute(uname, epoint);
-//                        Long number = (Long) q.deletePersistentAll(uname, epoint);
-                    }
-                }
+                double persistStart = System.currentTimeMillis();
+//                //Persisst entry
                 pm.makePersistent(entry);
-                ILogicalData copy = pm.detachCopy(entry);
+
+                double persistStop = System.currentTimeMillis();
+                debug("persist: " + (persistStop - persistStart));
+//                ILogicalData copy = pm.detachCopy(entry);
+
+                double comitStart = System.currentTimeMillis();
                 tx.commit();
-                entry = null;
-                entry = copy;
-                cahce.put(copy.getLDRI(), copy);
+                double comitStop = System.currentTimeMillis();
+                debug("commit: " + (comitStop - comitStart));
+//                entry = null;
+//                entry = copy;
+                cahce.put(entry.getLDRI(), entry);
+            } catch (Exception ex) {
+                if (ex instanceof NonExistingResourceException) {
+                    throw (NonExistingResourceException) ex;
+                }
+                if(ex.getMessage().contains("Duplicate entry")){
+                    throw new DuplicateResourceException("Cannot register resource " + entry.getLDRI() + " resource exists");
+                }
+                throw new CatalogueException(ex.getMessage());
             } finally {
                 if (tx.isActive()) {
                     tx.rollback();
@@ -130,6 +134,7 @@ public class RDMSDLCatalog implements IDLCatalogue {
             String strLogicalResourceName = logicalResourceName.toString();
             try {
                 tx.begin();
+
                 ILogicalData loaded = getEntryById(logicalResourceName, pm);
                 copy = loaded;
                 if (loaded == null) {
@@ -173,6 +178,7 @@ public class RDMSDLCatalog implements IDLCatalogue {
                 if (entriesParent != null && !StringUtil.isEmpty(entriesParent.toString()) && !entry.getLDRI().isRoot()) {
                     String strLogicalResourceName = entriesParent.toString();
                     ILogicalData parentEntry = getEntryById(entriesParent, pm);
+
                     if (parentEntry == null) {
                         Query q = pm.newQuery(LogicalData.class);
                         q.setFilter("strLDRI == strLogicalResourceName");
@@ -201,14 +207,15 @@ public class RDMSDLCatalog implements IDLCatalogue {
                     q.setUnique(true);
                     result = (LogicalData) q.execute(parentsName);
                 }
+                ILogicalData copy = pm.detachCopy(result);
                 //Maybe it's already gone 
-                if (result != null) {
+                if (copy != null) {
                     //Delete its storage sites, since every time we create a new 
                     //entry we add a new StorageSite, even a copy
-                    Collection<IStorageSite> storageSites = result.getStorageSites();
+                    Collection<IStorageSite> storageSites = copy.getStorageSites();
                     //Make sure we dont clear all the storage sites. If the storage 
                     //site dosn't belong to any othe entry,  then  delete
-//                SELECT FOMRM LOGICALDATA WHERE storageSite.contains(storageSite)
+                    //SELECT FOMRM LOGICALDATA WHERE storageSite.contains(storageSite)
                     Collection<LogicalData> res = null;
                     Collection<IStorageSite> toBeDeleted = new ArrayList<IStorageSite>();
                     Collection<IStorageSite> toBeUpdated = new ArrayList<IStorageSite>();
@@ -225,12 +232,14 @@ public class RDMSDLCatalog implements IDLCatalogue {
                         if (res == null || res.isEmpty() && sites.size() > PropertiesLoader.getNumOfStorageSites()) {
                             toBeDeleted.add(s);
                         } else {
-                            s.removeLogicalPath(result.getPDRI());
+                            s.removeLogicalPath(copy.getPDRI());
                             toBeUpdated.add(s);
                         }
                     }
+
                     pm.deletePersistentAll(toBeDeleted);
                     pm.makePersistentAll(toBeUpdated);
+//                    pm.detachCopyAll(toBeUpdated);
                 } else {
                     String path = entry.getLDRI().toString();
                     debug("Entry " + entry.getLDRI() + " is not in catalog");
@@ -262,9 +271,9 @@ public class RDMSDLCatalog implements IDLCatalogue {
                             + end.getClass().getName() + " end, "
                             + nameWithSlash.getClass().getName() + " nameWithSlash, "
                             + strPath.getClass().getName() + " strPath");
-                    //                    Long number = q.deletePersistentAll(name, start, end, nameWithSlash, strPath);
+//                    Long number = q.deletePersistentAll(name, start, end, nameWithSlash, strPath);
                     Collection<ILogicalData> res = (Collection<ILogicalData>) q.executeWithArray(new Object[]{name, start, end, nameWithSlash, strPath});
-                    for(ILogicalData ld : res){
+                    for (ILogicalData ld : res) {
                         cahce.remove(ld.getLDRI());
                     }
                     pm.deletePersistentAll(res);
@@ -402,7 +411,7 @@ public class RDMSDLCatalog implements IDLCatalogue {
                     cahce.put(parentEntry.getLDRI(), parentEntry);
                 }
                 cahce.remove(toBeRenamed.getLDRI());
-                toBeRenamed.setLDRI(newPath); 
+                toBeRenamed.setLDRI(newPath);
 
                 Collection<String> children = toBeRenamed.getChildren();
                 if (children != null) {
@@ -410,7 +419,7 @@ public class RDMSDLCatalog implements IDLCatalogue {
                         String newChildName = ch.replace(oldPath.toString(), newPath.toString());
                         toBeRenamed.removeChild(Path.path(ch));
                         toBeRenamed.addChild(Path.path(newChildName));
-                        
+
                         ILogicalData childEntry = getEntryById(Path.path(ch), pm);
                         if (childEntry == null) {
                             q = pm.newQuery(LogicalData.class);
@@ -572,6 +581,7 @@ public class RDMSDLCatalog implements IDLCatalogue {
 
     @Override
     public void updateResourceEntry(ILogicalData newResource) throws CatalogueException {
+
         Transaction tx = null;
         PersistenceManager pm = null;
         synchronized (lock) {
@@ -595,7 +605,6 @@ public class RDMSDLCatalog implements IDLCatalogue {
             }
             cahce.put(newResource.getLDRI(), newResource);
         }
-
     }
 
     @Override
@@ -603,7 +612,7 @@ public class RDMSDLCatalog implements IDLCatalogue {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
-    void clearAllSites() {
+    void clearAllSites() throws CatalogueException {
         synchronized (lock) {
             PersistenceManager pm = getPmf().getPersistenceManagerProxy();
             Transaction tx = pm.currentTransaction();
@@ -625,7 +634,7 @@ public class RDMSDLCatalog implements IDLCatalogue {
         }
     }
 
-    public Collection<StorageSite> getAllSites() {
+    public Collection<StorageSite> getAllSites() throws CatalogueException {
         synchronized (lock) {
             PersistenceManager pm = getPmf().getPersistenceManagerProxy();
             Transaction tx = pm.currentTransaction();
@@ -661,14 +670,64 @@ public class RDMSDLCatalog implements IDLCatalogue {
     /**
      * @return the pmf
      */
-    private PersistenceManagerFactory getPmf() {
-        if (pmf == null) {
-            pmf = JDOHelper.getPersistenceManagerFactory(propFile);//Path.path(nl.uva.cs.lobcder.util.Constants.LOBCDER_CONF_DIR + "/datanucleus.properties").toString());
+    private PersistenceManagerFactory getPmf() throws CatalogueException {
+        long startGetPmf = System.currentTimeMillis();
+
+//            if (pmf == null) {
+//                pmf = JDOHelper.getPersistenceManagerFactory(propFile);//Path.path(nl.uva.cs.lobcder.util.Constants.LOBCDER_CONF_DIR + "/datanucleus.properties").toString());
+//            }
+//            return pmf;
+        try {
+            if (pmf == null) {
+                Properties props = PropertiesLoader.getProperties(propFile);
+                // Load the JDBC driver
+                Class.forName(props.getProperty("datanucleus.ConnectionDriverName"));
+
+                // Create the actual pool of connections 
+                ObjectPool connectionPool = new GenericObjectPool(null);
+
+
+                // Create the factory to be used by the pool to create the connections
+                String dbURL = props.getProperty("datanucleus.ConnectionURL");
+                String dbUser = props.getProperty("datanucleus.ConnectionUserName");
+                String dbPassword = props.getProperty("datanucleus.ConnectionPassword");
+                ConnectionFactory connectionFactory = new DriverManagerConnectionFactory(dbURL, dbUser, dbPassword);
+
+                // Create a factory for caching the PreparedStatements
+                KeyedObjectPoolFactory kpf = new StackKeyedObjectPoolFactory(null, 20);
+
+                // Wrap the connections with pooled variants
+                PoolableConnectionFactory pcf =
+                        new PoolableConnectionFactory(connectionFactory, connectionPool, kpf, null, false, true);
+
+                // Create the datasource
+                DataSource ds = new PoolingDataSource(connectionPool);
+
+
+                Map properties = new HashMap();
+                properties.put("javax.jdo.option.ConnectionFactory", ds);
+                Set<Entry<Object, Object>> set = props.entrySet();
+                Iterator<Entry<Object, Object>> iter = set.iterator();
+                while (iter.hasNext()) {
+                    Entry<Object, Object> entry = iter.next();
+                    properties.put(entry.getKey(), entry.getValue());
+                }
+                pmf = JDOHelper.getPersistenceManagerFactory(properties);
+            }
+
+        } catch (ClassNotFoundException ex) {
+            throw new CatalogueException(ex.getMessage());
+        } catch (FileNotFoundException ex) {
+            throw new CatalogueException(ex.getMessage());
+        } catch (IOException ex) {
+            throw new CatalogueException(ex.getMessage());
         }
+        long endGetPmf = System.currentTimeMillis();
+        debug("Elapsed get pmf: " + (endGetPmf - startGetPmf));
         return pmf;
     }
 
-    void clearLogicalData() {
+    void clearLogicalData() throws CatalogueException {
         synchronized (lock) {
             PersistenceManager pm = getPmf().getPersistenceManagerProxy();
             Transaction tx = pm.currentTransaction();

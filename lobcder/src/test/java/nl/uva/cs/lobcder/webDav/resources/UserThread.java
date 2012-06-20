@@ -178,9 +178,10 @@ public class UserThread extends Thread {
     }
 
     public void testUpdateResourceEntry() {
-        RDMSDLCatalog instance = new RDMSDLCatalog(new File(nl.uva.cs.lobcder.util.Constants.LOBCDER_CONF_DIR + "/datanucleus.properties"));
+        RDMSDLCatalog instance = null;
         ILogicalData loaded = null;
         try {
+            instance = new RDMSDLCatalog(new File(nl.uva.cs.lobcder.util.Constants.LOBCDER_CONF_DIR + "/datanucleus.properties"));
             System.out.println("testUpdateResourceEntry");
             LogicalData newEntry = new LogicalData(Path.path("testFileThread" + getName()), Constants.LOGICAL_FILE);
 

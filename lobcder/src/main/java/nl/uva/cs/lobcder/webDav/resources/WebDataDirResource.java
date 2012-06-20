@@ -5,7 +5,6 @@
 package nl.uva.cs.lobcder.webDav.resources;
 
 import com.bradmcevoy.common.Path;
-import com.bradmcevoy.http.Request.Method;
 import com.bradmcevoy.http.*;
 import com.bradmcevoy.http.exceptions.BadRequestException;
 import com.bradmcevoy.http.exceptions.ConflictException;
@@ -17,11 +16,9 @@ import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import nl.uva.cs.lobcder.auth.MyPrincipal;
 import nl.uva.cs.lobcder.auth.Permissions;
 import nl.uva.cs.lobcder.catalogue.CatalogueException;
 import nl.uva.cs.lobcder.catalogue.IDLCatalogue;
-import nl.uva.cs.lobcder.frontend.WebDavServlet;
 import nl.uva.cs.lobcder.resources.ILogicalData;
 import nl.uva.cs.lobcder.resources.IStorageSite;
 import nl.uva.cs.lobcder.resources.LogicalData;
@@ -188,7 +185,6 @@ class WebDataDirResource extends WebDataResource implements FolderResource, Coll
                 resource = createNonExistingFile(newPath, length, contentType, inputStream);
             }
 
-
             if (!getLogicalData().getLDRI().isRoot()) {
                 ILogicalData reloaded = getCatalogue().getResourceEntryByLDRI(this.getLogicalData().getLDRI());
                 setLogicalData(reloaded);
@@ -197,8 +193,8 @@ class WebDataDirResource extends WebDataResource implements FolderResource, Coll
 //            meta = ((WebDataResource) resource).getLogicalData().getMetadata();
 //            meta.setPermissionArray((new Permissions(principal)).getRolesPerm());
 //            ((WebDataResource) resource).getLogicalData().setMetadata(meta);
-            
-            getCatalogue().updateResourceEntry(((WebDataResource) resource).getLogicalData());
+
+//            getCatalogue().updateResourceEntry(((WebDataResource) resource).getLogicalData());
 
             return resource;
         } catch (Permissions.Exception e) {
@@ -228,7 +224,7 @@ class WebDataDirResource extends WebDataResource implements FolderResource, Coll
 //            }
             Path toCollectionLDRI = Path.path(toCollection.getName());
             Path newLDRI = Path.path(toCollectionLDRI, name);
-            
+
             LogicalData newFolderEntry = new LogicalData(newLDRI, Constants.LOGICAL_FOLDER);
             newFolderEntry.getMetadata().setModifiedDate(System.currentTimeMillis());
 //            newFolderEntry.getMetadata().setPermissionArray((ArrayList<Integer>) p.getRolesPerm().clone());
@@ -269,18 +265,18 @@ class WebDataDirResource extends WebDataResource implements FolderResource, Coll
             debug("delete.");
             //TODO: physical data shall be removed AFTER we delete logical structures. All permissions checks are
             //performed on logical level 
-            Collection<IStorageSite> sites = getLogicalData().getStorageSites();
-            if (sites != null && !sites.isEmpty()) {
-                for (IStorageSite s : sites) {
-                    s.deleteVNode(getLogicalData().getPDRI());
-                }
-            }
             List<? extends Resource> children = getChildren();
             if (children != null) {
                 for (Resource r : children) {
                     if (r instanceof DeletableResource) {
                         ((DeletableResource) r).delete();
                     }
+                }
+            }
+            Collection<IStorageSite> sites = getLogicalData().getStorageSites();
+            if (sites != null && !sites.isEmpty()) {
+                for (IStorageSite s : sites) {
+                    s.deleteVNode(getLogicalData().getPDRI());
                 }
             }
             getCatalogue().unregisterResourceEntry(getLogicalData());
@@ -415,10 +411,11 @@ class WebDataDirResource extends WebDataResource implements FolderResource, Coll
         return null;
     }
 
+    @Override
     protected void debug(String msg) {
-        if (debug) {
-            System.err.println(this.getClass().getSimpleName() + "." + getLogicalData().getLDRI() + ": " + msg);
-        }
+//        if (debug) {
+//            System.err.println(this.getClass().getSimpleName() + "." + getLogicalData().getLDRI() + ": " + msg);
+//        }
     }
 
     private ArrayList<? extends Resource> getTopLevelChildren() throws Exception {
@@ -468,46 +465,44 @@ class WebDataDirResource extends WebDataResource implements FolderResource, Coll
     }
 
     private Resource createNonExistingFile(Path newPath, Long length, String contentType, InputStream inputStream) throws IOException, Exception {
-        LogicalData newResource = new LogicalData(newPath, Constants.LOGICAL_FILE);
-        Collection<IStorageSite> sites = getStorageSites();
-        newResource.setStorageSites(sites);
-        VFSNode node = null;
-        try {
-            node = newResource.getVFSNode();
-        } catch (Exception ex) {
-            if (!(ex instanceof ResourceNotFoundException)) {
-                throw ex;
-            }
-        }
-        if (node == null) {
-            node = newResource.createPhysicalData();
-        }
-        if (node != null) {
-            OutputStream out = ((VFile) node).getOutputStream();
-            IOUtils.copy(inputStream, out);
-            if (inputStream != null) {
-                inputStream.close();
-            }
-            if (out != null) {
-                out.flush();
-                out.close();
-            }
-        }
+//        return asyncCreateNonExistingFile(newPath, length, contentType, inputStream);
+        return syncCreateNonExistingFile(newPath, length, contentType, inputStream);
+    }
 
-        Metadata meta = new Metadata();
-        meta.setLength(length);
-        meta.addContentType(contentType);
-        meta.setCreateDate(System.currentTimeMillis());
-        newResource.setMetadata(meta);
-        getCatalogue().registerResourceEntry(newResource);
-//        LogicalData relodedResource = (LogicalData) getCatalogue().getResourceEntryByLDRI(newResource.getLDRI());
+    private Resource updateExistingFile(LogicalData newResource, Long length, String contentType, InputStream inputStream) throws VlException, IOException, Exception {
+//        return asyncUpdateExistingFile(newResource, length, contentType, inputStream);
+        return syncUpdateExistingFile(newResource, length, contentType, inputStream);
+    }
+
+    private Resource asyncUpdateExistingFile(LogicalData newResource, Long length, String contentType, InputStream inputStream) throws InterruptedException, Exception {
+        Worker w2 = new Worker(Worker.UPDATE_DATA);
+        w2.setLogicalData(newResource);
+        w2.setCatalog(getCatalogue());
+        w2.setLength(length);
+        w2.setContentType(contentType);
+        Thread t2 = new Thread(w2);
+        t2.start();
+
+        Worker w1 = new Worker(Worker.CREATE_PHYSICAL_FILE);
+        w1.setLogicalData(newResource);
+        w1.setInputStream(inputStream);
+        Thread t1 = new Thread(w1);
+        t1.start();
+
+        t2.join();
+        t1.join();
+        if (w1.getException() != null) {
+            throw w1.getException();
+        }
+        if (w2.getException() != null) {
+            throw w2.getException();
+        }
 
         return new WebDataFileResource(getCatalogue(), newResource);
     }
 
-    private Resource updateExistingFile(LogicalData newResource, Long length, String contentType, InputStream inputStream) throws VlException, IOException, Exception {
+    private Resource syncUpdateExistingFile(LogicalData newResource, Long length, String contentType, InputStream inputStream) throws CatalogueException, Exception {
         VFSNode node;
-
         if (!newResource.hasPhysicalData()) {
             node = newResource.createPhysicalData();
         } else {
@@ -533,6 +528,77 @@ class WebDataDirResource extends WebDataResource implements FolderResource, Coll
 
         getCatalogue().updateResourceEntry(newResource);
 //        LogicalData relodedResource = (LogicalData) getCatalogue().getResourceEntryByLDRI(newResource.getLDRI());
+        return new WebDataFileResource(getCatalogue(), newResource);
+    }
+
+    private Resource asyncCreateNonExistingFile(Path newPath, Long length, String contentType, InputStream inputStream) throws CatalogueException, IOException, InterruptedException, Exception {
+        LogicalData newResource = new LogicalData(newPath, Constants.LOGICAL_FILE);
+        Collection<IStorageSite> sites = getStorageSites();
+        newResource.setStorageSites(sites);
+
+        Worker w1 = new Worker(Worker.CREATE_PHYSICAL_FILE);
+        w1.setLogicalData(newResource);
+        w1.setInputStream(inputStream);
+        Thread t1 = new Thread(w1);
+        t1.start();
+
+
+        Worker w2 = new Worker(Worker.REGISTER_DATA);
+        w2.setLogicalData(newResource);
+        w2.setContentType(contentType);
+        w2.setLength(length);
+        w2.setCatalog(getCatalogue());
+        Thread t2 = new Thread(w2);
+        t2.start();
+
+
+        t2.join();
+        t1.join();
+        if (w1.getException() != null) {
+            throw w1.getException();
+        }
+        if (w2.getException() != null) {
+            throw w2.getException();
+        }
+        return new WebDataFileResource(getCatalogue(), newResource);
+    }
+
+    private Resource syncCreateNonExistingFile(Path newPath, Long length, String contentType, InputStream inputStream) throws CatalogueException, IOException, Exception {
+        LogicalData newResource = new LogicalData(newPath, Constants.LOGICAL_FILE);
+        Collection<IStorageSite> sites = getStorageSites();
+        newResource.setStorageSites(sites);
+
+        VFSNode node = null;
+        try {
+            node = newResource.getVFSNode();
+        } catch (Exception ex) {
+            if (!(ex instanceof ResourceNotFoundException)) {
+                throw (ResourceNotFoundException) ex;
+            }
+        }
+        if (node == null) {
+            node = newResource.createPhysicalData();
+        }
+        if (node != null) {
+            OutputStream out = ((VFile) node).getOutputStream();
+            IOUtils.copy(inputStream, out);
+            if (inputStream != null) {
+                inputStream.close();
+            }
+            if (out != null) {
+                out.flush();
+                out.close();
+            }
+        }
+
+        Metadata meta = new Metadata();
+        meta.setLength(length);
+        meta.addContentType(contentType);
+        meta.setCreateDate(System.currentTimeMillis());
+        meta.setModifiedDate(System.currentTimeMillis());
+        newResource.setMetadata(meta);
+        getCatalogue().registerResourceEntry(newResource);
+
         return new WebDataFileResource(getCatalogue(), newResource);
     }
 }

@@ -4,12 +4,7 @@
  */
 package nl.uva.cs.lobcder.util;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import nl.uva.vlet.data.StringUtil;
 
 /**
@@ -148,10 +143,7 @@ public class MMTypeTools {
         results.subType = types[1].trim();
         return results;
     }
-
-    private static void debug(String msg) {
-        System.err.println(MMTypeTools.class.getSimpleName() + ": " + msg);
-    }
+    
 
     /**
      * Structure for holding a fitness/quality combo

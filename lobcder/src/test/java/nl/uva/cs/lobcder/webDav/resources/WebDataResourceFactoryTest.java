@@ -14,8 +14,6 @@ import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.servlet.http.HttpServletRequest;
-import nl.uva.cs.lobcder.auth.MyPrincipal;
-import nl.uva.cs.lobcder.auth.test.MyAuth;
 import nl.uva.cs.lobcder.catalogue.CatalogueException;
 import nl.uva.cs.lobcder.catalogue.RDMSDLCatalog;
 import nl.uva.cs.lobcder.frontend.WebDavServlet;
@@ -205,6 +203,15 @@ public class WebDataResourceFactoryTest {
             Collection<StorageSite> all = cat.getAllSites();
 
             file.delete();
+            children = result.getChildren();
+            //File should not be there 
+            foundIt = false;
+            for (Resource r : children) {
+                if (r.getUniqueId().equals(file.getUniqueId())) {
+                    foundIt = true;
+                }
+            }
+            assertFalse(foundIt);
 
 //        RDMSDLCatalog cat = new RDMSDLCatalog(new File(nl.uva.cs.lobcder.util.Constants.LOBCDER_CONF_DIR + "/datanucleus.properties"));
             entry = cat.getResourceEntryByLDRI(file.getPath());
@@ -241,6 +248,8 @@ public class WebDataResourceFactoryTest {
             name = file.getName();
             assertEquals(ConstantsAndSettings.TEST_FILE_NAME_1, name);
         } catch (Exception ex) {
+            ex.printStackTrace();
+            fail();
         } finally {
             try {
                 result.delete();
@@ -253,7 +262,6 @@ public class WebDataResourceFactoryTest {
                 Logger.getLogger(WebDataResourceFactoryTest.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-
     }
 
     @Test
@@ -322,7 +330,7 @@ public class WebDataResourceFactoryTest {
             int count = 1;
             for (int i = 0; i < count; i++) {
                 File tmpLocalFile = File.createTempFile(this.getClass().getName(), null);
-                byte[] data = new byte[1024 * 1024];//1MB
+                byte[] data = new byte[1024 * 20];//1MB
                 Random r = new Random();
                 r.nextBytes(data);
 
@@ -623,10 +631,8 @@ public class WebDataResourceFactoryTest {
 //        assertNotNull(meta.getPermissionArray());
     }
 
-    private WebDataDirResource getTestDir(WebDataResourceFactory instance, String host) throws NotAuthorizedException, ConflictException, BadRequestException, VlException, CatalogueException, IOException, MyPrincipal.Exception {
-        //        instance.setUserName(vphUserName);
-//        DummyHttpServletRequest req = new DummyHttpServletRequest();
-//        req.getSession().setAttribute("vph-user", new MyPrincipal(vphUserName+vphPassword, MyAuth.getInstance().checkToken(vphUserName+vphPassword)));
+    private WebDataDirResource getTestDir(WebDataResourceFactory instance, String host) throws NotAuthorizedException, ConflictException, BadRequestException, VlException, CatalogueException, IOException {
+//        instance.setUserName(vphUserName);
         WebDataDirResource result = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH + ConstantsAndSettings.TEST_FOLDER_NAME_1);
         if (result == null) {
             WebDataDirResource root = (WebDataDirResource) instance.getResource(host, ConstantsAndSettings.CONTEXT_PATH);

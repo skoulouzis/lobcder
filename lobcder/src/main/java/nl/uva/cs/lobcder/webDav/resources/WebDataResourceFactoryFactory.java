@@ -41,10 +41,10 @@ public class WebDataResourceFactoryFactory implements ResourceFactoryFactory {
     }
 
     private void debug(String msg) {
-        if (debug) {
-            System.err.println(this.getClass().getSimpleName() + ": " + msg);
-//        log.debug(msg);
-        }
+//        if (debug) {
+//            System.err.println(this.getClass().getSimpleName() + ": " + msg);
+////        log.debug(msg);
+//        }
 
     }
 }

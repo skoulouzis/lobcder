@@ -63,7 +63,7 @@ public class StorageSite implements Serializable, IStorageSite {
         GlobalConfig.setIsService(true);
         GlobalConfig.setInitURLStreamFactory(false);
         GlobalConfig.setAllowUserInteraction(false);
-        
+
         // user configuration 
         GlobalConfig.setUsePersistantUserConfiguration(false);
 //        GlobalConfig.setUserHomeLocation(new URL("file:////" + this.tmpVPHuserHome.getAbsolutePath()));
@@ -105,7 +105,6 @@ public class StorageSite implements Serializable, IStorageSite {
 
     public StorageSite(String endpoint, Credential cred) throws Exception {
         try {
-            uid = new StringIdentity(this.getClass(), java.util.UUID.randomUUID().toString()).getKey();
             if (endpoint == null) {
                 throw new NullPointerException("Endpoint is null");
             }
@@ -134,7 +133,16 @@ public class StorageSite implements Serializable, IStorageSite {
             prop = new Properties();
 
             this.credentials = cred;
-
+            uid = new StringIdentity(this.getClass(), java.util.UUID.randomUUID().toString()).getKey();//vrl.toString()+prop.getProperty(Constants.STORAGE_SITE_USERNAME);//vrl.toString();//vrl.toString();   // //
+//            if (credentials.getStorageSiteUsername() != null) {
+//                uid+=credentials.getStorageSiteUsername();
+//            }
+//            if (credentials.getStorageSitePassword() != null) {
+//                uid+=credentials.getStorageSitePassword();
+//            }
+//            if (credentials.getStorageSiteGridProxy() != null && credentials.getStorageSiteGridProxy().getUserDN() != null) {
+//                uid+=credentials.getStorageSiteGridProxy().getUserDN();
+//            }
             initVFS();
         } catch (VlException ex) {
             throw new Exception(ex);
@@ -229,9 +237,9 @@ public class StorageSite implements Serializable, IStorageSite {
     }
 
     private void debug(String msg) {
-        if (debug) {
-            System.err.println(this.getClass().getSimpleName() + ": " + msg);
-        }
+//        if (debug) {
+//            System.err.println(this.getClass().getSimpleName() + ": " + msg);
+//        }
     }
 
     @Override
