@@ -97,7 +97,7 @@ public class WebDataFileResourceTest {
             catalogue.registerResourceEntry(testLogicalFolder);
             collectionResource = createDirResource(catalogue, testLogicalFolder);
 
-            
+
             Path testFilePath = Path.path(testFile);
             LogicalData testLogicalFile = new LogicalData(testFilePath, Constants.LOGICAL_FILE);
             webDAVFile = createFileResource(catalogue, testLogicalFile);
@@ -152,10 +152,10 @@ public class WebDataFileResourceTest {
 
                 load = catalogue.getResourceEntryByLDRI(Path.path(testLogicalFolder.getLDRI(), testFile));
                 assertNull(load);
-                
+
                 webDAVFile.delete();
                 assertNull(catalogue.getResourceEntryByLDRI(webDAVFile.getPath()));
-                
+
 
             } catch (CatalogueException ex) {
                 Logger.getLogger(WebDataFileResourceTest.class.getName()).log(Level.SEVERE, null, ex);
@@ -210,7 +210,7 @@ public class WebDataFileResourceTest {
         try {
             ByteArrayInputStream bais = new ByteArrayInputStream(ConstantsAndSettings.TEST_DATA.getBytes());
             LogicalData testLogicalFolder = new LogicalData(Path.path("testCollPath"), Constants.LOGICAL_FOLDER);
-            
+
             testLogicalFolder.setStorageSites(sites);
             catalogue.registerResourceEntry(testLogicalFolder);
 
@@ -370,7 +370,7 @@ public class WebDataFileResourceTest {
         WebDataDirResource rDest = null;
         WebDataFileResource instance = null;
         Path path;
-        
+
         try {
             LogicalData testLogicalFolder = new LogicalData(Path.path("testCollPath"), Constants.LOGICAL_FOLDER);
             LogicalData testLogicalFile = new LogicalData(Path.path("testLogicalFile"), Constants.LOGICAL_FILE);
@@ -486,7 +486,7 @@ public class WebDataFileResourceTest {
             System.out.println("getUniqueId");
             LogicalData testLogicalFile = new LogicalData(Path.path("testLogicalFile"), Constants.LOGICAL_FILE);
             catalogue.registerResourceEntry(testLogicalFile);
-            
+
             instance = createFileResource(catalogue, testLogicalFile);
             String expResult = testLogicalFile.getUID();
             String result = instance.getUniqueId();

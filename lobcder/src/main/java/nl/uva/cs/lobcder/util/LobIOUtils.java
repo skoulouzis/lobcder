@@ -9,11 +9,15 @@ import com.bradmcevoy.io.StreamUtils;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
+import java.nio.channels.ReadableByteChannel;
+import java.nio.channels.WritableByteChannel;
 import java.util.List;
 
 /**
  *
  * Source from com.bradmcevoy.http.http11.PartialGetHelper
+ *
  * @author brad
  */
 public class LobIOUtils {
@@ -51,18 +55,53 @@ public class LobIOUtils {
     }
 
     public static void writeRange(InputStream in, Range range, OutputStream out) throws IOException {
-         try {
+        try {
             InputStream bufIn = in; //new BufferedInputStream(in);
             long pos = 0;
 //            for (Range r : ranges) {
-                long skip = range.getStart() - pos;
-                bufIn.skip(skip);
-                long length = range.getFinish() - range.getStart();
-                sendBytes(bufIn, out, length);
-                pos = range.getFinish();
+            long skip = range.getStart() - pos;
+            bufIn.skip(skip);
+            long length = range.getFinish() - range.getStart();
+            sendBytes(bufIn, out, length);
+            pos = range.getFinish();
 //            }
         } finally {
             StreamUtils.close(in);
+        }
+    }
+
+    public static void fastChannelCopy(final ReadableByteChannel src, final WritableByteChannel dest) throws IOException {
+        final ByteBuffer buffer = ByteBuffer.allocateDirect(16 * 1024);
+        while (src.read(buffer) != -1) {
+            // prepare the buffer to be drained
+            buffer.flip();
+            // write to the channel, may block
+            dest.write(buffer);
+            // If partial transfer, shift remainder down
+            // If buffer is empty, same as doing clear()
+            buffer.compact();
+        }
+        // EOF will leave buffer in fill state
+        buffer.flip();
+        // make sure the buffer is fully drained.
+        while (buffer.hasRemaining()) {
+            dest.write(buffer);
+        }
+    }
+
+    public static void copy(InputStream in, OutputStream out) throws IOException {
+        try {
+            int length = in.available(); // danger!
+            byte[] bytes = new byte[length];
+            in.read(bytes);
+            out.write(bytes);
+        } finally {
+            if (in != null) {
+                in.close();
+            }
+            if (out != null) {
+                out.close();
+            }
         }
     }
 }
