@@ -29,6 +29,7 @@ import org.apache.commons.httpclient.protocol.ProtocolSocketFactory;
 import org.apache.jackrabbit.webdav.client.methods.DeleteMethod;
 import org.apache.jackrabbit.webdav.client.methods.MkColMethod;
 import org.apache.jackrabbit.webdav.client.methods.PutMethod;
+import org.junit.AfterClass;
 import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Test;
@@ -49,14 +50,15 @@ public class LobcderScalabilityTest {
     public static final int CREATE_DATASET = 1;
     public static final int TEST_DOWNLOAD = 2;
     public static final int DELETE = 3;
-    public static final int FILE_SIZE_IN_KB = 200;
+    public static final int FILE_SIZE_IN_KB = 100;
     public static final int STEP_SIZE_DATASET = 4;
-    public static final int MIN_SIZE_DATASET = 20;
-    public static final int MAX_SIZE_DATASET = 100;
+    public static final int MIN_SIZE_DATASET = 10;
+    public static final int MAX_SIZE_DATASET = 1200;
     public static final int NUM_OF_CLIENTS = 1;
     public static final String[] meanLables = new String[]{ScaleTest.userMeasureLablesPut[0], ScaleTest.userMeasureLablesPut[1], ScaleTest.userMeasureLablesPut[2], ScaleTest.userMeasureLablesPut[3], ScaleTest.userMeasureLablesPut[4], ScaleTest.userMeasureLablesPut[5], "NumOfUsers"};
     public static String measuresPath = "measures";
     private String hostMeasuresPath;
+    private static File dataSetFolderBase;
 
     @Before
     public void setUp() throws Exception {
@@ -72,6 +74,25 @@ public class LobcderScalabilityTest {
         initClients();
 
         initDatasets();
+    }
+
+    @AfterClass
+    public static void tearDownClass() throws Exception {
+        FileFilter filter = new FileFilter() {
+
+            @Override
+            public boolean accept(File pathname) {
+                if (pathname.getName().contains(".dat")) {
+                    return true;
+                }
+                return false;
+            }
+        };
+
+        File[] dataSetFiles = dataSetFolderBase.listFiles(filter);
+        for (File f : dataSetFiles) {
+            f.delete();
+        }
     }
 
     private void initURL(Properties prop) throws FileNotFoundException {
@@ -128,7 +149,7 @@ public class LobcderScalabilityTest {
     private void initDatasets() throws IOException, InterruptedException {
         //Init a synthetic datasets from 50MB to 4GB
         String dirPath = System.getProperty("java.io.tmpdir") + "/testDatasets";
-        File dataSetFolderBase = new File(dirPath);
+        dataSetFolderBase = new File(dirPath);
         if (!dataSetFolderBase.exists()) {
             if (!dataSetFolderBase.mkdirs()) {
                 throw new IOException("Faild to create tmp dir");
@@ -358,8 +379,8 @@ public class LobcderScalabilityTest {
         private File dataset;
         private int fileID;
         private FileWriter writer;
-        public static String[] userMeasureLablesPut = new String[]{"DatasetID", "sizeUploaded(kb)", "UploadTime(msec)", "Speed(kb/msec)", "putWaitTotalTime(msec)", "putAverageTime(msec)"};
-        public static String[] userMeasureLablesGet = new String[]{"DatasetID", "sizeDownloaded(kb)", "DownloadTime(msec)", "Speed(kb/msec)", "getWaitTotalTime(msec)", "getAverageTime(msec)"};
+        public static String[] userMeasureLablesPut = new String[]{"DatasetID", "numOfFiles", "sizeUploaded(kb)", "UploadTime(msec)", "Speed(kb/msec)", "putWaitTotalTime(msec)", "putAverageTime(msec)"};
+        public static String[] userMeasureLablesGet = new String[]{"DatasetID", "numOfFiles", "sizeDownloaded(kb)", "DownloadTime(msec)", "Speed(kb/msec)", "getWaitTotalTime(msec)", "getAverageTime(msec)"};
         private String path;
 
         private ScaleTest(int op) {
@@ -429,7 +450,7 @@ public class LobcderScalabilityTest {
                 double elapsedUploadTime = endUpload - startUpload;
                 double kBytesUploaded = (double) (bytesUploaded / 1024.0);
                 double speed = (double) (kBytesUploaded / elapsedUploadTime);
-                writer.append(datasetName + "," + kBytesUploaded + "," + elapsedUploadTime + "," + speed + "," + putWaitTotalTime + "," + putAverageTime + "\n");
+                writer.append(datasetName + "," + files.length + "," + kBytesUploaded + "," + elapsedUploadTime + "," + speed + "," + putWaitTotalTime + "," + putAverageTime + "\n");
             }
             writer.flush();
             writer.close();
@@ -454,7 +475,7 @@ public class LobcderScalabilityTest {
                 double startDownload = System.currentTimeMillis();
                 double bytesDownloaded = 0;
                 double getWaitTotalTime = 0;
-
+                int downLoadedFileNum = 0;
                 for (File f : files) {
                     String path2 = path1 + "/" + f.getName();
 //                    debug("GET: " + path2);
@@ -463,7 +484,7 @@ public class LobcderScalabilityTest {
                     client.executeMethod(get);
                     InputStream is = get.getResponseBodyAsStream();
                     int read;
-                    File downLoadedFile = new File(System.getProperty("java.io.tmpdir") + File.separator +"testDatasets" +File.separator+f.getName());
+                    File downLoadedFile = new File(System.getProperty("java.io.tmpdir") + File.separator + "testDatasets" + File.separator + f.getName());
                     os = new FileOutputStream(downLoadedFile);
                     while ((read = is.read(buf)) != -1) {
                         os.write(buf, 0, read);
@@ -471,7 +492,7 @@ public class LobcderScalabilityTest {
                     double putEnd = System.currentTimeMillis();
                     bytesDownloaded += downLoadedFile.length();
                     getWaitTotalTime += (putEnd - putStart);
-
+                    ++downLoadedFileNum;
                     assertEquals(HttpStatus.SC_OK, get.getStatusCode());
                 }
                 double getAverageTime = (double) (getWaitTotalTime / files.length);
@@ -479,7 +500,7 @@ public class LobcderScalabilityTest {
                 double elapsedDownloadTime = endDownload - startDownload;
                 double kBytesDownloaded = (double) (bytesDownloaded / 1024.0);
                 double speed = (double) (kBytesDownloaded / elapsedDownloadTime);
-                writer.append(datasetName + "," + kBytesDownloaded + "," + elapsedDownloadTime + "," + speed + "," + getWaitTotalTime + "," + getAverageTime + "\n");
+                writer.append(datasetName + "," + downLoadedFileNum + "," + kBytesDownloaded + "," + elapsedDownloadTime + "," + speed + "," + getWaitTotalTime + "," + getAverageTime + "\n");
             }
             writer.flush();
             writer.close();
@@ -539,7 +560,7 @@ public class LobcderScalabilityTest {
         private void createDataset(int sizeInk) throws FileNotFoundException, IOException {
             byte[] data = new byte[1024 * sizeInk];//1MB
             Random r = new Random();
-            File f = new File(dataset.getAbsolutePath() + "/file" + this.fileID);
+            File f = new File(dataset.getAbsolutePath() + "/file" + this.fileID + ".dat");
             if (!f.exists()) {
 //                debug("Writing: " + f.getAbsolutePath());
                 FileOutputStream fos = new FileOutputStream(f);
