@@ -470,8 +470,8 @@ class WebDataDirResource extends WebDataResource implements FolderResource, Coll
     }
 
     private Resource updateExistingFile(LogicalData newResource, Long length, String contentType, InputStream inputStream) throws VlException, IOException, Exception {
-//        return asyncUpdateExistingFile(newResource, length, contentType, inputStream);
-        return syncUpdateExistingFile(newResource, length, contentType, inputStream);
+        return asyncUpdateExistingFile(newResource, length, contentType, inputStream);
+//        return syncUpdateExistingFile(newResource, length, contentType, inputStream);
     }
 
     private Resource asyncUpdateExistingFile(LogicalData newResource, Long length, String contentType, InputStream inputStream) throws InterruptedException, Exception {

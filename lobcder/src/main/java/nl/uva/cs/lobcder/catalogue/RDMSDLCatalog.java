@@ -594,7 +594,7 @@ public class RDMSDLCatalog implements IDLCatalogue {
 //            Query query = pm.newQuery("UPDATE " + newResource.getClass().getName() + "SET this.ldri=newLDRI WHERE strLDRI == strLogicalResourceName");
 //            Long number = (Long) query.execute();
                 pm.makePersistent(newResource);
-                ILogicalData copy = pm.detachCopy(newResource);
+//                ILogicalData copy = pm.detachCopy(newResource);
                 tx.commit();
 
             } finally {
@@ -657,7 +657,7 @@ public class RDMSDLCatalog implements IDLCatalogue {
     }
 
     private void debug(String msg) {
-        System.err.println(this.getClass().getName() + ": " + msg);
+//        System.err.println(this.getClass().getName() + ": " + msg);
     }
 
     private boolean comparePaths(Path path1, Path path2) {
