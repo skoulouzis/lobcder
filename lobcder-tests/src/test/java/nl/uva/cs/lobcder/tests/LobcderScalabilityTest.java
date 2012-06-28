@@ -218,7 +218,7 @@ public class LobcderScalabilityTest {
     public void benchmarkTest() throws FileNotFoundException, IOException, InterruptedException {
         benchmarkUpload();
 
-        benchmarkDownload();
+//        benchmarkDownload();
 
     }
 
@@ -561,7 +561,7 @@ public class LobcderScalabilityTest {
             byte[] data = new byte[1024 * sizeInk];//1MB
             Random r = new Random();
             File f = new File(dataset.getAbsolutePath() + "/file" + this.fileID + ".dat");
-            if (!f.exists()) {
+            if (!f.exists() || f.length() !=(1024 * sizeInk)) {
 //                debug("Writing: " + f.getAbsolutePath());
                 FileOutputStream fos = new FileOutputStream(f);
                 r.nextBytes(data);
