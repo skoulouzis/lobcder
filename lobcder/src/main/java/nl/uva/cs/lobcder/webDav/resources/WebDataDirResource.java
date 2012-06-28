@@ -489,8 +489,8 @@ class WebDataDirResource extends WebDataResource implements FolderResource, Coll
         Thread t1 = new Thread(w1);
         t1.start();
 
-        t2.join();
         t1.join();
+        t2.join();
         if (w1.getException() != null) {
             throw w1.getException();
         }
