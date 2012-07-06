@@ -25,6 +25,7 @@ import nl.uva.vlet.exception.ResourceNotFoundException;
 import nl.uva.vlet.exception.VRLSyntaxException;
 import nl.uva.vlet.exception.VlException;
 import nl.uva.vlet.util.cog.GridProxy;
+import nl.uva.vlet.vfs.VDir;
 import nl.uva.vlet.vfs.VFSClient;
 import nl.uva.vlet.vfs.VFSNode;
 import nl.uva.vlet.vfs.VFile;
@@ -271,7 +272,13 @@ public class StorageSite implements Serializable, IStorageSite {
         boolean exists = getVfsClient().existsPath(theVRL);
         if (exists) {
             VFSNode node = this.getVNode(permenantDRI);
-            if (node != null && node.delete()) {
+            boolean deleted = false;
+            if(node instanceof VDir){
+                deleted = ((VDir)node).deleteDir(theVRL.getDirPath(), true);
+            }else{
+                deleted= node.delete();
+            }
+            if (node != null && deleted) {
                 this.logicalPaths.remove(permenantDRI.toString());
             }
         }

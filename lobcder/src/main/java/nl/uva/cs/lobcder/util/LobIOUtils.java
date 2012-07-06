@@ -13,6 +13,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 import java.util.List;
+import org.apache.commons.io.IOUtils;
 
 /**
  *
@@ -71,7 +72,7 @@ public class LobIOUtils {
     }
 
     public static void fastChannelCopy(final ReadableByteChannel src, final WritableByteChannel dest) throws IOException {
-        final ByteBuffer buffer = ByteBuffer.allocateDirect(16 * 1024);
+        final ByteBuffer buffer = ByteBuffer.allocateDirect(1024 * 1024 * 1024);
         while (src.read(buffer) != -1) {
             // prepare the buffer to be drained
             buffer.flip();
@@ -92,9 +93,14 @@ public class LobIOUtils {
     public static void copy(InputStream in, OutputStream out) throws IOException {
         try {
             int length = in.available(); // danger!
-            byte[] bytes = new byte[length];
-            in.read(bytes);
-            out.write(bytes);
+            if (length != 0) {
+                byte[] bytes = new byte[length];
+                in.read(bytes);
+                out.write(bytes);
+            } else {
+                IOUtils.copy(in, out);
+            }
+
         } finally {
             if (in != null) {
                 in.close();

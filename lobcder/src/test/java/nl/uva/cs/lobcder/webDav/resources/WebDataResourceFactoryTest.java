@@ -330,7 +330,7 @@ public class WebDataResourceFactoryTest {
             int count = 1;
             for (int i = 0; i < count; i++) {
                 File tmpLocalFile = File.createTempFile(this.getClass().getName(), null);
-                byte[] data = new byte[1024 * 20];//1MB
+                byte[] data = new byte[1024 * 2];//1MB
                 Random r = new Random();
                 r.nextBytes(data);
 
