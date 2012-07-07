@@ -5,7 +5,9 @@
 package nl.uva.cs.lobcder.webDav.resources;
 
 import com.bradmcevoy.common.Path;
-import com.bradmcevoy.http.*;
+import com.bradmcevoy.http.CollectionResource;
+import com.bradmcevoy.http.Range;
+import com.bradmcevoy.http.Resource;
 import com.bradmcevoy.http.exceptions.BadRequestException;
 import com.bradmcevoy.http.exceptions.ConflictException;
 import com.bradmcevoy.http.exceptions.NotAuthorizedException;
