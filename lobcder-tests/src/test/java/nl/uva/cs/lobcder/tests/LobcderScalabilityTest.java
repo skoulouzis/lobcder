@@ -50,10 +50,12 @@ public class LobcderScalabilityTest {
     public static final int CREATE_DATASET = 1;
     public static final int TEST_DOWNLOAD = 2;
     public static final int DELETE = 3;
-    public static final int FILE_SIZE_IN_KB = 400;
+    
+    public static final int FILE_SIZE_IN_KB = 3200;
+    
     public static final int STEP_SIZE_DATASET = 4;
     public static final int MIN_SIZE_DATASET = 10;
-    public static final int MAX_SIZE_DATASET = 1200;
+    public static final int MAX_SIZE_DATASET = 60;//1200;
     public static final int NUM_OF_CLIENTS = 1;
     public static final String[] meanLables = new String[]{ScaleTest.userMeasureLablesPut[0], ScaleTest.userMeasureLablesPut[1], ScaleTest.userMeasureLablesPut[2], ScaleTest.userMeasureLablesPut[3], ScaleTest.userMeasureLablesPut[4], ScaleTest.userMeasureLablesPut[5], "NumOfUsers"};
     public static String measuresPath = "measures";
@@ -216,9 +218,13 @@ public class LobcderScalabilityTest {
 
     @Test
     public void benchmarkTest() throws FileNotFoundException, IOException, InterruptedException {
+        System.out.println("benchmarkUpload start: " + System.currentTimeMillis()/1000);
         benchmarkUpload();
-
-//        benchmarkDownload();
+        System.out.println("benchmarkUpload end: " + System.currentTimeMillis()/1000);
+        
+        System.out.println("benchmarkDownload start: " + System.currentTimeMillis()/1000);
+        benchmarkDownload();
+        System.out.println("benchmarkDownload end: " + System.currentTimeMillis()/1000);
 
     }
 
@@ -433,7 +439,7 @@ public class LobcderScalabilityTest {
                 assertTrue("status: " + mkcol.getStatusCode(), mkcol.getStatusCode() == HttpStatus.SC_CREATED || mkcol.getStatusCode() == HttpStatus.SC_METHOD_NOT_ALLOWED);
                 for (File f : files) {
                     String path2 = path1 + "/" + f.getName();
-//                    debug("PUT: " + path2);
+                    debug("PUT: " + path2);
                     PutMethod put = new PutMethod(path2);
                     RequestEntity requestEntity = new InputStreamRequestEntity(
                             new FileInputStream(f));
@@ -469,7 +475,7 @@ public class LobcderScalabilityTest {
                 File[] files = d.listFiles();
                 String datasetName = files[0].getParentFile().getName();
                 String path1 = testDatasetPath + "/" + username + "/" + datasetName;
-//                debug("GET: " + path1);
+                debug("GET: " + path1);
 
 
                 double startDownload = System.currentTimeMillis();
@@ -561,7 +567,7 @@ public class LobcderScalabilityTest {
             byte[] data = new byte[1024 * sizeInk];//1MB
             Random r = new Random();
             File f = new File(dataset.getAbsolutePath() + "/file" + this.fileID + ".dat");
-            if (!f.exists() || f.length() !=(1024 * sizeInk)) {
+            if (!f.exists() || f.length() != (1024 * sizeInk)) {
 //                debug("Writing: " + f.getAbsolutePath());
                 FileOutputStream fos = new FileOutputStream(f);
                 r.nextBytes(data);

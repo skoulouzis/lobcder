@@ -177,6 +177,12 @@ public class WebDAVTest {
             status = this.client.executeMethod(put);
             assertEquals(HttpStatus.SC_CREATED, status);
 
+            GetMethod get = new GetMethod(testuri1);
+            this.client.executeMethod(get);
+            status = get.getStatusCode();
+            assertEquals(HttpStatus.SC_OK, status);
+            assertEquals("foo", get.getResponseBodyAsString());
+
 
             // enabling version control always makes the resource referenceable
             //No version control yet
@@ -189,12 +195,12 @@ public class WebDAVTest {
             status = this.client.executeMethod(move);
             assertEquals(HttpStatus.SC_CREATED, status);
 
-            GetMethod get = new GetMethod(testuri2);
+            get = new GetMethod(testuri2);
             this.client.executeMethod(get);
             status = get.getStatusCode();
             assertEquals(HttpStatus.SC_OK, status);
             assertEquals("foo", get.getResponseBodyAsString());
-            System.out.println("Resp: " + get.getResponseBodyAsString());
+//            System.out.println("Resp: " + get.getResponseBodyAsString());
 
 //            URI resourceId2 = getResourceId(testuri2);
 //            assertEquals(resourceId, resourceId2);
