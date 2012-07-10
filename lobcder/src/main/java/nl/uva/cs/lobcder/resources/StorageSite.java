@@ -5,6 +5,7 @@
 package nl.uva.cs.lobcder.resources;
 
 import com.bradmcevoy.common.Path;
+import java.io.File;
 import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -228,6 +229,12 @@ public class StorageSite implements Serializable, IStorageSite {
         }
 
         info.setAttribute(ServerInfo.ATTR_DEFAULT_YES_NO_ANSWER, true);
+        
+//        if(getVrl().getScheme().equals(VRS.SFTP_SCHEME)){
+        //patch for bug with ssh driver 
+            info.setAttribute("sshKnownHostsFile", System.getProperty("user.home")+"/.ssh/known_hosts");
+//        }
+        
         info.store();
 
     }

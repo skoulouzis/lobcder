@@ -208,8 +208,8 @@ public class WebDataFileResource extends WebDataResource implements
 //                src = Channels.newChannel(in);
 //                dest = Channels.newChannel(out);
 //                LobIOUtils.fastChannelCopy(src, dest);
-//                IOUtils.copy(in, out);
-                LobIOUtils.copy(in, out);
+                IOUtils.copy(in, out);
+//                LobIOUtils.copy(in, out);
             }
 
         } catch (VlException ex) {
