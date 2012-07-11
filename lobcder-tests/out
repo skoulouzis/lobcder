@@ -1,0 +1,541 @@
+Welcome 1 times
+[INFO] Scanning for projects...
+[INFO]                                                                         
+[INFO] ------------------------------------------------------------------------
+[INFO] Building lobcder-tests 1.0-SNAPSHOT
+[INFO] ------------------------------------------------------------------------
+[INFO] 
+[INFO] --- maven-resources-plugin:2.5:resources (default-resources) @ lobcder-tests ---
+[debug] execute contextualize
+[WARNING] Using platform encoding (UTF-8 actually) to copy filtered resources, i.e. build is platform dependent!
+[INFO] Copying 0 resource
+[INFO] 
+[INFO] --- maven-compiler-plugin:2.3.2:compile (default-compile) @ lobcder-tests ---
+[INFO] Nothing to compile - all classes are up to date
+[INFO] 
+[INFO] --- maven-resources-plugin:2.5:testResources (default-testResources) @ lobcder-tests ---
+[debug] execute contextualize
+[WARNING] Using platform encoding (UTF-8 actually) to copy filtered resources, i.e. build is platform dependent!
+[INFO] skip non existing resourceDirectory /mnt/raid/home/skoulouz/workspace/lobcder-tests/src/test/resources
+[INFO] 
+[INFO] --- maven-compiler-plugin:2.3.2:testCompile (default-testCompile) @ lobcder-tests ---
+[INFO] Nothing to compile - all classes are up to date
+[INFO] 
+[INFO] --- maven-surefire-plugin:2.10:test (default-test) @ lobcder-tests ---
+[INFO] Surefire report directory: /mnt/raid/home/skoulouz/workspace/lobcder-tests/target/surefire-reports
+
+-------------------------------------------------------
+ T E S T S
+-------------------------------------------------------
+Running nl.uva.cs.lobcder.tests.LobcderScalabilityTest
+log4j:WARN No appenders could be found for logger (org.apache.commons.httpclient.HttpClient).
+log4j:WARN Please initialize the log4j system properly.
+log4j:WARN See http://logging.apache.org/log4j/1.2/faq.html#noconfig for more info.
+benchmarkUpload start: 1342016292
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file24.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file1.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file27.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file28.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file13.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file0.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file17.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file11.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file25.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file6.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file19.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file37.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file7.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file20.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file38.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file31.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file15.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file39.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file5.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file34.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file29.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file21.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file18.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file8.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file35.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file9.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file26.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file23.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file16.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file14.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file33.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file3.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file4.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file12.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file36.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file32.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file10.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file2.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file22.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file30.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file113.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file24.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file71.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file118.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file63.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file1.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file62.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file144.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file103.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file54.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file99.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file27.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file147.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file45.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file28.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file13.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file0.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file50.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file127.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file17.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file90.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file11.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file104.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file91.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file46.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file80.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file83.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file64.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file86.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file67.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file151.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file145.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file59.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file102.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file146.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file115.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file96.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file44.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file131.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file66.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file48.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file76.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file138.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file135.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file93.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file89.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file136.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file74.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file121.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file133.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file109.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file143.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file47.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file25.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file6.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file97.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file156.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file141.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file105.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file58.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file140.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file98.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file130.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file41.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file19.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file52.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file155.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file152.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file37.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file117.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file79.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file7.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file137.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file87.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file70.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file106.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file81.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file20.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file120.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file38.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file31.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file153.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file15.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file39.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file53.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file5.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file34.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file29.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file21.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file61.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file43.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file18.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file42.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file8.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file35.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file84.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file85.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file149.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file78.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file69.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file9.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file75.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file124.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file154.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file49.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file116.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file123.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file26.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file132.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file150.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file128.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file95.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file23.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file60.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file134.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file122.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file56.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file107.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file82.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file16.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file119.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file14.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file158.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file65.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file40.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file142.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file148.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file73.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file33.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file3.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file88.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file4.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file12.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file101.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file159.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file129.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file77.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file36.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file32.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file57.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file100.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file108.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file114.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file68.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file111.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file72.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file10.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file110.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file92.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file94.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file112.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file157.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file51.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file55.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file2.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file126.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file125.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file22.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file139.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file30.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file113.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file24.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file268.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file254.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file215.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file71.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file174.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file286.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file455.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file300.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file639.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file340.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file118.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file191.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file198.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file522.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file163.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file219.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file460.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file199.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file610.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file350.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file586.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file180.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file63.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file571.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file382.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file466.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file473.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file403.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file1.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file190.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file359.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file593.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file372.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file334.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file337.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file390.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file615.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file356.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file194.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file496.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file266.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file566.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file567.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file580.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file62.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file564.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file144.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file103.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file313.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file54.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file251.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file99.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file302.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file27.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file147.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file551.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file45.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file400.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file243.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file479.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file543.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file553.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file164.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file261.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file204.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file349.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file183.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file329.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file433.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file526.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file202.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file28.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file13.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file335.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file173.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file563.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file452.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file229.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file418.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file277.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file547.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file415.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file301.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file221.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file0.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file281.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file600.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file471.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file575.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file594.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file50.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file127.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file17.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file427.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file430.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file90.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file457.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file447.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file346.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file283.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file529.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file214.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file11.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file333.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file309.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file603.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file104.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file91.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file508.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file620.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file342.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file46.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file598.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file80.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file290.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file168.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file187.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file413.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file631.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file361.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file83.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file222.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file64.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file292.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file376.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file560.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file294.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file474.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file355.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file86.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file67.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file285.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file151.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file554.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file491.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file145.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file295.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file59.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file328.dat
+Running client 1
+benchmarkUpload end: 1342018096
+benchmarkDownload start: 1342018096
+ScaleTest.scaleUser1:GET: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/640/file315.dat
+Jul 11, 2012 4:48:22 PM nl.uva.cs.lobcder.tests.LobcderScalabilityTest$ScaleTest run
+SEVERE: null
+java.net.SocketException: Connection reset
+	at java.net.SocketInputStream.read(SocketInputStream.java:189)
+	at java.net.SocketInputStream.read(SocketInputStream.java:121)
+	at java.io.BufferedInputStream.read1(BufferedInputStream.java:273)
+	at java.io.BufferedInputStream.read(BufferedInputStream.java:334)
+	at org.apache.commons.httpclient.WireLogInputStream.read(WireLogInputStream.java:69)
+	at org.apache.commons.httpclient.ContentLengthInputStream.read(ContentLengthInputStream.java:170)
+	at java.io.FilterInputStream.read(FilterInputStream.java:133)
+	at org.apache.commons.httpclient.AutoCloseInputStream.read(AutoCloseInputStream.java:108)
+	at java.io.FilterInputStream.read(FilterInputStream.java:107)
+	at org.apache.commons.httpclient.AutoCloseInputStream.read(AutoCloseInputStream.java:127)
+	at nl.uva.cs.lobcder.tests.LobcderScalabilityTest$ScaleTest.download(LobcderScalabilityTest.java:495)
+	at nl.uva.cs.lobcder.tests.LobcderScalabilityTest$ScaleTest.run(LobcderScalabilityTest.java:408)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1110)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:603)
+	at java.lang.Thread.run(Thread.java:722)
+
+benchmarkDownload end: 1342018102
+Jul 11, 2012 4:48:22 PM nl.uva.cs.lobcder.tests.LobcderScalabilityTest$ScaleTest run
+SEVERE: null
+java.net.SocketException: Connection reset
+	at java.net.SocketInputStream.read(SocketInputStream.java:134)
+	at java.net.SocketInputStream.read(SocketInputStream.java:121)
+	at java.io.BufferedInputStream.fill(BufferedInputStream.java:235)
+	at java.io.BufferedInputStream.read(BufferedInputStream.java:254)
+	at org.apache.commons.httpclient.HttpParser.readRawLine(HttpParser.java:78)
+	at org.apache.commons.httpclient.HttpParser.readLine(HttpParser.java:106)
+	at org.apache.commons.httpclient.HttpParser.parseHeaders(HttpParser.java:176)
+	at org.apache.commons.httpclient.HttpMethodBase.readResponseHeaders(HttpMethodBase.java:1935)
+	at org.apache.commons.httpclient.HttpMethodBase.readResponse(HttpMethodBase.java:1737)
+	at org.apache.commons.httpclient.HttpMethodBase.execute(HttpMethodBase.java:1098)
+	at org.apache.commons.httpclient.HttpMethodDirector.executeWithRetry(HttpMethodDirector.java:398)
+	at org.apache.commons.httpclient.HttpMethodDirector.executeMethod(HttpMethodDirector.java:171)
+	at org.apache.commons.httpclient.HttpClient.executeMethod(HttpClient.java:397)
+	at org.apache.commons.httpclient.HttpClient.executeMethod(HttpClient.java:323)
+	at nl.uva.cs.lobcder.tests.LobcderScalabilityTest$ScaleTest.upload(LobcderScalabilityTest.java:448)
+	at nl.uva.cs.lobcder.tests.LobcderScalabilityTest$ScaleTest.run(LobcderScalabilityTest.java:402)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1110)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:603)
+	at java.lang.Thread.run(Thread.java:722)
+
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1,811.996 sec
+
+Results :
+
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0
+
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time: 30:16.346s
+[INFO] Finished at: Wed Jul 11 16:48:22 CEST 2012
+[INFO] Final Memory: 14M/158M
+[INFO] ------------------------------------------------------------------------
+Welcome 2 times
+[INFO] Scanning for projects...
+[INFO]                                                                         
+[INFO] ------------------------------------------------------------------------
+[INFO] Building lobcder-tests 1.0-SNAPSHOT
+[INFO] ------------------------------------------------------------------------
+[INFO] 
+[INFO] --- maven-resources-plugin:2.5:resources (default-resources) @ lobcder-tests ---
+[debug] execute contextualize
+[WARNING] Using platform encoding (UTF-8 actually) to copy filtered resources, i.e. build is platform dependent!
+[INFO] Copying 0 resource
+[INFO] 
+[INFO] --- maven-compiler-plugin:2.3.2:compile (default-compile) @ lobcder-tests ---
+[INFO] Nothing to compile - all classes are up to date
+[INFO] 
+[INFO] --- maven-resources-plugin:2.5:testResources (default-testResources) @ lobcder-tests ---
+[debug] execute contextualize
+[WARNING] Using platform encoding (UTF-8 actually) to copy filtered resources, i.e. build is platform dependent!
+[INFO] skip non existing resourceDirectory /mnt/raid/home/skoulouz/workspace/lobcder-tests/src/test/resources
+[INFO] 
+[INFO] --- maven-compiler-plugin:2.3.2:testCompile (default-testCompile) @ lobcder-tests ---
+[INFO] Nothing to compile - all classes are up to date
+[INFO] 
+[INFO] --- maven-surefire-plugin:2.10:test (default-test) @ lobcder-tests ---
+[INFO] Surefire report directory: /mnt/raid/home/skoulouz/workspace/lobcder-tests/target/surefire-reports
+
+-------------------------------------------------------
+ T E S T S
+-------------------------------------------------------
+Running nl.uva.cs.lobcder.tests.LobcderScalabilityTest
+log4j:WARN No appenders could be found for logger (org.apache.commons.httpclient.HttpClient).
+log4j:WARN Please initialize the log4j system properly.
+log4j:WARN See http://logging.apache.org/log4j/1.2/faq.html#noconfig for more info.
+benchmarkUpload start: 1342018107
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file24.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file1.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file27.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file28.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file13.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file0.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file17.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file11.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file25.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file6.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file19.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file37.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file7.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file20.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file38.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file31.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file15.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file39.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file5.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file34.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file29.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file21.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file18.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file8.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file35.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file9.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file26.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file23.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file16.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file14.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file33.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file3.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file4.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file12.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file36.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file32.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file10.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file2.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file22.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/40/file30.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file113.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file24.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file71.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file118.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file63.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file1.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file62.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file144.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file103.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file54.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file99.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file27.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file147.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file45.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file28.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file13.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file0.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file50.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file127.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file17.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file90.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file11.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file104.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file91.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file46.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file80.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file83.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file64.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file86.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file67.dat
+ScaleTest.scaleUser1:PUT: http://elab.lab.uvalight.net:8083/lobcder-1.0-SNAPSHOT/tmp/testDatasets/scaleUser1/160/file151.dat

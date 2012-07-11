@@ -54,8 +54,8 @@ public class LobcderScalabilityTest {
     public static final int FILE_SIZE_IN_KB = 3200;
     
     public static final int STEP_SIZE_DATASET = 4;
-    public static final int MIN_SIZE_DATASET = 10;
-    public static final int MAX_SIZE_DATASET = 60;//1200;
+    public static final int MIN_SIZE_DATASET = 40;
+    public static final int MAX_SIZE_DATASET = 1200;
     public static final int NUM_OF_CLIENTS = 1;
     public static final String[] meanLables = new String[]{ScaleTest.userMeasureLablesPut[0], ScaleTest.userMeasureLablesPut[1], ScaleTest.userMeasureLablesPut[2], ScaleTest.userMeasureLablesPut[3], ScaleTest.userMeasureLablesPut[4], ScaleTest.userMeasureLablesPut[5], "NumOfUsers"};
     public static String measuresPath = "measures";
