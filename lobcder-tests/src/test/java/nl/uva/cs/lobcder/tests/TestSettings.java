@@ -28,9 +28,11 @@ public class TestSettings {
             + "own sheer folly in eating the cattle of the Sun-god "
             + "Hyperion; so the god prevented them from ever reaching "
             + "home.";
-    
     public static final String TEST_TXT_FILE_NAME = "testTxtFileName.txt";
-    
+    public static final String BACKEND_ENDPOINT = "backend.endpoint";
+    public static final String BACKEND_USERNAME = "backend.username";
+    public static final String BACKEND_PASSWORD = "backend.password";
+
     public static Properties getTestProperties(String propPath)
             throws FileNotFoundException, IOException {
         Properties properties = new Properties();

@@ -52,10 +52,11 @@ public class LobcderScalabilityTest {
     public static final int DELETE = 3;
     
     public static final int FILE_SIZE_IN_KB = 100;
-    
     public static final int STEP_SIZE_DATASET = 4;
     public static final int MIN_SIZE_DATASET = 10;//640;
-    public static final int MAX_SIZE_DATASET = 640;//1200;
+    public static final int MAX_SIZE_DATASET = 20;//1200;
+    
+    
     public static final int NUM_OF_CLIENTS = 1;
     public static final String[] meanLables = new String[]{ScaleTest.userMeasureLablesPut[0], ScaleTest.userMeasureLablesPut[1], ScaleTest.userMeasureLablesPut[2], ScaleTest.userMeasureLablesPut[3], ScaleTest.userMeasureLablesPut[4], ScaleTest.userMeasureLablesPut[5], "NumOfUsers"};
     public static String measuresPath = "measures";
@@ -64,6 +65,8 @@ public class LobcderScalabilityTest {
 
     @Before
     public void setUp() throws Exception {
+        System.err.println("RUNS ONECE!!!!!!!!!");
+
         String propBasePath = System.getProperty("user.home") + File.separator
                 + "workspace" + File.separator + "lobcder-tests"
                 + File.separator + "etc" + File.separator + "test.proprties";
@@ -218,14 +221,13 @@ public class LobcderScalabilityTest {
 
     @Test
     public void benchmarkTest() throws FileNotFoundException, IOException, InterruptedException {
-        System.out.println("benchmarkUpload start: " + System.currentTimeMillis()/1000);
+        System.out.println("benchmarkUpload start: " + System.currentTimeMillis() / 1000);
         benchmarkUpload();
-        System.out.println("benchmarkUpload end: " + System.currentTimeMillis()/1000);
-        
-        System.out.println("benchmarkDownload start: " + System.currentTimeMillis()/1000);
-        benchmarkDownload();
-        System.out.println("benchmarkDownload end: " + System.currentTimeMillis()/1000);
+        System.out.println("benchmarkUpload end: " + System.currentTimeMillis() / 1000);
 
+        System.out.println("benchmarkDownload start: " + System.currentTimeMillis() / 1000);
+        benchmarkDownload();
+        System.out.println("benchmarkDownload end: " + System.currentTimeMillis() / 1000);
     }
 
     private void createFiles(int threads, int start, int end, File dataSetFolderBase) throws IOException, InterruptedException {
@@ -385,8 +387,8 @@ public class LobcderScalabilityTest {
         private File dataset;
         private int fileID;
         private FileWriter writer;
-        public static String[] userMeasureLablesPut = new String[]{"DatasetID", "numOfFiles", "sizeUploaded(kb)", "UploadTime(msec)", "Speed(kb/msec)", "putWaitTotalTime(msec)", "putAverageTime(msec)"};
-        public static String[] userMeasureLablesGet = new String[]{"DatasetID", "numOfFiles", "sizeDownloaded(kb)", "DownloadTime(msec)", "Speed(kb/msec)", "getWaitTotalTime(msec)", "getAverageTime(msec)"};
+        public static String[] userMeasureLablesPut = new String[]{"DatasetID", "numOfFiles", "sizeUploaded(kb)", "UploadTime(sec)", "Speed(kb/sec)", "putWaitTotalTime(sec)", "putAverageTime(sec)"};
+        public static String[] userMeasureLablesGet = new String[]{"DatasetID", "numOfFiles", "sizeDownloaded(kb)", "DownloadTime(sec)", "Speed(kb/sec)", "getWaitTotalTime(sec)", "getAverageTime(sec)"};
         private String path;
 
         private ScaleTest(int op) {
@@ -433,13 +435,14 @@ public class LobcderScalabilityTest {
 //                debug("Mkol: " + path1);
                 MkColMethod mkcol = new MkColMethod(path1);
                 client.executeMethod(mkcol);
-                double startUpload = System.currentTimeMillis();
+
                 double bytesUploaded = 0;
-                double putWaitTotalTime = 0;
+                double putWaitTotalTimeMils = 0;
                 assertTrue("status: " + mkcol.getStatusCode(), mkcol.getStatusCode() == HttpStatus.SC_CREATED || mkcol.getStatusCode() == HttpStatus.SC_METHOD_NOT_ALLOWED);
+                double startUpload = System.currentTimeMillis();
                 for (File f : files) {
                     String path2 = path1 + "/" + f.getName();
-                    debug("PUT: " + path2);
+//                    debug("PUT: " + path2);
                     PutMethod put = new PutMethod(path2);
                     RequestEntity requestEntity = new InputStreamRequestEntity(
                             new FileInputStream(f));
@@ -447,16 +450,17 @@ public class LobcderScalabilityTest {
                     double putStart = System.currentTimeMillis();
                     client.executeMethod(put);
                     double putEnd = System.currentTimeMillis();
+                    debug("uploadSpeed: " + (f.length() / 1024.0) / ((putEnd - putStart) / 1000.0));
                     bytesUploaded += f.length();
-                    putWaitTotalTime += (putEnd - putStart);
-                    assertEquals(HttpStatus.SC_CREATED, put.getStatusCode());
+                    putWaitTotalTimeMils += (putEnd - putStart);
+//                    assertEquals(HttpStatus.SC_CREATED, put.getStatusCode());
                 }
-                double putAverageTime = (double) (putWaitTotalTime / files.length);
+                double putAverageTime = (double) (putWaitTotalTimeMils / files.length);
                 double endUpload = System.currentTimeMillis();
                 double elapsedUploadTime = endUpload - startUpload;
                 double kBytesUploaded = (double) (bytesUploaded / 1024.0);
-                double speed = (double) (kBytesUploaded / elapsedUploadTime);
-                writer.append(datasetName + "," + files.length + "," + kBytesUploaded + "," + elapsedUploadTime + "," + speed + "," + putWaitTotalTime + "," + putAverageTime + "\n");
+                double speed = (double) (kBytesUploaded / (elapsedUploadTime / 1000.0));
+                writer.append(datasetName + "," + files.length + "," + kBytesUploaded + "," + elapsedUploadTime + "," + speed + "," + putWaitTotalTimeMils + "," + putAverageTime + "\n");
             }
             writer.flush();
             writer.close();
