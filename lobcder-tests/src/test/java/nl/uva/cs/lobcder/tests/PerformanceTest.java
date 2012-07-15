@@ -59,10 +59,14 @@ public class PerformanceTest {
     private static HttpClient client;
     private static String lobcdrTestPath;
     private static VFSClient vfsClient;
-    public static final int FILE_SIZE_IN_KB = 100;
+    public static final int[] FILE_SIZE_IN_KB = {100, 400};
     public static final int STEP_SIZE_DATASET = 4;
-    public static final int MIN_SIZE_DATASET = 10;//640;
-    public static final int MAX_SIZE_DATASET = 1200;
+    public static final int MIN_SIZE_DATASET = 2;//10;//640;
+    public static final int MAX_SIZE_DATASET = 10;//1200;
+    public static String measuresPath = "measures";
+    private static String hostMeasuresPath;
+    private static File downloadDir;
+    private static File uploadDir;
 
     @BeforeClass
     public static void setUpClass() throws Exception {
@@ -142,6 +146,16 @@ public class PerformanceTest {
         }
 
         lobcdrTestPath = uri.toString() + "/deleteMe";
+
+        hostMeasuresPath = measuresPath + File.separator + uri.getHost() + File.separator + uri.getPath();
+        File measureDir = new File(hostMeasuresPath);
+        if (measureDir.mkdirs()) {
+            throw new FileNotFoundException("Could not create " + measureDir.getAbsolutePath() + " dir");
+        }
+        downloadDir = new File(measureDir.getAbsolutePath() + File.separator + "download");
+        downloadDir.mkdirs();
+        uploadDir = new File(measureDir.getAbsolutePath() + File.separator + "upload");
+        uploadDir.mkdirs();
     }
 //    @Test
 //    public void test1SpeedFromFolder() throws VlException, FileNotFoundException, IOException {
@@ -193,17 +207,77 @@ public class PerformanceTest {
     @Test
     public void benchmarkTest() throws FileNotFoundException, IOException, InterruptedException, VlException {
         benchmarkUpload();
+        benchmarkDownload();
+    }
+
+    private void benchmarkDownload() throws IOException, VlException {
+
+
+        VFile localFile = localTempDir.createFile("test1MBUpload");
+
+
+
+        double sum = 0;
+        double start_time = 0;
+        double lobcderUpSpeed;
+
+
+
+        String lobcderFilePath = lobcdrTestPath + localFile.getName();
+        GetMethod get = new GetMethod(lobcderFilePath);
+        RequestEntity requestEntity = new InputStreamRequestEntity(localFile.getInputStream());
+
+        String header = "numOfFiles,sizeDownloaded(kb),DownloadTime(msec),Speed(kb/msec)";
+        for (int k : FILE_SIZE_IN_KB) {
+            FileWriter writer = new FileWriter(downloadDir.getAbsolutePath() + File.separator + System.currentTimeMillis() + "_" + k + "k.csv");
+            writer.append(header + "\n");
+            int len = 1024 * k;
+            Random generator = new Random();
+            byte buffer[] = new byte[len];
+            generator.nextBytes(buffer);
+            localFile.streamWrite(buffer, 0, buffer.length);
+
+            debug("file size: " + localFile.getLength());
+
+            for (int i = MIN_SIZE_DATASET; i < MAX_SIZE_DATASET; i *= STEP_SIZE_DATASET) {
+                client.executeMethod(get);
+                long datasetStart = System.currentTimeMillis();
+                for (int j = 0; j < i; j++) {
+//                    start_time = System.currentTimeMillis();
+
+                    InputStream is = get.getResponseBodyAsStream();
+                    File downLoadedFile = new File(localTempDir.getPath() + "/downloadFile");
+                    FileOutputStream os = new FileOutputStream(downLoadedFile);
+                    int read;
+                    while ((read = is.read(buffer)) != -1) {
+                        os.write(buffer, 0, read);
+                    }
+
+//                    double total_millis = System.currentTimeMillis() - start_time;
+//                assertEquals(HttpStatus.SC_CREATED, status);
+//                    lobcderUpSpeed = (1 / 1024.0) / (total_millis / 1000.0);
+//                    debug("lobcder download speed=" + lobcderUpSpeed + "KB/s");
+//            sum += lobcderUpSpeed;
+                }
+                long datasetElapsed = System.currentTimeMillis() - datasetStart;
+                double sizeUploaded = i * localFile.getLength();
+                double datasetUploadSpeedKBperSec = (sizeUploaded / 1024.0) / (datasetElapsed / 1000.0);
+//                debug("mean lobcder upload speed=" + datasetUploadSpeedKBperSec + "KB/s");
+                writer.append(i + "," + sizeUploaded + "," + datasetElapsed + "," + datasetUploadSpeedKBperSec + "\n");
+            }
+            writer.flush();
+            writer.close();
+
+//        double mean = sum / N;
+//        debug("mean lobcder upload speed=" + mean + "KB/s");
+        }
     }
 
     private void benchmarkUpload() throws IOException, VlException {
 
 
         VFile localFile = localTempDir.createFile("test1MBUpload");
-        int len = 1024 * FILE_SIZE_IN_KB;
-        Random generator = new Random();
-        byte buffer[] = new byte[len];
-        generator.nextBytes(buffer);
-        localFile.streamWrite(buffer, 0, buffer.length);
+
 
 
         double sum = 0;
@@ -218,28 +292,43 @@ public class PerformanceTest {
         put.setRequestEntity(requestEntity);
 
 
-        //        debug("---------- Test upload lobcder same file ------------");
-        //Make it load the DB driver
-//        client.executeMethod(put);
-        for (int i = MIN_SIZE_DATASET; i < MAX_SIZE_DATASET; i *= STEP_SIZE_DATASET) {
-            long datasetStart = System.currentTimeMillis();
-            for (int j = 0; j < i; j++) {
-                start_time = System.currentTimeMillis();
-                int status = client.executeMethod(put);
-                double total_millis = System.currentTimeMillis() - start_time;
-                assertEquals(HttpStatus.SC_CREATED, status);
-                lobcderUpSpeed = (len / 1024.0) / (total_millis / 1000.0);
-                debug("lobcder upload speed=" + lobcderUpSpeed + "KB/s");
+
+        String header = "numOfFiles,sizeUploaded(kb),UploadTime(msec),Speed(kb/msec)";
+        for (int k : FILE_SIZE_IN_KB) {
+            FileWriter writer = new FileWriter(uploadDir.getAbsolutePath() + File.separator + System.currentTimeMillis() + "_" + k + "k.csv");
+            writer.append(header + "\n");
+            int len = 1024 * k;
+            Random generator = new Random();
+            byte buffer[] = new byte[len];
+            generator.nextBytes(buffer);
+            localFile.streamWrite(buffer, 0, buffer.length);
+
+            debug("file size: " + localFile.getLength());
+
+            for (int i = MIN_SIZE_DATASET; i < MAX_SIZE_DATASET; i *= STEP_SIZE_DATASET) {
+                client.executeMethod(put);
+                long datasetStart = System.currentTimeMillis();
+                for (int j = 0; j < i; j++) {
+//                    start_time = System.currentTimeMillis();
+                    int status = client.executeMethod(put);
+//                    double total_millis = System.currentTimeMillis() - start_time;
+//                assertEquals(HttpStatus.SC_CREATED, status);
+//                    lobcderUpSpeed = (1 / 1024.0) / (total_millis / 1000.0);
+//                    debug("lobcder upload speed=" + lobcderUpSpeed + "KB/s");
 //            sum += lobcderUpSpeed;
+                }
+                long datasetElapsed = System.currentTimeMillis() - datasetStart;
+                double sizeUploaded = i * localFile.getLength();
+                double datasetUploadSpeedKBperSec = (sizeUploaded / 1024.0) / (datasetElapsed / 1000.0);
+//                debug("mean lobcder upload speed=" + datasetUploadSpeedKBperSec + "KB/s");
+                writer.append(i + "," + sizeUploaded + "," + datasetElapsed + "," + datasetUploadSpeedKBperSec + "\n");
             }
-            long datasetElapsed = System.currentTimeMillis() - datasetStart;
-            double sizeUploaded = i * len;
-            double datasetUploadSpeedKBperSec = (sizeUploaded / 1024.0) / (datasetElapsed / 1000.0);
-            debug("mean lobcder upload speed=" + datasetUploadSpeedKBperSec + "KB/s");
-        }
+            writer.flush();
+            writer.close();
 
 //        double mean = sum / N;
 //        debug("mean lobcder upload speed=" + mean + "KB/s");
+        }
     }
 
 //    @Test
