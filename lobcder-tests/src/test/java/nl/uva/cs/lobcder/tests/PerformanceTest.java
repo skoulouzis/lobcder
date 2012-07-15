@@ -59,7 +59,7 @@ public class PerformanceTest {
     private static HttpClient client;
     private static String lobcdrTestPath;
     private static VFSClient vfsClient;
-    public static final int[] FILE_SIZE_IN_KB = {100, 400,1200,3200};
+    public static final int[] FILE_SIZE_IN_KB = {100, 400, 1200, 3200};
     public static final int STEP_SIZE_DATASET = 4;
     public static final int MIN_SIZE_DATASET = 10;//640;
     public static final int MAX_SIZE_DATASET = 1200;
@@ -237,7 +237,7 @@ public class PerformanceTest {
             generator.nextBytes(buffer);
             localFile.streamWrite(buffer, 0, buffer.length);
 
-            debug("file size: " + localFile.getLength());
+            debug("download file size: " + localFile.getLength());
 
             for (int i = MIN_SIZE_DATASET; i < MAX_SIZE_DATASET; i *= STEP_SIZE_DATASET) {
                 client.executeMethod(get);
@@ -260,10 +260,11 @@ public class PerformanceTest {
 //            sum += lobcderUpSpeed;
                 }
                 long datasetElapsed = System.currentTimeMillis() - datasetStart;
-                double sizeUploaded = i * localFile.getLength();
-                double datasetUploadSpeedKBperSec = (sizeUploaded / 1024.0) / (datasetElapsed / 1000.0);
+                double sizeDownloaded = i * localFile.getLength();
+                double sizeDownloadedKb = (sizeDownloaded / 1024.0);
+                double datasetUploadSpeedKBperSec = sizeDownloadedKb / (datasetElapsed / 1000.0);
 //                debug("mean lobcder upload speed=" + datasetUploadSpeedKBperSec + "KB/s");
-                writer.append(i + "," + sizeUploaded + "," + datasetElapsed + "," + datasetUploadSpeedKBperSec + "\n");
+                writer.append(i + "," + sizeDownloadedKb + "," + datasetElapsed + "," + datasetUploadSpeedKBperSec + "\n");
             }
             writer.flush();
             writer.close();
@@ -303,7 +304,7 @@ public class PerformanceTest {
             generator.nextBytes(buffer);
             localFile.streamWrite(buffer, 0, buffer.length);
 
-            debug("file size: " + localFile.getLength());
+            debug("upload file size: " + localFile.getLength());
 
             for (int i = MIN_SIZE_DATASET; i < MAX_SIZE_DATASET; i *= STEP_SIZE_DATASET) {
                 client.executeMethod(put);
@@ -319,9 +320,10 @@ public class PerformanceTest {
                 }
                 long datasetElapsed = System.currentTimeMillis() - datasetStart;
                 double sizeUploaded = i * localFile.getLength();
-                double datasetUploadSpeedKBperSec = (sizeUploaded / 1024.0) / (datasetElapsed / 1000.0);
+                double sizeUploadedKb = (sizeUploaded / 1024.0);
+                double datasetUploadSpeedKBperSec = sizeUploadedKb / (datasetElapsed / 1000.0);
 //                debug("mean lobcder upload speed=" + datasetUploadSpeedKBperSec + "KB/s");
-                writer.append(i + "," + sizeUploaded + "," + datasetElapsed + "," + datasetUploadSpeedKBperSec + "\n");
+                writer.append(i + "," + sizeUploadedKb + "," + datasetElapsed + "," + datasetUploadSpeedKBperSec + "\n");
             }
             writer.flush();
             writer.close();
