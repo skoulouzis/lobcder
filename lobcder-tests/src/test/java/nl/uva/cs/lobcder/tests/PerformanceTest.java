@@ -206,7 +206,7 @@ public class PerformanceTest {
 
     @Test
     public void benchmarkTest() throws FileNotFoundException, IOException, InterruptedException, VlException {
-        benchmarkUpload();
+//        benchmarkUpload();
         benchmarkDownload();
     }
 
@@ -215,8 +215,8 @@ public class PerformanceTest {
 
         VFile localFile = localTempDir.createFile("test1MBUpload");
 
-
-
+        
+        
         double sum = 0;
         double start_time = 0;
         double lobcderUpSpeed;
@@ -225,7 +225,9 @@ public class PerformanceTest {
 
         String lobcderFilePath = lobcdrTestPath + localFile.getName();
         GetMethod get = new GetMethod(lobcderFilePath);
-        RequestEntity requestEntity = new InputStreamRequestEntity(localFile.getInputStream());
+        
+        
+        
 
         String header = "numOfFiles,sizeDownloaded(kb),DownloadTime(msec),Speed(kb/msec)";
         for (int k : FILE_SIZE_IN_KB) {
@@ -237,6 +239,11 @@ public class PerformanceTest {
             generator.nextBytes(buffer);
             localFile.streamWrite(buffer, 0, buffer.length);
 
+            PutMethod put = new PutMethod(lobcderFilePath);
+            RequestEntity requestEntity = new InputStreamRequestEntity(localFile.getInputStream());
+            put.setRequestEntity(requestEntity);
+            client.executeMethod(put);
+        
             debug("download file size: " + localFile.getLength());
 
             for (int i = MIN_SIZE_DATASET; i < MAX_SIZE_DATASET; i *= STEP_SIZE_DATASET) {
@@ -324,6 +331,7 @@ public class PerformanceTest {
                 double datasetUploadSpeedKBperSec = sizeUploadedKb / (datasetElapsed / 1000.0);
 //                debug("mean lobcder upload speed=" + datasetUploadSpeedKBperSec + "KB/s");
                 writer.append(i + "," + sizeUploadedKb + "," + datasetElapsed + "," + datasetUploadSpeedKBperSec + "\n");
+                writer.flush();
             }
             writer.flush();
             writer.close();
