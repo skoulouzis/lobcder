@@ -59,10 +59,10 @@ public class PerformanceTest {
     private static HttpClient client;
     private static String lobcdrTestPath;
     private static VFSClient vfsClient;
-    public static final int[] FILE_SIZE_IN_KB = {100, 400};
+    public static final int[] FILE_SIZE_IN_KB = {100, 400,1200,3200};
     public static final int STEP_SIZE_DATASET = 4;
-    public static final int MIN_SIZE_DATASET = 2;//10;//640;
-    public static final int MAX_SIZE_DATASET = 10;//1200;
+    public static final int MIN_SIZE_DATASET = 10;//640;
+    public static final int MAX_SIZE_DATASET = 1200;
     public static String measuresPath = "measures";
     private static String hostMeasuresPath;
     private static File downloadDir;
@@ -244,7 +244,7 @@ public class PerformanceTest {
                 long datasetStart = System.currentTimeMillis();
                 for (int j = 0; j < i; j++) {
 //                    start_time = System.currentTimeMillis();
-
+                    int status = client.executeMethod(get);
                     InputStream is = get.getResponseBodyAsStream();
                     File downLoadedFile = new File(localTempDir.getPath() + "/downloadFile");
                     FileOutputStream os = new FileOutputStream(downLoadedFile);
@@ -254,7 +254,7 @@ public class PerformanceTest {
                     }
 
 //                    double total_millis = System.currentTimeMillis() - start_time;
-//                assertEquals(HttpStatus.SC_CREATED, status);
+//                    assertEquals(HttpStatus.SC_OK, status);
 //                    lobcderUpSpeed = (1 / 1024.0) / (total_millis / 1000.0);
 //                    debug("lobcder download speed=" + lobcderUpSpeed + "KB/s");
 //            sum += lobcderUpSpeed;
@@ -312,7 +312,7 @@ public class PerformanceTest {
 //                    start_time = System.currentTimeMillis();
                     int status = client.executeMethod(put);
 //                    double total_millis = System.currentTimeMillis() - start_time;
-//                assertEquals(HttpStatus.SC_CREATED, status);
+//                    assertEquals(HttpStatus.SC_CREATED, status);
 //                    lobcderUpSpeed = (1 / 1024.0) / (total_millis / 1000.0);
 //                    debug("lobcder upload speed=" + lobcderUpSpeed + "KB/s");
 //            sum += lobcderUpSpeed;
