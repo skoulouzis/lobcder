@@ -54,7 +54,7 @@ public class LobcderScalabilityTest {
     public static final int FILE_SIZE_IN_KB = 100;
     public static final int STEP_SIZE_DATASET = 4;
     public static final int MIN_SIZE_DATASET = 10;//640;
-    public static final int MAX_SIZE_DATASET = 20;//1200;
+    public static final int MAX_SIZE_DATASET = 1200;
     
     
     public static final int NUM_OF_CLIENTS = 1;
@@ -221,13 +221,13 @@ public class LobcderScalabilityTest {
 
     @Test
     public void benchmarkTest() throws FileNotFoundException, IOException, InterruptedException {
-        System.out.println("benchmarkUpload start: " + System.currentTimeMillis() / 1000);
-        benchmarkUpload();
-        System.out.println("benchmarkUpload end: " + System.currentTimeMillis() / 1000);
-
-        System.out.println("benchmarkDownload start: " + System.currentTimeMillis() / 1000);
-        benchmarkDownload();
-        System.out.println("benchmarkDownload end: " + System.currentTimeMillis() / 1000);
+//        System.out.println("benchmarkUpload start: " + System.currentTimeMillis() / 1000);
+//        benchmarkUpload();
+//        System.out.println("benchmarkUpload end: " + System.currentTimeMillis() / 1000);
+//
+//        System.out.println("benchmarkDownload start: " + System.currentTimeMillis() / 1000);
+//        benchmarkDownload();
+//        System.out.println("benchmarkDownload end: " + System.currentTimeMillis() / 1000);
     }
 
     private void createFiles(int threads, int start, int end, File dataSetFolderBase) throws IOException, InterruptedException {

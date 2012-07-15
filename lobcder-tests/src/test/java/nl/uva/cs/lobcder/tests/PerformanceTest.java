@@ -59,13 +59,10 @@ public class PerformanceTest {
     private static HttpClient client;
     private static String lobcdrTestPath;
     private static VFSClient vfsClient;
-    private static File dataSetFolderBase;
-    private static ArrayList<File> datasets;
-    public static final int CREATE_DATASET = 1;
     public static final int FILE_SIZE_IN_KB = 100;
     public static final int STEP_SIZE_DATASET = 4;
-    public static final int MIN_SIZE_DATASET = 5;//640;
-    public static final int MAX_SIZE_DATASET = 10;//1200;
+    public static final int MIN_SIZE_DATASET = 10;//640;
+    public static final int MAX_SIZE_DATASET = 1200;
 
     @BeforeClass
     public static void setUpClass() throws Exception {
@@ -84,8 +81,6 @@ public class PerformanceTest {
         initClients();
 
         initLobcderTestDir();
-
-        initDatasets();
     }
 
     @AfterClass
@@ -148,46 +143,6 @@ public class PerformanceTest {
 
         lobcdrTestPath = uri.toString() + "/deleteMe";
     }
-
-    private static void initDatasets() throws IOException, InterruptedException {
-        //Init a synthetic datasets from 50MB to 4GB
-        String dirPath = System.getProperty("java.io.tmpdir") + "/testDatasets";
-        dataSetFolderBase = new File(dirPath);
-        if (!dataSetFolderBase.exists()) {
-            if (!dataSetFolderBase.mkdirs()) {
-                throw new IOException("Faild to create tmp dir");
-            }
-        }
-
-        datasets = new ArrayList<File>();
-        createFiles(32, MIN_SIZE_DATASET, MAX_SIZE_DATASET, dataSetFolderBase);
-    }
-
-    private static void createFiles(int threads, int start, int end, File dataSetFolderBase) throws IOException, InterruptedException {
-        ExecutorService execSvc = Executors.newFixedThreadPool(threads);
-        long startTime = System.currentTimeMillis();
-        for (int i = start; i < end; i *= STEP_SIZE_DATASET) {
-            String datasetName = String.valueOf(i);
-            String datasetPath = dataSetFolderBase.getAbsolutePath() + "/" + datasetName;
-            File dataset = new File(datasetPath);
-            if (!dataset.exists()) {
-                if (!dataset.mkdirs()) {
-                    throw new IOException("Faild to create tmp dir");
-                }
-            }
-            datasets.add(dataset);
-            for (int j = 0; j < i; j++) {
-                ScaleTest u = new ScaleTest(CREATE_DATASET);
-                u.setDataset(dataset);
-                u.setFileID(j);
-                execSvc.execute(u);
-            }
-        }
-        execSvc.shutdown();
-        execSvc.awaitTermination(30, TimeUnit.MINUTES);
-        long endTime = System.currentTimeMillis();
-    }
-
 //    @Test
 //    public void test1SpeedFromFolder() throws VlException, FileNotFoundException, IOException {
 //        String datasetPath = datasets.get(0).getAbsolutePath();
@@ -234,170 +189,172 @@ public class PerformanceTest {
 //        debug("mean backend upload speed=" + mean
 //                + "KB/s");
 //    }
-    @Test
-    public void benchmarkTest() throws FileNotFoundException, IOException, InterruptedException {
-//        benchmarkUpload();
-    }
-
-    private void benchmarkUpload() throws IOException {
-
-        //Create the folder stucture 
-        File dataset = datasets.get(0);
-        String[] parts = dataset.getAbsolutePath().split("/");
-        String testDatasetPath = lobcderRoot;
-        for (int i = 1; i < parts.length - 1; i++) {
-            if (testDatasetPath.endsWith("/")) {
-                testDatasetPath += parts[i];
-            } else {
-                testDatasetPath += "/" + parts[i];
-            }
-//                System.out.println("MkCol: " + testDatasetPath);
-            MkColMethod mkcol = new MkColMethod(testDatasetPath);
-            client.executeMethod(mkcol);
-            assertTrue("status: " + mkcol.getStatusCode(), mkcol.getStatusCode() == HttpStatus.SC_CREATED || mkcol.getStatusCode() == HttpStatus.SC_METHOD_NOT_ALLOWED);
-        }
-
-
-        for (File d : datasets) {
-            File[] files = d.listFiles();
-            String datasetName = files[0].getParentFile().getName();
-            String path1 = testDatasetPath + "/" + datasetName;
-            debug("Mkol: " + path1);
-            MkColMethod mkcol = new MkColMethod(path1);
-            client.executeMethod(mkcol);
-            for (File f : files) {
-                String path2 = path1 + "/" + f.getName();
-                PutMethod put = new PutMethod(path2);
-                RequestEntity requestEntity = new InputStreamRequestEntity(
-                        new FileInputStream(f));
-                put.setRequestEntity(requestEntity);
-                double putStart = System.currentTimeMillis();
-                client.executeMethod(put);
-                double putEnd = System.currentTimeMillis();
-                double individualFileUploadSpeedkBpSec = (f.length() / 1024.0) / ((putEnd - putStart) / 1000.0);
-                debug("uploadSpeed: " + individualFileUploadSpeedkBpSec);
-            }
-            //Clean up delete dataset.
-            DeleteMethod del = new DeleteMethod(path1);
-            client.executeMethod(del);
-
-        }
-    }
 
     @Test
-    public void testSpeed() throws VlException, IOException {
+    public void benchmarkTest() throws FileNotFoundException, IOException, InterruptedException, VlException {
+        benchmarkUpload();
+    }
 
-        //First test backend speed
-        VFile[] localFiles = new VFile[5];
+    private void benchmarkUpload() throws IOException, VlException {
+
 
         VFile localFile = localTempDir.createFile("test1MBUpload");
-        int len = 1024 * 100;
+        int len = 1024 * FILE_SIZE_IN_KB;
         Random generator = new Random();
         byte buffer[] = new byte[len];
         generator.nextBytes(buffer);
         localFile.streamWrite(buffer, 0, buffer.length);
 
-        long start_time;
-        long total_millis;
 
         double sum = 0;
-        double mean;
-        double N = 20;
-        VFile remoteFile = null;
-
-        debug("---------- Test upload backend same file ------------");
-        for (int i = 0; i < N; i++) {
-            start_time = System.currentTimeMillis();
-            remoteFile = localFile.copyTo(testDriverRemoteDir);
-            total_millis = System.currentTimeMillis() - start_time;
-            assertTrue(remoteFile.exists());
-            double backendUpSpeed = (len / 1024.0) / (total_millis / 1000.0);
-            debug("backend upload speed=" + backendUpSpeed
-                    + "KB/s");
-            sum += backendUpSpeed;
-        }
-        mean = sum / N;
-        debug("mean backend upload speed=" + mean
-                + "KB/s");
+        double start_time = 0;
+        double lobcderUpSpeed;
 
 
-        byte[] buf = new byte[(int) localFile.getLength()];
-        sum = 0;
-        debug("---------- Test download backend same file ------------");
-        for (int i = 0; i < N; i++) {
-            start_time = System.currentTimeMillis();
-            InputStream is = remoteFile.getInputStream();
-            File downLoadedFile = new File(localTempDir.getPath() + "/downloadFile");
-            FileOutputStream os = new FileOutputStream(downLoadedFile);
-            int read;
-            while ((read = is.read(buf)) != -1) {
-                os.write(buf, 0, read);
-            }
-            total_millis = System.currentTimeMillis() - start_time;
-            assertTrue(localFile.exists());
-            double backendDownSpeed = (len / 1024.0) / (total_millis / 1000.0);
-            debug("backend download speed=" + backendDownSpeed
-                    + "KB/s");
-            sum += backendDownSpeed;
-        }
-        mean = sum / N;
-        debug("mean backend download speed=" + mean
-                + "KB/s");
 
-        //Now test with LOBCDER
         String lobcderFilePath = lobcdrTestPath + localFile.getName();
         PutMethod put = new PutMethod(lobcderFilePath);
         RequestEntity requestEntity = new InputStreamRequestEntity(localFile.getInputStream());
         put.setRequestEntity(requestEntity);
 
-        sum = 0;
-        start_time = 0;
-        double lobcderUpSpeed;
-        debug("---------- Test upload lobcder same file ------------");
-        for (int i = 0; i < N; i++) {
-            start_time = System.currentTimeMillis();
-            int status = client.executeMethod(put);
-            total_millis = System.currentTimeMillis() - start_time;
-            assertEquals(HttpStatus.SC_CREATED, status);
-            lobcderUpSpeed = (len / 1024.0) / (total_millis / 1000.0);
-            debug("lobcder upload speed=" + lobcderUpSpeed
-                    + "KB/s");
-            sum += lobcderUpSpeed;
-        }
-        mean = sum / N;
 
-        debug("mean lobcder upload speed=" + mean
-                + "KB/s");
-
-        sum = 0;
-        start_time = 0;
-        GetMethod get = new GetMethod(lobcderFilePath);
-        double lobcderDownSpeed;
-        debug("---------- Test download lobcder same file ------------");
-        for (int i = 0; i < N; i++) {
-            start_time = System.currentTimeMillis();
-            int status = client.executeMethod(get);
-            InputStream is = get.getResponseBodyAsStream();
-            File downLoadedFile = new File(localTempDir.getPath() + "/downloadFile");
-            FileOutputStream os = new FileOutputStream(downLoadedFile);
-            int read;
-            while ((read = is.read(buf)) != -1) {
-                os.write(buf, 0, read);
+        //        debug("---------- Test upload lobcder same file ------------");
+        //Make it load the DB driver
+//        client.executeMethod(put);
+        for (int i = MIN_SIZE_DATASET; i < MAX_SIZE_DATASET; i *= STEP_SIZE_DATASET) {
+            long datasetStart = System.currentTimeMillis();
+            for (int j = 0; j < i; j++) {
+                start_time = System.currentTimeMillis();
+                int status = client.executeMethod(put);
+                double total_millis = System.currentTimeMillis() - start_time;
+                assertEquals(HttpStatus.SC_CREATED, status);
+                lobcderUpSpeed = (len / 1024.0) / (total_millis / 1000.0);
+                debug("lobcder upload speed=" + lobcderUpSpeed + "KB/s");
+//            sum += lobcderUpSpeed;
             }
-
-            total_millis = System.currentTimeMillis() - start_time;
-            assertEquals(HttpStatus.SC_OK, status);
-            lobcderDownSpeed = (len / 1024.0) / (total_millis / 1000.0);
-            debug("lobcder download speed=" + lobcderDownSpeed
-                    + "KB/s");
-            sum += lobcderDownSpeed;
+            long datasetElapsed = System.currentTimeMillis() - datasetStart;
+            double sizeUploaded = i * len;
+            double datasetUploadSpeedKBperSec = (sizeUploaded / 1024.0) / (datasetElapsed / 1000.0);
+            debug("mean lobcder upload speed=" + datasetUploadSpeedKBperSec + "KB/s");
         }
-        mean = sum / N;
 
-        debug("mean lobcder download speed=" + mean
-                + "KB/s");
+//        double mean = sum / N;
+//        debug("mean lobcder upload speed=" + mean + "KB/s");
     }
 
+//    @Test
+//    public void testSpeed() throws VlException, IOException {
+//
+//        //First test backend speed
+//
+//
+//        VFile localFile = localTempDir.createFile("test1MBUpload");
+//        int len = 1024 * 100;
+//        Random generator = new Random();
+//        byte buffer[] = new byte[len];
+//        generator.nextBytes(buffer);
+//        localFile.streamWrite(buffer, 0, buffer.length);
+//
+//        long start_time;
+//        long total_millis;
+//
+//        double sum = 0;
+//        double mean;
+//        double N = 20;
+//        VFile remoteFile = null;
+//
+//        debug("---------- Test upload backend same file ------------");
+//        for (int i = 0; i < N; i++) {
+//            start_time = System.currentTimeMillis();
+//            remoteFile = localFile.copyTo(testDriverRemoteDir);
+//            total_millis = System.currentTimeMillis() - start_time;
+//            assertTrue(remoteFile.exists());
+//            double backendUpSpeed = (len / 1024.0) / (total_millis / 1000.0);
+//            debug("backend upload speed=" + backendUpSpeed
+//                    + "KB/s");
+//            sum += backendUpSpeed;
+//        }
+//        mean = sum / N;
+//        debug("mean backend upload speed=" + mean
+//                + "KB/s");
+//
+//
+//        byte[] buf = new byte[(int) localFile.getLength()];
+//        sum = 0;
+//        debug("---------- Test download backend same file ------------");
+//        for (int i = 0; i < N; i++) {
+//            start_time = System.currentTimeMillis();
+//            InputStream is = remoteFile.getInputStream();
+//            File downLoadedFile = new File(localTempDir.getPath() + "/downloadFile");
+//            FileOutputStream os = new FileOutputStream(downLoadedFile);
+//            int read;
+//            while ((read = is.read(buf)) != -1) {
+//                os.write(buf, 0, read);
+//            }
+//            total_millis = System.currentTimeMillis() - start_time;
+//            assertTrue(localFile.exists());
+//            double backendDownSpeed = (len / 1024.0) / (total_millis / 1000.0);
+//            debug("backend download speed=" + backendDownSpeed
+//                    + "KB/s");
+//            sum += backendDownSpeed;
+//        }
+//        mean = sum / N;
+//        debug("mean backend download speed=" + mean
+//                + "KB/s");
+//
+//        //Now test with LOBCDER
+//        String lobcderFilePath = lobcdrTestPath + localFile.getName();
+//        PutMethod put = new PutMethod(lobcderFilePath);
+//        RequestEntity requestEntity = new InputStreamRequestEntity(localFile.getInputStream());
+//        put.setRequestEntity(requestEntity);
+//
+//        sum = 0;
+//        start_time = 0;
+//        double lobcderUpSpeed;
+//        debug("---------- Test upload lobcder same file ------------");
+//        for (int i = 0; i < N; i++) {
+//            start_time = System.currentTimeMillis();
+//            int status = client.executeMethod(put);
+//            total_millis = System.currentTimeMillis() - start_time;
+//            assertEquals(HttpStatus.SC_CREATED, status);
+//            lobcderUpSpeed = (len / 1024.0) / (total_millis / 1000.0);
+//            debug("lobcder upload speed=" + lobcderUpSpeed
+//                    + "KB/s");
+//            sum += lobcderUpSpeed;
+//        }
+//        mean = sum / N;
+//
+//        debug("mean lobcder upload speed=" + mean
+//                + "KB/s");
+//
+//        sum = 0;
+//        start_time = 0;
+//        GetMethod get = new GetMethod(lobcderFilePath);
+//        double lobcderDownSpeed;
+//        debug("---------- Test download lobcder same file ------------");
+//        for (int i = 0; i < N; i++) {
+//            start_time = System.currentTimeMillis();
+//            int status = client.executeMethod(get);
+//            InputStream is = get.getResponseBodyAsStream();
+//            File downLoadedFile = new File(localTempDir.getPath() + "/downloadFile");
+//            FileOutputStream os = new FileOutputStream(downLoadedFile);
+//            int read;
+//            while ((read = is.read(buf)) != -1) {
+//                os.write(buf, 0, read);
+//            }
+//
+//            total_millis = System.currentTimeMillis() - start_time;
+//            assertEquals(HttpStatus.SC_OK, status);
+//            lobcderDownSpeed = (len / 1024.0) / (total_millis / 1000.0);
+//            debug("lobcder download speed=" + lobcderDownSpeed
+//                    + "KB/s");
+//            sum += lobcderDownSpeed;
+//        }
+//        mean = sum / N;
+//
+//        debug("mean lobcder download speed=" + mean
+//                + "KB/s");
+//    }
     private static void debug(String msg) {
         System.err.println("debug: " + msg);
     }
@@ -438,51 +395,5 @@ public class PerformanceTest {
         MkColMethod mkcol = new MkColMethod(lobcdrTestPath);
         client.executeMethod(mkcol);
         assertTrue("status: " + mkcol.getStatusCode(), mkcol.getStatusCode() == HttpStatus.SC_CREATED || mkcol.getStatusCode() == HttpStatus.SC_METHOD_NOT_ALLOWED);
-    }
-
-    private static class ScaleTest implements Runnable {
-
-        private final int op;
-        private File dataset;
-        private int fileID;
-
-        private ScaleTest(int op) {
-            this.op = op;
-        }
-
-        @Override
-        public void run() {
-            try {
-                switch (op) {
-                    case CREATE_DATASET:
-                        createDataset(FILE_SIZE_IN_KB);
-                        break;
-                }
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            }
-        }
-
-        private void setDataset(File dataset) {
-            this.dataset = dataset;
-        }
-
-        private void setFileID(int j) {
-            this.fileID = j;
-        }
-
-        private void createDataset(int sizeInk) throws FileNotFoundException, IOException {
-            byte[] data = new byte[1024 * sizeInk];//1MB
-            Random r = new Random();
-            File f = new File(dataset.getAbsolutePath() + "/file" + this.fileID + ".dat");
-            if (!f.exists() || f.length() != (1024 * sizeInk)) {
-//                debug("Writing: " + f.getAbsolutePath());
-                FileOutputStream fos = new FileOutputStream(f);
-                r.nextBytes(data);
-                fos.write(data);
-                fos.flush();
-                fos.close();
-            }
-        }
     }
 }
