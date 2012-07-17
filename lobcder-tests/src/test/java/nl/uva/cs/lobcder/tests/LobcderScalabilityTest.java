@@ -51,7 +51,7 @@ public class LobcderScalabilityTest {
     public static final int TEST_DOWNLOAD = 2;
     public static final int DELETE = 3;
     
-    public static final int FILE_SIZE_IN_KB = 100;
+    public static final int FILE_SIZE_IN_KB = 3200;
     public static final int STEP_SIZE_DATASET = 4;
     public static final int MIN_SIZE_DATASET = 10;//640;
     public static final int MAX_SIZE_DATASET = 1200;
@@ -65,8 +65,6 @@ public class LobcderScalabilityTest {
 
     @Before
     public void setUp() throws Exception {
-        System.err.println("RUNS ONECE!!!!!!!!!");
-
         String propBasePath = System.getProperty("user.home") + File.separator
                 + "workspace" + File.separator + "lobcder-tests"
                 + File.separator + "etc" + File.separator + "test.proprties";

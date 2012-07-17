@@ -59,7 +59,7 @@ public class PerformanceTest {
     private static HttpClient client;
     private static String lobcdrTestPath;
     private static VFSClient vfsClient;
-    public static final int[] FILE_SIZE_IN_KB = {100, 400, 1200, 3200};
+    public static final int[] FILE_SIZE_IN_KB = {100,400,1600,3200};
     public static final int STEP_SIZE_DATASET = 4;
     public static final int MIN_SIZE_DATASET = 10;//640;
     public static final int MAX_SIZE_DATASET = 1200;
@@ -100,7 +100,7 @@ public class PerformanceTest {
         del = new DeleteMethod(lobcderRoot);
 //        debug("Deleteing: "+lobcderRoot);
         status = client.executeMethod(del);
-        assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
+        assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT || status == HttpStatus.SC_MULTI_STATUS );
     }
 
     private static void initUsers(Properties prop) {
@@ -206,7 +206,7 @@ public class PerformanceTest {
 
     @Test
     public void benchmarkTest() throws FileNotFoundException, IOException, InterruptedException, VlException {
-//        benchmarkUpload();
+        benchmarkUpload();
         benchmarkDownload();
     }
 
@@ -239,6 +239,12 @@ public class PerformanceTest {
             generator.nextBytes(buffer);
             localFile.streamWrite(buffer, 0, buffer.length);
 
+            
+            //just in case delete it first 
+            DeleteMethod del = new DeleteMethod(lobcderFilePath);
+            client.executeMethod(del);
+            
+            
             PutMethod put = new PutMethod(lobcderFilePath);
             RequestEntity requestEntity = new InputStreamRequestEntity(localFile.getInputStream());
             put.setRequestEntity(requestEntity);
@@ -250,7 +256,7 @@ public class PerformanceTest {
                 client.executeMethod(get);
                 long datasetStart = System.currentTimeMillis();
                 for (int j = 0; j < i; j++) {
-//                    start_time = System.currentTimeMillis();
+                    start_time = System.currentTimeMillis();
                     int status = client.executeMethod(get);
                     InputStream is = get.getResponseBodyAsStream();
                     File downLoadedFile = new File(localTempDir.getPath() + "/downloadFile");
@@ -259,11 +265,12 @@ public class PerformanceTest {
                     while ((read = is.read(buffer)) != -1) {
                         os.write(buffer, 0, read);
                     }
-
-//                    double total_millis = System.currentTimeMillis() - start_time;
+                    double total_millis = System.currentTimeMillis() - start_time;
+                    os.flush();
+                    os.close();
 //                    assertEquals(HttpStatus.SC_OK, status);
-//                    lobcderUpSpeed = (1 / 1024.0) / (total_millis / 1000.0);
-//                    debug("lobcder download speed=" + lobcderUpSpeed + "KB/s");
+                    lobcderUpSpeed = (len / 1024.0) / (total_millis / 1000.0);
+                    debug("lobcder download speed=" + lobcderUpSpeed + "KB/s");
 //            sum += lobcderUpSpeed;
                 }
                 long datasetElapsed = System.currentTimeMillis() - datasetStart;
@@ -272,6 +279,7 @@ public class PerformanceTest {
                 double datasetUploadSpeedKBperSec = sizeDownloadedKb / (datasetElapsed / 1000.0);
 //                debug("mean lobcder upload speed=" + datasetUploadSpeedKBperSec + "KB/s");
                 writer.append(i + "," + sizeDownloadedKb + "," + datasetElapsed + "," + datasetUploadSpeedKBperSec + "\n");
+		 writer.flush();
             }
             writer.flush();
             writer.close();
@@ -310,19 +318,19 @@ public class PerformanceTest {
             byte buffer[] = new byte[len];
             generator.nextBytes(buffer);
             localFile.streamWrite(buffer, 0, buffer.length);
-
+            
             debug("upload file size: " + localFile.getLength());
 
             for (int i = MIN_SIZE_DATASET; i < MAX_SIZE_DATASET; i *= STEP_SIZE_DATASET) {
                 client.executeMethod(put);
                 long datasetStart = System.currentTimeMillis();
                 for (int j = 0; j < i; j++) {
-//                    start_time = System.currentTimeMillis();
+                    start_time = System.currentTimeMillis();
                     int status = client.executeMethod(put);
-//                    double total_millis = System.currentTimeMillis() - start_time;
+                    double total_millis = System.currentTimeMillis() - start_time;
 //                    assertEquals(HttpStatus.SC_CREATED, status);
-//                    lobcderUpSpeed = (1 / 1024.0) / (total_millis / 1000.0);
-//                    debug("lobcder upload speed=" + lobcderUpSpeed + "KB/s");
+                    lobcderUpSpeed = (len / 1024.0) / (total_millis / 1000.0);
+                    debug("lobcder upload speed=" + lobcderUpSpeed + "KB/s");
 //            sum += lobcderUpSpeed;
                 }
                 long datasetElapsed = System.currentTimeMillis() - datasetStart;
