@@ -220,7 +220,7 @@ public class LobcderScalabilityTest {
     @Test
     public void benchmarkTest() throws FileNotFoundException, IOException, InterruptedException {
 //        System.out.println("benchmarkUpload start: " + System.currentTimeMillis() / 1000);
-//        benchmarkUpload();
+        benchmarkUpload();
 //        System.out.println("benchmarkUpload end: " + System.currentTimeMillis() / 1000);
 
 //        System.out.println("benchmarkDownload start: " + System.currentTimeMillis() / 1000);
