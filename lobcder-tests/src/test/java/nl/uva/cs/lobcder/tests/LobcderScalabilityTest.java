@@ -51,10 +51,10 @@ public class LobcderScalabilityTest {
     public static final int TEST_DOWNLOAD = 2;
     public static final int DELETE = 3;
     
-    public static final int FILE_SIZE_IN_KB = 3200;
+    public static final int FILE_SIZE_IN_KB = 100;
     public static final int STEP_SIZE_DATASET = 4;
-    public static final int MIN_SIZE_DATASET = 10;//640;
-    public static final int MAX_SIZE_DATASET = 1200;
+    public static final int MIN_SIZE_DATASET = 3;//640;
+    public static final int MAX_SIZE_DATASET = 4;
     
     
     public static final int NUM_OF_CLIENTS = 1;
