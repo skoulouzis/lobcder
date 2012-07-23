@@ -13,6 +13,9 @@ import com.bradmcevoy.http.exceptions.NotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.channels.Channels;
+import java.nio.channels.ReadableByteChannel;
+import java.nio.channels.WritableByteChannel;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -79,14 +82,14 @@ public class WebDataFileResource extends WebDataResource implements
             getCatalogue().registerResourceEntry(newFolderEntry);
         } catch (CatalogueException ex) {
             throw new ConflictException(this, ex.toString());
-        } catch(Exception e) {
+        } catch (Exception e) {
             throw new NotAuthorizedException();
         }
     }
 
     @Override
-    public void delete() throws NotAuthorizedException, ConflictException, BadRequestException {        
-        try {     
+    public void delete() throws NotAuthorizedException, ConflictException, BadRequestException {
+        try {
 //            MyPrincipal principal = getPrincipal();
 //            Path parentPath = getPath().getParent();
 //            if(parentPath ==null || parentPath.isRoot()) {
@@ -109,7 +112,7 @@ public class WebDataFileResource extends WebDataResource implements
             throw new BadRequestException(this, ex.toString());
         } catch (VlException ex) {
             throw new BadRequestException(this, ex.toString());
-        } catch (Exception e){
+        } catch (Exception e) {
             throw new NotAuthorizedException();
         }
     }
@@ -171,11 +174,13 @@ public class WebDataFileResource extends WebDataResource implements
             Map<String, String> params, String contentType) throws IOException,
             NotAuthorizedException, BadRequestException, NotFoundException {
         InputStream in = null;
+        ReadableByteChannel src = null;
+        WritableByteChannel dest = null;
         debug("sendContent.");
         debug("\t range: " + range);
         debug("\t params: " + params);
         debug("\t contentType: " + contentType);
-        
+
         try {
 //            Permissions p = new Permissions(getLogicalData().getMetadata().getPermissionArray());
 //            MyPrincipal principal = getPrincipal();
@@ -200,7 +205,11 @@ public class WebDataFileResource extends WebDataResource implements
                 LobIOUtils.writeRange(in, range, out);
             } else {
                 debug("sendContent: send whole file to " + vFile.getVRL());
+//                src = Channels.newChannel(in);
+//                dest = Channels.newChannel(out);
+//                LobIOUtils.fastChannelCopy(src, dest);
                 IOUtils.copy(in, out);
+//                LobIOUtils.copy(in, out);
             }
 
         } catch (VlException ex) {
@@ -209,6 +218,12 @@ public class WebDataFileResource extends WebDataResource implements
         } catch (Exception e) {
             throw new NotAuthorizedException();
         } finally {
+            if (src != null) {
+                src.close();
+            }
+            if (dest != null) {
+                dest.close();
+            }
             out.flush();
             out.close();
             if (in != null) {
@@ -329,7 +344,6 @@ public class WebDataFileResource extends WebDataResource implements
 //        if (debug) {
 //            System.err.println(this.getClass().getSimpleName() + "." + getLogicalData().getLDRI() + ": " + msg);
 //        }
-
 //        log.debug(msg);
     }
 
@@ -370,7 +384,7 @@ public class WebDataFileResource extends WebDataResource implements
         if (modifiedDate == null) {
             meta.setModifiedDate(System.currentTimeMillis());
             getLogicalData().setMetadata(meta);
-            
+
         }
     }
 }

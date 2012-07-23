@@ -5,7 +5,9 @@
 package nl.uva.cs.lobcder.webDav.resources;
 
 import com.bradmcevoy.common.Path;
-import com.bradmcevoy.http.*;
+import com.bradmcevoy.http.CollectionResource;
+import com.bradmcevoy.http.Range;
+import com.bradmcevoy.http.Resource;
 import com.bradmcevoy.http.exceptions.BadRequestException;
 import com.bradmcevoy.http.exceptions.ConflictException;
 import com.bradmcevoy.http.exceptions.NotAuthorizedException;
@@ -330,7 +332,7 @@ public class WebDataResourceFactoryTest {
             int count = 1;
             for (int i = 0; i < count; i++) {
                 File tmpLocalFile = File.createTempFile(this.getClass().getName(), null);
-                byte[] data = new byte[1024 * 20];//1MB
+                byte[] data = new byte[1024 * 2];//1MB
                 Random r = new Random();
                 r.nextBytes(data);
 
