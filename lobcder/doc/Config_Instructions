@@ -17,7 +17,8 @@ $mysql> grant CREATE,INSERT,DELETE,UPDATE,SELECT on mydb.* to username@localhost
 
 2. LOBCDER configuration files
 
-All configuration files should be located at ~/.lobcder/
+All configuration files should be located at ~/.lobcder/ or in some cases in 
+~/.lobcder-test/ (this is defined in the code in nl.uva.cs.lobcder.util.Constants) 
 In there we have 3 types of files: 
 a) ~/.lobcder-test/lobcder.prop 
 b)~/.lobcder/datanucleus.properties
