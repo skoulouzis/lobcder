@@ -17,6 +17,7 @@
     </properties>
 
     <dependencies>
+        
         <dependency>
             <groupId>cryptix</groupId>
             <artifactId>cryptix</artifactId>
@@ -37,14 +38,38 @@ there are no implementations to enhance
             <version>6.0</version>
             <scope>provided</scope>
         </dependency>-->
+        
+        
+        <dependency>
+            <groupId>vlet-vrs-core</groupId>
+            <artifactId>vlet-vrs-core</artifactId>
+            <version>1.5.0-beta-1</version>
+        </dependency>
 
+
+        <dependency>
+            <groupId>nl.uva.vlet</groupId>
+            <artifactId>vlet-vfs.cloud</artifactId>
+            <version>1.0-20120724.154529-1</version>
+        </dependency>
+        
+        
+        <dependency>
+            <groupId>nl.uva.vlet.vfs.gftp</groupId>
+            <artifactId>nl.uva.vlet.vfs.gftp</artifactId>
+            <version>1.5.0-beta-1</version>
+            <scope>runtime</scope>
+        </dependency>
+
+        
         <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>servlet-api</artifactId>
             <version>2.5</version>
             <scope>provided</scope>
         </dependency>
-
+        
+        
         <dependency>
             <groupId>javax.persistence</groupId>
             <artifactId>persistence-api</artifactId>
@@ -222,69 +247,13 @@ there are no implementations to enhance
             <artifactId>jclouds-allblobstore</artifactId>
             <version>1.3.1</version>
         </dependency>
-        <dependency>
-            <groupId>nl.uva.vlet</groupId>
-            <artifactId>vlet-vfs.cloud</artifactId>
-            <version>1.0-SNAPSHOT</version>
-        </dependency>
+        
+        
         <dependency>
             <groupId>org.antlr</groupId>
             <artifactId>stringtemplate</artifactId>
             <version>3.2.1</version>
             <type>jar</type>
-        </dependency>
-        <dependency>
-            <groupId>nl.uva.vlet</groupId>
-            <artifactId>vlet-vrs.core</artifactId>
-            <version>1.5.0-dev-0</version>
-        </dependency>
-        <dependency>
-            <groupId>nl.uva.vlet</groupId>
-            <artifactId>vlet-glite.lfc</artifactId>
-            <version>1.5.0-dev-0</version>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>nl.uva.vlet</groupId>
-            <artifactId>vlet-grid.globus</artifactId>
-            <version>1.5.0-dev-0</version>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>nl.uva.vlet</groupId>
-            <artifactId>vlet-lbl.srm</artifactId>
-            <version>1.5.0-dev-0</version>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>nl.uva.vlet</groupId>
-            <artifactId>vlet-vfs.gftp</artifactId>
-            <version>1.5.0-dev-0</version>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>nl.uva.vlet</groupId>
-            <artifactId>vlet-vfs.irods</artifactId>
-            <version>1.5.0-dev-0</version>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>nl.uva.vlet</groupId>
-            <artifactId>vlet-vfs.jcraft.ssh</artifactId>
-            <version>1.5.0-dev-0</version>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>nl.uva.vlet</groupId>
-            <artifactId>vlet-vfs.lfc</artifactId>
-            <version>1.5.0-dev-0</version>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>nl.uva.vlet</groupId>
-            <artifactId>vlet-vfs.srm</artifactId>
-            <version>1.5.0-dev-0</version>
-            <scope>runtime</scope>
         </dependency>
     </dependencies>
     
@@ -312,6 +281,13 @@ there are no implementations to enhance
             <name>DataNucleus Repository</name>
             <url>http://www.datanucleus.org/downloads/maven2</url>
         </repository>
+        
+        <repository>
+            <id>elab.lab.uvalight.net</id>
+            <name>elab.lab.uvalight.net-releases</name>
+            <url>https://elab.lab.uvalight.net:8444/artifactory/ext-snapshot-local</url>
+        </repository>
+
 <!--        <repository>  Required for transaction-api transitive dep
             <id>Java_Net_LEGACY</id>
             <name>Java.Net legacy</name>
