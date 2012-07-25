@@ -17,6 +17,7 @@
     </properties>
 
     <dependencies>
+        
         <dependency>
             <groupId>cryptix</groupId>
             <artifactId>cryptix</artifactId>
@@ -37,14 +38,16 @@ there are no implementations to enhance
             <version>6.0</version>
             <scope>provided</scope>
         </dependency>-->
-
+        
+        
         <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>servlet-api</artifactId>
             <version>2.5</version>
             <scope>provided</scope>
         </dependency>
-
+        
+        
         <dependency>
             <groupId>javax.persistence</groupId>
             <artifactId>persistence-api</artifactId>
@@ -217,11 +220,11 @@ there are no implementations to enhance
             <type>jar</type>
         </dependency>
         
-        <dependency>
+<!--        <dependency>
             <groupId>org.jclouds</groupId>
             <artifactId>jclouds-allblobstore</artifactId>
             <version>1.3.1</version>
-        </dependency>
+        </dependency>-->
         
         <dependency>
             <groupId>org.antlr</groupId>
@@ -231,29 +234,29 @@ there are no implementations to enhance
         </dependency>
         
         <dependency>
-            <groupId>vlet-vrs-core</groupId>
-            <artifactId>vlet-vrs-core</artifactId>
-            <version>1.5.0-beta-1</version>
+            <groupId>nl.uva.vlet</groupId>
+            <artifactId>vlet-vrs.core</artifactId>
+            <version>1.5.0-dev-1</version>
         </dependency>
         
         <dependency>
             <groupId>nl.uva.vlet</groupId>
             <artifactId>vlet-vfs.cloud</artifactId>
-            <version>1.0-20120724.154529-1</version>
+            <version>1.0-20120725.134812-1</version>
         </dependency>
 
         
         <dependency>
-            <groupId>nl.uva.vlet.vfs.gftp</groupId>
-            <artifactId>nl.uva.vlet.vfs.gftp</artifactId>
-            <version>1.5.0-beta-1</version>
+            <groupId>nl.uva.vlet</groupId>
+            <artifactId>vlet-vfs.gftp</artifactId>
+            <version>1.5.0-dev-1</version>
             <scope>runtime</scope>
         </dependency>
         
         <dependency>
-            <groupId>nl.uva.vlet.vfs.jcraft.ssh</groupId>
-            <artifactId>nl.uva.vlet.vfs.jcraft.ssh</artifactId>
-            <version>1.5.0-beta</version>
+            <groupId>nl.uva.vlet</groupId>
+            <artifactId>vlet-vfs.jcraft.ssh</artifactId>
+            <version>1.5.0-dev-1</version>
             <scope>runtime</scope>
         </dependency>
 
@@ -283,18 +286,19 @@ there are no implementations to enhance
             <name>DataNucleus Repository</name>
             <url>http://www.datanucleus.org/downloads/maven2</url>
         </repository>
+        
+        <repository>
+            <id>elab.lab.uvalight.net</id>
+            <name>elab.lab.uvalight.net-releases</name>
+            <url>https://elab.lab.uvalight.net:8444/artifactory/ext-snapshot-local</url>
+        </repository>
+
 <!--        <repository>  Required for transaction-api transitive dep
             <id>Java_Net_LEGACY</id>
             <name>Java.Net legacy</name>
             <url>http://download.java.net/maven/1/</url>
             <layout>legacy</layout>
         </repository>-->
-        
-        <repository>
-            <id>elab.lab.uvalight.net</id>
-            <name>elab.lab.uvalight.net-snapshots</name>
-            <url>https://elab.lab.uvalight.net:8444/artifactory/ext-snapshot-local</url>
-        </repository>
         
         
     </repositories>
