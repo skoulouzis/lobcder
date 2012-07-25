@@ -259,6 +259,21 @@ there are no implementations to enhance
             <version>1.5.0-dev-1</version>
             <scope>runtime</scope>
         </dependency>
+        
+        
+        <dependency>
+            <groupId>nl.uva.vlet</groupId>
+            <artifactId>vlet-vfs.srm</artifactId>
+            <version>1.5.0-dev-1</version>
+            <scope>runtime</scope>
+        </dependency>
+        
+        <dependency>
+            <groupId>nl.uva.vlet</groupId>
+            <artifactId>vlet-vfs.lfc</artifactId>
+            <version>1.5.0-dev-1</version>
+            <scope>runtime</scope>
+        </dependency>
 
     </dependencies>
     

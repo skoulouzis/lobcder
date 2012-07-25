@@ -13,6 +13,7 @@ import com.bradmcevoy.common.Path;
 import java.util.Collection;
 import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.cs.lobcder.util.PropertiesLoader;
+import nl.uva.vlet.exception.VlException;
 import nl.uva.vlet.vfs.VFSNode;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -113,7 +114,7 @@ public class StorageSiteTest {
         System.out.println("getVPHUsername");
         StorageSite instance = new StorageSite(testEndpoint, testCred);
         Collection<String> result = instance.getVPHUsernames();
-        for(String s : vphUsers){
+        for (String s : vphUsers) {
             assertTrue(result.contains(s));
         }
     }
@@ -164,5 +165,75 @@ public class StorageSiteTest {
         assertNotNull(result);
         node = instance.getVNode(Path.path(strPath));
         assertNotNull(node);
+    }
+
+    @Test
+    public void testLocalStorageSite() throws Exception {
+        String localEndpoint = "file:///tmp/";
+        Credential cred = new Credential(new String[]{"names"});
+        StorageSite localSS = new StorageSite(localEndpoint, cred);
+        testStorageSite(localSS);
+    }
+
+    @Test
+    public void testSFTPStorageSite() throws Exception {
+
+        Properties prop = new Properties();
+
+        File sftpLocal = new File(Constants.LOBCDER_CONF_DIR + "sftp_local.prop");
+        prop.load(new FileInputStream(sftpLocal));
+        String endpoint = prop.getProperty(Constants.STORAGE_SITE_ENDPOINT);
+        String[] users = prop.getProperty(Constants.VPH_USERNAMES).split(",");
+        Credential cred = new Credential(users);
+        String siteUname = prop.getProperty(Constants.STORAGE_SITE_USERNAME);
+        cred.setStorageSiteUsername(siteUname);
+        String passwd = prop.getProperty(Constants.STORAGE_SITE_PASSWORD);
+        cred.setStorageSitePassword(passwd);
+        StorageSite sftpSS = new StorageSite(endpoint, cred);
+        testStorageSite(sftpSS);
+
+
+
+        File sftpCyfornet = new File(Constants.LOBCDER_CONF_DIR + "sftp_cyfornet.prop");
+        prop.load(new FileInputStream(sftpCyfornet));
+        endpoint = prop.getProperty(Constants.STORAGE_SITE_ENDPOINT);
+        users = prop.getProperty(Constants.VPH_USERNAMES).split(",");
+        cred = new Credential(users);
+        siteUname = prop.getProperty(Constants.STORAGE_SITE_USERNAME);
+        cred.setStorageSiteUsername(siteUname);
+        passwd = prop.getProperty(Constants.STORAGE_SITE_PASSWORD);
+        cred.setStorageSitePassword(passwd);
+        sftpSS = new StorageSite(endpoint, cred);
+        testStorageSite(sftpSS);
+
+        File sftpSara = new File(Constants.LOBCDER_CONF_DIR + "sftp_ui.sara.prop");
+        prop.load(new FileInputStream(sftpSara));
+        endpoint = prop.getProperty(Constants.STORAGE_SITE_ENDPOINT);
+        users = prop.getProperty(Constants.VPH_USERNAMES).split(",");
+        cred = new Credential(users);
+        siteUname = prop.getProperty(Constants.STORAGE_SITE_USERNAME);
+        cred.setStorageSiteUsername(siteUname);
+        passwd = prop.getProperty(Constants.STORAGE_SITE_PASSWORD);
+        cred.setStorageSitePassword(passwd);
+        sftpSS = new StorageSite(endpoint, cred);
+        testStorageSite(sftpSS);
+        
+    }
+
+    private void testStorageSite(StorageSite site) throws VlException {
+        String strPath = "file1";
+        Path path = Path.path(strPath);
+        VFSNode result = site.createVFSFile(path);
+        assertNotNull(result);
+        assertTrue(site.LDRIHasPhysicalData(path));
+        VFSNode node = site.getVNode(Path.path(strPath));
+        assertNotNull(node);
+        assertEquals(node.getVRL(), result.getVRL());
+
+
+        site.deleteVNode(path);
+        assertFalse(site.LDRIHasPhysicalData(path));
+        node = site.getVNode(Path.path(strPath));
+        assertNull(node);
     }
 }
