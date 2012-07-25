@@ -13,7 +13,7 @@
     <properties>
         <endorsed.dir>${project.build.directory}/endorsed</endorsed.dir>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <skipTests>false</skipTests>
+        <skipTests>true</skipTests>
     </properties>
 
     <dependencies>
@@ -261,11 +261,10 @@ there are no implementations to enhance
         
         <dependency>
             <groupId>nl.uva.vlet</groupId>
-            <artifactId>vlet-lbl.srm</artifactId>
+            <artifactId>vlet-vfs.srm</artifactId>
             <version>1.5.0-dev-1</version>
             <scope>runtime</scope>
         </dependency>
-
 
         <dependency>
             <groupId>nl.uva.vlet</groupId>
