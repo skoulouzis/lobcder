@@ -38,14 +38,6 @@ there are no implementations to enhance
             <version>6.0</version>
             <scope>provided</scope>
         </dependency>-->
-        
-        
-        <dependency>
-            <groupId>vlet-vrs-core</groupId>
-            <artifactId>vlet-vrs-core</artifactId>
-            <version>1.5.0-beta-1</version>
-        </dependency>
-
 
         <dependency>
             <groupId>nl.uva.vlet</groupId>
@@ -262,20 +254,6 @@ there are no implementations to enhance
         </dependency>
         
         <dependency>
-            <groupId>nl.uva.vlet</groupId>
-            <artifactId>vlet-vfs.cloud</artifactId>
-            <version>1.0-20120724.154529-1</version>
-        </dependency>
-
-        
-        <dependency>
-            <groupId>nl.uva.vlet.vfs.gftp</groupId>
-            <artifactId>nl.uva.vlet.vfs.gftp</artifactId>
-            <version>1.5.0-beta-1</version>
-            <scope>runtime</scope>
-        </dependency>
-        
-        <dependency>
             <groupId>nl.uva.vlet.vfs.jcraft.ssh</groupId>
             <artifactId>nl.uva.vlet.vfs.jcraft.ssh</artifactId>
             <version>1.5.0-beta</version>
@@ -321,12 +299,6 @@ there are no implementations to enhance
             <url>http://download.java.net/maven/1/</url>
             <layout>legacy</layout>
         </repository>-->
-        
-        <repository>
-            <id>elab.lab.uvalight.net</id>
-            <name>elab.lab.uvalight.net-snapshots</name>
-            <url>https://elab.lab.uvalight.net:8444/artifactory/ext-snapshot-local</url>
-        </repository>
         
         
     </repositories>
