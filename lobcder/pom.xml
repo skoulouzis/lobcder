@@ -38,21 +38,7 @@ there are no implementations to enhance
             <version>6.0</version>
             <scope>provided</scope>
         </dependency>-->
-
-        <dependency>
-            <groupId>nl.uva.vlet</groupId>
-            <artifactId>vlet-vfs.cloud</artifactId>
-            <version>1.0-20120724.154529-1</version>
-        </dependency>
         
-        
-        <dependency>
-            <groupId>nl.uva.vlet.vfs.gftp</groupId>
-            <artifactId>nl.uva.vlet.vfs.gftp</artifactId>
-            <version>1.5.0-beta-1</version>
-            <scope>runtime</scope>
-        </dependency>
-
         
         <dependency>
             <groupId>javax.servlet</groupId>
@@ -248,15 +234,42 @@ there are no implementations to enhance
         </dependency>
         
         <dependency>
-            <groupId>vlet-vrs-core</groupId>
-            <artifactId>vlet-vrs-core</artifactId>
-            <version>1.5.0-beta-1</version>
+            <groupId>nl.uva.vlet</groupId>
+            <artifactId>vlet-vrs.core</artifactId>
+            <version>1.5.0-dev-1</version>
+        </dependency>
+
+        <dependency>
+            <groupId>nl.uva.vlet</groupId>
+            <artifactId>vlet-vfs.cloud</artifactId>
+            <version>1.0-20120725.134812-1</version>
         </dependency>
         
         <dependency>
-            <groupId>nl.uva.vlet.vfs.jcraft.ssh</groupId>
-            <artifactId>nl.uva.vlet.vfs.jcraft.ssh</artifactId>
-            <version>1.5.0-beta</version>
+            <groupId>nl.uva.vlet</groupId>
+            <artifactId>vlet-vfs.gftp</artifactId>
+            <version>1.5.0-dev-1</version>
+            <scope>runtime</scope>
+        </dependency>
+        
+        <dependency>
+            <groupId>nl.uva.vlet</groupId>
+            <artifactId>vlet-vfs.jcraft.ssh</artifactId>
+            <version>1.5.0-dev-1</version>
+            <scope>runtime</scope>
+        </dependency>
+        
+        <dependency>
+            <groupId>nl.uva.vlet</groupId>
+            <artifactId>vlet-vfs.srm</artifactId>
+            <version>1.5.0-dev-1</version>
+            <scope>runtime</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>nl.uva.vlet</groupId>
+            <artifactId>vlet-vfs.lfc</artifactId>
+            <version>1.5.0-dev-1</version>
             <scope>runtime</scope>
         </dependency>
 
