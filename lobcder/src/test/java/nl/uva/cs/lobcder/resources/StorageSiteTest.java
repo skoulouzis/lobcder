@@ -191,32 +191,31 @@ public class StorageSiteTest {
         cred.setStorageSitePassword(passwd);
         StorageSite sftpSS = new StorageSite(endpoint, cred);
         testStorageSite(sftpSS);
-
-
-
+        
+        
         File sftpCyfornet = new File(Constants.LOBCDER_CONF_DIR + "sftp_cyfornet.prop");
         prop.load(new FileInputStream(sftpCyfornet));
-        endpoint = prop.getProperty(Constants.STORAGE_SITE_ENDPOINT);
-        users = prop.getProperty(Constants.VPH_USERNAMES).split(",");
-        cred = new Credential(users);
-        siteUname = prop.getProperty(Constants.STORAGE_SITE_USERNAME);
-        cred.setStorageSiteUsername(siteUname);
-        passwd = prop.getProperty(Constants.STORAGE_SITE_PASSWORD);
-        cred.setStorageSitePassword(passwd);
-        sftpSS = new StorageSite(endpoint, cred);
-        testStorageSite(sftpSS);
+        String cyfornetEndpoint = prop.getProperty(Constants.STORAGE_SITE_ENDPOINT);
+        String[] cyfornetUsers = prop.getProperty(Constants.VPH_USERNAMES).split(",");
+        Credential cyfornetCred = new Credential(cyfornetUsers);
+        String cyfornetSiteUname = prop.getProperty(Constants.STORAGE_SITE_USERNAME);
+        cyfornetCred.setStorageSiteUsername(cyfornetSiteUname);
+        String cyfornetPasswd = prop.getProperty(Constants.STORAGE_SITE_PASSWORD);
+        cyfornetCred.setStorageSitePassword(cyfornetPasswd);
+        StorageSite cyfornetSftpSS = new StorageSite(cyfornetEndpoint, cyfornetCred);
+        testStorageSite(cyfornetSftpSS);
 
         File sftpSara = new File(Constants.LOBCDER_CONF_DIR + "sftp_ui.sara.prop");
         prop.load(new FileInputStream(sftpSara));
-        endpoint = prop.getProperty(Constants.STORAGE_SITE_ENDPOINT);
-        users = prop.getProperty(Constants.VPH_USERNAMES).split(",");
-        cred = new Credential(users);
-        siteUname = prop.getProperty(Constants.STORAGE_SITE_USERNAME);
-        cred.setStorageSiteUsername(siteUname);
-        passwd = prop.getProperty(Constants.STORAGE_SITE_PASSWORD);
-        cred.setStorageSitePassword(passwd);
-        sftpSS = new StorageSite(endpoint, cred);
-        testStorageSite(sftpSS);
+        String saraEndpoint = prop.getProperty(Constants.STORAGE_SITE_ENDPOINT);
+        String[] saraUsers = prop.getProperty(Constants.VPH_USERNAMES).split(",");
+        Credential saraCred = new Credential(saraUsers);
+        String saraSiteUname = prop.getProperty(Constants.STORAGE_SITE_USERNAME);
+        saraCred.setStorageSiteUsername(saraSiteUname);
+        String saraPasswd = prop.getProperty(Constants.STORAGE_SITE_PASSWORD);
+        saraCred.setStorageSitePassword(saraPasswd);
+        StorageSite saraSftpSS = new StorageSite(saraEndpoint, saraCred);
+        testStorageSite(saraSftpSS);
         
     }
 

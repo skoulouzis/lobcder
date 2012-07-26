@@ -305,7 +305,7 @@ there are no implementations to enhance
         <repository>
             <id>elab.lab.uvalight.net</id>
             <name>elab.lab.uvalight.net-releases</name>
-            <url>https://elab.lab.uvalight.net:8444/artifactory/ext-snapshot-local</url>
+            <url>https://elab.lab.uvalight.net:8444/artifactory/repo</url>
         </repository>
 
 <!--        <repository>  Required for transaction-api transitive dep

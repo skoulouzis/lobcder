@@ -68,12 +68,14 @@ public class StorageSite implements Serializable, IStorageSite {
         GlobalConfig.setUserHomeLocation(new URL("file:///"+System.getProperty("user.home")));
 
         // user configuration 
-        GlobalConfig.setUsePersistantUserConfiguration(false);
+//        GlobalConfig.setUsePersistantUserConfiguration(false);
 //        GlobalConfig.setUserHomeLocation(new URL("file:////" + this.tmpVPHuserHome.getAbsolutePath()));
 //        Global.setDebug(true);
 
         VRS.getRegistry().addVRSDriverClass(nl.uva.vlet.vfs.cloud.CloudFSFactory.class);
         Global.init();
+        
+        System.out.println("--------------------Home: "+Global.getUserHome());
     }
     @PrimaryKey
 //    @Persistent(valueStrategy= IdGeneratorStrategy.UUIDSTRING)
