@@ -176,6 +176,12 @@ public class StorageSiteTest {
     }
 
     @Test
+    /**
+     * To run this test you mast create in the
+     * <code>Constants.LOBCDER_CONF_DIR</code> the files sftp_local.prop,
+     * sftp_cyfornet.prop and sftp_ui.sara.prop for ssh see
+     * Doc/Config_Instructions on how to create these files
+     */
     public void testSFTPStorageSite() throws Exception {
 
         Properties prop = new Properties();
@@ -191,8 +197,8 @@ public class StorageSiteTest {
         cred.setStorageSitePassword(passwd);
         StorageSite sftpSS = new StorageSite(endpoint, cred);
         testStorageSite(sftpSS);
-        
-        
+
+
         File sftpCyfornet = new File(Constants.LOBCDER_CONF_DIR + "sftp_cyfornet.prop");
         prop.load(new FileInputStream(sftpCyfornet));
         String cyfornetEndpoint = prop.getProperty(Constants.STORAGE_SITE_ENDPOINT);
@@ -216,7 +222,31 @@ public class StorageSiteTest {
         saraCred.setStorageSitePassword(saraPasswd);
         StorageSite saraSftpSS = new StorageSite(saraEndpoint, saraCred);
         testStorageSite(saraSftpSS);
-        
+    }
+    
+    
+    
+      @Test
+    /**
+     * To run this test you mast create in the
+     * <code>Constants.LOBCDER_CONF_DIR</code> the file swift.prop.prop,
+     * for swift see Doc/Config_Instructions on how to create these files
+     */
+    public void testSWIFTStorageSite() throws Exception {
+
+        Properties prop = new Properties();
+
+        File swiftCyfornet = new File(Constants.LOBCDER_CONF_DIR + "swift.prop");
+        prop.load(new FileInputStream(swiftCyfornet));
+        String cyfornetEndpoint = prop.getProperty(Constants.STORAGE_SITE_ENDPOINT);
+        String[] cyfornetUsers = prop.getProperty(Constants.VPH_USERNAMES).split(",");
+        Credential cyfornetCred = new Credential(cyfornetUsers);
+        String cyfornetSiteUname = prop.getProperty(Constants.STORAGE_SITE_USERNAME);
+        cyfornetCred.setStorageSiteUsername(cyfornetSiteUname);
+        String cyfornetPasswd = prop.getProperty(Constants.STORAGE_SITE_PASSWORD);
+        cyfornetCred.setStorageSitePassword(cyfornetPasswd);
+        StorageSite cyfornetSwift = new StorageSite(cyfornetEndpoint, cyfornetCred);
+        testStorageSite(cyfornetSwift);
     }
 
     private void testStorageSite(StorageSite site) throws VlException {
