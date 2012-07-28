@@ -51,15 +51,15 @@
         </dependency>
         
         <dependency>
-            <groupId>vlet-vrs-core</groupId>
-            <artifactId>vlet-vrs-core</artifactId>
-            <version>1.5.0-beta-1</version>
+            <groupId>nl.uva.vlet</groupId>
+            <artifactId>vlet-vrs.core</artifactId>
+            <version>1.5.0-dev-1</version>
         </dependency>
         
         <dependency>
             <groupId>nl.uva.vlet</groupId>
             <artifactId>vlet-vfs.cloud</artifactId>
-            <version>1.0-20120724.154529-1</version>
+            <version>1.0</version>
         </dependency>
         
     </dependencies>
@@ -84,7 +84,7 @@
         <repository>
             <id>elab.lab.uvalight.net</id>
             <name>elab.lab.uvalight.net-releases</name>
-            <url>https://elab.lab.uvalight.net:8444/artifactory/ext-snapshot-local</url>
+            <url>https://elab.lab.uvalight.net:8444/artifactory/repo</url>
         </repository>
         
     </repositories>
