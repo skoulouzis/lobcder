@@ -125,24 +125,18 @@ public class WebDavServlet implements Servlet {
 
     protected void init(ResourceFactory rf, WebDavResponseHandler responseHandler, List<String> authHandlers) throws ServletException {
         AuthenticationService authService;
-
-        if (authHandlers == null) {
-            authService = new AuthenticationService();
-        } else {
-            List<com.bradmcevoy.http.AuthenticationHandler> list = new ArrayList<com.bradmcevoy.http.AuthenticationHandler>();
-            for (String authHandlerClassName : authHandlers) {
-                Object o = instantiate(authHandlerClassName);
-                if (o instanceof com.bradmcevoy.http.AuthenticationHandler) {
-                    com.bradmcevoy.http.AuthenticationHandler auth = (com.bradmcevoy.http.AuthenticationHandler) o;
-                    list.add(auth);
-                } else {
-                    throw new ServletException("Class: " + authHandlerClassName + " is not a: " + com.bradmcevoy.http.AuthenticationHandler.class.getCanonicalName());
-                }
+        List<com.bradmcevoy.http.AuthenticationHandler> list = new ArrayList<com.bradmcevoy.http.AuthenticationHandler>();
+        for (String authHandlerClassName : authHandlers) {
+            Object o = instantiate(authHandlerClassName);
+            if (o instanceof com.bradmcevoy.http.AuthenticationHandler) {
+                com.bradmcevoy.http.AuthenticationHandler auth = (com.bradmcevoy.http.AuthenticationHandler) o;
+                list.add(auth);
+            } else {
+                throw new ServletException("Class: " + authHandlerClassName + " is not a: " + com.bradmcevoy.http.AuthenticationHandler.class.getCanonicalName());
             }
-            authService = new AuthenticationService(list);
         }
 
-        authService = new AuthenticationService();
+        authService = new AuthenticationService(list);
         authService.setDisableDigest(true);
         authService.setDisableBasic(false);
         authService.setDisableExternal(true);
@@ -157,12 +151,19 @@ public class WebDavServlet implements Servlet {
             debug("No authentication handlers are configured! Any requests requiring authorisation will fail.");
         }
 
-        if (responseHandler == null) {
-            httpManager = new com.bradmcevoy.http.ServletHttpManager(rf, authService);
-        } else {
-            httpManager = new com.bradmcevoy.http.ServletHttpManager(rf, responseHandler, authService);
-        }
+        
+//        HandlerHelper hh = new com.bradmcevoy.http.HandlerHelper(authService);
+//        DefaultWebDavResponseHandler defaultResponseHandler = new com.bradmcevoy.http.webdav.DefaultWebDavResponseHandler(authService, crth);
+//        Http11Protocol http11 = new com.bradmcevoy.http.http11.Http11Protocol(defaultResponseHandler, hh);
+//        WebDavProtocol webdav = new com.bradmcevoy.http.webdav.WebDavProtocol(hh, crth, defaultResponseHandler, null);
+//        CalDavProtocol caldav = new com.ettrema.http.caldav.CalDavProtocol(demoResourceFactory, defaultResponseHandler, hh, webdav);
+//        ACLProtocol acl = new com.ettrema.http.acl.ACLProtocol(webdav);
+//        ProtocolHandlers protocols = new com.bradmcevoy.http.ProtocolHandlers(Arrays.asList(http11, webdav, caldav, acl));
+//        httpManager = new com.bradmcevoy.http.HttpManager(demoResourceFactory, defaultResponseHandler, protocols);
 
+
+
+        httpManager = new com.bradmcevoy.http.ServletHttpManager(rf, responseHandler, authService);
         httpManager.addFilter(0, new WebDavFilter());
     }
 
