@@ -74,8 +74,6 @@ public class StorageSite implements Serializable, IStorageSite {
 
         VRS.getRegistry().addVRSDriverClass(nl.uva.vlet.vfs.cloud.CloudFSFactory.class);
         Global.init();
-        
-        System.out.println("--------------------Home: "+Global.getUserHome());
     }
     @PrimaryKey
 //    @Persistent(valueStrategy= IdGeneratorStrategy.UUIDSTRING)
