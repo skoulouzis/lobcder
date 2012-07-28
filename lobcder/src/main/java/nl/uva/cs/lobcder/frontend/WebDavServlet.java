@@ -4,13 +4,14 @@
  */
 package nl.uva.cs.lobcder.frontend;
 
-import com.bradmcevoy.http.ApplicationConfig;
-import com.bradmcevoy.http.AuthenticationService;
-import com.bradmcevoy.http.MiltonServlet;
-import com.bradmcevoy.http.ResourceFactory;
+import com.bradmcevoy.http.*;
+import com.bradmcevoy.http.http11.Http11Protocol;
+import com.bradmcevoy.http.webdav.DefaultWebDavResponseHandler;
+import com.bradmcevoy.http.webdav.WebDavProtocol;
 import com.bradmcevoy.http.webdav.WebDavResponseHandler;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -152,17 +153,13 @@ public class WebDavServlet implements Servlet {
         }
 
         
-//        HandlerHelper hh = new com.bradmcevoy.http.HandlerHelper(authService);
-//        DefaultWebDavResponseHandler defaultResponseHandler = new com.bradmcevoy.http.webdav.DefaultWebDavResponseHandler(authService, crth);
-//        Http11Protocol http11 = new com.bradmcevoy.http.http11.Http11Protocol(defaultResponseHandler, hh);
-//        WebDavProtocol webdav = new com.bradmcevoy.http.webdav.WebDavProtocol(hh, crth, defaultResponseHandler, null);
+        WebDavProtocol webdav = new com.bradmcevoy.http.webdav.WebDavProtocol(responseHandler, null);
 //        CalDavProtocol caldav = new com.ettrema.http.caldav.CalDavProtocol(demoResourceFactory, defaultResponseHandler, hh, webdav);
-//        ACLProtocol acl = new com.ettrema.http.acl.ACLProtocol(webdav);
-//        ProtocolHandlers protocols = new com.bradmcevoy.http.ProtocolHandlers(Arrays.asList(http11, webdav, caldav, acl));
-//        httpManager = new com.bradmcevoy.http.HttpManager(demoResourceFactory, defaultResponseHandler, protocols);
-
-
-
+        com.ettrema.http.acl.ACLProtocol acl = new com.ettrema.http.acl.ACLProtocol(webdav);
+        List protocolList = Arrays.asList(webdav, acl,authService);
+        ProtocolHandlers protocols = new com.bradmcevoy.http.ProtocolHandlers(protocolList);
+//        httpManager = new com.bradmcevoy.http.HttpManager(rf, responseHandler, protocols);
+        
         httpManager = new com.bradmcevoy.http.ServletHttpManager(rf, responseHandler, authService);
         httpManager.addFilter(0, new WebDavFilter());
     }
