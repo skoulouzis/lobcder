@@ -40,6 +40,7 @@ public class WebDataResource implements PropFindableResource, Resource {
 //        }
         this.catalogue = catalogue;
         properties = new HashMap<String, CustomProperty>();
+        
     }
 
     @Override

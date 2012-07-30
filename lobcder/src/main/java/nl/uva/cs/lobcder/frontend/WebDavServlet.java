@@ -9,9 +9,11 @@ import com.bradmcevoy.http.http11.Http11Protocol;
 import com.bradmcevoy.http.webdav.DefaultWebDavResponseHandler;
 import com.bradmcevoy.http.webdav.WebDavProtocol;
 import com.bradmcevoy.http.webdav.WebDavResponseHandler;
+import com.ettrema.http.acl.ACLHandler;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -162,6 +164,14 @@ public class WebDavServlet implements Servlet {
         
         httpManager = new com.bradmcevoy.http.ServletHttpManager(rf, responseHandler, authService);
         httpManager.addFilter(0, new WebDavFilter());
+        
+        
+        Collection<Handler> handlers = httpManager.getAllHandlers();
+        for (Handler h : handlers) {
+            debug("Handler: " + h.getClass().getName());
+        }
+
+
     }
 
     protected <T> T instantiate(String className) throws ServletException {
@@ -194,10 +204,10 @@ public class WebDavServlet implements Servlet {
     }
 
     private void debug(String msg) {
-//        if (debug) {
-//            System.err.println(this.getClass().getSimpleName() + ": " + msg);
-////        log.debug(msg);
-//        }
+        if (debug) {
+            System.err.println(this.getClass().getSimpleName() + ": " + msg);
+//        log.debug(msg);
+        }
     }
 
     /**
