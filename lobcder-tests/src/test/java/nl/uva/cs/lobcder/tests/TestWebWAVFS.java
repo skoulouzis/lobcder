@@ -228,8 +228,6 @@ public class TestWebWAVFS {
 //
 //        delete(testFileURI1);
 //    }
-    
-    
     @Test
     public void testSetGetACL() throws IOException, DavException {
         String testFileURI1 = this.uri.toASCIIString() + TestSettings.TEST_FILE_NAME1;
@@ -238,10 +236,14 @@ public class TestWebWAVFS {
         int status = client1.executeMethod(put);
         assertEquals(HttpStatus.SC_CREATED, status);
 
-        Principal principal = Principal.getAllPrincipal();
 
+
+        Principal principal = Principal.getAllPrincipal();
         Privilege[] privileges = new Privilege[1];
-        privileges[0] = Privilege.PRIVILEGE_ALL;
+        privileges[0] = Privilege.PRIVILEGE_WRITE;
+
+
+
         boolean invert = false;
         boolean isProtected = false;
 
@@ -250,15 +252,14 @@ public class TestWebWAVFS {
         Ace ace = AclProperty.createGrantAce(principal, privileges, invert, isProtected, inheritedFrom);
         Ace[] accessControlElements = new Ace[1];
         accessControlElements[0] = ace;
-//        AclProperty aclProp = new AclProperty(accessControlElements);
+        AclProperty aclProp = new AclProperty(accessControlElements);
 
-        org.apache.jackrabbit.webdav.client.methods.AclMethod acl = new AclMethod(testFileURI1, new AclProperty(accessControlElements));
+        org.apache.jackrabbit.webdav.client.methods.AclMethod acl = new AclMethod(testFileURI1, aclProp);
         status = client1.executeMethod(acl);
 
         System.out.println("Status : " + status);
 
         delete(testFileURI1);
-
 
     }
 
