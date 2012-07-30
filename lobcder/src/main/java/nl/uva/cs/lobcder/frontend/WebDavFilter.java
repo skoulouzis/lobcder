@@ -20,21 +20,19 @@ import nl.uva.cs.lobcder.webDav.resources.WebDataResource;
  * @author alogo
  */
 class WebDavFilter implements Filter {
-
+   
     @Override
     public void process(FilterChain chain, Request request, Response response) {
         HttpManager manager = chain.getHttpManager();
         Http11ResponseHandler responseHandler = manager.getResponseHandler();
-
         try {
             Request.Method method = request.getMethod();
             Handler handler = manager.getMethodHandler(method);
             if (handler == null) {
-//                responseHandler.respondMethodNotImplemented(new EmptyResource(request), response, request);
                 responseHandler.respondMethodNotImplemented(new WebDataResource(null, null), response, request);
                 return;
             }
-
+            
             try {
                 try {
                     handler.process(manager, request, response);

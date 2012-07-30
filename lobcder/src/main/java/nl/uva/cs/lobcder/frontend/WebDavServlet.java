@@ -8,8 +8,11 @@ import com.bradmcevoy.http.*;
 import com.bradmcevoy.http.http11.Http11Protocol;
 import com.bradmcevoy.http.webdav.DefaultWebDavResponseHandler;
 import com.bradmcevoy.http.webdav.WebDavProtocol;
+import com.bradmcevoy.http.webdav.WebDavResourceTypeHelper;
 import com.bradmcevoy.http.webdav.WebDavResponseHandler;
 import com.ettrema.http.acl.ACLHandler;
+import com.ettrema.http.acl.ACLProtocol;
+import com.ettrema.http.caldav.CalDavProtocol;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -35,7 +38,7 @@ public class WebDavServlet implements Servlet {
 
     private static final ThreadLocal<HttpServletRequest> originalRequest = new ThreadLocal<HttpServletRequest>();
     private static final ThreadLocal<HttpServletResponse> originalResponse = new ThreadLocal<HttpServletResponse>();
-    protected com.bradmcevoy.http.ServletHttpManager httpManager;
+    protected com.bradmcevoy.http.ServletHttpManager servletHttpManager;
     private ServletConfig config;
 //    private Logger log = LoggerFactory.getLogger(this.getClass());
     private static final boolean debug = true;
@@ -49,6 +52,7 @@ public class WebDavServlet implements Servlet {
         originalRequest.set(req);
         originalResponse.set(resp);
     }
+    private HttpManager httpManager;
 
     @Override
     public void service(javax.servlet.ServletRequest servletRequest,
@@ -72,6 +76,10 @@ public class WebDavServlet implements Servlet {
                     + "\t getRemoteUser: " + req.getRemoteUser() + "\n"
                     + "\t getRequestURI: " + req.getRequestURI() + "\n"
                     + "\t getRequestedSessionId: " + req.getRequestedSessionId());
+            //            Collection<Handler> handlers = servletHttpManager.getAllHandlers();
+            //            for (Handler h : handlers) {
+            //                debug("servletHttpManager Handler: " + h.getClass().getName());
+            //            }
 
             try {
                 try {
@@ -83,6 +91,7 @@ public class WebDavServlet implements Servlet {
                     com.bradmcevoy.http.Request request = new com.bradmcevoy.http.ServletRequest(req);
                     com.bradmcevoy.http.Response response = new com.bradmcevoy.http.ServletResponse(resp);
 
+//                    servletHttpManager.process(request, response);
                     httpManager.process(request, response);
                 } catch (MyPrincipal.Exception ex) {
                     resp.sendError(HttpServletResponse.SC_UNAUTHORIZED);
@@ -101,13 +110,40 @@ public class WebDavServlet implements Servlet {
     public void init(ServletConfig config) throws ServletException {
         try {
             this.config = config;
-            // Note that the config variable may be null, in which case default handlers will be used
-            // If present and blank, NO handlers will be configed
-            List<String> authHandlers = loadAuthHandlersIfAny(config.getInitParameter("authentication.handler.classes"));
+            rf = new WebDataResourceFactory();
 
-            initFromFactoryFactory(authHandlers);
+//            // Note that the config variable may be null, in which case default handlers will be used
+//            // If present and blank, NO handlers will be configed
+//            List<String> authHandlers = loadAuthHandlersIfAny(config.getInitParameter("authentication.handler.classes"));
+//
+//            initFromFactoryFactory(authHandlers);
+//            servletHttpManager.init(new ApplicationConfig(config), servletHttpManager);
 
-            httpManager.init(new ApplicationConfig(config), httpManager);
+
+//            WebDavResourceTypeHelper rth = new com.bradmcevoy.http.webdav.WebDavResourceTypeHelper();
+//        CalendarResourceTypeHelper crth = new com.ettrema.http.caldav.CalendarResourceTypeHelper(
+//                new com.ettrema.http.acl.AccessControlledResourceTypeHelper(rth));
+
+
+            AuthenticationService authService = new com.bradmcevoy.http.AuthenticationService();
+            HandlerHelper hh = new com.bradmcevoy.http.HandlerHelper(authService);
+            DefaultWebDavResponseHandler defaultResponseHandler = new com.bradmcevoy.http.webdav.DefaultWebDavResponseHandler(authService);
+            Http11Protocol http11 = new com.bradmcevoy.http.http11.Http11Protocol(defaultResponseHandler, hh);
+
+            WebDavProtocol webdav = new com.bradmcevoy.http.webdav.WebDavProtocol(defaultResponseHandler, hh);
+
+            CalDavProtocol caldav = new com.ettrema.http.caldav.CalDavProtocol(rf, defaultResponseHandler, hh, webdav);
+
+            ACLProtocol acl = new com.ettrema.http.acl.ACLProtocol(webdav);
+            ProtocolHandlers protocolHandlers = new com.bradmcevoy.http.ProtocolHandlers(Arrays.asList(http11, webdav, acl, caldav));
+
+            httpManager = new com.bradmcevoy.http.HttpManager(rf, defaultResponseHandler, protocolHandlers);
+
+            Collection<Handler> handlers = httpManager.getAllHandlers();
+            for (Handler h : handlers) {
+                debug("httpManager Handler: " + h.getClass().getName());
+            }
+
         } catch (Exception ex) {
             debug("Exception starting WebDavServlet servlet " + ex);
             throw new RuntimeException(ex);
@@ -154,23 +190,15 @@ public class WebDavServlet implements Servlet {
             debug("No authentication handlers are configured! Any requests requiring authorisation will fail.");
         }
 
-        
-        WebDavProtocol webdav = new com.bradmcevoy.http.webdav.WebDavProtocol(responseHandler, null);
-//        CalDavProtocol caldav = new com.ettrema.http.caldav.CalDavProtocol(demoResourceFactory, defaultResponseHandler, hh, webdav);
-        com.ettrema.http.acl.ACLProtocol acl = new com.ettrema.http.acl.ACLProtocol(webdav);
-        List protocolList = Arrays.asList(webdav, acl,authService);
-        ProtocolHandlers protocols = new com.bradmcevoy.http.ProtocolHandlers(protocolList);
-//        httpManager = new com.bradmcevoy.http.HttpManager(rf, responseHandler, protocols);
-        
-        httpManager = new com.bradmcevoy.http.ServletHttpManager(rf, responseHandler, authService);
-        httpManager.addFilter(0, new WebDavFilter());
-        
-        
-        Collection<Handler> handlers = httpManager.getAllHandlers();
-        for (Handler h : handlers) {
-            debug("Handler: " + h.getClass().getName());
-        }
+//        WebDavProtocol webdav = new com.bradmcevoy.http.webdav.WebDavProtocol(responseHandler, null);
+//        com.ettrema.http.acl.ACLProtocol acl = new com.ettrema.http.acl.ACLProtocol(webdav);
+//        List protocolList = Arrays.asList(webdav, acl, authService);
+//        ProtocolHandlers protocols = new com.bradmcevoy.http.ProtocolHandlers(protocolList);
+//        HttpManager httpManager = new com.bradmcevoy.http.HttpManager(rf, responseHandler, protocols);
 
+
+        servletHttpManager = new com.bradmcevoy.http.ServletHttpManager(rf, responseHandler, authService);
+        servletHttpManager.addFilter(0, new WebDavFilter());
 
     }
 
@@ -197,10 +225,10 @@ public class WebDavServlet implements Servlet {
     @Override
     public void destroy() {
         debug("destroy");
-        if (httpManager == null) {
+        if (servletHttpManager == null) {
             return;
         }
-        httpManager.destroy(httpManager);
+        servletHttpManager.destroy(servletHttpManager);
     }
 
     private void debug(String msg) {

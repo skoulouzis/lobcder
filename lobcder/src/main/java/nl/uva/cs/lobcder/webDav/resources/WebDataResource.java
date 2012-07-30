@@ -7,11 +7,11 @@ package nl.uva.cs.lobcder.webDav.resources;
 import com.bradmcevoy.common.Path;
 import com.bradmcevoy.http.Request.Method;
 import com.bradmcevoy.http.*;
+import com.bradmcevoy.http.values.HrefList;
+import com.ettrema.http.AccessControlledResource;
+import com.ettrema.http.acl.Principal;
 import java.io.IOException;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import javax.servlet.http.HttpSession;
 import nl.uva.cs.lobcder.auth.MyPrincipal;
 import nl.uva.cs.lobcder.catalogue.CatalogueException;
@@ -24,11 +24,11 @@ import nl.uva.cs.lobcder.resources.IStorageSite;
  *
  * @author S. Koulouzis
  */
-public class WebDataResource implements PropFindableResource, Resource {
+public class WebDataResource implements PropFindableResource, Resource, AccessControlledResource {
 
     private ILogicalData logicalData;
     private final IDLCatalogue catalogue;
-    private static final boolean debug = false;
+    private static final boolean debug = true;
     private Map<String, CustomProperty> properties;
     //Collection<Integer> roles = null;
     private String uname;
@@ -40,7 +40,7 @@ public class WebDataResource implements PropFindableResource, Resource {
 //        }
         this.catalogue = catalogue;
         properties = new HashMap<String, CustomProperty>();
-        
+
     }
 
     @Override
@@ -183,9 +183,9 @@ public class WebDataResource implements PropFindableResource, Resource {
     }
 
     protected void debug(String msg) {
-//        if (debug) {
-//            System.err.println(this.getClass().getSimpleName() + "." + getLogicalData().getLDRI() + ": " + msg);
-//        }
+        if (debug) {
+            System.err.println(this.getClass().getSimpleName() + "." + getLogicalData().getLDRI() + ": " + msg);
+        }
 //        log.debug(msg);
     }
 //    @Override
@@ -233,7 +233,7 @@ public class WebDataResource implements PropFindableResource, Resource {
     Collection<IStorageSite> getStorageSites() throws CatalogueException, IOException {
         Collection<IStorageSite> sites = getLogicalData().getStorageSites();
         if (sites == null || sites.isEmpty()) {
-            
+
 //            String uname = String.valueOf(getPrincipal().getUid());
             sites = getCatalogue().getSitesByUname("uname1");
         }
@@ -248,5 +248,52 @@ public class WebDataResource implements PropFindableResource, Resource {
         HttpSession s = WebDavServlet.request().getSession();
         MyPrincipal pr = (MyPrincipal) (s.getAttribute("vph-user"));
         return pr;
+    }
+
+    @Override
+    public String getPrincipalURL() {
+        debug("getPrincipalURL");
+        return getPrincipal().getUid().toString();
+    }
+
+    @Override
+    public List<Priviledge> getPriviledges(Auth auth) {
+        List<Priviledge> priviledgesList = new ArrayList<Priviledge>();
+//        priviledgesList.add(Priviledge.ALL);
+//        priviledgesList.add(Priviledge.BIND);
+        priviledgesList.add(Priviledge.READ);
+        priviledgesList.add(Priviledge.READ_ACL);
+        priviledgesList.add(Priviledge.READ_CURRENT_USER_PRIVILEDGE);
+//        priviledgesList.add(Priviledge.UNBIND);
+//        priviledgesList.add(Priviledge.UNLOCK);
+        priviledgesList.add(Priviledge.WRITE);
+        priviledgesList.add(Priviledge.WRITE_ACL);
+        priviledgesList.add(Priviledge.WRITE_CONTENT);
+//        priviledgesList.add(Priviledge.WRITE_PROPERTIES);
+        return priviledgesList;
+    }
+
+    @Override
+    public Map<Principal, List<Priviledge>> getAccessControlList() {
+        debug("getAccessControlList");
+        
+        // Do the mapping 
+        ArrayList<Integer> permArray = this.logicalData.getMetadata().getPermissionArray();
+        List<Priviledge> perm = new ArrayList<Priviledge>();
+        HashMap<Principal, List<Priviledge>> acl = new HashMap<Principal, List<Priviledge>>();
+        throw new UnsupportedOperationException("Not supported yets.");
+    }
+
+    @Override
+    public void setAccessControlList(Map<Principal, List<Priviledge>> map) {
+        debug("setAccessControlList");
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public HrefList getPrincipalCollectionHrefs() {
+        HrefList list = new HrefList();
+        list.add("/users/");
+        return list;
     }
 }
