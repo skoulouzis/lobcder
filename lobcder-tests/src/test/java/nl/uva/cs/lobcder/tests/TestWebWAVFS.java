@@ -24,6 +24,8 @@ import org.apache.jackrabbit.webdav.client.methods.AclMethod;
 import org.apache.jackrabbit.webdav.client.methods.DeleteMethod;
 import org.apache.jackrabbit.webdav.client.methods.PropFindMethod;
 import org.apache.jackrabbit.webdav.client.methods.PutMethod;
+import org.apache.jackrabbit.webdav.property.DavProperty;
+import org.apache.jackrabbit.webdav.property.DavPropertyIterator;
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
 import org.apache.jackrabbit.webdav.property.DavPropertySet;
 import org.apache.jackrabbit.webdav.security.AclProperty;
@@ -33,6 +35,7 @@ import org.apache.jackrabbit.webdav.security.Principal;
 import org.apache.jackrabbit.webdav.security.Privilege;
 import static org.junit.Assert.*;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 /**
@@ -41,16 +44,17 @@ import org.junit.Test;
  */
 public class TestWebWAVFS {
 
-    private String root;
-    private URI uri;
-    private String username1, password1;
-    private HttpClient client1;
-    private HttpClient client2;
-    private String username2;
-    private String password2;
+    private static String root;
+    private static URI uri;
+    private static String username1, password1;
+    private static HttpClient client1;
+    private static HttpClient client2;
+    private static String username2;
+    private static String password2;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeClass
+    public static void setUpClass() throws Exception {
+
         String propBasePath = System.getProperty("user.home") + File.separator
                 + "workspace" + File.separator + "lobcder-tests"
                 + File.separator + "etc" + File.separator + "test.proprties";
@@ -67,41 +71,41 @@ public class TestWebWAVFS {
         }
 
 
-        this.uri = URI.create(testURL);
-        this.root = this.uri.toASCIIString();
-        if (!this.root.endsWith("/")) {
-            this.root += "/";
+        uri = URI.create(testURL);
+        root = uri.toASCIIString();
+        if (!root.endsWith("/")) {
+            root += "/";
         }
 
-        this.username1 = prop.getProperty(("webdav.test.username1"), "");
+        username1 = prop.getProperty(("webdav.test.username1"), "");
         if (username1 == null) {
             username1 = "user1";
         }
         assertTrue(username1 != null);
-        this.password1 = prop.getProperty(("webdav.test.password1"), "");
+        password1 = prop.getProperty(("webdav.test.password1"), "");
         if (password1 == null) {
             password1 = "passwd1";
         }
         assertTrue(password1 != null);
 
 
-        this.username2 = prop.getProperty(("webdav.test.username2"), "");
+        username2 = prop.getProperty(("webdav.test.username2"), "");
         if (username2 == null) {
             username2 = "user2";
         }
         assertTrue(username2 != null);
-        this.password2 = prop.getProperty(("webdav.test.password2"), "");
+        password2 = prop.getProperty(("webdav.test.password2"), "");
         if (password2 == null) {
             password2 = "passwd2";
         }
         assertTrue(password2 != null);
 
 
-        this.client1 = new HttpClient();
+        client1 = new HttpClient();
 
-        assertNotNull(this.uri.getHost());
-        assertNotNull(this.uri.getPort());
-        assertNotNull(this.client1);
+        assertNotNull(uri.getHost());
+        assertNotNull(uri.getPort());
+        assertNotNull(client1);
 
 
         int port = uri.getPort();
@@ -114,32 +118,32 @@ public class TestWebWAVFS {
         Protocol https = new Protocol("https", socketFactory, port);
         Protocol.registerProtocol("https", https);
 
-        this.client1.getState().setCredentials(
-                new AuthScope(this.uri.getHost(), this.uri.getPort()),
-                new UsernamePasswordCredentials(this.username1, this.password1));
+        client1.getState().setCredentials(
+                new AuthScope(uri.getHost(), uri.getPort()),
+                new UsernamePasswordCredentials(username1, password1));
 
 
-        this.client2 = new HttpClient();
+        client2 = new HttpClient();
 
-        assertNotNull(this.uri.getHost());
-        assertNotNull(this.uri.getPort());
-        assertNotNull(this.client2);
+        assertNotNull(uri.getHost());
+        assertNotNull(uri.getPort());
+        assertNotNull(client2);
 
-        this.client2.getState().setCredentials(
-                new AuthScope(this.uri.getHost(), this.uri.getPort()),
-                new UsernamePasswordCredentials(this.username2, this.password2));
+        client2.getState().setCredentials(
+                new AuthScope(uri.getHost(), uri.getPort()),
+                new UsernamePasswordCredentials(username2, password2));
     }
 
     @Test
     public void testCreateAndDeleteFile() throws IOException, DavException {
-        String testFileURI1 = this.uri.toASCIIString() + TestSettings.TEST_FILE_NAME1;
+        String testFileURI1 = uri.toASCIIString() + TestSettings.TEST_FILE_NAME1;
         PutMethod put = new PutMethod(testFileURI1);
         put.setRequestEntity(new StringRequestEntity(TestSettings.TEST_DATA, "text/plain", "UTF-8"));
         int status = client1.executeMethod(put);
         assertEquals(HttpStatus.SC_CREATED, status);
 
 
-        String testFileURI2 = this.uri.toASCIIString() + TestSettings.TEST_TXT_FILE_NAME;
+        String testFileURI2 = uri.toASCIIString() + TestSettings.TEST_TXT_FILE_NAME;
         put = new PutMethod(testFileURI2);
         put.setRequestEntity(new StringRequestEntity(TestSettings.TEST_DATA, "text/plain", "UTF-8"));
         status = client1.executeMethod(put);
@@ -202,8 +206,6 @@ public class TestWebWAVFS {
         assertTrue(contentType.contains("text"));
 
 
-
-
 //        DavPropertySet newProps = new DavPropertySet();
 //        DavPropertyNameSet removeProperties = new DavPropertyNameSet();
 //
@@ -228,10 +230,10 @@ public class TestWebWAVFS {
 
         delete(testFileURI1);
     }
-    
+
     @Test
     public void testSetGetACL() throws IOException, DavException {
-        String testFileURI1 = this.uri.toASCIIString() + TestSettings.TEST_FILE_NAME1;
+        String testFileURI1 = uri.toASCIIString() + TestSettings.TEST_FILE_NAME1;
         PutMethod put = new PutMethod(testFileURI1);
         put.setRequestEntity(new StringRequestEntity(TestSettings.TEST_DATA, "text/plain", "UTF-8"));
         int status = client1.executeMethod(put);
@@ -247,7 +249,6 @@ public class TestWebWAVFS {
 
         boolean invert = false;
         boolean isProtected = false;
-
 
         AclResource inheritedFrom = null;
         Ace ace = AclProperty.createGrantAce(principal, privileges, invert, isProtected, inheritedFrom);
@@ -268,7 +269,7 @@ public class TestWebWAVFS {
     public void testPROPFIND_PUT_PROPFIND_GET_PUT() throws IOException, DavException {
 
         //PROPFIND file is not there 
-        String testFileURI1 = this.uri.toASCIIString() + TestSettings.TEST_FILE_NAME1 + ".txt";
+        String testFileURI1 = uri.toASCIIString() + TestSettings.TEST_FILE_NAME1 + ".txt";
         PropFindMethod propFind = new PropFindMethod(testFileURI1, DavConstants.PROPFIND_ALL_PROP_INCLUDE, DavConstants.DEPTH_0);
         int status = client1.executeMethod(propFind);
         assertEquals(HttpStatus.SC_NOT_FOUND, status);
@@ -308,7 +309,7 @@ public class TestWebWAVFS {
 
         //GET the file 
         GetMethod get = new GetMethod(testFileURI1);
-        status = this.client1.executeMethod(get);
+        status = client1.executeMethod(get);
         assertEquals(HttpStatus.SC_OK, status);
         assertEquals("\n", get.getResponseBodyAsString());
 
@@ -321,7 +322,7 @@ public class TestWebWAVFS {
 
 
         get = new GetMethod(testFileURI1);
-        status = this.client1.executeMethod(get);
+        status = client1.executeMethod(get);
         assertEquals(HttpStatus.SC_OK, status);
         assertEquals(content, get.getResponseBodyAsString());
 
@@ -333,7 +334,7 @@ public class TestWebWAVFS {
 
 
         get = new GetMethod(testFileURI1);
-        status = this.client1.executeMethod(get);
+        status = client1.executeMethod(get);
         assertEquals(HttpStatus.SC_OK, status);
         assertEquals(content, get.getResponseBodyAsString());
 
@@ -344,7 +345,7 @@ public class TestWebWAVFS {
     @Test
     public void testInconsistency() {
         try {
-            String testFileURI1 = this.uri.toASCIIString() + TestSettings.TEST_FILE_NAME1 + ".txt";
+            String testFileURI1 = uri.toASCIIString() + TestSettings.TEST_FILE_NAME1 + ".txt";
             PutMethod put = new PutMethod(testFileURI1);
             put.setRequestEntity(new StringRequestEntity(TestSettings.TEST_DATA, "text/plain", "UTF-8"));
             int status = client1.executeMethod(put);
@@ -357,7 +358,7 @@ public class TestWebWAVFS {
             }
 
             GetMethod get = new GetMethod(testFileURI1);
-            status = this.client1.executeMethod(get);
+            status = client1.executeMethod(get);
             System.out.println("Status: " + status);
 
         } catch (IOException ex) {
@@ -368,9 +369,9 @@ public class TestWebWAVFS {
     @Test
     public void testMultiThread() throws IOException, DavException {
         try {
-            Thread userThread1 = new UserThread(this.client1, this.uri.toASCIIString(), 1);
+            Thread userThread1 = new UserThread(client1, uri.toASCIIString(), 1);
             userThread1.setName("T1");
-            Thread userThread2 = new UserThread(this.client2, this.uri.toASCIIString(), 2);
+            Thread userThread2 = new UserThread(client2, uri.toASCIIString(), 2);
             userThread2.setName("T2");
 
             userThread1.start();

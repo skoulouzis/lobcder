@@ -35,13 +35,27 @@
             <scope>test</scope>
         </dependency>
         
+        
+        <!-- The JCR API --> 
+        <dependency> 
+            <groupId>javax.jcr</groupId> 
+            <artifactId>jcr</artifactId> 
+            <version>2.0</version> 
+        </dependency> 
+
+<!-- Jackrabbit content repository --> 
+        <dependency> 
+            <groupId>org.apache.jackrabbit</groupId> 
+            <artifactId>jackrabbit-core</artifactId> 
+            <version>2.2.4</version> 
+        </dependency> 
+
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-log4j12</artifactId>
             <version>1.6.4</version>
-            <scope>test</scope>
-            <type>jar</type>
         </dependency>
+       
         <dependency>
             <groupId>org.kuali.rice</groupId>
             <artifactId>rice-ksb-client-impl</artifactId>
@@ -55,11 +69,35 @@
             <artifactId>vlet-vrs.core</artifactId>
             <version>1.5.0-dev-1</version>
         </dependency>
-
+        
+        <dependency>
+            <groupId>nl.uva.vlet</groupId>
+            <artifactId>vlet-vfs.jcraft.ssh</artifactId>
+            <version>1.5.0-dev-1</version>
+            <scope>runtime</scope>
+        </dependency>
+        
+        
+        <dependency>
+            <groupId>nl.uva.vlet</groupId>
+            <artifactId>vlet-vfs.srm</artifactId>
+            <version>1.5.0-dev-1</version>
+            <scope>runtime</scope>
+        </dependency>
+        
+        
         <dependency>
             <groupId>nl.uva.vlet</groupId>
             <artifactId>vlet-vfs.cloud</artifactId>
             <version>1.0</version>
+        </dependency>
+        
+        
+        <dependency>
+            <groupId>nl.uva.vlet</groupId>
+            <artifactId>vlet-vfs.gftp</artifactId>
+            <version>1.5.0-dev-1</version>
+            <scope>runtime</scope>
         </dependency>
 
         <dependency>

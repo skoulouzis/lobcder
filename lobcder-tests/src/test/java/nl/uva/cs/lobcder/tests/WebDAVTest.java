@@ -148,7 +148,6 @@ public class WebDAVTest {
         //assertTrue("Allow header should include REBIND method", allow.contains("REBIND"));
         //assertTrue("Allow header should include UNBIND method", allow.contains("UNBIND"));
 
-        assertTrue("Allow header should include COPY method", allow.contains("ACL"));
         assertTrue("Allow header should include COPY method", allow.contains("COPY"));
         assertTrue("Allow header should include DELETE method", allow.contains("DELETE"));
         assertTrue("Allow header should include MKCOL method", allow.contains("MKCOL"));
@@ -161,7 +160,7 @@ public class WebDAVTest {
         assertTrue("Allow header should include PUT method", allow.contains("PUT"));
     }
 
-//         create test resource, make it referenceable, check resource id, move resource, check again
+    //     create test resource, make it referenceable, check resource id, move resource, check again
     @Test
     public void testResourceId() throws HttpException, IOException, DavException, URISyntaxException {
         String testcol = this.root + "testResourceId/";
