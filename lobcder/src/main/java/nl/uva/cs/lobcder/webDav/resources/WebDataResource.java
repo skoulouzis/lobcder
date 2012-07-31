@@ -252,7 +252,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
 
     @Override
     public String getPrincipalURL() {
-        debug("getPrincipalURL");
+        debug("getPrincipalURL");        
         return getPrincipal().getUid().toString();
     }
 
@@ -276,7 +276,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
     @Override
     public Map<Principal, List<Priviledge>> getAccessControlList() {
         debug("getAccessControlList");
-        
+
         // Do the mapping 
         ArrayList<Integer> permArray = this.logicalData.getMetadata().getPermissionArray();
         List<Priviledge> perm = new ArrayList<Priviledge>();
@@ -290,10 +290,21 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
+    /**
+     * - DAV:principal-collection-set - Collection of principals for this
+     * server. For security and scalability reasons, a server MAY report only a
+     * subset of the entire set of known principal collections, and therefore
+     * clients should not assume they have retrieved an exhaustive listing. A
+     * server MAY elect to report none of the principal collections it knows
+     * about, in which case the property value would be empty.
+     *
+     * @return
+     */
     @Override
     public HrefList getPrincipalCollectionHrefs() {
-        HrefList list = new HrefList();
-        list.add("/users/");
-        return list;
+//        HrefList list = new HrefList();
+//        list.add("/users/");
+//        return list;
+        return null;
     }
 }

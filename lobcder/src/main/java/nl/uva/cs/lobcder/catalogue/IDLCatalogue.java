@@ -6,7 +6,9 @@ package nl.uva.cs.lobcder.catalogue;
 
 import com.bradmcevoy.common.Path;
 import java.util.Collection;
+import java.util.List;
 import java.util.Properties;
+import nl.uva.cs.lobcder.auth.MyPrincipal;
 import nl.uva.cs.lobcder.resources.ILogicalData;
 import nl.uva.cs.lobcder.resources.IStorageSite;
 
@@ -40,5 +42,5 @@ public interface IDLCatalogue {
 
     public void updateResourceEntry(ILogicalData newResource)throws CatalogueException;
     
-    public void close()throws CatalogueException;    
+    public void close()throws CatalogueException;
 }

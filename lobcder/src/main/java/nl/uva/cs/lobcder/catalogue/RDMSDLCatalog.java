@@ -8,10 +8,8 @@ import com.bradmcevoy.common.Path;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.*;
 import java.util.Map.Entry;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.*;
 import javax.jdo.*;
 import javax.jdo.identity.StringIdentity;
 import javax.sql.DataSource;
@@ -24,8 +22,6 @@ import org.datanucleus.store.rdbms.datasource.dbcp.PoolableConnectionFactory;
 import org.datanucleus.store.rdbms.datasource.dbcp.PoolingDataSource;
 import org.datanucleus.store.rdbms.datasource.dbcp.pool.KeyedObjectPoolFactory;
 import org.datanucleus.store.rdbms.datasource.dbcp.pool.ObjectPool;
-import org.datanucleus.store.rdbms.datasource.dbcp.pool.PoolableObjectFactory;
-import org.datanucleus.store.rdbms.datasource.dbcp.pool.impl.GenericKeyedObjectPool.Config;
 import org.datanucleus.store.rdbms.datasource.dbcp.pool.impl.GenericObjectPool;
 import org.datanucleus.store.rdbms.datasource.dbcp.pool.impl.StackKeyedObjectPoolFactory;
 
@@ -48,7 +44,7 @@ public class RDMSDLCatalog implements IDLCatalogue {
 
     @Override
     public void registerResourceEntry(ILogicalData entry) throws CatalogueException {
-        
+
         double checkExistsStart = System.currentTimeMillis();
         ILogicalData loaded = cahce.get(entry.getLDRI());
         if (loaded != null && comparePaths(loaded.getLDRI(), entry.getLDRI())) {
@@ -108,7 +104,7 @@ public class RDMSDLCatalog implements IDLCatalogue {
                 if (ex instanceof NonExistingResourceException) {
                     throw (NonExistingResourceException) ex;
                 }
-                if(ex.getMessage().contains("Duplicate entry")){
+                if (ex.getMessage().contains("Duplicate entry")) {
                     throw new DuplicateResourceException("Cannot register resource " + entry.getLDRI() + " resource exists");
                 }
                 throw new CatalogueException(ex.getMessage());
@@ -606,7 +602,7 @@ public class RDMSDLCatalog implements IDLCatalogue {
             cahce.put(newResource.getLDRI(), newResource);
         }
     }
-
+    
     @Override
     public void close() throws CatalogueException {
         throw new UnsupportedOperationException("Not supported yet.");
