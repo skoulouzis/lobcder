@@ -8,9 +8,7 @@ import com.bradmcevoy.http.*;
 import com.bradmcevoy.http.http11.Http11Protocol;
 import com.bradmcevoy.http.webdav.DefaultWebDavResponseHandler;
 import com.bradmcevoy.http.webdav.WebDavProtocol;
-import com.bradmcevoy.http.webdav.WebDavResourceTypeHelper;
 import com.bradmcevoy.http.webdav.WebDavResponseHandler;
-import com.ettrema.http.acl.ACLHandler;
 import com.ettrema.http.acl.ACLProtocol;
 import com.ettrema.http.caldav.CalDavProtocol;
 import java.io.IOException;
@@ -18,15 +16,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.servlet.Servlet;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import nl.uva.cs.lobcder.auth.MyPrincipal;
-import nl.uva.cs.lobcder.auth.test.MyAuth;
 import nl.uva.cs.lobcder.webDav.resources.WebDataResourceFactory;
 import nl.uva.cs.lobcder.webDav.resources.WebDataResourceFactoryFactory;
 
@@ -59,9 +53,10 @@ public class WebDavServlet implements Servlet {
             javax.servlet.ServletResponse servletResponse) throws ServletException, IOException {
         HttpServletRequest req = (HttpServletRequest) servletRequest;
         HttpServletResponse resp = (HttpServletResponse) servletResponse;
-        final String auth = req.getHeader("Authorization");
-        if (auth == null) {
-            resp.setHeader("WWW-Authenticate", "Basic realm=\"" + "SECRET" + "\"");
+
+        //Enforce Basic auth 
+        if (req.getHeader("Authorization") == null) {
+            resp.setHeader("WWW-Authenticate", "Basic realm=\"SECRET\"");
             resp.sendError(HttpServletResponse.SC_UNAUTHORIZED);
         } else {
 
@@ -82,21 +77,12 @@ public class WebDavServlet implements Servlet {
             //            }
 
             try {
-                try {
-                    req.getSession().setAttribute("vph-user", new MyPrincipal(auth, MyAuth.getInstance().checkToken(auth)));
-
-                    originalRequest.set(req);
-                    originalResponse.set(resp);
-
-                    com.bradmcevoy.http.Request request = new com.bradmcevoy.http.ServletRequest(req);
-                    com.bradmcevoy.http.Response response = new com.bradmcevoy.http.ServletResponse(resp);
-
+                originalRequest.set(req);
+                originalResponse.set(resp);
+                com.bradmcevoy.http.Request request = new com.bradmcevoy.http.ServletRequest(req);
+                com.bradmcevoy.http.Response response = new com.bradmcevoy.http.ServletResponse(resp);
 //                    servletHttpManager.process(request, response);
-                    httpManager.process(request, response);
-                } catch (MyPrincipal.Exception ex) {
-                    resp.sendError(HttpServletResponse.SC_UNAUTHORIZED);
-                }
-
+                httpManager.process(request, response);
             } finally {
                 originalRequest.remove();
                 originalResponse.remove();
@@ -152,7 +138,6 @@ public class WebDavServlet implements Servlet {
 
     protected void init(String responseHandlerClassName, List<String> authHandlers) throws Exception {
         rf = new WebDataResourceFactory();
-
         WebDavResponseHandler responseHandler;
         if (responseHandlerClassName == null) {
             responseHandler = null; // allow default to be created

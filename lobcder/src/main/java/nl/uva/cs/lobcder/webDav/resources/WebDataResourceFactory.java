@@ -11,7 +11,7 @@ import java.util.Properties;
 import java.util.logging.Level;
 import nl.uva.cs.lobcder.auth.Permissions;
 import nl.uva.cs.lobcder.catalogue.IDLCatalogue;
-import nl.uva.cs.lobcder.catalogue.RDMSDLCatalog;
+import nl.uva.cs.lobcder.catalogue.MemoryCatalog;
 import nl.uva.cs.lobcder.resources.ILogicalData;
 import nl.uva.cs.lobcder.resources.IStorageSite;
 import nl.uva.cs.lobcder.resources.LogicalData;
@@ -30,7 +30,7 @@ public class WebDataResourceFactory implements ResourceFactory {
         if (!propFile.exists()) {
             throw new IOException("Properties file " + propFile.getAbsolutePath() + " is missing");
         }
-        catalogue = new RDMSDLCatalog(propFile);
+        catalogue = new MemoryCatalog();
         initStorageSites();
     }
 
@@ -44,20 +44,20 @@ public class WebDataResourceFactory implements ResourceFactory {
             debug("getResource:  host: " + host + " path: " + ldri);
 
             Collection<IStorageSite> sites;
-            if (ldri.isRoot() || ldri.toString().equals("")) {
-                LogicalData root = new LogicalData(ldri, Constants.LOGICAL_FOLDER);
-                ArrayList<Integer> permArr = new ArrayList<Integer>();
-                permArr.add(0);
-                permArr.add(Permissions.OWNER_ROLE | Permissions.READWRITE);
-                permArr.add(Permissions.REST_ROLE | Permissions.NOACCESS);
-                permArr.add(Permissions.ROOT_ADMIN | Permissions.READWRITE);
-                Metadata meta = root.getMetadata();
-                meta.setPermissionArray(permArr);
-                root.setMetadata(meta);
-                
-                WebDataDirResource webRoot = new WebDataDirResource(catalogue, root);                
-                return webRoot;
-            }
+//            if (ldri.isRoot() || ldri.toString().equals("")) {
+//                LogicalData root = new LogicalData(ldri, Constants.LOGICAL_FOLDER);
+//                ArrayList<Integer> permArr = new ArrayList<Integer>();
+//                permArr.add(0);
+//                permArr.add(Permissions.OWNER_ROLE | Permissions.READWRITE);
+//                permArr.add(Permissions.REST_ROLE | Permissions.NOACCESS);
+//                permArr.add(Permissions.ROOT_ADMIN | Permissions.READWRITE);
+//                Metadata meta = root.getMetadata();
+//                meta.setPermissionArray(permArr);
+//                root.setMetadata(meta);
+//                
+//                WebDataDirResource webRoot = new WebDataDirResource(catalogue, root);                
+//                return webRoot;
+//            }
 
             ILogicalData entry = catalogue.getResourceEntryByLDRI(ldri);
             if (entry == null) {
@@ -87,13 +87,13 @@ public class WebDataResourceFactory implements ResourceFactory {
     private void initStorageSites() throws Exception {
 //        String[] names = new String[]{"storage1.prop", "storage2.prop", "storage3.prop"};
 
-
-        Properties[] storageSitesProps = PropertiesLoader.getStorageSitesProps();
-        for (Properties p : storageSitesProps) {
-            if (!catalogue.storageSiteExists(p)) {
-                catalogue.registerStorageSite(p);
-            }
-        }
+//
+//        Properties[] storageSitesProps = PropertiesLoader.getStorageSitesProps();
+//        for (Properties p : storageSitesProps) {
+//            if (!catalogue.storageSiteExists(p)) {
+//                catalogue.registerStorageSite(p);
+//            }
+//        }
     }
 
 //    public void setUserName(String remoteUser) {

@@ -13,28 +13,21 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.*;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import nl.uva.cs.lobcder.auth.Permissions;
 import nl.uva.cs.lobcder.catalogue.CatalogueException;
 import nl.uva.cs.lobcder.catalogue.IDLCatalogue;
-import nl.uva.cs.lobcder.resources.ILogicalData;
-import nl.uva.cs.lobcder.resources.IStorageSite;
-import nl.uva.cs.lobcder.resources.LogicalData;
-import nl.uva.cs.lobcder.resources.Metadata;
+import nl.uva.cs.lobcder.catalogue.ResourceExistsException;
+import nl.uva.cs.lobcder.resources.*;
 import nl.uva.cs.lobcder.util.Constants;
-import nl.uva.vlet.exception.ResourceNotFoundException;
 import nl.uva.vlet.exception.VlException;
-import nl.uva.vlet.vfs.VFSNode;
-import nl.uva.vlet.vfs.VFile;
-import org.apache.commons.io.IOUtils;
 
 /**
  *
  * @author S. Koulouzis
  */
-class WebDataDirResource extends WebDataResource implements FolderResource, CollectionResource {
+public class WebDataDirResource extends WebDataResource implements FolderResource, CollectionResource, DeletableCollectionResource  {
 
 //    private ILogicalData entry;
 //    private final IDLCatalogue catalogue;
@@ -52,13 +45,9 @@ class WebDataDirResource extends WebDataResource implements FolderResource, Coll
 
     @Override
     public CollectionResource createCollection(String newName) throws NotAuthorizedException, ConflictException, BadRequestException {
-        try {
-//            Permissions p = new Permissions(getLogicalData().getMetadata().getPermissionArray());
-//            MyPrincipal principal = getPrincipal();
-//            if(!p.canWrite(principal)){
-//                throw new NotAuthorizedException();
-//            }
-            debug("createCollection.");
+        debug("createCollection.");
+        isWritable();
+        try {            
             Path newCollectionPath = Path.path(getLogicalData().getLDRI(), newName);
             LogicalData newFolderEntry = (LogicalData) getCatalogue().getResourceEntryByLDRI(newCollectionPath);
             debug("\t newCollectionPath: " + newCollectionPath);
@@ -66,55 +55,31 @@ class WebDataDirResource extends WebDataResource implements FolderResource, Coll
                 newFolderEntry = new LogicalData(newCollectionPath, Constants.LOGICAL_FOLDER);
                 Metadata meta = newFolderEntry.getMetadata();
                 meta.setCreateDate(System.currentTimeMillis());
-                newFolderEntry.setMetadata(meta);
-
-                Collection<IStorageSite> sites = getStorageSites();
-
-                newFolderEntry.setStorageSites(sites);
-                getCatalogue().registerResourceEntry(newFolderEntry);
-            }
-
-
-//            Metadata meta = newFolderEntry.getMetadata();
-//            meta.setPermissionArray((new Permissions(principal).getRolesPerm()));
-//            newFolderEntry.setMetadata(meta);
-//            getCatalogue().updateResourceEntry(newFolderEntry);
-
-            WebDataDirResource resource = new WebDataDirResource(getCatalogue(), newFolderEntry);
-            return resource;
-        } catch (Permissions.Exception e) {
-            throw new NotAuthorizedException();
-        } catch (NotAuthorizedException e) {
-            throw e;
-        } catch (Exception ex) {
-            Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, ex);
-            if (ex.getMessage().contains("resource exists")) {
+                meta.setPermissionArray((new Permissions(getPrincipal()).getRolesPerm()));
+                newFolderEntry.setMetadata(meta);                            
+                WebDataDirResource res = new WebDataDirResource(getCatalogue(), newFolderEntry);
+                getCatalogue().registerResourceEntry(this, newFolderEntry);
+                return res;
+            } else {
                 throw new ConflictException(this, newName);
             }
-        }
-        return null;
+        } 
+        catch (Exception ex) {
+            if(ex instanceof ConflictException) {
+                throw (ConflictException)ex;
+            } else {
+                debug(ex.getMessage());
+                throw new BadRequestException(this, ex.getMessage());
+            }                
+        }       
     }
 
     @Override
     public Resource child(String childName) throws NotAuthorizedException {
-//        try {
-//            Permissions p = new Permissions(getLogicalData().getMetadata().getPermissionArray());
-//            MyPrincipal principal = getPrincipal();
-//            if (!p.canRead(principal)) {
-//                throw new NotAuthorizedException();
-//            }
-//        } catch (Permissions.Exception e) {
-//            throw new NotAuthorizedException();
-//        } catch (NotAuthorizedException e){
-//            throw e;
-//        } catch (Exception e) {
-//            throw new NotAuthorizedException();
-//        }
-        try {
-            debug("child.");
-            Path childPath = Path.path(getLogicalData().getLDRI(), childName);
-            ILogicalData child = getCatalogue().getResourceEntryByLDRI(childPath);
-
+        debug("child.");
+        isReadable();
+        try {           
+            ILogicalData child = getCatalogue().getResourceEntryByLDRI(getLogicalData().getLDRI().child(childName));
             if (child != null) {
                 if (child.getType().equals(Constants.LOGICAL_FOLDER)) {
                     return new WebDataDirResource(getCatalogue(), child);
@@ -134,25 +99,33 @@ class WebDataDirResource extends WebDataResource implements FolderResource, Coll
 
     @Override
     public List<? extends Resource> getChildren() throws NotAuthorizedException {
-        debug("getChildren.");
-        ArrayList<? extends Resource> children = null;
-        try {
-//            ArrayList<Integer> perm = getLogicalData().getMetadata().getPermissionArray();
-//            Permissions p = new Permissions(perm);
-//            MyPrincipal principal = getPrincipal();
-//            if(!p.canRead(principal)) {
-//                throw new NotAuthorizedException(); 
-//            }
-            if (getLogicalData().getLDRI().isRoot()) {
-                children = getTopLevelChildren();
-            } else {
-                children = new ArrayList<Resource>(getEntriesChildren());
+        debug(getLogicalData().getLDRI().toPath() + " collection: getChildren.");
+        isReadable();
+        ArrayList<WebDataResource> children = new ArrayList<WebDataResource>() {
+            @Override
+            public String toString() {
+                StringBuilder sb = new StringBuilder();
+                for(WebDataResource r : this) {
+                    sb.append(r.getLogicalData().getLDRI().toPath()).append("\n");
+                }
+                return sb.toString();
             }
-
-        } catch (Permissions.Exception e) {
-            throw new NotAuthorizedException();
-        } catch (NotAuthorizedException e) {
-            throw e;
+        };      
+        try {
+            Collection<ILogicalData> childrenLD = getCatalogue().getChildren(this);
+            if(childrenLD != null) {
+                for(ILogicalData childLD : childrenLD) {
+                    if (childLD.getType().equals(Constants.LOGICAL_FOLDER)) {
+                        children.add(new WebDataDirResource(getCatalogue(), childLD));
+                    }
+                    if (childLD.getType().equals(Constants.LOGICAL_FILE)) {
+                        children.add(new WebDataFileResource(getCatalogue(), childLD));
+                    }
+                    if (childLD.getType().equals(Constants.LOGICAL_DATA)) {
+                        children.add(new WebDataResource(getCatalogue(), childLD));
+                    }
+                }
+            }           
         } catch (Exception ex) {
             Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -167,74 +140,66 @@ class WebDataDirResource extends WebDataResource implements FolderResource, Coll
         debug("\t newName: " + newName);
         debug("\t length: " + length);
         debug("\t contentType: " + contentType);
-
         try {
-//            Metadata meta = getLogicalData().getMetadata();
-//            ArrayList<Integer> array = meta.getPermissionArray();
-//            Permissions p = new Permissions(array);
-//            MyPrincipal principal = getPrincipal();
-//            if (!p.canWrite(principal)) {
-//                throw new NotAuthorizedException();
-//            }
             Path newPath = Path.path(getLogicalData().getLDRI(), newName);
-
-            LogicalData newResource = (LogicalData) getCatalogue().getResourceEntryByLDRI(newPath);
+            ILogicalData newResource = (LogicalData) getCatalogue().getResourceEntryByLDRI(newPath);
             if (newResource != null) {
-                resource = updateExistingFile(newResource, length, contentType, inputStream);
+                Permissions p = new Permissions(newResource.getMetadata().getPermissionArray());
+                p.canWrite(getPrincipal());
+                PDRI pdri = createPDRI(length);
+                pdri.putData(inputStream);          
+                newResource = getCatalogue().registerPdriForNewEntry(newResource.getUID(), pdri);                                             
+                Metadata m = newResource.getMetadata();
+                m.setLength(length);
+                m.setModifiedDate(System.currentTimeMillis());
+                m.addContentType(contentType);
+                newResource.setMetadata(m);  
+                getCatalogue().updateResourceEntry(newResource);
             } else {
-                resource = createNonExistingFile(newPath, length, contentType, inputStream);
+                isWritable();
+                newResource = new LogicalData(newPath, Constants.LOGICAL_FILE);
+                Permissions p = new Permissions(getPrincipal());
+                PDRI pdri = createPDRI(length);
+                pdri.putData(inputStream);
+                Metadata m = newResource.getMetadata();
+                m.setLength(length);
+                m.setCreateDate(System.currentTimeMillis());
+                m.setModifiedDate(System.currentTimeMillis());
+                m.setPermissionArray(p.getRolesPerm());
+                m.addContentType(contentType);
+                newResource.setMetadata(m);            
+                
+                getCatalogue().registerResourceEntry(this, newResource);
+                getCatalogue().registerPdriForNewEntry(newResource.getUID(), pdri);             
             }
 
-            if (!getLogicalData().getLDRI().isRoot()) {
-                ILogicalData reloaded = getCatalogue().getResourceEntryByLDRI(this.getLogicalData().getLDRI());
-                setLogicalData(reloaded);
-            }
-
-//            meta = ((WebDataResource) resource).getLogicalData().getMetadata();
-//            meta.setPermissionArray((new Permissions(principal)).getRolesPerm());
-//            ((WebDataResource) resource).getLogicalData().setMetadata(meta);
-
-//            getCatalogue().updateResourceEntry(((WebDataResource) resource).getLogicalData());
-
-            return resource;
-        } catch (Permissions.Exception e) {
-            throw new NotAuthorizedException();
+            return new WebDataFileResource(getCatalogue(), newResource);
         } catch (NotAuthorizedException e) {
+            debug("NotAuthorizedException");
             throw e;
         } catch (Exception ex) {
-            throw new BadRequestException(this, ex.getMessage());
-        } finally {
-        }
+            ex.printStackTrace();
+            throw new BadRequestException(this, ex.getMessage());           
+        } 
     }
 
     @Override
     public void copyTo(CollectionResource toCollection, String name) throws NotAuthorizedException, BadRequestException, ConflictException {
         try {
+            WebDataDirResource toWDDR = (WebDataDirResource) toCollection;
             debug("copyTo.");
-            debug("\t toCollection: " + toCollection.getName());
+            debug("\t toCollection: " + toWDDR.getLogicalData().getLDRI().toPath());
             debug("\t name: " + name);
-//            Permissions p = new Permissions(getLogicalData().getMetadata().getPermissionArray());
-//            MyPrincipal principal = getPrincipal();
-//            if (!p.canRead(principal)) {
-//                throw new NotAuthorizedException();
-//            }
-//            Permissions parentPerm = new Permissions(((WebDataResource) toCollection).getLogicalData().getMetadata().getPermissionArray());
-//            if (!parentPerm.canWrite(principal)) {
-//                throw new NotAuthorizedException();
-//            }
-            Path toCollectionLDRI = Path.path(toCollection.getName());
-            Path newLDRI = Path.path(toCollectionLDRI, name);
-
-            LogicalData newFolderEntry = new LogicalData(newLDRI, Constants.LOGICAL_FOLDER);
-            newFolderEntry.getMetadata().setModifiedDate(System.currentTimeMillis());
-//            newFolderEntry.getMetadata().setPermissionArray((ArrayList<Integer>) p.getRolesPerm().clone());
-            getCatalogue().registerResourceEntry(newFolderEntry);
-
-//        } catch (Permissions.Exception e) {
-//            throw new NotAuthorizedException();
-//        } catch (NotAuthorizedException e) {
-//            throw e;
+            isReadable();
+            toWDDR.isWritable();
+            Permissions p = new Permissions(getPrincipal());                 
+            getCatalogue().copyEntry(getLogicalData().getUID(), p.getRolesPerm(), toWDDR, name);
+//        } catch (NotAuthorizedException ex) {
+//            throw ex;
+//        } catch (BadRequestException ex) {
+//            throw ex;
         } catch (Exception ex) {
+            ex.printStackTrace();
             if (ex.getMessage().contains("resource exists")) {
                 throw new ConflictException(this, ex.getMessage());
             }
@@ -245,44 +210,23 @@ class WebDataDirResource extends WebDataResource implements FolderResource, Coll
     @Override
     public void delete() throws NotAuthorizedException, ConflictException, BadRequestException {
         try {
-//            MyPrincipal principal = getPrincipal();
-//            if (getLogicalData().getLDRI().isRoot()) {
-//                throw new NotAuthorizedException();
-//            } else {
-//                Path parentPath = getPath().getParent();
-//                if (parentPath == null || parentPath.isRoot()) {
-//                    if (!principal.getRoles().contains(Permissions.ROOT_ADMIN)) {
-//                        throw new NotAuthorizedException();
-//                    }
-//                } else {
-//                    ArrayList<Integer> pai = getCatalogue().getResourceEntryByLDRI(getPath().getParent()).getMetadata().getPermissionArray();
-//                    Permissions p = new Permissions(pai);
-//                    if (!p.canWrite(principal)) {
-//                        throw new NotAuthorizedException();
-//                    }
-//                }
-//            }
-            debug("delete.");
-            //TODO: physical data shall be removed AFTER we delete logical structures. All permissions checks are
-            //performed on logical level 
-            List<? extends Resource> children = getChildren();
-            if (children != null) {
-                for (Resource r : children) {
-                    if (r instanceof DeletableResource) {
-                        ((DeletableResource) r).delete();
-                    }
-                }
+            debug(getLogicalData().getLDRI().toPath() + " folder delete.");
+            Path parentPath = getLogicalData().getLDRI().getParent();
+            if (parentPath == null || getLogicalData().getLDRI().isRoot()){
+                throw new NotAuthorizedException();
             }
-            Collection<IStorageSite> sites = getLogicalData().getStorageSites();
-            if (sites != null && !sites.isEmpty()) {
-                for (IStorageSite s : sites) {
-                    s.deleteVNode(getLogicalData().getPDRI());
-                }
+            ILogicalData parentLD = getCatalogue().getResourceEntryByLDRI(getLogicalData().getLDRI().getParent());
+            if(parentLD == null){
+                throw new  BadRequestException("Parent does not exist");
+            }            
+            Permissions p = new Permissions(parentLD.getMetadata().getPermissionArray());
+            if (!p.canWrite(getPrincipal())){
+                throw new NotAuthorizedException();
             }
-            getCatalogue().unregisterResourceEntry(getLogicalData());
+            getCatalogue().removeResourceEntryBulk(getLogicalData().getLDRI());            
 
-//        } catch (Permissions.Exception e) {
-//            throw new NotAuthorizedException();
+        } catch (Permissions.Exception e) {
+            throw new NotAuthorizedException();
         } catch (NotAuthorizedException e) {
             throw e;
         } catch (CatalogueException ex) {
@@ -333,7 +277,7 @@ class WebDataDirResource extends WebDataResource implements FolderResource, Coll
     @Override
     public String getContentType(String accepts) {
         debug("getContentType. accepts: " + accepts);
-        ArrayList<String> mimeTypes;
+        List<String> mimeTypes;
         if (accepts != null) {
             String[] acceptsTypes = accepts.split(",");
             if (getLogicalData().getMetadata() != null && getLogicalData().getMetadata().getContentTypes() != null) {
@@ -362,40 +306,38 @@ class WebDataDirResource extends WebDataResource implements FolderResource, Coll
 
     @Override
     public void moveTo(CollectionResource rDest, String name) throws ConflictException, NotAuthorizedException, BadRequestException {
+        debug("#########################################moveTo: collection " + getLogicalData().getLDRI().toPath());
+        WebDataDirResource rdst = (WebDataDirResource)rDest;
+        debug("\t rDestgetName: " + rdst.getLogicalData().getLDRI().toPath() + " name: " + name);
+        
         try {
-//            MyPrincipal principal = getPrincipal();
-//            if (getLogicalData().getLDRI().isRoot()) {
-//                throw new NotAuthorizedException();
-//            } else {
-//                if (getPath().getParent().isRoot()) {
-//                    if (!principal.getRoles().contains(Permissions.ROOT_ADMIN)) {
-//                        throw new NotAuthorizedException();
-//                    }
-//                } else {
-//                    ArrayList<Integer> pai = getCatalogue().getResourceEntryByLDRI(getPath().getParent()).getMetadata().getPermissionArray();
-//                    Permissions p = new Permissions(pai);
-//                    if (!p.canWrite(principal)) {
-//                        throw new NotAuthorizedException();
-//                    }
-//                }
-//            }
-//            Permissions parentPerm = new Permissions(((WebDataResource) rDest).getLogicalData().getMetadata().getPermissionArray());
-//            if (!parentPerm.canWrite(principal)) {
-//                throw new NotAuthorizedException();
-//            }
-            debug("moveTo.");
-            debug("\t rDestgetName: " + rDest.getName() + " name: " + name);
-            getCatalogue().renameEntry(getLogicalData().getLDRI(), Path.path(getLogicalData().getLDRI(), name));
-//        } catch (Permissions.Exception e) {
-//            throw new NotAuthorizedException();
-//        } catch (NotAuthorizedException e) {
-//            throw e;
-        } catch (Exception ex) {
-            Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, ex);
-            if (ex.getMessage().contains("resource exists")) {
-                throw new ConflictException(rDest, ex.getMessage());
+            if (getLogicalData().getLDRI().isRoot()){
+                throw new NotAuthorizedException();
             }
-        }
+            ILogicalData parentLD = getCatalogue().getResourceEntryByLDRI(getLogicalData().getLDRI().getParent());
+            if(parentLD == null){
+                throw new  BadRequestException("Parent does not exist");
+            }            
+            Permissions p = new Permissions(parentLD.getMetadata().getPermissionArray());
+            if (!p.canWrite(getPrincipal())){
+                throw new NotAuthorizedException();
+            }            
+            rdst.isWritable();
+            getCatalogue().moveEntry(getLogicalData().getUID(), rdst, name);
+                        
+        } catch (ResourceExistsException ex) {
+            throw new ConflictException(rDest, ex.getMessage());
+        } catch (Permissions.Exception e) {
+            throw new NotAuthorizedException();
+        } catch (NotAuthorizedException e) {
+            throw e;
+        } catch (CatalogueException ex) {
+            throw new BadRequestException(this, ex.toString());
+        } catch (VlException ex) {
+            throw new BadRequestException(this, ex.toString());
+        } catch (Exception ex) {
+            throw new BadRequestException(this, ex.toString());
+        }                
     }
 
     @Override
@@ -413,192 +355,13 @@ class WebDataDirResource extends WebDataResource implements FolderResource, Coll
 
     @Override
     protected void debug(String msg) {
-//        if (debug) {
-//            System.err.println(this.getClass().getSimpleName() + "." + getLogicalData().getLDRI() + ": " + msg);
-//        }
+        if (debug) {
+            System.err.println(this.getClass().getSimpleName() + "." + getLogicalData().getLDRI() + ": " + msg);
+        }
     }
 
-    private ArrayList<? extends Resource> getTopLevelChildren() throws Exception {
-        Collection<ILogicalData> topEntries = getCatalogue().getTopLevelResourceEntries();
-        ArrayList<Resource> children = new ArrayList<Resource>();
-        for (ILogicalData e : topEntries) {
-            if (e.getType().equals(Constants.LOGICAL_FOLDER)) {
-                children.add(new WebDataDirResource(getCatalogue(), e));
-            } else if (e.getType().equals(Constants.LOGICAL_FILE)) {
-                children.add(new WebDataFileResource(getCatalogue(), e));
-            } else {
-                children.add(new WebDataResource(getCatalogue(), e));
-            }
-        }
-        return children;
-    }
-
-    private Collection<Resource> getEntriesChildren() throws Exception {
-        Collection<String> childrenPaths = getLogicalData().getChildren();
-
-        Collection<Resource> children = new CopyOnWriteArrayList<Resource>();
-        ArrayList<String> toBeRemoved = new ArrayList<String>();
-        if (childrenPaths != null) {
-
-            for (String p : childrenPaths) {
-                debug("Adding children: " + p);
-                ILogicalData ch = getCatalogue().getResourceEntryByLDRI(Path.path(p));
-                if (ch == null) {
-                    //We have some kind of inconsistency. It can happend that someone else calls delete on the child, which removes it from the catalog. In this case we'll belive the catalog and retun null 
-//                    throw new NullPointerException("The Collection " + getLogicalData().getLDRI() + " has " + p + " registered as a child but the catalogue has no such entry");
-                    //This throws java.util.ConcurrentModificationException because we change the list while iteratting 
-//                    getLogicalData().removeChild();
-                    toBeRemoved.add(p);
-                    continue;
-                }
-                if (ch.getType().equals(Constants.LOGICAL_FOLDER)) {
-                    children.add(new WebDataDirResource(getCatalogue(), ch));
-                } else if (ch.getType().equals(Constants.LOGICAL_FILE)) {
-                    children.add(new WebDataFileResource(getCatalogue(), ch));
-                } else {
-                    children.add(new WebDataResource(getCatalogue(), ch));
-                }
-            }
-            getLogicalData().removeChildren(toBeRemoved);
-        }
-        return children;
-    }
-
-    private Resource createNonExistingFile(Path newPath, Long length, String contentType, InputStream inputStream) throws IOException, Exception {
-//        return asyncCreateNonExistingFile(newPath, length, contentType, inputStream);
-        return syncCreateNonExistingFile(newPath, length, contentType, inputStream);
-    }
-
-    private Resource updateExistingFile(LogicalData newResource, Long length, String contentType, InputStream inputStream) throws VlException, IOException, Exception {
-        return asyncUpdateExistingFile(newResource, length, contentType, inputStream);
-//        return syncUpdateExistingFile(newResource, length, contentType, inputStream);
-    }
-
-    private Resource asyncUpdateExistingFile(LogicalData newResource, Long length, String contentType, InputStream inputStream) throws InterruptedException, Exception {
-        Worker w2 = new Worker(Worker.UPDATE_DATA);
-        w2.setLogicalData(newResource);
-        w2.setCatalog(getCatalogue());
-        w2.setLength(length);
-        w2.setContentType(contentType);
-        Thread t2 = new Thread(w2);
-        t2.start();
-
-        Worker w1 = new Worker(Worker.CREATE_PHYSICAL_FILE);
-        w1.setLogicalData(newResource);
-        w1.setInputStream(inputStream);
-        Thread t1 = new Thread(w1);
-        t1.start();
-
-        t1.join();
-        t2.join();
-        if (w1.getException() != null) {
-            throw w1.getException();
-        }
-        if (w2.getException() != null) {
-            throw w2.getException();
-        }
-
-        return new WebDataFileResource(getCatalogue(), newResource);
-    }
-
-    private Resource syncUpdateExistingFile(LogicalData newResource, Long length, String contentType, InputStream inputStream) throws CatalogueException, Exception {
-        VFSNode node;
-        if (!newResource.hasPhysicalData()) {
-            node = newResource.createPhysicalData();
-        } else {
-            node = newResource.getVFSNode();
-        }
-        if (node != null) {
-            OutputStream out = ((VFile) node).getOutputStream();
-            IOUtils.copy(inputStream, out);
-            if (inputStream != null) {
-                inputStream.close();
-            }
-            if (out != null) {
-                out.flush();
-                out.close();
-            }
-        }
-
-        Metadata meta = newResource.getMetadata();
-        meta.setLength(length);
-        meta.addContentType(contentType);
-        meta.setModifiedDate(System.currentTimeMillis());
-        newResource.setMetadata(meta);
-
-        getCatalogue().updateResourceEntry(newResource);
-//        LogicalData relodedResource = (LogicalData) getCatalogue().getResourceEntryByLDRI(newResource.getLDRI());
-        return new WebDataFileResource(getCatalogue(), newResource);
-    }
-
-    private Resource asyncCreateNonExistingFile(Path newPath, Long length, String contentType, InputStream inputStream) throws CatalogueException, IOException, InterruptedException, Exception {
-        LogicalData newResource = new LogicalData(newPath, Constants.LOGICAL_FILE);
-        Collection<IStorageSite> sites = getStorageSites();
-        newResource.setStorageSites(sites);
-
-        Worker w1 = new Worker(Worker.CREATE_PHYSICAL_FILE);
-        w1.setLogicalData(newResource);
-        w1.setInputStream(inputStream);
-        Thread t1 = new Thread(w1);
-        t1.start();
-
-
-        Worker w2 = new Worker(Worker.REGISTER_DATA);
-        w2.setLogicalData(newResource);
-        w2.setContentType(contentType);
-        w2.setLength(length);
-        w2.setCatalog(getCatalogue());
-        Thread t2 = new Thread(w2);
-        t2.start();
-
-
-        t2.join();
-        t1.join();
-        if (w1.getException() != null) {
-            throw w1.getException();
-        }
-        if (w2.getException() != null) {
-            throw w2.getException();
-        }
-        return new WebDataFileResource(getCatalogue(), newResource);
-    }
-
-    private Resource syncCreateNonExistingFile(Path newPath, Long length, String contentType, InputStream inputStream) throws CatalogueException, IOException, Exception {
-        LogicalData newResource = new LogicalData(newPath, Constants.LOGICAL_FILE);
-        Collection<IStorageSite> sites = getStorageSites();
-        newResource.setStorageSites(sites);
-
-        VFSNode node = null;
-        try {
-            node = newResource.getVFSNode();
-        } catch (Exception ex) {
-            if (!(ex instanceof ResourceNotFoundException)) {
-                throw (ResourceNotFoundException) ex;
-            }
-        }
-        if (node == null) {
-            node = newResource.createPhysicalData();
-        }
-        if (node != null) {
-            OutputStream out = ((VFile) node).getOutputStream();
-            IOUtils.copy(inputStream, out);
-            if (inputStream != null) {
-                inputStream.close();
-            }
-            if (out != null) {
-                out.flush();
-                out.close();
-            }
-        }
-
-        Metadata meta = new Metadata();
-        meta.setLength(length);
-        meta.addContentType(contentType);
-        meta.setCreateDate(System.currentTimeMillis());
-        meta.setModifiedDate(System.currentTimeMillis());
-        newResource.setMetadata(meta);
-        getCatalogue().registerResourceEntry(newResource);
-
-        return new WebDataFileResource(getCatalogue(), newResource);
+    @Override
+    public boolean isLockedOutRecursive(Request rqst) {
+        return false;
     }
 }

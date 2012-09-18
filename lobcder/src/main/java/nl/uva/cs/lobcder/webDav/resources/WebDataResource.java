@@ -4,21 +4,22 @@
  */
 package nl.uva.cs.lobcder.webDav.resources;
 
-import com.bradmcevoy.common.Path;
 import com.bradmcevoy.http.Request.Method;
 import com.bradmcevoy.http.*;
+import com.bradmcevoy.http.exceptions.NotAuthorizedException;
 import com.bradmcevoy.http.values.HrefList;
 import com.ettrema.http.AccessControlledResource;
 import com.ettrema.http.acl.Principal;
-import java.io.IOException;
 import java.util.*;
-import javax.servlet.http.HttpSession;
 import nl.uva.cs.lobcder.auth.MyPrincipal;
-import nl.uva.cs.lobcder.catalogue.CatalogueException;
+import nl.uva.cs.lobcder.auth.Permissions;
+import nl.uva.cs.lobcder.auth.PrincipalCache;
+import nl.uva.cs.lobcder.auth.test.MyAuth;
 import nl.uva.cs.lobcder.catalogue.IDLCatalogue;
 import nl.uva.cs.lobcder.frontend.WebDavServlet;
 import nl.uva.cs.lobcder.resources.ILogicalData;
-import nl.uva.cs.lobcder.resources.IStorageSite;
+import nl.uva.cs.lobcder.resources.PDRI;
+import nl.uva.cs.lobcder.resources.SimplePDRI;
 
 /**
  *
@@ -31,7 +32,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
     private static final boolean debug = true;
     private Map<String, CustomProperty> properties;
     //Collection<Integer> roles = null;
-    private String uname;
+    //private String uname;
 
     public WebDataResource(IDLCatalogue catalogue, ILogicalData logicalData) {
         this.logicalData = logicalData;
@@ -66,32 +67,30 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
 
     @Override
     public Object authenticate(String user, String password) {
-        return "Authenticated";
-//        MyPrincipal principal = null;
-//        debug("authenticate.\n"
-//                + "\t user: " + user
-//                + "\t password: " + password);
-//        uname = user;
-//        try {
-//            ArrayList<Integer> roles = new ArrayList<Integer>();
-//            roles.add(0);
-//            String token = user + password;
-//            principal = PrincipalCache.pcache.getPrincipal(token);
-//            if (principal == null) {
-//                principal = new MyPrincipal(token, MyAuth.getInstance().checkToken(token));
-//                PrincipalCache.pcache.putPrincipal(principal);
-//            }
-//            WebDavServlet.request().setAttribute("vph-user", principal);
-//        } catch (Exception ex) {
-//            Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
-//
-//        }
-//        return principal;
+        MyPrincipal principal = null;
+        debug("authenticate.\n"
+                + "\t user: " + user
+                + "\t password: " + password);
+
+        try {
+            String token = password;
+            principal = PrincipalCache.pcache.getPrincipal(token);
+            if (principal == null) {
+                principal = new MyPrincipal(token, MyAuth.getInstance().checkToken(token));
+                PrincipalCache.pcache.putPrincipal(principal);
+            }
+        } catch (Exception ex) {
+            debug(ex.getMessage());
+        }
+        WebDavServlet.request().setAttribute("vph-user", principal);
+        return principal;
     }
 
     @Override
     public boolean authorise(Request request, Method method, Auth auth) {
 
+        System.err.println("AUTHORIZE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!:  " + auth.getUser());
+        System.err.println(WebDavServlet.request().getUserPrincipal());
         //Object permission = getPermissionForTheLogicalData();
         boolean authorized = true;
         if (authorized) {
@@ -146,8 +145,6 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
                     + "\t auth.getUser(): " + user + "\n"
                     + "\t auth.getTag(): " + tag);
         }
-
-        //return auth.getUser() == null ? false : true;
         return authorized;
     }
 
@@ -226,33 +223,35 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
         this.logicalData = logicalData;
     }
 
-    public Path getPath() {
-        return getLogicalData().getLDRI();
-    }
-
-    Collection<IStorageSite> getStorageSites() throws CatalogueException, IOException {
-        Collection<IStorageSite> sites = getLogicalData().getStorageSites();
-        if (sites == null || sites.isEmpty()) {
-
-//            String uname = String.valueOf(getPrincipal().getUid());
-            sites = getCatalogue().getSitesByUname("uname1");
-        }
-        if (sites == null || sites.isEmpty()) {
-            debug("\t Storage Sites for " + this.getLogicalData().getLDRI() + " are empty!");
-            throw new IOException("Storage Sites for " + this.getLogicalData().getLDRI() + " are empty!");
-        }
-        return sites;
-    }
-
     public MyPrincipal getPrincipal() {
-        HttpSession s = WebDavServlet.request().getSession();
-        MyPrincipal pr = (MyPrincipal) (s.getAttribute("vph-user"));
-        return pr;
+        return (MyPrincipal) WebDavServlet.request().getAttribute("vph-user");
     }
+    
+    public void isReadable() throws NotAuthorizedException {
+        try {
+            Permissions p = new Permissions(getLogicalData().getMetadata().getPermissionArray());
+            MyPrincipal principal = getPrincipal();
+            if(!p.canRead(principal))
+                throw new NotAuthorizedException();            
+        } catch (Throwable ex) {
+            throw new NotAuthorizedException();
+        }        
+    }
+    
+    public void isWritable() throws NotAuthorizedException {
+        try {
+            Permissions p = new Permissions(getLogicalData().getMetadata().getPermissionArray());
+            MyPrincipal principal = getPrincipal();
+            if(!p.canWrite(principal))
+                throw new NotAuthorizedException();            
+        } catch (Throwable ex) {
+            throw new NotAuthorizedException();
+        }        
+    }    
 
     @Override
     public String getPrincipalURL() {
-        debug("getPrincipalURL");        
+        debug("getPrincipalURL");
         return getPrincipal().getUid().toString();
     }
 
@@ -278,7 +277,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
         debug("getAccessControlList");
 
         // Do the mapping 
-        ArrayList<Integer> permArray = this.logicalData.getMetadata().getPermissionArray();
+        List<Integer> permArray = this.logicalData.getMetadata().getPermissionArray();
         List<Priviledge> perm = new ArrayList<Priviledge>();
         HashMap<Principal, List<Priviledge>> acl = new HashMap<Principal, List<Priviledge>>();
         throw new UnsupportedOperationException("Not supported yets.");
@@ -306,5 +305,19 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
 //        list.add("/users/");
 //        return list;
         return null;
+    }
+    
+    
+    public PDRI createPDRI(long fileLength) {
+        return new SimplePDRI(UUID.randomUUID().toString(), null);
+    }
+    
+    public PDRI getPDRI(){
+        PDRI res = null;
+        Iterator<PDRI> it = getCatalogue().getPdriByGroupId(getLogicalData().getPdriGroupId()).iterator();
+        if(it.hasNext()){
+            res = it.next();
+        }
+        return res;
     }
 }

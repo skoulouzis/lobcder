@@ -5,65 +5,37 @@
 package nl.uva.cs.lobcder.resources;
 
 import com.bradmcevoy.common.Path;
-import java.util.AbstractCollection;
-import java.util.Collection;
-import nl.uva.vlet.exception.VlException;
-import nl.uva.vlet.vfs.VFSNode;
+import java.util.Set;
 
 /**
  *
  * @author S. Koulouzis
  */
-public interface ILogicalData {
+public interface ILogicalData extends Cloneable {
 
     public Path getLDRI();
-    
-    public Collection<String> getChildren();
 
-    public void addChildren(Collection<String> children);
-
-    public void addChild(Path child);
-
-    public Collection<IStorageSite> getStorageSites();
-
-    public void setStorageSites(Collection<IStorageSite> storageResources);
+    public void setLDRI(Path path);
+        
+    public void setLDRI(String parent, String name);
 
     public Metadata getMetadata();
 
     public void setMetadata(Metadata metadata);
 
-    public String getUID();
+    public Long getUID();
     
-    public void setUID(String uid);
-
-    public boolean hasChildren();
-
-    public void removeChild(Path childPath);
+    public Long getPdriGroupId();
     
-    public void removeChildren(Collection<String> childPath);
-
-    public Path getChild(Path path);
-
-    public void setLDRI(Path path);
-
+    public void setPdriGroupId(Long pdriGroupId);
+    
     public boolean isRedirectAllowed();
 
-    public VFSNode getVFSNode() throws VlException;
-
-    public boolean hasPhysicalData()throws VlException;
-
-    public VFSNode createPhysicalData()throws VlException;
-
-    public void removeStorageSites();
-
-    public void setChildren(Collection<String> children);
-    
     public String getType();
 
-    public Path getPDRI();
-
-    public void setPDRI(Path pdrI);
-    
     public String getParent();
     
+    public String getName();
+
+    public Object clone();
 }

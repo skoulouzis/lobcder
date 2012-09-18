@@ -29,11 +29,11 @@ public class Permissions {
             super(reason);
         }
     }
-    private ArrayList<Integer> rolesPerm;
+    private List<Integer> rolesPerm;
 
     // first int = owner's user ID
     // role 0 = owner, 1 = rest
-    public Permissions(ArrayList<Integer> rolesPerm) throws Exception {
+    public Permissions(List<Integer> rolesPerm) throws Exception {
         setRolesPerm(rolesPerm);
     }
 
@@ -48,14 +48,14 @@ public class Permissions {
         } 
     }
 
-    public final synchronized void setRolesPerm(ArrayList<Integer> rolesPerm) throws Exception {
+    public final synchronized void setRolesPerm(List<Integer> rolesPerm) throws Exception {
         if (rolesPerm == null || rolesPerm.size() < 3) {
             throw new Exception("Wrong parameter");
         }
         this.rolesPerm = rolesPerm;
     }
 
-    public synchronized ArrayList<Integer> getRolesPerm() {
+    public synchronized List<Integer> getRolesPerm() {
         return rolesPerm;
     }
 

@@ -5,13 +5,9 @@
 package nl.uva.cs.lobcder.resources;
 
 import com.bradmcevoy.common.Path;
-import java.io.Serializable;
-import java.util.Collection;
-import java.util.concurrent.CopyOnWriteArrayList;
-import javax.jdo.annotations.*;
-import nl.uva.vlet.data.StringUtil;
-import nl.uva.vlet.exception.VlException;
-import nl.uva.vlet.vfs.VFSNode;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
+import nl.uva.cs.lobcder.util.Constants;
 
 /**
  *
@@ -21,88 +17,52 @@ import nl.uva.vlet.vfs.VFSNode;
  * first thing to do to use a class with this facility is to tag it as
  * "detachable". This is done by adding the attribute
  */
-@PersistenceCapable(detachable = "true")
-@Inheritance(strategy = InheritanceStrategy.NEW_TABLE)
-@Discriminator(strategy = DiscriminatorStrategy.CLASS_NAME)
-public class LogicalData implements ILogicalData, Serializable {
+public class LogicalData implements ILogicalData, Cloneable {
 
-    /**
-     *
-     */
-    private static final long serialVersionUID = -1529997963561059214L;
-    @PrimaryKey
-//    @Persistent(valueStrategy= IdGeneratorStrategy.UUIDSTRING)
-    @Persistent
-    private String uid;
-    //When an object is retrieved from the datastore by JDO typically not all 
-    //fields are retrieved immediately. This is because for efficiency purposes 
-    //only particular field types are retrieved in the initial access of the 
-    //object, and then any other objects are retrieved when accessed 
-    //(lazy loading). The group of fields that are loaded is called a fetch 
-    //group
-    @Persistent(defaultFetchGroup = "true")
-    private Path ldri;
-    @Persistent(defaultFetchGroup = "true")
-    private Path pdri;
-    
-    @Persistent
-    private String strLDRI;
-    @Persistent
-    private int ldriLen;
-    @Persistent(defaultFetchGroup = "true")
-    private String parent;
-    @Persistent(defaultFetchGroup = "true")
-    private Metadata metadata;
-    @Persistent(defaultFetchGroup = "true")
-    private Collection<String> children;
-    @Persistent(defaultFetchGroup = "true")
+    private Long uid;
     private String type;
-    private boolean debug = false;
-    @Persistent(defaultFetchGroup = "true")
-    @Join
-    @Element(types = nl.uva.cs.lobcder.resources.StorageSite.class)
-    @Order(column = "STORAGE_SITE")
-    private Collection<IStorageSite> storageSites;
+    private String name;
+    private String parent;
+    private Long pdriGroupId;
+    private Metadata metadata;
+    
+    
+    private static final boolean debug = false;
+    
+    private static AtomicLong count = new AtomicLong();
+
+
 
     public LogicalData(Path ldri, String type) {
-        this.ldri = ldri;
-        strLDRI = ldri.toString();
-        ldriLen = ldri.getLength();
-        
+        this.name = ldri.getName() != null ? ldri.getName() : "";
+        this.parent = ldri.getParent() != null ? ldri.getParent().toPath() : "";
         this.type = type;
-        //Data will hold the same pdri for ever.
-        pdri = ldri;
-        uid = pdri.toString();//new StringIdentity(this.getClass(), java.util.UUID.randomUUID().toString()).getKey();
-        Path parentPath = ldri.getParent();
-        if (parentPath != null && !StringUtil.isEmpty(parentPath.toString())) {
-            parent = parentPath.toString();
-        } else {
-            parent = Path.root.toString();
-        }
-
+        uid = count.incrementAndGet();        
+        metadata = new Metadata();
+        pdriGroupId = null;
     }
 
+    public LogicalData(Path ldri, String type, Long uid, Metadata md) {
+        this.name = ldri.getName() != null ? ldri.getName() : "";
+        this.parent = ldri.getParent() != null ? ldri.getParent().toPath() : "";
+        this.type = type;
+        this.uid = uid;        
+        metadata = md;
+        pdriGroupId = null;
+    }
+        
     @Override
     public Path getLDRI() {
-        return this.ldri;
-    }
-
-    @Override
-    public Collection<String> getChildren() {
-        return children;
-    }
-
-    @Override
-    public Collection<IStorageSite> getStorageSites() {
-        return this.storageSites;
+        if(parent.isEmpty() && name.isEmpty() && type.equals(Constants.LOGICAL_FOLDER) )
+            return Path.root;
+        else if(parent.isEmpty())
+            return Path.root.child(name);
+        else
+            return Path.path(parent).child(name);
     }
 
     @Override
     public Metadata getMetadata() {
-        if (this.metadata == null) {
-            Metadata meta = new Metadata();
-            return meta;
-        }
         return this.metadata;
     }
 
@@ -112,67 +72,14 @@ public class LogicalData implements ILogicalData, Serializable {
     }
 
     @Override
-    public String getUID() {
+    public Long getUID() {
         return this.uid;
     }
 
-    @Override
-    public void addChildren(Collection<String> children) {
-        if (this.children == null) {
-            this.children = children;
-        } else {
-            this.children.addAll(children);
-        }
-    }
-
-    @Override
-    public void setStorageSites(Collection<IStorageSite> storageSites) {
-        if (storageSites != null) {//&& !storageSites.isEmpty()) {
-            this.storageSites = storageSites;
-            debug("StorageSite num : " + this.storageSites.size());
-        }
-    }
-
-    @Override
-    public void addChild(Path child) {
-        if (this.children == null) {
-            this.children = new CopyOnWriteArrayList<String>();
-        }
-        this.children.add(child.toString());
-    }
-
     private void debug(String msg) {
-//        if (debug) {
-//            System.err.println(this.getClass().getName() + "." + this.ldri + ": " + msg);
-//        }
-    }
-
-    @Override
-    public boolean hasChildren() {
-        if (children != null && !children.isEmpty()) {
-            return true;
+        if (debug) {
+            System.err.println(this.getClass().getName() + "." + Path.path(parent).child(name) + ": " + msg);
         }
-        return false;
-    }
-
-    @Override
-    public void removeChild(Path childPath) {
-        if (children != null && !children.isEmpty()) {
-            children.remove(childPath.toString());
-        }
-    }
-
-    @Override
-    public Path getChild(Path path) {
-
-        if (children != null && !children.isEmpty()) {
-            for (String p : children) {
-                if (p.toString().equals(path.toString())) {
-                    return Path.path(p);
-                }
-            }
-        }
-        return null;
     }
 
     @Override
@@ -181,60 +88,17 @@ public class LogicalData implements ILogicalData, Serializable {
         return false;
     }
 
-    @Override
-    public VFSNode getVFSNode() throws VlException {
-        for (IStorageSite s : this.storageSites) {
-            if (s != null && s.LDRIHasPhysicalData(pdri)) {
-                return s.getVNode(pdri);
-            }
-        }
-        return null;
-    }
-
-    @Override
-    public boolean hasPhysicalData() throws VlException {
-        if (storageSites != null && !storageSites.isEmpty()) {
-            for (IStorageSite s : storageSites) {
-                return s.LDRIHasPhysicalData(pdri);
-            }
-        }
-        return false;
-    }
-
-    @Override
-    public VFSNode createPhysicalData() throws VlException {
-        if (this.storageSites == null || this.storageSites.isEmpty()) {
-            return null;
-        }
-        for (IStorageSite s : this.storageSites) {
-            if (s != null) {
-                return s.createVFSFile(pdri);
-            }
-        }
-        return null;
-    }
 
     @Override
     public void setLDRI(Path ldri) {
-        this.ldri = ldri;
-        this.strLDRI = ldri.toString();
+        parent = ldri.getParent().toPath();
+        name = ldri.getName();
     }
-
+    
     @Override
-    public void removeChildren(Collection<String> childPath) {
-        if (children != null || !children.isEmpty()) {
-            this.children.removeAll(childPath);
-        }
-    }
-
-    @Override
-    public void removeStorageSites() {
-        this.storageSites.clear();
-    }
-
-    @Override
-    public void setChildren(Collection<String> children) {
-        this.children = children;
+    public void setLDRI(String parent, String name) {
+        this.parent = parent;
+        this.name = name;
     }
 
     @Override
@@ -250,33 +114,45 @@ public class LogicalData implements ILogicalData, Serializable {
     }
 
     @Override
-    public Path getPDRI() {
-        return pdri;
+    public String getParent() {        
+        return parent;           
     }
 
     @Override
-    public void setPDRI(Path pdrI) {
-        this.pdri = pdrI;
-    }
+    public String getName() {
+        return name;
+    }  
 
     @Override
-    public String getParent() {
-        return parent;
+    public Long getPdriGroupId() {
+        return pdriGroupId;
     }
-
-    /**
-     * @param parent the parent to set
-     */
-    public void setParent(String parent) {
-        this.parent = parent;
-    }
-
-    public String getStrLDRI() {
-        return strLDRI;
-    }
-
+    
     @Override
-    public void setUID(String uid) {
-        this.uid = uid;
+    public void setPdriGroupId(Long pdriGroupId){        
+        this.pdriGroupId = pdriGroupId;        
     }
+    
+    @Override
+    public Object clone(){
+        Metadata md = (Metadata) getMetadata().clone();
+        LogicalData clone = new LogicalData(getLDRI(), type, uid, md);           
+        clone.pdriGroupId = pdriGroupId;
+        return clone;        
+    }
+    
+    @Override
+    public boolean equals(Object obj){
+        if(obj instanceof LogicalData){
+            return hashCode() == obj.hashCode();
+        } else {
+            return false;
+        }
+    }
+    
+    @Override
+    public int hashCode(){
+        return uid.intValue();
+    }
+    
 }

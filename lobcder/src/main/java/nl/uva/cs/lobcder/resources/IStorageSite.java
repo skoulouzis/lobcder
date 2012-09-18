@@ -24,21 +24,21 @@ public interface IStorageSite {
 
     Collection<String> getLogicalPaths();
     
-    boolean LDRIHasPhysicalData(Path ldri)throws VlException;
+    boolean LDRIHasPhysicalData(String ldri)throws VlException;
     
-    VFSNode getVNode(Path path) throws VlException;
+    VFSNode getVNode(String path) throws VlException;
         
-    VFSNode createVFSFile(Path path) throws VlException;
+    VFSNode createVFSFile(String path) throws VlException;
 
     public Credential getCredentials();
 
-    public void deleteVNode(Path lDRI)throws VlException;
+    public void deleteVNode(String lDRI)throws VlException;
 
     public ServerInfo getInfo();
     
     public VFSClient getVfsClient() throws VlException;
 
-    public void removeLogicalPath(Path pdrI);
+    public void removeLogicalPath(String pdrI);
     
     public String getVPHUsernamesCSV();
     
