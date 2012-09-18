@@ -37,9 +37,9 @@ public class MemoryCatalog implements IDLCatalogue {
             return res;
         }
     };
-    
     final Map<Long, PDRIGroup> pdriGroupIdToPdriGroup = new HashMap<Long, PDRIGroup>();
-    final Map<Long, PDRI> pdriIdToPdri = new HashMap<Long, PDRI> ();
+    final Map<Long, PDRI> pdriIdToPdri = new HashMap<Long, PDRI>();
+    private final Map<String, List<MyStorageSite>> userToStorageSites = new HashMap<String, List<MyStorageSite>>();
 
     public MemoryCatalog() {
         Path ldri = Path.path("/");
@@ -70,15 +70,15 @@ public class MemoryCatalog implements IDLCatalogue {
     }
 
     @Override
-    public ILogicalData registerPdriForNewEntry(Long logicalDataUID, PDRI pdri) throws Exception {        
+    public ILogicalData registerPdriForNewEntry(Long logicalDataUID, PDRI pdri) throws Exception {
         synchronized (this) {
             ILogicalData ld = uidToLD.get(logicalDataUID);
-            if(ld != null) {
+            if (ld != null) {
                 PDRIGroup prdiGroup;
                 Long pdriGroupId = ld.getPdriGroupId();
-                if(pdriGroupId != null){
+                if (pdriGroupId != null) {
                     prdiGroup = pdriGroupIdToPdriGroup.get(pdriGroupId);
-                    if(prdiGroup != null) {
+                    if (prdiGroup != null) {
                         PDRIGroup.Accessor.setRefCount(prdiGroup, PDRIGroup.Accessor.getRefCount(prdiGroup) - 1);
                     }
                 }
@@ -87,7 +87,7 @@ public class MemoryCatalog implements IDLCatalogue {
                 PDRIGroup.Accessor.setRefCount(prdiGroup, PDRIGroup.Accessor.getRefCount(prdiGroup) + 1);
                 ld.setPdriGroupId(prdiGroup.getGroupId());
                 pdriIdToPdri.put(pdri.getPdriId(), pdri);
-                pdriGroupIdToPdriGroup.put(prdiGroup.getGroupId(), prdiGroup);                
+                pdriGroupIdToPdriGroup.put(prdiGroup.getGroupId(), prdiGroup);
             }
             return (ILogicalData) ld.clone();
         }
@@ -97,7 +97,7 @@ public class MemoryCatalog implements IDLCatalogue {
     public Collection<PDRI> getPdriByGroupId(Long GroupId) {
         ArrayList<PDRI> res = new ArrayList<PDRI>();
         synchronized (this) {
-            for(Long pdriId: pdriGroupIdToPdriGroup.get(GroupId).getPdriIds()){
+            for (Long pdriId : pdriGroupIdToPdriGroup.get(GroupId).getPdriIds()) {
                 res.add(pdriIdToPdri.get(pdriId));
             }
         }
@@ -120,14 +120,14 @@ public class MemoryCatalog implements IDLCatalogue {
             pathToLD.put(entry.getLDRI().toPath(), entry);
             parentPathToChildren.get(entry.getParent()).add(entry);
         }
-    }   
+    }
 
     @Override
     public ILogicalData getResourceEntryByLDRI(Path logicalResourceName) throws Exception {
         ILogicalData res;
         synchronized (this) {
             res = (ILogicalData) pathToLD.get(logicalResourceName.toPath());
-            if(res != null) {
+            if (res != null) {
                 res = (ILogicalData) res.clone();
             }
             return res;
@@ -149,10 +149,10 @@ public class MemoryCatalog implements IDLCatalogue {
             ILogicalData toRemove = pathToLD.remove(myPath);
             uidToLD.remove(toRemove.getUID());
             parentPathToChildren.get(childToRemove.getParent().toPath()).remove(toRemove);
-            if(toRemove.getPdriGroupId() != null){
+            if (toRemove.getPdriGroupId() != null) {
                 PDRIGroup pgrig = pdriGroupIdToPdriGroup.get(toRemove.getPdriGroupId());
-                if(pgrig != null){
-                    PDRIGroup.Accessor.setRefCount(pgrig, PDRIGroup.Accessor.getRefCount(pgrig) -1);
+                if (pgrig != null) {
+                    PDRIGroup.Accessor.setRefCount(pgrig, PDRIGroup.Accessor.getRefCount(pgrig) - 1);
                 }
             }
         }
@@ -162,9 +162,9 @@ public class MemoryCatalog implements IDLCatalogue {
     public Collection<ILogicalData> getChildren(WebDataDirResource parent) {
         Collection<ILogicalData> result = new ArrayList<ILogicalData>();
         synchronized (this) {
-            for(ILogicalData ld : parentPathToChildren.get(parent.getLogicalData().getLDRI().toPath())){
-                result.add((ILogicalData)ld.clone());
-            }            
+            for (ILogicalData ld : parentPathToChildren.get(parent.getLogicalData().getLDRI().toPath())) {
+                result.add((ILogicalData) ld.clone());
+            }
         }
         return result;
     }
@@ -178,7 +178,7 @@ public class MemoryCatalog implements IDLCatalogue {
         synchronized (this) {
             ILogicalData entry = uidToLD.get(entryId);
             final String entryCurrentPathStr = entry.getLDRI().toPath();
-            
+
             pathToLD.remove(entryCurrentPathStr); // put to variable an entry from HashMap - must be the same in all collections
             parentPathToChildren.get(entry.getParent()).remove(entry); // entry is removed from both maps
             entry.setLDRI(newParentForEntryStr, newName); // set new LDRI for entry
@@ -202,7 +202,7 @@ public class MemoryCatalog implements IDLCatalogue {
             }
         }
     }
-    
+
     @Override
     public void copyEntry(Long entryId, List<Integer> perm, WebDataDirResource newParent, String newName) throws Exception {
         String newParentForEntryStr = newParent.getLogicalData().getLDRI().toPath();
@@ -215,15 +215,15 @@ public class MemoryCatalog implements IDLCatalogue {
             final String entryCurrentPathStr = entry.getLDRI().toPath();
             //entry = pathToLD.remove(entryCurrentPathStr); // put to variable an entry from HashMap - must be the same in all collections
             //parentPathToChildren.get(entry.getParent()).remove(entry); // entry is removed from both maps
-            ILogicalData newEntry = new LogicalData(entry.getLDRI(),entry.getType());
-            newEntry.setMetadata((Metadata)entry.getMetadata().clone());
+            ILogicalData newEntry = new LogicalData(entry.getLDRI(), entry.getType());
+            newEntry.setMetadata((Metadata) entry.getMetadata().clone());
             newEntry.getMetadata().setCreateDate(System.currentTimeMillis());
             newEntry.getMetadata().setModifiedDate(System.currentTimeMillis());
             newEntry.getMetadata().setPermissionArray(perm);
             newEntry.setLDRI(newParentForEntryStr, newName); // set new LDRI for entry
             newEntry.setPdriGroupId(entry.getPdriGroupId());
             PDRIGroup pdriGroup = pdriGroupIdToPdriGroup.get(newEntry.getPdriGroupId());
-            if(pdriGroup != null) {
+            if (pdriGroup != null) {
                 PDRIGroup.Accessor.setRefCount(pdriGroup, PDRIGroup.Accessor.getRefCount(pdriGroup) + 1);
             }
             pathToLD.put(newEntry.getLDRI().toPath(), newEntry);
@@ -231,7 +231,7 @@ public class MemoryCatalog implements IDLCatalogue {
             uidToLD.put(newEntry.getUID(), newEntry);
             final String newEntryPathStr = newEntry.getLDRI().toPath();// all children shall change their prefixes to this string
             if (entry.getType().equals(Constants.LOGICAL_FOLDER)) { //if entry is a folder replace paths for the children (all in depth)
-                LinkedList<ILogicalData> copiedData = new LinkedList<ILogicalData> ();
+                LinkedList<ILogicalData> copiedData = new LinkedList<ILogicalData>();
                 for (ILogicalData ld : uidToLD.values()) {
                     String parentPathStr = ld.getParent();
                     if (parentPathStr.startsWith(entryCurrentPathStr)) {
@@ -239,21 +239,21 @@ public class MemoryCatalog implements IDLCatalogue {
                         String oldParent = ld.getParent();
                         String newParentPath = parentPathStr.replaceFirst(entryCurrentPathStr, newEntryPathStr);
                         ILogicalData newE = new LogicalData(ld.getLDRI(), ld.getType());
-                        newE.setMetadata((Metadata)ld.getMetadata().clone());
+                        newE.setMetadata((Metadata) ld.getMetadata().clone());
                         newE.getMetadata().setCreateDate(System.currentTimeMillis());
                         newE.getMetadata().setModifiedDate(System.currentTimeMillis());
                         newE.getMetadata().setPermissionArray(perm);
                         newE.setLDRI(newParentPath, newE.getName()); // change LDRI for a child
                         newE.setPdriGroupId(ld.getPdriGroupId());
                         pdriGroup = pdriGroupIdToPdriGroup.get(newE.getPdriGroupId());
-                        if(pdriGroup != null){
-                            PDRIGroup.Accessor.setRefCount(pdriGroup, PDRIGroup.Accessor.getRefCount(pdriGroup) + 1);                   
+                        if (pdriGroup != null) {
+                            PDRIGroup.Accessor.setRefCount(pdriGroup, PDRIGroup.Accessor.getRefCount(pdriGroup) + 1);
                         }
                         copiedData.add(newE);
                     }
                 }
-                for(ILogicalData ld : copiedData){
-                    uidToLD.put(ld.getUID(), ld);                    
+                for (ILogicalData ld : copiedData) {
+                    uidToLD.put(ld.getUID(), ld);
                     pathToLD.put(ld.getLDRI().toPath(), ld); // register new paths in maps
                     parentPathToChildren.get(ld.getParent()).add(ld);
                 }
@@ -261,16 +261,40 @@ public class MemoryCatalog implements IDLCatalogue {
         }
     }
 
-
     @Override
     public Collection<MyStorageSite> getStorageSitesByUser(MyPrincipal user) throws CatalogueException {
-        return null;
+        //for testing to work, register the /tmp as a storage site.
+//        List<MyStorageSite> sites = userToStorageSites.get(user.getToken());
+//        if(sites==null || sites.isEmpty()){
+//            MyStorageSite ss = new MyStorageSite();
+//            ss.addAllowedUser(user);
+//            ss.setResourceURI("file:///tmp/");
+//            registerStorageSite(ss);
+//        }
+        return userToStorageSites.get(user.getToken());
+    }
+
+    @Override
+    public void registerStorageSite(MyStorageSite ss) throws CatalogueException {
+//        try {
+//            List<MyPrincipal> users = ss.getAllowedUsers();
+//            for (MyPrincipal p : users) {
+//                List<MyStorageSite> sites = userToStorageSites.get(p);
+//                if(sites==null){
+//                    sites = new ArrayList<MyStorageSite>();
+//                }
+//                sites.add(ss);
+//                userToStorageSites.put(p.getToken(), sites);
+//            }
+//        } catch (MyPrincipal.Exception ex) {
+//            throw new CatalogueException(ex.getMessage());
+//        }
     }
 
     @Override
     public void updateResourceEntry(ILogicalData newResource) throws Exception {
         synchronized (this) {
-            if(getResourceEntryByUID(newResource.getUID()) == null) {
+            if (getResourceEntryByUID(newResource.getUID()) == null) {
                 throw new CatalogueException("Cannot update non-existing ILogicalData: " + newResource.getLDRI().toPath());
             }
             ILogicalData entry = (ILogicalData) newResource.clone();
@@ -295,12 +319,12 @@ public class MemoryCatalog implements IDLCatalogue {
                     while (it.hasNext()) {
                         PDRIGroup pdriGroup = it.next().getValue();
                         if (PDRIGroup.Accessor.getRefCount(pdriGroup) == 0) {
-                            for(Long pdriId: pdriGroup.getPdriIds()){
+                            for (Long pdriId : pdriGroup.getPdriIds()) {
                                 toRemove.add(pdriIdToPdri.remove(pdriId));
                             }
                             it.remove();
-                        }                      
-                    }                   
+                        }
+                    }
                 }
                 for (PDRI pdri : toRemove) {
                     try {
@@ -317,14 +341,14 @@ public class MemoryCatalog implements IDLCatalogue {
     public void removeResourceEntryBulk(Path ldrI) {
         System.err.println("################################### removeResourceEntryBulk" + ldrI.toPath());
         synchronized (this) {
-            Iterator<Map.Entry<Long, ILogicalData>> it = uidToLD.entrySet().iterator(); 
-            while(it.hasNext()){
+            Iterator<Map.Entry<Long, ILogicalData>> it = uidToLD.entrySet().iterator();
+            while (it.hasNext()) {
                 ILogicalData ld = it.next().getValue();
-                if(ld.getLDRI().toPath().startsWith(ldrI.toPath())){
-                    if(ld.getPdriGroupId() != null){
+                if (ld.getLDRI().toPath().startsWith(ldrI.toPath())) {
+                    if (ld.getPdriGroupId() != null) {
                         PDRIGroup pgrig = pdriGroupIdToPdriGroup.get(ld.getPdriGroupId());
-                        if(pgrig != null) {
-                            PDRIGroup.Accessor.setRefCount(pgrig, PDRIGroup.Accessor.getRefCount(pgrig) -1);
+                        if (pgrig != null) {
+                            PDRIGroup.Accessor.setRefCount(pgrig, PDRIGroup.Accessor.getRefCount(pgrig) - 1);
                         }
                     }
                     it.remove();
@@ -332,25 +356,25 @@ public class MemoryCatalog implements IDLCatalogue {
                     pathToLD.remove(ld.getLDRI().toPath());
                 }
             }
-        }        
+        }
     }
-    
-     public void removeResourceEntryBulk1(Path currentPath, MyPrincipal principal) throws Exception {
+
+    public void removeResourceEntryBulk1(Path currentPath, MyPrincipal principal) throws Exception {
         System.err.println("################################### removeResourceEntryBulk1" + currentPath.toPath());
         synchronized (this) {
-            
+
             ILogicalData currentLD = pathToLD.get(currentPath.toPath());
-            if(currentLD != null) {
+            if (currentLD != null) {
                 Permissions perm = new Permissions(currentLD.getMetadata().getPermissionArray());
-                if(perm.canRead(principal) && perm.canWrite(principal)) {  
+                if (perm.canRead(principal) && perm.canWrite(principal)) {
                     //process files
                     Iterator<ILogicalData> it = parentPathToChildren.get(currentLD.getLDRI().toPath()).iterator();
-                    while(it.hasNext()) {
+                    while (it.hasNext()) {
                         ILogicalData ld = it.next();
-                        if(ld.getType().equals(Constants.LOGICAL_FILE)){                            
+                        if (ld.getType().equals(Constants.LOGICAL_FILE)) {
                             PDRIGroup pgrig = pdriGroupIdToPdriGroup.get(ld.getPdriGroupId());
-                            if(pgrig != null) {
-                                PDRIGroup.Accessor.setRefCount(pgrig, PDRIGroup.Accessor.getRefCount(pgrig) -1);
+                            if (pgrig != null) {
+                                PDRIGroup.Accessor.setRefCount(pgrig, PDRIGroup.Accessor.getRefCount(pgrig) - 1);
                             }
                             uidToLD.remove(ld.getUID());
                             pathToLD.remove(ld.getLDRI().toPath());
@@ -359,19 +383,19 @@ public class MemoryCatalog implements IDLCatalogue {
                     }
                     //process folders
                     it = parentPathToChildren.get(currentLD.getLDRI().toPath()).iterator();
-                    while(it.hasNext()) {
+                    while (it.hasNext()) {
                         ILogicalData ld = it.next();
-                        if(ld.getType().equals(Constants.LOGICAL_FOLDER)){                            
+                        if (ld.getType().equals(Constants.LOGICAL_FOLDER)) {
                             removeResourceEntryBulk1(ld.getLDRI(), principal);
                             uidToLD.remove(ld.getUID());
                             pathToLD.remove(ld.getLDRI().toPath());
                             it.remove();
                         }
-                    }                                      
+                    }
                 } else {
                     throw new NotAuthorizedException();
                 }
-            }           
-        }        
+            }
+        }
     }
 }

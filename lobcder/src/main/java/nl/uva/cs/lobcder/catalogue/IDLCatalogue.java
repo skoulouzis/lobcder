@@ -20,32 +20,33 @@ import nl.uva.cs.lobcder.webDav.resources.WebDataDirResource;
  * @author S. Koulouzis
  */
 public interface IDLCatalogue {
- 
+
     public ILogicalData registerPdriForNewEntry(Long logicalDataUID, PDRI pdri) throws Exception;
-    
-    public Collection<PDRI> getPdriByGroupId(Long GroupId); 
-          
+
+    public Collection<PDRI> getPdriByGroupId(Long GroupId);
+
     public void registerResourceEntry(WebDataDirResource parent, ILogicalData entry) throws CatalogueException;
 
     public ILogicalData getResourceEntryByLDRI(Path logicalResourceName)
             throws Exception;
 
     public ILogicalData getResourceEntryByUID(Long UID) throws Exception;
-    
+
     public void removeResourceEntry(Path entry) throws Exception;
-    
+
     public Collection<ILogicalData> getChildren(WebDataDirResource parent);
 
-    public void moveEntry(Long entryId, WebDataDirResource newParent, String newName) throws Exception;   
-    
+    public void moveEntry(Long entryId, WebDataDirResource newParent, String newName) throws Exception;
+
     public void copyEntry(Long entryId, List<Integer> perm, WebDataDirResource newParent, String newName) throws Exception;
-    
+
     public Collection<MyStorageSite> getStorageSitesByUser(MyPrincipal user) throws CatalogueException;
 
-    public void updateResourceEntry(ILogicalData newResource)throws Exception;
-    
+    public void updateResourceEntry(ILogicalData newResource) throws Exception;
+
     public Runnable deleteSweep();
 
     public void removeResourceEntryBulk(Path ldrI);
-    
+
+    public void registerStorageSite(MyStorageSite ss) throws CatalogueException;
 }

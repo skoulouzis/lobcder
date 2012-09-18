@@ -86,7 +86,6 @@ public class WebDataResourceFactory implements ResourceFactory {
 
     private void initStorageSites() throws Exception {
 //        String[] names = new String[]{"storage1.prop", "storage2.prop", "storage3.prop"};
-
 //
 //        Properties[] storageSitesProps = PropertiesLoader.getStorageSitesProps();
 //        for (Properties p : storageSitesProps) {

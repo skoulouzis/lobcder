@@ -15,9 +15,11 @@ import nl.uva.cs.lobcder.auth.MyPrincipal;
 import nl.uva.cs.lobcder.auth.Permissions;
 import nl.uva.cs.lobcder.auth.PrincipalCache;
 import nl.uva.cs.lobcder.auth.test.MyAuth;
+import nl.uva.cs.lobcder.catalogue.CatalogueException;
 import nl.uva.cs.lobcder.catalogue.IDLCatalogue;
 import nl.uva.cs.lobcder.frontend.WebDavServlet;
 import nl.uva.cs.lobcder.resources.ILogicalData;
+import nl.uva.cs.lobcder.resources.MyStorageSite;
 import nl.uva.cs.lobcder.resources.PDRI;
 import nl.uva.cs.lobcder.resources.SimplePDRI;
 
@@ -308,7 +310,11 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
     }
     
     
-    public PDRI createPDRI(long fileLength) {
+    public PDRI createPDRI(long fileLength) throws CatalogueException {
+        Collection<MyStorageSite> sites = getCatalogue().getStorageSitesByUser(getPrincipal());
+        for(MyStorageSite s : sites){
+            debug("Sites to choose from: "+s.getResourceURI());
+        }
         return new SimplePDRI(UUID.randomUUID().toString(), null);
     }
     
