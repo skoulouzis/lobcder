@@ -24,7 +24,7 @@ public abstract class PDRI implements Cloneable{
     public PDRI(String file_name, Long storageSiteId){
         this.storageSiteId = storageSiteId;
         this.file_name = file_name;
- 
+        
        /* if(storageSiteId != null) {
             url = ss.getResourceURI();
             if(!url.endsWith("/"))

@@ -48,11 +48,11 @@ there are no implementations to enhance
         </dependency>
         
         
-        <dependency>
+<!--        <dependency>
             <groupId>javax.persistence</groupId>
             <artifactId>persistence-api</artifactId>
             <version>1.0</version>
-        </dependency>
+        </dependency>-->
 
         <dependency>
             <groupId>junit</groupId>
@@ -99,17 +99,17 @@ there are no implementations to enhance
             <version>1.4</version>
         </dependency>
 
-        <dependency>
+<!--        <dependency>
             <groupId>javax.xml</groupId>
             <artifactId>jaxrpc-api</artifactId>
             <version>1.1</version>
-        </dependency>
+        </dependency>-->
 
-        <dependency>
+<!--        <dependency>
             <groupId>javax.xml</groupId>
             <artifactId>jaxrpc</artifactId>
             <version>1.1</version>
-        </dependency>
+        </dependency>-->
 
         <dependency>
             <groupId>commons-discovery</groupId>
@@ -125,13 +125,13 @@ there are no implementations to enhance
         </dependency>
 
 
-        <dependency>
+<!--        <dependency>
             <groupId>javax.jdo</groupId>
             <artifactId>jdo-api</artifactId>
             <version>3.0.1</version>
-        </dependency>
+        </dependency>-->
         
-        <dependency>
+<!--        <dependency>
             <groupId>org.apache.geronimo.specs</groupId>
             <artifactId>geronimo-jpa_2.0_spec</artifactId>
             <version>1.0</version>
@@ -142,15 +142,15 @@ there are no implementations to enhance
             <groupId>org.datanucleus</groupId>
             <artifactId>datanucleus-api-jdo</artifactId>
             <version>3.0.7</version>
-        </dependency>
+        </dependency>-->
 
 
-        <dependency>
+<!--        <dependency>
             <groupId>org.datanucleus</groupId>
             <artifactId>datanucleus-core</artifactId>
             <version>3.0.10</version>
             <scope>runtime</scope>
-        </dependency>
+        </dependency>-->
 
 
 <!--        <dependency>
@@ -159,21 +159,21 @@ there are no implementations to enhance
             <version>3.0.1</version>
         </dependency>-->
 
-        <dependency>
+<!--        <dependency>
             <groupId>org.datanucleus</groupId>
             <artifactId>datanucleus-neodatis</artifactId>
             <version>3.0.1</version>
-        </dependency>
+        </dependency>-->
 
 
 <!--Connection pool to solve too many connections error-->
-        <dependency>
+<!--        <dependency>
             <groupId>org.datanucleus</groupId>
             <artifactId>datanucleus-rdbms</artifactId>
             <version>3.0.8</version>
-        </dependency>
+        </dependency>-->
         
-        <dependency>
+<!--        <dependency>
             <groupId>commons-dbcp</groupId>
             <artifactId>commons-dbcp</artifactId>
             <version>1.4</version>
@@ -202,7 +202,7 @@ there are no implementations to enhance
             <artifactId>mysql-connector-java</artifactId>
             <version>5.1.18</version>
             <scope>runtime</scope>
-        </dependency>
+        </dependency>-->
         
 <!--        <dependency>
             <groupId>commons-httpclient</groupId>
@@ -302,18 +302,18 @@ there are no implementations to enhance
         </repository>
 
         
-        <repository>
+<!--        <repository>
             <id>DataNucleus_Repos2</id>
             <name>DataNucleus Repository</name>
             <url>http://www.datanucleus.org/downloads/maven2</url>
-        </repository>
+        </repository>-->
         
         <repository>
             <id>elab.lab.uvalight.net</id>
             <name>elab.lab.uvalight.net-releases</name>
             <url>https://elab.lab.uvalight.net:8444/artifactory/repo</url>
         </repository>
-
+        
 <!--        <repository>  Required for transaction-api transitive dep
             <id>Java_Net_LEGACY</id>
             <name>Java.Net legacy</name>
@@ -324,12 +324,12 @@ there are no implementations to enhance
         
     </repositories>
 
-    <pluginRepositories>
+<!--    <pluginRepositories>
         <pluginRepository>
             <id>DataNucleus_2</id>
             <url>http://www.datanucleus.org/downloads/maven2/</url>
         </pluginRepository>
-    </pluginRepositories>
+    </pluginRepositories>-->
 
     <build>
         <plugins>
@@ -380,14 +380,14 @@ there are no implementations to enhance
                 </executions>
             </plugin>
             
-            <plugin>
+<!--            <plugin>
                 <groupId>org.datanucleus</groupId>
                 <artifactId>maven-datanucleus-plugin</artifactId>
                 <version>3.0.1</version>
                 <configuration>
-<!--                    <log4jConfiguration>${project.basedir}/log4j.properties</log4jConfiguration>-->
+                    <log4jConfiguration>${project.basedir}/log4j.properties</log4jConfiguration>
                     <verbose>false</verbose>
-<!--                    <props>${project.basedir}/datanucleus.prop</props>-->
+                    <props>${project.basedir}/datanucleus.prop</props>
                 </configuration>
                 <executions>
                     <execution>
@@ -397,7 +397,7 @@ there are no implementations to enhance
                         </goals>
                     </execution>
                 </executions>
-            </plugin>
+            </plugin>-->
 
 
 <!--            <plugin>
