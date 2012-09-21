@@ -46,13 +46,6 @@ there are no implementations to enhance
             <version>2.5</version>
             <scope>provided</scope>
         </dependency>
-        
-        
-<!--        <dependency>
-            <groupId>javax.persistence</groupId>
-            <artifactId>persistence-api</artifactId>
-            <version>1.0</version>
-        </dependency>-->
 
         <dependency>
             <groupId>junit</groupId>
@@ -73,19 +66,19 @@ there are no implementations to enhance
             <version>1.8.1.3</version>
         </dependency>
 
-        <dependency>
+<!--        <dependency>
             <groupId>org.jglobus</groupId>
             <artifactId>JGlobus-Core</artifactId>
             <version>2.0.2</version>
             <scope>runtime</scope>
-        </dependency>
+        </dependency>-->
 
-        <dependency>
+<!--        <dependency>
             <groupId>org.jglobus</groupId>
             <artifactId>cog-jglobus</artifactId>
             <version>1.8.0</version>
             <scope>runtime</scope>
-        </dependency>
+        </dependency>-->
         
         <dependency>
             <groupId>com.jcraft</groupId>
@@ -99,18 +92,6 @@ there are no implementations to enhance
             <version>1.4</version>
         </dependency>
 
-<!--        <dependency>
-            <groupId>javax.xml</groupId>
-            <artifactId>jaxrpc-api</artifactId>
-            <version>1.1</version>
-        </dependency>-->
-
-<!--        <dependency>
-            <groupId>javax.xml</groupId>
-            <artifactId>jaxrpc</artifactId>
-            <version>1.1</version>
-        </dependency>-->
-
         <dependency>
             <groupId>commons-discovery</groupId>
             <artifactId>commons-discovery</artifactId>
@@ -123,101 +104,7 @@ there are no implementations to enhance
             <artifactId>cog-axis</artifactId>
             <version>3.0.2</version>
         </dependency>
-
-
-<!--        <dependency>
-            <groupId>javax.jdo</groupId>
-            <artifactId>jdo-api</artifactId>
-            <version>3.0.1</version>
-        </dependency>-->
         
-<!--        <dependency>
-            <groupId>org.apache.geronimo.specs</groupId>
-            <artifactId>geronimo-jpa_2.0_spec</artifactId>
-            <version>1.0</version>
-        </dependency>
-
-
-        <dependency>
-            <groupId>org.datanucleus</groupId>
-            <artifactId>datanucleus-api-jdo</artifactId>
-            <version>3.0.7</version>
-        </dependency>-->
-
-
-<!--        <dependency>
-            <groupId>org.datanucleus</groupId>
-            <artifactId>datanucleus-core</artifactId>
-            <version>3.0.10</version>
-            <scope>runtime</scope>
-        </dependency>-->
-
-
-<!--        <dependency>
-            <groupId>org.datanucleus</groupId>
-            <artifactId>datanucleus-xml</artifactId>
-            <version>3.0.1</version>
-        </dependency>-->
-
-<!--        <dependency>
-            <groupId>org.datanucleus</groupId>
-            <artifactId>datanucleus-neodatis</artifactId>
-            <version>3.0.1</version>
-        </dependency>-->
-
-
-<!--Connection pool to solve too many connections error-->
-<!--        <dependency>
-            <groupId>org.datanucleus</groupId>
-            <artifactId>datanucleus-rdbms</artifactId>
-            <version>3.0.8</version>
-        </dependency>-->
-        
-<!--        <dependency>
-            <groupId>commons-dbcp</groupId>
-            <artifactId>commons-dbcp</artifactId>
-            <version>1.4</version>
-        </dependency>
-        
-        <dependency>
-            <groupId>org.datanucleus</groupId>
-            <artifactId>datanucleus-connectionpool</artifactId>
-            <version>2.0.3</version>
-        </dependency>
-        
-        <dependency>
-            <groupId>commons-pool</groupId>
-            <artifactId>commons-pool</artifactId>
-            <version>1.6</version>
-        </dependency>
-        
-        <dependency>
-            <groupId>commons-collections</groupId>
-            <artifactId>commons-collections</artifactId>
-            <version>3.2.1</version>
-        </dependency>
-        
-        <dependency>
-            <groupId>mysql</groupId>
-            <artifactId>mysql-connector-java</artifactId>
-            <version>5.1.18</version>
-            <scope>runtime</scope>
-        </dependency>-->
-        
-<!--        <dependency>
-            <groupId>commons-httpclient</groupId>
-            <artifactId>commons-httpclient</artifactId>
-            <version>3.1</version>
-            <scope>test</scope>
-        </dependency>
-
-
-        <dependency>
-            <groupId>org.apache.jackrabbit</groupId>
-            <artifactId>jackrabbit-webdav</artifactId>
-            <version>2.2.8</version>
-            <scope>test</scope>
-        </dependency>-->
         <dependency>
             <groupId>commons-httpclient</groupId>
             <artifactId>commons-httpclient</artifactId>
@@ -242,6 +129,12 @@ there are no implementations to enhance
         
         <dependency>
             <groupId>nl.uva.vlet</groupId>
+            <artifactId>vlet-vrs.core</artifactId>
+            <version>1.5.0-dev-1</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>nl.uva.vlet</groupId>
             <artifactId>vlet-vfs.cloud</artifactId>
             <version>1.0</version>
         </dependency>
@@ -253,6 +146,15 @@ there are no implementations to enhance
             <version>1.5.0-dev-1</version>
             <scope>runtime</scope>
         </dependency>
+        
+<!--        dependency for gftp driver -->
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcprov-jdk16</artifactId>
+            <version>1.46</version>
+            <scope>runtime</scope>
+        </dependency>
+            
         
         <dependency>
             <groupId>nl.uva.vlet</groupId>
@@ -275,6 +177,7 @@ there are no implementations to enhance
             <version>1.5.0-dev-1</version>
             <scope>runtime</scope>
         </dependency>
+        
         <dependency>
             <groupId>com.ettrema</groupId>
             <artifactId>milton-api</artifactId>

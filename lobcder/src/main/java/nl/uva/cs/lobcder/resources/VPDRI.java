@@ -15,6 +15,7 @@ import nl.uva.cs.lobcder.util.LobIOUtils;
 import nl.uva.vlet.Global;
 import nl.uva.vlet.GlobalConfig;
 import nl.uva.vlet.data.StringUtil;
+import nl.uva.vlet.exception.ResourceNotFoundException;
 import nl.uva.vlet.exception.VlException;
 import nl.uva.vlet.util.cog.GridProxy;
 import nl.uva.vlet.vfs.VFSClient;
@@ -63,13 +64,14 @@ public class VPDRI extends PDRI {
         Global.init();
     }
     private VFSClient vfsClient;
-    private Credential credentials;
+    private MyStorageSite storageSite;
     private VRL vrl;
 
-    public VPDRI(String file_name, Long storageSiteId, Credential credentials) throws IOException {
+    public VPDRI(String file_name, Long storageSiteId, MyStorageSite storageSite) throws IOException {
         super(file_name, storageSiteId);
         try {
-            vrl = new VRL(url);
+            this.storageSite = storageSite;
+            vrl = new VRL(storageSite.getResourceURI()).append(file_name);
             initVFS();
         } catch (VlException ex) {
             throw new IOException(ex);
@@ -94,12 +96,12 @@ public class VPDRI extends PDRI {
         if (StringUtil.equals(authScheme, ServerInfo.PASSWORD_AUTH)
                 || StringUtil.equals(authScheme, ServerInfo.PASSWORD_OR_PASSPHRASE_AUTH)
                 || StringUtil.equals(authScheme, ServerInfo.PASSPHRASE_AUTH)) {
-            String username = credentials.getStorageSiteUsername();
+            String username = storageSite.getCredential().getStorageSiteUsername();
             if (username == null) {
                 throw new NullPointerException("Username is null!");
             }
             info.setUsername(username);
-            String password = credentials.getStorageSitePassword();
+            String password = storageSite.getCredential().getStorageSitePassword();
             if (password == null) {
                 throw new NullPointerException("password is null!");
             }
@@ -120,7 +122,7 @@ public class VPDRI extends PDRI {
     @Override
     public void delete() throws IOException {
         try {
-            this.vfsClient.openLocation(vrl.append(file_name)).delete();
+            this.vfsClient.openLocation(vrl).delete();
         } catch (VlException ex) {
             throw new IOException(ex);
         }
@@ -129,7 +131,7 @@ public class VPDRI extends PDRI {
     @Override
     public InputStream getData() throws IOException {
         try {
-            return ((VFile) this.vfsClient.openLocation(vrl.append(file_name))).getInputStream();
+            return ((VFile) this.vfsClient.openLocation(vrl)).getInputStream();
         } catch (VlException ex) {
             throw new IOException(ex);
         }
@@ -139,10 +141,19 @@ public class VPDRI extends PDRI {
     public void putData(InputStream in) throws IOException {
         OutputStream out = null;
         try {
-            out = ((VFile) this.vfsClient.openLocation(vrl.append(file_name))).getOutputStream();
+            out = this.vfsClient.getFile(vrl).getOutputStream();
             LobIOUtils.copy(in, out);
         } catch (VlException ex) {
-            throw new IOException(ex);
+            if (ex instanceof ResourceNotFoundException) {
+                try {
+                    out = this.vfsClient.createFile(vrl, false).getOutputStream();
+                    LobIOUtils.copy(in, out);
+                } catch (VlException ex1) {
+                    throw new IOException(ex1);
+                }
+            } else {
+                throw new IOException(ex);
+            }
         } finally {
             try {
                 out.close();

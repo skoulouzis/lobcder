@@ -264,31 +264,31 @@ public class MemoryCatalog implements IDLCatalogue {
     @Override
     public Collection<MyStorageSite> getStorageSitesByUser(MyPrincipal user) throws CatalogueException {
         //for testing to work, register the /tmp as a storage site.
-//        List<MyStorageSite> sites = userToStorageSites.get(user.getToken());
-//        if(sites==null || sites.isEmpty()){
-//            MyStorageSite ss = new MyStorageSite();
-//            ss.addAllowedUser(user);
-//            ss.setResourceURI("file:///tmp/");
-//            registerStorageSite(ss);
-//        }
+        List<MyStorageSite> sites = userToStorageSites.get(user.getToken());
+        if(sites==null || sites.isEmpty()){
+            MyStorageSite ss = new MyStorageSite();
+            ss.addAllowedUser(user);
+            ss.setResourceURI("file:///tmp/");
+            registerStorageSite(ss);
+        }
         return userToStorageSites.get(user.getToken());
     }
 
     @Override
     public void registerStorageSite(MyStorageSite ss) throws CatalogueException {
-//        try {
-//            List<MyPrincipal> users = ss.getAllowedUsers();
-//            for (MyPrincipal p : users) {
-//                List<MyStorageSite> sites = userToStorageSites.get(p);
-//                if(sites==null){
-//                    sites = new ArrayList<MyStorageSite>();
-//                }
-//                sites.add(ss);
-//                userToStorageSites.put(p.getToken(), sites);
-//            }
-//        } catch (MyPrincipal.Exception ex) {
-//            throw new CatalogueException(ex.getMessage());
-//        }
+        try {
+            List<MyPrincipal> users = ss.getAllowedUsers();
+            for (MyPrincipal p : users) {
+                List<MyStorageSite> sites = userToStorageSites.get(p.getToken());
+                if(sites==null){
+                    sites = new ArrayList<MyStorageSite>();
+                }
+                sites.add(ss);
+                userToStorageSites.put(p.getToken(), sites);
+            }
+        } catch (MyPrincipal.Exception ex) {
+            throw new CatalogueException(ex.getMessage());
+        }
     }
 
     @Override
