@@ -10,6 +10,7 @@ import com.bradmcevoy.http.exceptions.NotAuthorizedException;
 import com.bradmcevoy.http.values.HrefList;
 import com.ettrema.http.AccessControlledResource;
 import com.ettrema.http.acl.Principal;
+import java.io.IOException;
 import java.util.*;
 import nl.uva.cs.lobcder.auth.MyPrincipal;
 import nl.uva.cs.lobcder.auth.Permissions;
@@ -18,10 +19,7 @@ import nl.uva.cs.lobcder.auth.test.MyAuth;
 import nl.uva.cs.lobcder.catalogue.CatalogueException;
 import nl.uva.cs.lobcder.catalogue.IDLCatalogue;
 import nl.uva.cs.lobcder.frontend.WebDavServlet;
-import nl.uva.cs.lobcder.resources.ILogicalData;
-import nl.uva.cs.lobcder.resources.MyStorageSite;
-import nl.uva.cs.lobcder.resources.PDRI;
-import nl.uva.cs.lobcder.resources.SimplePDRI;
+import nl.uva.cs.lobcder.resources.*;
 
 /**
  *
@@ -228,28 +226,30 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
     public MyPrincipal getPrincipal() {
         return (MyPrincipal) WebDavServlet.request().getAttribute("vph-user");
     }
-    
+
     public void isReadable() throws NotAuthorizedException {
         try {
             Permissions p = new Permissions(getLogicalData().getMetadata().getPermissionArray());
             MyPrincipal principal = getPrincipal();
-            if(!p.canRead(principal))
-                throw new NotAuthorizedException();            
+            if (!p.canRead(principal)) {
+                throw new NotAuthorizedException();
+            }
         } catch (Throwable ex) {
             throw new NotAuthorizedException();
-        }        
+        }
     }
-    
+
     public void isWritable() throws NotAuthorizedException {
         try {
             Permissions p = new Permissions(getLogicalData().getMetadata().getPermissionArray());
             MyPrincipal principal = getPrincipal();
-            if(!p.canWrite(principal))
-                throw new NotAuthorizedException();            
+            if (!p.canWrite(principal)) {
+                throw new NotAuthorizedException();
+            }
         } catch (Throwable ex) {
             throw new NotAuthorizedException();
-        }        
-    }    
+        }
+    }
 
     @Override
     public String getPrincipalURL() {
@@ -308,20 +308,22 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
 //        return list;
         return null;
     }
-    
-    
-    public PDRI createPDRI(long fileLength) throws CatalogueException {
+
+    public PDRI createPDRI(String name, long fileLength) throws CatalogueException, IOException {
         Collection<MyStorageSite> sites = getCatalogue().getStorageSitesByUser(getPrincipal());
-        for(MyStorageSite s : sites){
-            debug("Sites to choose from: "+s.getResourceURI());
+        MyStorageSite bestSite = null;
+        for (MyStorageSite s : sites) {
+            debug("Sites to choose from: " + s.getResourceURI());
+            bestSite = s;
         }
-        return new SimplePDRI(UUID.randomUUID().toString(), null);
+        return new VPDRI(name, null, bestSite);
+//        return new SimplePDRI(UUID.randomUUID().toString(), null);
     }
-    
-    public PDRI getPDRI(){
+
+    public PDRI getPDRI() {
         PDRI res = null;
         Iterator<PDRI> it = getCatalogue().getPdriByGroupId(getLogicalData().getPdriGroupId()).iterator();
-        if(it.hasNext()){
+        if (it.hasNext()) {
             res = it.next();
         }
         return res;
