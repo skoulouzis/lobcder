@@ -309,14 +309,14 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
         return null;
     }
 
-    public PDRI createPDRI(String name, long fileLength) throws CatalogueException, IOException {
+    public PDRI createPDRI(long fileLength) throws CatalogueException, IOException {
         Collection<MyStorageSite> sites = getCatalogue().getStorageSitesByUser(getPrincipal());
         MyStorageSite bestSite = null;
         for (MyStorageSite s : sites) {
             debug("Sites to choose from: " + s.getResourceURI());
             bestSite = s;
         }
-        return new VPDRI(name, null, bestSite);
+        return new VPDRI(UUID.randomUUID().toString(), null, bestSite);
 //        return new SimplePDRI(UUID.randomUUID().toString(), null);
     }
 
