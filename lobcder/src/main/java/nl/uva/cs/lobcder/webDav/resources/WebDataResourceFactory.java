@@ -43,7 +43,7 @@ public class WebDataResourceFactory implements ResourceFactory {
             debug("getResource:  strPath: " + strPath + " path: " + Path.path(strPath) + " ldri: " + ldri);
             debug("getResource:  host: " + host + " path: " + ldri);
 
-            Collection<IStorageSite> sites;
+//            Collection<IStorageSite> sites;
 //            if (ldri.isRoot() || ldri.toString().equals("")) {
 //                LogicalData root = new LogicalData(ldri, Constants.LOGICAL_FOLDER);
 //                ArrayList<Integer> permArr = new ArrayList<Integer>();
