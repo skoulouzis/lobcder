@@ -19,7 +19,10 @@ import nl.uva.cs.lobcder.auth.test.MyAuth;
 import nl.uva.cs.lobcder.catalogue.CatalogueException;
 import nl.uva.cs.lobcder.catalogue.IDLCatalogue;
 import nl.uva.cs.lobcder.frontend.WebDavServlet;
-import nl.uva.cs.lobcder.resources.*;
+import nl.uva.cs.lobcder.resources.ILogicalData;
+import nl.uva.cs.lobcder.resources.MyStorageSite;
+import nl.uva.cs.lobcder.resources.PDRI;
+import nl.uva.cs.lobcder.resources.VPDRI;
 
 /**
  *
@@ -303,7 +306,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
      */
     @Override
     public HrefList getPrincipalCollectionHrefs() {
-//        HrefList list = new HrefList();
+        HrefList list = new HrefList();
 //        list.add("/users/");
 //        return list;
         return null;
