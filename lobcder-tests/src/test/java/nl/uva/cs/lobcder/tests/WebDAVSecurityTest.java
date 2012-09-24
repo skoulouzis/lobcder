@@ -20,9 +20,7 @@ import org.apache.commons.httpclient.protocol.ProtocolSocketFactory;
 import org.apache.jackrabbit.webdav.*;
 import org.apache.jackrabbit.webdav.client.methods.PropFindMethod;
 import org.apache.jackrabbit.webdav.client.methods.PutMethod;
-import org.apache.jackrabbit.webdav.property.DavProperty;
-import org.apache.jackrabbit.webdav.property.DavPropertyIterator;
-import org.apache.jackrabbit.webdav.property.DavPropertySet;
+import org.apache.jackrabbit.webdav.property.*;
 import org.apache.jackrabbit.webdav.security.Privilege;
 import org.junit.BeforeClass;
 import static org.junit.Assert.*;
@@ -138,11 +136,20 @@ public class WebDAVSecurityTest {
         int status = client1.executeMethod(put);
         assertEquals(HttpStatus.SC_CREATED, status);
 
-        PropFindMethod propFind = new PropFindMethod(testFileURI1, DavConstants.PROPFIND_ALL_PROP, DavConstants.DEPTH_INFINITY);
-
-
+        DavPropertyNameSet d = new DavPropertyNameSet();
+        DavPropertyName userPriv = DavPropertyName.create("current-user-privilege-set");
+        d.add(userPriv);
+        DavPropertyNameIterator dIter = d.iterator();
+        while (dIter.hasNext()) {
+            DavPropertyName pName = dIter.nextPropertyName();
+            System.out.println("Will ask for: " + pName.getName());
+        }
+      
+        PropFindMethod propFind = new PropFindMethod(testFileURI1, d, DavConstants.DEPTH_INFINITY);
         status = client1.executeMethod(propFind);
         assertEquals(HttpStatus.SC_MULTI_STATUS, status);
+
+
         MultiStatus multiStatus = propFind.getResponseBodyAsMultiStatus();
         MultiStatusResponse[] responses = multiStatus.getResponses();
         assertEquals(HttpStatus.SC_OK, responses[0].getStatus()[0].getStatusCode());
@@ -151,7 +158,7 @@ public class WebDAVSecurityTest {
         DavPropertyIterator iter = allProp.iterator();
         while (iter.hasNext()) {
             DavProperty<?> p = iter.nextProperty();
-            System.out.println("P: " + p.getName() + " " + p.getValue());
+            System.out.println("Name: " + p.getName() + " Values " + p.getValue());
         }
     }
 
