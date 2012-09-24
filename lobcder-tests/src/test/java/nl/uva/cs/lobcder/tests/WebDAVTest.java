@@ -79,7 +79,7 @@ public class WebDAVTest {
         assertTrue(username != null);
         this.password = prop.getProperty(("webdav.test.password1"), "");
         if (password == null) {
-            password = "passwd";
+            password = "token0";
         }
         assertTrue(password != null);
 
@@ -131,7 +131,7 @@ public class WebDAVTest {
         ArrayList<String> allow = new ArrayList<String>();
         while (allowedMethods.hasMoreElements()) {
             String method = (String) allowedMethods.nextElement();
-//            System.out.println("Allowed Methods: " + method);
+            System.out.println("Allowed Methods: " + method);
             allow.add(method);
         }
 
@@ -709,23 +709,38 @@ public class WebDAVTest {
 
         int status;
         try {
+            //Make sure the testcol is deleted
+            DeleteMethod del = new DeleteMethod(testcol);
+            status = this.client.executeMethod(del);
+            assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT || status == HttpStatus.SC_NOT_FOUND);
+
+
+            //We can't create a resource if its parent does not exist.
+            //When the PUT operation creates a new non-collection resource all 
+            //ancestors MUST already exist. If all ancestors do not exist, the 
+            //method MUST fail with a 409 (Conflict) status code. For example, 
+            //if resource /a/b/c/d.html is to be created and /a/b/c/ does not
+            //exist, then the request must fail.
+            //http://www.webdav.org/specs/rfc2518.html#rfc.section.8.7.2
+            //In our case (milton API) we will keep going one level up till we 
+            //find an existing resource, in this case root.
+            //When found root will run the <code>child</code> method without 
+            //before running the <code>authenticate</code> method, resulting in 
+            //an SC_UNAUTHORIZED return code
             PutMethod put = new PutMethod(testuri);
             status = this.client.executeMethod(put);
-            assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_CREATED || status == HttpStatus.SC_NO_CONTENT);
-
-            // try to move outside the servlet's name space
-//            MoveMethod moveOutsideNamespace = new MoveMethod(testuri, "/outside_the_servlet_namespace", true);
-//            status = this.client.executeMethod(moveOutsideNamespace);
-            //Expects 403 but we can't detect that
-//            assertTrue("status: " + status, status == 403 );
+            assertTrue("status: " + status, status == HttpStatus.SC_CONFLICT || status == HttpStatus.SC_UNAUTHORIZED);
 
 
-            // try a relative path
-//            HttpMethod moveRelative = new MoveMethod(testuri, "relative_path", true);
-//            status = this.client.executeMethod(moveRelative);
-            //Expects 400 but we can't detect that
-//            assertTrue("status: " + status, status == 400 );
+            MkColMethod mkCol = new MkColMethod(testcol);
+            status = this.client.executeMethod(mkCol);
+            assertTrue("status: " + status, status == HttpStatus.SC_CREATED);
 
+
+
+            put = new PutMethod(testuri);
+            status = this.client.executeMethod(put);
+            assertTrue("status: " + status, status == HttpStatus.SC_CREATED);
 
             MoveMethod moveNormal = new MoveMethod(testuri, destinationpath, true);
             status = this.client.executeMethod(moveNormal);
@@ -891,9 +906,9 @@ public class WebDAVTest {
             assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT || status == HttpStatus.SC_NOT_FOUND);
         }
     }
+    
     // utility methods
     // see http://greenbytes.de/tech/webdav/rfc5842.html#rfc.section.3.1
-
     private URI getResourceId(String uri) throws IOException, DavException, URISyntaxException {
         DavPropertyNameSet names = new DavPropertyNameSet();
         names.add(BindConstants.RESOURCEID);
