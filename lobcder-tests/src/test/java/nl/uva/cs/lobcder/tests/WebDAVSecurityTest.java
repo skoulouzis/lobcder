@@ -21,10 +21,7 @@ import org.apache.jackrabbit.webdav.*;
 import org.apache.jackrabbit.webdav.client.methods.PropFindMethod;
 import org.apache.jackrabbit.webdav.client.methods.PutMethod;
 import org.apache.jackrabbit.webdav.property.*;
-import org.apache.jackrabbit.webdav.security.Privilege;
-import org.junit.BeforeClass;
 import static org.junit.Assert.*;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
