@@ -54,7 +54,7 @@ BEFORE DELETE ON ldata_table
 FOR EACH ROW BEGIN
   IF OLD.datatype = 'logical.file' THEN
     IF OLD.pdriGroupId != 0 THEN
-        UPDATE pdrigroup_table SET refCount=refCount+1 WHERE groupId = OLD.pdriGroupId;
+        UPDATE pdrigroup_table SET refCount=refCount-1 WHERE groupId = OLD.pdriGroupId;
     END IF;
   END IF;
 END|
