@@ -30,7 +30,7 @@ import nl.uva.vlet.vrs.VRSContext;
  *
  * @author S. koulouzis
  */
-public class VPDRI extends PDRI {
+public class VPDRI implements PDRI {
 
     static {
         try {
@@ -68,7 +68,6 @@ public class VPDRI extends PDRI {
     private VRL vrl;
 
     public VPDRI(String file_name, Long storageSiteId, MyStorageSite storageSite) throws IOException {
-        super(file_name, storageSiteId);
         try {
             this.storageSite = storageSite;
             vrl = new VRL(storageSite.getResourceURI()).append(file_name);
@@ -161,5 +160,15 @@ public class VPDRI extends PDRI {
                 throw ex;
             }
         }
+    }
+
+    @Override
+    public Long getStorageSiteId() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public String getURL() {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 }

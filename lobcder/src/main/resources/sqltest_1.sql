@@ -1,0 +1,1 @@
+INSERT INTO pdri_table (url, storageSiteId, pdriGroupId) VALUES('newURL', 3, 3);

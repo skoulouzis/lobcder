@@ -5,23 +5,16 @@ import com.bradmcevoy.http.Resource;
 import com.bradmcevoy.http.ResourceFactory;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Properties;
 import java.util.logging.Level;
-import nl.uva.cs.lobcder.auth.Permissions;
-import nl.uva.cs.lobcder.catalogue.IDLCatalogue;
-import nl.uva.cs.lobcder.catalogue.MemoryCatalog;
+import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
 import nl.uva.cs.lobcder.resources.ILogicalData;
 import nl.uva.cs.lobcder.resources.IStorageSite;
-import nl.uva.cs.lobcder.resources.LogicalData;
-import nl.uva.cs.lobcder.resources.Metadata;
 import nl.uva.cs.lobcder.util.Constants;
-import nl.uva.cs.lobcder.util.PropertiesLoader;
 
 public class WebDataResourceFactory implements ResourceFactory {
     
-    private IDLCatalogue catalogue;
+    private JDBCatalogue catalogue;
     private boolean debug = false;
 
     public WebDataResourceFactory() throws Exception {
@@ -30,7 +23,7 @@ public class WebDataResourceFactory implements ResourceFactory {
         if (!propFile.exists()) {
             throw new IOException("Properties file " + propFile.getAbsolutePath() + " is missing");
         }
-        catalogue = new MemoryCatalog();
+        catalogue = new JDBCatalogue();
         initStorageSites();
     }
 
@@ -59,7 +52,7 @@ public class WebDataResourceFactory implements ResourceFactory {
 //                return webRoot;
 //            }
 
-            ILogicalData entry = catalogue.getResourceEntryByLDRI(ldri);
+            ILogicalData entry = catalogue.getResourceEntryByLDRI(ldri, null);
             if (entry == null) {
                 return null;
             }

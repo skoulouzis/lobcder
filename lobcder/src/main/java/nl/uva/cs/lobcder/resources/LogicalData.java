@@ -6,7 +6,10 @@ package nl.uva.cs.lobcder.resources;
 
 import com.bradmcevoy.common.Path;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import nl.uva.cs.lobcder.authdb.Permissions;
+import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
 import nl.uva.cs.lobcder.util.Constants;
 
 /**
@@ -19,56 +22,41 @@ import nl.uva.cs.lobcder.util.Constants;
  */
 public class LogicalData implements ILogicalData, Cloneable {
 
-    private Long uid;
-    private String type;
-    private String name;
-    private String parent;
-    private Long pdriGroupId;
-    private Metadata metadata;
-    
-    
+    private Long uid = Long.valueOf(0);
+    private String ownerId = "";
+    private String datatype = "";
+    private String ld_name = "";
+    private String parent = "";
+    private Long createDate = Long.valueOf(0);
+    private Long modifiedDate = Long.valueOf(0);
+    private Long ld_length = Long.valueOf(0);
+    private String contentTypesStr = "";
+    private Long pdriGroupId = Long.valueOf(0);
+    private JDBCatalogue catalogue;
+    private List<String> decodedContentTypes = null;
     private static final boolean debug = false;
-    
-    private static AtomicLong count = new AtomicLong();
 
-
-
-    public LogicalData(Path ldri, String type) {
-        this.name = ldri.getName() != null ? ldri.getName() : "";
+    public LogicalData(Path ldri, String datatype, JDBCatalogue catalogue) {
+        this.ld_name = ldri.getName() != null ? ldri.getName() : "";
         this.parent = ldri.getParent() != null ? ldri.getParent().toPath() : "";
-        this.type = type;
-        uid = count.incrementAndGet();        
-        metadata = new Metadata();
-        pdriGroupId = null;
+        this.datatype = datatype;
+        uid = Long.valueOf(0);
+        this.catalogue = catalogue;
     }
 
-    public LogicalData(Path ldri, String type, Long uid, Metadata md) {
-        this.name = ldri.getName() != null ? ldri.getName() : "";
-        this.parent = ldri.getParent() != null ? ldri.getParent().toPath() : "";
-        this.type = type;
-        this.uid = uid;        
-        metadata = md;
-        pdriGroupId = null;
+    public LogicalData(JDBCatalogue catalogue) {
+        this.catalogue = catalogue;
     }
-        
+
     @Override
     public Path getLDRI() {
-        if(parent.isEmpty() && name.isEmpty() && type.equals(Constants.LOGICAL_FOLDER) )
+        if (parent.isEmpty() && ld_name.isEmpty() && datatype.equals(Constants.LOGICAL_FOLDER)) {
             return Path.root;
-        else if(parent.isEmpty())
-            return Path.root.child(name);
-        else
-            return Path.path(parent).child(name);
-    }
-
-    @Override
-    public Metadata getMetadata() {
-        return this.metadata;
-    }
-
-    @Override
-    public void setMetadata(Metadata metadata) {
-        this.metadata = metadata;
+        } else if (parent.isEmpty()) {
+            return Path.root.child(ld_name);
+        } else {
+            return Path.path(parent).child(ld_name);
+        }
     }
 
     @Override
@@ -76,9 +64,14 @@ public class LogicalData implements ILogicalData, Cloneable {
         return this.uid;
     }
 
+    @Override
+    public void setUID(Long uid) {
+        this.uid = uid;
+    }
+
     private void debug(String msg) {
         if (debug) {
-            System.err.println(this.getClass().getName() + "." + Path.path(parent).child(name) + ": " + msg);
+            System.err.println(this.getClass().getName() + "." + Path.path(parent).child(ld_name) + ": " + msg);
         }
     }
 
@@ -88,71 +81,179 @@ public class LogicalData implements ILogicalData, Cloneable {
         return false;
     }
 
-
     @Override
     public void setLDRI(Path ldri) {
         parent = ldri.getParent().toPath();
-        name = ldri.getName();
+        ld_name = ldri.getName();
     }
-    
+
     @Override
     public void setLDRI(String parent, String name) {
         this.parent = parent;
-        this.name = name;
+        this.ld_name = name;
     }
 
     @Override
     public String getType() {
-        return type;
+        return datatype;
     }
 
-    /**
-     * @param type the type to set
-     */
+   
+    @Override
     public void setType(String type) {
-        this.type = type;
+        this.datatype = type;
     }
 
     @Override
-    public String getParent() {        
-        return parent;           
+    public String getParent() {
+        return parent;
     }
 
+    @Override
+    public void setParent(String parent) {
+        this.parent = parent;
+    }
+        
     @Override
     public String getName() {
-        return name;
-    }  
+        return ld_name;
+    }
+    
+    @Override
+    public void setName(String name) {
+        this.ld_name = name;
+    }
 
     @Override
     public Long getPdriGroupId() {
         return pdriGroupId;
     }
-    
+
     @Override
-    public void setPdriGroupId(Long pdriGroupId){        
-        this.pdriGroupId = pdriGroupId;        
+    public void setPdriGroupId(Long pdriGroupId) {
+        this.pdriGroupId = pdriGroupId;
     }
-    
+
     @Override
-    public Object clone(){
-        Metadata md = (Metadata) getMetadata().clone();
-        LogicalData clone = new LogicalData(getLDRI(), type, uid, md);           
+    public Object clone() {
+        LogicalData clone = new LogicalData(catalogue);
+        clone.uid = uid;
+        clone.ownerId = ownerId;
+        clone.datatype = datatype;
+        clone.ld_name = ld_name;
+        clone.parent = parent;
+        clone.createDate = createDate;
+        clone.modifiedDate = modifiedDate;
+        clone.ld_length = ld_length;
+        clone.contentTypesStr = contentTypesStr;
         clone.pdriGroupId = pdriGroupId;
-        return clone;        
+        return clone;
     }
-    
+
     @Override
-    public boolean equals(Object obj){
-        if(obj instanceof LogicalData){
+    public boolean equals(Object obj) {
+        if (obj instanceof LogicalData) {
             return hashCode() == obj.hashCode();
         } else {
             return false;
         }
     }
-    
+
     @Override
-    public int hashCode(){
+    public int hashCode() {
         return uid.intValue();
     }
-    
+
+    @Override
+    public Long getCreateDate() {
+        return this.createDate;
+    }
+
+    @Override
+    public void setCreateDate(Long createDate) {
+        this.createDate = createDate;
+    }
+
+    @Override
+    public Long getModifiedDate() {
+        return this.modifiedDate;
+    }
+
+    @Override
+    public void setModifiedDate(Long modifiedDate) {
+        this.modifiedDate = modifiedDate;
+    }
+
+    @Override
+    public Long getLength() {
+        return this.ld_length;
+    }
+
+    @Override
+    public void setLength(Long length) {
+        this.ld_length = length;
+    }
+
+    @Override
+    public List<String> getContentTypes() {
+        if (decodedContentTypes == null) {
+            decodedContentTypes = Arrays.asList(contentTypesStr.split(","));
+        }
+        return Collections.unmodifiableList(decodedContentTypes);
+    }
+
+    @Override
+    public String getContentTypesAsString() {
+        return contentTypesStr;
+    }
+
+    @Override
+    public void setContentTypesAsString(String ct) {
+        contentTypesStr = ct;
+        decodedContentTypes = null;
+    }
+
+    @Override
+    public void addContentType(String contentType) {
+        String ct[] = contentTypesStr.split(",");
+        if (!Arrays.asList(ct).contains(contentType)) {
+            contentTypesStr += contentTypesStr.isEmpty() ? contentType : "," + contentType;
+        }
+        decodedContentTypes = null;
+    }
+
+    @Override
+    public Permissions getPermissions() {
+        try {
+            return catalogue.getPermissions(uid, ownerId, null);
+        } catch (Exception ex) {
+            Logger.getLogger(LogicalData.class.getName()).log(Level.SEVERE, null, ex);
+            return null;
+        }
+
+    }
+
+    @Override
+    public void setPermissions(Permissions permissions) {
+        try {
+            catalogue.setPermissions(uid, permissions, null);
+        } catch (Exception ex) {
+            Logger.getLogger(LogicalData.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    @Override
+    public boolean isFolder() {
+        return datatype.equals(Constants.LOGICAL_FOLDER);
+    }
+
+    @Override
+    public String getOwner() {
+        return ownerId;
+    }
+
+    @Override
+    public void setOwner(String owner) {
+        ownerId = owner;
+    }
 }

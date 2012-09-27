@@ -11,12 +11,15 @@ import nl.uva.cs.lobcder.util.LobIOUtils;
  *
  * @author dvasunin
  */
-public class SimplePDRI extends PDRI{
+public class SimplePDRI implements PDRI{
 
-    final String baseLocation = "/tmp/";
+    final private String baseLocation = "/tmp/";
+    final private String file_name;
+    final private Long ssid;
     
-    public SimplePDRI(String file_name, Long storageSiteId) {
-        super(file_name, storageSiteId);
+    public SimplePDRI(Long ssid, String file_name) {
+        this.ssid = ssid;
+        this.file_name = file_name;
     }
     
     @Override
@@ -36,6 +39,16 @@ public class SimplePDRI extends PDRI{
         File f = new File(baseLocation + file_name);
         BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(f));
         LobIOUtils.copy(data, bos);           
+    }
+
+    @Override
+    public Long getStorageSiteId() {
+        return ssid;
+    }
+
+    @Override
+    public String getURL() {
+        return file_name;
     }
     
 }

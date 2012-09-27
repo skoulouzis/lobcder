@@ -6,15 +6,15 @@ package nl.uva.cs.lobcder.auth.test;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
-import nl.uva.cs.lobcder.auth.ExternAuthI;
-import nl.uva.cs.lobcder.auth.Permissions;
+import nl.uva.cs.lobcder.authdb.*;
 
 /**
  *
  * @author skoulouz
  */
-public class MyAuth implements ExternAuthI{
+public class MyAuth {
 
     static MyAuth auth = new MyAuth();
     
@@ -23,23 +23,18 @@ public class MyAuth implements ExternAuthI{
     }
     
     
-    @Override
-    public ArrayList<Integer> checkToken(String token) {   
-        ArrayList<Integer> roles = new ArrayList<Integer> ();
+    public MyPrincipal checkToken(String token) {           
+        HashSet<String> roles = new HashSet<String> ();
         if(token.equals("token0")) {        
-            roles.add(token.hashCode());
-            roles.add(3);
-            roles.add(Permissions.ROOT_ADMIN);
+            roles.add("megarole1");
+            roles.add("other");
+            roles.add("admin");
         } else if(token.equals("token1")) {
-            roles.add(token.hashCode());
-            roles.add(3);
-        } else if(token.equals("token2")) {
-            roles.add(token.hashCode());
-            roles.add(4);
-        } else {
-            roles.add(token.hashCode());
-        }
-        return roles;
+            roles.add("other");
+        } 
+        
+        MyPrincipal principal = new MyPrincipal(token, roles);
+        return principal;
     }
     
 }

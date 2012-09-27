@@ -12,17 +12,13 @@ import com.ettrema.http.AccessControlledResource;
 import com.ettrema.http.acl.Principal;
 import java.io.IOException;
 import java.util.*;
-import nl.uva.cs.lobcder.auth.MyPrincipal;
-import nl.uva.cs.lobcder.auth.Permissions;
-import nl.uva.cs.lobcder.auth.PrincipalCache;
 import nl.uva.cs.lobcder.auth.test.MyAuth;
+import nl.uva.cs.lobcder.authdb.MyPrincipal;
+import nl.uva.cs.lobcder.authdb.Permissions;
 import nl.uva.cs.lobcder.catalogue.CatalogueException;
-import nl.uva.cs.lobcder.catalogue.IDLCatalogue;
+import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
 import nl.uva.cs.lobcder.frontend.WebDavServlet;
-import nl.uva.cs.lobcder.resources.ILogicalData;
-import nl.uva.cs.lobcder.resources.MyStorageSite;
-import nl.uva.cs.lobcder.resources.PDRI;
-import nl.uva.cs.lobcder.resources.VPDRI;
+import nl.uva.cs.lobcder.resources.*;
 
 /**
  *
@@ -31,13 +27,13 @@ import nl.uva.cs.lobcder.resources.VPDRI;
 public class WebDataResource implements PropFindableResource, Resource, AccessControlledResource {
 
     private ILogicalData logicalData;
-    private final IDLCatalogue catalogue;
+    private final JDBCatalogue catalogue;
     private static final boolean debug = true;
     private Map<String, CustomProperty> properties;
     //Collection<Integer> roles = null;
     //private String uname;
 
-    public WebDataResource(IDLCatalogue catalogue, ILogicalData logicalData) {
+    public WebDataResource(JDBCatalogue catalogue, ILogicalData logicalData) {
         this.logicalData = logicalData;
 //        if (!logicalData.getType().equals(Constants.LOGICAL_DATA)) {
 //            throw new Exception("The logical data has the wonrg type: " + logicalData.getType());
@@ -50,10 +46,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
     @Override
     public Date getCreateDate() {
         debug("getCreateDate.");
-        if (getLogicalData().getMetadata() != null && getLogicalData().getMetadata().getCreateDate() != null) {
-            return new Date(getLogicalData().getMetadata().getCreateDate());
-        }
-        return null;
+        return new Date(getLogicalData().getCreateDate());
     }
 
     @Override
@@ -70,21 +63,13 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
 
     @Override
     public Object authenticate(String user, String password) {
-        MyPrincipal principal = null;
         debug("authenticate.\n"
                 + "\t user: " + user
                 + "\t password: " + password);
 
-        try {
-            String token = password;
-            principal = PrincipalCache.pcache.getPrincipal(token);
-            if (principal == null) {
-                principal = new MyPrincipal(token, MyAuth.getInstance().checkToken(token));
-                PrincipalCache.pcache.putPrincipal(principal);
-            }
-        } catch (Exception ex) {
-            debug(ex.getMessage());
-        }
+
+        String token = password;
+        MyPrincipal principal = MyAuth.getInstance().checkToken(token);
         WebDavServlet.request().setAttribute("vph-user", principal);
         return principal;
     }
@@ -160,10 +145,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
     @Override
     public Date getModifiedDate() {
         debug("getModifiedDate.");
-        if (getLogicalData().getMetadata() != null && getLogicalData().getMetadata().getModifiedDate() != null) {
-            return new Date(getLogicalData().getMetadata().getModifiedDate());
-        }
-        return null;
+        return new Date(getLogicalData().getModifiedDate());
     }
 
     @Override
@@ -208,7 +190,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
     /**
      * @return the catalogue
      */
-    public IDLCatalogue getCatalogue() {
+    public JDBCatalogue getCatalogue() {
         return catalogue;
     }
 
@@ -229,27 +211,27 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
     public MyPrincipal getPrincipal() {
         return (MyPrincipal) WebDavServlet.request().getAttribute("vph-user");
     }
+    private Permissions perm = null;
+
+    Permissions getPermission() {
+        if (perm == null) {
+            perm = getLogicalData().getPermissions();
+        }
+        return perm;
+    }
 
     public void isReadable() throws NotAuthorizedException {
-        try {
-            Permissions p = new Permissions(getLogicalData().getMetadata().getPermissionArray());
-            MyPrincipal principal = getPrincipal();
-            if (!p.canRead(principal)) {
-                throw new NotAuthorizedException();
-            }
-        } catch (Throwable ex) {
+
+        MyPrincipal principal = getPrincipal();
+        if (!principal.canRead(getPermission())) {
             throw new NotAuthorizedException();
         }
+
     }
 
     public void isWritable() throws NotAuthorizedException {
-        try {
-            Permissions p = new Permissions(getLogicalData().getMetadata().getPermissionArray());
-            MyPrincipal principal = getPrincipal();
-            if (!p.canWrite(principal)) {
-                throw new NotAuthorizedException();
-            }
-        } catch (Throwable ex) {
+        MyPrincipal principal = getPrincipal();
+        if (!principal.canWrite(getPermission())) {
             throw new NotAuthorizedException();
         }
     }
@@ -257,7 +239,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
     @Override
     public String getPrincipalURL() {
         debug("getPrincipalURL");
-        return getPrincipal().getUid().toString();
+        return getPrincipal().getUserId();
     }
 
     @Override
@@ -282,9 +264,9 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
         debug("getAccessControlList");
 
         // Do the mapping 
-        List<Integer> permArray = this.logicalData.getMetadata().getPermissionArray();
-        List<Priviledge> perm = new ArrayList<Priviledge>();
-        HashMap<Principal, List<Priviledge>> acl = new HashMap<Principal, List<Priviledge>>();
+//        List<Integer> permArray = this.logicalData.getMetadata().getPermissionArray();
+//        List<Priviledge> perm = new ArrayList<Priviledge>();
+//        HashMap<Principal, List<Priviledge>> acl = new HashMap<Principal, List<Priviledge>>();
         throw new UnsupportedOperationException("Not supported yets.");
     }
 
@@ -312,20 +294,17 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
         return null;
     }
 
-    public PDRI createPDRI(long fileLength) throws CatalogueException, IOException {
+    public PDRI createPDRI(long fileLength) throws CatalogueException {
         Collection<MyStorageSite> sites = getCatalogue().getStorageSitesByUser(getPrincipal());
-        MyStorageSite bestSite = null;
         for (MyStorageSite s : sites) {
             debug("Sites to choose from: " + s.getResourceURI());
-            bestSite = s;
         }
-        return new VPDRI(UUID.randomUUID().toString(), null, bestSite);
-//        return new SimplePDRI(UUID.randomUUID().toString(), null);
+        return new SimplePDRI(Long.valueOf(0), UUID.randomUUID().toString());
     }
 
-    public PDRI getPDRI() {
+    public PDRI getPDRI() throws CatalogueException {
         PDRI res = null;
-        Iterator<PDRI> it = getCatalogue().getPdriByGroupId(getLogicalData().getPdriGroupId()).iterator();
+        Iterator<PDRI> it = getCatalogue().getPdriByGroupId(getLogicalData().getPdriGroupId(), null).iterator();
         if (it.hasNext()) {
             res = it.next();
         }

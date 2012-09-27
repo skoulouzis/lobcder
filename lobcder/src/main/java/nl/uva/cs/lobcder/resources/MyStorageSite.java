@@ -78,9 +78,9 @@ public class MyStorageSite implements Cloneable {
 
     public List<MyPrincipal> getAllowedUsers() throws Exception {
         ArrayList<MyPrincipal> allowedUsers = new ArrayList<MyPrincipal>();
-        for (String token : allowedUsersTokens) {
-            allowedUsers.add(new MyPrincipal(token, MyAuth.getInstance().checkToken(token)));
-        }
+//        for (String token : allowedUsersTokens) {
+//            allowedUsers.add(new MyPrincipal(token, MyAuth.getInstance().checkToken(token)));
+//        }
         return allowedUsers;
     }
 
