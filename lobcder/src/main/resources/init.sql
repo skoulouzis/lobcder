@@ -1,3 +1,5 @@
+DROP TABLE IF EXISTS permission_table, ldata_table, pdri_table, pdrigroup_table, storage_site_table, credential_table;
+
 CREATE TABLE pdrigroup_table (
   groupId SERIAL PRIMARY KEY,
   refCount INT, INDEX(refCount)
@@ -12,19 +14,18 @@ CREATE TABLE credential_table (
 CREATE TABLE storage_site_table (
   storageSiteId SERIAL PRIMARY KEY,
   resourceURI VARCHAR(1024),
-  credentialRef BIGINT, FOREIGN KEY(credentialRef) REFERENCES credential_table(credintialId),
+  credentialRef BIGINT UNSIGNED, FOREIGN KEY(credentialRef) REFERENCES credential_table(credintialId) ON DELETE CASCADE,
   currentNum BIGINT,
   currentSize BIGINT,
   quotaNum BIGINT,
   quotaSize BIGINT
 );
 
-
 CREATE TABLE pdri_table (
   pdriId SERIAL PRIMARY KEY,
   url VARCHAR(1024),
-  storageSiteId BIGINT, FOREIGN KEY(storageSiteId) REFERENCES storage_site_table(storageSiteId),
-  pdriGroupId BIGINT,  FOREIGN KEY(pdriGroupId) REFERENCES pdrigroup_table(groupId), INDEX(pdriGroupId)
+  storageSiteId BIGINT UNSIGNED,
+  pdriGroupId BIGINT UNSIGNED, INDEX(pdriGroupId)
 );
 
 CREATE TABLE ldata_table (
@@ -37,13 +38,13 @@ CREATE TABLE ldata_table (
  modifiedDate DATETIME NOT NULL,
  ld_length BIGINT,
  contentTypesStr VARCHAR(10240),
- pdriGroupId BIGINT, FOREIGN KEY(pdriGroupId) REFERENCES pdrigroup_table(groupId)
+ pdriGroupId BIGINT UNSIGNED
 );
 
 CREATE TABLE permission_table (
  id SERIAL PRIMARY KEY,
  perm_type ENUM('read', 'write'), index(perm_type),
- ld_uid_ref BIGINT, FOREIGN KEY(ld_uid_ref) REFERENCES ldata_table(uid), INDEX(ld_uid_ref),
+ ld_uid_ref BIGINT UNSIGNED, FOREIGN KEY(ld_uid_ref) REFERENCES ldata_table(uid) ON DELETE CASCADE, INDEX(ld_uid_ref),
  role_name VARCHAR(255)
 );
 
@@ -69,4 +70,7 @@ SELECT @rootID := LAST_INSERT_ID() FROM ldata_table;
 INSERT INTO permission_table (perm_type, ld_uid_ref, role_name) VALUES  ('read', @rootID, 'other'),
                                                                         ('read', @rootID, 'admin'),
                                                                         ('write', @rootID, 'admin');
-
+INSERT INTO  credential_table(username, password) VALUES ('fakeusername', 'fakepassword');
+SELECT @credID := LAST_INSERT_ID() FROM credential_table;
+INSERT INTO storage_site_table(resourceURI, credentialRef, currentNum, currentSize, quotaNum, quotaSize)
+            VALUES('file://localhost/tmp/', @credID, -1, -1, -1, -1);

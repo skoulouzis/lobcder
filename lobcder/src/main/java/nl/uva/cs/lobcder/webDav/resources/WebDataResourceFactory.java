@@ -17,13 +17,8 @@ public class WebDataResourceFactory implements ResourceFactory {
     private JDBCatalogue catalogue;
     private boolean debug = false;
 
-    public WebDataResourceFactory() throws Exception {
-        String confDir = nl.uva.cs.lobcder.util.Constants.LOBCDER_CONF_DIR;
-        File propFile = new File(confDir + "/datanucleus.properties");
-        if (!propFile.exists()) {
-            throw new IOException("Properties file " + propFile.getAbsolutePath() + " is missing");
-        }
-        catalogue = new JDBCatalogue();
+    public WebDataResourceFactory(JDBCatalogue catalogue) throws Exception {
+        this.catalogue = catalogue;
         initStorageSites();
     }
 

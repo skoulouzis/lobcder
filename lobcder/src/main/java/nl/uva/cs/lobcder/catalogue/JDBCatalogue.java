@@ -17,21 +17,23 @@ import nl.uva.cs.lobcder.webDav.resources.WebDataDirResource;
 import javax.sql.DataSource;
 import javax.naming.InitialContext;
 import javax.naming.Context;
-import javax.naming.NamingException;
 /**
  *
  * @author dvasunin
  */
 public class JDBCatalogue {
 
+    private DataSource datasource = null;
     public Connection getConnection() throws CatalogueException {
         try{
-            String jndiName = "jdbc/lobcder";// !!!!!!!!!!!!!!!!!!!!!!!!!!!
-            Context ctx = new InitialContext();
-            if(ctx == null )
-                throw new Exception("JNDI could not create InitalContext ");
-            Context envContext  = (Context)ctx.lookup("java:/comp/env");
-            DataSource datasource =  (DataSource)envContext.lookup(jndiName);
+            if(datasource == null) {
+                String jndiName = "jdbc/lobcder";
+                Context ctx = new InitialContext();
+                if(ctx == null )
+                    throw new Exception("JNDI could not create InitalContext ");
+                Context envContext  = (Context)ctx.lookup("java:/comp/env");
+                datasource =  (DataSource)envContext.lookup(jndiName);
+            }
             return datasource.getConnection();
       } catch(Exception e) {
           throw new CatalogueException(e.getMessage());
@@ -40,6 +42,11 @@ public class JDBCatalogue {
 
 
     public JDBCatalogue() {
+        
+    }
+
+    private Timer timer = null;
+    public void startSweep() {
         TimerTask gcTask = new TimerTask() {
 
             Runnable sweep = deleteSweep();
@@ -49,9 +56,15 @@ public class JDBCatalogue {
                 sweep.run();
             }
         };
-        new Timer(true).schedule(gcTask, 10000, 10000); //once in 10 sec
+        timer = new Timer(true);
+        timer.schedule(gcTask, 10000, 10000); //once in 10 sec
     }
-
+    
+    public void stopSweep() {
+        timer.cancel();
+    }
+    
+    
     public ILogicalData registerPdriForNewEntry(ILogicalData logicalData, PDRI pdri, Connection connection) throws CatalogueException {
         boolean connectionIsProvided;
         boolean connectionAutocommit = false;
@@ -79,8 +92,12 @@ public class JDBCatalogue {
                 throw new CatalogueException("cannot get generated key after insert");
             }
             Long newGroupId = rs.getLong(1);
-            s.executeUpdate("INSERT INTO pdri_table (url, storageSiteId, pdriGroupId) VALUES("
-                    + "'" + pdri.getURL() + "', " + pdri.getStorageSiteId() + ", " + newGroupId + ")");
+            String sql = "INSERT INTO pdri_table (url, storageSiteId, pdriGroupId) VALUES("
+                    + "'" + pdri.getURL() + "', " + pdri.getStorageSiteId() + ", " + newGroupId + ")";
+            System.err.println("##########################" + sql);
+            
+            s.executeUpdate(sql);
+            
 
             s.executeUpdate("UPDATE ldata_table SET pdriGroupId = " + newGroupId + " WHERE uid = " + logicalData.getUID());
             logicalData.setPdriGroupId(newGroupId);
@@ -130,12 +147,16 @@ public class JDBCatalogue {
         }
         try {
             connectionAutocommit = connection.getAutoCommit();
+            connection.setAutoCommit(false);
             s = connection.createStatement();
-            ResultSet rs = s.executeQuery(
-                    "SELECT url, username, password, storageSiteId FROM pdri_table "
+            System.err.println("executeQueryexecuteQueryexecuteQueryexecuteQueryexecuteQueryexecuteQuery");
+            String sql = "SELECT url, username, password, pdri_table.storageSiteId AS storageSiteId FROM pdri_table "
                     + "JOIN storage_site_table ON pdri_table.storageSiteId = storage_site_table.storageSiteId "
                     + "JOIN credential_table ON storage_site_table.credentialRef = credential_table.credintialId "
-                    + "WHERE pdri_table.pdriGroupId = " + GroupId);
+                    + "WHERE pdri_table.pdriGroupId = " + GroupId;
+            System.err.println(sql);
+            ResultSet rs = s.executeQuery(sql);
+            System.err.println("executeQueryexecuteQueryexecuteQueryexecuteQueryexecuteQueryexecuteQuery");
             while (rs.next()) {
                 res.add(PDRIFactory.getFactory().createInstance(
                         rs.getLong(4), rs.getString(1), rs.getString(2), rs.getString(3)));
@@ -217,6 +238,13 @@ public class JDBCatalogue {
                 rs.updateString(9, entry.getContentTypesAsString());
                 rs.updateLong(10, entry.getPdriGroupId());
                 rs.insertRow();
+                //
+                // the driver adds rows at the end
+                //
+                rs.last();
+                //
+                // We should now be on the row we just inserted
+                //              
                 entry.setUID(rs.getLong(1));
                 return entry;
             }
@@ -643,7 +671,7 @@ public class JDBCatalogue {
                     while (rs1.next()) {
                         Long groupId = rs1.getLong(1);
                         ResultSet rs2 = s2.executeQuery(
-                                "SELECT url, username, password, storageSiteId FROM pdri_table "
+                                "SELECT url, username, password, pdri_table.storageSiteId AS storageSiteId FROM pdri_table "
                                 + "JOIN storage_site_table ON pdri_table.storageSiteId = storage_site_table.storageSiteId "
                                 + "JOIN credential_table ON storage_site_table.credentialRef = credential_table.credintialId "
                                 + "WHERE pdri_table.pdriGroupId = " + groupId);
@@ -654,8 +682,11 @@ public class JDBCatalogue {
                         }
                         s2.executeUpdate("DELETE FROM pdri_table WHERE pdri_table.pdriGroupId = " + groupId);
                         rs1.deleteRow();
+                        rs1.beforeFirst();
+                        System.err.println("*********************************************************************");
                     }
                 } catch (Exception e) {
+                    e.printStackTrace();
                     try {
                         if (s1 != null && !s1.isClosed()) {
                             s1.close();

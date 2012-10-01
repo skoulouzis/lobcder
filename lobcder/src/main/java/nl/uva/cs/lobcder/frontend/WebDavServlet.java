@@ -21,6 +21,7 @@ import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
 import nl.uva.cs.lobcder.webDav.resources.WebDataResourceFactory;
 import nl.uva.cs.lobcder.webDav.resources.WebDataResourceFactoryFactory;
 
@@ -37,6 +38,8 @@ public class WebDavServlet implements Servlet {
 //    private Logger log = LoggerFactory.getLogger(this.getClass());
     private static final boolean debug = true;
     private ResourceFactory rf;
+    
+    private JDBCatalogue catalogue = null;
 
     public static HttpServletRequest request() {
         return originalRequest.get();
@@ -96,7 +99,9 @@ public class WebDavServlet implements Servlet {
     public void init(ServletConfig config) throws ServletException {
         try {
             this.config = config;
-            rf = new WebDataResourceFactory();
+            catalogue = new JDBCatalogue();
+            rf = new WebDataResourceFactory(catalogue);
+            catalogue.startSweep();
 
 //            // Note that the config variable may be null, in which case default handlers will be used
 //            // If present and blank, NO handlers will be configed
@@ -137,7 +142,7 @@ public class WebDavServlet implements Servlet {
     }
 
     protected void init(String responseHandlerClassName, List<String> authHandlers) throws Exception {
-        rf = new WebDataResourceFactory();
+        rf = new WebDataResourceFactory(null);
         WebDavResponseHandler responseHandler;
         if (responseHandlerClassName == null) {
             responseHandler = null; // allow default to be created
@@ -210,6 +215,9 @@ public class WebDavServlet implements Servlet {
     @Override
     public void destroy() {
         debug("destroy");
+        if(catalogue != null) {
+            catalogue.stopSweep();
+        }
         if (servletHttpManager == null) {
             return;
         }

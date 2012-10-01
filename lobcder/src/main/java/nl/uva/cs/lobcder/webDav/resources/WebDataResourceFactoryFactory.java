@@ -32,7 +32,7 @@ public class WebDataResourceFactoryFactory implements ResourceFactoryFactory {
         if (authenticationService == null) {
             try {
                 authenticationService = new AuthenticationService();
-                resourceFactory = new WebDataResourceFactory();
+                resourceFactory = new WebDataResourceFactory(null);
             } catch (Exception ex) {
                 java.util.logging.Logger.getLogger(WebDataResourceFactoryFactory.class.getName()).log(Level.SEVERE, null, ex);
             }

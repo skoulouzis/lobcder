@@ -295,11 +295,11 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
     }
 
     public PDRI createPDRI(long fileLength) throws CatalogueException {
-        Collection<MyStorageSite> sites = getCatalogue().getStorageSitesByUser(getPrincipal());
-        for (MyStorageSite s : sites) {
-            debug("Sites to choose from: " + s.getResourceURI());
-        }
-        return new SimplePDRI(Long.valueOf(0), UUID.randomUUID().toString());
+//        Collection<MyStorageSite> sites = getCatalogue().getStorageSitesByUser(getPrincipal());
+//        for (MyStorageSite s : sites) {
+//            debug("Sites to choose from: " + s.getResourceURI());
+//        }
+        return new SimplePDRI(Long.valueOf(1), UUID.randomUUID().toString());
     }
 
     public PDRI getPDRI() throws CatalogueException {
@@ -307,6 +307,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
         Iterator<PDRI> it = getCatalogue().getPdriByGroupId(getLogicalData().getPdriGroupId(), null).iterator();
         if (it.hasNext()) {
             res = it.next();
+            System.err.println("#####################" + res);
         }
         return res;
     }

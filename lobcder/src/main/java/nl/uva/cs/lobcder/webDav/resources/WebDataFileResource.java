@@ -145,13 +145,17 @@ public class WebDataFileResource extends WebDataResource implements
         debug("\t params: " + params);
         debug("\t contentType: " + contentType);
 
-
+        System.err.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@22");
         isReadable();
+        System.err.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@22");
         PDRI pdri;
         try {
+            System.err.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@22");
             pdri = getPDRI();
+            System.err.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@22");
             IOUtils.copy(pdri.getData(), out);
         } catch (Exception ex) {
+            System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!1");
             throw new IOException(ex.getMessage());
         }
         
