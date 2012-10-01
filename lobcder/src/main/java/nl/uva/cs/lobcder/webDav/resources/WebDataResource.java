@@ -211,30 +211,21 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
     public MyPrincipal getPrincipal() {
         return (MyPrincipal) WebDavServlet.request().getAttribute("vph-user");
     }
-    private Permissions perm = null;
 
-    Permissions getPermission() {
-        if (perm == null) {
-            perm = getLogicalData().getPermissions();
-        }
-        return perm;
-    }
-
-    public void isReadable() throws NotAuthorizedException {
-
-        MyPrincipal principal = getPrincipal();
-        if (!principal.canRead(getPermission())) {
-            throw new NotAuthorizedException();
-        }
-
-    }
-
-    public void isWritable() throws NotAuthorizedException {
-        MyPrincipal principal = getPrincipal();
-        if (!principal.canWrite(getPermission())) {
-            throw new NotAuthorizedException();
-        }
-    }
+//    public void isReadable(Permissions perm) throws NotAuthorizedException {
+//        MyPrincipal principal = getPrincipal();
+//        if (!principal.canRead(perm)) {
+//            throw new NotAuthorizedException();
+//        }
+//
+//    }
+//
+//    public void isWritable(Permissions perm) throws NotAuthorizedException {
+//        MyPrincipal principal = getPrincipal();
+//        if (!principal.canWrite(perm)) {
+//            throw new NotAuthorizedException();
+//        }
+//    }
 
     @Override
     public String getPrincipalURL() {
@@ -300,15 +291,5 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
 //            debug("Sites to choose from: " + s.getResourceURI());
 //        }
         return new SimplePDRI(Long.valueOf(1), UUID.randomUUID().toString());
-    }
-
-    public PDRI getPDRI() throws CatalogueException {
-        PDRI res = null;
-        Iterator<PDRI> it = getCatalogue().getPdriByGroupId(getLogicalData().getPdriGroupId(), null).iterator();
-        if (it.hasNext()) {
-            res = it.next();
-            System.err.println("#####################" + res);
-        }
-        return res;
     }
 }

@@ -13,6 +13,8 @@ import com.bradmcevoy.http.exceptions.NotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -65,19 +67,23 @@ public class WebDataFileResource extends WebDataResource implements
 
     @Override
     public void delete() throws NotAuthorizedException, ConflictException, BadRequestException {
+        Connection connection = null;
         try {
             debug(getLogicalData().getLDRI().toPath() + " file delete.");
             Path parentPath = getLogicalData().getLDRI().getParent();
-            ILogicalData parentLD = getCatalogue().getResourceEntryByLDRI(parentPath, null);
+            connection = getCatalogue().getConnection();
+            connection.setAutoCommit(false);
+            ILogicalData parentLD = getCatalogue().getResourceEntryByLDRI(parentPath, connection);
             if (parentLD == null) {
                 throw new BadRequestException("Parent does not exist");
             }
-            Permissions p = getCatalogue().getPermissions(parentLD.getUID(), parentLD.getOwner(), null);
+            Permissions p = getCatalogue().getPermissions(parentLD.getUID(), parentLD.getOwner(), connection);
             if (!getPrincipal().canWrite(p)) {
                 throw new NotAuthorizedException();
             }
-            getCatalogue().removeResourceEntry(getLogicalData(), getPrincipal(), null);
-
+            getCatalogue().removeResourceEntry(getLogicalData(), getPrincipal(), connection);
+            connection.commit();
+            connection.close();
         } catch (NotAuthorizedException e) {
             throw e;
         } catch (CatalogueException ex) {
@@ -86,6 +92,15 @@ public class WebDataFileResource extends WebDataResource implements
             throw new BadRequestException(this, ex.toString());
         } catch (Exception ex) {
             throw new BadRequestException(this, ex.toString());
+        } finally {
+            try {
+                if(connection != null && !connection.isClosed()) {
+                    connection.rollback();
+                    connection.close();
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
     }
 
@@ -111,14 +126,17 @@ public class WebDataFileResource extends WebDataResource implements
                 type = MMTypeTools.bestMatch(acceptsList, fileContentType);
                 debug("\t type: " + type);
                 if (!StringUtil.isEmpty(type)) {
+                    System.err.println("getContentType: " + type);
                     return type;
                 }
             }
         } else {
             String regex = "(^.*?\\[|\\]\\s*$)";
             type = fileContentTypes.toString().replaceAll(regex, "");
+            System.err.println("getContentType: " + type);
             return type;
         }
+        System.err.println("getContentType: null");
         return null;
     }
 
@@ -144,46 +162,65 @@ public class WebDataFileResource extends WebDataResource implements
         debug("\t range: " + range);
         debug("\t params: " + params);
         debug("\t contentType: " + contentType);
-
-        System.err.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@22");
-        isReadable();
-        System.err.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@22");
-        PDRI pdri;
+        Connection connection = null;
         try {
-            System.err.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@22");
-            pdri = getPDRI();
-            System.err.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@22");
-            IOUtils.copy(pdri.getData(), out);
+            connection = getCatalogue().getConnection();
+            connection.setAutoCommit(false);
+            Permissions p = getCatalogue().getPermissions(getLogicalData().getUID(), getLogicalData().getOwner(), connection);
+            if(!getPrincipal().canRead(p)){
+                throw new NotAuthorizedException();
+            }
+            PDRI pdri = null;
+            Iterator<PDRI> it = getCatalogue().getPdriByGroupId(getLogicalData().getPdriGroupId(), connection).iterator();
+            if (it.hasNext()) {
+                pdri = it.next();
+            }
+            connection.commit();
+            connection.close();
+            IOUtils.copy(pdri.getData(), out);       
         } catch (Exception ex) {
-            System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!1");
             throw new IOException(ex.getMessage());
-        }
-        
+        } finally {
+            try {
+                if(connection != null && !connection.isClosed()) {
+                    connection.rollback();
+                    connection.close();
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }     
     }
 
     @Override
     public void moveTo(CollectionResource rDest, String name) throws ConflictException, NotAuthorizedException, BadRequestException {
-        debug("#########################################moveTo: file " + getLogicalData().getLDRI().toPath());
+        debug("moveTo: file " + getLogicalData().getLDRI().toPath());
         WebDataDirResource rdst = (WebDataDirResource) rDest;
         debug("\t rDestgetName: " + rdst.getLogicalData().getLDRI().toPath() + " name: " + name);
-
+        Connection connection = null;
         try {
             Path parentPath = getLogicalData().getLDRI().getParent(); //getPath().getParent();
             if (parentPath == null) {
                 throw new NotAuthorizedException();
             }
-            ILogicalData parentLD = getCatalogue().getResourceEntryByLDRI(getLogicalData().getLDRI().getParent(), null);
+            connection = getCatalogue().getConnection();
+            connection.setAutoCommit(false);
+            ILogicalData parentLD = getCatalogue().getResourceEntryByLDRI(getLogicalData().getLDRI().getParent(), connection);
             if (parentLD == null) {
                 throw new BadRequestException("Parent does not exist");
             }
-            Permissions p = getCatalogue().getPermissions(parentLD.getUID(), parentLD.getOwner(), null);
+            Permissions parentPerm = getCatalogue().getPermissions(parentLD.getUID(), parentLD.getOwner(), connection);
                     
-            if (!getPrincipal().canWrite(p)) {
+            if (!getPrincipal().canWrite(parentPerm)) {
                 throw new NotAuthorizedException();
             }
-            rdst.isWritable();
-            getCatalogue().moveEntry(getLogicalData(), rdst.getLogicalData(), name, null);
-
+            Permissions destPerm = getCatalogue().getPermissions(rdst.getLogicalData().getUID(), rdst.getLogicalData().getOwner(), connection);
+            if (!getPrincipal().canWrite(destPerm)){
+                throw new NotAuthorizedException();
+            }
+            getCatalogue().moveEntry(getLogicalData(), rdst.getLogicalData(), name, connection);
+            connection.commit();
+            connection.close();
         } catch (ResourceExistsException ex) {
             throw new ConflictException(rDest, ex.getMessage());
         } catch (NotAuthorizedException e) {
@@ -194,7 +231,16 @@ public class WebDataFileResource extends WebDataResource implements
             throw new BadRequestException(this, ex.toString());
         } catch (Exception ex) {
             throw new BadRequestException(this, ex.toString());
-        }
+        } finally {
+            try {
+                if(connection != null && !connection.isClosed()) {
+                    connection.rollback();
+                    connection.close();
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }    
     }
 
     @Override
