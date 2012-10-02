@@ -6,30 +6,28 @@ package nl.uva.cs.lobcder.webDav.resources;
 
 import com.bradmcevoy.http.Request.Method;
 import com.bradmcevoy.http.*;
-import com.bradmcevoy.http.exceptions.NotAuthorizedException;
 import com.bradmcevoy.http.values.HrefList;
 import com.ettrema.http.AccessControlledResource;
 import com.ettrema.http.acl.Principal;
-import java.io.IOException;
 import java.util.*;
 import nl.uva.cs.lobcder.auth.test.MyAuth;
 import nl.uva.cs.lobcder.authdb.MyPrincipal;
-import nl.uva.cs.lobcder.authdb.Permissions;
 import nl.uva.cs.lobcder.catalogue.CatalogueException;
 import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
 import nl.uva.cs.lobcder.frontend.WebDavServlet;
 import nl.uva.cs.lobcder.resources.*;
+import nl.uva.cs.lobcder.util.Constants;
 
 /**
  *
  * @author S. Koulouzis
  */
-public class WebDataResource implements PropFindableResource, Resource, AccessControlledResource {
+public class WebDataResource implements PropFindableResource, Resource, AccessControlledResource, CustomPropertyResource{//, ReplaceableResource {
 
     private ILogicalData logicalData;
     private final JDBCatalogue catalogue;
     private static final boolean debug = true;
-    private Map<String, CustomProperty> properties;
+    private Map<String, CustomProperty> customProperties;
     //Collection<Integer> roles = null;
     //private String uname;
 
@@ -39,8 +37,11 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
 //            throw new Exception("The logical data has the wonrg type: " + logicalData.getType());
 //        }
         this.catalogue = catalogue;
-        properties = new HashMap<String, CustomProperty>();
-
+        customProperties = new HashMap<String, CustomProperty>();
+        DataDistProperty dataDistProp = new DataDistProperty();
+        
+        dataDistProp.setFormattedValue("[[90%,karkow],[80%,ams]]");
+        customProperties.put(Constants.DATA_DIST_PROP_NAME,dataDistProp);
     }
 
     @Override
@@ -158,7 +159,6 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
                     return null;
                 }
                 return null;
-
             default:
                 return null;
         }
@@ -226,7 +226,6 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
 //            throw new NotAuthorizedException();
 //        }
 //    }
-
     @Override
     public String getPrincipalURL() {
         debug("getPrincipalURL");
@@ -240,13 +239,13 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
 //        priviledgesList.add(Priviledge.BIND);
         priviledgesList.add(Priviledge.READ);
         priviledgesList.add(Priviledge.READ_ACL);
-        priviledgesList.add(Priviledge.READ_CURRENT_USER_PRIVILEDGE);
-//        priviledgesList.add(Priviledge.UNBIND);
-//        priviledgesList.add(Priviledge.UNLOCK);
+        //        priviledgesList.add(Priviledge.READ_CURRENT_USER_PRIVILEDGE);
+        //        priviledgesList.add(Priviledge.UNBIND);
+        //        priviledgesList.add(Priviledge.UNLOCK);
         priviledgesList.add(Priviledge.WRITE);
         priviledgesList.add(Priviledge.WRITE_ACL);
         priviledgesList.add(Priviledge.WRITE_CONTENT);
-//        priviledgesList.add(Priviledge.WRITE_PROPERTIES);
+        priviledgesList.add(Priviledge.WRITE_PROPERTIES);
         return priviledgesList;
     }
 
@@ -279,7 +278,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
      */
     @Override
     public HrefList getPrincipalCollectionHrefs() {
-        HrefList list = new HrefList();
+//        HrefList list = new HrefList();
 //        list.add("/users/");
 //        return list;
         return null;
@@ -291,5 +290,20 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
 //            debug("Sites to choose from: " + s.getResourceURI());
 //        }
         return new SimplePDRI(Long.valueOf(1), UUID.randomUUID().toString());
+    }
+
+    @Override
+    public Set<String> getAllPropertyNames() {
+        return customProperties.keySet();
+    }
+
+    @Override
+    public CustomProperty getProperty(String propName) {
+        return customProperties.get(propName);
+    }
+
+    @Override
+    public String getNameSpaceURI() {
+        return "custom:";
     }
 }
