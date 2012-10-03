@@ -29,6 +29,20 @@ public class MyPrincipal {
         return roles;
     }
     
+    public String getRolesStr(){
+        StringBuilder sb = new StringBuilder();
+        boolean first = true;
+        for(String s : roles){
+            if(first){
+                sb.append(s);
+                first = false;
+            } else {
+                sb.append(',').append(s);                
+            }
+        }
+        return sb.toString();
+    }
+    
     public boolean canRead(Permissions p){
         if(p.getOwner().equals(userId))
             return true;

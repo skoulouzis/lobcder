@@ -49,19 +49,37 @@ public class WebDataFileResource extends WebDataResource implements
     @Override
     public void copyTo(CollectionResource collectionResource, String name) throws ConflictException, NotAuthorizedException {
         WebDataDirResource toWDDR = (WebDataDirResource) collectionResource;
+        Connection connection = null;
         try {
+            connection = getCatalogue().getConnection();
+            connection.setAutoCommit(false);
             debug(getLogicalData().getLDRI().toPath() + " file copyTo.");
             debug("\t toCollection: " + toWDDR.getLogicalData().getLDRI().toPath());
             debug("\t name: " + name);
-//            isReadable();
-//            Permissions p = new Permissions(getPrincipal());                 
-//            getCatalogue().copyEntry(getLogicalData().getUID(), p.getRolesPerm(), toWDDR, name);
-            throw new CatalogueException("Not implemented");
-            
+            Permissions copyToPerm = getCatalogue().getPermissions(getLogicalData().getUID(), getLogicalData().getOwner(), connection);
+            if(!getPrincipal().canRead(copyToPerm)){
+                throw new NotAuthorizedException();
+            }
+            Permissions newParentPerm = getCatalogue().getPermissions(toWDDR.getLogicalData().getUID(), toWDDR.getLogicalData().getOwner(), connection);
+            if(!getPrincipal().canWrite(newParentPerm)){
+                throw new NotAuthorizedException();
+            }
+            getCatalogue().copyEntry(getLogicalData(), toWDDR.getLogicalData(), name, getPrincipal(), connection);
+            connection.commit();
+            connection.close();
         } catch (CatalogueException ex) {
             throw new ConflictException(this, ex.toString());
         } catch (Exception e) {
             throw new NotAuthorizedException();
+        } finally {
+            try {
+                if(connection != null && !connection.isClosed()) {
+                    connection.rollback();
+                    connection.close();
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
     }
 
@@ -174,19 +192,28 @@ public class WebDataFileResource extends WebDataResource implements
             Iterator<PDRI> it = getCatalogue().getPdriByGroupId(getLogicalData().getPdriGroupId(), connection).iterator();
             if (it.hasNext()) {
                 pdri = it.next();
+                
             }
+
             connection.commit();
             connection.close();
+                        System.err.println(pdri.getURL());
+            //IOUtils.copy(pdri.getData(), System.err); 
             IOUtils.copy(pdri.getData(), out);       
+        } catch(NotAuthorizedException ex) {
+            System.err.println("NotAuthorizedException");
+            throw new NotAuthorizedException();
         } catch (Exception ex) {
             throw new IOException(ex.getMessage());
         } finally {
             try {
+                out.flush();
+                out.close();
                 if(connection != null && !connection.isClosed()) {
                     connection.rollback();
                     connection.close();
                 }
-            } catch (SQLException ex) {
+            } catch (Exception ex) {
                 Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, ex);
             }
         }     

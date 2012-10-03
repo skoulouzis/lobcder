@@ -161,6 +161,7 @@ public class JDBCatalogue {
                 res.add(PDRIFactory.getFactory().createInstance(
                         rs.getLong(4), rs.getString(1), rs.getString(2), rs.getString(3)));
             }
+            System.err.println("executeQueryexecuteQueryexecuteQueryexecuteQueryexecuteQueryexecuteQuery");
             return res;
         } catch (Exception e) {
             try {
@@ -643,8 +644,106 @@ public class JDBCatalogue {
         }
     }
 
-    public void copyEntry(Long entryId, List<Integer> perm, WebDataDirResource newParent, String newName) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public void copyEntry(ILogicalData toCopy, ILogicalData newParent, String newName, MyPrincipal principal, Connection connection) throws CatalogueException {
+        Statement s = null;
+        boolean connectionIsProvided = (connection == null) ? false : true;
+        boolean connectionAutocommit = false;
+        try {
+            if (connection == null) {
+                connection = getConnection();
+                connection.setAutoCommit(false);
+            } else {
+                connectionAutocommit = connection.getAutoCommit();
+                connection.setAutoCommit(false);
+            }
+            Permissions toCopyPerm = getPermissions(toCopy.getUID(), toCopy.getOwner(), connection);
+            Permissions newParentPerm = getPermissions(newParent.getUID(), newParent.getOwner(), connection);
+            Permissions permissionsForNew = new Permissions(principal);
+            String parentPath = toCopy.getLDRI().toPath();
+            if (toCopy.isFolder() && principal.canWrite(newParentPerm)) {
+                ILogicalData newFolderEntry = new LogicalData(Path.path(newParent.getLDRI(), newName), Constants.LOGICAL_FOLDER, this);
+                newFolderEntry.setCreateDate(System.currentTimeMillis());
+                newFolderEntry.setModifiedDate(System.currentTimeMillis());
+                newFolderEntry.setOwner(principal.getUserId());
+                newFolderEntry = registerOrUpdateResourceEntry(newFolderEntry, connection);
+                setPermissions(newFolderEntry.getUID(), permissionsForNew, connection);
+                if(principal.canRead(toCopyPerm)) {
+                    CallableStatement cs = connection.prepareCall("{call copyFolderContentProc(?, ?, ?, ?, ?, ?)}");
+                    cs.setString(1, principal.getUserId());
+                    cs.setString(2, principal.getRolesStr());
+                    cs.setString(3, permissionsForNew.getReadStr());
+                    cs.setString(4, permissionsForNew.getWriteStr());
+                    cs.setString(5, parentPath);
+                    cs.setString(6, newFolderEntry.getLDRI().toPath());
+                    cs.execute();                
+                    s = connection.createStatement();
+                    ResultSet rs = s.executeQuery("SELECT uid, ownerId, ld_name, createDate, modifiedDate, ld_length, contentTypesStr, pdriGroupId FROM ldata_table "
+                        + "WHERE ldata_table.parent = '" + parentPath + "' "
+                        + "AND ldata_table.datatype = 'logical.folder'");
+                    LinkedList<ILogicalData> ld_list = new LinkedList<ILogicalData>();
+                    while (rs.next()) {
+                        ILogicalData element = new LogicalData(this);
+                        element.setUID(rs.getLong(1));
+                        element.setOwner(rs.getString(2));
+                        element.setType("logical.folder");
+                        element.setName(rs.getString(3));
+                        element.setParent(parentPath);
+                        element.setCreateDate(rs.getTimestamp(4).getTime());
+                        element.setModifiedDate(rs.getTimestamp(5).getTime());
+                        element.setLength(rs.getLong(6));
+                        element.setContentTypesAsString(rs.getString(7));
+                        element.setPdriGroupId(rs.getLong(8));
+                        ld_list.add(element);
+                    }
+                    rs.close();
+                    s.close();
+                    for (ILogicalData ld : ld_list) {
+                        copyEntry(ld, newFolderEntry, ld.getName(), principal, connection);
+                    }
+                }
+            } else if(!toCopy.isFolder() && principal.canRead(toCopyPerm) && principal.canWrite(newParentPerm)) {
+                ILogicalData ld = (ILogicalData) toCopy.clone();
+                ld.setOwner(principal.getUserId());
+                ld.setName(newName);
+                ld.setParent(newParent.getLDRI().toPath());
+                ld.setCreateDate(System.currentTimeMillis());
+                ld.setModifiedDate(System.currentTimeMillis());
+                ld = registerOrUpdateResourceEntry(ld, connection);
+                setPermissions(ld.getUID(), permissionsForNew, connection);
+                s = connection.createStatement();
+                s.executeUpdate("UPDATE pdrigroup_table SET refCount=refCount+1 WHERE groupId = " + ld.getPdriGroupId());
+                s.close();
+            }                     
+        } catch (Exception e) {
+            try {
+                if (s != null && !s.isClosed()) {
+                    s.close();
+                    s = null;
+                }
+                if (!connectionIsProvided && !connection.isClosed()) {
+                    connection.rollback();
+                    connection.close();
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            throw new CatalogueException(e.getMessage());
+        } finally {
+            try {
+                if (s != null && !s.isClosed()) {
+                    s.close();
+                }
+                if (!connectionIsProvided && !connection.isClosed()) {
+                    connection.commit();
+                    connection.close();
+                }
+                if (connectionIsProvided && !connection.isClosed()) {
+                    connection.setAutoCommit(connectionAutocommit);
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }            
     }
 
     public Collection<MyStorageSite> getStorageSitesByUser(MyPrincipal user) throws CatalogueException {
@@ -724,17 +823,6 @@ public class JDBCatalogue {
 
             }
         };
-    }
-
-    public void putRolesToTmpTable(MyPrincipal principal, Connection connection) throws SQLException {
-        Statement s = connection.createStatement(java.sql.ResultSet.TYPE_FORWARD_ONLY,
-                java.sql.ResultSet.CONCUR_UPDATABLE);
-        s.executeUpdate("DROP TABLE IF EXISTS myroles");
-        s.executeUpdate("CREATE TEMPORARY TABLE myroles (mrole VARCHAR(255))");
-        for (String role : principal.getRoles()) {
-            s.executeUpdate("INSERT INTO myroles(mrole) VALUES  ('" + role + "')");
-        }
-        s.close();
     }
 
     public void removeResourceEntry(ILogicalData toRemove, MyPrincipal principal, Connection connection) throws Exception {

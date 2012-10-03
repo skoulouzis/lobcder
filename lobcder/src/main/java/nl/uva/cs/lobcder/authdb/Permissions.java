@@ -27,13 +27,44 @@ public class Permissions {
     public String getOwner(){
         return owner;
     }
+    
     public void setOwner(String owner) {
         this.owner = owner;
     }
+    
     public Set<String> canRead() {
         return read;
     }
+    
+    public String getReadStr(){
+        StringBuilder sb = new StringBuilder();
+        boolean first = true;
+        for(String s : read){
+            if(first){
+                sb.append(s);
+                first = false;
+            } else {
+                sb.append(',').append(s);                
+            }
+        }
+        return sb.toString();
+    }
+    
     public Set<String> canWrite(){
         return write;
+    }
+    
+    public String getWriteStr(){
+        StringBuilder sb = new StringBuilder();
+        boolean first = true;
+        for(String s : write){
+            if(first){
+                sb.append(s);
+                first = false;
+            } else {
+                sb.append(',').append(s);                
+            }
+        }
+        return sb.toString();
     }
 }

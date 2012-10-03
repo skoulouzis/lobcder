@@ -208,13 +208,12 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                     throw new NotAuthorizedException();
                 }
                 newResource = new LogicalData(newPath, Constants.LOGICAL_FILE, getCatalogue());
+                newResource.setOwner(getPrincipal().getUserId());
                 newResource.setLength(length);
                 newResource.setCreateDate(System.currentTimeMillis());
                 newResource.setModifiedDate(System.currentTimeMillis());
                 newResource.addContentType(contentType);
-                //Spiros: add the owner 
-                newResource.setOwner(getPrincipal().getUserId());
-                getCatalogue().registerOrUpdateResourceEntry(newResource, connection);
+                newResource = getCatalogue().registerOrUpdateResourceEntry(newResource, connection);
                 getCatalogue().setPermissions(newResource.getUID(), new Permissions(getPrincipal()), connection);
                 PDRI pdri = createPDRI(length);
                 pdri.putData(inputStream);
@@ -243,7 +242,6 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
 
     @Override
     public void copyTo(CollectionResource toCollection, String name) throws NotAuthorizedException, BadRequestException, ConflictException {
-        throw new ConflictException("Not implemented");
         /*
          * try {
          *
@@ -260,6 +258,40 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
          * Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE,
          * null, ex); }
          */
+        WebDataDirResource toWDDR = (WebDataDirResource) toCollection;
+        Connection connection = null;
+        try {
+            connection = getCatalogue().getConnection();
+            connection.setAutoCommit(false);
+            debug(getLogicalData().getLDRI().toPath() + " file copyTo.");
+            debug("\t toCollection: " + toWDDR.getLogicalData().getLDRI().toPath());
+            debug("\t name: " + name);
+            Permissions copyToPerm = getCatalogue().getPermissions(getLogicalData().getUID(), getLogicalData().getOwner(), connection);
+            if(!getPrincipal().canRead(copyToPerm)){
+                throw new NotAuthorizedException();
+            }
+            Permissions newParentPerm = getCatalogue().getPermissions(toWDDR.getLogicalData().getUID(), toWDDR.getLogicalData().getOwner(), connection);
+            if(!getPrincipal().canWrite(newParentPerm)){
+                throw new NotAuthorizedException();
+            }
+            getCatalogue().copyEntry(getLogicalData(), toWDDR.getLogicalData(), name, getPrincipal(), connection);
+            connection.commit();
+            connection.close();
+        } catch (CatalogueException ex) {
+            ex.printStackTrace();
+            throw new ConflictException(this, ex.toString());
+        } catch (Exception e) {
+            throw new NotAuthorizedException();
+        } finally {
+            try {
+                if(connection != null && !connection.isClosed()) {
+                    connection.rollback();
+                    connection.close();
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
     }
 
     @Override
