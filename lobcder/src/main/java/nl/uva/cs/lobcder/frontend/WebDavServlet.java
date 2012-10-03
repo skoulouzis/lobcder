@@ -125,7 +125,8 @@ public class WebDavServlet implements Servlet {
 
             CalDavProtocol caldav = new com.ettrema.http.caldav.CalDavProtocol(rf, defaultResponseHandler, hh, webdav);
 
-            ACLProtocol acl = new com.ettrema.http.acl.ACLProtocol(webdav);
+//            ACLProtocol acl = new com.ettrema.http.acl.ACLProtocol(webdav);
+            MyACLProtocol acl = new MyACLProtocol(webdav);            
             ProtocolHandlers protocolHandlers = new com.bradmcevoy.http.ProtocolHandlers(Arrays.asList(http11, webdav, acl, caldav));
 
             httpManager = new com.bradmcevoy.http.HttpManager(rf, defaultResponseHandler, protocolHandlers);

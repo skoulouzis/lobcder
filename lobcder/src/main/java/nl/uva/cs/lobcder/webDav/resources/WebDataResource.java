@@ -6,28 +6,38 @@ package nl.uva.cs.lobcder.webDav.resources;
 
 import com.bradmcevoy.http.Request.Method;
 import com.bradmcevoy.http.*;
+import com.bradmcevoy.http.exceptions.NotAuthorizedException;
 import com.bradmcevoy.http.values.HrefList;
+import com.bradmcevoy.http.webdav.PropertyMap;
 import com.ettrema.http.AccessControlledResource;
 import com.ettrema.http.acl.Principal;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import nl.uva.cs.lobcder.auth.test.MyAuth;
 import nl.uva.cs.lobcder.authdb.MyPrincipal;
+import nl.uva.cs.lobcder.authdb.Permissions;
 import nl.uva.cs.lobcder.catalogue.CatalogueException;
 import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
 import nl.uva.cs.lobcder.frontend.WebDavServlet;
-import nl.uva.cs.lobcder.resources.*;
+import nl.uva.cs.lobcder.resources.ILogicalData;
+import nl.uva.cs.lobcder.resources.PDRI;
+import nl.uva.cs.lobcder.resources.SimplePDRI;
 import nl.uva.cs.lobcder.util.Constants;
 
 /**
  *
  * @author S. Koulouzis
  */
-public class WebDataResource implements PropFindableResource, Resource, AccessControlledResource, CustomPropertyResource{//, ReplaceableResource {
+public class WebDataResource implements PropFindableResource, Resource, AccessControlledResource, CustomPropertyResource {//, ReplaceableResource {
 
     private ILogicalData logicalData;
     private final JDBCatalogue catalogue;
     private static final boolean debug = true;
-    private Map<String, CustomProperty> customProperties;
+    private final Map<String, CustomProperty> customProperties = new HashMap<String, CustomProperty>();
+    private final Map<String, PropertyMap.StandardProperty> userPrivledges = new HashMap<String, PropertyMap.StandardProperty>();
     //Collection<Integer> roles = null;
     //private String uname;
 
@@ -37,11 +47,13 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
 //            throw new Exception("The logical data has the wonrg type: " + logicalData.getType());
 //        }
         this.catalogue = catalogue;
-        customProperties = new HashMap<String, CustomProperty>();
-        DataDistProperty dataDistProp = new DataDistProperty();
-        
-        dataDistProp.setFormattedValue("[[90%,karkow],[80%,ams]]");
-        customProperties.put(Constants.DATA_DIST_PROP_NAME,dataDistProp);
+
+        initProps();
+
+    }
+
+    private void initProps() {
+        customProperties.put(Constants.DATA_DIST_PROP_NAME, null);
     }
 
     @Override
@@ -67,8 +79,6 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
         debug("authenticate.\n"
                 + "\t user: " + user
                 + "\t password: " + password);
-
-
         String token = password;
         MyPrincipal principal = MyAuth.getInstance().checkToken(token);
         WebDavServlet.request().setAttribute("vph-user", principal);
@@ -232,20 +242,45 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
         return getPrincipal().getUserId();
     }
 
+    /**
+     * DAV:current-user-privilege-set is a protected property containing the
+     * exact set of privileges (as computed by the server) granted to the
+     * currently authenticated HTTP user. See
+     * http://www.webdav.org/specs/rfc3744.html#rfc.section.5.4
+     *
+     * @param auth
+     * @return
+     */
     @Override
     public List<Priviledge> getPriviledges(Auth auth) {
+
+        MyPrincipal currentPrincipal = MyAuth.getInstance().checkToken(auth.getPassword());
         List<Priviledge> priviledgesList = new ArrayList<Priviledge>();
-//        priviledgesList.add(Priviledge.ALL);
-//        priviledgesList.add(Priviledge.BIND);
-        priviledgesList.add(Priviledge.READ);
-        priviledgesList.add(Priviledge.READ_ACL);
-        //        priviledgesList.add(Priviledge.READ_CURRENT_USER_PRIVILEDGE);
-        //        priviledgesList.add(Priviledge.UNBIND);
-        //        priviledgesList.add(Priviledge.UNLOCK);
-        priviledgesList.add(Priviledge.WRITE);
-        priviledgesList.add(Priviledge.WRITE_ACL);
-        priviledgesList.add(Priviledge.WRITE_CONTENT);
-        priviledgesList.add(Priviledge.WRITE_PROPERTIES);
+
+//        if (currentPrincipal.getUserId().equals(getLogicalData().getOwner())) {
+//            priviledgesList.add(Priviledge.ALL);
+//            return priviledgesList;
+//        }
+
+        Set<String> currentRoles = currentPrincipal.getRoles();
+        //We are supposed to get permissions for this resource for the current owner
+        Permissions p = getLogicalData().getPermissions();
+
+        Set<String> readRoles = p.canRead();
+        Set<String> writeRoles = p.canWrite();
+        for (String r : currentRoles) {
+            if (readRoles.contains(r)) {
+                priviledgesList.add(Priviledge.READ);
+                break;
+            }
+        }
+        for (String r : currentRoles) {
+            if (writeRoles.contains(r)) {
+                priviledgesList.add(Priviledge.WRITE);
+                break;
+            }
+        }
+        
         return priviledgesList;
     }
 

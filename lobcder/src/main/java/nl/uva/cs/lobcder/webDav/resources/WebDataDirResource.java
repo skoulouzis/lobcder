@@ -212,6 +212,8 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                 newResource.setCreateDate(System.currentTimeMillis());
                 newResource.setModifiedDate(System.currentTimeMillis());
                 newResource.addContentType(contentType);
+                //Spiros: add the owner 
+                newResource.setOwner(getPrincipal().getUserId());
                 getCatalogue().registerOrUpdateResourceEntry(newResource, connection);
                 getCatalogue().setPermissions(newResource.getUID(), new Permissions(getPrincipal()), connection);
                 PDRI pdri = createPDRI(length);
