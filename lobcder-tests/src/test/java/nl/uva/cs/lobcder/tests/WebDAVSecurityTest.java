@@ -18,6 +18,7 @@ import org.apache.commons.httpclient.methods.StringRequestEntity;
 import org.apache.commons.httpclient.protocol.Protocol;
 import org.apache.commons.httpclient.protocol.ProtocolSocketFactory;
 import org.apache.jackrabbit.webdav.*;
+import org.apache.jackrabbit.webdav.client.methods.DeleteMethod;
 import org.apache.jackrabbit.webdav.client.methods.PropFindMethod;
 import org.apache.jackrabbit.webdav.client.methods.PutMethod;
 import org.apache.jackrabbit.webdav.property.*;
@@ -128,34 +129,55 @@ public class WebDAVSecurityTest {
     @Test
     public void testGetSupportedPrivileges() throws UnsupportedEncodingException, IOException, DavException {
         String testFileURI1 = uri.toASCIIString() + TestSettings.TEST_FILE_NAME1 + ".txt";
-        PutMethod put = new PutMethod(testFileURI1);
-        put.setRequestEntity(new StringRequestEntity(TestSettings.TEST_DATA, "text/plain", "UTF-8"));
-        int status = client1.executeMethod(put);
-        assertEquals(HttpStatus.SC_CREATED, status);
+        try {
 
-        DavPropertyNameSet d = new DavPropertyNameSet();
-        DavPropertyName userPriv = DavPropertyName.create("current-user-privilege-set");
-        d.add(userPriv);
-        DavPropertyNameIterator dIter = d.iterator();
-        while (dIter.hasNext()) {
-            DavPropertyName pName = dIter.nextPropertyName();
-            System.out.println("Will ask for: " + pName.getName());
-        }
-      
-        PropFindMethod propFind = new PropFindMethod(testFileURI1, d, DavConstants.DEPTH_INFINITY);
-        status = client1.executeMethod(propFind);
-        assertEquals(HttpStatus.SC_MULTI_STATUS, status);
+            PutMethod put = new PutMethod(testFileURI1);
+            put.setRequestEntity(new StringRequestEntity(TestSettings.TEST_DATA, "text/plain", "UTF-8"));
+            int status = client1.executeMethod(put);
+            assertEquals(HttpStatus.SC_CREATED, status);
+
+            DavPropertyNameSet d = new DavPropertyNameSet();
+            DavPropertyName userPriv = DavPropertyName.create("current-user-privilege-set");
+//        DavPropertyName userPriv = DavPropertyName.create("data-distribution");
+            d.add(userPriv);
 
 
-        MultiStatus multiStatus = propFind.getResponseBodyAsMultiStatus();
-        MultiStatusResponse[] responses = multiStatus.getResponses();
-        assertEquals(HttpStatus.SC_OK, responses[0].getStatus()[0].getStatusCode());
-        DavPropertySet allProp = getProperties(responses[0]);
+            PropFindMethod propFind = new PropFindMethod(testFileURI1, d, DavConstants.DEPTH_INFINITY);
+//        PropFindMethod propFind = new PropFindMethod(testFileURI1, DavPropertyNameSet.PROPFIND_ALL_PROP, DavConstants.DEPTH_INFINITY);
+            status = client1.executeMethod(propFind);
+            assertEquals(HttpStatus.SC_MULTI_STATUS, status);
 
-        DavPropertyIterator iter = allProp.iterator();
-        while (iter.hasNext()) {
-            DavProperty<?> p = iter.nextProperty();
-            System.out.println("Name: " + p.getName() + " Values " + p.getValue());
+
+            MultiStatus multiStatus = propFind.getResponseBodyAsMultiStatus();
+            MultiStatusResponse[] responses = multiStatus.getResponses();
+
+//            for (MultiStatusResponse r : responses) {
+//                System.out.println("Responce: " + r.getHref());
+//                DavPropertySet allProp = getProperties(r);
+//
+//                DavPropertyIterator iter = allProp.iterator();
+//                while (iter.hasNext()) {
+//                    DavProperty<?> p = iter.nextProperty();
+//                    System.out.println("\tName: " + p.getName() + " Values " + p.getValue());
+//                }
+//
+//            }
+
+            assertEquals(HttpStatus.SC_OK, responses[0].getStatus()[0].getStatusCode());
+            DavPropertySet allProp = getProperties(responses[0]);
+            DavProperty<?> prop = allProp.get(userPriv);
+            assertEquals(userPriv,prop.getName());
+            
+            //We should atleast be able to read
+            String value =(String) prop.getValue();
+            assertTrue(value.contains("READ"));
+//            System.out.println("Name: " + prop.getName() + " Values " + prop.getValue()+" class: "+prop.getValue().getClass().getName());
+
+
+        } finally {
+            DeleteMethod delete = new DeleteMethod(testFileURI1);
+            int status = this.client1.executeMethod(delete);
+            assertTrue("DeleteMethod status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
         }
     }
 
