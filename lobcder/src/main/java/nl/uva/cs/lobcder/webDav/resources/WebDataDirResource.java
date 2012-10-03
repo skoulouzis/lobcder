@@ -191,9 +191,9 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
             ILogicalData newResource = getCatalogue().getResourceEntryByLDRI(newPath, connection);
             if (newResource != null) { // Resource exists, update
                 Permissions p = getCatalogue().getPermissions(newResource.getUID(), newResource.getOwner(), connection);
-//                if (!getPrincipal().canWrite(p)) {
-//                    throw new NotAuthorizedException();
-//                }
+                if (!getPrincipal().canWrite(p)) {
+                    throw new NotAuthorizedException();
+                }
                 newResource.setLength(length);
                 newResource.setModifiedDate(System.currentTimeMillis());
                 newResource.addContentType(contentType);
