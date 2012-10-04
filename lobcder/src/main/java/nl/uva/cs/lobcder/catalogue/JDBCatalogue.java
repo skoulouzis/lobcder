@@ -149,19 +149,15 @@ public class JDBCatalogue {
             connectionAutocommit = connection.getAutoCommit();
             connection.setAutoCommit(false);
             s = connection.createStatement();
-            System.err.println("executeQueryexecuteQueryexecuteQueryexecuteQueryexecuteQueryexecuteQuery");
-            String sql = "SELECT url, username, password, pdri_table.storageSiteId AS storageSiteId FROM pdri_table "
+            String sql = "SELECT url, pdri_table.storageSiteId AS storageSiteId, resourceURI, username, password FROM pdri_table "
                     + "JOIN storage_site_table ON pdri_table.storageSiteId = storage_site_table.storageSiteId "
                     + "JOIN credential_table ON storage_site_table.credentialRef = credential_table.credintialId "
                     + "WHERE pdri_table.pdriGroupId = " + GroupId;
             System.err.println(sql);
             ResultSet rs = s.executeQuery(sql);
-            System.err.println("executeQueryexecuteQueryexecuteQueryexecuteQueryexecuteQueryexecuteQuery");
             while (rs.next()) {
-                res.add(PDRIFactory.getFactory().createInstance(
-                        rs.getLong(4), rs.getString(1), rs.getString(2), rs.getString(3)));
+                res.add(PDRIFactory.getFactory().createInstance(rs.getString(1), rs.getLong(2), rs.getString(3), rs.getString(4), rs.getString(5)));
             }
-            System.err.println("executeQueryexecuteQueryexecuteQueryexecuteQueryexecuteQueryexecuteQuery");
             return res;
         } catch (Exception e) {
             try {
@@ -770,19 +766,18 @@ public class JDBCatalogue {
                     while (rs1.next()) {
                         Long groupId = rs1.getLong(1);
                         ResultSet rs2 = s2.executeQuery(
-                                "SELECT url, username, password, pdri_table.storageSiteId AS storageSiteId FROM pdri_table "
+                                "SELECT url, pdri_table.storageSiteId AS storageSiteId, resourceURI, username, password FROM pdri_table "
                                 + "JOIN storage_site_table ON pdri_table.storageSiteId = storage_site_table.storageSiteId "
                                 + "JOIN credential_table ON storage_site_table.credentialRef = credential_table.credintialId "
                                 + "WHERE pdri_table.pdriGroupId = " + groupId);
                         while (rs2.next()) {
                             PDRI pdri = PDRIFactory.getFactory().createInstance(
-                                    rs2.getLong(4), rs2.getString(1), rs2.getString(2), rs2.getString(3));
+                                    rs2.getString(1), rs2.getLong(2), rs2.getString(3), rs2.getString(4), rs2.getString(5));
                             pdri.delete();
                         }
                         s2.executeUpdate("DELETE FROM pdri_table WHERE pdri_table.pdriGroupId = " + groupId);
                         rs1.deleteRow();
                         rs1.beforeFirst();
-                        System.err.println("*********************************************************************");
                     }
                 } catch (Exception e) {
                     e.printStackTrace();

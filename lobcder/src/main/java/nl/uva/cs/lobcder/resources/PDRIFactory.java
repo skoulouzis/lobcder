@@ -15,8 +15,11 @@ public class PDRIFactory {
         return factory;
     }
     
-    public PDRI createInstance(Long storageSiteId, String url, String username, String password) {
-        return new SimplePDRI(storageSiteId, url);
+    public PDRI createInstance(String url, Long storageSiteId, String resourceUrl, String username, String password) {
+        if(resourceUrl.startsWith("file://")) {
+            return new SimplePDRI(storageSiteId, url);
+        } else 
+            return null;
     }
     
 }

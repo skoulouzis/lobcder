@@ -4,12 +4,6 @@
  */
 package nl.uva.cs.lobcder.resources;
 
-import java.util.ArrayList;
-import java.util.List;
-import nl.uva.cs.lobcder.auth.MyPrincipal;
-import nl.uva.cs.lobcder.auth.MyPrincipal.Exception;
-import nl.uva.cs.lobcder.auth.test.MyAuth;
-
 /**
  *
  * @author S. Koulouzis
@@ -76,31 +70,6 @@ public class MyStorageSite implements Cloneable {
         return clone;
     }
 
-    public List<MyPrincipal> getAllowedUsers() throws Exception {
-        ArrayList<MyPrincipal> allowedUsers = new ArrayList<MyPrincipal>();
-//        for (String token : allowedUsersTokens) {
-//            allowedUsers.add(new MyPrincipal(token, MyAuth.getInstance().checkToken(token)));
-//        }
-        return allowedUsers;
-    }
-
-    public void setAllowedUsers(List<MyPrincipal> users) {
-        if (allowedUsersTokens == null) {
-            allowedUsersTokens = new ArrayList<String>();
-        }
-        for (MyPrincipal p : users) {
-            allowedUsersTokens.add(p.getToken());
-        }
-    }
-
-    public void addAllowedUser(MyPrincipal user) {
-        if (allowedUsersTokens == null) {
-            allowedUsersTokens = new ArrayList<String>();
-        }
-        allowedUsersTokens.add(user.getToken());
-    }
-    
-    
     
     private Long quotaSize;
     private Long quotaNum;
@@ -108,5 +77,4 @@ public class MyStorageSite implements Cloneable {
     private Long currentNum;
     private String resourceURI;
     private Credential credential;
-    private List<String> allowedUsersTokens;
 }

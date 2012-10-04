@@ -94,11 +94,11 @@ public class StorageSite implements Serializable, IStorageSite {
             if (cred == null) {
                 throw new NullPointerException("Credentials are null");
             }
-            if (cred.getVPHUsernames() == null) {
-                throw new NullPointerException("vph Username is null");
-            }
-
-            vphUsernames = Arrays.asList(cred.getVPHUsernames());
+//            if (cred.getVPHUsernames() == null) {
+//                throw new NullPointerException("vph Username is null");
+//            }
+//
+//            vphUsernames = Arrays.asList(cred.getVPHUsernames());
 
             vphUsernamesCSV = "";
             String prefix = "";
