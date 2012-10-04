@@ -9,7 +9,10 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
@@ -111,7 +114,6 @@ public class WebDAVSecurityTest {
                 new AuthScope(uri.getHost(), uri.getPort()),
                 new UsernamePasswordCredentials(username1, password1));
 
-
         client2 = new HttpClient();
 
         assertNotNull(uri.getHost());
@@ -127,7 +129,7 @@ public class WebDAVSecurityTest {
     }
 
     @Test
-    public void testGetSupportedPrivileges() throws UnsupportedEncodingException, IOException, DavException {
+    public void testGetCurrentUserPrivilegeSet() throws UnsupportedEncodingException, IOException, DavException {
         String testFileURI1 = uri.toASCIIString() + TestSettings.TEST_FILE_NAME1 + ".txt";
         try {
 
@@ -166,19 +168,35 @@ public class WebDAVSecurityTest {
             assertEquals(HttpStatus.SC_OK, responses[0].getStatus()[0].getStatusCode());
             DavPropertySet allProp = getProperties(responses[0]);
             DavProperty<?> prop = allProp.get(userPriv);
-            assertEquals(userPriv,prop.getName());
-            
+            assertEquals(userPriv, prop.getName());
+
             //We should atleast be able to read
-            String value =(String) prop.getValue();
+            String value = (String) prop.getValue();
             assertTrue(value.contains("READ"));
 //            System.out.println("Name: " + prop.getName() + " Values " + prop.getValue()+" class: "+prop.getValue().getClass().getName());
 
 
         } finally {
             DeleteMethod delete = new DeleteMethod(testFileURI1);
-            int status = this.client1.executeMethod(delete);
+            int status = client1.executeMethod(delete);
             assertTrue("DeleteMethod status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
         }
+    }
+
+    @Test
+    public void testUnothorizedCreateFile() {
+        try {
+            String testFileURI1 = uri.toASCIIString() + TestSettings.TEST_FILE_NAME1 + ".txt";
+            PutMethod put = new PutMethod(testFileURI1);
+            put.setRequestEntity(new StringRequestEntity("foo", "text/plain", "UTF-8"));
+            int status = client2.executeMethod(put);
+            assertEquals(HttpStatus.SC_CREATED, status);
+            
+            
+            
+        } catch (IOException ex) {
+            Logger.getLogger(WebDAVSecurityTest.class.getName()).log(Level.SEVERE, null, ex);
+        } 
     }
 
     private DavPropertySet getProperties(MultiStatusResponse statusResponse) {
