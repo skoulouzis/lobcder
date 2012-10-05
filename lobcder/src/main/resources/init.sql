@@ -1,4 +1,4 @@
-DROP TABLE IF EXISTS permission_table, ldata_table, pdri_table, pdrigroup_table, storage_site_table, credential_table;
+DROP TABLE IF EXISTS permission_table, ldata_table, pdri_table, pdrigroup_table, role_to_ss_table, storage_site_table, credential_table;
 
 CREATE TABLE pdrigroup_table (
   groupId SERIAL PRIMARY KEY,
@@ -178,6 +178,13 @@ $$
 
 DELIMITER ;
 
+
+CREATE TABLE role_to_ss_table (
+ id SERIAL PRIMARY KEY,
+ role_name VARCHAR(255), index(role_name),
+ ss_id BIGINT unsigned, FOREIGN KEY(ss_id) REFERENCES storage_site_table(storageSiteId) ON DELETE CASCADE
+);
+
 INSERT INTO ldata_table(ownerId, datatype, ld_name, parent, createDate, modifiedDate) VALUES('root', 'logical.folder', '', '', NOW(), NOW());
 SET @rootID = LAST_INSERT_ID();
 
@@ -188,3 +195,6 @@ INSERT INTO  credential_table(username, password) VALUES ('fakeusername', 'fakep
 SET @credID = LAST_INSERT_ID();
 INSERT INTO storage_site_table(resourceURI, credentialRef, currentNum, currentSize, quotaNum, quotaSize)
             VALUES('file://localhost/tmp/', @credID, -1, -1, -1, -1);
+SET @ssId = LAST_INSERT_ID();
+INSERT INTO role_to_ss_table(role_name, ss_id) values   ('admin', @ssId),
+                                                        ('other', @ssId);

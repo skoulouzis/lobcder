@@ -57,10 +57,19 @@ public class MyStorageSite implements Cloneable {
     public void setResourceURI(String resourceURI) {
         this.resourceURI = resourceURI;
     }
+    
+    public Long getStorageSiteId(){
+        return ssId;
+    }
+    
+    public void setStorageSiteId(Long ssId){
+        this.ssId = ssId;
+    }
 
     @Override
     public Object clone() {
         MyStorageSite clone = new MyStorageSite();
+        clone.setStorageSiteId(ssId);
         clone.setCredential(credential);
         clone.setCurrentNum(new Long(currentNum));
         clone.setCurrentSize(new Long(currentSize));
@@ -71,6 +80,7 @@ public class MyStorageSite implements Cloneable {
     }
 
     
+    private Long ssId;
     private Long quotaSize;
     private Long quotaNum;
     private Long currentSize;

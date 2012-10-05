@@ -22,9 +22,7 @@ import nl.uva.cs.lobcder.authdb.Permissions;
 import nl.uva.cs.lobcder.catalogue.CatalogueException;
 import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
 import nl.uva.cs.lobcder.frontend.WebDavServlet;
-import nl.uva.cs.lobcder.resources.ILogicalData;
-import nl.uva.cs.lobcder.resources.PDRI;
-import nl.uva.cs.lobcder.resources.SimplePDRI;
+import nl.uva.cs.lobcder.resources.*;
 import nl.uva.cs.lobcder.util.Constants;
 
 /**
@@ -142,7 +140,8 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
                     + "\t auth.getResponseDigest(): " + responseDigest + "\n"
                     + "\t auth.getUri(): " + uri + "\n"
                     + "\t auth.getUser(): " + user + "\n"
-                    + "\t auth.getTag(): " + tag);
+                    + "\t auth.getTag(): " + tag
+                    + "\t\t Method = " + method.name());
         }
         return authorized;
     }
@@ -319,12 +318,16 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
         return null;
     }
 
-    public PDRI createPDRI(long fileLength) throws CatalogueException {
-//        Collection<MyStorageSite> sites = getCatalogue().getStorageSitesByUser(getPrincipal());
-//        for (MyStorageSite s : sites) {
-//            debug("Sites to choose from: " + s.getResourceURI());
-//        }
-        return new SimplePDRI(Long.valueOf(1), UUID.randomUUID().toString());
+    public PDRI createPDRI(long fileLength, Connection connection) throws CatalogueException {
+        Collection<MyStorageSite> sites = getCatalogue().getStorageSitesByUser(getPrincipal(), connection);
+        if(!sites.isEmpty()) {
+            MyStorageSite site = sites.iterator().next();
+            return PDRIFactory.getFactory().createInstance(UUID.randomUUID().toString(), 
+                    site.getStorageSiteId(), site.getResourceURI(), 
+                    site.getCredential().getStorageSiteUsername(), site.getCredential().getStorageSitePassword());
+        } else {
+            return null;
+        }
     }
 
     @Override

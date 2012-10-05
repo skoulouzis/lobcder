@@ -742,8 +742,78 @@ public class JDBCatalogue {
         }            
     }
 
-    public Collection<MyStorageSite> getStorageSitesByUser(MyPrincipal user) throws CatalogueException {
-        return null;
+    public Collection<MyStorageSite> getStorageSitesByUser(MyPrincipal user, Connection connection) throws CatalogueException {
+        Statement s = null;
+        boolean connectionIsProvided = (connection == null) ? false : true;
+        boolean connectionAutocommit = false;
+        try {
+            if (connection == null) {
+                connection = getConnection();
+                connection.setAutoCommit(false);
+            } else {
+                connectionAutocommit = connection.getAutoCommit();
+                connection.setAutoCommit(false);
+            }            
+            boolean first = true;
+            String sql = "SELECT DISTINCT storageSiteId, resourceURI, currentNum, currentSize, quotaNum, quotaSize, username, password FROM role_to_ss_table JOIN storage_site_table ON ss_id = storageSiteId JOIN credential_table ON credentialRef = credintialId WHERE ";
+            for(String role : user.getRoles()){
+                if(first) {
+                    sql += "role_name = '" + role + "'";
+                    first = false;
+                } else {
+                    sql += " OR role_name = '" + role + "'";
+                }
+            }
+            s = connection.createStatement();
+            System.err.println(sql);
+            ResultSet rs = s.executeQuery(sql);
+            LinkedList<MyStorageSite> res = new LinkedList<MyStorageSite>();
+            while (rs.next()) {
+                Credential c = new Credential();
+                c.setStorageSiteUsername(rs.getString(7));
+                c.setStorageSitePassword(rs.getString(8));
+                MyStorageSite ss = new MyStorageSite();
+                ss.setStorageSiteId(rs.getLong(1));
+                ss.setCredential(c);
+                ss.setResourceURI(rs.getString(2));
+                ss.setCurrentNum(rs.getLong(3));
+                ss.setCurrentSize(rs.getLong(4));
+                ss.setQuotaNum(rs.getLong(5));
+                ss.setQuotaSize(rs.getLong(6));
+                res.add(ss);
+            }
+            rs.close();   
+            return res;
+        } catch (Exception e) {
+            try {
+                if (s != null && !s.isClosed()) {
+                    s.close();
+                    s = null;
+                }
+                if (!connectionIsProvided && !connection.isClosed()) {
+                    connection.rollback();
+                    connection.close();
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            throw new CatalogueException(e.getMessage());
+        } finally {
+            try {
+                if (s != null && !s.isClosed()) {
+                    s.close();
+                }
+                if (!connectionIsProvided && !connection.isClosed()) {
+                    connection.commit();
+                    connection.close();
+                }
+                if (connectionIsProvided && !connection.isClosed()) {
+                    connection.setAutoCommit(connectionAutocommit);
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }               
     }
 
     public Runnable deleteSweep() {
