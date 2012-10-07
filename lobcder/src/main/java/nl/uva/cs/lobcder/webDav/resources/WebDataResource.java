@@ -262,7 +262,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
 //        }
 
         Set<String> currentRoles = currentPrincipal.getRoles();
-        //We are supposed to get permissions for this resource for the current owner
+        //We are supposed to get permissions for this resource for the current user
         Permissions p = getLogicalData().getPermissions();
 
         Set<String> readRoles = p.canRead();
