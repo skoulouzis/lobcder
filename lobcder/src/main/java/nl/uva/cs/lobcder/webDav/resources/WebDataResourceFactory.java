@@ -25,7 +25,7 @@ public class WebDataResourceFactory implements ResourceFactory {
     @Override
     public Resource getResource(String host, String strPath) {
 
-        Path ldri = Path.path(new File(strPath).getPath()).getStripFirst();
+        Path ldri = Path.path(new File(strPath).getPath()).getStripFirst().getStripFirst();
         try {
             //Gets the root path. If instead we called :'ldri = Path.path(strPath);' we get back '/lobcder-1.0-SNAPSHOT'
             debug("getResource:  strPath: " + strPath + " path: " + Path.path(strPath) + " ldri: " + ldri);

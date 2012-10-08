@@ -24,6 +24,8 @@ import javax.naming.Context;
 public class JDBCatalogue {
 
     private DataSource datasource = null;
+
+    
     public Connection getConnection() throws CatalogueException {
         try{
             if(datasource == null) {
@@ -890,7 +892,7 @@ public class JDBCatalogue {
         };
     }
 
-    public void removeResourceEntry(ILogicalData toRemove, MyPrincipal principal, Connection connection) throws Exception {
+    public void removeResourceEntry(ILogicalData toRemove, MyPrincipal principal, Connection connection) throws CatalogueException {
         Statement s = null;
         boolean connectionIsProvided = (connection == null) ? false : true;
         boolean connectionAutocommit = false;
@@ -969,5 +971,69 @@ public class JDBCatalogue {
                 Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
+    }
+    
+    public List<LogicalData> getSupervised(Connection connection) throws CatalogueException {
+        Statement s = null;
+        boolean connectionIsProvided = (connection == null) ? false : true;
+        boolean connectionAutocommit = false;
+        try {
+            if (connection == null) {
+                connection = getConnection();
+                connection.setAutoCommit(false);
+            } else {
+                connectionAutocommit = connection.getAutoCommit();
+                connection.setAutoCommit(false);                
+            }
+            s = connection.createStatement();
+            ResultSet rs = s.executeQuery("SELECT uid, ownerId, datatype, ld_name, parent, createDate, modifiedDate, ld_length, contentTypesStr, pdriGroupId FROM ldata_table WHERE ldata_table.isSupervised = TRUE");
+                LinkedList<LogicalData> ld_list = new LinkedList<LogicalData>();
+                while (rs.next()) {
+                    LogicalData element = new LogicalData(this);
+                    element.setUID(rs.getLong(1));
+                    element.setOwner(rs.getString(2));
+                    element.setType(rs.getString(3));
+                    element.setName(rs.getString(4));
+                    element.setParent(rs.getString(5));
+                    element.setCreateDate(rs.getTimestamp(6).getTime());
+                    element.setModifiedDate(rs.getTimestamp(7).getTime());
+                    element.setLength(rs.getLong(8));
+                    element.setContentTypesAsString(rs.getString(9));
+                    element.setPdriGroupId(rs.getLong(10));
+                    ld_list.add(element);
+                }
+                rs.close();
+                s.close();         
+                return ld_list;            
+        } catch (Exception e) {
+            try {
+                if (s != null && !s.isClosed()) {
+                    s.close();
+                    s = null;
+                }
+                if (!connectionIsProvided && !connection.isClosed()) {
+                    connection.rollback();
+                    connection.close();
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            throw new CatalogueException(e.getMessage());
+        } finally {
+            try {
+                if (s != null && !s.isClosed()) {
+                    s.close();
+                }
+                if (!connectionIsProvided && !connection.isClosed()) {
+                    connection.commit();
+                    connection.close();
+                }
+                if (connectionIsProvided && !connection.isClosed()) {
+                    connection.setAutoCommit(connectionAutocommit);
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }                 
     }
 }

@@ -38,7 +38,8 @@ CREATE TABLE ldata_table (
  modifiedDate DATETIME NOT NULL,
  ld_length BIGINT,
  contentTypesStr VARCHAR(10240),
- pdriGroupId BIGINT UNSIGNED
+ pdriGroupId BIGINT UNSIGNED,
+ isSupervised Boolean, INDEX(isSupervised)
 );
 
 CREATE TABLE permission_table (

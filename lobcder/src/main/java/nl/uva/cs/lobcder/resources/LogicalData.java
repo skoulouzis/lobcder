@@ -8,6 +8,8 @@ import com.bradmcevoy.common.Path;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 import nl.uva.cs.lobcder.authdb.Permissions;
 import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
 import nl.uva.cs.lobcder.util.Constants;
@@ -20,10 +22,13 @@ import nl.uva.cs.lobcder.util.Constants;
  * first thing to do to use a class with this facility is to tag it as
  * "detachable". This is done by adding the attribute
  */
+
+@XmlRootElement
 public class LogicalData implements ILogicalData, Cloneable {
 
     private Long uid = Long.valueOf(0);
     private String ownerId = "";
+    @XmlTransient
     private String datatype = "";
     private String ld_name = "";
     private String parent = "";
@@ -31,10 +36,24 @@ public class LogicalData implements ILogicalData, Cloneable {
     private Long modifiedDate = Long.valueOf(0);
     private Long ld_length = Long.valueOf(0);
     private String contentTypesStr = "";
+    @XmlTransient
     private Long pdriGroupId = Long.valueOf(0);
+    @XmlTransient
     private JDBCatalogue catalogue;
+    @XmlTransient
     private List<String> decodedContentTypes = null;
+    @XmlTransient
     private static final boolean debug = false;
+    @XmlTransient
+    private Boolean supervised;
+
+    public Boolean getSupervised() {
+        return supervised;
+    }
+
+    public void setSupervised(Boolean supervised) {
+        this.supervised = supervised;
+    }
 
     public LogicalData(Path ldri, String datatype, JDBCatalogue catalogue) {
         this.ld_name = ldri.getName() != null ? ldri.getName() : "";
@@ -48,6 +67,10 @@ public class LogicalData implements ILogicalData, Cloneable {
         this.catalogue = catalogue;
     }
 
+    public LogicalData() {
+    }
+    
+    @XmlTransient
     @Override
     public Path getLDRI() {
         if (parent.isEmpty() && ld_name.isEmpty() && datatype.equals(Constants.LOGICAL_FOLDER)) {
@@ -93,6 +116,7 @@ public class LogicalData implements ILogicalData, Cloneable {
         this.ld_name = name;
     }
 
+    @XmlTransient
     @Override
     public String getType() {
         return datatype;
@@ -123,7 +147,8 @@ public class LogicalData implements ILogicalData, Cloneable {
     public void setName(String name) {
         this.ld_name = name;
     }
-
+    
+    @XmlTransient
     @Override
     public Long getPdriGroupId() {
         return pdriGroupId;
@@ -221,7 +246,8 @@ public class LogicalData implements ILogicalData, Cloneable {
         }
         decodedContentTypes = null;
     }
-
+    
+    @XmlTransient
     @Override
     public Permissions getPermissions() {
         try {
