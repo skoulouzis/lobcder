@@ -174,8 +174,6 @@ public class WebDAVSecurityTest {
             String value = (String) prop.getValue();
             assertTrue(value.contains("READ"));
 //            System.out.println("Name: " + prop.getName() + " Values " + prop.getValue()+" class: "+prop.getValue().getClass().getName());
-
-
         } finally {
             DeleteMethod delete = new DeleteMethod(testFileURI1);
             int status = client1.executeMethod(delete);
