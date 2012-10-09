@@ -8,6 +8,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -24,17 +26,23 @@ import nl.uva.cs.lobcder.resources.LogicalData;
  * @author dvasunin
  */
 @Path("/Items")
-public class ItemsResource {
+public class DRItemsResource {
 
     JDBCatalogue catalogue = null;
-    
     @Context
     private UriInfo context;
 
     /**
      * Creates a new instance of ItemsResource
      */
-    public ItemsResource() {
+    public DRItemsResource() throws Exception {
+        String jndiName = "bean/JDBCatalog";
+        javax.naming.Context ctx = new InitialContext();
+        if (ctx == null) {
+            throw new Exception("JNDI could not create InitalContext ");
+        }
+        javax.naming.Context envContext = (javax.naming.Context) ctx.lookup("java:/comp/env");
+        catalogue = (JDBCatalogue) envContext.lookup(jndiName);
         catalogue = new JDBCatalogue();
     }
 
@@ -45,7 +53,7 @@ public class ItemsResource {
         try {
             res = catalogue.getSupervised(null);
         } catch (CatalogueException ex) {
-            Logger.getLogger(ItemsResource.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(DRItemsResource.class.getName()).log(Level.SEVERE, null, ex);
         }
         return res;
     }

@@ -16,6 +16,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import javax.naming.Context;
+import javax.naming.InitialContext;
 import javax.servlet.Servlet;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -98,8 +100,13 @@ public class WebDavServlet implements Servlet {
     @Override
     public void init(ServletConfig config) throws ServletException {
         try {
-            this.config = config;
-            catalogue = new JDBCatalogue();
+            this.config = config;            
+            String jndiName = "bean/JDBCatalog";
+            Context ctx = new InitialContext();
+            if(ctx == null )
+                    throw new Exception("JNDI could not create InitalContext ");
+            Context envContext  = (Context)ctx.lookup("java:/comp/env");
+            catalogue =  (JDBCatalogue)envContext.lookup(jndiName);
             rf = new WebDataResourceFactory(catalogue);
             catalogue.startSweep();
 
