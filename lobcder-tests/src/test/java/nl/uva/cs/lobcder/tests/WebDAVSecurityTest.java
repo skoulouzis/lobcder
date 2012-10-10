@@ -21,10 +21,16 @@ import org.apache.commons.httpclient.methods.StringRequestEntity;
 import org.apache.commons.httpclient.protocol.Protocol;
 import org.apache.commons.httpclient.protocol.ProtocolSocketFactory;
 import org.apache.jackrabbit.webdav.*;
+import org.apache.jackrabbit.webdav.client.methods.AclMethod;
 import org.apache.jackrabbit.webdav.client.methods.DeleteMethod;
 import org.apache.jackrabbit.webdav.client.methods.PropFindMethod;
 import org.apache.jackrabbit.webdav.client.methods.PutMethod;
 import org.apache.jackrabbit.webdav.property.*;
+import org.apache.jackrabbit.webdav.security.AclProperty;
+import org.apache.jackrabbit.webdav.security.AclProperty.Ace;
+import org.apache.jackrabbit.webdav.security.AclResource;
+import org.apache.jackrabbit.webdav.security.Principal;
+import org.apache.jackrabbit.webdav.security.Privilege;
 import static org.junit.Assert.*;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -201,6 +207,58 @@ public class WebDAVSecurityTest {
         } catch (IOException ex) {
             Logger.getLogger(WebDAVSecurityTest.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+
+    @Test
+    public void testSetGetACL() throws IOException, DavException {
+        String testFileURI1 = uri.toASCIIString() + TestSettings.TEST_FILE_NAME1;
+        DeleteMethod del = new DeleteMethod(testFileURI1);
+        client1.executeMethod(del);
+
+        PutMethod put = new PutMethod(testFileURI1);
+        put.setRequestEntity(new StringRequestEntity(TestSettings.TEST_DATA, "text/plain", "UTF-8"));
+        int status = client1.executeMethod(put);
+        assertEquals(HttpStatus.SC_CREATED, status);
+
+        Principal principal = Principal.getAuthenticatedPrincipal();
+        Privilege[] privileges = new Privilege[1];
+        privileges[0] = Privilege.PRIVILEGE_WRITE;
+
+        boolean invert = false;
+        boolean isProtected = false;
+
+        AclResource inheritedFrom = null;
+        Ace ace = AclProperty.createGrantAce(principal, privileges, invert, isProtected, inheritedFrom);
+        Ace[] accessControlElements = new Ace[1];
+        accessControlElements[0] = ace;
+        AclProperty aclProp = new AclProperty(accessControlElements);
+
+        AclMethod acl = new AclMethod(testFileURI1, aclProp);
+        status = client1.executeMethod(acl);
+
+        System.out.println("Status : " + status);
+
+
+        PropFindMethod propFind = new PropFindMethod(testFileURI1, DavPropertyNameSet.PROPFIND_ALL_PROP, DavConstants.DEPTH_INFINITY);
+        status = client1.executeMethod(propFind);
+        assertEquals(HttpStatus.SC_MULTI_STATUS, status);
+
+
+        MultiStatus multiStatus = propFind.getResponseBodyAsMultiStatus();
+        MultiStatusResponse[] responses = multiStatus.getResponses();
+
+        for (MultiStatusResponse r : responses) {
+            System.out.println("Responce: " + r.getHref());
+            DavPropertySet allProp = getProperties(r);
+
+            DavPropertyIterator iter = allProp.iterator();
+            while (iter.hasNext()) {
+                DavProperty<?> p = iter.nextProperty();
+                System.out.println("\tName: " + p.getName() + " Values " + p.getValue());
+            }
+
+        }
+
     }
 
     private DavPropertySet getProperties(MultiStatusResponse statusResponse) {
