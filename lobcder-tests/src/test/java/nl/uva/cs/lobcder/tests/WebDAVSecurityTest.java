@@ -133,9 +133,12 @@ public class WebDAVSecurityTest {
         String testFileURI1 = uri.toASCIIString() + TestSettings.TEST_FILE_NAME1 + ".txt";
         try {
 
+            DeleteMethod delete = new DeleteMethod(testFileURI1);
+            int status = client1.executeMethod(delete);
+
             PutMethod put = new PutMethod(testFileURI1);
             put.setRequestEntity(new StringRequestEntity(TestSettings.TEST_DATA, "text/plain", "UTF-8"));
-            int status = client1.executeMethod(put);
+            status = client1.executeMethod(put);
             assertEquals(HttpStatus.SC_CREATED, status);
 
             DavPropertyNameSet d = new DavPropertyNameSet();
@@ -187,14 +190,17 @@ public class WebDAVSecurityTest {
             String testFileURI1 = uri.toASCIIString() + TestSettings.TEST_FILE_NAME1 + ".txt";
             PutMethod put = new PutMethod(testFileURI1);
             put.setRequestEntity(new StringRequestEntity("foo", "text/plain", "UTF-8"));
+
+            client2.getState().setCredentials(
+                    new AuthScope(uri.getHost(), uri.getPort()),
+                    new UsernamePasswordCredentials(username2, "WRONG_PASSWORD"));
+
             int status = client2.executeMethod(put);
-            assertEquals(HttpStatus.SC_CREATED, status);
-            
-            
-            
+            assertEquals(HttpStatus.SC_UNAUTHORIZED, status);
+
         } catch (IOException ex) {
             Logger.getLogger(WebDAVSecurityTest.class.getName()).log(Level.SEVERE, null, ex);
-        } 
+        }
     }
 
     private DavPropertySet getProperties(MultiStatusResponse statusResponse) {
