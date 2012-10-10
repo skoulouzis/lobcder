@@ -235,10 +235,11 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
 //            throw new NotAuthorizedException();
 //        }
 //    }
+    
     @Override
     public String getPrincipalURL() {
         debug("getPrincipalURL");
-        return getPrincipal().getUserId();
+        return "thePrincipalURL";//getPrincipal().getUserId();
     }
 
     /**
