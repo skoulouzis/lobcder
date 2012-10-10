@@ -13,7 +13,7 @@ import nl.uva.cs.lobcder.util.LobIOUtils;
  */
 public class SimplePDRI implements PDRI{
 
-    final private String baseLocation = "/tmp/lobcder/";
+    final private String baseLocation = System.getProperty("user.home") +"/tmp/lobcder/";
     final private String file_name;
     final private Long ssid;
     
