@@ -46,6 +46,8 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
 //        }
         this.catalogue = catalogue;
 
+        //We can't init the data dist props here cause there is no authorization 
+        //yet. So the getPrincipal will return null
         initProps();
 
     }
@@ -235,7 +237,6 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
 //            throw new NotAuthorizedException();
 //        }
 //    }
-    
     @Override
     public String getPrincipalURL() {
         debug("getPrincipalURL");
@@ -280,7 +281,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
                 break;
             }
         }
-        
+
         return priviledgesList;
     }
 
@@ -321,10 +322,10 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
 
     public PDRI createPDRI(long fileLength, Connection connection) throws CatalogueException {
         Collection<MyStorageSite> sites = getCatalogue().getStorageSitesByUser(getPrincipal(), connection);
-        if(!sites.isEmpty()) {
+        if (!sites.isEmpty()) {
             MyStorageSite site = sites.iterator().next();
-            return PDRIFactory.getFactory().createInstance(UUID.randomUUID().toString(), 
-                    site.getStorageSiteId(), site.getResourceURI(), 
+            return PDRIFactory.getFactory().createInstance(UUID.randomUUID().toString(),
+                    site.getStorageSiteId(), site.getResourceURI(),
                     site.getCredential().getStorageSiteUsername(), site.getCredential().getStorageSitePassword());
         } else {
             return null;
@@ -338,11 +339,49 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
 
     @Override
     public CustomProperty getProperty(String propName) {
+        if (propName.equals(Constants.DATA_DIST_PROP_NAME)) {
+            try {
+                initDataDist();
+            } catch (CatalogueException ex) {
+                Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (SQLException ex) {
+                Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (NotAuthorizedException ex) {
+                Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
         return customProperties.get(propName);
     }
 
     @Override
     public String getNameSpaceURI() {
         return "custom:";
+    }
+
+    private void initDataDist() throws CatalogueException, SQLException, NotAuthorizedException {
+        Connection connection = getCatalogue().getConnection();
+        connection.setAutoCommit(false);
+        StringBuilder sb = new StringBuilder();
+        if (getLogicalData().isFolder()) {
+            List<? extends WebDataResource> children = (List<? extends WebDataResource>) ((WebDataDirResource) (this)).getChildren();
+            sb.append("[");
+            for (WebDataResource r : children) {
+                Collection<PDRI> pdris = getCatalogue().getPdriByGroupId(r.getLogicalData().getPdriGroupId(), connection);
+                for (PDRI p : pdris) {
+                    sb.append(p.getURL());
+                    sb.append(",");
+                }
+            }
+            sb.append("]");
+        } else {
+            Collection<PDRI> pdris = getCatalogue().getPdriByGroupId(getLogicalData().getPdriGroupId(), connection);
+            sb.append("[");
+            for (PDRI p : pdris) {
+                sb.append(p.getURL());
+                sb.append(",");
+            }
+        }
+        DataDistProperty dataDist = new DataDistProperty(sb.toString());
+        customProperties.put(Constants.DATA_DIST_PROP_NAME, dataDist);
     }
 }

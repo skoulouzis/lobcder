@@ -13,6 +13,10 @@ import com.bradmcevoy.http.CustomProperty;
 class DataDistProperty implements CustomProperty{
     private String formattedValue="formattedValue";
 
+    DataDistProperty(String dataDist) {
+        this.formattedValue = dataDist;
+    }
+
     @Override
     public Class getValueClass() {
         return DataDistProperty.class;

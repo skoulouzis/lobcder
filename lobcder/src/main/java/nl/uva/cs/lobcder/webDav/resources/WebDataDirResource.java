@@ -17,6 +17,7 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import nl.uva.cs.lobcder.authdb.MyPrincipal;
 import nl.uva.cs.lobcder.authdb.Permissions;
 import nl.uva.cs.lobcder.catalogue.CatalogueException;
 import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
@@ -140,7 +141,8 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
             connection = getCatalogue().getConnection();
             connection.setAutoCommit(false);
             Permissions perm = getCatalogue().getPermissions(getLogicalData().getUID(), getLogicalData().getOwner(), connection);
-            if (!getPrincipal().canRead(perm)) {
+            MyPrincipal pr = getPrincipal();
+            if (!pr.canRead(perm)) {
                 throw new NotAuthorizedException();
             }
             Collection<ILogicalData> childrenLD = getCatalogue().getChildren(getLogicalData().getLDRI().toPath(), connection);

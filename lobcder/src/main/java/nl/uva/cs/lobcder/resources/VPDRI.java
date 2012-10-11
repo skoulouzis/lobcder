@@ -66,11 +66,13 @@ public class VPDRI implements PDRI {
     private VFSClient vfsClient;
     private MyStorageSite storageSite;
     private VRL vrl;
+    private final Long storageSiteId;
 
     public VPDRI(String file_name, Long storageSiteId, MyStorageSite storageSite) throws IOException {
         try {
             this.storageSite = storageSite;
             vrl = new VRL(storageSite.getResourceURI()).append(file_name);
+            this.storageSiteId = storageSiteId;
             initVFS();
         } catch (VlException ex) {
             throw new IOException(ex);
@@ -164,11 +166,11 @@ public class VPDRI implements PDRI {
 
     @Override
     public Long getStorageSiteId() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return storageSiteId;
     }
 
     @Override
     public String getURL() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return storageSite.getResourceURI().toString();
     }
 }
