@@ -26,6 +26,7 @@ import org.apache.jackrabbit.webdav.client.methods.DeleteMethod;
 import org.apache.jackrabbit.webdav.client.methods.*;
 import org.apache.jackrabbit.webdav.property.*;
 import org.apache.jackrabbit.webdav.version.DeltaVConstants;
+import org.apache.jackrabbit.webdav.xml.Namespace;
 import org.junit.After;
 import static org.junit.Assert.*;
 import org.junit.Before;
@@ -942,10 +943,10 @@ public class WebDAVTest {
             assertEquals(HttpStatus.SC_CREATED, status);
 
             DavPropertyNameSet d = new DavPropertyNameSet();
-            DavPropertyName userPriv = DavPropertyName.create("data-distribution");
-            d.add(userPriv);
+            DavPropertyName dataDist = DavPropertyName.create("data-distribution", Namespace.getNamespace("custom:"));
+            d.add(dataDist);
 
-
+            
             PropFindMethod propFind = new PropFindMethod(testcol1, d, DavConstants.DEPTH_INFINITY);
             status = client.executeMethod(propFind);
             assertEquals(HttpStatus.SC_MULTI_STATUS, status);
