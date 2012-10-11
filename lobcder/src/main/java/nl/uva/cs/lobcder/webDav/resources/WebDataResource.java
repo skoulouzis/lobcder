@@ -372,7 +372,6 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
                     sb.append(",");
                 }
             }
-            sb.append("]");
         } else {
             Collection<PDRI> pdris = getCatalogue().getPdriByGroupId(getLogicalData().getPdriGroupId(), connection);
             sb.append("[");
@@ -381,6 +380,8 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
                 sb.append(",");
             }
         }
+        sb.replace(sb.lastIndexOf(","), sb.length(), "");
+        sb.append("]");
         DataDistProperty dataDist = new DataDistProperty(sb.toString());
         customProperties.put(Constants.DATA_DIST_PROP_NAME, dataDist);
     }
