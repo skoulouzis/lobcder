@@ -5,6 +5,7 @@
 package nl.uva.cs.lobcder.resources;
 
 import java.io.*;
+import java.net.URI;
 import nl.uva.cs.lobcder.util.LobIOUtils;
 
 /**
