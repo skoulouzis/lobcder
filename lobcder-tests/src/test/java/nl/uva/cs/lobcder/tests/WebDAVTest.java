@@ -910,7 +910,8 @@ public class WebDAVTest {
         String testuri1 = testcol1 + "file1";
         String testuri2 = testcol1 + "file2";
         String testuri3 = testcol1 + "file3";
-        String testcol2 = testcol1 + "folder4";
+        String testcol2 = testcol1 + "folder4/";
+        String testuri4 = testcol2 + "file5";
         try {
 
             DeleteMethod delete = new DeleteMethod(testcol1);
@@ -941,12 +942,16 @@ public class WebDAVTest {
             mkcol = new MkColMethod(testcol2);
             status = client.executeMethod(mkcol);
             assertEquals(HttpStatus.SC_CREATED, status);
+            
+            put = new PutMethod(testuri4);
+            put.setRequestEntity(new StringRequestEntity(TestSettings.TEST_DATA, "text/plain", "UTF-8"));
+            status = this.client.executeMethod(put);
+            assertEquals(HttpStatus.SC_CREATED, status);
 
             DavPropertyNameSet d = new DavPropertyNameSet();
             DavPropertyName dataDist = DavPropertyName.create("data-distribution", Namespace.getNamespace("custom:"));
             d.add(dataDist);
 
-            
             PropFindMethod propFind = new PropFindMethod(testcol1, d, DavConstants.DEPTH_INFINITY);
             status = client.executeMethod(propFind);
             assertEquals(HttpStatus.SC_MULTI_STATUS, status);
