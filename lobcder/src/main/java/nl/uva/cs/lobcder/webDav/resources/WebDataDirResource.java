@@ -34,7 +34,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
 
     private boolean debug = true;
 
-    public WebDataDirResource(JDBCatalogue catalogue, ILogicalData entry) throws IOException, Exception {
+    public WebDataDirResource(JDBCatalogue catalogue, LogicalData entry) throws IOException, Exception {
         super(catalogue, entry);
         if (!getLogicalData().getType().equals(Constants.LOGICAL_FOLDER)) {
             throw new Exception("The logical data has the wonrg type: " + getLogicalData().getType());
@@ -55,7 +55,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
             }
             Path newCollectionPath = Path.path(getLogicalData().getLDRI(), newName);
             debug("\t newCollectionPath: " + newCollectionPath);
-            ILogicalData newFolderEntry = getCatalogue().getResourceEntryByLDRI(newCollectionPath, connection);
+            LogicalData newFolderEntry = getCatalogue().getResourceEntryByLDRI(newCollectionPath, connection);
             if (newFolderEntry == null) { // collection does not exists, create a new one
                 newFolderEntry = new LogicalData(newCollectionPath, Constants.LOGICAL_FOLDER, getCatalogue());
                 newFolderEntry.setCreateDate(System.currentTimeMillis());
@@ -100,7 +100,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
             if (!getPrincipal().canRead(perm)) {
                 throw new NotAuthorizedException();
             }
-            ILogicalData child = getCatalogue().getResourceEntryByLDRI(getLogicalData().getLDRI().child(childName), connection);
+            LogicalData child = getCatalogue().getResourceEntryByLDRI(getLogicalData().getLDRI().child(childName), connection);
             connection.commit();
             connection.close();
             if (child != null) {
@@ -145,11 +145,11 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
             if (!pr.canRead(perm)) {
                 throw new NotAuthorizedException();
             }
-            Collection<ILogicalData> childrenLD = getCatalogue().getChildren(getLogicalData().getLDRI().toPath(), connection);
+            Collection<LogicalData> childrenLD = getCatalogue().getChildren(getLogicalData().getLDRI().toPath(), connection);
             connection.commit();
             connection.close();
             if (childrenLD != null) {
-                for (ILogicalData childLD : childrenLD) {
+                for (LogicalData childLD : childrenLD) {
                     if (childLD.getType().equals(Constants.LOGICAL_FOLDER)) {
                         children.add(new WebDataDirResource(getCatalogue(), childLD));
                     }
@@ -190,7 +190,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
             connection = getCatalogue().getConnection();
             connection.setAutoCommit(false);
             Path newPath = Path.path(getLogicalData().getLDRI(), newName);
-            ILogicalData newResource = getCatalogue().getResourceEntryByLDRI(newPath, connection);
+            LogicalData newResource = getCatalogue().getResourceEntryByLDRI(newPath, connection);
             if (newResource != null) { // Resource exists, update
                 Permissions p = getCatalogue().getPermissions(newResource.getUID(), newResource.getOwner(), connection);
                 if (!getPrincipal().canWrite(p)) {
@@ -304,7 +304,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
             connection = getCatalogue().getConnection();
             connection.setAutoCommit(false);
             Path parentPath = getLogicalData().getLDRI().getParent();
-            ILogicalData parentLD = getCatalogue().getResourceEntryByLDRI(parentPath, connection);
+            LogicalData parentLD = getCatalogue().getResourceEntryByLDRI(parentPath, connection);
             if (parentLD == null) {
                 throw new BadRequestException("Parent does not exist");
             }
@@ -365,10 +365,10 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
             if (!getPrincipal().canRead(perm)) {
                 throw new NotAuthorizedException();
             }
-            Collection<ILogicalData> childrenLD = getCatalogue().getChildren(getLogicalData().getLDRI().toPath(), connection);
+            Collection<LogicalData> childrenLD = getCatalogue().getChildren(getLogicalData().getLDRI().toPath(), connection);
             connection.commit();
             connection.close();
-            for (ILogicalData ld : childrenLD) {               
+            for (LogicalData ld : childrenLD) {               
                 if(!ld.getName().isEmpty()) {                
                     String s = ld.getName() + '\n';
                     System.err.print(s);
@@ -445,7 +445,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
             }
             connection = getCatalogue().getConnection();
             connection.setAutoCommit(false);
-            ILogicalData parentLD = getCatalogue().getResourceEntryByLDRI(getLogicalData().getLDRI().getParent(), connection);
+            LogicalData parentLD = getCatalogue().getResourceEntryByLDRI(getLogicalData().getLDRI().getParent(), connection);
             if (parentLD == null) {
                 throw new BadRequestException("Parent does not exist");
             }

@@ -39,7 +39,7 @@ public class WebDataFileResource extends WebDataResource implements
 
     private static final boolean debug = true;
 
-    public WebDataFileResource(JDBCatalogue catalogue, ILogicalData logicalData) throws CatalogueException, Exception {
+    public WebDataFileResource(JDBCatalogue catalogue, LogicalData logicalData) throws CatalogueException, Exception {
         super(catalogue, logicalData);
         if (!logicalData.getType().equals(Constants.LOGICAL_FILE)) {
             throw new Exception("The logical data has the wonrg type: " + logicalData.getType());
@@ -91,7 +91,7 @@ public class WebDataFileResource extends WebDataResource implements
             Path parentPath = getLogicalData().getLDRI().getParent();
             connection = getCatalogue().getConnection();
             connection.setAutoCommit(false);
-            ILogicalData parentLD = getCatalogue().getResourceEntryByLDRI(parentPath, connection);
+            LogicalData parentLD = getCatalogue().getResourceEntryByLDRI(parentPath, connection);
             if (parentLD == null) {
                 throw new BadRequestException("Parent does not exist");
             }
@@ -231,7 +231,7 @@ public class WebDataFileResource extends WebDataResource implements
             }
             connection = getCatalogue().getConnection();
             connection.setAutoCommit(false);
-            ILogicalData parentLD = getCatalogue().getResourceEntryByLDRI(getLogicalData().getLDRI().getParent(), connection);
+            LogicalData parentLD = getCatalogue().getResourceEntryByLDRI(getLogicalData().getLDRI().getParent(), connection);
             if (parentLD == null) {
                 throw new BadRequestException("Parent does not exist");
             }

@@ -8,8 +8,8 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.logging.Level;
 import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
-import nl.uva.cs.lobcder.resources.ILogicalData;
 import nl.uva.cs.lobcder.resources.IStorageSite;
+import nl.uva.cs.lobcder.resources.LogicalData;
 import nl.uva.cs.lobcder.util.Constants;
 
 public class WebDataResourceFactory implements ResourceFactory {
@@ -47,7 +47,7 @@ public class WebDataResourceFactory implements ResourceFactory {
 //                return webRoot;
 //            }
 
-            ILogicalData entry = catalogue.getResourceEntryByLDRI(ldri, null);
+            LogicalData entry = catalogue.getResourceEntryByLDRI(ldri, null);
             if (entry == null) {
                 return null;
             }

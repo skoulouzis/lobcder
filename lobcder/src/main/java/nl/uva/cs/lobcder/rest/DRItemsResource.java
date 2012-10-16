@@ -10,9 +10,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
@@ -48,13 +46,23 @@ public class DRItemsResource {
 
     @GET
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public List<LogicalData> getXml() {
+    public List<LogicalData> getXml(@QueryParam("path") String path) {
         List<LogicalData> res = null;
         try {
-            res = catalogue.getSupervised(null);
+            res = catalogue.getSupervised(path, null);
         } catch (CatalogueException ex) {
             Logger.getLogger(DRItemsResource.class.getName()).log(Level.SEVERE, null, ex);
         }
         return res;
+    }
+    
+    @Path("/{isSupervised}")
+    @PUT
+    public void setDirSupervised(@PathParam("isSupervised") Boolean param, @QueryParam("path") String path) {
+        try {
+            catalogue.setDirSupervised(path, param, null);
+        } catch (CatalogueException ex) {
+            Logger.getLogger(DRItemsResource.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 }

@@ -9,6 +9,8 @@ import com.bradmcevoy.http.*;
 import com.bradmcevoy.http.exceptions.NotAuthorizedException;
 import com.bradmcevoy.http.values.HrefList;
 import com.bradmcevoy.http.webdav.PropertyMap;
+import com.bradmcevoy.property.BeanPropertyAccess;
+import com.bradmcevoy.property.BeanPropertyResource;
 import com.ettrema.http.AccessControlledResource;
 import com.ettrema.http.acl.Principal;
 import java.io.IOException;
@@ -23,19 +25,17 @@ import nl.uva.cs.lobcder.authdb.Permissions;
 import nl.uva.cs.lobcder.catalogue.CatalogueException;
 import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
 import nl.uva.cs.lobcder.frontend.WebDavServlet;
-import nl.uva.cs.lobcder.resources.ILogicalData;
-import nl.uva.cs.lobcder.resources.MyStorageSite;
-import nl.uva.cs.lobcder.resources.PDRI;
-import nl.uva.cs.lobcder.resources.PDRIFactory;
+import nl.uva.cs.lobcder.resources.*;
 import nl.uva.cs.lobcder.util.Constants;
 
 /**
  *
  * @author S. Koulouzis
  */
+
 public class WebDataResource implements PropFindableResource, Resource, AccessControlledResource, CustomPropertyResource {//, ReplaceableResource {
 
-    private ILogicalData logicalData;
+    private LogicalData logicalData;
     private final JDBCatalogue catalogue;
     private static final boolean debug = true;
     private final Map<String, CustomProperty> customProperties = new HashMap<String, CustomProperty>();
@@ -43,7 +43,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
     //Collection<Integer> roles = null;
     //private String uname;
 
-    public WebDataResource(JDBCatalogue catalogue, ILogicalData logicalData) {
+    public WebDataResource(JDBCatalogue catalogue, LogicalData logicalData) {
         this.logicalData = logicalData;
 //        if (!logicalData.getType().equals(Constants.LOGICAL_DATA)) {
 //            throw new Exception("The logical data has the wonrg type: " + logicalData.getType());
@@ -56,8 +56,15 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
 
     }
 
-    private void initProps() {
-        customProperties.put(Constants.DATA_DIST_PROP_NAME, null);
+    private void initProps() {     
+        customProperties.put(Constants.DRI_SUPERVISED, new DRIsSupervisedProperty(getLogicalData()));
+        customProperties.put(Constants.DRI_CHECKSUM, new DRICheckSumProperty(getLogicalData().getChecksum()));
+        customProperties.put(Constants.DRI_LAST_VALIDATION_DATE, new DRI_lastValidationDateProperty(getLogicalData().getLastValidationDate()));
+//        if(getLogicalData().getSupervised() != null) {
+//            DataDistProperty ddip = new DataDistProperty();
+//            ddip.setFormattedValue(getLogicalData().getSupervised().toString());
+//            customProperties.put(Constants.DATA_DIST_PROP_NAME, ddip);
+//        }
     }
 
     @Override
@@ -212,14 +219,14 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
     /**
      * @return the logicalData
      */
-    public ILogicalData getLogicalData() {
+    public LogicalData getLogicalData() {
         return logicalData;
     }
 
     /**
      * @return the logicalData
      */
-    public void setLogicalData(ILogicalData logicalData) {
+    public void setLogicalData(LogicalData logicalData) {
         this.logicalData = logicalData;
     }
 

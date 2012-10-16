@@ -65,7 +65,7 @@ public class JDBCatalogue {
         timer.cancel();
     }
 
-    public ILogicalData registerPdriForNewEntry(ILogicalData logicalData, PDRI pdri, Connection connection) throws CatalogueException {
+    public LogicalData registerPdriForNewEntry(LogicalData logicalData, PDRI pdri, Connection connection) throws CatalogueException {
         boolean connectionIsProvided;
         boolean connectionAutocommit = false;
         Statement s = null;
@@ -196,7 +196,7 @@ public class JDBCatalogue {
         }
     }
 
-    public ILogicalData registerOrUpdateResourceEntry(ILogicalData entry, Connection connection) throws CatalogueException {
+    public LogicalData registerOrUpdateResourceEntry(LogicalData entry, Connection connection) throws CatalogueException {
         boolean connectionIsProvided;
         boolean connectionAutocommit = false;
         PreparedStatement ps01 = null;
@@ -282,8 +282,8 @@ public class JDBCatalogue {
         }
     }
 
-    public ILogicalData getResourceEntryByLDRI(Path logicalResourceName, Connection connection) throws Exception {
-        ILogicalData res = null;
+    public LogicalData getResourceEntryByLDRI(Path logicalResourceName, Connection connection) throws Exception {
+        LogicalData res = null;
         boolean connectionIsProvided;
         boolean connectionAutocommit = false;
         PreparedStatement ps = null;
@@ -297,7 +297,7 @@ public class JDBCatalogue {
             connectionAutocommit = connection.getAutoCommit();
             connection.setAutoCommit(false);
             ps = connection.prepareStatement(
-                    "SELECT uid, ownerId, datatype, createDate, modifiedDate, ld_length, contentTypesStr, pdriGroupId FROM ldata_table where ldata_table.parent = ? AND ldata_table.ld_name = ?");
+                    "SELECT uid, ownerId, datatype, createDate, modifiedDate, ld_length, contentTypesStr, pdriGroupId, isSupervised FROM ldata_table where ldata_table.parent = ? AND ldata_table.ld_name = ?");
             if (logicalResourceName.isRoot()) {
                 ps.setString(1, "");
                 ps.setString(2, "");
@@ -318,6 +318,7 @@ public class JDBCatalogue {
                 res.setLength(rs.getLong(6));
                 res.setContentTypesAsString(rs.getString(7));
                 res.setPdriGroupId(rs.getLong(8));
+                res.setSupervised(rs.getBoolean(9));
             }
             return res;
         } catch (Exception e) {
@@ -462,8 +463,8 @@ public class JDBCatalogue {
         }
     }
 
-    public ILogicalData getResourceEntryByUID(Long UID, Connection connection) throws CatalogueException {
-        ILogicalData res = null;
+    public LogicalData getResourceEntryByUID(Long UID, Connection connection) throws CatalogueException {
+        LogicalData res = null;
         Statement s = null;
         boolean connectionIsProvided = (connection == null) ? false : true;
         boolean connectionAutocommit = false;
@@ -476,7 +477,7 @@ public class JDBCatalogue {
                 connection.setAutoCommit(false);
             }
             s = connection.createStatement();
-            ResultSet rs = s.executeQuery("SELECT ownerId, datatype, ld_name, parent, createDate, modifiedDate, ld_length, contentTypesStr, pdriGroupId FROM ldata_table WHERE ldata_table.uid = " + UID);
+            ResultSet rs = s.executeQuery("SELECT ownerId, datatype, ld_name, parent, createDate, modifiedDate, ld_length, contentTypesStr, pdriGroupId, isSupervised FROM ldata_table WHERE ldata_table.uid = " + UID);
             if (rs.next()) {
                 res = new LogicalData(this);
                 res.setUID(UID);
@@ -489,6 +490,7 @@ public class JDBCatalogue {
                 res.setLength(rs.getLong(7));
                 res.setContentTypesAsString(rs.getString(8));
                 res.setPdriGroupId(rs.getLong(9));
+                res.setSupervised(rs.getBoolean(10));
             }
             return res;
         } catch (Exception e) {
@@ -523,8 +525,8 @@ public class JDBCatalogue {
         }
     }
 
-    public Collection<ILogicalData> getChildren(String parentPath, Connection connection) throws CatalogueException {
-        LinkedList<ILogicalData> res = new LinkedList<ILogicalData>();
+    public Collection<LogicalData> getChildren(String parentPath, Connection connection) throws CatalogueException {
+        LinkedList<LogicalData> res = new LinkedList<LogicalData>();
         PreparedStatement ps = null;
         boolean connectionIsProvided = (connection == null) ? false : true;
         boolean connectionAutocommit = false;
@@ -536,11 +538,11 @@ public class JDBCatalogue {
                 connectionAutocommit = connection.getAutoCommit();
                 connection.setAutoCommit(false);
             }
-            ps = connection.prepareStatement("SELECT uid, ownerId, datatype, ld_name, createDate, modifiedDate, ld_length, contentTypesStr, pdriGroupId  FROM ldata_table WHERE ldata_table.parent = ?");
+            ps = connection.prepareStatement("SELECT uid, ownerId, datatype, ld_name, createDate, modifiedDate, ld_length, contentTypesStr, pdriGroupId, isSupervised  FROM ldata_table WHERE ldata_table.parent = ?");
             ps.setString(1, parentPath);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
-                ILogicalData element = new LogicalData(this);
+                LogicalData element = new LogicalData(this);
                 element.setUID(rs.getLong(1));
                 element.setOwner(rs.getString(2));
                 element.setType(rs.getString(3));
@@ -551,6 +553,7 @@ public class JDBCatalogue {
                 element.setLength(rs.getLong(7));
                 element.setContentTypesAsString(rs.getString(8));
                 element.setPdriGroupId(rs.getLong(9));
+                element.setSupervised(rs.getBoolean(10));
                 res.add(element);
             }
             return res;
@@ -586,7 +589,7 @@ public class JDBCatalogue {
         }
     }
 
-    public void moveEntry(ILogicalData toMove, ILogicalData newParent, String newName, Connection connection) throws CatalogueException {
+    public void moveEntry(LogicalData toMove, LogicalData newParent, String newName, Connection connection) throws CatalogueException {
         Statement s = null;
         boolean connectionIsProvided = (connection == null) ? false : true;
         boolean connectionAutocommit = false;
@@ -598,7 +601,7 @@ public class JDBCatalogue {
                 connectionAutocommit = connection.getAutoCommit();
                 connection.setAutoCommit(false);
             }
-            ILogicalData entry = toMove;
+            LogicalData entry = toMove;
             final String parentCurrentPathStr = entry.getLDRI().toPath();
             entry.setLDRI(Path.path(newParent.getLDRI(), newName));
             final String parentNewPathStr = entry.getLDRI().toPath();
@@ -645,7 +648,7 @@ public class JDBCatalogue {
         }
     }
 
-    public void copyEntry(ILogicalData toCopy, ILogicalData newParent, String newName, MyPrincipal principal, Connection connection) throws CatalogueException {
+    public void copyEntry(LogicalData toCopy, LogicalData newParent, String newName, MyPrincipal principal, Connection connection) throws CatalogueException {
         Statement s = null;
         boolean connectionIsProvided = (connection == null) ? false : true;
         boolean connectionAutocommit = false;
@@ -662,7 +665,7 @@ public class JDBCatalogue {
             Permissions permissionsForNew = new Permissions(principal);
             String parentPath = toCopy.getLDRI().toPath();
             if (toCopy.isFolder() && principal.canWrite(newParentPerm)) {
-                ILogicalData newFolderEntry = new LogicalData(Path.path(newParent.getLDRI(), newName), Constants.LOGICAL_FOLDER, this);
+                LogicalData newFolderEntry = new LogicalData(Path.path(newParent.getLDRI(), newName), Constants.LOGICAL_FOLDER, this);
                 newFolderEntry.setCreateDate(System.currentTimeMillis());
                 newFolderEntry.setModifiedDate(System.currentTimeMillis());
                 newFolderEntry.setOwner(principal.getUserId());
@@ -681,9 +684,9 @@ public class JDBCatalogue {
                     ResultSet rs = s.executeQuery("SELECT uid, ownerId, ld_name, createDate, modifiedDate, ld_length, contentTypesStr, pdriGroupId FROM ldata_table "
                             + "WHERE ldata_table.parent = '" + parentPath + "' "
                             + "AND ldata_table.datatype = 'logical.folder'");
-                    LinkedList<ILogicalData> ld_list = new LinkedList<ILogicalData>();
+                    LinkedList<LogicalData> ld_list = new LinkedList<LogicalData>();
                     while (rs.next()) {
-                        ILogicalData element = new LogicalData(this);
+                        LogicalData element = new LogicalData(this);
                         element.setUID(rs.getLong(1));
                         element.setOwner(rs.getString(2));
                         element.setType("logical.folder");
@@ -698,12 +701,12 @@ public class JDBCatalogue {
                     }
                     rs.close();
                     s.close();
-                    for (ILogicalData ld : ld_list) {
+                    for (LogicalData ld : ld_list) {
                         copyEntry(ld, newFolderEntry, ld.getName(), principal, connection);
                     }
                 }
             } else if (!toCopy.isFolder() && principal.canRead(toCopyPerm) && principal.canWrite(newParentPerm)) {
-                ILogicalData ld = (ILogicalData) toCopy.clone();
+                LogicalData ld = (LogicalData) toCopy.clone();
                 ld.setOwner(principal.getUserId());
                 ld.setName(newName);
                 ld.setParent(newParent.getLDRI().toPath());
@@ -899,7 +902,7 @@ public class JDBCatalogue {
         };
     }
 
-    public void removeResourceEntry(ILogicalData toRemove, MyPrincipal principal, Connection connection) throws CatalogueException {
+    public void removeResourceEntry(LogicalData toRemove, MyPrincipal principal, Connection connection) throws CatalogueException {
         Statement s = null;
         boolean connectionIsProvided = (connection == null) ? false : true;
         boolean connectionAutocommit = false;
@@ -924,9 +927,9 @@ public class JDBCatalogue {
                 ResultSet rs = s.executeQuery("SELECT uid, ownerId, ld_name, createDate, modifiedDate, ld_length, contentTypesStr, pdriGroupId FROM ldata_table "
                         + "WHERE ldata_table.parent = '" + parentPath + "' "
                         + "AND ldata_table.datatype = 'logical.folder'");
-                LinkedList<ILogicalData> ld_list = new LinkedList<ILogicalData>();
+                LinkedList<LogicalData> ld_list = new LinkedList<LogicalData>();
                 while (rs.next()) {
-                    ILogicalData element = new LogicalData(this);
+                    LogicalData element = new LogicalData(this);
                     element.setUID(rs.getLong(1));
                     element.setOwner(rs.getString(2));
                     element.setType("logical.folder");
@@ -941,7 +944,7 @@ public class JDBCatalogue {
                 }
                 rs.close();
                 s.close();
-                for (ILogicalData ld : ld_list) {
+                for (LogicalData ld : ld_list) {
                     removeResourceEntry(ld, principal, connection);
                 }
             }
@@ -980,7 +983,7 @@ public class JDBCatalogue {
         }
     }
 
-    public List<LogicalData> getSupervised(Connection connection) throws CatalogueException {
+    public List<LogicalData> getSupervised(String parentDir, Connection connection) throws CatalogueException {
         Statement s = null;
         boolean connectionIsProvided = (connection == null) ? false : true;
         boolean connectionAutocommit = false;
@@ -993,7 +996,7 @@ public class JDBCatalogue {
                 connection.setAutoCommit(false);
             }
             s = connection.createStatement();
-            ResultSet rs = s.executeQuery("SELECT uid, ownerId, datatype, ld_name, parent, createDate, modifiedDate, ld_length, contentTypesStr, pdriGroupId FROM ldata_table WHERE ldata_table.isSupervised = TRUE");
+            ResultSet rs = s.executeQuery("SELECT uid, ownerId, datatype, ld_name, parent, createDate, modifiedDate, ld_length, contentTypesStr, pdriGroupId, checksum, lastValidationDate FROM ldata_table WHERE ldata_table.isSupervised = TRUE AND datatype = 'logical.file' AND parent LIKE '" + parentDir + "%'");
             LinkedList<LogicalData> ld_list = new LinkedList<LogicalData>();
             while (rs.next()) {
                 LogicalData element = new LogicalData(this);
@@ -1007,6 +1010,8 @@ public class JDBCatalogue {
                 element.setLength(rs.getLong(8));
                 element.setContentTypesAsString(rs.getString(9));
                 element.setPdriGroupId(rs.getLong(10));
+                element.setChecksum(rs.getLong(11));
+                element.setLastValidationDate(rs.getLong(12));
                 ld_list.add(element);
             }
             rs.close();
@@ -1043,4 +1048,99 @@ public class JDBCatalogue {
             }
         }
     }
+
+    public void setDirSupervised(String parentDir, Boolean flag, Connection connection) throws CatalogueException {
+        Statement s = null;
+        boolean connectionIsProvided = (connection == null) ? false : true;
+        boolean connectionAutocommit = false;
+        try {
+            if (connection == null) {
+                connection = getConnection();
+                connection.setAutoCommit(false);
+            } else {
+                connectionAutocommit = connection.getAutoCommit();
+                connection.setAutoCommit(false);
+            }
+            s = connection.createStatement();
+            s.executeUpdate("UPDATE ldata_table SET isSupervised = " + flag.toString() + " WHERE datatype = 'logical.file' AND parent LIKE '" + parentDir + "%'");
+            s.close();
+        } catch (Exception e) {
+            try {
+                if (s != null && !s.isClosed()) {
+                    s.close();
+                    s = null;
+                }
+                if (!connectionIsProvided && !connection.isClosed()) {
+                    connection.rollback();
+                    connection.close();
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            throw new CatalogueException(e.getMessage());
+        } finally {
+            try {
+                if (s != null && !s.isClosed()) {
+                    s.close();
+                }
+                if (!connectionIsProvided && !connection.isClosed()) {
+                    connection.commit();
+                    connection.close();
+                }
+                if (connectionIsProvided && !connection.isClosed()) {
+                    connection.setAutoCommit(connectionAutocommit);
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+    
+    public void setFileSupervised(Long uid, Boolean flag, Connection connection) throws CatalogueException {
+        Statement s = null;
+        boolean connectionIsProvided = (connection == null) ? false : true;
+        boolean connectionAutocommit = false;
+        try {
+            if (connection == null) {
+                connection = getConnection();
+                connection.setAutoCommit(false);
+            } else {
+                connectionAutocommit = connection.getAutoCommit();
+                connection.setAutoCommit(false);
+            }
+            s = connection.createStatement();
+            s.executeUpdate("UPDATE ldata_table SET isSupervised = " + flag.toString() + " WHERE uid = " + uid);
+            s.close();
+        } catch (Exception e) {
+            try {
+                if (s != null && !s.isClosed()) {
+                    s.close();
+                    s = null;
+                }
+                if (!connectionIsProvided && !connection.isClosed()) {
+                    connection.rollback();
+                    connection.close();
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            throw new CatalogueException(e.getMessage());
+        } finally {
+            try {
+                if (s != null && !s.isClosed()) {
+                    s.close();
+                }
+                if (!connectionIsProvided && !connection.isClosed()) {
+                    connection.commit();
+                    connection.close();
+                }
+                if (connectionIsProvided && !connection.isClosed()) {
+                    connection.setAutoCommit(connectionAutocommit);
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+    
 }

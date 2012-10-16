@@ -39,7 +39,9 @@ CREATE TABLE ldata_table (
  ld_length BIGINT,
  contentTypesStr VARCHAR(10240),
  pdriGroupId BIGINT UNSIGNED,
- isSupervised Boolean, INDEX(isSupervised)
+ isSupervised BOOLEAN NOT NULL DEFAULT FALSE, INDEX(isSupervised), 
+ checksum BIGINT,
+ lastValidationDate DATETIME
 );
 
 CREATE TABLE permission_table (
