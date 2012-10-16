@@ -11,6 +11,7 @@ import com.bradmcevoy.http.values.HrefList;
 import com.bradmcevoy.http.webdav.PropertyMap;
 import com.ettrema.http.AccessControlledResource;
 import com.ettrema.http.acl.Principal;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.*;
@@ -22,7 +23,10 @@ import nl.uva.cs.lobcder.authdb.Permissions;
 import nl.uva.cs.lobcder.catalogue.CatalogueException;
 import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
 import nl.uva.cs.lobcder.frontend.WebDavServlet;
-import nl.uva.cs.lobcder.resources.*;
+import nl.uva.cs.lobcder.resources.ILogicalData;
+import nl.uva.cs.lobcder.resources.MyStorageSite;
+import nl.uva.cs.lobcder.resources.PDRI;
+import nl.uva.cs.lobcder.resources.PDRIFactory;
 import nl.uva.cs.lobcder.util.Constants;
 
 /**
@@ -320,10 +324,11 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
         return null;
     }
 
-    public PDRI createPDRI(long fileLength, Connection connection) throws CatalogueException {
+    public PDRI createPDRI(long fileLength, Connection connection) throws CatalogueException, IOException {
         Collection<MyStorageSite> sites = getCatalogue().getStorageSitesByUser(getPrincipal(), connection);
         if (!sites.isEmpty()) {
-            MyStorageSite site = sites.iterator().next();
+//            MyStorageSite site = sites.iterator().next();
+            MyStorageSite site = selectBestSite(sites);
             return PDRIFactory.getFactory().createInstance(UUID.randomUUID().toString(),
                     site.getStorageSiteId(), site.getResourceURI(),
                     site.getCredential().getStorageSiteUsername(), site.getCredential().getStorageSitePassword());
@@ -384,5 +389,15 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
         sb.append("]");
         DataDistProperty dataDist = new DataDistProperty(sb.toString());
         customProperties.put(Constants.DATA_DIST_PROP_NAME, dataDist);
+    }
+
+    private MyStorageSite selectBestSite(Collection<MyStorageSite> sites) {
+        for (MyStorageSite s : sites) {
+            debug("Sites: " + s.getResourceURI());
+            if (s.getResourceURI().startsWith("sftp")) {
+                return s;
+            }
+        }
+        return null;
     }
 }

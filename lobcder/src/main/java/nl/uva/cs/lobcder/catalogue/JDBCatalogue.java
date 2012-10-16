@@ -17,6 +17,7 @@ import nl.uva.cs.lobcder.webDav.resources.WebDataDirResource;
 import javax.sql.DataSource;
 import javax.naming.InitialContext;
 import javax.naming.Context;
+
 /**
  *
  * @author dvasunin
@@ -25,29 +26,27 @@ public class JDBCatalogue {
 
     private DataSource datasource = null;
 
-    
     public Connection getConnection() throws CatalogueException {
-        try{
-            if(datasource == null) {
+        try {
+            if (datasource == null) {
                 String jndiName = "jdbc/lobcder";
                 Context ctx = new InitialContext();
-                if(ctx == null )
+                if (ctx == null) {
                     throw new Exception("JNDI could not create InitalContext ");
-                Context envContext  = (Context)ctx.lookup("java:/comp/env");
-                datasource =  (DataSource)envContext.lookup(jndiName);
+                }
+                Context envContext = (Context) ctx.lookup("java:/comp/env");
+                datasource = (DataSource) envContext.lookup(jndiName);
             }
             return datasource.getConnection();
-      } catch(Exception e) {
-          throw new CatalogueException(e.getMessage());
-      }
+        } catch (Exception e) {
+            throw new CatalogueException(e.getMessage());
+        }
     }
-
 
     public JDBCatalogue() {
-        
     }
-
     private Timer timer = null;
+
     public void startSweep() {
         TimerTask gcTask = new TimerTask() {
 
@@ -61,12 +60,11 @@ public class JDBCatalogue {
         timer = new Timer(true);
         timer.schedule(gcTask, 10000, 10000); //once in 10 sec
     }
-    
+
     public void stopSweep() {
         timer.cancel();
     }
-    
-    
+
     public ILogicalData registerPdriForNewEntry(ILogicalData logicalData, PDRI pdri, Connection connection) throws CatalogueException {
         boolean connectionIsProvided;
         boolean connectionAutocommit = false;
@@ -97,9 +95,9 @@ public class JDBCatalogue {
             String sql = "INSERT INTO pdri_table (url, storageSiteId, pdriGroupId) VALUES("
                     + "'" + pdri.getURL() + "', " + pdri.getStorageSiteId() + ", " + newGroupId + ")";
             System.err.println("##########################" + sql);
-            
+
             s.executeUpdate(sql);
-            
+
 
             s.executeUpdate("UPDATE ldata_table SET pdriGroupId = " + newGroupId + " WHERE uid = " + logicalData.getUID());
             logicalData.setPdriGroupId(newGroupId);
@@ -158,7 +156,12 @@ public class JDBCatalogue {
             System.err.println(sql);
             ResultSet rs = s.executeQuery(sql);
             while (rs.next()) {
-                res.add(PDRIFactory.getFactory().createInstance(rs.getString(1), rs.getLong(2), rs.getString(3), rs.getString(4), rs.getString(5)));
+                String url = rs.getString(1);
+                long ssID = rs.getLong(2);
+                String resourceURI = rs.getString(3);
+                String uName = rs.getString(4);
+                String passwd = rs.getString(5);
+                res.add(PDRIFactory.getFactory().createInstance(url, ssID, resourceURI, uName, passwd));
             }
             return res;
         } catch (Exception e) {
@@ -665,7 +668,7 @@ public class JDBCatalogue {
                 newFolderEntry.setOwner(principal.getUserId());
                 newFolderEntry = registerOrUpdateResourceEntry(newFolderEntry, connection);
                 setPermissions(newFolderEntry.getUID(), permissionsForNew, connection);
-                if(principal.canRead(toCopyPerm)) {
+                if (principal.canRead(toCopyPerm)) {
                     CallableStatement cs = connection.prepareCall("{call copyFolderContentProc(?, ?, ?, ?, ?, ?)}");
                     cs.setString(1, principal.getUserId());
                     cs.setString(2, principal.getRolesStr());
@@ -673,11 +676,11 @@ public class JDBCatalogue {
                     cs.setString(4, permissionsForNew.getWriteStr());
                     cs.setString(5, parentPath);
                     cs.setString(6, newFolderEntry.getLDRI().toPath());
-                    cs.execute();                
+                    cs.execute();
                     s = connection.createStatement();
                     ResultSet rs = s.executeQuery("SELECT uid, ownerId, ld_name, createDate, modifiedDate, ld_length, contentTypesStr, pdriGroupId FROM ldata_table "
-                        + "WHERE ldata_table.parent = '" + parentPath + "' "
-                        + "AND ldata_table.datatype = 'logical.folder'");
+                            + "WHERE ldata_table.parent = '" + parentPath + "' "
+                            + "AND ldata_table.datatype = 'logical.folder'");
                     LinkedList<ILogicalData> ld_list = new LinkedList<ILogicalData>();
                     while (rs.next()) {
                         ILogicalData element = new LogicalData(this);
@@ -699,7 +702,7 @@ public class JDBCatalogue {
                         copyEntry(ld, newFolderEntry, ld.getName(), principal, connection);
                     }
                 }
-            } else if(!toCopy.isFolder() && principal.canRead(toCopyPerm) && principal.canWrite(newParentPerm)) {
+            } else if (!toCopy.isFolder() && principal.canRead(toCopyPerm) && principal.canWrite(newParentPerm)) {
                 ILogicalData ld = (ILogicalData) toCopy.clone();
                 ld.setOwner(principal.getUserId());
                 ld.setName(newName);
@@ -711,7 +714,7 @@ public class JDBCatalogue {
                 s = connection.createStatement();
                 s.executeUpdate("UPDATE pdrigroup_table SET refCount=refCount+1 WHERE groupId = " + ld.getPdriGroupId());
                 s.close();
-            }                     
+            }
         } catch (Exception e) {
             try {
                 if (s != null && !s.isClosed()) {
@@ -741,7 +744,7 @@ public class JDBCatalogue {
             } catch (SQLException ex) {
                 Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
             }
-        }            
+        }
     }
 
     public Collection<MyStorageSite> getStorageSitesByUser(MyPrincipal user, Connection connection) throws CatalogueException {
@@ -755,11 +758,11 @@ public class JDBCatalogue {
             } else {
                 connectionAutocommit = connection.getAutoCommit();
                 connection.setAutoCommit(false);
-            }            
+            }
             boolean first = true;
             String sql = "SELECT DISTINCT storageSiteId, resourceURI, currentNum, currentSize, quotaNum, quotaSize, username, password FROM role_to_ss_table JOIN storage_site_table ON ss_id = storageSiteId JOIN credential_table ON credentialRef = credintialId WHERE ";
-            for(String role : user.getRoles()){
-                if(first) {
+            for (String role : user.getRoles()) {
+                if (first) {
                     sql += "role_name = '" + role + "'";
                     first = false;
                 } else {
@@ -784,7 +787,7 @@ public class JDBCatalogue {
                 ss.setQuotaSize(rs.getLong(6));
                 res.add(ss);
             }
-            rs.close();   
+            rs.close();
             return res;
         } catch (Exception e) {
             try {
@@ -815,7 +818,7 @@ public class JDBCatalogue {
             } catch (SQLException ex) {
                 Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
             }
-        }               
+        }
     }
 
     public Runnable deleteSweep() {
@@ -843,8 +846,12 @@ public class JDBCatalogue {
                                 + "JOIN credential_table ON storage_site_table.credentialRef = credential_table.credintialId "
                                 + "WHERE pdri_table.pdriGroupId = " + groupId);
                         while (rs2.next()) {
-                            PDRI pdri = PDRIFactory.getFactory().createInstance(
-                                    rs2.getString(1), rs2.getLong(2), rs2.getString(3), rs2.getString(4), rs2.getString(5));
+                            String url = rs2.getString(1);
+                            long ssID = rs2.getLong(2);
+                            String resourceURI = rs2.getString(3);
+                            String uName = rs2.getString(4);
+                            String passwd = rs2.getString(5);
+                            PDRI pdri = PDRIFactory.getFactory().createInstance(url, ssID, resourceURI, uName, passwd);
                             pdri.delete();
                         }
                         s2.executeUpdate("DELETE FROM pdri_table WHERE pdri_table.pdriGroupId = " + groupId);
@@ -972,7 +979,7 @@ public class JDBCatalogue {
             }
         }
     }
-    
+
     public List<LogicalData> getSupervised(Connection connection) throws CatalogueException {
         Statement s = null;
         boolean connectionIsProvided = (connection == null) ? false : true;
@@ -983,28 +990,28 @@ public class JDBCatalogue {
                 connection.setAutoCommit(false);
             } else {
                 connectionAutocommit = connection.getAutoCommit();
-                connection.setAutoCommit(false);                
+                connection.setAutoCommit(false);
             }
             s = connection.createStatement();
             ResultSet rs = s.executeQuery("SELECT uid, ownerId, datatype, ld_name, parent, createDate, modifiedDate, ld_length, contentTypesStr, pdriGroupId FROM ldata_table WHERE ldata_table.isSupervised = TRUE");
-                LinkedList<LogicalData> ld_list = new LinkedList<LogicalData>();
-                while (rs.next()) {
-                    LogicalData element = new LogicalData(this);
-                    element.setUID(rs.getLong(1));
-                    element.setOwner(rs.getString(2));
-                    element.setType(rs.getString(3));
-                    element.setName(rs.getString(4));
-                    element.setParent(rs.getString(5));
-                    element.setCreateDate(rs.getTimestamp(6).getTime());
-                    element.setModifiedDate(rs.getTimestamp(7).getTime());
-                    element.setLength(rs.getLong(8));
-                    element.setContentTypesAsString(rs.getString(9));
-                    element.setPdriGroupId(rs.getLong(10));
-                    ld_list.add(element);
-                }
-                rs.close();
-                s.close();         
-                return ld_list;            
+            LinkedList<LogicalData> ld_list = new LinkedList<LogicalData>();
+            while (rs.next()) {
+                LogicalData element = new LogicalData(this);
+                element.setUID(rs.getLong(1));
+                element.setOwner(rs.getString(2));
+                element.setType(rs.getString(3));
+                element.setName(rs.getString(4));
+                element.setParent(rs.getString(5));
+                element.setCreateDate(rs.getTimestamp(6).getTime());
+                element.setModifiedDate(rs.getTimestamp(7).getTime());
+                element.setLength(rs.getLong(8));
+                element.setContentTypesAsString(rs.getString(9));
+                element.setPdriGroupId(rs.getLong(10));
+                ld_list.add(element);
+            }
+            rs.close();
+            s.close();
+            return ld_list;
         } catch (Exception e) {
             try {
                 if (s != null && !s.isClosed()) {
@@ -1034,6 +1041,6 @@ public class JDBCatalogue {
             } catch (SQLException ex) {
                 Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
             }
-        }                 
+        }
     }
 }

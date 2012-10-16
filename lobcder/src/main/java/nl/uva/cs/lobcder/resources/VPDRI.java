@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -64,15 +66,22 @@ public class VPDRI implements PDRI {
         Global.init();
     }
     private VFSClient vfsClient;
-    private MyStorageSite storageSite;
+//    private MyStorageSite storageSite;
     private VRL vrl;
+    private final String username;
+    private final String password;
     private final Long storageSiteId;
+    private final String resourceUrl;
+    private final String fileURI;
 
-    public VPDRI(String file_name, Long storageSiteId, MyStorageSite storageSite) throws IOException {
+    VPDRI(String fileURI, Long storageSiteId, String resourceUrl, String username, String password) throws IOException {
         try {
-            this.storageSite = storageSite;
-            vrl = new VRL(storageSite.getResourceURI()).append(file_name);
+            this.fileURI = fileURI;
+            vrl = new VRL(resourceUrl).append(fileURI);
             this.storageSiteId = storageSiteId;
+            this.username = username;
+            this.password = password;
+            this.resourceUrl = resourceUrl;
             initVFS();
         } catch (VlException ex) {
             throw new IOException(ex);
@@ -97,12 +106,12 @@ public class VPDRI implements PDRI {
         if (StringUtil.equals(authScheme, ServerInfo.PASSWORD_AUTH)
                 || StringUtil.equals(authScheme, ServerInfo.PASSWORD_OR_PASSPHRASE_AUTH)
                 || StringUtil.equals(authScheme, ServerInfo.PASSPHRASE_AUTH)) {
-            String username = storageSite.getCredential().getStorageSiteUsername();
+//            String username = storageSite.getCredential().getStorageSiteUsername();
             if (username == null) {
                 throw new NullPointerException("Username is null!");
             }
             info.setUsername(username);
-            String password = storageSite.getCredential().getStorageSitePassword();
+//            String password = storageSite.getCredential().getStorageSitePassword();
             if (password == null) {
                 throw new NullPointerException("password is null!");
             }
@@ -166,11 +175,11 @@ public class VPDRI implements PDRI {
 
     @Override
     public Long getStorageSiteId() {
-        return storageSiteId;
+        return this.storageSiteId;//storageSite.getStorageSiteId();
     }
 
     @Override
     public String getURL() {
-        return storageSite.getResourceURI().toString();
+        return this.fileURI;
     }
 }
