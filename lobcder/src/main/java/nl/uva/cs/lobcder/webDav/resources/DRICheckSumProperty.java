@@ -5,22 +5,20 @@
 package nl.uva.cs.lobcder.webDav.resources;
 
 import com.bradmcevoy.http.CustomProperty;
+import nl.uva.cs.lobcder.resources.LogicalData;
 
 /**
  *
  * @author S. koulouzis
  */
 class DRICheckSumProperty implements CustomProperty{
-    private Long value;
+    
+    private LogicalData ld;
 
-    DRICheckSumProperty() {
-        value =  Long.valueOf(0);
+    DRICheckSumProperty(LogicalData ld) {
+        this.ld = ld;
     }
     
-    DRICheckSumProperty(Long checksum) {
-        this.value = checksum;
-    }
-
     @Override
     public Class getValueClass() {
         return DRICheckSumProperty.class;
@@ -28,17 +26,16 @@ class DRICheckSumProperty implements CustomProperty{
 
     @Override
     public Object getTypedValue() {
-        return value;
+        return ld.getChecksum();
     }
 
     @Override
     public String getFormattedValue() {
-        return value.toString();
+        return ld.getChecksum().toString();
     }
 
     @Override
     public void setFormattedValue(String v) {
-        System.err.println("AAAAAAAAAAAAa: " + v);
-        this.value = Long.valueOf(v);
+        ld.updateChecksum(Long.valueOf(v));
     }    
 }

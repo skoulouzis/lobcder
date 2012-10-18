@@ -5,21 +5,20 @@
 package nl.uva.cs.lobcder.webDav.resources;
 
 import com.bradmcevoy.http.CustomProperty;
+import nl.uva.cs.lobcder.resources.LogicalData;
 
 /**
  *
  * @author S. koulouzis
  */
 class DRI_lastValidationDateProperty implements CustomProperty{
-    private Long value;
-
-    DRI_lastValidationDateProperty() {
-        value =  Long.valueOf(0);
-    }
     
-    DRI_lastValidationDateProperty(Long checksum) {
-        this.value = checksum;
+    private LogicalData ld;
+
+    DRI_lastValidationDateProperty(LogicalData ld) {
+        this.ld = ld;
     }
+   
 
     @Override
     public Class getValueClass() {
@@ -28,16 +27,16 @@ class DRI_lastValidationDateProperty implements CustomProperty{
 
     @Override
     public Object getTypedValue() {
-        return value;
+        return ld.getLastValidationDate();
     }
 
     @Override
     public String getFormattedValue() {
-        return value.toString();
+        return ld.getLastValidationDate().toString();
     }
 
     @Override
     public void setFormattedValue(String v) {
-        this.value = Long.valueOf(v);
+        ld.updateLastValidationDate(Long.valueOf(v));
     }    
 }

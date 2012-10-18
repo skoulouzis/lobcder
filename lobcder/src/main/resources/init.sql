@@ -40,8 +40,8 @@ CREATE TABLE ldata_table (
  contentTypesStr VARCHAR(10240),
  pdriGroupId BIGINT UNSIGNED,
  isSupervised BOOLEAN NOT NULL DEFAULT FALSE, INDEX(isSupervised), 
- checksum BIGINT,
- lastValidationDate DATETIME
+ checksum BIGINT NOT NULL DEFAULT 0,
+ lastValidationDate BIGINT NOT NULL DEFAULT 0
 );
 
 CREATE TABLE permission_table (

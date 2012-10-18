@@ -297,7 +297,7 @@ public class JDBCatalogue {
             connectionAutocommit = connection.getAutoCommit();
             connection.setAutoCommit(false);
             ps = connection.prepareStatement(
-                    "SELECT uid, ownerId, datatype, createDate, modifiedDate, ld_length, contentTypesStr, pdriGroupId, isSupervised FROM ldata_table where ldata_table.parent = ? AND ldata_table.ld_name = ?");
+                    "SELECT uid, ownerId, datatype, createDate, modifiedDate, ld_length, contentTypesStr, pdriGroupId, isSupervised, checksum, lastValidationDate FROM ldata_table where ldata_table.parent = ? AND ldata_table.ld_name = ?");
             if (logicalResourceName.isRoot()) {
                 ps.setString(1, "");
                 ps.setString(2, "");
@@ -319,6 +319,8 @@ public class JDBCatalogue {
                 res.setContentTypesAsString(rs.getString(7));
                 res.setPdriGroupId(rs.getLong(8));
                 res.setSupervised(rs.getBoolean(9));
+                res.setChecksum(rs.getLong(10));
+                res.setLastValidationDate(rs.getLong(11));
             }
             return res;
         } catch (Exception e) {
@@ -477,7 +479,7 @@ public class JDBCatalogue {
                 connection.setAutoCommit(false);
             }
             s = connection.createStatement();
-            ResultSet rs = s.executeQuery("SELECT ownerId, datatype, ld_name, parent, createDate, modifiedDate, ld_length, contentTypesStr, pdriGroupId, isSupervised FROM ldata_table WHERE ldata_table.uid = " + UID);
+            ResultSet rs = s.executeQuery("SELECT ownerId, datatype, ld_name, parent, createDate, modifiedDate, ld_length, contentTypesStr, pdriGroupId, isSupervised, checksum, lastValidationDate FROM ldata_table WHERE ldata_table.uid = " + UID);
             if (rs.next()) {
                 res = new LogicalData(this);
                 res.setUID(UID);
@@ -491,6 +493,8 @@ public class JDBCatalogue {
                 res.setContentTypesAsString(rs.getString(8));
                 res.setPdriGroupId(rs.getLong(9));
                 res.setSupervised(rs.getBoolean(10));
+                res.setChecksum(rs.getLong(11));
+                res.setLastValidationDate(rs.getLong(12));            
             }
             return res;
         } catch (Exception e) {
@@ -1095,7 +1099,7 @@ public class JDBCatalogue {
             }
         }
     }
-    
+
     public void setFileSupervised(Long uid, Boolean flag, Connection connection) throws CatalogueException {
         Statement s = null;
         boolean connectionIsProvided = (connection == null) ? false : true;
@@ -1142,5 +1146,103 @@ public class JDBCatalogue {
             }
         }
     }
+
+    public void setLastValidationDate(Long uid, Long lastValidationDate, Connection connection) throws CatalogueException {
+        PreparedStatement ps = null;
+        boolean connectionIsProvided = (connection == null) ? false : true;
+        boolean connectionAutocommit = false;
+        try {
+            if (connection == null) {
+                connection = getConnection();
+                connection.setAutoCommit(false);
+            } else {
+                connectionAutocommit = connection.getAutoCommit();
+                connection.setAutoCommit(false);
+            }
+            ps = connection.prepareStatement("UPDATE ldata_table SET lastValidationDate = ? WHERE uid = ?");
+            ps.setLong(1, lastValidationDate);
+            ps.setLong(2, uid);
+            ps.executeUpdate();
+            ps.close();
+        } catch (Exception e) {
+            try {
+                if (ps != null && !ps.isClosed()) {
+                    ps.close();
+                    ps = null;
+                }
+                if (!connectionIsProvided && !connection.isClosed()) {
+                    connection.rollback();
+                    connection.close();
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            throw new CatalogueException(e.getMessage());
+        } finally {
+            try {
+                if (ps != null && !ps.isClosed()) {
+                    ps.close();
+                }
+                if (!connectionIsProvided && !connection.isClosed()) {
+                    connection.commit();
+                    connection.close();
+                }
+                if (connectionIsProvided && !connection.isClosed()) {
+                    connection.setAutoCommit(connectionAutocommit);
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }  
     
+    
+    public void setFileChecksum(Long uid, Long checksum, Connection connection) throws CatalogueException {
+        PreparedStatement ps = null;
+        boolean connectionIsProvided = (connection == null) ? false : true;
+        boolean connectionAutocommit = false;
+        try {
+            if (connection == null) {
+                connection = getConnection();
+                connection.setAutoCommit(false);
+            } else {
+                connectionAutocommit = connection.getAutoCommit();
+                connection.setAutoCommit(false);
+            }
+            ps = connection.prepareStatement("UPDATE ldata_table SET checksum = ? WHERE uid = ?");
+            ps.setLong(1, checksum);
+            ps.setLong(2, uid);
+            ps.executeUpdate();
+            ps.close();
+        } catch (Exception e) {
+            try {
+                if (ps != null && !ps.isClosed()) {
+                    ps.close();
+                    ps = null;
+                }
+                if (!connectionIsProvided && !connection.isClosed()) {
+                    connection.rollback();
+                    connection.close();
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            throw new CatalogueException(e.getMessage());
+        } finally {
+            try {
+                if (ps != null && !ps.isClosed()) {
+                    ps.close();
+                }
+                if (!connectionIsProvided && !connection.isClosed()) {
+                    connection.commit();
+                    connection.close();
+                }
+                if (connectionIsProvided && !connection.isClosed()) {
+                    connection.setAutoCommit(connectionAutocommit);
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }    
 }

@@ -22,7 +22,6 @@ import nl.uva.cs.lobcder.util.Constants;
  * first thing to do to use a class with this facility is to tag it as
  * "detachable". This is done by adding the attribute
  */
-
 @XmlRootElement
 public class LogicalData implements Cloneable {
 
@@ -53,11 +52,11 @@ public class LogicalData implements Cloneable {
         return supervised;
     }
 
-    public void setSupervised(Boolean supervised) {       
+    public void setSupervised(Boolean supervised) {
         this.supervised = supervised;
     }
-    
-    public void updateSupervised(Boolean supervised) {       
+
+    public void updateSupervised(Boolean supervised) {
         this.supervised = supervised;
         try {
             catalogue.setFileSupervised(uid, supervised, null);
@@ -80,8 +79,8 @@ public class LogicalData implements Cloneable {
 
     public LogicalData() {
     }
-    
-    @XmlTransient   
+
+    @XmlTransient
     public Path getLDRI() {
         if (parent.isEmpty() && ld_name.isEmpty() && datatype.equals(Constants.LOGICAL_FOLDER)) {
             return Path.root;
@@ -92,12 +91,10 @@ public class LogicalData implements Cloneable {
         }
     }
 
-    
     public Long getUID() {
         return this.uid;
     }
 
-    
     public void setUID(Long uid) {
         this.uid = uid;
     }
@@ -108,68 +105,55 @@ public class LogicalData implements Cloneable {
         }
     }
 
-    
     public boolean isRedirectAllowed() {
         //Read policy and decide....
         return false;
     }
 
-    
     public void setLDRI(Path ldri) {
         parent = ldri.getParent().toPath();
         ld_name = ldri.getName();
     }
 
-    
     public void setLDRI(String parent, String name) {
         this.parent = parent;
         this.ld_name = name;
     }
 
     @XmlTransient
-    
     public String getType() {
         return datatype;
     }
 
-   
-    
     public void setType(String type) {
         this.datatype = type;
     }
 
-    
     public String getParent() {
         return parent;
     }
 
-    
     public void setParent(String parent) {
         this.parent = parent;
     }
-        
-    
+
     public String getName() {
         return ld_name;
     }
-    
-    
+
     public void setName(String name) {
         this.ld_name = name;
     }
-    
+
     @XmlTransient
-    
     public Long getPdriGroupId() {
         return pdriGroupId;
     }
 
-    
     public void setPdriGroupId(Long pdriGroupId) {
         this.pdriGroupId = pdriGroupId;
     }
 
-    
     @Override
     public Object clone() {
         LogicalData clone = new LogicalData(catalogue);
@@ -186,7 +170,6 @@ public class LogicalData implements Cloneable {
         return clone;
     }
 
-    
     public boolean equals(Object obj) {
         if (obj instanceof LogicalData) {
             return hashCode() == obj.hashCode();
@@ -195,42 +178,34 @@ public class LogicalData implements Cloneable {
         }
     }
 
-    
     public int hashCode() {
         return uid.intValue();
     }
 
-    
     public Long getCreateDate() {
         return this.createDate;
     }
 
-    
     public void setCreateDate(Long createDate) {
         this.createDate = createDate;
     }
 
-    
     public Long getModifiedDate() {
         return this.modifiedDate;
     }
 
-    
     public void setModifiedDate(Long modifiedDate) {
         this.modifiedDate = modifiedDate;
     }
 
-    
     public Long getLength() {
         return this.ld_length;
     }
 
-    
     public void setLength(Long length) {
         this.ld_length = length;
     }
 
-    
     public List<String> getContentTypes() {
         if (decodedContentTypes == null) {
             decodedContentTypes = Arrays.asList(contentTypesStr.split(","));
@@ -238,18 +213,15 @@ public class LogicalData implements Cloneable {
         return Collections.unmodifiableList(decodedContentTypes);
     }
 
-    
     public String getContentTypesAsString() {
         return contentTypesStr;
     }
 
-    
     public void setContentTypesAsString(String ct) {
         contentTypesStr = ct;
         decodedContentTypes = null;
     }
 
-    
     public void addContentType(String contentType) {
         String ct[] = contentTypesStr.split(",");
         if (!Arrays.asList(ct).contains(contentType)) {
@@ -257,9 +229,8 @@ public class LogicalData implements Cloneable {
         }
         decodedContentTypes = null;
     }
-    
+
     @XmlTransient
-    
     public Permissions getPermissions() {
         try {
             return catalogue.getPermissions(uid, ownerId, null);
@@ -270,7 +241,6 @@ public class LogicalData implements Cloneable {
 
     }
 
-    
     public void setPermissions(Permissions permissions) {
         try {
             catalogue.setPermissions(uid, permissions, null);
@@ -279,17 +249,14 @@ public class LogicalData implements Cloneable {
         }
     }
 
-    
     public boolean isFolder() {
         return datatype.equals(Constants.LOGICAL_FOLDER);
     }
 
-    
     public String getOwner() {
         return ownerId;
     }
 
-    
     public void setOwner(String owner) {
         ownerId = owner;
     }
@@ -297,16 +264,34 @@ public class LogicalData implements Cloneable {
     public void setChecksum(Long aLong) {
         this.checkSum = aLong;
     }
-    
+
     public Long getChecksum() {
         return checkSum;
+    }
+
+    public void updateChecksum(Long aLong) {
+        this.checkSum = aLong;
+        try {
+            catalogue.setFileChecksum(uid, aLong, null);
+        } catch (Exception ex) {
+            Logger.getLogger(LogicalData.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     public void setLastValidationDate(Long aLong) {
         this.lastValidationDate = aLong;
     }
-    
+
     public Long getLastValidationDate() {
         return lastValidationDate;
+    }
+
+    public void updateLastValidationDate(Long aLong) {
+        this.lastValidationDate = aLong;
+        try {
+            catalogue.setLastValidationDate(uid, aLong, null);
+        } catch (Exception ex) {
+            Logger.getLogger(LogicalData.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 }

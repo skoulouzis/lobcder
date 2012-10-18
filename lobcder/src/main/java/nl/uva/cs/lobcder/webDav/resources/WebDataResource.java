@@ -58,8 +58,8 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
 
     private void initProps() {     
         customProperties.put(Constants.DRI_SUPERVISED, new DRIsSupervisedProperty(getLogicalData()));
-        customProperties.put(Constants.DRI_CHECKSUM, new DRICheckSumProperty(getLogicalData().getChecksum()));
-        customProperties.put(Constants.DRI_LAST_VALIDATION_DATE, new DRI_lastValidationDateProperty(getLogicalData().getLastValidationDate()));
+        customProperties.put(Constants.DRI_CHECKSUM, new DRICheckSumProperty(getLogicalData()));
+        customProperties.put(Constants.DRI_LAST_VALIDATION_DATE, new DRI_lastValidationDateProperty(getLogicalData()));
 //        if(getLogicalData().getSupervised() != null) {
 //            DataDistProperty ddip = new DataDistProperty();
 //            ddip.setFormattedValue(getLogicalData().getSupervised().toString());
@@ -402,6 +402,9 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
         for (MyStorageSite s : sites) {
             debug("Sites: " + s.getResourceURI());
             if (s.getResourceURI().startsWith("sftp")) {
+                return s;
+            }
+            if (s.getResourceURI().startsWith("file")) {
                 return s;
             }
         }
