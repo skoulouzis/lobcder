@@ -181,7 +181,7 @@ there are no implementations to enhance
         <dependency>
             <groupId>com.ettrema</groupId>
             <artifactId>milton-api</artifactId>
-            <version>1.8.0-SNAPSHOT</version>
+            <version>1.8.1.4</version>
             <type>jar</type>
         </dependency>
         

@@ -8,9 +8,9 @@ import com.bradmcevoy.http.Request.Method;
 import com.bradmcevoy.http.*;
 import com.bradmcevoy.http.exceptions.NotAuthorizedException;
 import com.bradmcevoy.http.values.HrefList;
+import com.bradmcevoy.http.webdav.PropPatchHandler.Field;
+import com.bradmcevoy.http.webdav.PropPatchHandler.Fields;
 import com.bradmcevoy.http.webdav.PropertyMap;
-import com.bradmcevoy.property.BeanPropertyAccess;
-import com.bradmcevoy.property.BeanPropertyResource;
 import com.ettrema.http.AccessControlledResource;
 import com.ettrema.http.acl.Principal;
 import java.io.IOException;
@@ -25,14 +25,16 @@ import nl.uva.cs.lobcder.authdb.Permissions;
 import nl.uva.cs.lobcder.catalogue.CatalogueException;
 import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
 import nl.uva.cs.lobcder.frontend.WebDavServlet;
-import nl.uva.cs.lobcder.resources.*;
+import nl.uva.cs.lobcder.resources.LogicalData;
+import nl.uva.cs.lobcder.resources.MyStorageSite;
+import nl.uva.cs.lobcder.resources.PDRI;
+import nl.uva.cs.lobcder.resources.PDRIFactory;
 import nl.uva.cs.lobcder.util.Constants;
 
 /**
  *
  * @author S. Koulouzis
  */
-
 public class WebDataResource implements PropFindableResource, Resource, AccessControlledResource, CustomPropertyResource {//, ReplaceableResource {
 
     private LogicalData logicalData;
@@ -52,11 +54,11 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
 
         //We can't init the data dist props here cause there is no authorization 
         //yet. So the getPrincipal will return null
-        initProps();
+//        initProps();
 
     }
 
-    private void initProps() {     
+    private void initProps() {
         customProperties.put(Constants.DRI_SUPERVISED, new DRIsSupervisedProperty(getLogicalData()));
         customProperties.put(Constants.DRI_CHECKSUM, new DRICheckSumProperty(getLogicalData()));
         customProperties.put(Constants.DRI_LAST_VALIDATION_DATE, new DRI_lastValidationDateProperty(getLogicalData()));
@@ -362,6 +364,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
                 Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
+        initProps();
         return customProperties.get(propName);
     }
 
@@ -400,13 +403,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
 
     private MyStorageSite selectBestSite(Collection<MyStorageSite> sites) {
         for (MyStorageSite s : sites) {
-            debug("Sites: " + s.getResourceURI());
-            if (s.getResourceURI().startsWith("sftp")) {
-                return s;
-            }
-            if (s.getResourceURI().startsWith("file")) {
-                return s;
-            }
+            return s;
         }
         return null;
     }

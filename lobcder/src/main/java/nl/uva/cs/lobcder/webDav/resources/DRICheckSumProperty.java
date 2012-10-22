@@ -36,6 +36,8 @@ class DRICheckSumProperty implements CustomProperty{
 
     @Override
     public void setFormattedValue(String v) {
-        ld.updateChecksum(Long.valueOf(v));
+        if(v !=null){
+         ld.updateChecksum(Long.valueOf(v));   
+        }
     }    
 }

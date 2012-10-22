@@ -11,14 +11,13 @@ import nl.uva.cs.lobcder.resources.LogicalData;
  *
  * @author S. koulouzis
  */
-class DRI_lastValidationDateProperty implements CustomProperty{
-    
+class DRI_lastValidationDateProperty implements CustomProperty {
+
     private LogicalData ld;
 
     DRI_lastValidationDateProperty(LogicalData ld) {
         this.ld = ld;
     }
-   
 
     @Override
     public Class getValueClass() {
@@ -37,6 +36,8 @@ class DRI_lastValidationDateProperty implements CustomProperty{
 
     @Override
     public void setFormattedValue(String v) {
-        ld.updateLastValidationDate(Long.valueOf(v));
+        if (v != null) {
+            ld.updateLastValidationDate(Long.valueOf(v));
+        }
     }    
 }

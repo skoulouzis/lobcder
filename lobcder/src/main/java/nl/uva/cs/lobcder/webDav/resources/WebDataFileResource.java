@@ -58,11 +58,11 @@ public class WebDataFileResource extends WebDataResource implements
             debug("\t name: " + name);
             Permissions copyToPerm = getCatalogue().getPermissions(getLogicalData().getUID(), getLogicalData().getOwner(), connection);
             if (!getPrincipal().canRead(copyToPerm)) {
-                throw new NotAuthorizedException();
+                throw new NotAuthorizedException(this);
             }
             Permissions newParentPerm = getCatalogue().getPermissions(toWDDR.getLogicalData().getUID(), toWDDR.getLogicalData().getOwner(), connection);
             if (!getPrincipal().canWrite(newParentPerm)) {
-                throw new NotAuthorizedException();
+                throw new NotAuthorizedException(this);
             }
             getCatalogue().copyEntry(getLogicalData(), toWDDR.getLogicalData(), name, getPrincipal(), connection);
             connection.commit();
@@ -70,7 +70,7 @@ public class WebDataFileResource extends WebDataResource implements
         } catch (CatalogueException ex) {
             throw new ConflictException(this, ex.toString());
         } catch (Exception e) {
-            throw new NotAuthorizedException();
+            throw new NotAuthorizedException(this);
         } finally {
             try {
                 if (connection != null && !connection.isClosed()) {
@@ -97,7 +97,7 @@ public class WebDataFileResource extends WebDataResource implements
             }
             Permissions p = getCatalogue().getPermissions(parentLD.getUID(), parentLD.getOwner(), connection);
             if (!getPrincipal().canWrite(p)) {
-                throw new NotAuthorizedException();
+                throw new NotAuthorizedException(this);
             }
             getCatalogue().removeResourceEntry(getLogicalData(), getPrincipal(), connection);
             connection.commit();
@@ -186,7 +186,7 @@ public class WebDataFileResource extends WebDataResource implements
             connection.setAutoCommit(false);
             Permissions p = getCatalogue().getPermissions(getLogicalData().getUID(), getLogicalData().getOwner(), connection);
             if (!getPrincipal().canRead(p)) {
-                throw new NotAuthorizedException();
+                throw new NotAuthorizedException(this);
             }
             PDRI pdri = null;
             Iterator<PDRI> it = getCatalogue().getPdriByGroupId(getLogicalData().getPdriGroupId(), connection).iterator();
@@ -201,7 +201,7 @@ public class WebDataFileResource extends WebDataResource implements
             IOUtils.copy(pdri.getData(), out);
         } catch (NotAuthorizedException ex) {
             System.err.println("NotAuthorizedException");
-            throw new NotAuthorizedException();
+            throw new NotAuthorizedException(this);
         } catch (Exception ex) {
             throw new IOException(ex.getMessage());
         } finally {
@@ -227,7 +227,7 @@ public class WebDataFileResource extends WebDataResource implements
         try {
             Path parentPath = getLogicalData().getLDRI().getParent(); //getPath().getParent();
             if (parentPath == null) {
-                throw new NotAuthorizedException();
+                throw new NotAuthorizedException(this);
             }
             connection = getCatalogue().getConnection();
             connection.setAutoCommit(false);
@@ -238,11 +238,11 @@ public class WebDataFileResource extends WebDataResource implements
             Permissions parentPerm = getCatalogue().getPermissions(parentLD.getUID(), parentLD.getOwner(), connection);
 
             if (!getPrincipal().canWrite(parentPerm)) {
-                throw new NotAuthorizedException();
+                throw new NotAuthorizedException(this);
             }
             Permissions destPerm = getCatalogue().getPermissions(rdst.getLogicalData().getUID(), rdst.getLogicalData().getOwner(), connection);
             if (!getPrincipal().canWrite(destPerm)) {
-                throw new NotAuthorizedException();
+                throw new NotAuthorizedException(this);
             }
             getCatalogue().moveEntry(getLogicalData(), rdst.getLogicalData(), name, connection);
             connection.commit();

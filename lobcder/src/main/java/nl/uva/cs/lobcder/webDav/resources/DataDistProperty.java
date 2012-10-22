@@ -34,7 +34,8 @@ class DataDistProperty implements CustomProperty{
 
     @Override
     public void setFormattedValue(String value) {
-        formattedValue = value;
+        //We should not allow user to set this value
+//        formattedValue = value;
     }
     
 }

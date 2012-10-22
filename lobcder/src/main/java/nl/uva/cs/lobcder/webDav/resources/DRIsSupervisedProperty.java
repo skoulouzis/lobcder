@@ -11,10 +11,10 @@ import nl.uva.cs.lobcder.resources.LogicalData;
  *
  * @author S. koulouzis
  */
-class DRIsSupervisedProperty implements CustomProperty{
+class DRIsSupervisedProperty implements CustomProperty {
 
     private LogicalData ld;
-    
+
     DRIsSupervisedProperty(LogicalData ld) {
         this.ld = ld;
     }
@@ -36,6 +36,13 @@ class DRIsSupervisedProperty implements CustomProperty{
 
     @Override
     public void setFormattedValue(String v) {
-        ld.updateSupervised(Boolean.valueOf(v));
-    }    
+        debug("setFormattedValue: " + v);
+        if (v != null) {
+            ld.updateSupervised(Boolean.valueOf(v));
+        }
+    }
+
+    private void debug(String msg) {
+        System.err.println(ld.getLDRI() + ": " + msg);
+    }
 }

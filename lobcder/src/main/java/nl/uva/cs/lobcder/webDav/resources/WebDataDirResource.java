@@ -22,7 +22,8 @@ import nl.uva.cs.lobcder.authdb.Permissions;
 import nl.uva.cs.lobcder.catalogue.CatalogueException;
 import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
 import nl.uva.cs.lobcder.catalogue.ResourceExistsException;
-import nl.uva.cs.lobcder.resources.*;
+import nl.uva.cs.lobcder.resources.LogicalData;
+import nl.uva.cs.lobcder.resources.PDRI;
 import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.vlet.exception.VlException;
 
@@ -51,7 +52,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
             connection.setAutoCommit(false);
             Permissions perm = getCatalogue().getPermissions(getLogicalData().getUID(), getLogicalData().getOwner(), connection);
             if (!getPrincipal().canWrite(perm)) {
-                throw new NotAuthorizedException();
+                throw new NotAuthorizedException(this);
             }
             Path newCollectionPath = Path.path(getLogicalData().getLDRI(), newName);
             debug("\t newCollectionPath: " + newCollectionPath);
@@ -97,8 +98,8 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
             connection = getCatalogue().getConnection();
             connection.setAutoCommit(false);
             Permissions perm = getCatalogue().getPermissions(getLogicalData().getUID(), getLogicalData().getOwner(), connection);
-            if (!getPrincipal().canRead(perm)) {
-                throw new NotAuthorizedException();
+            if (getPrincipal()==null || !getPrincipal().canRead(perm)) {
+                throw new NotAuthorizedException(this);
             }
             LogicalData child = getCatalogue().getResourceEntryByLDRI(getLogicalData().getLDRI().child(childName), connection);
             connection.commit();
@@ -143,7 +144,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
             Permissions perm = getCatalogue().getPermissions(getLogicalData().getUID(), getLogicalData().getOwner(), connection);
             MyPrincipal pr = getPrincipal();
             if (!pr.canRead(perm)) {
-                throw new NotAuthorizedException();
+                throw new NotAuthorizedException(this);
             }
             Collection<LogicalData> childrenLD = getCatalogue().getChildren(getLogicalData().getLDRI().toPath(), connection);
             connection.commit();
@@ -194,7 +195,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
             if (newResource != null) { // Resource exists, update
                 Permissions p = getCatalogue().getPermissions(newResource.getUID(), newResource.getOwner(), connection);
                 if (!getPrincipal().canWrite(p)) {
-                    throw new NotAuthorizedException();
+                    throw new NotAuthorizedException(this);
                 }
                 newResource.setLength(length);
                 newResource.setModifiedDate(System.currentTimeMillis());
@@ -207,7 +208,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                 // new need write prmissions for current collection
                 Permissions p = getCatalogue().getPermissions(getLogicalData().getUID(), getLogicalData().getOwner(), connection);
                 if (!getPrincipal().canWrite(p)) {
-                    throw new NotAuthorizedException();
+                    throw new NotAuthorizedException(this);
                 }
                 newResource = new LogicalData(newPath, Constants.LOGICAL_FILE, getCatalogue());
                 newResource.setOwner(getPrincipal().getUserId());
@@ -270,11 +271,11 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
             debug("\t name: " + name);
             Permissions copyToPerm = getCatalogue().getPermissions(getLogicalData().getUID(), getLogicalData().getOwner(), connection);
             if(!getPrincipal().canRead(copyToPerm)){
-                throw new NotAuthorizedException();
+                throw new NotAuthorizedException(this);
             }
             Permissions newParentPerm = getCatalogue().getPermissions(toWDDR.getLogicalData().getUID(), toWDDR.getLogicalData().getOwner(), connection);
             if(!getPrincipal().canWrite(newParentPerm)){
-                throw new NotAuthorizedException();
+                throw new NotAuthorizedException(this);
             }
             getCatalogue().copyEntry(getLogicalData(), toWDDR.getLogicalData(), name, getPrincipal(), connection);
             connection.commit();
@@ -283,7 +284,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
             ex.printStackTrace();
             throw new ConflictException(this, ex.toString());
         } catch (Exception e) {
-            throw new NotAuthorizedException();
+            throw new NotAuthorizedException(this);
         } finally {
             try {
                 if(connection != null && !connection.isClosed()) {
@@ -310,7 +311,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
             }
             Permissions p = getCatalogue().getPermissions(parentLD.getUID(), parentLD.getOwner(), connection);
             if (!getPrincipal().canWrite(p)) {
-                throw new NotAuthorizedException();
+                throw new NotAuthorizedException(this);
             }
             getCatalogue().removeResourceEntry(getLogicalData(), getPrincipal(), connection);
             connection.commit();
@@ -341,10 +342,10 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
 //            Permissions p = new Permissions(getLogicalData().getMetadata().getPermissionArray());
 //            MyPrincipal principal = getPrincipal();
 //            if (!p.canRead(principal)) {
-//                throw new NotAuthorizedException();
+//                throw new NotAuthorizedException(this);
 //            }
 //        } catch (Exception e) {
-//            throw new NotAuthorizedException();
+//            throw new NotAuthorizedException(this);
 //        }
 
         //List contents. Fix this to work with browsers 
@@ -363,7 +364,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
             connection.setAutoCommit(false);
             Permissions perm = getCatalogue().getPermissions(getLogicalData().getUID(), getLogicalData().getOwner(), connection);
             if (!getPrincipal().canRead(perm)) {
-                throw new NotAuthorizedException();
+                throw new NotAuthorizedException(this);
             }
             Collection<LogicalData> childrenLD = getCatalogue().getChildren(getLogicalData().getLDRI().toPath(), connection);
             connection.commit();
@@ -441,7 +442,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
         try {
             Path parentPath = getLogicalData().getLDRI().getParent();
             if (parentPath == null) {
-                throw new NotAuthorizedException();
+                throw new NotAuthorizedException(this);
             }
             connection = getCatalogue().getConnection();
             connection.setAutoCommit(false);
@@ -451,11 +452,11 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
             }
             Permissions p = getCatalogue().getPermissions(parentLD.getUID(), parentLD.getOwner(), connection);
             if (!getPrincipal().canWrite(p)) {
-                throw new NotAuthorizedException();
+                throw new NotAuthorizedException(this);
             }
             p = getCatalogue().getPermissions(rdst.getLogicalData().getUID(), rdst.getLogicalData().getOwner(), connection);
             if (!getPrincipal().canWrite(p)) {
-                throw new NotAuthorizedException();
+                throw new NotAuthorizedException(this);
             }
             getCatalogue().moveEntry(getLogicalData(), rdst.getLogicalData(), name, connection);
             connection.commit();
