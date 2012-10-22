@@ -131,7 +131,7 @@ public class TestWebWAVFS {
         String testFileURI1 = uri.toASCIIString() + TestSettings.TEST_FILE_NAME1;
         DeleteMethod del = new DeleteMethod(testFileURI1);
         int status = client1.executeMethod(del);
-        
+
         testFileURI1 = uri.toASCIIString() + TestSettings.TEST_FILE_NAME1;
         PutMethod put = new PutMethod(testFileURI1);
         put.setRequestEntity(new StringRequestEntity(TestSettings.TEST_DATA, "text/plain", "UTF-8"));
@@ -338,6 +338,12 @@ public class TestWebWAVFS {
         try {
             Thread userThread1 = new UserThread(client1, uri.toASCIIString(), 1);
             userThread1.setName("T1");
+
+
+            client2.getState().setCredentials(
+                    new AuthScope(uri.getHost(), uri.getPort()),
+                    new UsernamePasswordCredentials(username1, password1));
+
             Thread userThread2 = new UserThread(client2, uri.toASCIIString(), 2);
             userThread2.setName("T2");
 
@@ -386,8 +392,6 @@ public class TestWebWAVFS {
                 MultiStatus multiStatus = propFind.getResponseBodyAsMultiStatus();
                 MultiStatusResponse[] responses = multiStatus.getResponses();
                 assertEquals(HttpStatus.SC_OK, responses[0].getStatus()[0].getStatusCode());
-
-
 
                 DeleteMethod del = new DeleteMethod(testFileURI1);
                 status = client.executeMethod(del);
