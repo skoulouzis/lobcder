@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Context antiJARLocking="true" path="/lobcder-1.0-SNAPSHOT">
+<Context antiJARLocking="true" path="/lobcder-2.0-SNAPSHOT">
   <!--
   <Resource auth="Container" factory="org.apache.naming.factory.BeanFactory" name="bean/MyPrincipalCache" timeout="600000" type="nl.uva.cs.lobcder.auth.PrincipalCache"/>
   -->
