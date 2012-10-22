@@ -8,8 +8,6 @@ import com.bradmcevoy.http.Request.Method;
 import com.bradmcevoy.http.*;
 import com.bradmcevoy.http.exceptions.NotAuthorizedException;
 import com.bradmcevoy.http.values.HrefList;
-import com.bradmcevoy.http.webdav.PropPatchHandler.Field;
-import com.bradmcevoy.http.webdav.PropPatchHandler.Fields;
 import com.bradmcevoy.http.webdav.PropertyMap;
 import com.ettrema.http.AccessControlledResource;
 import com.ettrema.http.acl.Principal;
@@ -100,9 +98,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
 
     @Override
     public boolean authorise(Request request, Method method, Auth auth) {
-
-        System.err.println("AUTHORIZE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!:  " + auth.getUser());
-        System.err.println(WebDavServlet.request().getUserPrincipal());
+//        System.err.println(WebDavServlet.request().getUserPrincipal());
         //Object permission = getPermissionForTheLogicalData();
         boolean authorized = true;
         if (authorized) {

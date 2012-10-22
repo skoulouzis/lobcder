@@ -9,7 +9,6 @@ import com.bradmcevoy.http.http11.Http11Protocol;
 import com.bradmcevoy.http.webdav.DefaultWebDavResponseHandler;
 import com.bradmcevoy.http.webdav.WebDavProtocol;
 import com.bradmcevoy.http.webdav.WebDavResponseHandler;
-import com.ettrema.http.acl.ACLProtocol;
 import com.ettrema.http.caldav.CalDavProtocol;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -40,7 +39,6 @@ public class WebDavServlet implements Servlet {
 //    private Logger log = LoggerFactory.getLogger(this.getClass());
     private static final boolean debug = true;
     private ResourceFactory rf;
-    
     private JDBCatalogue catalogue = null;
 
     public static HttpServletRequest request() {
@@ -100,13 +98,14 @@ public class WebDavServlet implements Servlet {
     @Override
     public void init(ServletConfig config) throws ServletException {
         try {
-            this.config = config;            
+            this.config = config;
             String jndiName = "bean/JDBCatalog";
             Context ctx = new InitialContext();
-            if(ctx == null )
-                    throw new Exception("JNDI could not create InitalContext ");
-            Context envContext  = (Context)ctx.lookup("java:/comp/env");
-            catalogue =  (JDBCatalogue)envContext.lookup(jndiName);
+            if (ctx == null) {
+                throw new Exception("JNDI could not create InitalContext ");
+            }
+            Context envContext = (Context) ctx.lookup("java:/comp/env");
+            catalogue = (JDBCatalogue) envContext.lookup(jndiName);
             rf = new WebDataResourceFactory(catalogue);
             catalogue.startSweep();
 
@@ -133,7 +132,7 @@ public class WebDavServlet implements Servlet {
             CalDavProtocol caldav = new com.ettrema.http.caldav.CalDavProtocol(rf, defaultResponseHandler, hh, webdav);
 
 //            ACLProtocol acl = new com.ettrema.http.acl.ACLProtocol(webdav);
-            MyACLProtocol acl = new MyACLProtocol(webdav);            
+            MyACLProtocol acl = new MyACLProtocol(webdav);
             ProtocolHandlers protocolHandlers = new com.bradmcevoy.http.ProtocolHandlers(Arrays.asList(http11, webdav, acl, caldav));
 
             httpManager = new com.bradmcevoy.http.HttpManager(rf, defaultResponseHandler, protocolHandlers);
@@ -223,7 +222,7 @@ public class WebDavServlet implements Servlet {
     @Override
     public void destroy() {
         debug("destroy");
-        if(catalogue != null) {
+        if (catalogue != null) {
             catalogue.stopSweep();
         }
         if (servletHttpManager == null) {

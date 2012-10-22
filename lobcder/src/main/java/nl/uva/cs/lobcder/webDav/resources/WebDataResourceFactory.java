@@ -19,7 +19,6 @@ public class WebDataResourceFactory implements ResourceFactory {
 
     public WebDataResourceFactory(JDBCatalogue catalogue) throws Exception {
         this.catalogue = catalogue;
-        initStorageSites();
     }
 
     @Override
@@ -72,7 +71,7 @@ public class WebDataResourceFactory implements ResourceFactory {
 //        }
     }
 
-    private void initStorageSites() throws Exception {
+//    private void initStorageSites() throws Exception {
 //        String[] names = new String[]{"storage1.prop", "storage2.prop", "storage3.prop"};
 //
 //        Properties[] storageSitesProps = PropertiesLoader.getStorageSitesProps();
@@ -81,7 +80,7 @@ public class WebDataResourceFactory implements ResourceFactory {
 //                catalogue.registerStorageSite(p);
 //            }
 //        }
-    }
+//    }
 
 //    public void setUserName(String remoteUser) {
 //        this.uname = remoteUser;

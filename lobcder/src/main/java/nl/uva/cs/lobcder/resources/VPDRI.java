@@ -8,8 +8,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -17,6 +15,7 @@ import nl.uva.cs.lobcder.util.LobIOUtils;
 import nl.uva.vlet.Global;
 import nl.uva.vlet.GlobalConfig;
 import nl.uva.vlet.data.StringUtil;
+import nl.uva.vlet.exception.ResourceCreationFailedException;
 import nl.uva.vlet.exception.ResourceNotFoundException;
 import nl.uva.vlet.exception.VlException;
 import nl.uva.vlet.util.cog.GridProxy;
@@ -71,17 +70,17 @@ public class VPDRI implements PDRI {
     private final String username;
     private final String password;
     private final Long storageSiteId;
-    private final String resourceUrl;
+    private final String baseDir = "LOBCDER-REPLICA-v2.0";
     private final String fileURI;
 
     VPDRI(String fileURI, Long storageSiteId, String resourceUrl, String username, String password) throws IOException {
         try {
             this.fileURI = fileURI;
-            vrl = new VRL(resourceUrl).append(fileURI);
+            vrl = new VRL(resourceUrl).appendPath(baseDir).append(fileURI);
             this.storageSiteId = storageSiteId;
             this.username = username;
             this.password = password;
-            this.resourceUrl = resourceUrl;
+//            this.resourceUrl = resourceUrl;
             initVFS();
         } catch (VlException ex) {
             throw new IOException(ex);
@@ -154,19 +153,27 @@ public class VPDRI implements PDRI {
             out = this.vfsClient.getFile(vrl).getOutputStream();
             LobIOUtils.copy(in, out);
         } catch (VlException ex) {
-            if (ex instanceof ResourceNotFoundException) {
+            if (ex instanceof ResourceNotFoundException || ex.getMessage().contains("Couldn open location. Get NULL object for")) {
                 try {
                     out = this.vfsClient.createFile(vrl, false).getOutputStream();
                     LobIOUtils.copy(in, out);
-                } catch (VlException ex1) {
-                    throw new IOException(ex1);
+                } catch (Exception ex1) {
+                    try {
+                        vfsClient.mkdirs(vrl.getParent());
+                        out = this.vfsClient.createFile(vrl, false).getOutputStream();
+                        LobIOUtils.copy(in, out);
+                    } catch (VlException ex2) {
+                        Logger.getLogger(VPDRI.class.getName()).log(Level.SEVERE, null, ex2);
+                    }
                 }
             } else {
                 throw new IOException(ex);
             }
         } finally {
             try {
-                out.close();
+                if (out != null) {
+                    out.close();
+                }
             } catch (IOException ex) {
                 throw ex;
             }

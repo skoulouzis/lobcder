@@ -1,0 +1,11 @@
+username1=user
+password1=pass
+roles1=manager,admin
+
+username2=user1
+password2=pass
+roles2=demo
+
+username3=user2
+password3=pass
+roles3=demo2
