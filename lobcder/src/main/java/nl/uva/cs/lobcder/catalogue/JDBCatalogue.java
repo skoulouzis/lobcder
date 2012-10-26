@@ -9,14 +9,13 @@ import java.sql.*;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.naming.Context;
+import javax.naming.InitialContext;
+import javax.sql.DataSource;
 import nl.uva.cs.lobcder.authdb.MyPrincipal;
 import nl.uva.cs.lobcder.authdb.Permissions;
 import nl.uva.cs.lobcder.resources.*;
 import nl.uva.cs.lobcder.util.Constants;
-import nl.uva.cs.lobcder.webDav.resources.WebDataDirResource;
-import javax.sql.DataSource;
-import javax.naming.InitialContext;
-import javax.naming.Context;
 
 /**
  *
@@ -94,7 +93,7 @@ public class JDBCatalogue {
             Long newGroupId = rs.getLong(1);
             String sql = "INSERT INTO pdri_table (url, storageSiteId, pdriGroupId) VALUES("
                     + "'" + pdri.getURL() + "', " + pdri.getStorageSiteId() + ", " + newGroupId + ")";
-            System.err.println("##########################" + sql);
+            debug("##########################" + sql);
 
             s.executeUpdate(sql);
 
@@ -153,7 +152,7 @@ public class JDBCatalogue {
                     + "JOIN storage_site_table ON pdri_table.storageSiteId = storage_site_table.storageSiteId "
                     + "JOIN credential_table ON storage_site_table.credentialRef = credential_table.credintialId "
                     + "WHERE pdri_table.pdriGroupId = " + GroupId;
-            System.err.println(sql);
+            debug(sql);
             ResultSet rs = s.executeQuery(sql);
             while (rs.next()) {
                 String url = rs.getString(1);
@@ -494,7 +493,7 @@ public class JDBCatalogue {
                 res.setPdriGroupId(rs.getLong(9));
                 res.setSupervised(rs.getBoolean(10));
                 res.setChecksum(rs.getLong(11));
-                res.setLastValidationDate(rs.getLong(12));            
+                res.setLastValidationDate(rs.getLong(12));
             }
             return res;
         } catch (Exception e) {
@@ -777,7 +776,7 @@ public class JDBCatalogue {
                 }
             }
             s = connection.createStatement();
-            System.err.println(sql);
+            debug(sql);
             ResultSet rs = s.executeQuery(sql);
             LinkedList<MyStorageSite> res = new LinkedList<MyStorageSite>();
             while (rs.next()) {
@@ -1194,9 +1193,8 @@ public class JDBCatalogue {
                 Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-    }  
-    
-    
+    }
+
     public void setFileChecksum(Long uid, Long checksum, Connection connection) throws CatalogueException {
         PreparedStatement ps = null;
         boolean connectionIsProvided = (connection == null) ? false : true;
@@ -1244,5 +1242,9 @@ public class JDBCatalogue {
                 Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-    }    
+    }
+
+    private void debug(String msg) {
+//        System.err.println(this.getClass().getName()+": "+msg);
+    }
 }

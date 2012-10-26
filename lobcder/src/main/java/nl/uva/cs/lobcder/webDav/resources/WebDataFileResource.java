@@ -22,7 +22,8 @@ import nl.uva.cs.lobcder.authdb.Permissions;
 import nl.uva.cs.lobcder.catalogue.CatalogueException;
 import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
 import nl.uva.cs.lobcder.catalogue.ResourceExistsException;
-import nl.uva.cs.lobcder.resources.*;
+import nl.uva.cs.lobcder.resources.LogicalData;
+import nl.uva.cs.lobcder.resources.PDRI;
 import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.cs.lobcder.util.MMTypeTools;
 import nl.uva.vlet.data.StringUtil;
@@ -37,7 +38,7 @@ import org.apache.commons.io.IOUtils;
 public class WebDataFileResource extends WebDataResource implements
         com.bradmcevoy.http.FileResource {
 
-    private static final boolean debug = true;
+    private static final boolean debug = false;
 
     public WebDataFileResource(JDBCatalogue catalogue, LogicalData logicalData) throws CatalogueException, Exception {
         super(catalogue, logicalData);
@@ -144,17 +145,17 @@ public class WebDataFileResource extends WebDataResource implements
                 type = MMTypeTools.bestMatch(acceptsList, fileContentType);
                 debug("\t type: " + type);
                 if (!StringUtil.isEmpty(type)) {
-                    System.err.println("getContentType: " + type);
+                    debug("getContentType: " + type);
                     return type;
                 }
             }
         } else {
             String regex = "(^.*?\\[|\\]\\s*$)";
             type = fileContentTypes.toString().replaceAll(regex, "");
-            System.err.println("getContentType: " + type);
+            debug("getContentType: " + type);
             return type;
         }
-        System.err.println("getContentType: null");
+        debug("getContentType: null");
         return null;
     }
 
@@ -196,11 +197,11 @@ public class WebDataFileResource extends WebDataResource implements
             }
             connection.commit();
             connection.close();
-            System.err.println(pdri.getURL());
+            debug(pdri.getURL());
             //IOUtils.copy(pdri.getData(), System.err); 
             IOUtils.copy(pdri.getData(), out);
         } catch (NotAuthorizedException ex) {
-            System.err.println("NotAuthorizedException");
+            debug("NotAuthorizedException");
             throw new NotAuthorizedException(this);
         } catch (Exception ex) {
             throw new IOException(ex.getMessage());

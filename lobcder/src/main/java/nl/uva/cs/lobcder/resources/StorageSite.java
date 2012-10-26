@@ -5,12 +5,10 @@
 package nl.uva.cs.lobcder.resources;
 
 import com.bradmcevoy.common.Path;
-import java.io.File;
 import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Properties;
 import java.util.logging.Level;

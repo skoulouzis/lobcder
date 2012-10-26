@@ -4,18 +4,14 @@ import com.bradmcevoy.common.Path;
 import com.bradmcevoy.http.Resource;
 import com.bradmcevoy.http.ResourceFactory;
 import java.io.File;
-import java.io.IOException;
-import java.util.Collection;
 import java.util.logging.Level;
 import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
-import nl.uva.cs.lobcder.resources.IStorageSite;
 import nl.uva.cs.lobcder.resources.LogicalData;
 import nl.uva.cs.lobcder.util.Constants;
 
 public class WebDataResourceFactory implements ResourceFactory {
     
     private JDBCatalogue catalogue;
-    private boolean debug = false;
 
     public WebDataResourceFactory(JDBCatalogue catalogue) throws Exception {
         this.catalogue = catalogue;

@@ -33,7 +33,7 @@ import nl.uva.vlet.exception.VlException;
  */
 public class WebDataDirResource extends WebDataResource implements FolderResource, CollectionResource, DeletableCollectionResource {
 
-    private boolean debug = true;
+    private boolean debug = false;
 
     public WebDataDirResource(JDBCatalogue catalogue, LogicalData entry) throws IOException, Exception {
         super(catalogue, entry);
@@ -372,7 +372,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
             for (LogicalData ld : childrenLD) {               
                 if(!ld.getName().isEmpty()) {                
                     String s = ld.getName() + '\n';
-                    System.err.print(s);
+                    debug(s);
                     out.write(s.getBytes());
                 }
             }

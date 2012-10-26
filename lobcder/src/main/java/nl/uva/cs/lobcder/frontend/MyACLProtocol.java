@@ -89,7 +89,7 @@ class MyACLProtocol implements HttpExtension, PropertySource {
     }
 
     private void debug(String msg) {
-        System.err.println(this.getClass().getName() + ": " + msg);
+//        System.err.println(this.getClass().getName() + ": " + msg);
     }
 
     class PrincipalUrl implements StandardProperty<String> {

@@ -4,7 +4,6 @@
  */
 package nl.uva.cs.lobcder.resources;
 
-import nl.uva.cs.lobcder.resources.*;
 import java.io.Serializable;
 import nl.uva.vlet.util.cog.GridProxy;
 

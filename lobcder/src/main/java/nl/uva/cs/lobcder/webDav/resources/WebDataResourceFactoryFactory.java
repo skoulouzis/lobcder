@@ -14,7 +14,7 @@ public class WebDataResourceFactoryFactory implements ResourceFactoryFactory {
     private Logger log = LoggerFactory.getLogger(WebDataResourceFactoryFactory.class);
     private static AuthenticationService authenticationService;
     private static WebDataResourceFactory resourceFactory;
-    private boolean debug = false;
+
     
     @Override
     public ResourceFactory createResourceFactory() {

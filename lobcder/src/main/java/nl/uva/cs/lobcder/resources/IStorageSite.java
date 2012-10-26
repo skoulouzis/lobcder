@@ -4,7 +4,6 @@
  */
 package nl.uva.cs.lobcder.resources;
 
-import com.bradmcevoy.common.Path;
 import java.util.Collection;
 import nl.uva.vlet.exception.VlException;
 import nl.uva.vlet.vfs.VFSClient;
