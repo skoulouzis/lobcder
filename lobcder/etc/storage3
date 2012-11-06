@@ -1,5 +1,0 @@
-vph.username=uname1
-storage.site.username=user
-storage.site.password=non
-storage.site.grid.proxy=notyet
-storage.site.endpoint=sftp://host/home/user/deleteMe

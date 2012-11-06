@@ -92,14 +92,15 @@ public class LobIOUtils {
 
     public static void copy(InputStream in, OutputStream out) throws IOException {
         try {
-            int length = in.available(); // danger!
-            if (length != 0) {
-                byte[] bytes = new byte[length];
-                in.read(bytes);
-                out.write(bytes);
-            } else {
-                IOUtils.copy(in, out);
-            }
+            // danger!
+//            int length = in.available(); 
+//            if (length != 0) {
+//                byte[] bytes = new byte[length];
+//                in.read(bytes);
+//                out.write(bytes);
+//            } else {
+            IOUtils.copy(in, out);
+//            }
 
         } finally {
             if (in != null) {

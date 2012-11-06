@@ -4,51 +4,73 @@
  */
 package nl.uva.cs.lobcder.webDav.resources;
 
-import com.bradmcevoy.common.Path;
 import com.bradmcevoy.http.Request.Method;
 import com.bradmcevoy.http.*;
+import com.bradmcevoy.http.exceptions.NotAuthorizedException;
+import com.bradmcevoy.http.values.HrefList;
+import com.bradmcevoy.http.webdav.PropertyMap;
+import com.ettrema.http.AccessControlledResource;
+import com.ettrema.http.acl.Principal;
 import java.io.IOException;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import javax.servlet.http.HttpSession;
-import nl.uva.cs.lobcder.auth.MyPrincipal;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import nl.uva.cs.lobcder.auth.test.MyAuth;
+import nl.uva.cs.lobcder.authdb.MyPrincipal;
+import nl.uva.cs.lobcder.authdb.Permissions;
 import nl.uva.cs.lobcder.catalogue.CatalogueException;
-import nl.uva.cs.lobcder.catalogue.IDLCatalogue;
+import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
 import nl.uva.cs.lobcder.frontend.WebDavServlet;
-import nl.uva.cs.lobcder.resources.ILogicalData;
-import nl.uva.cs.lobcder.resources.IStorageSite;
+import nl.uva.cs.lobcder.resources.LogicalData;
+import nl.uva.cs.lobcder.resources.MyStorageSite;
+import nl.uva.cs.lobcder.resources.PDRI;
+import nl.uva.cs.lobcder.resources.PDRIFactory;
+import nl.uva.cs.lobcder.util.Constants;
 
 /**
  *
  * @author S. Koulouzis
  */
-public class WebDataResource implements PropFindableResource, Resource {
+public class WebDataResource implements PropFindableResource, Resource, AccessControlledResource, CustomPropertyResource {//, ReplaceableResource {
 
-    private ILogicalData logicalData;
-    private final IDLCatalogue catalogue;
-    private static final boolean debug = false;
-    private Map<String, CustomProperty> properties;
+    private LogicalData logicalData;
+    private final JDBCatalogue catalogue;
+    private static final boolean debug = true;
+    private final Map<String, CustomProperty> customProperties = new HashMap<String, CustomProperty>();
+//    private final Map<String, PropertyMap.StandardProperty> userPrivledges = new HashMap<String, PropertyMap.StandardProperty>();
     //Collection<Integer> roles = null;
-    private String uname;
+    //private String uname;
 
-    public WebDataResource(IDLCatalogue catalogue, ILogicalData logicalData) {
+    public WebDataResource(JDBCatalogue catalogue, LogicalData logicalData) {
         this.logicalData = logicalData;
 //        if (!logicalData.getType().equals(Constants.LOGICAL_DATA)) {
 //            throw new Exception("The logical data has the wonrg type: " + logicalData.getType());
 //        }
         this.catalogue = catalogue;
-        properties = new HashMap<String, CustomProperty>();
+
+        //We can't init the data dist props here cause there is no authorization 
+        //yet. So the getPrincipal will return null
+//        initProps();
+
+    }
+
+    private void initProps() {
+        customProperties.put(Constants.DRI_SUPERVISED, new DRIsSupervisedProperty(getLogicalData()));
+        customProperties.put(Constants.DRI_CHECKSUM, new DRICheckSumProperty(getLogicalData()));
+        customProperties.put(Constants.DRI_LAST_VALIDATION_DATE, new DRI_lastValidationDateProperty(getLogicalData()));
+//        if(getLogicalData().getSupervised() != null) {
+//            DataDistProperty ddip = new DataDistProperty();
+//            ddip.setFormattedValue(getLogicalData().getSupervised().toString());
+//            customProperties.put(Constants.DATA_DIST_PROP_NAME, ddip);
+//        }
     }
 
     @Override
     public Date getCreateDate() {
         debug("getCreateDate.");
-        if (getLogicalData().getMetadata() != null && getLogicalData().getMetadata().getCreateDate() != null) {
-            return new Date(getLogicalData().getMetadata().getCreateDate());
-        }
-        return null;
+        return new Date(getLogicalData().getCreateDate());
     }
 
     @Override
@@ -65,32 +87,18 @@ public class WebDataResource implements PropFindableResource, Resource {
 
     @Override
     public Object authenticate(String user, String password) {
-        return "Authenticated";
-//        MyPrincipal principal = null;
-//        debug("authenticate.\n"
-//                + "\t user: " + user
-//                + "\t password: " + password);
-//        uname = user;
-//        try {
-//            ArrayList<Integer> roles = new ArrayList<Integer>();
-//            roles.add(0);
-//            String token = user + password;
-//            principal = PrincipalCache.pcache.getPrincipal(token);
-//            if (principal == null) {
-//                principal = new MyPrincipal(token, MyAuth.getInstance().checkToken(token));
-//                PrincipalCache.pcache.putPrincipal(principal);
-//            }
-//            WebDavServlet.request().setAttribute("vph-user", principal);
-//        } catch (Exception ex) {
-//            Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
-//
-//        }
-//        return principal;
+        debug("authenticate.\n"
+                + "\t user: " + user
+                + "\t password: " + password);
+        String token = password;
+        MyPrincipal principal = MyAuth.getInstance().checkToken(token);
+        WebDavServlet.request().setAttribute("vph-user", principal);
+        return principal;
     }
 
     @Override
     public boolean authorise(Request request, Method method, Auth auth) {
-
+//        System.err.println(WebDavServlet.request().getUserPrincipal());
         //Object permission = getPermissionForTheLogicalData();
         boolean authorized = true;
         if (authorized) {
@@ -143,10 +151,9 @@ public class WebDataResource implements PropFindableResource, Resource {
                     + "\t auth.getResponseDigest(): " + responseDigest + "\n"
                     + "\t auth.getUri(): " + uri + "\n"
                     + "\t auth.getUser(): " + user + "\n"
-                    + "\t auth.getTag(): " + tag);
+                    + "\t auth.getTag(): " + tag
+                    + "\t\t Method = " + method.name());
         }
-
-        //return auth.getUser() == null ? false : true;
         return authorized;
     }
 
@@ -159,10 +166,7 @@ public class WebDataResource implements PropFindableResource, Resource {
     @Override
     public Date getModifiedDate() {
         debug("getModifiedDate.");
-        if (getLogicalData().getMetadata() != null && getLogicalData().getMetadata().getModifiedDate() != null) {
-            return new Date(getLogicalData().getMetadata().getModifiedDate());
-        }
-        return null;
+        return new Date(getLogicalData().getModifiedDate());
     }
 
     @Override
@@ -175,16 +179,15 @@ public class WebDataResource implements PropFindableResource, Resource {
                     return null;
                 }
                 return null;
-
             default:
                 return null;
         }
     }
 
     protected void debug(String msg) {
-//        if (debug) {
-//            System.err.println(this.getClass().getSimpleName() + "." + getLogicalData().getLDRI() + ": " + msg);
-//        }
+        if (debug) {
+            System.err.println(this.getClass().getSimpleName() + "." + getLogicalData().getLDRI() + ": " + msg);
+        }
 //        log.debug(msg);
     }
 //    @Override
@@ -207,45 +210,197 @@ public class WebDataResource implements PropFindableResource, Resource {
     /**
      * @return the catalogue
      */
-    public IDLCatalogue getCatalogue() {
+    public JDBCatalogue getCatalogue() {
         return catalogue;
     }
 
     /**
      * @return the logicalData
      */
-    public ILogicalData getLogicalData() {
+    public LogicalData getLogicalData() {
         return logicalData;
     }
 
     /**
      * @return the logicalData
      */
-    public void setLogicalData(ILogicalData logicalData) {
+    public void setLogicalData(LogicalData logicalData) {
         this.logicalData = logicalData;
     }
 
-    public Path getPath() {
-        return getLogicalData().getLDRI();
-    }
-
-    Collection<IStorageSite> getStorageSites() throws CatalogueException, IOException {
-        Collection<IStorageSite> sites = getLogicalData().getStorageSites();
-        if (sites == null || sites.isEmpty()) {
-            
-//            String uname = String.valueOf(getPrincipal().getUid());
-            sites = getCatalogue().getSitesByUname("uname1");
-        }
-        if (sites == null || sites.isEmpty()) {
-            debug("\t Storage Sites for " + this.getLogicalData().getLDRI() + " are empty!");
-            throw new IOException("Storage Sites for " + this.getLogicalData().getLDRI() + " are empty!");
-        }
-        return sites;
-    }
-
     public MyPrincipal getPrincipal() {
-        HttpSession s = WebDavServlet.request().getSession();
-        MyPrincipal pr = (MyPrincipal) (s.getAttribute("vph-user"));
-        return pr;
+        return (MyPrincipal) WebDavServlet.request().getAttribute("vph-user");
+    }
+
+//    public void isReadable(Permissions perm) throws NotAuthorizedException {
+//        MyPrincipal principal = getPrincipal();
+//        if (!principal.canRead(perm)) {
+//            throw new NotAuthorizedException();
+//        }
+//
+//    }
+//
+//    public void isWritable(Permissions perm) throws NotAuthorizedException {
+//        MyPrincipal principal = getPrincipal();
+//        if (!principal.canWrite(perm)) {
+//            throw new NotAuthorizedException();
+//        }
+//    }
+    @Override
+    public String getPrincipalURL() {
+        debug("getPrincipalURL");
+        return "thePrincipalURL";//getPrincipal().getUserId();
+    }
+
+    /**
+     * DAV:current-user-privilege-set is a protected property containing the
+     * exact set of privileges (as computed by the server) granted to the
+     * currently authenticated HTTP user. See
+     * http://www.webdav.org/specs/rfc3744.html#rfc.section.5.4
+     *
+     * @param auth
+     * @return
+     */
+    @Override
+    public List<Priviledge> getPriviledges(Auth auth) {
+
+        MyPrincipal currentPrincipal = MyAuth.getInstance().checkToken(auth.getPassword());
+        List<Priviledge> priviledgesList = new ArrayList<Priviledge>();
+
+//        if (currentPrincipal.getUserId().equals(getLogicalData().getOwner())) {
+//            priviledgesList.add(Priviledge.ALL);
+//            return priviledgesList;
+//        }
+
+        Set<String> currentRoles = currentPrincipal.getRoles();
+        //We are supposed to get permissions for this resource for the current user
+        Permissions p = getLogicalData().getPermissions();
+
+        Set<String> readRoles = p.canRead();
+        Set<String> writeRoles = p.canWrite();
+        for (String r : currentRoles) {
+            if (readRoles.contains(r)) {
+                priviledgesList.add(Priviledge.READ);
+                break;
+            }
+        }
+        for (String r : currentRoles) {
+            if (writeRoles.contains(r)) {
+                priviledgesList.add(Priviledge.WRITE);
+                break;
+            }
+        }
+
+        return priviledgesList;
+    }
+
+    @Override
+    public Map<Principal, List<Priviledge>> getAccessControlList() {
+        debug("getAccessControlList");
+
+        // Do the mapping 
+//        List<Integer> permArray = this.logicalData.getMetadata().getPermissionArray();
+//        List<Priviledge> perm = new ArrayList<Priviledge>();
+//        HashMap<Principal, List<Priviledge>> acl = new HashMap<Principal, List<Priviledge>>();
+        throw new UnsupportedOperationException("Not supported yets.");
+    }
+
+    @Override
+    public void setAccessControlList(Map<Principal, List<Priviledge>> map) {
+        debug("setAccessControlList");
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    /**
+     * - DAV:principal-collection-set - Collection of principals for this
+     * server. For security and scalability reasons, a server MAY report only a
+     * subset of the entire set of known principal collections, and therefore
+     * clients should not assume they have retrieved an exhaustive listing. A
+     * server MAY elect to report none of the principal collections it knows
+     * about, in which case the property value would be empty.
+     *
+     * @return
+     */
+    @Override
+    public HrefList getPrincipalCollectionHrefs() {
+//        HrefList list = new HrefList();
+//        list.add("/users/");
+//        return list;
+        return null;
+    }
+
+    public PDRI createPDRI(long fileLength, Connection connection) throws CatalogueException, IOException {
+        Collection<MyStorageSite> sites = getCatalogue().getStorageSitesByUser(getPrincipal(), connection);
+        if (!sites.isEmpty()) {
+//            MyStorageSite site = sites.iterator().next();
+            MyStorageSite site = selectBestSite(sites);
+            return PDRIFactory.getFactory().createInstance(UUID.randomUUID().toString(),
+                    site.getStorageSiteId(), site.getResourceURI(),
+                    site.getCredential().getStorageSiteUsername(), site.getCredential().getStorageSitePassword());
+        } else {
+            return null;
+        }
+    }
+
+    @Override
+    public Set<String> getAllPropertyNames() {
+        return customProperties.keySet();
+    }
+
+    @Override
+    public CustomProperty getProperty(String propName) {
+        if (propName.equals(Constants.DATA_DIST_PROP_NAME)) {
+            try {
+                initDataDist();
+            } catch (CatalogueException ex) {
+                Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (SQLException ex) {
+                Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (NotAuthorizedException ex) {
+                Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        initProps();
+        return customProperties.get(propName);
+    }
+
+    @Override
+    public String getNameSpaceURI() {
+        return "custom:";
+    }
+
+    private void initDataDist() throws CatalogueException, SQLException, NotAuthorizedException {
+        Connection connection = getCatalogue().getConnection();
+        connection.setAutoCommit(false);
+        StringBuilder sb = new StringBuilder();
+        if (getLogicalData().isFolder()) {
+            List<? extends WebDataResource> children = (List<? extends WebDataResource>) ((WebDataDirResource) (this)).getChildren();
+            sb.append("[");
+            for (WebDataResource r : children) {
+                Collection<PDRI> pdris = getCatalogue().getPdriByGroupId(r.getLogicalData().getPdriGroupId(), connection);
+                for (PDRI p : pdris) {
+                    sb.append(p.getURL());
+                    sb.append(",");
+                }
+            }
+        } else {
+            Collection<PDRI> pdris = getCatalogue().getPdriByGroupId(getLogicalData().getPdriGroupId(), connection);
+            sb.append("[");
+            for (PDRI p : pdris) {
+                sb.append(p.getURL());
+                sb.append(",");
+            }
+        }
+        sb.replace(sb.lastIndexOf(","), sb.length(), "");
+        sb.append("]");
+        DataDistProperty dataDist = new DataDistProperty(sb.toString());
+        customProperties.put(Constants.DATA_DIST_PROP_NAME, dataDist);
+    }
+
+    private MyStorageSite selectBestSite(Collection<MyStorageSite> sites) {
+        for (MyStorageSite s : sites) {
+            return s;
+        }
+        return null;
     }
 }

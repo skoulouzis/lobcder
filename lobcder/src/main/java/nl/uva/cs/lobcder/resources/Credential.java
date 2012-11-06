@@ -13,13 +13,11 @@ import nl.uva.vlet.util.cog.GridProxy;
  */
 public class Credential implements Serializable{
 
-    private String[] vphUsernames;
     private String storageSiteUname;
     private String passwd;
     private GridProxy gridProxy;
 
-    public Credential(String[] vphUsernames) {
-        this.vphUsernames = vphUsernames;
+    public Credential() {
     }
 
     public GridProxy getStorageSiteGridProxy() {
@@ -32,10 +30,6 @@ public class Credential implements Serializable{
 
     public String getStorageSitePassword() {
         return passwd;
-    }
-
-    public String[] getVPHUsernames() {
-        return vphUsernames;
     }
 
     public void setStorageSiteUsername(String storageSiteUname) {

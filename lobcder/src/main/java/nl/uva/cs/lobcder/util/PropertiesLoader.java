@@ -15,8 +15,6 @@ import java.util.Properties;
  * @author skoulouz
  */
 public class PropertiesLoader {
-
-    private static final Object lock = new Object();
     private static int numOfStorgeSites = -1;
 
     public static Properties getLobcderProperties()

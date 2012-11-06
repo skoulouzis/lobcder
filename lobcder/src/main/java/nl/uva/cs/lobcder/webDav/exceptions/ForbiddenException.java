@@ -5,7 +5,6 @@
 package nl.uva.cs.lobcder.webDav.exceptions;
 
 import com.bradmcevoy.http.Resource;
-import com.bradmcevoy.http.exceptions.MiltonException;
 
 /**
  *

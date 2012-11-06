@@ -5,13 +5,16 @@
 package nl.uva.cs.lobcder.resources;
 
 import com.bradmcevoy.common.Path;
-import java.io.Serializable;
-import java.util.Collection;
-import java.util.concurrent.CopyOnWriteArrayList;
-import javax.jdo.annotations.*;
-import nl.uva.vlet.data.StringUtil;
-import nl.uva.vlet.exception.VlException;
-import nl.uva.vlet.vfs.VFSNode;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
+import nl.uva.cs.lobcder.authdb.Permissions;
+import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
+import nl.uva.cs.lobcder.util.Constants;
 
 /**
  *
@@ -21,262 +24,276 @@ import nl.uva.vlet.vfs.VFSNode;
  * first thing to do to use a class with this facility is to tag it as
  * "detachable". This is done by adding the attribute
  */
-@PersistenceCapable(detachable = "true")
-@Inheritance(strategy = InheritanceStrategy.NEW_TABLE)
-@Discriminator(strategy = DiscriminatorStrategy.CLASS_NAME)
-public class LogicalData implements ILogicalData, Serializable {
+@XmlRootElement
+public class LogicalData implements Cloneable {
 
-    /**
-     *
-     */
-    private static final long serialVersionUID = -1529997963561059214L;
-    @PrimaryKey
-//    @Persistent(valueStrategy= IdGeneratorStrategy.UUIDSTRING)
-    @Persistent
-    private String uid;
-    //When an object is retrieved from the datastore by JDO typically not all 
-    //fields are retrieved immediately. This is because for efficiency purposes 
-    //only particular field types are retrieved in the initial access of the 
-    //object, and then any other objects are retrieved when accessed 
-    //(lazy loading). The group of fields that are loaded is called a fetch 
-    //group
-    @Persistent(defaultFetchGroup = "true")
-    private Path ldri;
-    @Persistent(defaultFetchGroup = "true")
-    private Path pdri;
-    
-    @Persistent
-    private String strLDRI;
-    @Persistent
-    private int ldriLen;
-    @Persistent(defaultFetchGroup = "true")
-    private String parent;
-    @Persistent(defaultFetchGroup = "true")
-    private Metadata metadata;
-    @Persistent(defaultFetchGroup = "true")
-    private Collection<String> children;
-    @Persistent(defaultFetchGroup = "true")
-    private String type;
-    private boolean debug = false;
-    @Persistent(defaultFetchGroup = "true")
-    @Join
-    @Element(types = nl.uva.cs.lobcder.resources.StorageSite.class)
-    @Order(column = "STORAGE_SITE")
-    private Collection<IStorageSite> storageSites;
+    private Long uid = Long.valueOf(0);
+    private String ownerId = "";
+    @XmlTransient
+    private String datatype = "";
+    private String ld_name = "";
+    private String parent = "";
+    private Long createDate = Long.valueOf(0);
+    private Long modifiedDate = Long.valueOf(0);
+    private Long ld_length = Long.valueOf(0);
+    private String contentTypesStr = "";
+    @XmlTransient
+    private Long pdriGroupId = Long.valueOf(0);
+    @XmlTransient
+    private JDBCatalogue catalogue;
+    @XmlTransient
+    private List<String> decodedContentTypes = null;
+    @XmlTransient
+    private static final boolean debug = false;
+    @XmlTransient
+    private Boolean supervised;
+    private Long checkSum;
+    private Long lastValidationDate;
 
-    public LogicalData(Path ldri, String type) {
-        this.ldri = ldri;
-        strLDRI = ldri.toString();
-        ldriLen = ldri.getLength();
-        
-        this.type = type;
-        //Data will hold the same pdri for ever.
-        pdri = ldri;
-        uid = pdri.toString();//new StringIdentity(this.getClass(), java.util.UUID.randomUUID().toString()).getKey();
-        Path parentPath = ldri.getParent();
-        if (parentPath != null && !StringUtil.isEmpty(parentPath.toString())) {
-            parent = parentPath.toString();
-        } else {
-            parent = Path.root.toString();
-        }
-
+    public Boolean getSupervised() {
+        return supervised;
     }
 
-    @Override
+    public void setSupervised(Boolean supervised) {
+        this.supervised = supervised;
+    }
+
+    public void updateSupervised(Boolean supervised) {
+        this.supervised = supervised;
+        try {
+            catalogue.setFileSupervised(uid, supervised, null);
+        } catch (Exception ex) {
+            Logger.getLogger(LogicalData.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    public LogicalData(Path ldri, String datatype, JDBCatalogue catalogue) {
+        this.ld_name = ldri.getName() != null ? ldri.getName() : "";
+        this.parent = ldri.getParent() != null ? ldri.getParent().toPath() : "";
+        this.datatype = datatype;
+        uid = Long.valueOf(0);
+        this.catalogue = catalogue;
+    }
+
+    public LogicalData(JDBCatalogue catalogue) {
+        this.catalogue = catalogue;
+    }
+
+    public LogicalData() {
+    }
+
+    @XmlTransient
     public Path getLDRI() {
-        return this.ldri;
-    }
-
-    @Override
-    public Collection<String> getChildren() {
-        return children;
-    }
-
-    @Override
-    public Collection<IStorageSite> getStorageSites() {
-        return this.storageSites;
-    }
-
-    @Override
-    public Metadata getMetadata() {
-        if (this.metadata == null) {
-            Metadata meta = new Metadata();
-            return meta;
+        if (parent.isEmpty() && ld_name.isEmpty() && datatype.equals(Constants.LOGICAL_FOLDER)) {
+            return Path.root;
+        } else if (parent.isEmpty()) {
+            return Path.root.child(ld_name);
+        } else {
+            return Path.path(parent).child(ld_name);
         }
-        return this.metadata;
     }
 
-    @Override
-    public void setMetadata(Metadata metadata) {
-        this.metadata = metadata;
-    }
-
-    @Override
-    public String getUID() {
+    public Long getUID() {
         return this.uid;
     }
 
-    @Override
-    public void addChildren(Collection<String> children) {
-        if (this.children == null) {
-            this.children = children;
-        } else {
-            this.children.addAll(children);
-        }
-    }
-
-    @Override
-    public void setStorageSites(Collection<IStorageSite> storageSites) {
-        if (storageSites != null) {//&& !storageSites.isEmpty()) {
-            this.storageSites = storageSites;
-            debug("StorageSite num : " + this.storageSites.size());
-        }
-    }
-
-    @Override
-    public void addChild(Path child) {
-        if (this.children == null) {
-            this.children = new CopyOnWriteArrayList<String>();
-        }
-        this.children.add(child.toString());
+    public void setUID(Long uid) {
+        this.uid = uid;
     }
 
     private void debug(String msg) {
-//        if (debug) {
-//            System.err.println(this.getClass().getName() + "." + this.ldri + ": " + msg);
-//        }
-    }
-
-    @Override
-    public boolean hasChildren() {
-        if (children != null && !children.isEmpty()) {
-            return true;
-        }
-        return false;
-    }
-
-    @Override
-    public void removeChild(Path childPath) {
-        if (children != null && !children.isEmpty()) {
-            children.remove(childPath.toString());
+        if (debug) {
+            System.err.println(this.getClass().getName() + "." + Path.path(parent).child(ld_name) + ": " + msg);
         }
     }
 
-    @Override
-    public Path getChild(Path path) {
-
-        if (children != null && !children.isEmpty()) {
-            for (String p : children) {
-                if (p.toString().equals(path.toString())) {
-                    return Path.path(p);
-                }
-            }
-        }
-        return null;
-    }
-
-    @Override
     public boolean isRedirectAllowed() {
         //Read policy and decide....
         return false;
     }
 
-    @Override
-    public VFSNode getVFSNode() throws VlException {
-        for (IStorageSite s : this.storageSites) {
-            if (s != null && s.LDRIHasPhysicalData(pdri)) {
-                return s.getVNode(pdri);
-            }
-        }
-        return null;
-    }
-
-    @Override
-    public boolean hasPhysicalData() throws VlException {
-        if (storageSites != null && !storageSites.isEmpty()) {
-            for (IStorageSite s : storageSites) {
-                return s.LDRIHasPhysicalData(pdri);
-            }
-        }
-        return false;
-    }
-
-    @Override
-    public VFSNode createPhysicalData() throws VlException {
-        if (this.storageSites == null || this.storageSites.isEmpty()) {
-            return null;
-        }
-        for (IStorageSite s : this.storageSites) {
-            if (s != null) {
-                return s.createVFSFile(pdri);
-            }
-        }
-        return null;
-    }
-
-    @Override
     public void setLDRI(Path ldri) {
-        this.ldri = ldri;
-        this.strLDRI = ldri.toString();
+        parent = ldri.getParent().toPath();
+        ld_name = ldri.getName();
     }
 
-    @Override
-    public void removeChildren(Collection<String> childPath) {
-        if (children != null || !children.isEmpty()) {
-            this.children.removeAll(childPath);
-        }
+    public void setLDRI(String parent, String name) {
+        this.parent = parent;
+        this.ld_name = name;
     }
 
-    @Override
-    public void removeStorageSites() {
-        this.storageSites.clear();
-    }
-
-    @Override
-    public void setChildren(Collection<String> children) {
-        this.children = children;
-    }
-
-    @Override
+    @XmlTransient
     public String getType() {
-        return type;
+        return datatype;
     }
 
-    /**
-     * @param type the type to set
-     */
     public void setType(String type) {
-        this.type = type;
+        this.datatype = type;
     }
 
-    @Override
-    public Path getPDRI() {
-        return pdri;
-    }
-
-    @Override
-    public void setPDRI(Path pdrI) {
-        this.pdri = pdrI;
-    }
-
-    @Override
     public String getParent() {
         return parent;
     }
 
-    /**
-     * @param parent the parent to set
-     */
     public void setParent(String parent) {
         this.parent = parent;
     }
 
-    public String getStrLDRI() {
-        return strLDRI;
+    public String getName() {
+        return ld_name;
+    }
+
+    public void setName(String name) {
+        this.ld_name = name;
+    }
+
+    @XmlTransient
+    public Long getPdriGroupId() {
+        return pdriGroupId;
+    }
+
+    public void setPdriGroupId(Long pdriGroupId) {
+        this.pdriGroupId = pdriGroupId;
     }
 
     @Override
-    public void setUID(String uid) {
-        this.uid = uid;
+    public Object clone() {
+        LogicalData clone = new LogicalData(catalogue);
+        clone.uid = uid;
+        clone.ownerId = ownerId;
+        clone.datatype = datatype;
+        clone.ld_name = ld_name;
+        clone.parent = parent;
+        clone.createDate = createDate;
+        clone.modifiedDate = modifiedDate;
+        clone.ld_length = ld_length;
+        clone.contentTypesStr = contentTypesStr;
+        clone.pdriGroupId = pdriGroupId;
+        return clone;
+    }
+
+    public boolean equals(Object obj) {
+        if (obj instanceof LogicalData) {
+            return hashCode() == obj.hashCode();
+        } else {
+            return false;
+        }
+    }
+
+    public int hashCode() {
+        return uid.intValue();
+    }
+
+    public Long getCreateDate() {
+        return this.createDate;
+    }
+
+    public void setCreateDate(Long createDate) {
+        this.createDate = createDate;
+    }
+
+    public Long getModifiedDate() {
+        return this.modifiedDate;
+    }
+
+    public void setModifiedDate(Long modifiedDate) {
+        this.modifiedDate = modifiedDate;
+    }
+
+    public Long getLength() {
+        return this.ld_length;
+    }
+
+    public void setLength(Long length) {
+        this.ld_length = length;
+    }
+
+    public List<String> getContentTypes() {
+        if (decodedContentTypes == null) {
+            decodedContentTypes = Arrays.asList(contentTypesStr.split(","));
+        }
+        return Collections.unmodifiableList(decodedContentTypes);
+    }
+
+    public String getContentTypesAsString() {
+        return contentTypesStr;
+    }
+
+    public void setContentTypesAsString(String ct) {
+        contentTypesStr = ct;
+        decodedContentTypes = null;
+    }
+
+    public void addContentType(String contentType) {
+        String ct[] = contentTypesStr.split(",");
+        if (!Arrays.asList(ct).contains(contentType)) {
+            contentTypesStr += contentTypesStr.isEmpty() ? contentType : "," + contentType;
+        }
+        decodedContentTypes = null;
+    }
+
+    @XmlTransient
+    public Permissions getPermissions() {
+        try {
+            return catalogue.getPermissions(uid, ownerId, null);
+        } catch (Exception ex) {
+            Logger.getLogger(LogicalData.class.getName()).log(Level.SEVERE, null, ex);
+            return null;
+        }
+
+    }
+
+    public void setPermissions(Permissions permissions) {
+        try {
+            catalogue.setPermissions(uid, permissions, null);
+        } catch (Exception ex) {
+            Logger.getLogger(LogicalData.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    public boolean isFolder() {
+        return datatype.equals(Constants.LOGICAL_FOLDER);
+    }
+
+    public String getOwner() {
+        return ownerId;
+    }
+
+    public void setOwner(String owner) {
+        ownerId = owner;
+    }
+
+    public void setChecksum(Long aLong) {
+        this.checkSum = aLong;
+    }
+
+    public Long getChecksum() {
+        return checkSum;
+    }
+
+    public void updateChecksum(Long aLong) {
+        this.checkSum = aLong;
+        try {
+            catalogue.setFileChecksum(uid, aLong, null);
+        } catch (Exception ex) {
+            Logger.getLogger(LogicalData.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    public void setLastValidationDate(Long aLong) {
+        this.lastValidationDate = aLong;
+    }
+
+    public Long getLastValidationDate() {
+        return lastValidationDate;
+    }
+
+    public void updateLastValidationDate(Long aLong) {
+        this.lastValidationDate = aLong;
+        try {
+            catalogue.setLastValidationDate(uid, aLong, null);
+        } catch (Exception ex) {
+            Logger.getLogger(LogicalData.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 }

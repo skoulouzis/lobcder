@@ -4,23 +4,25 @@
  */
 package nl.uva.cs.lobcder.frontend;
 
-import com.bradmcevoy.http.ApplicationConfig;
-import com.bradmcevoy.http.AuthenticationService;
-import com.bradmcevoy.http.MiltonServlet;
-import com.bradmcevoy.http.ResourceFactory;
+import com.bradmcevoy.http.*;
+import com.bradmcevoy.http.http11.Http11Protocol;
+import com.bradmcevoy.http.webdav.DefaultWebDavResponseHandler;
+import com.bradmcevoy.http.webdav.WebDavProtocol;
 import com.bradmcevoy.http.webdav.WebDavResponseHandler;
+import com.ettrema.http.caldav.CalDavProtocol;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import javax.naming.Context;
+import javax.naming.InitialContext;
 import javax.servlet.Servlet;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import nl.uva.cs.lobcder.auth.MyPrincipal;
-import nl.uva.cs.lobcder.auth.test.MyAuth;
+import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
 import nl.uva.cs.lobcder.webDav.resources.WebDataResourceFactory;
 import nl.uva.cs.lobcder.webDav.resources.WebDataResourceFactoryFactory;
 
@@ -32,11 +34,12 @@ public class WebDavServlet implements Servlet {
 
     private static final ThreadLocal<HttpServletRequest> originalRequest = new ThreadLocal<HttpServletRequest>();
     private static final ThreadLocal<HttpServletResponse> originalResponse = new ThreadLocal<HttpServletResponse>();
-    protected com.bradmcevoy.http.ServletHttpManager httpManager;
+    protected com.bradmcevoy.http.ServletHttpManager servletHttpManager;
     private ServletConfig config;
 //    private Logger log = LoggerFactory.getLogger(this.getClass());
-    private static final boolean debug = true;
+    private static final boolean debug = false;
     private ResourceFactory rf;
+    private JDBCatalogue catalogue = null;
 
     public static HttpServletRequest request() {
         return originalRequest.get();
@@ -46,15 +49,17 @@ public class WebDavServlet implements Servlet {
         originalRequest.set(req);
         originalResponse.set(resp);
     }
+    private HttpManager httpManager;
 
     @Override
     public void service(javax.servlet.ServletRequest servletRequest,
             javax.servlet.ServletResponse servletResponse) throws ServletException, IOException {
         HttpServletRequest req = (HttpServletRequest) servletRequest;
         HttpServletResponse resp = (HttpServletResponse) servletResponse;
-        final String auth = req.getHeader("Authorization");
-        if (auth == null) {
-            resp.setHeader("WWW-Authenticate", "Basic realm=\"" + "SECRET" + "\"");
+
+        //Enforce Basic auth 
+        if (req.getHeader("Authorization") == null) {
+            resp.setHeader("WWW-Authenticate", "Basic realm=\"SECRET\"");
             resp.sendError(HttpServletResponse.SC_UNAUTHORIZED);
         } else {
 
@@ -69,22 +74,18 @@ public class WebDavServlet implements Servlet {
                     + "\t getRemoteUser: " + req.getRemoteUser() + "\n"
                     + "\t getRequestURI: " + req.getRequestURI() + "\n"
                     + "\t getRequestedSessionId: " + req.getRequestedSessionId());
+            //            Collection<Handler> handlers = servletHttpManager.getAllHandlers();
+            //            for (Handler h : handlers) {
+            //                debug("servletHttpManager Handler: " + h.getClass().getName());
+            //            }
 
             try {
-                try {
-                    req.getSession().setAttribute("vph-user", new MyPrincipal(auth, MyAuth.getInstance().checkToken(auth)));
-
-                    originalRequest.set(req);
-                    originalResponse.set(resp);
-
-                    com.bradmcevoy.http.Request request = new com.bradmcevoy.http.ServletRequest(req);
-                    com.bradmcevoy.http.Response response = new com.bradmcevoy.http.ServletResponse(resp);
-
-                    httpManager.process(request, response);
-                } catch (MyPrincipal.Exception ex) {
-                    resp.sendError(HttpServletResponse.SC_UNAUTHORIZED);
-                }
-
+                originalRequest.set(req);
+                originalResponse.set(resp);
+                com.bradmcevoy.http.Request request = new com.bradmcevoy.http.ServletRequest(req);
+                com.bradmcevoy.http.Response response = new com.bradmcevoy.http.ServletResponse(resp);
+//                    servletHttpManager.process(request, response);
+                httpManager.process(request, response);
             } finally {
                 originalRequest.remove();
                 originalResponse.remove();
@@ -98,13 +99,49 @@ public class WebDavServlet implements Servlet {
     public void init(ServletConfig config) throws ServletException {
         try {
             this.config = config;
-            // Note that the config variable may be null, in which case default handlers will be used
-            // If present and blank, NO handlers will be configed
-            List<String> authHandlers = loadAuthHandlersIfAny(config.getInitParameter("authentication.handler.classes"));
+            String jndiName = "bean/JDBCatalog";
+            Context ctx = new InitialContext();
+            if (ctx == null) {
+                throw new Exception("JNDI could not create InitalContext ");
+            }
+            Context envContext = (Context) ctx.lookup("java:/comp/env");
+            catalogue = (JDBCatalogue) envContext.lookup(jndiName);
+            rf = new WebDataResourceFactory(catalogue);
+            catalogue.startSweep();
 
-            initFromFactoryFactory(authHandlers);
+//            // Note that the config variable may be null, in which case default handlers will be used
+//            // If present and blank, NO handlers will be configed
+//            List<String> authHandlers = loadAuthHandlersIfAny(config.getInitParameter("authentication.handler.classes"));
+//
+//            initFromFactoryFactory(authHandlers);
+//            servletHttpManager.init(new ApplicationConfig(config), servletHttpManager);
 
-            httpManager.init(new ApplicationConfig(config), httpManager);
+
+//            WebDavResourceTypeHelper rth = new com.bradmcevoy.http.webdav.WebDavResourceTypeHelper();
+//        CalendarResourceTypeHelper crth = new com.ettrema.http.caldav.CalendarResourceTypeHelper(
+//                new com.ettrema.http.acl.AccessControlledResourceTypeHelper(rth));
+
+
+            AuthenticationService authService = new com.bradmcevoy.http.AuthenticationService();
+            HandlerHelper hh = new com.bradmcevoy.http.HandlerHelper(authService);
+            DefaultWebDavResponseHandler defaultResponseHandler = new com.bradmcevoy.http.webdav.DefaultWebDavResponseHandler(authService);
+            Http11Protocol http11 = new com.bradmcevoy.http.http11.Http11Protocol(defaultResponseHandler, hh);
+
+            WebDavProtocol webdav = new com.bradmcevoy.http.webdav.WebDavProtocol(defaultResponseHandler, hh);
+
+            CalDavProtocol caldav = new com.ettrema.http.caldav.CalDavProtocol(rf, defaultResponseHandler, hh, webdav);
+
+//            ACLProtocol acl = new com.ettrema.http.acl.ACLProtocol(webdav);
+            MyACLProtocol acl = new MyACLProtocol(webdav);
+            ProtocolHandlers protocolHandlers = new com.bradmcevoy.http.ProtocolHandlers(Arrays.asList(http11, webdav, acl, caldav));
+
+            httpManager = new com.bradmcevoy.http.HttpManager(rf, defaultResponseHandler, protocolHandlers);
+
+            Collection<Handler> handlers = httpManager.getAllHandlers();
+            for (Handler h : handlers) {
+                debug("httpManager Handler: " + h.getClass().getName());
+            }
+
         } catch (Exception ex) {
             debug("Exception starting WebDavServlet servlet " + ex);
             throw new RuntimeException(ex);
@@ -112,8 +149,7 @@ public class WebDavServlet implements Servlet {
     }
 
     protected void init(String responseHandlerClassName, List<String> authHandlers) throws Exception {
-        rf = new WebDataResourceFactory();
-
+        rf = new WebDataResourceFactory(null);
         WebDavResponseHandler responseHandler;
         if (responseHandlerClassName == null) {
             responseHandler = null; // allow default to be created
@@ -125,24 +161,18 @@ public class WebDavServlet implements Servlet {
 
     protected void init(ResourceFactory rf, WebDavResponseHandler responseHandler, List<String> authHandlers) throws ServletException {
         AuthenticationService authService;
-
-        if (authHandlers == null) {
-            authService = new AuthenticationService();
-        } else {
-            List<com.bradmcevoy.http.AuthenticationHandler> list = new ArrayList<com.bradmcevoy.http.AuthenticationHandler>();
-            for (String authHandlerClassName : authHandlers) {
-                Object o = instantiate(authHandlerClassName);
-                if (o instanceof com.bradmcevoy.http.AuthenticationHandler) {
-                    com.bradmcevoy.http.AuthenticationHandler auth = (com.bradmcevoy.http.AuthenticationHandler) o;
-                    list.add(auth);
-                } else {
-                    throw new ServletException("Class: " + authHandlerClassName + " is not a: " + com.bradmcevoy.http.AuthenticationHandler.class.getCanonicalName());
-                }
+        List<com.bradmcevoy.http.AuthenticationHandler> list = new ArrayList<com.bradmcevoy.http.AuthenticationHandler>();
+        for (String authHandlerClassName : authHandlers) {
+            Object o = instantiate(authHandlerClassName);
+            if (o instanceof com.bradmcevoy.http.AuthenticationHandler) {
+                com.bradmcevoy.http.AuthenticationHandler auth = (com.bradmcevoy.http.AuthenticationHandler) o;
+                list.add(auth);
+            } else {
+                throw new ServletException("Class: " + authHandlerClassName + " is not a: " + com.bradmcevoy.http.AuthenticationHandler.class.getCanonicalName());
             }
-            authService = new AuthenticationService(list);
         }
 
-        authService = new AuthenticationService();
+        authService = new AuthenticationService(list);
         authService.setDisableDigest(true);
         authService.setDisableBasic(false);
         authService.setDisableExternal(true);
@@ -157,13 +187,16 @@ public class WebDavServlet implements Servlet {
             debug("No authentication handlers are configured! Any requests requiring authorisation will fail.");
         }
 
-        if (responseHandler == null) {
-            httpManager = new com.bradmcevoy.http.ServletHttpManager(rf, authService);
-        } else {
-            httpManager = new com.bradmcevoy.http.ServletHttpManager(rf, responseHandler, authService);
-        }
+//        WebDavProtocol webdav = new com.bradmcevoy.http.webdav.WebDavProtocol(responseHandler, null);
+//        com.ettrema.http.acl.ACLProtocol acl = new com.ettrema.http.acl.ACLProtocol(webdav);
+//        List protocolList = Arrays.asList(webdav, acl, authService);
+//        ProtocolHandlers protocols = new com.bradmcevoy.http.ProtocolHandlers(protocolList);
+//        HttpManager httpManager = new com.bradmcevoy.http.HttpManager(rf, responseHandler, protocols);
 
-        httpManager.addFilter(0, new WebDavFilter());
+
+        servletHttpManager = new com.bradmcevoy.http.ServletHttpManager(rf, responseHandler, authService);
+        servletHttpManager.addFilter(0, new WebDavFilter());
+
     }
 
     protected <T> T instantiate(String className) throws ServletException {
@@ -189,17 +222,20 @@ public class WebDavServlet implements Servlet {
     @Override
     public void destroy() {
         debug("destroy");
-        if (httpManager == null) {
+        if (catalogue != null) {
+            catalogue.stopSweep();
+        }
+        if (servletHttpManager == null) {
             return;
         }
-        httpManager.destroy(httpManager);
+        servletHttpManager.destroy(servletHttpManager);
     }
 
     private void debug(String msg) {
-//        if (debug) {
-//            System.err.println(this.getClass().getSimpleName() + ": " + msg);
-////        log.debug(msg);
-//        }
+        if (debug) {
+            System.err.println(this.getClass().getSimpleName() + ": " + msg);
+//        log.debug(msg);
+        }
     }
 
     /**

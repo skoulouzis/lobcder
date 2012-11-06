@@ -5,18 +5,14 @@
 package nl.uva.cs.lobcder.resources;
 
 import com.bradmcevoy.common.Path;
-import java.io.File;
 import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.jdo.annotations.*;
-import javax.jdo.identity.StringIdentity;
 import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.cs.lobcder.util.PropertiesLoader;
 import nl.uva.vlet.Global;
@@ -39,10 +35,7 @@ import nl.uva.vlet.vrs.VRSContext;
  *
  * @author S. Koulouzis
  */
-@PersistenceCapable(detachable = "true")
 public class StorageSite implements Serializable, IStorageSite {
-
-    private static final long serialVersionUID = -2552461454620784560L;
 
     static {
         try {
@@ -65,44 +58,29 @@ public class StorageSite implements Serializable, IStorageSite {
         GlobalConfig.setIsService(true);
         GlobalConfig.setInitURLStreamFactory(false);
         GlobalConfig.setAllowUserInteraction(false);
+        GlobalConfig.setUserHomeLocation(new URL("file:///"+System.getProperty("user.home")));
 
         // user configuration 
-        GlobalConfig.setUsePersistantUserConfiguration(false);
+//        GlobalConfig.setUsePersistantUserConfiguration(false);
 //        GlobalConfig.setUserHomeLocation(new URL("file:////" + this.tmpVPHuserHome.getAbsolutePath()));
 //        Global.setDebug(true);
 
         VRS.getRegistry().addVRSDriverClass(nl.uva.vlet.vfs.cloud.CloudFSFactory.class);
         Global.init();
     }
-    @PrimaryKey
-//    @Persistent(valueStrategy= IdGeneratorStrategy.UUIDSTRING)
-    @Persistent
+
     private String uid;
-    @Persistent
     private String endpoint;
-    @Join
-    @Persistent(defaultFetchGroup = "true")
-    @Element(types = String.class)
-    @Order(column = "LOGICAL_PATHS")
     private Collection<String> logicalPaths;
-    @Join
-    @Persistent(defaultFetchGroup = "true")
-    @Element(types = String.class)
-    @Order(column = "VPH_USERNAMES")
     private Collection<String> vphUsernames;
-    @Persistent
-    @Column(name = "VPH_USERNAMES_CSV", jdbcType = "VARCHAR", length = 500)
     private String vphUsernamesCSV;
-    @Persistent(defaultFetchGroup = "true")
     private Credential credentials;
     private Properties prop;
     private VRL vrl;
     private ServerInfo info;
     private VRSContext context;
     private VFSClient vfsClient;
-    @NotPersistent
     public static String storagePrefix = "LOBCDER-REPLICA-vTEST";
-    @NotPersistent
     private static final boolean debug = true;
 
     public StorageSite(String endpoint, Credential cred) throws Exception {
@@ -114,11 +92,11 @@ public class StorageSite implements Serializable, IStorageSite {
             if (cred == null) {
                 throw new NullPointerException("Credentials are null");
             }
-            if (cred.getVPHUsernames() == null) {
-                throw new NullPointerException("vph Username is null");
-            }
-
-            vphUsernames = Arrays.asList(cred.getVPHUsernames());
+//            if (cred.getVPHUsernames() == null) {
+//                throw new NullPointerException("vph Username is null");
+//            }
+//
+//            vphUsernames = Arrays.asList(cred.getVPHUsernames());
 
             vphUsernamesCSV = "";
             String prefix = "";
@@ -135,7 +113,7 @@ public class StorageSite implements Serializable, IStorageSite {
             prop = new Properties();
 
             this.credentials = cred;
-            uid = new StringIdentity(this.getClass(), java.util.UUID.randomUUID().toString()).getKey();//vrl.toString()+prop.getProperty(Constants.STORAGE_SITE_USERNAME);//vrl.toString();//vrl.toString();   // //
+            uid = java.util.UUID.randomUUID().toString();
 //            if (credentials.getStorageSiteUsername() != null) {
 //                uid+=credentials.getStorageSiteUsername();
 //            }
@@ -154,14 +132,14 @@ public class StorageSite implements Serializable, IStorageSite {
     }
 
     @Override
-    public VFSNode getVNode(Path path) {
+    public VFSNode getVNode(String path) {
         try {
-            return getVfsClient().openLocation(getVrl().append(path.toString()));
+            return getVfsClient().openLocation(getVrl().append(path));
         } catch (VlException ex) {
             if (ex instanceof ResourceNotFoundException) {
                 //wrong cache 
-                while (logicalPaths.contains(path.toString())) {
-                    logicalPaths.remove(path.toString());
+                while (logicalPaths.contains(path)) {
+                    logicalPaths.remove(path);
                 }
             }
         }
@@ -169,12 +147,13 @@ public class StorageSite implements Serializable, IStorageSite {
     }
 
     @Override
-    public VFSNode createVFSFile(Path path) throws VlException {
+    public VFSNode createVFSFile(String pathStr) throws VlException {
         try {
             getVfsClient().mkdirs(getVrl(), true);
         } catch (Exception ex) {
             throw new VlException(ex);
         }
+        Path path = Path.path(pathStr);
         String[] parts = path.getParts();
         if (parts.length > 1) {
             String parent = path.getParent().toString();
@@ -251,16 +230,16 @@ public class StorageSite implements Serializable, IStorageSite {
     }
 
     @Override
-    public boolean LDRIHasPhysicalData(Path ldri) throws VlException {
+    public boolean LDRIHasPhysicalData(String ldri) throws VlException {
         if (!logicalPaths.contains(ldri.toString())) {
-            VRL newVRL = getVrl().append(ldri.toString());
+            VRL newVRL = getVrl().append(ldri);
             boolean hasPhysicalData = getVfsClient().existsPath(newVRL);
-            if (hasPhysicalData && !logicalPaths.contains(ldri.toString())) {
-                logicalPaths.add(ldri.toString());
+            if (hasPhysicalData && !logicalPaths.contains(ldri)) {
+                logicalPaths.add(ldri);
             }
             return hasPhysicalData;
         }
-        return logicalPaths.contains(ldri.toString());
+        return logicalPaths.contains(ldri);
     }
 
     @Override
@@ -273,9 +252,9 @@ public class StorageSite implements Serializable, IStorageSite {
 //        return this.uid;
 //    }
     @Override
-    public void deleteVNode(Path permenantDRI) throws VlException {
+    public void deleteVNode(String permenantDRI) throws VlException {
         debug("Exists?: " + permenantDRI);
-        VRL theVRL = getVrl().append(permenantDRI.toString());
+        VRL theVRL = getVrl().append(permenantDRI);
         boolean exists = getVfsClient().existsPath(theVRL);
         if (exists) {
             VFSNode node = this.getVNode(permenantDRI);
@@ -347,8 +326,8 @@ public class StorageSite implements Serializable, IStorageSite {
     }
 
     @Override
-    public void removeLogicalPath(Path pdrI) {
-        this.logicalPaths.remove(pdrI.toString());
+    public void removeLogicalPath(String pdrI) {
+        this.logicalPaths.remove(pdrI);
         //We have to remove children as well 
 //        for (String s : logicalPaths) {
 //            debug("Remove?? " + s);
