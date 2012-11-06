@@ -242,7 +242,7 @@ there are no implementations to enhance
         <dependency>
             <groupId>nl.uva.vlet</groupId>
             <artifactId>vlet-vfs.cloud</artifactId>
-            <version>1.0-20120725.134812-1</version>
+            <version>1.0</version>
         </dependency>
         
         <dependency>
