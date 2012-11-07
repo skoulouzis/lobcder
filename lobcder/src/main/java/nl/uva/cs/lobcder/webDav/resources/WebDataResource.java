@@ -185,9 +185,9 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
     }
 
     protected void debug(String msg) {
-        if (debug) {
-            System.err.println(this.getClass().getSimpleName() + "." + getLogicalData().getLDRI() + ": " + msg);
-        }
+//        if (debug) {
+//            System.err.println(this.getClass().getSimpleName() + "." + getLogicalData().getLDRI() + ": " + msg);
+//        }
 //        log.debug(msg);
     }
 //    @Override

@@ -6,10 +6,9 @@ package nl.uva.cs.lobcder.util;
 
 import com.bradmcevoy.http.Range;
 import com.bradmcevoy.io.StreamUtils;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 import java.util.List;
@@ -93,14 +92,14 @@ public class LobIOUtils {
     public static void copy(InputStream in, OutputStream out) throws IOException {
         try {
             // danger!
-//            int length = in.available();
-//            if (length != 0) {
-//                byte[] bytes = new byte[length];
-//                in.read(bytes);
-//                out.write(bytes);
-//            } else {
+            int length = in.available();
+            if (length != 0) {
+                byte[] bytes = new byte[length];
+                in.read(bytes);
+                out.write(bytes);
+            } else {
                 IOUtils.copy(in, out);
-//            }
+            }
 
         } finally {
             if (in != null) {
@@ -109,6 +108,46 @@ public class LobIOUtils {
             if (out != null) {
                 out.close();
             }
+        }
+    }
+
+    public void copyCompletely(InputStream input, OutputStream output) throws IOException {
+        // if both are file streams, use channel IO
+        if ((output instanceof FileOutputStream) && (input instanceof FileInputStream)) {
+            try {
+                FileChannel target = ((FileOutputStream) output).getChannel();
+                FileChannel source = ((FileInputStream) input).getChannel();
+                source.transferTo(0, Integer.MAX_VALUE, target);
+                source.close();
+                target.close();
+
+                return;
+            } catch (Exception e) { /*
+                 * failover to byte stream version
+                 */
+
+            }
+        }
+        int length = input.available();
+        if (length <= 0) {
+            length = 500 * 1024 * 1024;
+        }
+        byte[] buf = new byte[length];
+        while (true) {
+            length = input.read(buf);
+            if (length < 0) {
+                break;
+            }
+            output.write(buf, 0, length);
+        }
+
+        try {
+            input.close();
+        } catch (IOException ignore) {
+        }
+        try {
+            output.close();
+        } catch (IOException ignore) {
         }
     }
 }

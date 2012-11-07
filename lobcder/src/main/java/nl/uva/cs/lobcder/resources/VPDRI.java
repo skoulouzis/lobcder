@@ -71,6 +71,7 @@ public class VPDRI implements PDRI {
     private final Long storageSiteId;
     private final String baseDir = "LOBCDER-REPLICA-v2.0";
     private final String fileURI;
+    private static final int DELETE = 0;
 
     VPDRI(String fileURI, Long storageSiteId, String resourceUrl, String username, String password) throws IOException {
         try {
@@ -129,11 +130,9 @@ public class VPDRI implements PDRI {
 
     @Override
     public void delete() throws IOException {
-        try {
-            this.vfsClient.openLocation(vrl).delete();
-        } catch (VlException ex) {
-            throw new IOException(ex);
-        }
+        //it's void so do it asynchronously
+        Runnable asyncDel = getAsyncDelete(this.vfsClient, vrl);
+        asyncDel.run();
     }
 
     @Override
@@ -147,36 +146,9 @@ public class VPDRI implements PDRI {
 
     @Override
     public void putData(InputStream in) throws IOException {
-        OutputStream out = null;
-        try {
-            out = this.vfsClient.getFile(vrl).getOutputStream();
-            LobIOUtils.copy(in, out);
-        } catch (VlException ex) {
-            if (ex instanceof ResourceNotFoundException || ex.getMessage().contains("Couldn open location. Get NULL object for")) {
-                try {
-                    out = this.vfsClient.createFile(vrl, false).getOutputStream();
-                    LobIOUtils.copy(in, out);
-                } catch (Exception ex1) {
-                    try {
-                        vfsClient.mkdirs(vrl.getParent());
-                        out = this.vfsClient.createFile(vrl, false).getOutputStream();
-                        LobIOUtils.copy(in, out);
-                    } catch (VlException ex2) {
-                        Logger.getLogger(VPDRI.class.getName()).log(Level.SEVERE, null, ex2);
-                    }
-                }
-            } else {
-                throw new IOException(ex);
-            }
-        } finally {
-            try {
-                if (out != null) {
-                    out.close();
-                }
-            } catch (IOException ex) {
-                throw ex;
-            }
-        }
+        //Fire and forget ??
+        Runnable asyncPut = getAsyncPutData(this.vfsClient, in);
+        asyncPut.run();
     }
 
     @Override
@@ -187,5 +159,71 @@ public class VPDRI implements PDRI {
     @Override
     public String getURL() {
         return this.fileURI;
+    }
+
+    private Runnable getAsyncDelete(final VFSClient vfsClient, final VRL vrl) {
+        return new Runnable() {
+
+            @Override
+            public void run() {
+                try {
+                    vfsClient.openLocation(vrl).delete();
+                } catch (VlException ex) {
+                    Logger.getLogger(VPDRI.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        };
+    }
+
+    private Runnable getAsyncPutData(final VFSClient vfsClient, final InputStream in) {
+        return new Runnable() {
+
+            @Override
+            public void run() {
+                OutputStream out = null;
+                try {
+                    out = vfsClient.getFile(vrl).getOutputStream();
+                    LobIOUtils u = new LobIOUtils();
+                    u.copyCompletely(in, out);
+                } catch (IOException ex) {
+                    Logger.getLogger(VPDRI.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (VlException ex) {
+                    if (ex instanceof ResourceNotFoundException || ex.getMessage().contains("Couldn open location. Get NULL object for")) {
+                        try {
+                            out = vfsClient.createFile(vrl, false).getOutputStream();
+                            LobIOUtils.copy(in, out);
+                        } catch (Exception ex1) {
+                            try {
+                                vfsClient.mkdirs(vrl.getParent());
+                                out = vfsClient.createFile(vrl, false).getOutputStream();
+                                LobIOUtils.copy(in, out);
+                            } catch (IOException ex2) {
+                                Logger.getLogger(VPDRI.class.getName()).log(Level.SEVERE, null, ex2);
+                            } catch (VlException ex2) {
+                                Logger.getLogger(VPDRI.class.getName()).log(Level.SEVERE, null, ex2);
+                            }
+                        }
+                    } else {
+                        try {
+                            throw new IOException(ex);
+                        } catch (IOException ex1) {
+                            Logger.getLogger(VPDRI.class.getName()).log(Level.SEVERE, null, ex1);
+                        }
+                    }
+                } finally {
+                    try {
+                        if (out != null) {
+                            out.close();
+                        }
+                    } catch (IOException ex) {
+                        try {
+                            throw ex;
+                        } catch (IOException ex1) {
+                            Logger.getLogger(VPDRI.class.getName()).log(Level.SEVERE, null, ex1);
+                        }
+                    }
+                }
+            }
+        };
     }
 }

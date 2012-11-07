@@ -11,6 +11,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.naming.Context;
 import javax.naming.InitialContext;
+import javax.naming.NamingException;
 import javax.sql.DataSource;
 import nl.uva.cs.lobcder.authdb.MyPrincipal;
 import nl.uva.cs.lobcder.authdb.Permissions;
@@ -24,6 +25,12 @@ import nl.uva.cs.lobcder.util.Constants;
 public class JDBCatalogue {
 
     private DataSource datasource = null;
+
+    public JDBCatalogue() throws NamingException, Exception {
+
+        Runnable init = initDatasource();
+        init.run();
+    }
 
     public Connection getConnection() throws CatalogueException {
         try {
@@ -40,9 +47,6 @@ public class JDBCatalogue {
         } catch (Exception e) {
             throw new CatalogueException(e.getMessage());
         }
-    }
-
-    public JDBCatalogue() {
     }
     private Timer timer = null;
 
@@ -1246,5 +1250,26 @@ public class JDBCatalogue {
 
     private void debug(String msg) {
 //        System.err.println(this.getClass().getName()+": "+msg);
+    }
+
+    private Runnable initDatasource() {
+        return new Runnable() {
+            @Override
+            public void run() {
+                    if (datasource == null) {
+                        try {
+                            String jndiName = "jdbc/lobcder";
+                            Context ctx = new InitialContext();
+                            if (ctx == null) {
+                                throw new Exception("JNDI could not create InitalContext ");
+                            }
+                            Context envContext = (Context) ctx.lookup("java:/comp/env");
+                            datasource = (DataSource) envContext.lookup(jndiName);
+                        } catch (Exception ex) {
+                            Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    }
+            }
+        };
     }
 }

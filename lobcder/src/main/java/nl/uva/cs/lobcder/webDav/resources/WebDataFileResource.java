@@ -38,7 +38,7 @@ import org.apache.commons.io.IOUtils;
 public class WebDataFileResource extends WebDataResource implements
         com.bradmcevoy.http.FileResource {
 
-    private static final boolean debug = false;
+    private static final boolean debug = true;
 
     public WebDataFileResource(JDBCatalogue catalogue, LogicalData logicalData) throws CatalogueException, Exception {
         super(catalogue, logicalData);
@@ -274,7 +274,7 @@ public class WebDataFileResource extends WebDataResource implements
     public String processForm(Map<String, String> parameters,
             Map<String, FileItem> files) throws BadRequestException,
             NotAuthorizedException {
-
+        
         //Maybe we can do more smart things here with deltas. So if we update a file send only the diff
         debug("processForm.");
         debug("\t parameters: " + parameters);
@@ -318,13 +318,6 @@ public class WebDataFileResource extends WebDataResource implements
 //        } finally {
 //        }
         return null;
-    }
-
-    @Override
-    protected void debug(String msg) {
-        if (debug) {
-            System.err.println(this.getClass().getSimpleName() + "." + getLogicalData().getLDRI() + ": " + msg);
-        }
     }
 
     @Override
