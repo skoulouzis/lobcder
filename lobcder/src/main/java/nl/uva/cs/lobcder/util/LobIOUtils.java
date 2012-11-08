@@ -133,6 +133,7 @@ public class LobIOUtils {
     }
 
     public static void fastCopy(final ReadableByteChannel src, final WritableByteChannel dest) throws IOException {
+        final ByteBuffer buffer = ByteBuffer.allocateDirect(64 * 1024);
         while (src.read(buffer) != -1) {
             buffer.flip();
             dest.write(buffer);
