@@ -71,7 +71,6 @@ public class VPDRI implements PDRI {
     private final Long storageSiteId;
     private final String baseDir = "LOBCDER-REPLICA-v2.0";
     private final String fileURI;
-    private static final int DELETE = 0;
 
     VPDRI(String fileURI, Long storageSiteId, String resourceUrl, String username, String password) throws IOException {
         try {
@@ -184,19 +183,19 @@ public class VPDRI implements PDRI {
                 try {
                     out = vfsClient.getFile(vrl).getOutputStream();
                     LobIOUtils u = new LobIOUtils();
-                    u.copyCompletely(in, out);
+                    u.fastCopy(in, out);
                 } catch (IOException ex) {
                     Logger.getLogger(VPDRI.class.getName()).log(Level.SEVERE, null, ex);
                 } catch (VlException ex) {
                     if (ex instanceof ResourceNotFoundException || ex.getMessage().contains("Couldn open location. Get NULL object for")) {
                         try {
                             out = vfsClient.createFile(vrl, false).getOutputStream();
-                            LobIOUtils.copy(in, out);
+                            LobIOUtils.fastCopy(in, out);
                         } catch (Exception ex1) {
                             try {
                                 vfsClient.mkdirs(vrl.getParent());
                                 out = vfsClient.createFile(vrl, false).getOutputStream();
-                                LobIOUtils.copy(in, out);
+                                LobIOUtils.fastCopy(in, out);
                             } catch (IOException ex2) {
                                 Logger.getLogger(VPDRI.class.getName()).log(Level.SEVERE, null, ex2);
                             } catch (VlException ex2) {

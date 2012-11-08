@@ -63,7 +63,7 @@ public class SimplePDRI implements PDRI {
                     File f = new File(string);
                     bos = new BufferedOutputStream(new FileOutputStream(f));
                     LobIOUtils u = new LobIOUtils();
-                    u.copyCompletely(data, bos);
+                    u.fastCopy(data, bos);
                 } catch (IOException ex) {
                     Logger.getLogger(SimplePDRI.class.getName()).log(Level.SEVERE, null, ex);
                 } finally {
