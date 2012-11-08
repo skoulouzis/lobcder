@@ -111,29 +111,30 @@ public class LobIOUtils {
 //            }
 //        }
 //    }
-    public static void fastCopy(final InputStream src, final OutputStream dest) throws IOException {
-//              if both are file streams, use channel IO
-        if ((dest instanceof FileOutputStream) && (src instanceof FileInputStream)) {
-            try {
-                FileChannel target = ((FileOutputStream) dest).getChannel();
-                FileChannel source = ((FileInputStream) src).getChannel();
-                source.transferTo(0, source.size(), target);
-                source.close();
-                target.close();
+    
+//    public static void fastCopy(final InputStream src, final OutputStream dest) throws IOException {
+////              if both are file streams, use channel IO
+//        if ((dest instanceof FileOutputStream) && (src instanceof FileInputStream)) {
+//            try {
+//                FileChannel target = ((FileOutputStream) dest).getChannel();
+//                FileChannel source = ((FileInputStream) src).getChannel();
+//                source.transferTo(0, source.size(), target);
+//                source.close();
+//                target.close();
+//
+//                return;
+//            } catch (Exception e) { /*
+//                 * failover to byte stream version
+//                 */
+//            }
+//        }
+//        final ReadableByteChannel inputChannel = Channels.newChannel(src);
+//        final WritableByteChannel outputChannel = Channels.newChannel(dest);
+//        fastCopy(inputChannel, outputChannel);
+//    }
 
-                return;
-            } catch (Exception e) { /*
-                 * failover to byte stream version
-                 */
-            }
-        }
-        final ReadableByteChannel inputChannel = Channels.newChannel(src);
-        final WritableByteChannel outputChannel = Channels.newChannel(dest);
-        fastCopy(inputChannel, outputChannel);
-    }
-
-    public static void fastCopy(final ReadableByteChannel src, final WritableByteChannel dest) throws IOException {
-        final ByteBuffer buffer = ByteBuffer.allocateDirect(64 * 1024);
+    private static void fastCopy(final ReadableByteChannel src, final WritableByteChannel dest) throws IOException {
+        final ByteBuffer buffer = ByteBuffer.allocateDirect(65536);
         while (src.read(buffer) != -1) {
             buffer.flip();
             dest.write(buffer);

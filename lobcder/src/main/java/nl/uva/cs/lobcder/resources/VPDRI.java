@@ -146,8 +146,53 @@ public class VPDRI implements PDRI {
     @Override
     public void putData(InputStream in) throws IOException {
         //Fire and forget ??
-        Runnable asyncPut = getAsyncPutData(this.vfsClient, in);
-        asyncPut.run();
+//        Runnable asyncPut = getAsyncPutData(this.vfsClient, in);
+//        asyncPut.run();
+        OutputStream out = null;
+        try {
+            out = vfsClient.getFile(vrl).getOutputStream();
+//                    LobIOUtils.fastCopy(in, out);
+            org.apache.commons.io.IOUtils.copy(in, out);
+        } catch (IOException ex) {
+            Logger.getLogger(VPDRI.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (VlException ex) {
+            if (ex instanceof ResourceNotFoundException || ex.getMessage().contains("Couldn open location. Get NULL object for")) {
+                try {
+                    out = vfsClient.createFile(vrl, false).getOutputStream();
+//                            LobIOUtils.fastCopy(in, out);
+                    org.apache.commons.io.IOUtils.copy(in, out);
+                } catch (Exception ex1) {
+                    try {
+                        vfsClient.mkdirs(vrl.getParent());
+                        out = vfsClient.createFile(vrl, false).getOutputStream();
+//                                LobIOUtils.fastCopy(in, out);
+                        org.apache.commons.io.IOUtils.copy(in, out);
+                    } catch (IOException ex2) {
+                        Logger.getLogger(VPDRI.class.getName()).log(Level.SEVERE, null, ex2);
+                    } catch (VlException ex2) {
+                        Logger.getLogger(VPDRI.class.getName()).log(Level.SEVERE, null, ex2);
+                    }
+                }
+            } else {
+                try {
+                    throw new IOException(ex);
+                } catch (IOException ex1) {
+                    Logger.getLogger(VPDRI.class.getName()).log(Level.SEVERE, null, ex1);
+                }
+            }
+        } finally {
+            try {
+                if (out != null) {
+                    out.close();
+                }
+            } catch (IOException ex) {
+                try {
+                    throw ex;
+                } catch (IOException ex1) {
+                    Logger.getLogger(VPDRI.class.getName()).log(Level.SEVERE, null, ex1);
+                }
+            }
+        }
     }
 
     @Override
@@ -182,20 +227,22 @@ public class VPDRI implements PDRI {
                 OutputStream out = null;
                 try {
                     out = vfsClient.getFile(vrl).getOutputStream();
-                    LobIOUtils u = new LobIOUtils();
-                    u.fastCopy(in, out);
+//                    LobIOUtils.fastCopy(in, out);
+                    org.apache.commons.io.IOUtils.copy(in, out);
                 } catch (IOException ex) {
                     Logger.getLogger(VPDRI.class.getName()).log(Level.SEVERE, null, ex);
                 } catch (VlException ex) {
                     if (ex instanceof ResourceNotFoundException || ex.getMessage().contains("Couldn open location. Get NULL object for")) {
                         try {
                             out = vfsClient.createFile(vrl, false).getOutputStream();
-                            LobIOUtils.fastCopy(in, out);
+//                            LobIOUtils.fastCopy(in, out);
+                            org.apache.commons.io.IOUtils.copy(in, out);
                         } catch (Exception ex1) {
                             try {
                                 vfsClient.mkdirs(vrl.getParent());
                                 out = vfsClient.createFile(vrl, false).getOutputStream();
-                                LobIOUtils.fastCopy(in, out);
+//                                LobIOUtils.fastCopy(in, out);
+                                org.apache.commons.io.IOUtils.copy(in, out);
                             } catch (IOException ex2) {
                                 Logger.getLogger(VPDRI.class.getName()).log(Level.SEVERE, null, ex2);
                             } catch (VlException ex2) {

@@ -6,6 +6,11 @@ package nl.uva.cs.lobcder.resources;
 
 import java.io.*;
 import java.net.URI;
+import java.nio.ByteBuffer;
+import java.nio.channels.Channels;
+import java.nio.channels.FileChannel;
+import java.nio.channels.ReadableByteChannel;
+import java.nio.channels.WritableByteChannel;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import nl.uva.cs.lobcder.util.LobIOUtils;
@@ -19,6 +24,7 @@ public class SimplePDRI implements PDRI {
     final private String baseLocation = System.getProperty("user.home") + "/tmp/lobcder/";
     final private String file_name;
     final private Long ssid;
+    private static final int BUF_SIZE = 65536;
 
     public SimplePDRI(Long ssid, String file_name) {
         this.ssid = ssid;
@@ -39,8 +45,9 @@ public class SimplePDRI implements PDRI {
 
     @Override
     public void putData(InputStream data) throws IOException {
-        Runnable asyncPut = getAsyncPutData(baseLocation + file_name, data);
-        asyncPut.run();
+//        Runnable asyncPut = getAsyncPutData(baseLocation + file_name, data);
+//        asyncPut.run();
+        setResourceContent(baseLocation + file_name, data);
     }
 
     @Override
@@ -53,27 +60,78 @@ public class SimplePDRI implements PDRI {
         return file_name;
     }
 
-    private Runnable getAsyncPutData(final String string, final InputStream data) {
+    private void setResourceContent(String uri, InputStream is) throws FileNotFoundException, IOException {
+
+        File file = new File(uri);
+        OutputStream os = new BufferedOutputStream(new FileOutputStream(file), BUF_SIZE);
+        try {
+            int read;
+            byte[] copyBuffer = new byte[BUF_SIZE];
+
+            while ((read = is.read(copyBuffer, 0, copyBuffer.length)) != -1) {
+                os.write(copyBuffer, 0, read);
+            }
+        } finally {
+            try {
+                is.close();
+            } finally {
+                os.close();
+            }
+        }
+    }
+
+    private Runnable getAsyncPutData(final String uri, final InputStream is) {
+
         return new Runnable() {
 
             @Override
             public void run() {
-                BufferedOutputStream bos = null;
+                OutputStream dest = null;
                 try {
-                    File f = new File(string);
-                    bos = new BufferedOutputStream(new FileOutputStream(f));
-                    LobIOUtils u = new LobIOUtils();
-                    u.fastCopy(data, bos);
+                    dest = new FileOutputStream(new File(uri));
+                    if ((dest instanceof FileOutputStream) && (is instanceof FileInputStream)) {
+                        try {
+                            FileChannel target = ((FileOutputStream) dest).getChannel();
+                            FileChannel source = ((FileInputStream) is).getChannel();
+                            source.transferTo(0, source.size(), target);
+                            source.close();
+                            target.close();
+
+                            return;
+                        } catch (Exception e) { /*
+                             * failover to byte stream version
+                             */
+                        }
+                    }
+                    final ReadableByteChannel inputChannel = Channels.newChannel(is);
+                    final WritableByteChannel outputChannel = Channels.newChannel(dest);
+                    fastCopy(inputChannel, outputChannel);
                 } catch (IOException ex) {
                     Logger.getLogger(SimplePDRI.class.getName()).log(Level.SEVERE, null, ex);
                 } finally {
                     try {
-                        bos.close();
+                        dest.close();
                     } catch (IOException ex) {
                         Logger.getLogger(SimplePDRI.class.getName()).log(Level.SEVERE, null, ex);
                     }
                 }
             }
+
+            private void fastCopy(ReadableByteChannel inputChannel, WritableByteChannel outputChannel) throws IOException {
+                final ByteBuffer buffer = ByteBuffer.allocateDirect(BUF_SIZE);
+                while (inputChannel.read(buffer) != -1) {
+                    buffer.flip();
+                    outputChannel.write(buffer);
+                    buffer.compact();
+                }
+                buffer.flip();
+
+                while (buffer.hasRemaining()) {
+                    outputChannel.write(buffer);
+                }
+            }
         };
+
+
     }
 }
