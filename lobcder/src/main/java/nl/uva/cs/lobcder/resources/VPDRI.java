@@ -4,14 +4,17 @@
  */
 package nl.uva.cs.lobcder.resources;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.ByteBuffer;
+import java.nio.channels.Channels;
+import java.nio.channels.FileChannel;
+import java.nio.channels.ReadableByteChannel;
+import java.nio.channels.WritableByteChannel;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import nl.uva.cs.lobcder.util.LobIOUtils;
+import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.vlet.Global;
 import nl.uva.vlet.GlobalConfig;
 import nl.uva.vlet.data.StringUtil;
@@ -145,52 +148,35 @@ public class VPDRI implements PDRI {
 
     @Override
     public void putData(InputStream in) throws IOException {
-        //Fire and forget ??
-//        Runnable asyncPut = getAsyncPutData(this.vfsClient, in);
-//        asyncPut.run();
         OutputStream out = null;
         try {
             out = vfsClient.getFile(vrl).getOutputStream();
-//                    LobIOUtils.fastCopy(in, out);
-            org.apache.commons.io.IOUtils.copy(in, out);
-        } catch (IOException ex) {
-            Logger.getLogger(VPDRI.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (VlException ex) {
-            if (ex instanceof ResourceNotFoundException || ex.getMessage().contains("Couldn open location. Get NULL object for")) {
+            //                   if both are file streams, use channel IO
+            if ((out instanceof FileOutputStream) && (in instanceof FileInputStream)) {
                 try {
-                    out = vfsClient.createFile(vrl, false).getOutputStream();
-//                            LobIOUtils.fastCopy(in, out);
-                    org.apache.commons.io.IOUtils.copy(in, out);
-                } catch (Exception ex1) {
-                    try {
-                        vfsClient.mkdirs(vrl.getParent());
-                        out = vfsClient.createFile(vrl, false).getOutputStream();
-//                                LobIOUtils.fastCopy(in, out);
-                        org.apache.commons.io.IOUtils.copy(in, out);
-                    } catch (IOException ex2) {
-                        Logger.getLogger(VPDRI.class.getName()).log(Level.SEVERE, null, ex2);
-                    } catch (VlException ex2) {
-                        Logger.getLogger(VPDRI.class.getName()).log(Level.SEVERE, null, ex2);
-                    }
-                }
-            } else {
-                try {
-                    throw new IOException(ex);
-                } catch (IOException ex1) {
-                    Logger.getLogger(VPDRI.class.getName()).log(Level.SEVERE, null, ex1);
+                    FileChannel target = ((FileOutputStream) out).getChannel();
+                    FileChannel source = ((FileInputStream) in).getChannel();
+                    source.transferTo(0, source.size(), target);
+                    source.close();
+                    target.close();
+
+                    return;
+                } catch (Exception e) { /*
+                     * failover to byte stream version
+                     */
+
                 }
             }
+            final ReadableByteChannel inputChannel = Channels.newChannel(in);
+            final WritableByteChannel outputChannel = Channels.newChannel(out);
+            fastCopy(inputChannel, outputChannel);
+        } catch (VlException ex) {
+            Logger.getLogger(VPDRI.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
             try {
-                if (out != null) {
-                    out.close();
-                }
+                out.close();
             } catch (IOException ex) {
-                try {
-                    throw ex;
-                } catch (IOException ex1) {
-                    Logger.getLogger(VPDRI.class.getName()).log(Level.SEVERE, null, ex1);
-                }
+                Logger.getLogger(VPDRI.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
     }
@@ -271,5 +257,20 @@ public class VPDRI implements PDRI {
                 }
             }
         };
+    }
+
+    private void fastCopy(ReadableByteChannel src, WritableByteChannel dest) throws IOException {
+        final ByteBuffer buffer = ByteBuffer.allocateDirect(Constants.BUF_SIZE);
+        while (src.read(buffer) != -1) {
+            buffer.flip();
+            dest.write(buffer);
+            buffer.compact();
+        }
+
+        buffer.flip();
+
+        while (buffer.hasRemaining()) {
+            dest.write(buffer);
+        }
     }
 }

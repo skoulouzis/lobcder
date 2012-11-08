@@ -25,4 +25,5 @@ public class Constants {
     public static final String DRI_CHECKSUM = "dri-checksum";
     public static final String DRI_LAST_VALIDATION_DATE = "dri-last-validation-date-ms";
     public static final String CURRENT_USER_PRIVILEGE_PROP_NAME="current-user-privilege-set";
+    public static final int BUF_SIZE = 131072;
 }
