@@ -163,6 +163,7 @@ public class WebDAVTest {
     //     create test resource, make it referenceable, check resource id, move resource, check again
     @Test
     public void testResourceId() throws HttpException, IOException, DavException, URISyntaxException {
+        System.out.println("testResourceId");
         String testcol = this.root + "testResourceId/";
         String testuri1 = testcol + "bindtest1";
         String testuri2 = testcol + "bindtest2";
@@ -213,6 +214,7 @@ public class WebDAVTest {
 
     @Test
     public void testSimpleBind() throws Exception {
+        System.out.println("testSimpleBind");
         String testcol = this.root + "testSimpleBind/";
         String subcol1 = testcol + "bindtest1/";
         String testres1 = subcol1 + "res1";
@@ -286,6 +288,7 @@ public class WebDAVTest {
 ////    No rebind yet
 //    @Test
 //    public void testRebind() throws Exception {
+//    System.out.println("testRebind");
 //        String testcol = this.root + "testRebind/";
 //        String subcol1 = testcol + "bindtest1/";
 //        String testres1 = subcol1 + "res1";
@@ -348,6 +351,7 @@ public class WebDAVTest {
 //    }
     @Test
     public void testBindOverwrite() throws Exception {
+        System.out.println("testBindOverwrite");
         String testcol = this.root + "testSimpleBind/";
         String subcol1 = testcol + "bindtest1/";
         String testres1 = subcol1 + "res1";
@@ -413,6 +417,7 @@ public class WebDAVTest {
 
     @Test
     public void testRebindOverwrite() throws Exception {
+        System.out.println("testRebindOverwrite");
         String testcol = this.root + "testSimpleBind/";
         String subcol1 = testcol + "bindtest1/";
         String testres1 = subcol1 + "res1";
@@ -487,6 +492,7 @@ public class WebDAVTest {
 
     @Test
     public void testParentSet() throws Exception {
+        System.out.println("testParentSet");
         String testcol = this.root + "testParentSet/";
         String subcol1 = testcol + "bindtest1/";
         String testres1 = subcol1 + "res1";
@@ -557,6 +563,7 @@ public class WebDAVTest {
 
     @Test
     public void testBindCollections() throws Exception {
+        System.out.println("testBindCollections");
         String testcol = this.root + "testBindCollections/";
         String a1 = testcol + "a1/";
         String b1 = a1 + "b1/";
@@ -632,6 +639,7 @@ public class WebDAVTest {
     //will fail until <https://issues.apache.org/jira/browse/JCR-1773> is fixed
     @Test
     public void testUnbind() throws Exception {
+        System.out.println("testUnbind");
         String testcol = this.root + "testUnbind/";
         String subcol1 = testcol + "bindtest1/";
         String testres1 = subcol1 + "res1";
@@ -685,7 +693,7 @@ public class WebDAVTest {
 
     @Test
     public void testMove() throws HttpException, IOException, DavException, URISyntaxException {
-
+System.out.println("testMove");
         String testcol = this.root + "testResourceId/";
         String testuri = testcol + "movetest";
         String destinationuri = testuri + "2";
@@ -758,6 +766,7 @@ public class WebDAVTest {
     }
 
     public void testPutIfEtag() throws HttpException, IOException, DavException, URISyntaxException {
+        System.out.println("testPutIfEtag");
         String testcol = this.root + "testResourceId/";
         String testuri = testcol + "iftest";
         int status;
@@ -856,7 +865,7 @@ public class WebDAVTest {
 //
     @Test
     public void testPropfindInclude() throws HttpException, IOException, DavException, URISyntaxException {
-
+System.out.println("testPropfindInclude");
         String testcol = this.root + "testPropfindInclude/";
         String testuri = testcol + "iftest/ ";
         int status;
@@ -895,6 +904,7 @@ public class WebDAVTest {
 
     @Test
     public void testGetDataDistribution() throws UnsupportedEncodingException, IOException, DavException {
+        System.out.println("testGetDataDistribution");
         String testcol1 = this.root + "testResourceId/";
         String testuri1 = testcol1 + "file1";
         String testuri2 = testcol1 + "file2";
@@ -971,6 +981,7 @@ public class WebDAVTest {
 
     @Test
     public void testGetSetDRISupervisedProp() throws UnsupportedEncodingException, IOException, DavException {
+        System.out.println("testGetSetDRISupervisedProp");
         String testcol1 = this.root + "testResourceId/";
         String testuri1 = testcol1 + "file1";
         String testuri2 = testcol1 + "file2";
@@ -1098,6 +1109,7 @@ public class WebDAVTest {
 
     @Test
     public void testGetSetDRICheckSumProp() throws UnsupportedEncodingException, IOException, DavException {
+        System.out.println("testGetSetDRICheckSumProp");
         String testcol1 = this.root + "testResourceId/";
         String testuri1 = testcol1 + "file1";
         String testuri2 = testcol1 + "file2";
@@ -1208,6 +1220,7 @@ public class WebDAVTest {
 
     @Test
     public void testGetSetDriLastValidationdateProp() throws UnsupportedEncodingException, IOException, DavException {
+        System.out.println("testGetSetDriLastValidationdateProp");
         String testcol1 = this.root + "testResourceId/";
         String testuri1 = testcol1 + "file1";
         String testuri2 = testcol1 + "file2";
