@@ -8,18 +8,13 @@ import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.Properties;
 import java.util.Random;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import nl.uva.vlet.Global;
 import nl.uva.vlet.GlobalConfig;
 import nl.uva.vlet.exception.VlException;
 import nl.uva.vlet.vfs.VDir;
 import nl.uva.vlet.vfs.VFSClient;
-import nl.uva.vlet.vfs.VFSNode;
 import nl.uva.vlet.vfs.VFile;
 import nl.uva.vlet.vrl.VRL;
 import nl.uva.vlet.vrs.ServerInfo;
@@ -37,14 +32,16 @@ import org.apache.commons.httpclient.methods.multipart.Part;
 import org.apache.commons.httpclient.methods.multipart.StringPart;
 import org.apache.commons.httpclient.protocol.Protocol;
 import org.apache.commons.httpclient.protocol.ProtocolSocketFactory;
-import org.apache.commons.httpclient.util.HttpURLConnection;
+import org.apache.jackrabbit.webdav.*;
 import org.apache.jackrabbit.webdav.client.methods.MkColMethod;
+import org.apache.jackrabbit.webdav.client.methods.PropFindMethod;
 import org.apache.jackrabbit.webdav.client.methods.PutMethod;
+import org.apache.jackrabbit.webdav.property.*;
+import org.apache.jackrabbit.webdav.version.DeltaVConstants;
 import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.Test;
 import static org.junit.Assert.*;
 import org.junit.BeforeClass;
+import org.junit.Test;
 
 /**
  *
@@ -60,22 +57,23 @@ public class PerformanceTest {
     private static HttpClient client;
     private static String lobcdrTestPath;
     private static VFSClient vfsClient;
-    public static final int[] FILE_SIZE_IN_KB = {3200};//{100,400,1600,3200};
+    public static final int[] FILE_SIZE_IN_KB = {6400};//{100,400,1600,3200};
     public static final int STEP_SIZE_DATASET = 4;
     public static final int MIN_SIZE_DATASET = 10;//3;//640;
-    public static final int MAX_SIZE_DATASET = 800;
+    public static final int MAX_SIZE_DATASET = 20;
     public static String measuresPath = "measures";
     private static String hostMeasuresPath;
     private static File downloadDir;
     private static File uploadDir;
     private static String lobcderFilePath;
+    private static Properties prop;
 
     @BeforeClass
     public static void setUpClass() throws Exception {
         String propBasePath = System.getProperty("user.home") + File.separator
                 + "workspace" + File.separator + "lobcder-tests"
                 + File.separator + "etc" + File.separator + "test.proprties";
-        Properties prop = TestSettings.getTestProperties(propBasePath);
+        prop = TestSettings.getTestProperties(propBasePath);
 
 
         initBackendDriver(prop);
@@ -97,11 +95,17 @@ public class PerformanceTest {
         int status = client.executeMethod(del);
         assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
 
+//        del = new DeleteMethod(lobcderRoot);
+//        debug("Deleteing: " + lobcderRoot);
+//        status = client.executeMethod(del);
+//        assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT || status == HttpStatus.SC_MULTI_STATUS);
+
         del = new DeleteMethod(lobcderFilePath);
         debug("Deleteing: " + lobcderFilePath);
         status = client.executeMethod(del);
         assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT || status == HttpStatus.SC_MULTI_STATUS);
-        
+
+
         localTempDir.delete();
     }
 
@@ -197,11 +201,24 @@ public class PerformanceTest {
     }
 
     @Test
-    public void benchmarkTest() throws FileNotFoundException, IOException, InterruptedException, VlException {
-        benchmarkUpload();
-        benchmarkDownload();
-//        uploadOneLargeFile(30000);
-//        downloadOneLargeFile();
+    public void benchmarkTest() throws FileNotFoundException, IOException, InterruptedException, VlException, DavException {
+        Boolean testLargeUpload = Boolean.valueOf(prop.getProperty("test.large.upload", "true"));
+        Boolean testLargeDownload = Boolean.valueOf(prop.getProperty("test.large.download", "true"));
+        Boolean testDatasetUpload = Boolean.valueOf(prop.getProperty("test.dataset.upload", "true"));
+        Boolean testDatasetDownload = Boolean.valueOf(prop.getProperty("test.dataset.download", "true"));
+        if (testDatasetUpload) {
+            benchmarkUpload();
+        }
+        if (testDatasetDownload) {
+            benchmarkDownload();
+        }
+        int sizeInMB = 3;
+        if (testLargeUpload) {
+            uploadOneLargeFile(sizeInMB);
+        }
+        if (testLargeDownload) {
+            downloadOneLargeFile(sizeInMB);
+        }
     }
 
     private void benchmarkDownload() throws IOException, VlException {
@@ -215,7 +232,7 @@ public class PerformanceTest {
         lobcderFilePath = lobcdrTestPath + localFile.getName();
         GetMethod get = new GetMethod(lobcderFilePath);
 
-        String header = "numOfFiles,sizeDownloaded(kb),DownloadTime(msec),Speed(kb/msec)";
+        String header = "numOfFiles,sizeDownloaded(kb),DownloadTime(sec),Speed(kb/sec)";
         for (int k : FILE_SIZE_IN_KB) {
             FileWriter writer = new FileWriter(downloadDir.getAbsolutePath() + File.separator + System.currentTimeMillis() + "_" + k + "k.csv");
             writer.append(header + "\n");
@@ -287,7 +304,7 @@ public class PerformanceTest {
         RequestEntity requestEntity = new FileRequestEntity(new File(localFile.getVRL().toURI()), "application/octet-stream");
         put.setRequestEntity(requestEntity);
 
-        String header = "numOfFiles,sizeUploaded(kb),UploadTime(msec),Speed(kb/msec)";
+        String header = "numOfFiles,sizeUploaded(kb),UploadTime(sec),Speed(kb/sec)";
         for (int k : FILE_SIZE_IN_KB) {
             FileWriter writer = new FileWriter(uploadDir.getAbsolutePath() + File.separator + System.currentTimeMillis() + "_" + k + "k.csv");
             writer.append(header + "\n");
@@ -322,7 +339,7 @@ public class PerformanceTest {
                 double sizeUploadedKb = (sizeUploaded / 1024.0);
                 double datasetUploadSpeedKBperSec = sizeUploadedKb / (datasetElapsed / 1000.0);
                 debug("mean lobcder upload speed=" + datasetUploadSpeedKBperSec + "KB/s");
-                writer.append(i + "," + sizeUploadedKb + "," + datasetElapsed + "," + datasetUploadSpeedKBperSec + "\n");
+                writer.append(i + "," + sizeUploadedKb + "," + (datasetElapsed / 1000.0) + "," + datasetUploadSpeedKBperSec + "\n");
                 writer.flush();
             }
             writer.flush();
@@ -337,9 +354,7 @@ public class PerformanceTest {
         System.err.println("debug: " + msg);
     }
 
-    private void uploadOneLargeFile(int lenInMb) throws VlException, IOException {
-
-
+    private void uploadOneLargeFile(int lenInMb) throws VlException, IOException, DavException {
         VFile localFile = localTempDir.createFile("testLargeUpload");
 
         long start_time = 0;
@@ -351,9 +366,7 @@ public class PerformanceTest {
             generator.nextBytes(buffer);
             out.write(buffer);
         }
-
         File testUploadFile = new File(localFile.getVRL().toURI());
-
         Part[] parts = {
             new StringPart("param_name", "value"),
             new FilePart(testUploadFile.getName(), testUploadFile)
@@ -367,10 +380,18 @@ public class PerformanceTest {
         debug("upload file size: " + localFile.getLength() / (1024.0 * 1024.0) + "Mb");
         start_time = System.currentTimeMillis();
         int status = client.executeMethod(method);
-        long datasetElapsed = System.currentTimeMillis() - start_time;
+        long endUnixTime = System.currentTimeMillis();
+        long datasetElapsed = endUnixTime - start_time;
         assertEquals(HttpStatus.SC_CREATED, status);
 
-        double sizeUploaded = localFile.getLength();
+        PropFindMethod propFind = new PropFindMethod(lobcderFilePath, DavConstants.PROPFIND_ALL_PROP_INCLUDE, DavConstants.DEPTH_0);
+        status = client.executeMethod(propFind);
+        MultiStatus multiStatus = propFind.getResponseBodyAsMultiStatus();
+        MultiStatusResponse[] responses = multiStatus.getResponses();
+        DavPropertySet allProp = getProperties(responses[0]);
+        String lenStr = (String) allProp.get(DavPropertyName.GETCONTENTLENGTH).getValue();
+
+        double sizeUploaded = Double.valueOf(lenStr);//localFile.getLength();
         double sizeUploadedKb = (sizeUploaded / 1024.0);
         double sizeUploadedMB = (sizeUploaded / (1024.0 * 1024.0));
 
@@ -378,7 +399,7 @@ public class PerformanceTest {
         double datasetUploadSpeedMBperSec = sizeUploadedMB / (datasetElapsed / 1000.0);
         debug("lobcder upload speed=" + datasetUploadSpeedMBperSec + "MB/s");
 
-        String header = "numOfFiles,sizeUploaded(kb),UploadTime(msec),Speed(kb/msec)";
+        String header = "startUnixTime,numOfFiles,sizeUploaded(kb),UploadTime(sec),Speed(kb/sec)";
         File f = new File(uploadDir.getAbsolutePath() + File.separator + "_" + lenInMb + "Mb.csv");
         FileWriter writer;
         if (!f.exists()) {
@@ -388,12 +409,108 @@ public class PerformanceTest {
         } else {
             writer = new FileWriter(f, true);
         }
-        writer.append("1," + sizeUploadedKb + "," + datasetElapsed + "," + datasetUploadSpeedKBperSec + "\n");
+        writer.append(start_time / 1000 + "," + endUnixTime + ",1," + sizeUploadedKb + "," + (datasetElapsed / 1000.0) + "," + datasetUploadSpeedKBperSec + "\n");
         writer.flush();
         writer.close();
     }
 
-    private void downloadOneLargeFile() {
-//        throw new UnsupportedOperationException("Not yet implemented");
+    private DavPropertySet getProperties(MultiStatusResponse statusResponse) {
+        Status[] status = statusResponse.getStatus();
+
+        DavPropertySet allProp = new DavPropertySet();
+        for (int i = 0; i < status.length; i++) {
+            DavPropertySet pset = statusResponse.getProperties(status[i].getStatusCode());
+            allProp.addAll(pset);
+        }
+
+        return allProp;
+    }
+
+    private void downloadOneLargeFile(int lenInMb) throws VlException, IOException, DavException {
+        VFile localFile = null;
+        if (!localTempDir.existsFile("testLargeUpload")) {
+            localFile = localTempDir.createFile("testLargeUpload");
+        } else {
+            localFile = localTempDir.getFile("testLargeUpload");
+        }
+
+        if (localFile.getLength() != lenInMb) {
+            Random generator = new Random();
+            byte buffer[] = new byte[1024 * 1024];
+            OutputStream out = localFile.getOutputStream();
+            for (int i = 0; i < lenInMb; i++) {
+                generator.nextBytes(buffer);
+                out.write(buffer);
+            }
+            out.flush();
+            out.close();
+        }
+
+        lobcderFilePath = lobcdrTestPath + localFile.getName();
+        PropFindMethod propFind = new PropFindMethod(lobcderFilePath, DavConstants.PROPFIND_ALL_PROP_INCLUDE, DavConstants.DEPTH_0);
+        int status = client.executeMethod(propFind);
+
+        if (status == HttpStatus.SC_MULTI_STATUS) {
+            MultiStatus multiStatus = propFind.getResponseBodyAsMultiStatus();
+            MultiStatusResponse[] responses = multiStatus.getResponses();
+            DavPropertySet allProp = getProperties(responses[0]);
+            DavPropertyIterator iter = allProp.iterator();
+//        while (iter.hasNext()) {
+//            DavProperty<?> p = iter.nextProperty();
+//            System.out.println("P: " + p.getName() + " " + p.getValue());
+//        }
+            String lenStr = (String) allProp.get(DavPropertyName.GETCONTENTLENGTH).getValue();
+            int lenInBytes = lenInMb * 1024 * 1024;
+//            if (Integer.valueOf(lenStr) != lenInBytes) {
+//                File testUploadFile = new File(localFile.getVRL().toURI());
+//                Part[] parts = {
+//                    new StringPart("param_name", "value"),
+//                    new FilePart(testUploadFile.getName(), testUploadFile)
+//                };
+//                PutMethod method = new PutMethod(lobcderFilePath);
+//                MultipartRequestEntity requestEntity = new MultipartRequestEntity(parts, method.getParams());
+//                method.setRequestEntity(requestEntity);
+//                
+//            }
+        }
+
+
+        GetMethod method = new GetMethod(lobcderFilePath);
+        long start_time = 0;
+        File f = new File("/tmp/testDir/tmpFile");
+        f.deleteOnExit();
+        FileOutputStream fout = new FileOutputStream(f);
+        byte[] data = new byte[128 * 1024];
+        start_time = System.currentTimeMillis();
+        status = client.executeMethod(method);
+        InputStream in = method.getResponseBodyAsStream();
+        while ((in.read(data)) != -1) {
+            fout.write(data);
+        }
+        long endUnixTime = System.currentTimeMillis();
+        long datasetElapsed = endUnixTime - start_time;
+        assertEquals(HttpStatus.SC_OK, status);
+
+        double sizeDownloaded = f.length();
+        double sizeDownLoadedKb = (sizeDownloaded / 1024.0);
+        double sizeDownLoadedMB = (sizeDownloaded / (1024.0 * 1024.0));
+        double datasetUploadSpeedKBperSec = sizeDownLoadedKb / (datasetElapsed / 1000.0);
+        double datasetUploadSpeedMBperSec = sizeDownLoadedMB / (datasetElapsed / 1000.0);
+        debug("lobcder download speed=" + datasetUploadSpeedMBperSec + "MB/s");
+
+        String header = "startUnixTime,endUnixTime,numOfFiles,sizeDownload(kb),UploadTime(sec),Speed(kb/sec)";
+        File measureF = new File(downloadDir.getAbsolutePath() + File.separator + "_" + lenInMb + "Mb.csv");
+        FileWriter writer;
+        if (!measureF.exists()) {
+            writer = new FileWriter(measureF);
+            writer.append(header + "\n");
+            writer.flush();
+        } else {
+            writer = new FileWriter(measureF, true);
+        }
+        writer.append(start_time / 1000 + "," + endUnixTime / 1000 + ",1," + sizeDownLoadedKb + "," + (datasetElapsed / 1000.0) + "," + datasetUploadSpeedKBperSec + "\n");
+        writer.flush();
+        writer.close();
+
     }
 }
