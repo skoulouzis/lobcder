@@ -1,4 +1,4 @@
-webdav.test.url=http://localhost:8083/lobcder-2.0-SNAPSHOT/dav
+webdav.test.url=http://localhost:8083//tomcatWebDAV
 webdav.test.username1=demo1
 webdav.test.password1=d3moPasswd
 webdav.test.username2=p-med

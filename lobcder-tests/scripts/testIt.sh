@@ -98,7 +98,7 @@ echo $TEST_SET_UP >> $BASE_DIR/etc/test.proprties
 echo $TEST_SET_DOWN >> $BASE_DIR/etc/test.proprties
 
 
-for i in 1 2 3 4 5 
+for i in 1 
 do
 	JAVA_HOME=/opt/java/jdk $HOME/.netbeans/7.0/maven/bin/mvn -f $BASE_DIR//pom.xml -Dtest=nl.uva.cs.lobcder.tests.PerformanceTest test-compile surefire:test
 done
@@ -198,7 +198,7 @@ echo $TEST_SET_UP >> $BASE_DIR/etc/test.proprties
 echo $TEST_SET_DOWN >> $BASE_DIR/etc/test.proprties
 
 
-for i in 1 2 3 4 5 
+for i in 1 
 do
     JAVA_HOME=/opt/java/jdk $HOME/.netbeans/7.0/maven/bin/mvn -f $BASE_DIR//pom.xml -Dtest=nl.uva.cs.lobcder.tests.PerformanceTest test-compile surefire:test
 done
@@ -207,6 +207,6 @@ done
 
 
 #---------------------THE END---------------------------
-scp -r $HOME/measures/localhost elab:$BASE_DIR//measures
+scp -r $BASE_DIR/measures/localhost elab:$BASE_DIR/measures
 $HOME/servers/apache-tomcat-6.0.35-TEST/bin/shutdown.sh
 
