@@ -57,7 +57,7 @@ public class PerformanceTest {
     private static HttpClient client;
     private static String lobcdrTestPath;
     private static VFSClient vfsClient;
-    public static final int[] FILE_SIZE_IN_KB = {6400};//{100,400,1600,3200};
+    public static final int[] FILE_SIZE_IN_KB = {10};//{100,400,1600,3200};
     public static final int STEP_SIZE_DATASET = 4;
     public static final int MIN_SIZE_DATASET = 10;//3;//640;
     public static final int MAX_SIZE_DATASET = 20;
