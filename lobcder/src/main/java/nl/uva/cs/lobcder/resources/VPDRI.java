@@ -14,12 +14,14 @@ import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.imageio.IIOException;
 import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.vlet.Global;
 import nl.uva.vlet.GlobalConfig;
 import nl.uva.vlet.data.StringUtil;
 import nl.uva.vlet.exception.ResourceNotFoundException;
 import nl.uva.vlet.exception.VlException;
+import nl.uva.vlet.io.CircularStreamBufferTransferer;
 import nl.uva.vlet.util.cog.GridProxy;
 import nl.uva.vlet.vfs.VFSClient;
 import nl.uva.vlet.vfs.VFile;
@@ -27,6 +29,7 @@ import nl.uva.vlet.vrl.VRL;
 import nl.uva.vlet.vrs.ServerInfo;
 import nl.uva.vlet.vrs.VRS;
 import nl.uva.vlet.vrs.VRSContext;
+import org.jdom.adapters.CrimsonDOMAdapter;
 
 /**
  * A test PDRI to implement the delete get/set data methods with the VRS API
@@ -34,7 +37,7 @@ import nl.uva.vlet.vrs.VRSContext;
  * @author S. koulouzis
  */
 public class VPDRI implements PDRI {
-
+    
     static {
         try {
             InitGlobalVFS();
@@ -42,7 +45,7 @@ public class VPDRI implements PDRI {
             Logger.getLogger(StorageSite.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-
+    
     private static void InitGlobalVFS() throws MalformedURLException, VlException, Exception {
         try {
             GlobalConfig.setBaseLocation(new URL("http://dummy/url"));
@@ -74,7 +77,7 @@ public class VPDRI implements PDRI {
     private final Long storageSiteId;
     private final String baseDir = "LOBCDER-REPLICA-v2.0";
     private final String fileURI;
-
+    
     VPDRI(String fileURI, Long storageSiteId, String resourceUrl, String username, String password) throws IOException {
         try {
             this.fileURI = fileURI;
@@ -90,20 +93,20 @@ public class VPDRI implements PDRI {
             throw new IOException(ex);
         }
     }
-
+    
     private void initVFS() throws VlException, MalformedURLException {
         this.vfsClient = new VFSClient();
         VRSContext context = this.vfsClient.getVRSContext();
         //Bug in sftp: We have to put the username in the url
         ServerInfo info = context.getServerInfoFor(vrl, true);
         String authScheme = info.getAuthScheme();
-
+        
         if (StringUtil.equals(authScheme, ServerInfo.GSI_AUTH)) {
             //Use the username and password to get access to MyProxy 
             GridProxy proxy = null;
             context.setGridProxy(proxy);
         }
-
+        
         if (StringUtil.equals(authScheme, ServerInfo.PASSWORD_AUTH)
                 || StringUtil.equals(authScheme, ServerInfo.PASSWORD_OR_PASSPHRASE_AUTH)
                 || StringUtil.equals(authScheme, ServerInfo.PASSPHRASE_AUTH)) {
@@ -118,7 +121,7 @@ public class VPDRI implements PDRI {
             }
             info.setPassword(password);
         }
-
+        
         info.setAttribute(ServerInfo.ATTR_DEFAULT_YES_NO_ANSWER, true);
 
 //        if(getVrl().getScheme().equals(VRS.SFTP_SCHEME)){
@@ -127,16 +130,16 @@ public class VPDRI implements PDRI {
 //        }
 
         info.store();
-
+        
     }
-
+    
     @Override
     public void delete() throws IOException {
         //it's void so do it asynchronously
         Runnable asyncDel = getAsyncDelete(this.vfsClient, vrl);
         asyncDel.run();
     }
-
+    
     @Override
     public InputStream getData() throws IOException {
         try {
@@ -145,55 +148,41 @@ public class VPDRI implements PDRI {
             throw new IOException(ex);
         }
     }
-
+    
     @Override
     public void putData(InputStream in) throws IOException {
-        OutputStream out = null;
         try {
-            out = vfsClient.getFile(vrl).getOutputStream();
-            //                   if both are file streams, use channel IO
-            if ((out instanceof FileOutputStream) && (in instanceof FileInputStream)) {
-                try {
-                    FileChannel target = ((FileOutputStream) out).getChannel();
-                    FileChannel source = ((FileInputStream) in).getChannel();
-                    source.transferTo(0, source.size(), target);
-                    source.close();
-                    target.close();
-
-                    return;
-                } catch (Exception e) { /*
-                     * failover to byte stream version
-                     */
-
-                }
-            }
+//             nl.uva.cs.lobcder.util.CircularStreamBufferTransferer out = new  nl.uva.cs.lobcder.util.CircularStreamBufferTransferer(Constants.BUF_SIZE, in, vfsClient.getFile(vrl).getOutputStream());
+//            out.startTransfer(new Long(-1));
+            
             final ReadableByteChannel inputChannel = Channels.newChannel(in);
-            final WritableByteChannel outputChannel = Channels.newChannel(out);
+            final WritableByteChannel outputChannel = Channels.newChannel(vfsClient.getFile(vrl).getOutputStream());
             fastCopy(inputChannel, outputChannel);
         } catch (VlException ex) {
-            Logger.getLogger(VPDRI.class.getName()).log(Level.SEVERE, null, ex);
-        } finally {
-            try {
-                out.close();
-            } catch (IOException ex) {
-                Logger.getLogger(VPDRI.class.getName()).log(Level.SEVERE, null, ex);
+            if (ex instanceof ResourceNotFoundException || ex.getMessage().contains("not found")) {
+                try {
+                    vfsClient.createFile(vrl, true);
+                    putData(in);
+                } catch (VlException ex1) {
+                    throw new IOException(ex1);
+                }
             }
         }
     }
-
+    
     @Override
     public Long getStorageSiteId() {
         return this.storageSiteId;//storageSite.getStorageSiteId();
     }
-
+    
     @Override
     public String getURL() {
         return this.fileURI;
     }
-
+    
     private Runnable getAsyncDelete(final VFSClient vfsClient, final VRL vrl) {
         return new Runnable() {
-
+            
             @Override
             public void run() {
                 try {
@@ -204,73 +193,38 @@ public class VPDRI implements PDRI {
             }
         };
     }
-
+    
     private Runnable getAsyncPutData(final VFSClient vfsClient, final InputStream in) {
         return new Runnable() {
-
+            
             @Override
             public void run() {
-                OutputStream out = null;
-                try {
-                    out = vfsClient.getFile(vrl).getOutputStream();
-//                    LobIOUtils.fastCopy(in, out);
-                    org.apache.commons.io.IOUtils.copy(in, out);
-                } catch (IOException ex) {
-                    Logger.getLogger(VPDRI.class.getName()).log(Level.SEVERE, null, ex);
-                } catch (VlException ex) {
-                    if (ex instanceof ResourceNotFoundException || ex.getMessage().contains("Couldn open location. Get NULL object for")) {
-                        try {
-                            out = vfsClient.createFile(vrl, false).getOutputStream();
-//                            LobIOUtils.fastCopy(in, out);
-                            org.apache.commons.io.IOUtils.copy(in, out);
-                        } catch (Exception ex1) {
-                            try {
-                                vfsClient.mkdirs(vrl.getParent());
-                                out = vfsClient.createFile(vrl, false).getOutputStream();
-//                                LobIOUtils.fastCopy(in, out);
-                                org.apache.commons.io.IOUtils.copy(in, out);
-                            } catch (IOException ex2) {
-                                Logger.getLogger(VPDRI.class.getName()).log(Level.SEVERE, null, ex2);
-                            } catch (VlException ex2) {
-                                Logger.getLogger(VPDRI.class.getName()).log(Level.SEVERE, null, ex2);
-                            }
-                        }
-                    } else {
-                        try {
-                            throw new IOException(ex);
-                        } catch (IOException ex1) {
-                            Logger.getLogger(VPDRI.class.getName()).log(Level.SEVERE, null, ex1);
-                        }
-                    }
-                } finally {
-                    try {
-                        if (out != null) {
-                            out.close();
-                        }
-                    } catch (IOException ex) {
-                        try {
-                            throw ex;
-                        } catch (IOException ex1) {
-                            Logger.getLogger(VPDRI.class.getName()).log(Level.SEVERE, null, ex1);
-                        }
-                    }
-                }
+                
             }
         };
     }
-
+    
     private void fastCopy(ReadableByteChannel src, WritableByteChannel dest) throws IOException {
         final ByteBuffer buffer = ByteBuffer.allocateDirect(Constants.BUF_SIZE);
-        while (src.read(buffer) != -1) {
+        int len;
+        while ((len = src.read(buffer)) != -1) {
+//            System.err.println("Read size: " + len);
             buffer.flip();
             dest.write(buffer);
             buffer.compact();
         }
-
+//        System.err.println("--------------");
         buffer.flip();
-
         while (buffer.hasRemaining()) {
             dest.write(buffer);
         }
+    }
+    
+    private void channelCopy(OutputStream out, InputStream in) throws IOException {
+        FileChannel target = ((FileOutputStream) out).getChannel();
+        FileChannel source = ((FileInputStream) in).getChannel();
+        source.transferTo(0, source.size(), target);
+        source.close();
+        target.close();
     }
 }

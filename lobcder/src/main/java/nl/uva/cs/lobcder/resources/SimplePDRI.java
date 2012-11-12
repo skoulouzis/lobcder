@@ -59,7 +59,6 @@ public class SimplePDRI implements PDRI {
     }
 
     private void setResourceContent(String uri, InputStream is) throws FileNotFoundException, IOException {
-
         File file = new File(uri);
         OutputStream os = new BufferedOutputStream(new FileOutputStream(file), Constants.BUF_SIZE);
         try {
