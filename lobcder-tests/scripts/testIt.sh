@@ -49,13 +49,15 @@ echo $TEST_SET_UP >> $BASE_DIR/etc/test.proprties
 echo $TEST_SET_DOWN >> $BASE_DIR/etc/test.proprties
 
 
-bwm-ng -o csv -I lo -T rate >> $BASE_DIR/measures/localhost/lobcder-2.0-SNAPSHOT/bm_lobcder_mistos.csv &
+bwm-ng -o csv -I lo -T rate >> $BASE_DIR/measures/localhost/lobcder-2.0-SNAPSHOT/$TEST_URL &
 BWM_PID=$!
 
 JAVA_HOME=/opt/java/jdk $HOME/.netbeans/7.0/maven/bin/mvn -f $BASE_DIR/pom.xml -Dtest=nl.uva.cs.lobcder.tests.PerformanceTest test-compile surefire:test
 
 sleep 5
 kill $BWM_PID
+
+sed '/total/d' $BASE_DIR/measures/localhost/lobcder-2.0-SNAPSHOT/bm_lobcder_mistos.csv > $BASE_DIR/measures/localhost/lobcder-2.0-SNAPSHOT/bm_
 
 
 TEST_URL="webdav.test.url=http://localhost:8083/lobcder-2.0-SNAPSHOT/dav"

@@ -4,21 +4,26 @@
  */
 package nl.uva.cs.lobcder.tests;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Properties;
+import java.util.Random;
 import org.apache.commons.httpclient.*;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.contrib.ssl.EasySSLProtocolSocketFactory;
 import org.apache.commons.httpclient.methods.OptionsMethod;
 import org.apache.commons.httpclient.methods.PutMethod;
 import org.apache.commons.httpclient.methods.*;
+import org.apache.commons.httpclient.methods.multipart.FilePart;
+import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
+import org.apache.commons.httpclient.methods.multipart.Part;
+import org.apache.commons.httpclient.methods.multipart.StringPart;
 import org.apache.commons.httpclient.protocol.Protocol;
 import org.apache.commons.httpclient.protocol.ProtocolSocketFactory;
 import org.apache.jackrabbit.webdav.*;
@@ -113,7 +118,6 @@ public class WebDAVTest {
     public void testConnect() throws IOException {
         HttpMethod method = new GetMethod(this.uri.toASCIIString());
         int status = client.executeMethod(method);
-
         //Just get something back 
         assertTrue("GetMethod status: " + status, status == HttpStatus.SC_NOT_FOUND || status == HttpStatus.SC_OK);
     }
@@ -693,7 +697,7 @@ public class WebDAVTest {
 
     @Test
     public void testMove() throws HttpException, IOException, DavException, URISyntaxException {
-System.out.println("testMove");
+        System.out.println("testMove");
         String testcol = this.root + "testResourceId/";
         String testuri = testcol + "movetest";
         String destinationuri = testuri + "2";
@@ -865,7 +869,7 @@ System.out.println("testMove");
 //
     @Test
     public void testPropfindInclude() throws HttpException, IOException, DavException, URISyntaxException {
-System.out.println("testPropfindInclude");
+        System.out.println("testPropfindInclude");
         String testcol = this.root + "testPropfindInclude/";
         String testuri = testcol + "iftest/ ";
         int status;
@@ -1328,6 +1332,56 @@ System.out.println("testPropfindInclude");
             int status = client.executeMethod(delete);
             assertTrue("DeleteMethod status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
         }
+    }
+
+    @Test
+    public void testFileConsistency() throws IOException, NoSuchAlgorithmException {
+        File testUploadFile = File.createTempFile("tmp", null);
+        Random generator = new Random();
+        byte buffer[] = new byte[1024 * 1024];
+        OutputStream out = new FileOutputStream(testUploadFile);
+        for (int i = 0; i < 10; i++) {
+            generator.nextBytes(buffer);
+//            out.write(("TEST DATA:" + i).getBytes());
+        }
+
+        Part[] parts = {
+            new FilePart(testUploadFile.getName(), testUploadFile)
+        };
+        
+        String lobcderFilePath = this.root + testUploadFile.getName();
+        org.apache.jackrabbit.webdav.client.methods.PutMethod method = new org.apache.jackrabbit.webdav.client.methods.PutMethod(lobcderFilePath);
+
+
+        MultipartRequestEntity requestEntity = new MultipartRequestEntity(parts, method.getParams());
+        method.setRequestEntity(requestEntity);
+        client.executeMethod(method);
+
+        String localMD5 = checkChecksum(new FileInputStream(testUploadFile));
+        GetMethod get = new GetMethod(lobcderFilePath);
+        client.executeMethod(get);
+        InputStream in = get.getResponseBodyAsStream();
+        String remoteMD5 = checkChecksum(in);
+//        assertEquals(localMD5, remoteMD5);
+    }
+
+    private String checkChecksum(InputStream is) throws NoSuchAlgorithmException, FileNotFoundException, IOException {
+        MessageDigest md = MessageDigest.getInstance("MD5");
+
+        byte[] dataBytes = new byte[1024];
+
+        int nread = 0;
+        while ((nread = is.read(dataBytes)) != -1) {
+            md.update(dataBytes, 0, nread);
+        }
+        byte[] mdbytes = md.digest();
+
+        //convert the byte to hex format method 1
+        StringBuffer sb = new StringBuffer();
+        for (int i = 0; i < mdbytes.length; i++) {
+            sb.append(Integer.toString((mdbytes[i] & 0xff) + 0x100, 16).substring(1));
+        }
+        return sb.toString();
     }
 
     // utility methods

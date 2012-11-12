@@ -8,6 +8,9 @@ import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
+import java.security.DigestInputStream;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Properties;
 import java.util.Random;
 import nl.uva.vlet.Global;
@@ -36,8 +39,9 @@ import org.apache.jackrabbit.webdav.*;
 import org.apache.jackrabbit.webdav.client.methods.MkColMethod;
 import org.apache.jackrabbit.webdav.client.methods.PropFindMethod;
 import org.apache.jackrabbit.webdav.client.methods.PutMethod;
-import org.apache.jackrabbit.webdav.property.*;
-import org.apache.jackrabbit.webdav.version.DeltaVConstants;
+import org.apache.jackrabbit.webdav.property.DavPropertyIterator;
+import org.apache.jackrabbit.webdav.property.DavPropertyName;
+import org.apache.jackrabbit.webdav.property.DavPropertySet;
 import org.junit.AfterClass;
 import static org.junit.Assert.*;
 import org.junit.BeforeClass;
@@ -91,13 +95,13 @@ public class PerformanceTest {
     public static void tearDownClass() throws Exception {
 //        testDriverRemoteDir.delete();
         DeleteMethod del = new DeleteMethod(lobcdrTestPath);
-//        debug("Deleteing: "+lobcdrTestPath);
+        debug("Deleteing: "+lobcdrTestPath);
         int status = client.executeMethod(del);
         assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
 
-//        del = new DeleteMethod(lobcderRoot);
-//        debug("Deleteing: " + lobcderRoot);
-//        status = client.executeMethod(del);
+        del = new DeleteMethod(lobcderRoot);
+        debug("Deleteing: " + lobcderRoot);
+        status = client.executeMethod(del);
 //        assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT || status == HttpStatus.SC_MULTI_STATUS);
 
         del = new DeleteMethod(lobcderFilePath);
@@ -201,7 +205,7 @@ public class PerformanceTest {
     }
 
     @Test
-    public void benchmarkTest() throws FileNotFoundException, IOException, InterruptedException, VlException, DavException {
+    public void benchmarkTest() throws FileNotFoundException, IOException, InterruptedException, VlException, DavException, NoSuchAlgorithmException {
         Boolean testLargeUpload = Boolean.valueOf(prop.getProperty("test.large.upload", "true"));
         Boolean testLargeDownload = Boolean.valueOf(prop.getProperty("test.large.download", "true"));
         Boolean testDatasetUpload = Boolean.valueOf(prop.getProperty("test.dataset.upload", "true"));
@@ -212,7 +216,7 @@ public class PerformanceTest {
         if (testDatasetDownload) {
             benchmarkDownload();
         }
-        int sizeInMB = 3;
+        int sizeInMB = 40;
         if (testLargeUpload) {
             uploadOneLargeFile(sizeInMB);
         }
@@ -354,7 +358,7 @@ public class PerformanceTest {
         System.err.println("debug: " + msg);
     }
 
-    private void uploadOneLargeFile(int lenInMb) throws VlException, IOException, DavException {
+    private void uploadOneLargeFile(int lenInMb) throws VlException, IOException, DavException, FileNotFoundException, NoSuchAlgorithmException {
         VFile localFile = localTempDir.createFile("testLargeUpload");
 
         long start_time = 0;
@@ -373,7 +377,6 @@ public class PerformanceTest {
         };
         lobcderFilePath = lobcdrTestPath + localFile.getName();
         PutMethod method = new PutMethod(lobcderFilePath);
-
 
         MultipartRequestEntity requestEntity = new MultipartRequestEntity(parts, method.getParams());
         method.setRequestEntity(requestEntity);
@@ -513,4 +516,6 @@ public class PerformanceTest {
         writer.close();
 
     }
+
+    
 }
