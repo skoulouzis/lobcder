@@ -195,7 +195,7 @@ public class PerformanceTest {
         info.setAttribute(ServerInfo.ATTR_DEFAULT_YES_NO_ANSWER, true);
         info.store();
 
-        localTempDir = vfsClient.createDir(new VRL("file:/tmp/testDir"), true);
+        localTempDir = vfsClient.createDir(new VRL("file:/mnt/raid/home/skoulouz/tmp/"), true);
     }
 
     private static void initLobcderTestDir() throws IOException {
