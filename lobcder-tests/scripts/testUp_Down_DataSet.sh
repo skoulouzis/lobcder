@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# $HOME/servers/apache-tomcat-6.0.35-TEST/bin/shutdown.sh
+# $HOME/servers/apache-tomcat-6.0.35-TEST/bin/startup.sh
+# sleep 5
+
+
 function initVariables {
         BASE_DIR=$HOME/workspace/lobcder-tests
         HOST_NAME="elab.lab.uvalight.net"
@@ -7,12 +12,16 @@ function initVariables {
 
         PORT="8083"
         URL="http://$HOST_NAME:$PORT/$SERVER_PATH"
-        
+
         TEST_FILE_NAME=testLargeUpload
-        TEST_FILE_SERVER_PATH=$HOME/tmp/$TEST_FILE_NAME
-
-        let TEST_FILE_SIZE_IN_GB=20
-
+        mkdir $HOME/tmp/dataset
+        TEST_DATASET_DIR=$HOME/tmp/dataset
+        TEST_DATASET_PATH=$TEST_DATASET_DIR/$TEST_FILE_NAME
+        
+        TEST_DATASET_SIZE_IN_GB=1
+        let TEST_DATASET_SIZE_IN_MB=$TEST_DATASET_SIZE_IN_GB*1024
+        TEST_FILE_SIZE_IN_MB=10
+        let NUM_OF_FILE=$TEST_DATASET_SIZE_IN_MB/$TEST_FILE_SIZE_IN_MB
 
         if [ "$METHOD" = "lob" ];
         then
@@ -51,16 +60,16 @@ function initMeasurePathAndFile {
                 mkdir -p $BASE_DIR/measures/$HOST_NAME/$SERVER_PATH
         fi
 
-        if [ ! -f  $TEST_FILE_SERVER_PATH ];
+        if [ ! -f  $TEST_DATASET_PATH.0.dat ];
         then
-                echo "File $TEST_FILE_SERVER_PATH does not exist."
-                
-                dd if=/dev/zero of=$TEST_FILE_SERVER_PATH bs=1G count=$TEST_FILE_SIZE_IN_GB
-                sleep 1
+                echo "File $TEST_DATASET_PATH does not exist."
+                for ((i = 0 ; i < $NUM_OF_FILE ; i++)); do
+                    dd if=/dev/zero of=$TEST_DATASET_PATH.$i.dat bs=10M count=1
+                done
         fi
 
         echo "measures $BASE_DIR/measures/$HOST_NAME/$SERVER_PATH"
-        echo "file $TEST_FILE_SERVER_PATH"
+        echo "file $TEST_DATASET_PATH"
 }
 
 
@@ -72,32 +81,37 @@ function initMeasureFileAndCadaverScript {
 
         echo open $URL > cadaver.script
 
-#        if [ "$METHOD" = "ftp" ];
-#        then
-#                echo open $HOST_NAME > cadaver.script
-#        fi
-
         if [ "$DIRECTION" = "up" ] && [ "$METHOD" = "ftp" ];
         then
                 echo open $URL > cadaver.script
-                echo put $TEST_FILE_SERVER_PATH $TEST_FILE_SERVER_PATH.COPY >> cadaver.script
+                FILES=$TEST_DATASET_DIR/*
+                for f in $FILES
+                do
+                    echo put $f $f.COPY >> cadaver.script
+                done
                 BWM_FILE_SERVER_PATH=$BASE_DIR/measures/$HOST_NAME/$SERVER_PATH/bwm-up.csv
         elif [ "$DIRECTION" = "up" ] && [ "$METHOD" != "ftp" ];
         then
-                #echo open $URL > cadaver.script
-                echo put $TEST_FILE_SERVER_PATH >> cadaver.script
+                echo open $URL > cadaver.script
+                FILES=$TEST_DATASET_DIR/*
+                for f in $FILES
+                do
+                    echo put $f  >> cadaver.script
+                done
+                
                 BWM_FILE_SERVER_PATH=$BASE_DIR/measures/$HOST_NAME/$SERVER_PATH/bwm-up.csv
         fi
 
         if [ "$DIRECTION" = "down" ] && [ "$METHOD" = "ftp" ];
         then
                 echo open $URL > cadaver.script
-                echo get $TEST_FILE_SERVER_PATH $TEST_FILE_SERVER_PATH.COPY >> cadaver.script
+                echo nmap $TEST_DATASET_DIR/'$1 $1.COPY'  >> cadaver.script
+                echo mget $TEST_DATASET_DIR/'*' >> cadaver.script
                 BWM_FILE_SERVER_PATH=$BASE_DIR/measures/$HOST_NAME/$SERVER_PATH/bwm-down.csv
         elif [ "$DIRECTION" = "down" ] && [ "$METHOD" != "ftp" ];
         then
                 echo open $URL > cadaver.script
-                echo get $TEST_FILE_NAME >> cadaver.script
+                echo mget $TEST_FILE_NAME'*' >> cadaver.script
                 BWM_FILE_SERVER_PATH=$BASE_DIR/measures/$HOST_NAME/$SERVER_PATH/bwm-down.csv
         fi
         echo quit >> cadaver.script
@@ -113,14 +127,14 @@ function start {
 	START="$(date +%s)"
         if [ "$METHOD" = "ftp" ];
         then
-		ftp < cadaver.script
+		ftp -i < cadaver.script
 	else
                 cadaver < cadaver.script
         fi
 
        END="$(date +%s)"
        ELAPSED="$(expr $END - $START)"
-       SIZE= ls -la $TEST_FILE_SERVER_PATH | awk '{print $5}'
+       let SIZE=$TEST_DATASET_SIZE_IN_GB*1024*1024 #ls -la $TEST_DATASET_PATH | awk '{print $5}'
        echo Elapsed time: $ELAPSED
        #rm cadaver.script
        sleep 1
@@ -133,12 +147,12 @@ function formatOutputAndCleanUp {
 # ----------------------- Format output-------------------------
         if [ "$DIRECTION" = "up" ];
         then
-                BWM_FILE_LO_SERVER_PATH=$BASE_DIR/measures/$HOST_NAME/$SERVER_PATH/bwm-up-lo-$TEST_FILE_SIZE.csv
+                BWM_FILE_LO_SERVER_PATH=$BASE_DIR/measures/$HOST_NAME/$SERVER_PATH/bwm-up-dataset-lo-$TEST_FILE_SIZE.csv
         fi
 
         if [ "$DIRECTION" = "down" ];
         then
-                BWM_FILE_LO_SERVER_PATH=$BASE_DIR/measures/$HOST_NAME/$SERVER_PATH/bwm-down-lo-$TEST_FILE_SIZE.csv
+                BWM_FILE_LO_SERVER_PATH=$BASE_DIR/measures/$HOST_NAME/$SERVER_PATH/bwm-down-dataset-lo-$TEST_FILE_SIZE.csv
         fi
         echo "Start time" > $BWM_FILE_LO_SERVER_PATH
         echo $START >> $BWM_FILE_LO_SERVER_PATH
@@ -151,8 +165,8 @@ function formatOutputAndCleanUp {
         echo "unix_timestamp;iface_name;bytes_out_$METHOD;bytes_in_$METHOD;bytes_total_$METHOD;packets_out;packets_in;packets_total;errors_out;errors_in" >>  $BWM_FILE_LO_SERVER_PATH
         sed '/total/d' $BWM_FILE_SERVER_PATH >> $BWM_FILE_LO_SERVER_PATH
         rm $BWM_FILE_SERVER_PATH
-        #rm $TEST_FILE_SERVER_PATH
-        rm $TEST_FILE_SERVER_PATH.COPY
+        find $TEST_DATASET_DIR ! -name "*.dat" -type f -exec rm {} \;
+        rm $TEST_FILE_NAME*
 
 }
 
@@ -164,13 +178,13 @@ USER_NAME=$2
 PASSWORD=$3
 initVariables
 initMeasurePathAndFile
-#initMeasureFileAndCadaverScript
-#start
-#formatOutputAndCleanUp
+initMeasureFileAndCadaverScript
+start
+formatOutputAndCleanUp
 
-#DIRECTION=down
-#initVariables
-#initMeasurePathAndFile
-#initMeasureFileAndCadaverScript
-#start
-#formatOutputAndCleanUp
+DIRECTION=down
+initVariables
+initMeasurePathAndFile
+initMeasureFileAndCadaverScript
+start
+formatOutputAndCleanUp
