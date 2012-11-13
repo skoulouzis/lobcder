@@ -11,27 +11,29 @@ function initVariables {
         SERVER_PATH="/tomcatWebDAV" #"/lobcder-2.0-SNAPSHOT/dav"
 
         PORT="8083"
-        URL="http://$HOST_NAME:$PORT$SERVER_PATH"
+        URL="http://$HOST_NAME:$PORT/$SERVER_PATH"
 
         TEST_FILE_NAME=testLargeUpload
         TEST_FILE_SERVER_PATH=$HOME/tmp/$TEST_FILE_NAME
         let TEST_FILE_SIZE=1024*1024*1000
 
 
-        if [ "$1" = "lob" ];
+        if [ "$METHOD" = "lob" ];
         then
                 SERVER_PATH="/lobcder-2.0-SNAPSHOT/dav"
+                URL="http://$HOST_NAME:$PORT/$SERVER_PATH"
         fi
 
-        if [ "$1" = "dav" ];
+        if [ "$METHOD" = "dav" ];
         then
                 SERVER_PATH="/tomcatWebDAV"
+                URL="http://$HOST_NAME:$PORT/$SERVER_PATH"
         fi
-        if [ "$1" = "ftp" ];
+        if [ "$METHOD" = "ftp" ];
         then
                 SERVER_PATH="/ftp"
                 PORT=21
-                URL="ftp://$HOST_NAME$SERVER_PATH"
+                URL="$HOST_NAME"
         fi
         echo "BASE_DIR $BASE_DIR"
         echo "HOST_NAME $HOST_NAME"
@@ -51,88 +53,79 @@ function initMeasurePathAndFile {
                 dd if=/dev/zero of=$TEST_FILE_SERVER_PATH bs=$TEST_FILE_SIZE count=1
         fi
 
-        echo "SERVER_PATH $BASE_DIR/measures/$HOST_NAME/$SERVER_PATH"
+        echo "measures $BASE_DIR/measures/$HOST_NAME/$SERVER_PATH"
+        echo "file $TEST_FILE_SERVER_PATH"
 }
 
 
 function initMeasureFileAndCadaverScript {
-#	echo "ARGS: 1: $1 2: $2 3: $3 4 $4"
-	rm -f $HOME/.netrc
         echo "machine $HOST_NAME" > $HOME/.netrc
-        echo "	login $3" >> $HOME/.netrc
-        echo "	password $4" >> $HOME/.netrc
+        echo "	login $USER_NAME" >> $HOME/.netrc
+        echo "	password $PASSWORD" >> $HOME/.netrc
+        chmod 600 $HOME/.netrc
 
         echo open $URL > cadaver.script
 
-        if [ "$2" = "ftp" ];
+        if [ "$METHOD" = "ftp" ];
         then
-                #echo open $HOST_NAME > cadaver.script
-		rm -f $HOME/.netrc
+                echo open $HOST_NAME > cadaver.script
         fi
 
-
-        if [ "$1" = "up" ];
+        if [ "$DIRECTION" = "up" ];
         then
-                echo put $TEST_FILE_SERVER_PATH >> cadaver.script
+                echo open $URL > cadaver.script
+                echo put $TEST_FILE_SERVER_PATH $TEST_FILE_SERVER_PATH.COPY >> cadaver.script
                 BWM_FILE_SERVER_PATH=$BASE_DIR/measures/$HOST_NAME/$SERVER_PATH/bwm-up.csv
-                echo "UP!"
         fi
 
-        if [ "$1" = "down" ];
+        if [ "$DIRECTION" = "down" ];
         then
+                echo open $URL > cadaver.script
                 echo get $TEST_FILE_NAME >> cadaver.script
                 BWM_FILE_SERVER_PATH=$BASE_DIR/measures/$HOST_NAME/$SERVER_PATH/bwm-down.csv
-                echo "DOWN!"
         fi
         echo quit >> cadaver.script
-        echo "BWM_FILE $BWM_FILE_SERVER_PATH"
 }
 
 
 function start {
-        CMD="cadaver < cadaver.script"
-        if [ "$1" = "ftp" ];
-        then
-		CMD="ftp << cadaver.script"
-	fi
-
-echo "Command $CMD"
-echo "bwm-ng path $BWM_FILE_SERVER_PATH"
-# ---------------------Start monitoring-----------------------------
-bwm-ng -o csv -I lo -T rate -t 100 >> $BWM_FILE_SERVER_PATH &
-       BWM_PID=$!
-       sleep 1
-#----------------------start copy-----------------------------------
+        # ---------------------Start monitoring-----------------------------
+        bwm-ng -o csv -I lo -T rate -t 100 >> $BWM_FILE_SERVER_PATH &
+        BWM_PID=$!
+        sleep 1
+        #----------------------start copy-----------------------------------
 	START="$(date +%s)"
-	#$CMD                    #cadaver < cadaver.script       
-
-ftp -inv $HOST_NAME <<ENDFTP
-user $2 $3
-put $TEST_FILE_SERVER_PATH $SERVER_PATH
-bye
-ENDFTP
-
-
+        if [ "$METHOD" = "ftp" ];
+        then
+		ftp < cadaver.script
+                #ftp -inv $HOST_NAME <<ENDFTP
+                #user $2 $3
+                #put $TEST_FILE_SERVER_PATH $SERVER_PATH
+                #bye    
+                #ENDFTP
+	else
+                cadaver < cadaver.script
+        fi
 
        END="$(date +%s)"
        ELAPSED="$(expr $END - $START)"
        SIZE= ls -la $TEST_FILE_SERVER_PATH | awk '{print $5}'
        echo Elapsed time: $ELAPSED
-       rm cadaver.script
+       #rm cadaver.script
        sleep 1
        kill $BWM_PID
 }
 
 
-function formatOutput {
+function formatOutputAndCleanUp {
 
 # ----------------------- Format output-------------------------
-        if [ "$1" = "up" ];
+        if [ "$DIRECTION" = "up" ];
         then
                 BWM_FILE_LO_SERVER_PATH=$BASE_DIR/measures/$HOST_NAME/$SERVER_PATH/bwm-up-lo.csv
         fi
 
-        if [ "$1" = "down" ];
+        if [ "$DIRECTION" = "down" ];
         then
                 BWM_FILE_LO_SERVER_PATH=$BASE_DIR/measures/$HOST_NAME/$SERVER_PATH/bwm-down-lo.csv
         fi
@@ -147,6 +140,8 @@ function formatOutput {
         echo "unix_timestamp;iface_name;bytes_out;bytes_in;bytes_total;packets_out;packets_in;packets_total;errors_out;errors_in" >>  $BWM_FILE_LO_SERVER_PATH
         sed '/total/d' $BWM_FILE_SERVER_PATH >> $BWM_FILE_LO_SERVER_PATH
         rm $BWM_FILE_SERVER_PATH
+        rm $TEST_FILE_SERVER_PATH
+        rm $TEST_FILE_SERVER_PATH.COPY
 
 }
 
@@ -154,9 +149,12 @@ function formatOutput {
 
 #----------------FTP---------------------
 DIRECTION=up
-initVariables $1
+METHOD=$1
+USER_NAME=$2
+PASSWORD=$3
+initVariables
 initMeasurePathAndFile
-initMeasureFileAndCadaverScript $DIRECTION $1 $2 $3
-start $1 $2 $3
-# formatOutput $DIRECTION
+initMeasureFileAndCadaverScript
+start
+formatOutputAndCleanUp
 
