@@ -13,6 +13,10 @@ import com.bradmcevoy.http.exceptions.NotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
+import java.nio.channels.Channels;
+import java.nio.channels.ReadableByteChannel;
+import java.nio.channels.WritableByteChannel;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.*;
@@ -199,7 +203,7 @@ public class WebDataFileResource extends WebDataResource implements
             connection.close();
             debug(pdri.getURL());
             //IOUtils.copy(pdri.getData(), System.err); 
-            IOUtils.copy(pdri.getData(), out);
+            fastCopy(pdri.getData(), out);
         } catch (NotAuthorizedException ex) {
             debug("NotAuthorizedException");
             throw new NotAuthorizedException(this);
@@ -274,7 +278,7 @@ public class WebDataFileResource extends WebDataResource implements
     public String processForm(Map<String, String> parameters,
             Map<String, FileItem> files) throws BadRequestException,
             NotAuthorizedException {
-        
+
         //Maybe we can do more smart things here with deltas. So if we update a file send only the diff
         debug("processForm.");
         debug("\t parameters: " + parameters);
@@ -340,5 +344,27 @@ public class WebDataFileResource extends WebDataResource implements
     public Date getCreateDate() {
         debug("getCreateDate.");
         return new Date(getLogicalData().getCreateDate());
+    }
+
+    private void fastCopy(InputStream in, OutputStream out) throws IOException {
+        final ReadableByteChannel inputChannel = Channels.newChannel(in);
+        final WritableByteChannel outputChannel = Channels.newChannel(out);
+        fastCopy(inputChannel, outputChannel);
+    }
+
+    private void fastCopy(ReadableByteChannel src, WritableByteChannel dest) throws IOException {
+        final ByteBuffer buffer = ByteBuffer.allocateDirect(Constants.BUF_SIZE);
+        int len;
+        while ((len = src.read(buffer)) != -1) {
+//            System.err.println("Read size: " + len);
+            buffer.flip();
+            dest.write(buffer);
+            buffer.compact();
+        }
+//        System.err.println("--------------");
+        buffer.flip();
+        while (buffer.hasRemaining()) {
+            dest.write(buffer);
+        }
     }
 }
