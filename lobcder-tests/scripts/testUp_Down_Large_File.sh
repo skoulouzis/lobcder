@@ -21,14 +21,22 @@ function initVariables {
         if [ "$METHOD" = "lob" ];
         then
                 SERVER_PATH="/lobcder-2.0-SNAPSHOT/dav"
-                URL="http://$HOST_NAME:$PORT/$SERVER_PATH"
+                URL="http://$HOST_NAME:$PORT$SERVER_PATH"
+        fi
+
+        if [ "$METHOD" = "javadav" ];
+        then
+                SERVER_PATH="/tomcatWebDAV"
+                URL="http://$HOST_NAME:$PORT$SERVER_PATH"
         fi
 
         if [ "$METHOD" = "dav" ];
         then
-                SERVER_PATH="/tomcatWebDAV"
-                URL="http://$HOST_NAME:$PORT/$SERVER_PATH"
+                SERVER_PATH="/webdav"
+                PORT="80"
+                URL="http://$HOST_NAME:$PORT$SERVER_PATH"
         fi
+
         if [ "$METHOD" = "ftp" ];
         then
                 SERVER_PATH="/ftp"
@@ -66,19 +74,29 @@ function initMeasureFileAndCadaverScript {
 
         echo open $URL > cadaver.script
 
-        if [ "$METHOD" = "ftp" ];
-        then
-                echo open $HOST_NAME > cadaver.script
-        fi
+#        if [ "$METHOD" = "ftp" ];
+#        then
+#                echo open $HOST_NAME > cadaver.script
+#        fi
 
-        if [ "$DIRECTION" = "up" ];
+        if [ "$DIRECTION" = "up" ] && [ "$METHOD" = "ftp" ];
         then
                 echo open $URL > cadaver.script
                 echo put $TEST_FILE_SERVER_PATH $TEST_FILE_SERVER_PATH.COPY >> cadaver.script
                 BWM_FILE_SERVER_PATH=$BASE_DIR/measures/$HOST_NAME/$SERVER_PATH/bwm-up.csv
+        elif [ "$DIRECTION" = "up" ] && [ "$METHOD" != "ftp" ];
+        then
+                #echo open $URL > cadaver.script
+                echo put $TEST_FILE_SERVER_PATH >> cadaver.script
+                BWM_FILE_SERVER_PATH=$BASE_DIR/measures/$HOST_NAME/$SERVER_PATH/bwm-up.csv
         fi
 
-        if [ "$DIRECTION" = "down" ];
+        if [ "$DIRECTION" = "down" ] && [ "$METHOD" = "ftp" ];
+        then
+                echo open $URL > cadaver.script
+                echo get $TEST_FILE_SERVER_PATH $TEST_FILE_SERVER_PATH.COPY >> cadaver.script
+                BWM_FILE_SERVER_PATH=$BASE_DIR/measures/$HOST_NAME/$SERVER_PATH/bwm-down.csv
+        elif [ "$DIRECTION" = "down" ] && [ "$METHOD" != "ftp" ];
         then
                 echo open $URL > cadaver.script
                 echo get $TEST_FILE_NAME >> cadaver.script
@@ -98,11 +116,6 @@ function start {
         if [ "$METHOD" = "ftp" ];
         then
 		ftp < cadaver.script
-                #ftp -inv $HOST_NAME <<ENDFTP
-                #user $2 $3
-                #put $TEST_FILE_SERVER_PATH $SERVER_PATH
-                #bye    
-                #ENDFTP
 	else
                 cadaver < cadaver.script
         fi
@@ -140,15 +153,24 @@ function formatOutputAndCleanUp {
         echo "unix_timestamp;iface_name;bytes_out;bytes_in;bytes_total;packets_out;packets_in;packets_total;errors_out;errors_in" >>  $BWM_FILE_LO_SERVER_PATH
         sed '/total/d' $BWM_FILE_SERVER_PATH >> $BWM_FILE_LO_SERVER_PATH
         rm $BWM_FILE_SERVER_PATH
-        rm $TEST_FILE_SERVER_PATH
+        #rm $TEST_FILE_SERVER_PATH
         rm $TEST_FILE_SERVER_PATH.COPY
 
 }
 
 
 
-#----------------FTP---------------------
 DIRECTION=up
+METHOD=$1
+USER_NAME=$2
+PASSWORD=$3
+initVariables
+initMeasurePathAndFile
+initMeasureFileAndCadaverScript
+start
+formatOutputAndCleanUp
+
+DIRECTION=down
 METHOD=$1
 USER_NAME=$2
 PASSWORD=$3
