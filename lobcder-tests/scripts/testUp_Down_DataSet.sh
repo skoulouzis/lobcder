@@ -18,7 +18,6 @@ function initVariables {
         TEST_DATASET_DIR=$HOME/tmp/dataset
         TEST_DATASET_PATH=$TEST_DATASET_DIR/$TEST_FILE_NAME
         
-        TEST_DATASET_SIZE_IN_GB=1
         let TEST_DATASET_SIZE_IN_MB=$TEST_DATASET_SIZE_IN_GB*1024
         TEST_FILE_SIZE_IN_MB=10
         let NUM_OF_FILE=$TEST_DATASET_SIZE_IN_MB/$TEST_FILE_SIZE_IN_MB
@@ -176,6 +175,7 @@ DIRECTION=up
 METHOD=$1
 USER_NAME=$2
 PASSWORD=$3
+TEST_DATASET_SIZE_IN_GB=$4
 initVariables
 initMeasurePathAndFile
 initMeasureFileAndCadaverScript

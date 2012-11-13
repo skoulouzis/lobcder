@@ -11,8 +11,6 @@ function initVariables {
         TEST_FILE_NAME=testLargeUpload
         TEST_FILE_SERVER_PATH=$HOME/tmp/$TEST_FILE_NAME
 
-        let TEST_FILE_SIZE_IN_GB=20
-
 
         if [ "$METHOD" = "lob" ];
         then
@@ -54,7 +52,6 @@ function initMeasurePathAndFile {
         if [ ! -f  $TEST_FILE_SERVER_PATH ];
         then
                 echo "File $TEST_FILE_SERVER_PATH does not exist."
-                
                 dd if=/dev/zero of=$TEST_FILE_SERVER_PATH bs=1G count=$TEST_FILE_SIZE_IN_GB
                 sleep 1
         fi
@@ -162,15 +159,16 @@ DIRECTION=up
 METHOD=$1
 USER_NAME=$2
 PASSWORD=$3
+TEST_FILE_SIZE_IN_GB=$4
 initVariables
 initMeasurePathAndFile
-#initMeasureFileAndCadaverScript
-#start
-#formatOutputAndCleanUp
+initMeasureFileAndCadaverScript
+start
+formatOutputAndCleanUp
 
-#DIRECTION=down
-#initVariables
-#initMeasurePathAndFile
-#initMeasureFileAndCadaverScript
-#start
-#formatOutputAndCleanUp
+DIRECTION=down
+initVariables
+initMeasurePathAndFile
+initMeasureFileAndCadaverScript
+start
+formatOutputAndCleanUp
