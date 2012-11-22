@@ -201,7 +201,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                 newResource.setModifiedDate(System.currentTimeMillis());
                 newResource.addContentType(contentType);
                 getCatalogue().registerOrUpdateResourceEntry(newResource, connection);
-                PDRI pdri = createPDRI(length, connection);
+                PDRI pdri = createPDRI(length, newName,connection);
                 pdri.putData(inputStream);
                 newResource = getCatalogue().registerPdriForNewEntry(newResource, pdri, connection);
             } else { // Resource does not exists, create a new one
@@ -218,7 +218,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                 newResource.addContentType(contentType);
                 newResource = getCatalogue().registerOrUpdateResourceEntry(newResource, connection);
                 getCatalogue().setPermissions(newResource.getUID(), new Permissions(getPrincipal()), connection);
-                PDRI pdri = createPDRI(length, connection);
+                PDRI pdri = createPDRI(length, newName, connection);
                 pdri.putData(inputStream);
                 getCatalogue().registerPdriForNewEntry(newResource, pdri, connection);
             }

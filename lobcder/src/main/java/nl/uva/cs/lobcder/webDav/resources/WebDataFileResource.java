@@ -14,7 +14,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
-import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 import java.sql.Connection;
@@ -32,8 +31,8 @@ import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.cs.lobcder.util.MMTypeTools;
 import nl.uva.vlet.data.StringUtil;
 import nl.uva.vlet.exception.VlException;
+import nl.uva.vlet.io.CircularStreamBufferTransferer;
 import nl.uva.vlet.vfs.VFSNode;
-import org.apache.commons.io.IOUtils;
 
 /**
  *
@@ -346,10 +345,12 @@ public class WebDataFileResource extends WebDataResource implements
         return new Date(getLogicalData().getCreateDate());
     }
 
-    private void fastCopy(InputStream in, OutputStream out) throws IOException {
-        final ReadableByteChannel inputChannel = Channels.newChannel(in);
-        final WritableByteChannel outputChannel = Channels.newChannel(out);
-        fastCopy(inputChannel, outputChannel);
+    private void fastCopy(InputStream in, OutputStream out) throws IOException, VlException {
+        CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer(Constants.BUF_SIZE, in, out);
+        cBuff.startTransfer(new Long(-1));
+//        final ReadableByteChannel inputChannel = Channels.newChannel(in);
+//        final WritableByteChannel outputChannel = Channels.newChannel(out);
+//        fastCopy(inputChannel, outputChannel);
     }
 
     private void fastCopy(ReadableByteChannel src, WritableByteChannel dest) throws IOException {
