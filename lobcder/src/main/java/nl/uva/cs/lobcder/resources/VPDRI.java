@@ -150,11 +150,11 @@ public class VPDRI implements PDRI {
     @Override
     public void putData(InputStream in) throws IOException {
         try {
-           CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer(Constants.BUF_SIZE, in, vfsClient.getFile(vrl).getOutputStream());
-           cBuff.startTransfer(new Long(-1));
-//             final ReadableByteChannel inputChannel = Channels.newChannel(in);
-//             final WritableByteChannel outputChannel = Channels.newChannel(vfsClient.getFile(vrl).getOutputStream());
-//             fastCopy(inputChannel, outputChannel);
+//           CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer(Constants.BUF_SIZE, in, vfsClient.getFile(vrl).getOutputStream());
+//           cBuff.startTransfer(new Long(-1));
+             final ReadableByteChannel inputChannel = Channels.newChannel(in);
+             final WritableByteChannel outputChannel = Channels.newChannel(vfsClient.getFile(vrl).getOutputStream());
+             fastCopy(inputChannel, outputChannel);
         } catch (VlException ex) {
             if (ex instanceof ResourceNotFoundException || ex.getMessage().contains("not found") || ex.getMessage().contains("Couldn open location")) {
                 try {
