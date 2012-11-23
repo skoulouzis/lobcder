@@ -19,13 +19,13 @@ import nl.uva.cs.lobcder.util.PropertiesLoader;
  * @author skoulouz
  */
 public class MyAuth {
-
+    
     static MyAuth auth = new MyAuth();
-
+    
     public static MyAuth getInstance() {
         return auth;
     }
-
+    
     public MyPrincipal checkToken(String token) {
         try {
             HashSet<String> roles = new HashSet<String>();
@@ -35,17 +35,19 @@ public class MyAuth {
                 roles.add("admin");
             } else if (token.equals("token1")) {
                 roles.add("other");
-            }
-            File f = new File(Constants.LOBCDER_CONF_DIR + "lob-users.prop");
-            Properties props = PropertiesLoader.getProperties(f);
-            for (int i = 0; i < 5; i++) {
-                String pass = props.getProperty("password" + i);
-                if (pass != null && pass.equals(token)) {
-                    String[] userRoles = props.getProperty("roles"+i).split(",");
-                    roles.addAll(Arrays.asList(userRoles));
+            } else {
+                File f = new File(Constants.LOBCDER_CONF_DIR + "lob-users.prop");
+                Properties props = PropertiesLoader.getProperties(f);
+                for (int i = 0; i < 5; i++) {
+                    String pass = props.getProperty("password" + i);
+                    if (pass != null && pass.equals(token)) {
+                        String[] userRoles = props.getProperty("roles" + i).split(",");
+                        roles.addAll(Arrays.asList(userRoles));
+                    }
                 }
             }
-
+            
+            
             MyPrincipal principal = new MyPrincipal(token, roles);
             return principal;
         } catch (FileNotFoundException ex) {
