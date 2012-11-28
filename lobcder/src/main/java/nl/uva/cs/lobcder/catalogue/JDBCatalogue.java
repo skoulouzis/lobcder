@@ -1249,7 +1249,7 @@ public class JDBCatalogue {
     }
 
     private void debug(String msg) {
-//        System.err.println(this.getClass().getName()+": "+msg);
+        System.err.println(this.getClass().getName()+": "+msg);
     }
 
     private Runnable initDatasource() {

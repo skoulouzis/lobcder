@@ -10,8 +10,9 @@ import nl.uva.cs.lobcder.resources.LogicalData;
 import nl.uva.cs.lobcder.util.Constants;
 
 public class WebDataResourceFactory implements ResourceFactory {
-    
+
     private JDBCatalogue catalogue;
+    private boolean debug = true;
 
     public WebDataResourceFactory(JDBCatalogue catalogue) throws Exception {
         this.catalogue = catalogue;
@@ -61,12 +62,11 @@ public class WebDataResourceFactory implements ResourceFactory {
     }
 
     private void debug(String msg) {
-//        if (debug) {
-//            System.err.println(this.getClass().getSimpleName() + ": " + msg);
-////        log.debug(msg);
-//        }
+        if (debug) {
+            System.err.println(this.getClass().getSimpleName() + ": " + msg);
+//        log.debug(msg);
+        }
     }
-
 //    private void initStorageSites() throws Exception {
 //        String[] names = new String[]{"storage1.prop", "storage2.prop", "storage3.prop"};
 //
@@ -77,7 +77,6 @@ public class WebDataResourceFactory implements ResourceFactory {
 //            }
 //        }
 //    }
-
 //    public void setUserName(String remoteUser) {
 //        this.uname = remoteUser;
 //    }

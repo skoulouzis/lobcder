@@ -44,7 +44,7 @@ public class LogicalData implements Cloneable {
     @XmlTransient
     private List<String> decodedContentTypes = null;
     @XmlTransient
-    private static final boolean debug = false;
+    private static final boolean debug = true;
     @XmlTransient
     private Boolean supervised;
     private Long checkSum;

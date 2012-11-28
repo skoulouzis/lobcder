@@ -20,7 +20,6 @@ import nl.uva.vlet.GlobalConfig;
 import nl.uva.vlet.data.StringUtil;
 import nl.uva.vlet.exception.ResourceNotFoundException;
 import nl.uva.vlet.exception.VlException;
-import nl.uva.vlet.io.CircularStreamBufferTransferer;
 import nl.uva.vlet.util.cog.GridProxy;
 import nl.uva.vlet.vfs.VFSClient;
 import nl.uva.vlet.vfs.VFile;
@@ -152,12 +151,13 @@ public class VPDRI implements PDRI {
         try {
 //           CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer(Constants.BUF_SIZE, in, vfsClient.getFile(vrl).getOutputStream());
 //           cBuff.startTransfer(new Long(-1));
-             final ReadableByteChannel inputChannel = Channels.newChannel(in);
-             final WritableByteChannel outputChannel = Channels.newChannel(vfsClient.getFile(vrl).getOutputStream());
-             fastCopy(inputChannel, outputChannel);
+            final ReadableByteChannel inputChannel = Channels.newChannel(in);
+            final WritableByteChannel outputChannel = Channels.newChannel(vfsClient.getFile(vrl).getOutputStream());
+            fastCopy(inputChannel, outputChannel);
         } catch (VlException ex) {
-            if (ex instanceof ResourceNotFoundException || ex.getMessage().contains("not found") || ex.getMessage().contains("Couldn open location")) {
+            if (ex instanceof ResourceNotFoundException || ex.getMessage().contains("not found") || ex.getMessage().contains("Couldn open location") || ex.getMessage().contains("not found in container")) {
                 try {
+                    vfsClient.mkdirs(vrl.getParent());
                     vfsClient.createFile(vrl, true);
                     putData(in);
                 } catch (VlException ex1) {
