@@ -2,19 +2,21 @@
 
 function initVariables {
         BASE_DIR=$HOME/workspace/lobcder-tests
-        HOST_NAME="elab.lab.uvalight.net"
-        SERVER_PATH="/tomcatWebDAV" #"/lobcder-2.0-SNAPSHOT/dav"
-
+        HOST_NAME="elab.lab.uvalight.net" #"149.156.10.138" 
+        SERVER_PATH="/lobcder-2.0-SNAPSHOT/dav" #"/tomcatWebDAV" #
+        
         PORT="8083"
         URL="http://$HOST_NAME:$PORT/$SERVER_PATH"
         
         TEST_FILE_NAME=testLargeUpload
         TEST_FILE_SERVER_PATH=$HOME/tmp/$TEST_FILE_NAME
 
+        INTERFACE=lo
+
 
         if [ "$METHOD" = "lob" ];
         then
-                SERVER_PATH="/lobcder-2.0-SNAPSHOT/dav"
+                SERVER_PATH="/lobcder-2.0-SNAPSHOT/dav"   #"/lobcder-2.0/dav"
                 URL="http://$HOST_NAME:$PORT$SERVER_PATH"
         fi
 
@@ -31,12 +33,32 @@ function initVariables {
                 URL="http://$HOST_NAME:$PORT$SERVER_PATH"
         fi
 
+        if [ "$METHOD" = "swift" ];
+        then
+                SERVER_PATH="/auth/v1.0"
+                PORT="8443"
+                HOST_NAME="149.156.10.131"
+                URL="https://$HOST_NAME:$PORT$SERVER_PATH"
+                INTERFACE=eth0
+        fi
+
         if [ "$METHOD" = "ftp" ];
         then
                 SERVER_PATH="/ftp"
                 PORT=21
+                HOST_NAME="149.156.10.138"
                 URL="$HOST_NAME"
         fi
+
+        if [ "$METHOD" = "sftp" ];
+        then
+                SERVER_PATH="/sftp"
+                PORT=22
+                HOST_NAME="149.156.10.138"
+                URL="$HOST_NAME"
+                INTERFACE=eth0
+        fi
+
         echo "BASE_DIR $BASE_DIR"
         echo "HOST_NAME $HOST_NAME"
         echo "URL $URL"
@@ -52,7 +74,8 @@ function initMeasurePathAndFile {
         if [ ! -f  $TEST_FILE_SERVER_PATH ];
         then
                 echo "File $TEST_FILE_SERVER_PATH does not exist."
-                dd if=/dev/zero of=$TEST_FILE_SERVER_PATH bs=1G count=$TEST_FILE_SIZE_IN_GB
+                let COUNT=$TEST_FILE_SIZE_IN_GB*10
+                dd if=/dev/zero of=$TEST_FILE_SERVER_PATH bs=100M count=$COUNT
                 sleep 1
         fi
 
@@ -73,37 +96,36 @@ function initMeasureFileAndCadaverScript {
 #        then
 #                echo open $HOST_NAME > cadaver.script
 #        fi
-
+        
+        BWM_FILE_SERVER_PATH=$BASE_DIR/measures/$HOST_NAME/$SERVER_PATH/bwm-$DIRECTION.csv
         if [ "$DIRECTION" = "up" ] && [ "$METHOD" = "ftp" ];
         then
                 echo open $URL > cadaver.script
                 echo put $TEST_FILE_SERVER_PATH $TEST_FILE_SERVER_PATH.COPY >> cadaver.script
-                BWM_FILE_SERVER_PATH=$BASE_DIR/measures/$HOST_NAME/$SERVER_PATH/bwm-up.csv
         elif [ "$DIRECTION" = "up" ] && [ "$METHOD" != "ftp" ];
         then
                 #echo open $URL > cadaver.script
                 echo put $TEST_FILE_SERVER_PATH >> cadaver.script
-                BWM_FILE_SERVER_PATH=$BASE_DIR/measures/$HOST_NAME/$SERVER_PATH/bwm-up.csv
         fi
 
         if [ "$DIRECTION" = "down" ] && [ "$METHOD" = "ftp" ];
         then
                 echo open $URL > cadaver.script
-                echo get $TEST_FILE_SERVER_PATH $TEST_FILE_SERVER_PATH.COPY >> cadaver.script
-                BWM_FILE_SERVER_PATH=$BASE_DIR/measures/$HOST_NAME/$SERVER_PATH/bwm-down.csv
+                echo get $TEST_FILE_SERVER_PATH $TEST_FILE_SERVER_PATH.COPY $TEST_FILE_NAME >> cadaver.script
         elif [ "$DIRECTION" = "down" ] && [ "$METHOD" != "ftp" ];
         then
                 echo open $URL > cadaver.script
-                echo get $TEST_FILE_NAME >> cadaver.script
-                BWM_FILE_SERVER_PATH=$BASE_DIR/measures/$HOST_NAME/$SERVER_PATH/bwm-down.csv
+                echo get $TEST_FILE_NAME $TEST_FILE_NAME >> cadaver.script
         fi
         echo quit >> cadaver.script
+        echo quit >> cadaver.script
+        echo "BWM_FILE_SERVER_PATH $BWM_FILE_SERVER_PATH"
 }
 
 
 function start {
         # ---------------------Start monitoring-----------------------------
-        bwm-ng -o csv -I lo -T rate -t 100 >> $BWM_FILE_SERVER_PATH &
+        bwm-ng -o csv -I $INTERFACE -T rate -t 100 >> $BWM_FILE_SERVER_PATH &
         BWM_PID=$!
         sleep 1
         #----------------------start copy-----------------------------------
@@ -111,8 +133,29 @@ function start {
         if [ "$METHOD" = "ftp" ];
         then
 		ftp < cadaver.script
-	else
+        elif [ "$DIRECTION" = "down" ] && [ "$METHOD" = "swift" ];
+        then
+		echo "SWIFT: python2.6  /home/$USER/Documents/scripts/swift -A $URL -U $USER_NAME -K $PASSWORD download LOBCDER-REPLICA-v2.0 home/$USER/tmp/$TEST_FILE_NAME"
+                python2.6  /home/$USER/Documents/scripts/swift -A $URL -U $USER_NAME -K $PASSWORD download LOBCDER-REPLICA-v2.0 home/$USER/tmp/$TEST_FILE_NAME
+	elif [ "$DIRECTION" = "up" ] && [ "$METHOD" = "swift" ];
+	then
+		echo "SWIFT: python2.6  /home/$USER/Documents/scripts/swift -A $URL -U $USER_NAME -K $PASSWORD upload LOBCDER-REPLICA-v2.0 $TEST_FILE_SERVER_PATH"
+		python2.6  /home/$USER/Documents/scripts/swift -A $URL -U $USER_NAME -K $PASSWORD upload LOBCDER-REPLICA-v2.0 $TEST_FILE_SERVER_PATH
+        fi
+
+        if  [ "$METHOD" = "lob" ] || [ "$METHOD" = "dav" ] || [ "$METHOD" = "javadav" ];
+        then
                 cadaver < cadaver.script
+        fi
+
+        if [ "$DIRECTION" = "down" ] && [ "$METHOD" = "sftp" ];
+        then
+                echo "SFTP: -r $USER_NAME@$HOST_NAME:/home/$USER_NAME $TEST_FILE_SERVER_PATH"
+                scp -r $USER_NAME@$HOST_NAME:/home/$USER_NAME/$TEST_FILE_NAME  $TEST_FILE_SERVER_PATH 
+        elif [ "$DIRECTION" = "up" ] && [ "$METHOD" == "sftp" ];
+        then
+                echo "SFTP: -r  $TEST_FILE_SERVER_PATH $USER_NAME@$HOST_NAME:/home/$USER_NAME"
+                scp -r  $TEST_FILE_SERVER_PATH $USER_NAME@$HOST_NAME:/home/$USER_NAME 
         fi
 
        END="$(date +%s)"
@@ -126,17 +169,8 @@ function start {
 
 
 function formatOutputAndCleanUp {
-
 # ----------------------- Format output-------------------------
-        if [ "$DIRECTION" = "up" ];
-        then
-                BWM_FILE_LO_SERVER_PATH=$BASE_DIR/measures/$HOST_NAME/$SERVER_PATH/bwm-up-lo-$TEST_FILE_SIZE.csv
-        fi
-
-        if [ "$DIRECTION" = "down" ];
-        then
-                BWM_FILE_LO_SERVER_PATH=$BASE_DIR/measures/$HOST_NAME/$SERVER_PATH/bwm-down-lo-$TEST_FILE_SIZE.csv
-        fi
+        BWM_FILE_LO_SERVER_PATH=$BASE_DIR/measures/$HOST_NAME/$SERVER_PATH/bwm-$DIRECTION-$INTERFACE-$TEST_FILE_SIZE_IN_GB.csv
         echo "Start time" > $BWM_FILE_LO_SERVER_PATH
         echo $START >> $BWM_FILE_LO_SERVER_PATH
         echo "End time" >> $BWM_FILE_LO_SERVER_PATH
@@ -148,9 +182,6 @@ function formatOutputAndCleanUp {
         echo "unix_timestamp;iface_name;bytes_out_$METHOD;bytes_in_$METHOD;bytes_total_$METHOD;packets_out;packets_in;packets_total;errors_out;errors_in" >>  $BWM_FILE_LO_SERVER_PATH
         sed '/total/d' $BWM_FILE_SERVER_PATH >> $BWM_FILE_LO_SERVER_PATH
         rm $BWM_FILE_SERVER_PATH
-        #rm $TEST_FILE_SERVER_PATH
-        rm $TEST_FILE_SERVER_PATH.COPY
-
 }
 
 
@@ -166,9 +197,24 @@ initMeasureFileAndCadaverScript
 start
 formatOutputAndCleanUp
 
+SLEEP=180
+echo "sleeping for ....$SLEEP"
+sleep $SLEEP
+
 DIRECTION=down
 initVariables
 initMeasurePathAndFile
 initMeasureFileAndCadaverScript
 start
 formatOutputAndCleanUp
+
+
+rm $TEST_FILE_SERVER_PATH
+rm cadaver.script
+rm $TEST_FILE_SERVER_PATH.COPY
+rm quit 
+rm -r home/$USER/tmp/$TEST_FILE_NAME
+if [ "$METHOD" = "swift" ];
+then
+    python2.6  /home/$USER/Documents/scripts/swift -A $URL -U $USER_NAME -K $PASSWORD delete LOBCDER-REPLICA-v2.0 $TEST_FILE_SERVER_PATH
+fi
