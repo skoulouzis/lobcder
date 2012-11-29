@@ -8,7 +8,6 @@ import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.ByteBuffer;
-import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
@@ -20,6 +19,7 @@ import nl.uva.vlet.GlobalConfig;
 import nl.uva.vlet.data.StringUtil;
 import nl.uva.vlet.exception.ResourceNotFoundException;
 import nl.uva.vlet.exception.VlException;
+import nl.uva.vlet.io.CircularStreamBufferTransferer;
 import nl.uva.vlet.util.cog.GridProxy;
 import nl.uva.vlet.vfs.VFSClient;
 import nl.uva.vlet.vfs.VFile;
@@ -149,11 +149,11 @@ public class VPDRI implements PDRI {
     @Override
     public void putData(InputStream in) throws IOException {
         try {
-//           CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer(Constants.BUF_SIZE, in, vfsClient.getFile(vrl).getOutputStream());
-//           cBuff.startTransfer(new Long(-1));
-            final ReadableByteChannel inputChannel = Channels.newChannel(in);
-            final WritableByteChannel outputChannel = Channels.newChannel(vfsClient.getFile(vrl).getOutputStream());
-            fastCopy(inputChannel, outputChannel);
+           CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer(Constants.BUF_SIZE, in, vfsClient.getFile(vrl).getOutputStream());
+           cBuff.startTransfer(new Long(-1));
+//            final ReadableByteChannel inputChannel = Channels.newChannel(in);
+//            final WritableByteChannel outputChannel = Channels.newChannel(vfsClient.getFile(vrl).getOutputStream());
+//            fastCopy(inputChannel, outputChannel);
         } catch (VlException ex) {
             if (ex instanceof ResourceNotFoundException || ex.getMessage().contains("not found") || ex.getMessage().contains("Couldn open location") || ex.getMessage().contains("not found in container")) {
                 try {
