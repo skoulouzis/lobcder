@@ -37,7 +37,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
 
     private LogicalData logicalData;
     private final JDBCatalogue catalogue;
-    private static final boolean debug = false;
+    private static final boolean debug = true;
     private final Map<String, CustomProperty> customProperties = new HashMap<String, CustomProperty>();
     private final Map<String, PropertyMap.StandardProperty> userPrivledges = new HashMap<String, PropertyMap.StandardProperty>();
     //Collection<Integer> roles = null;
