@@ -72,7 +72,7 @@ public class VPDRI implements PDRI {
     private final String username;
     private final String password;
     private final Long storageSiteId;
-    private final String baseDir = "LOBCDER-REPLICA-v2.0";
+    private final String baseDir = "LOBCDER-REPLICA-vTEST";//"LOBCDER-REPLICA-v2.0";
     private final String fileURI;
 
     VPDRI(String fileURI, Long storageSiteId, String resourceUrl, String username, String password) throws IOException {
@@ -148,9 +148,12 @@ public class VPDRI implements PDRI {
 
     @Override
     public void putData(InputStream in) throws IOException {
+        OutputStream out = null;
         try {
-           CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer(Constants.BUF_SIZE, in, vfsClient.getFile(vrl).getOutputStream());
-           cBuff.startTransfer(new Long(-1));
+
+            out = vfsClient.getFile(vrl).getOutputStream();
+            CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer(Constants.BUF_SIZE, in, vfsClient.getFile(vrl).getOutputStream());
+            cBuff.startTransfer(new Long(-1));
 //            final ReadableByteChannel inputChannel = Channels.newChannel(in);
 //            final WritableByteChannel outputChannel = Channels.newChannel(vfsClient.getFile(vrl).getOutputStream());
 //            fastCopy(inputChannel, outputChannel);
@@ -163,6 +166,14 @@ public class VPDRI implements PDRI {
                 } catch (VlException ex1) {
                     throw new IOException(ex1);
                 }
+            }
+        } finally {
+            if (out != null) {
+                out.flush();
+                out.close();
+            }
+            if (in != null) {
+                in.close();
             }
         }
     }

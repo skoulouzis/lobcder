@@ -185,6 +185,7 @@ public class WebDataFileResource extends WebDataResource implements
         debug("\t params: " + params);
         debug("\t contentType: " + contentType);
         Connection connection = null;
+        PDRI pdri = null;
         try {
             connection = getCatalogue().getConnection();
             connection.setAutoCommit(false);
@@ -192,17 +193,18 @@ public class WebDataFileResource extends WebDataResource implements
             if (!getPrincipal().canRead(p)) {
                 throw new NotAuthorizedException(this);
             }
-            PDRI pdri = null;
+
             Iterator<PDRI> it = getCatalogue().getPdriByGroupId(getLogicalData().getPdriGroupId(), connection).iterator();
             if (it.hasNext()) {
                 pdri = it.next();
-
             }
             connection.commit();
             connection.close();
             debug(pdri.getURL());
             //IOUtils.copy(pdri.getData(), System.err); 
-            fastCopy(pdri.getData(), out);
+//            fastCopy(pdri.getData(), out);
+            CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer(Constants.BUF_SIZE, pdri.getData(), out);
+            cBuff.startTransfer(new Long(-1));
         } catch (NotAuthorizedException ex) {
             debug("NotAuthorizedException");
             throw new NotAuthorizedException(this);
@@ -216,6 +218,10 @@ public class WebDataFileResource extends WebDataResource implements
                     connection.rollback();
                     connection.close();
                 }
+
+//                if (pdri != null && pdri.getData() != null) {
+//                    pdri.getData().close();
+//                }
             } catch (Exception ex) {
                 Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, ex);
             }
