@@ -37,7 +37,7 @@ public class WebDavServlet implements Servlet {
     protected com.bradmcevoy.http.ServletHttpManager servletHttpManager;
     private ServletConfig config;
 //    private Logger log = LoggerFactory.getLogger(this.getClass());
-    private static final boolean debug = true;
+    private static final boolean debug = false;
     private ResourceFactory rf;
     private JDBCatalogue catalogue = null;
 

@@ -14,8 +14,8 @@ public class WebDataResourceFactoryFactory implements ResourceFactoryFactory {
     private Logger log = LoggerFactory.getLogger(WebDataResourceFactoryFactory.class);
     private static AuthenticationService authenticationService;
     private static WebDataResourceFactory resourceFactory;
+    private static final boolean debug = false;
 
-    
     @Override
     public ResourceFactory createResourceFactory() {
         return resourceFactory;
@@ -41,10 +41,9 @@ public class WebDataResourceFactoryFactory implements ResourceFactoryFactory {
     }
 
     private void debug(String msg) {
-//        if (debug) {
-//            System.err.println(this.getClass().getSimpleName() + ": " + msg);
-////        log.debug(msg);
-//        }
-
+        if (debug) {
+            System.err.println(this.getClass().getSimpleName() + ": " + msg);
+//        log.debug(msg);
+        }
     }
 }

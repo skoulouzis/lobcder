@@ -25,6 +25,7 @@ import nl.uva.cs.lobcder.util.Constants;
 public class JDBCatalogue {
 
     private DataSource datasource = null;
+    private static final boolean debug = false;
 
     public JDBCatalogue() throws NamingException, Exception {
 
@@ -1249,26 +1250,29 @@ public class JDBCatalogue {
     }
 
     private void debug(String msg) {
-        System.err.println(this.getClass().getName()+": "+msg);
+        if (debug) {
+            System.err.println(this.getClass().getName() + ": " + msg);
+        }
     }
 
     private Runnable initDatasource() {
         return new Runnable() {
+
             @Override
             public void run() {
-                    if (datasource == null) {
-                        try {
-                            String jndiName = "jdbc/lobcder";
-                            Context ctx = new InitialContext();
-                            if (ctx == null) {
-                                throw new Exception("JNDI could not create InitalContext ");
-                            }
-                            Context envContext = (Context) ctx.lookup("java:/comp/env");
-                            datasource = (DataSource) envContext.lookup(jndiName);
-                        } catch (Exception ex) {
-                            Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+                if (datasource == null) {
+                    try {
+                        String jndiName = "jdbc/lobcder";
+                        Context ctx = new InitialContext();
+                        if (ctx == null) {
+                            throw new Exception("JNDI could not create InitalContext ");
                         }
+                        Context envContext = (Context) ctx.lookup("java:/comp/env");
+                        datasource = (DataSource) envContext.lookup(jndiName);
+                    } catch (Exception ex) {
+                        Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
                     }
+                }
             }
         };
     }

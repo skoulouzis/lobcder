@@ -17,6 +17,7 @@ import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.vlet.Global;
 import nl.uva.vlet.GlobalConfig;
 import nl.uva.vlet.data.StringUtil;
+import nl.uva.vlet.exception.ResourceNotFoundException;
 import nl.uva.vlet.exception.VlException;
 import nl.uva.vlet.io.CircularStreamBufferTransferer;
 import nl.uva.vlet.util.cog.GridProxy;
@@ -149,9 +150,6 @@ public class VPDRI implements PDRI {
     public void putData(InputStream in) throws IOException {
         OutputStream out = null;
         try {
-            vfsClient.mkdirs(vrl.getParent(), true);
-            vfsClient.createFile(vrl, true);
-            
             out = vfsClient.getFile(vrl).getOutputStream();
             CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer(Constants.BUF_SIZE, in, out);
             cBuff.startTransfer(new Long(-1));
@@ -159,14 +157,16 @@ public class VPDRI implements PDRI {
 //            final WritableByteChannel outputChannel = Channels.newChannel(out);
 //            fastCopy(inputChannel, outputChannel);
         } catch (VlException ex) {
-            throw new IOException(ex);
-//            if (ex instanceof ResourceNotFoundException || ex.getMessage().contains("not found") || ex.getMessage().contains("Couldn open location") || ex.getMessage().contains("not found in container")) {
-//                try {
-//
-//                } catch (VlException ex1) {
-//                    throw new IOException(ex1);
-//                }
-//            }
+//            throw new IOException(ex);
+            if (ex instanceof ResourceNotFoundException || ex.getMessage().contains("not found") || ex.getMessage().contains("Couldn open location") || ex.getMessage().contains("not found in container")) {
+                try {
+                    vfsClient.mkdirs(vrl.getParent(), true);
+                    vfsClient.createFile(vrl, true);
+                    putData(in);
+                } catch (VlException ex1) {
+                    throw new IOException(ex1);
+                }
+            }
         } finally {
             if (out != null) {
                 out.flush();

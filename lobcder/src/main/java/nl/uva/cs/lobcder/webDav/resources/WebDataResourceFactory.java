@@ -12,7 +12,7 @@ import nl.uva.cs.lobcder.util.Constants;
 public class WebDataResourceFactory implements ResourceFactory {
 
     private JDBCatalogue catalogue;
-    private boolean debug = true;
+    private static final boolean debug = false;
 
     public WebDataResourceFactory(JDBCatalogue catalogue) throws Exception {
         this.catalogue = catalogue;

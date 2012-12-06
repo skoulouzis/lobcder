@@ -41,7 +41,7 @@ import nl.uva.vlet.vfs.VFSNode;
 public class WebDataFileResource extends WebDataResource implements
         com.bradmcevoy.http.FileResource {
 
-    private static final boolean debug = true;
+    private static final boolean debug = false;
 
     public WebDataFileResource(JDBCatalogue catalogue, LogicalData logicalData) throws CatalogueException, Exception {
         super(catalogue, logicalData);
