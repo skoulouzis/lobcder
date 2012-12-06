@@ -134,46 +134,46 @@ function initMeasureFileAndCadaverScript {
         fi
         echo quit >> cadaver.script
 
-        echo "BWM_FILE_SERVER_PATH $BWM_FILE_SERVER_PATH"
+        echo "BWM_FILE_PATH $BWM_FILE_SERVER_PATH"
 }
 
 
 function start {
         # ---------------------Start monitoring-----------------------------
-	bwm-ng -o csv -I $INTERFACE -T rate -t 100 >> $BWM_FILE_SERVER_PATH &
+	bwm-ng -o csv -T rate -t 1000 >> $BWM_FILE_SERVER_PATH &
         BWM_PID=$!
         sleep 1
         #----------------------start copy-----------------------------------
-	START="$(date +%s)"
-        if [ "$METHOD" = "ftp" ];
-        then
-		ftp -i < cadaver.script
-	elif [ "$METHOD" = "lob" ] || [ "$METHOD" = "dav" ] || [ "$METHOD" = "javadav" ];
-	then 
-                #cd $TEST_DATASET_DIR
-                cadaver < $HOME/workspace/lobcder-tests/scripts/cadaver.script
-                #cd $HOME/workspace/lobcder-tests/scripts/
-	fi
-
-	if [ "$DIRECTION" = "down" ] && [ "$METHOD" = "swift" ];
-        then
-		echo "SWIFT: python2.6  /home/$USER/Documents/scripts/swift -A $URL -U $USER_NAME -K $PASSWORD download TEST"
-                python2.6  /home/$USER/Documents/scripts/swift -A $URL -U $USER_NAME -K $PASSWORD download TEST
-	elif [ "$DIRECTION" = "up" ] && [ "$METHOD" = "swift" ];
-	then
-		echo "SWIFT: python2.6  /home/$USER/Documents/scripts/swift -A $URL -U $USER_NAME -K $PASSWORD upload TEST $TEST_DATASET_DIR"
-		python2.6  /home/$USER/Documents/scripts/swift -A $URL -U $USER_NAME -K $PASSWORD upload TEST $TEST_DATASET_DIR
-	fi
-
-        if [ "$DIRECTION" = "down" ] && [ "$METHOD" = "sftp" ];
-        then
-                echo "SFTP: -r $USER_NAME@$HOST_NAME:/home/$USER_NAME $TEST_FILE_SERVER_PATH"
-                scp -r $USER_NAME@$HOST_NAME:/home/$USER_NAME/dataset  $TEST_DATASET_DIR
-        elif [ "$DIRECTION" = "up" ] && [ "$METHOD" == "sftp" ];
-        then
-                echo "SFTP: -r  $TEST_FILE_SERVER_PATH $USER_NAME@$HOST_NAME:/home/$USER_NAME"
-                scp -r  $TEST_DATASET_DIR $USER_NAME@$HOST_NAME:/home/$USER_NAME 
-        fi
+ 	START="$(date +%s)"
+         if [ "$METHOD" = "ftp" ];
+         then
+ 		ftp -i < cadaver.script
+ 	elif [ "$METHOD" = "lob" ] || [ "$METHOD" = "dav" ] || [ "$METHOD" = "javadav" ];
+ 	then 
+                 #cd $TEST_DATASET_DIR
+                 cadaver < $HOME/workspace/lobcder-tests/scripts/cadaver.script
+                 #cd $HOME/workspace/lobcder-tests/scripts/
+ 	fi
+ 
+ 	if [ "$DIRECTION" = "down" ] && [ "$METHOD" = "swift" ];
+         then
+ 		echo "SWIFT: python2.6  /home/$USER/Documents/scripts/swift -A $URL -U $USER_NAME -K $PASSWORD download TEST"
+                 python2.6  /home/$USER/Documents/scripts/swift -A $URL -U $USER_NAME -K $PASSWORD download TEST
+ 	elif [ "$DIRECTION" = "up" ] && [ "$METHOD" = "swift" ];
+ 	then
+ 		echo "SWIFT: python2.6  /home/$USER/Documents/scripts/swift -A $URL -U $USER_NAME -K $PASSWORD upload TEST $TEST_DATASET_DIR"
+ 		python2.6  /home/$USER/Documents/scripts/swift -A $URL -U $USER_NAME -K $PASSWORD upload TEST $TEST_DATASET_DIR
+ 	fi
+ 
+         if [ "$DIRECTION" = "down" ] && [ "$METHOD" = "sftp" ];
+         then
+                 echo "SFTP: -r $USER_NAME@$HOST_NAME:/home/$USER_NAME $TEST_FILE_SERVER_PATH"
+                 scp -r $USER_NAME@$HOST_NAME:/home/$USER_NAME/dataset  $TEST_DATASET_DIR
+         elif [ "$DIRECTION" = "up" ] && [ "$METHOD" == "sftp" ];
+         then
+                 echo "SFTP: -r  $TEST_FILE_SERVER_PATH $USER_NAME@$HOST_NAME:/home/$USER_NAME"
+                 scp -r  $TEST_DATASET_DIR $USER_NAME@$HOST_NAME:/home/$USER_NAME 
+         fi
 
        END="$(date +%s)"
        ELAPSED="$(expr $END - $START)"
@@ -188,19 +188,52 @@ function start {
 function formatOutputAndCleanUp {
 
 # ----------------------- Format output-------------------------
-        BWM_FILE_LO_SERVER_PATH=$BASE_DIR/measures/$HOST_NAME/$SERVER_PATH/bwm-$DIRECTION-dataset-$INTERFACE-$TEST_DATASET_SIZE_IN_GB.csv
+        BWM_FILE_PATH=$BASE_DIR/measures/$HOST_NAME/$SERVER_PATH/bwm-$DIRECTION-dataset-$TEST_DATASET_SIZE_IN_GB.csv
+        
+        BWM_FILE_LO_PATH=$BASE_DIR/measures/$HOST_NAME/$SERVER_PATH/bwm-$DIRECTION-dataset-lo-$TEST_DATASET_SIZE_IN_GB.csv
+        BWM_FILE_LO_Rx_PATH=$BASE_DIR/measures/$HOST_NAME/$SERVER_PATH/bwm-$DIRECTION-dataset-lo-Rx-$TEST_DATASET_SIZE_IN_GB.csv
+        BWM_FILE_LO_Tx_PATH=$BASE_DIR/measures/$HOST_NAME/$SERVER_PATH/bwm-$DIRECTION-dataset-lo-Tx-$TEST_DATASET_SIZE_IN_GB.csv
 
-        echo "Start time" > $BWM_FILE_LO_SERVER_PATH
-        echo $START >> $BWM_FILE_LO_SERVER_PATH
-        echo "End time" >> $BWM_FILE_LO_SERVER_PATH
-        echo $END >> $BWM_FILE_LO_SERVER_PATH
-        echo "Elapsed" >> $BWM_FILE_LO_SERVER_PATH
-        echo $ELAPSED >> $BWM_FILE_LO_SERVER_PATH
-        echo "Size (MB)" >> $BWM_FILE_LO_SERVER_PATH
-        echo $TEST_DATASET_SIZE_IN_MB >>  $BWM_FILE_LO_SERVER_PATH
-        echo "unix_timestamp;iface_name;bytes_out_$METHOD;bytes_in_$METHOD;bytes_total_$METHOD;packets_out;packets_in;packets_total;errors_out;errors_in" >>  $BWM_FILE_LO_SERVER_PATH
-        sed '/total/d' $BWM_FILE_SERVER_PATH >> $BWM_FILE_LO_SERVER_PATH
-        rm $BWM_FILE_SERVER_PATH
+        BWM_FILE_ETH0_PATH=$BASE_DIR/measures/$HOST_NAME/$SERVER_PATH/bwm-$DIRECTION-dataset-eth0-$TEST_DATASET_SIZE_IN_GB.csv
+        BWM_FILE_ETH0_Tx_PATH=$BASE_DIR/measures/$HOST_NAME/$SERVER_PATH/bwm-$DIRECTION-dataset-eth0-Tx-$TEST_DATASET_SIZE_IN_GB.csv
+        BWM_FILE_ETH0_Rx_PATH=$BASE_DIR/measures/$HOST_NAME/$SERVER_PATH/bwm-$DIRECTION-dataset-eth0-Rx-$TEST_DATASET_SIZE_IN_GB.csv
+
+        echo "Start time" > $BWM_FILE_PATH
+        echo $START >> $BWM_FILE_PATH
+        echo "End time" >> $BWM_FILE_PATH
+        echo $END >> $BWM_FILE_PATH
+        echo "Elapsed" >> $BWM_FILE_PATH
+        echo $ELAPSED >> $BWM_FILE_PATH
+        echo "Elapsed" $ELAPSED
+        echo "Size (MB)" >> $BWM_FILE_PATH
+        echo $TEST_DATASET_SIZE_IN_MB >> $BWM_FILE_PATH
+        echo "Speed (MB/sec)" >> $BWM_FILE_PATH
+        SPEED=$(echo "$TEST_DATASET_SIZE_IN_MB / $ELAPSED" |bc -l)
+        echo $SPEED >> $BWM_FILE_PATH
+        echo "Speed (MB/sec): $SPEED"
+                
+        HEADER="unix_timestamp;iface_name;bytes_out_$METHOD;bytes_in_$METHOD;bytes_total_$METHOD;packets_out;packets_in;packets_total;errors_out;errors_in"
+        echo $HEADER >> $BWM_FILE_PATH
+        echo $HEADER >> $BWM_FILE_LO_PATH
+        cat $BWM_FILE_SERVER_PATH | grep lo >> $BWM_FILE_LO_PATH
+        echo $HEADER >> $BWM_FILE_ETH0_PATH
+        cat $BWM_FILE_SERVER_PATH | grep 'eth0' | sed '/peth/d' >> $BWM_FILE_ETH0_PATH
+        
+        if [ "$DIRECTION" = "up" ] ;
+        then
+            awk -F "\"*;\"*" '{print $1 ";" $4}' $BWM_FILE_LO_PATH > $BWM_FILE_LO_Rx_PATH
+            awk -F "\"*;\"*" '{print $3}' $BWM_FILE_ETH0_PATH >> $BWM_FILE_ETH0_Tx_PATH
+            echo -F "\"*;\"*" '{ OFS=";"} {getline add < "'$BWM_FILE_ETH0_Tx_PATH'"} {print $0,add}' $BWM_FILE_LO_Rx_PATH >> $BWM_FILE_PATH
+            awk -F "\"*;\"*" '{ OFS=";"} {getline add < "'$BWM_FILE_ETH0_Tx_PATH'"} {print $0,add}' $BWM_FILE_LO_Rx_PATH >> $BWM_FILE_PATH
+        fi
+
+        #if [ "$DIRECTION" = "down" ] ;
+        #then
+        #    awk -F "\"*;\"*" '{print $1 ";" $3}' $BWM_FILE_LO_PATH > $BWM_FILE_LO_Tx_PATH
+        #    awk -F "\"*;\"*" '{print $4}' $BWM_FILE_ETH0_PATH > $BWM_FILE_ETH0_Rx_PATH
+        #    awk -F "\"*;\"*" '{ OFS=";"} {getline add < "$BWM_FILE_ETH0_Rx_PATH"} {print $0,add}' $BWM_FILE_LO_Tx_PATH > $BWM_FILE_PATH
+        #fi
+
 }
 
 
@@ -216,16 +249,16 @@ initMeasureFileAndCadaverScript
 start
 formatOutputAndCleanUp
 
-SLEEP=30
-echo "sleeping for ....$SLEEP"
-sleep $SLEEP
+#SLEEP=30
+#echo "sleeping for ....$SLEEP"
+#sleep $SLEEP
 
-DIRECTION=down
-initVariables
-initMeasurePathAndFile
-initMeasureFileAndCadaverScript
-tart
-formatOutputAndCleanUp
+#DIRECTION=down
+#initVariables
+#initMeasurePathAndFile
+#initMeasureFileAndCadaverScript
+#start
+#formatOutputAndCleanUp
 
 find $TEST_DATASET_DIR ! -name "*.dat" -type f -exec rm {} \;
 rm $TEST_FILE_NAME*
