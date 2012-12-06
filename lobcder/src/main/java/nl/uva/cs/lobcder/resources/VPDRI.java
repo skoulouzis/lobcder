@@ -8,11 +8,13 @@ import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.ByteBuffer;
+import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.imageio.IIOException;
 import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.vlet.Global;
 import nl.uva.vlet.GlobalConfig;
@@ -150,23 +152,22 @@ public class VPDRI implements PDRI {
     public void putData(InputStream in) throws IOException {
         OutputStream out = null;
         try {
-
+            
             out = vfsClient.getFile(vrl).getOutputStream();
-            CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer(Constants.BUF_SIZE, in, vfsClient.getFile(vrl).getOutputStream());
+            CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer(Constants.BUF_SIZE, in, out);
             cBuff.startTransfer(new Long(-1));
 //            final ReadableByteChannel inputChannel = Channels.newChannel(in);
-//            final WritableByteChannel outputChannel = Channels.newChannel(vfsClient.getFile(vrl).getOutputStream());
+//            final WritableByteChannel outputChannel = Channels.newChannel(out);
 //            fastCopy(inputChannel, outputChannel);
         } catch (VlException ex) {
-            if (ex instanceof ResourceNotFoundException || ex.getMessage().contains("not found") || ex.getMessage().contains("Couldn open location") || ex.getMessage().contains("not found in container")) {
-                try {
-                    vfsClient.mkdirs(vrl.getParent());
-                    vfsClient.createFile(vrl, true);
-                    putData(in);
-                } catch (VlException ex1) {
-                    throw new IOException(ex1);
-                }
-            }
+            throw new IOException(ex);
+//            if (ex instanceof ResourceNotFoundException || ex.getMessage().contains("not found") || ex.getMessage().contains("Couldn open location") || ex.getMessage().contains("not found in container")) {
+//                try {
+//
+//                } catch (VlException ex1) {
+//                    throw new IOException(ex1);
+//                }
+//            }
         } finally {
             if (out != null) {
                 out.flush();
