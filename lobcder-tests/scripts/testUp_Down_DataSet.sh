@@ -100,15 +100,20 @@ function initMeasureFileAndCadaverScript {
 
         echo open $URL > cadaver.script
         
-        BWM_FILE_SERVER_PATH=$BASE_DIR/measures/$HOST_NAME/$SERVER_PATH/bwm-$DIRECTION.csv
+        BWM_FILE_SERVER_NAME=bwm-$DIRECTION.csv
+        BWM_FILE_SERVER_PATH=$BASE_DIR/measures/$HOST_NAME/$SERVER_PATH/$BWM_FILE_SERVER_NAME
 
         if [ "$DIRECTION" = "up" ] && [ "$METHOD" = "ftp" ];
         then
                 echo open $URL > cadaver.script
                 FILES=$TEST_DATASET_DIR/*
+                echo prompt >> cadaver.script
+                #echo mput $TEST_DATASET_DIR/* >> cadaver.script
                 for f in $FILES
                 do
-                    echo put $f $f.COPY >> cadaver.script
+                    COUNT=`expr $COUNT + 1` 
+                    #echo put $f $f.COPY >> cadaver.script
+                    echo put $f dataset/test_"$COUNT" >> cadaver.script
                 done
         elif [ "$DIRECTION" = "up" ] && [ "$METHOD" = "lob" ] || [ "$METHOD" = "dav" ] || [ "$METHOD" = "javadav" ];
         then
@@ -126,7 +131,9 @@ function initMeasureFileAndCadaverScript {
         then
                 echo open $URL > cadaver.script
                 echo nmap $TEST_DATASET_DIR/'$1 $1.COPY'  >> cadaver.script
-                echo mget $TEST_DATASET_DIR/'*' >> cadaver.script
+                #echo mget $TEST_DATASET_DIR/'*' >> cadaver.script
+                echo cd dataset >> cadaver.script 
+                echo 'mget test*' >> cadaver.script 
         elif [ "$DIRECTION" = "down" ] && [ "$METHOD" = "lob" ] || [ "$METHOD" = "dav" ] || [ "$METHOD" = "javadav" ];
         then
                 echo open $URL > cadaver.script
@@ -140,7 +147,7 @@ function initMeasureFileAndCadaverScript {
 
 function start {
         # ---------------------Start monitoring-----------------------------
-	bwm-ng -o csv -T rate -t 1000 >> $BWM_FILE_SERVER_PATH &
+	bwm-ng -o csv -T rate -t 1000 > $BWM_FILE_SERVER_PATH &
         BWM_PID=$!
         sleep 1
         #----------------------start copy-----------------------------------
@@ -189,14 +196,17 @@ function formatOutputAndCleanUp {
 
 # ----------------------- Format output-------------------------
         BWM_FILE_PATH=$BASE_DIR/measures/$HOST_NAME/$SERVER_PATH/bwm-$DIRECTION-dataset-$TEST_DATASET_SIZE_IN_GB.csv
-        
+
         BWM_FILE_LO_PATH=$BASE_DIR/measures/$HOST_NAME/$SERVER_PATH/bwm-$DIRECTION-dataset-lo-$TEST_DATASET_SIZE_IN_GB.csv
         BWM_FILE_LO_Rx_PATH=$BASE_DIR/measures/$HOST_NAME/$SERVER_PATH/bwm-$DIRECTION-dataset-lo-Rx-$TEST_DATASET_SIZE_IN_GB.csv
         BWM_FILE_LO_Tx_PATH=$BASE_DIR/measures/$HOST_NAME/$SERVER_PATH/bwm-$DIRECTION-dataset-lo-Tx-$TEST_DATASET_SIZE_IN_GB.csv
 
         BWM_FILE_ETH0_PATH=$BASE_DIR/measures/$HOST_NAME/$SERVER_PATH/bwm-$DIRECTION-dataset-eth0-$TEST_DATASET_SIZE_IN_GB.csv
-        BWM_FILE_ETH0_Tx_PATH=$BASE_DIR/measures/$HOST_NAME/$SERVER_PATH/bwm-$DIRECTION-dataset-eth0-Tx-$TEST_DATASET_SIZE_IN_GB.csv
-        BWM_FILE_ETH0_Rx_PATH=$BASE_DIR/measures/$HOST_NAME/$SERVER_PATH/bwm-$DIRECTION-dataset-eth0-Rx-$TEST_DATASET_SIZE_IN_GB.csv
+
+        BWM_FILE_ETH0_Tx_NAME=bwm-$DIRECTION-dataset-eth0-Tx-$TEST_DATASET_SIZE_IN_GB.csv
+        BWM_FILE_ETH0_Tx_PATH=$BASE_DIR/measures/$HOST_NAME/$SERVER_PATH/$BWM_FILE_ETH0_Tx_NAME
+        BWM_FILE_ETH0_Rx_NAME=bwm-$DIRECTION-dataset-eth0-Rx-$TEST_DATASET_SIZE_IN_GB.csv
+        BWM_FILE_ETH0_Rx_PATH=$BASE_DIR/measures/$HOST_NAME/$SERVER_PATH/$BWM_FILE_ETH0_Rx_NAME
 
         echo "Start time" > $BWM_FILE_PATH
         echo $START >> $BWM_FILE_PATH
@@ -211,28 +221,41 @@ function formatOutputAndCleanUp {
         SPEED=$(echo "$TEST_DATASET_SIZE_IN_MB / $ELAPSED" |bc -l)
         echo $SPEED >> $BWM_FILE_PATH
         echo "Speed (MB/sec): $SPEED"
-                
-        HEADER="unix_timestamp;iface_name;bytes_out_$METHOD;bytes_in_$METHOD;bytes_total_$METHOD;packets_out;packets_in;packets_total;errors_out;errors_in"
-        echo $HEADER >> $BWM_FILE_PATH
-        echo $HEADER >> $BWM_FILE_LO_PATH
+
+
+        echo "unix_timestamp;iface_name;Mbytes_out_"$METHOD"_lo;Mbytes_in_"$METHOD"_lo;bytes_total_"$METHOD"_lo;packets_out;packets_in;packets_total;errors_out;errors_in" > $BWM_FILE_LO_PATH
+	cp $BWM_FILE_SERVER_PATH  $BWM_FILE_SERVER_NAME
+	awk  -v s=$START -F "\"*;\"*" '{ print $1-s ";" $2 ";" $3/(1024*1024) ";" $4/(1024*1024) ";" $5/(1024*1024) ";" $6 ";" $7 ";" $9 ";" $10}' $BWM_FILE_SERVER_NAME > tmp
+	mv tmp $BWM_FILE_SERVER_PATH
+        
+
         cat $BWM_FILE_SERVER_PATH | grep lo >> $BWM_FILE_LO_PATH
-        echo $HEADER >> $BWM_FILE_ETH0_PATH
+
+
+        echo "unix_timestamp;iface_name;Mbytes_out_"$METHOD"_eth0;Mbytes_in_"$METHOD"_eth0;Mbytes_total_"$METHOD"_eth0;packets_out;packets_in;packets_total;errors_out;errors_in" > $BWM_FILE_ETH0_PATH
         cat $BWM_FILE_SERVER_PATH | grep 'eth0' | sed '/peth/d' >> $BWM_FILE_ETH0_PATH
         
         if [ "$DIRECTION" = "up" ] ;
         then
             awk -F "\"*;\"*" '{print $1 ";" $4}' $BWM_FILE_LO_PATH > $BWM_FILE_LO_Rx_PATH
             awk -F "\"*;\"*" '{print $3}' $BWM_FILE_ETH0_PATH >> $BWM_FILE_ETH0_Tx_PATH
-            echo -F "\"*;\"*" '{ OFS=";"} {getline add < "'$BWM_FILE_ETH0_Tx_PATH'"} {print $0,add}' $BWM_FILE_LO_Rx_PATH >> $BWM_FILE_PATH
-            awk -F "\"*;\"*" '{ OFS=";"} {getline add < "'$BWM_FILE_ETH0_Tx_PATH'"} {print $0,add}' $BWM_FILE_LO_Rx_PATH >> $BWM_FILE_PATH
+            cp $BWM_FILE_ETH0_Tx_PATH .
+            awk -F "\"*;\"*" '{ OFS=";"} {getline add < "'$BWM_FILE_ETH0_Tx_NAME'"} {print $0,add}' $BWM_FILE_LO_Rx_PATH >> $BWM_FILE_PATH
+            mv $BWM_FILE_ETH0_Tx_NAME $BWM_FILE_ETH0_Tx_PATH
         fi
-
-        #if [ "$DIRECTION" = "down" ] ;
-        #then
-        #    awk -F "\"*;\"*" '{print $1 ";" $3}' $BWM_FILE_LO_PATH > $BWM_FILE_LO_Tx_PATH
-        #    awk -F "\"*;\"*" '{print $4}' $BWM_FILE_ETH0_PATH > $BWM_FILE_ETH0_Rx_PATH
-        #    awk -F "\"*;\"*" '{ OFS=";"} {getline add < "$BWM_FILE_ETH0_Rx_PATH"} {print $0,add}' $BWM_FILE_LO_Tx_PATH > $BWM_FILE_PATH
-        #fi
+        
+        if [ "$DIRECTION" = "down" ] ;
+        then
+            awk -F "\"*;\"*" '{print $1 ";" $3}' $BWM_FILE_LO_PATH > $BWM_FILE_LO_Tx_PATH
+            awk -F "\"*;\"*" '{print $4}' $BWM_FILE_ETH0_PATH >> $BWM_FILE_ETH0_Rx_PATH
+            cp $BWM_FILE_ETH0_Rx_PATH .
+            awk -F "\"*;\"*" '{ OFS=";"} {getline add < "'$BWM_FILE_ETH0_Rx_NAME'"} {print $0,add}' $BWM_FILE_LO_Tx_PATH >> $BWM_FILE_PATH
+            mv $BWM_FILE_ETH0_Rx_NAME $BWM_FILE_ETH0_Rx_PATH
+        fi
+        DATE=`date +%s`
+        mv $BWM_FILE_PATH $BWM_FILE_PATH-$DATE.csv
+        rm ./*.csv
+        rm $BWM_FILE_LO_PATH $BWM_FILE_LO_Rx_PATH $BWM_FILE_LO_Tx_PATH $BWM_FILE_ETH0_PATH $BWM_FILE_ETH0_Tx_PATH $BWM_FILE_ETH0_Rx_PATH
 
 }
 
@@ -249,16 +272,16 @@ initMeasureFileAndCadaverScript
 start
 formatOutputAndCleanUp
 
-#SLEEP=30
-#echo "sleeping for ....$SLEEP"
-#sleep $SLEEP
+SLEEP=3
+echo "sleeping for ....$SLEEP"
+sleep $SLEEP
 
-#DIRECTION=down
-#initVariables
-#initMeasurePathAndFile
-#initMeasureFileAndCadaverScript
-#start
-#formatOutputAndCleanUp
+DIRECTION=down
+initVariables
+initMeasurePathAndFile
+initMeasureFileAndCadaverScript
+start
+formatOutputAndCleanUp
 
 find $TEST_DATASET_DIR ! -name "*.dat" -type f -exec rm {} \;
 rm $TEST_FILE_NAME*
