@@ -4,7 +4,9 @@
  */
 package nl.uva.cs.lobcder.resources;
 
+import com.sun.management.OperatingSystemMXBean;
 import java.io.*;
+import java.lang.management.ManagementFactory;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.ByteBuffer;
@@ -151,7 +153,10 @@ public class VPDRI implements PDRI {
         OutputStream out = null;
         try {
             out = vfsClient.getFile(vrl).getOutputStream();
-            CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer(Constants.BUF_SIZE, in, out);
+
+            OperatingSystemMXBean osMBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
+            int size = (int) (osMBean.getFreePhysicalMemorySize() / 50);
+            CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer(size, in, out);
             cBuff.startTransfer(new Long(-1));
 //            final ReadableByteChannel inputChannel = Channels.newChannel(in);
 //            final WritableByteChannel outputChannel = Channels.newChannel(out);
@@ -212,7 +217,9 @@ public class VPDRI implements PDRI {
     }
 
     private void fastCopy(ReadableByteChannel src, WritableByteChannel dest) throws IOException {
-        final ByteBuffer buffer = ByteBuffer.allocateDirect(Constants.BUF_SIZE);
+        OperatingSystemMXBean osMBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
+        int size = (int) (osMBean.getFreePhysicalMemorySize() / 50);
+        final ByteBuffer buffer = ByteBuffer.allocateDirect(size);
         int len;
         try {
             while ((len = src.read(buffer)) != -1) {

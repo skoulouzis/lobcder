@@ -10,9 +10,11 @@ import com.bradmcevoy.http.exceptions.BadRequestException;
 import com.bradmcevoy.http.exceptions.ConflictException;
 import com.bradmcevoy.http.exceptions.NotAuthorizedException;
 import com.bradmcevoy.http.exceptions.NotFoundException;
+import com.sun.management.OperatingSystemMXBean;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.management.ManagementFactory;
 import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
@@ -203,7 +205,9 @@ public class WebDataFileResource extends WebDataResource implements
             debug(pdri.getURL());
             //IOUtils.copy(pdri.getData(), System.err); 
 //            fastCopy(pdri.getData(), out);
-            CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer(Constants.BUF_SIZE, pdri.getData(), out);
+            OperatingSystemMXBean osMBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
+            int size = (int) (osMBean.getFreePhysicalMemorySize() / 50);
+            CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer(size, pdri.getData(), out);
             cBuff.startTransfer(new Long(-1));
         } catch (NotAuthorizedException ex) {
             debug("NotAuthorizedException");
@@ -339,7 +343,6 @@ public class WebDataFileResource extends WebDataResource implements
                     return null;
                 }
                 return null;
-
             default:
                 return null;
         }
@@ -352,7 +355,9 @@ public class WebDataFileResource extends WebDataResource implements
     }
 
     private void fastCopy(InputStream in, OutputStream out) throws IOException, VlException {
-        CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer(Constants.BUF_SIZE, in, out);
+        OperatingSystemMXBean osMBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
+        int size = (int) (osMBean.getFreePhysicalMemorySize() / 50);
+        CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer(size, in, out);
         cBuff.startTransfer(new Long(-1));
 //        final ReadableByteChannel inputChannel = Channels.newChannel(in);
 //        final WritableByteChannel outputChannel = Channels.newChannel(out);
@@ -360,7 +365,9 @@ public class WebDataFileResource extends WebDataResource implements
     }
 
     private void fastCopy(ReadableByteChannel src, WritableByteChannel dest) throws IOException {
-        final ByteBuffer buffer = ByteBuffer.allocateDirect(Constants.BUF_SIZE);
+        OperatingSystemMXBean osMBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
+        int size = (int) (osMBean.getFreePhysicalMemorySize() / 50);
+        final ByteBuffer buffer = ByteBuffer.allocateDirect(size);
         int len;
         while ((len = src.read(buffer)) != -1) {
 //            System.err.println("Read size: " + len);
