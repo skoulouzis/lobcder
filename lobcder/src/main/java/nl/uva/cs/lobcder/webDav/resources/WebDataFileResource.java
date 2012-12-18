@@ -206,7 +206,7 @@ public class WebDataFileResource extends WebDataResource implements
             //IOUtils.copy(pdri.getData(), System.err); 
 //            fastCopy(pdri.getData(), out);
             OperatingSystemMXBean osMBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
-            int size = (int) (osMBean.getFreePhysicalMemorySize() / 50);
+            int size = (int) (osMBean.getFreePhysicalMemorySize() / 10);
             debug("Alocated  physical memory:\t" + size / (1024.0 * 1024.0));
             CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer(size, pdri.getData(), out);
             cBuff.startTransfer(new Long(-1));
