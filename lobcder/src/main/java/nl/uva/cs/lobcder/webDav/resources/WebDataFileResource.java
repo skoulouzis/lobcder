@@ -16,6 +16,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.management.ManagementFactory;
 import java.nio.ByteBuffer;
+import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 import java.sql.Connection;
@@ -44,11 +45,18 @@ public class WebDataFileResource extends WebDataResource implements
         com.bradmcevoy.http.FileResource {
 
     private static final boolean debug = false;
+    private static int bufferSize = -1;
 
     public WebDataFileResource(JDBCatalogue catalogue, LogicalData logicalData) throws CatalogueException, Exception {
         super(catalogue, logicalData);
         if (!logicalData.getType().equals(Constants.LOGICAL_FILE)) {
             throw new Exception("The logical data has the wonrg type: " + logicalData.getType());
+        }
+
+        if (bufferSize <= -1) {
+            OperatingSystemMXBean osMBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
+            bufferSize = (int) (osMBean.getFreePhysicalMemorySize() / 10);
+            debug("Alocated  physical memory:\t" + bufferSize / (1024.0 * 1024.0));
         }
     }
 
@@ -135,7 +143,7 @@ public class WebDataFileResource extends WebDataResource implements
 
     @Override
     public String getContentType(String accepts) {
-        debug("getContentType. accepts: " + accepts);
+//        debug("getContentType. accepts: " + accepts);
 
         String type = "";
         List<String> fileContentTypes = getLogicalData().getContentTypes();
@@ -181,11 +189,12 @@ public class WebDataFileResource extends WebDataResource implements
     public void sendContent(OutputStream out, Range range,
             Map<String, String> params, String contentType) throws IOException,
             NotAuthorizedException, BadRequestException, NotFoundException {
-
-        debug("sendContent.");
-        debug("\t range: " + range);
-        debug("\t params: " + params);
-        debug("\t contentType: " + contentType);
+        long start = System.currentTimeMillis();
+        long totalWritten = this.getContentLength();
+//        debug("sendContent.");
+//        debug("\t range: " + range);
+//        debug("\t params: " + params);
+//        debug("\t contentType: " + contentType);
         Connection connection = null;
         PDRI pdri = null;
         try {
@@ -204,12 +213,11 @@ public class WebDataFileResource extends WebDataResource implements
             connection.close();
             debug(pdri.getURL());
             //IOUtils.copy(pdri.getData(), System.err); 
-//            fastCopy(pdri.getData(), out);
-            OperatingSystemMXBean osMBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
-            int size = (int) (osMBean.getFreePhysicalMemorySize() / 10);
-            debug("Alocated  physical memory:\t" + size / (1024.0 * 1024.0));
-            CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer(size, pdri.getData(), out);
-            cBuff.startTransfer(new Long(-1));
+            fastCopy(pdri.getData(), out);
+
+//            CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer(bufferSize, pdri.getData(), out);
+//            cBuff.startTransfer(new Long(-1));
+//            totalWritten = cBuff.getTotalWritten();
         } catch (NotAuthorizedException ex) {
             debug("NotAuthorizedException");
             throw new NotAuthorizedException(this);
@@ -224,9 +232,12 @@ public class WebDataFileResource extends WebDataResource implements
                     connection.close();
                 }
                 System.gc();
-//                if (pdri != null && pdri.getData() != null) {
-//                    pdri.getData().close();
-//                }
+                long elapsed = System.currentTimeMillis() - start;
+                double speed = ((totalWritten * 8) / 1000.0 * 1000.0) / (elapsed / 1000.0);
+                debug("SendCont speed:  " + speed + " MBit/sec (SI)");
+                //                if (pdri != null && pdri.getData() != null) {
+                //                    pdri.getData().close();
+                //                }
             } catch (Exception ex) {
                 Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -235,9 +246,9 @@ public class WebDataFileResource extends WebDataResource implements
 
     @Override
     public void moveTo(CollectionResource rDest, String name) throws ConflictException, NotAuthorizedException, BadRequestException {
-        debug("moveTo: file " + getLogicalData().getLDRI().toPath());
+//        debug("moveTo: file " + getLogicalData().getLDRI().toPath());
         WebDataDirResource rdst = (WebDataDirResource) rDest;
-        debug("\t rDestgetName: " + rdst.getLogicalData().getLDRI().toPath() + " name: " + name);
+//        debug("\t rDestgetName: " + rdst.getLogicalData().getLDRI().toPath() + " name: " + name);
         Connection connection = null;
         try {
             Path parentPath = getLogicalData().getLDRI().getParent(); //getPath().getParent();
@@ -290,9 +301,9 @@ public class WebDataFileResource extends WebDataResource implements
             NotAuthorizedException {
 
         //Maybe we can do more smart things here with deltas. So if we update a file send only the diff
-        debug("processForm.");
-        debug("\t parameters: " + parameters);
-        debug("\t files: " + files);
+//        debug("processForm.");
+//        debug("\t parameters: " + parameters);
+//        debug("\t files: " + files);
         Collection<FileItem> values = files.values();
         VFSNode node;
         OutputStream out;
@@ -336,7 +347,7 @@ public class WebDataFileResource extends WebDataResource implements
 
     @Override
     public String checkRedirect(Request request) {
-        debug("checkRedirect.");
+//        debug("checkRedirect.");
         switch (request.getMethod()) {
             case GET:
                 if (getLogicalData().isRedirectAllowed()) {
@@ -351,24 +362,19 @@ public class WebDataFileResource extends WebDataResource implements
 
     @Override
     public Date getCreateDate() {
-        debug("getCreateDate.");
+//        debug("getCreateDate.");
         return new Date(getLogicalData().getCreateDate());
     }
 
     private void fastCopy(InputStream in, OutputStream out) throws IOException, VlException {
-        OperatingSystemMXBean osMBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
-        int size = (int) (osMBean.getFreePhysicalMemorySize() / 50);
-        CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer(size, in, out);
-        cBuff.startTransfer(new Long(-1));
-//        final ReadableByteChannel inputChannel = Channels.newChannel(in);
-//        final WritableByteChannel outputChannel = Channels.newChannel(out);
-//        fastCopy(inputChannel, outputChannel);
+        final ReadableByteChannel inputChannel = Channels.newChannel(in);
+        final WritableByteChannel outputChannel = Channels.newChannel(out);
+        fastCopy(inputChannel, outputChannel);
     }
 
     private void fastCopy(ReadableByteChannel src, WritableByteChannel dest) throws IOException {
         OperatingSystemMXBean osMBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
-        int size = (int) (osMBean.getFreePhysicalMemorySize() / 50);
-        final ByteBuffer buffer = ByteBuffer.allocateDirect(size);
+        final ByteBuffer buffer = ByteBuffer.allocateDirect(bufferSize);
         int len;
         while ((len = src.read(buffer)) != -1) {
 //            System.err.println("Read size: " + len);

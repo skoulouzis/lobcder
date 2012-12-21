@@ -37,7 +37,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
 
     private LogicalData logicalData;
     private final JDBCatalogue catalogue;
-    private static final boolean debug = false;
+    private static final boolean debug = true;
     private final Map<String, CustomProperty> customProperties = new HashMap<String, CustomProperty>();
     private final Map<String, PropertyMap.StandardProperty> userPrivledges = new HashMap<String, PropertyMap.StandardProperty>();
     //Collection<Integer> roles = null;
@@ -69,27 +69,27 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
 
     @Override
     public Date getCreateDate() {
-        debug("getCreateDate.");
+//        debug("getCreateDate.");
         return new Date(getLogicalData().getCreateDate());
     }
 
     @Override
     public String getUniqueId() {
-        debug("getUniqueId.");
+//        debug("getUniqueId.");
         return String.valueOf(getLogicalData().getUID());
     }
 
     @Override
     public String getName() {
-        debug("getName.");
+//        debug("getName.");
         return getLogicalData().getLDRI().getName();
     }
 
     @Override
     public Object authenticate(String user, String password) {
-        debug("authenticate.\n"
-                + "\t user: " + user
-                + "\t password: " + password);
+//        debug("authenticate.\n"
+//                + "\t user: " + user
+//                + "\t password: " + password);
         String token = password;
         MyPrincipal principal = MyAuth.getInstance().checkToken(token);
         WebDavServlet.request().setAttribute("vph-user", principal);
@@ -136,36 +136,36 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
                 user = auth.getUser();
                 tag = auth.getTag();
             }
-            debug("authorise. \n"
-                    + "\t request.getAbsolutePath(): " + absPath + "\n"
-                    + "\t request.getAbsoluteUrl(): " + absURL + "\n"
-                    + "\t request.getAcceptHeader(): " + acceptHeader + "\n"
-                    + "\t request.getFromAddress(): " + fromAddress + "\n"
-                    + "\t request.getRemoteAddr(): " + remoteAddr + "\n"
-                    + "\t auth.getCnonce(): " + cnonce + "\n"
-                    + "\t auth.getNc(): " + nc + "\n"
-                    + "\t auth.getNonce(): " + nonce + "\n"
-                    + "\t auth.getPassword(): " + password + "\n"
-                    + "\t auth.getQop(): " + qop + "\n"
-                    + "\t auth.getRealm(): " + relm + "\n"
-                    + "\t auth.getResponseDigest(): " + responseDigest + "\n"
-                    + "\t auth.getUri(): " + uri + "\n"
-                    + "\t auth.getUser(): " + user + "\n"
-                    + "\t auth.getTag(): " + tag
-                    + "\t\t Method = " + method.name());
+//            debug("authorise. \n"
+//                    + "\t request.getAbsolutePath(): " + absPath + "\n"
+//                    + "\t request.getAbsoluteUrl(): " + absURL + "\n"
+//                    + "\t request.getAcceptHeader(): " + acceptHeader + "\n"
+//                    + "\t request.getFromAddress(): " + fromAddress + "\n"
+//                    + "\t request.getRemoteAddr(): " + remoteAddr + "\n"
+//                    + "\t auth.getCnonce(): " + cnonce + "\n"
+//                    + "\t auth.getNc(): " + nc + "\n"
+//                    + "\t auth.getNonce(): " + nonce + "\n"
+//                    + "\t auth.getPassword(): " + password + "\n"
+//                    + "\t auth.getQop(): " + qop + "\n"
+//                    + "\t auth.getRealm(): " + relm + "\n"
+//                    + "\t auth.getResponseDigest(): " + responseDigest + "\n"
+//                    + "\t auth.getUri(): " + uri + "\n"
+//                    + "\t auth.getUser(): " + user + "\n"
+//                    + "\t auth.getTag(): " + tag
+//                    + "\t\t Method = " + method.name());
         }
         return authorized;
     }
 
     @Override
     public String getRealm() {
-        debug("getRealm.");
+//        debug("getRealm.");
         return "realm";
     }
 
     @Override
     public Date getModifiedDate() {
-        debug("getModifiedDate.");
+//        debug("getModifiedDate.");
         return new Date(getLogicalData().getModifiedDate());
     }
 
@@ -248,7 +248,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
 //    }
     @Override
     public String getPrincipalURL() {
-        debug("getPrincipalURL");
+//        debug("getPrincipalURL");
         return "thePrincipalURL";//getPrincipal().getUserId();
     }
 
@@ -307,7 +307,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
 
     @Override
     public void setAccessControlList(Map<Principal, List<Priviledge>> map) {
-        debug("setAccessControlList");
+//        debug("setAccessControlList");
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
