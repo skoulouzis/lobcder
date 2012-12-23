@@ -45,7 +45,7 @@ public class WebDataFileResource extends WebDataResource implements
         com.bradmcevoy.http.FileResource {
 
     private static final boolean debug = false;
-    private static int bufferSize = -1;
+    private final int bufferSize;
 
     public WebDataFileResource(JDBCatalogue catalogue, LogicalData logicalData) throws CatalogueException, Exception {
         super(catalogue, logicalData);
@@ -53,11 +53,10 @@ public class WebDataFileResource extends WebDataResource implements
             throw new Exception("The logical data has the wonrg type: " + logicalData.getType());
         }
 
-        if (bufferSize <= -1) {
+        
             OperatingSystemMXBean osMBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
-            bufferSize = (int) (osMBean.getFreePhysicalMemorySize() / 10);
+            bufferSize = (int) (osMBean.getFreePhysicalMemorySize() / 200);
             debug("Alocated  physical memory:\t" + bufferSize / (1024.0 * 1024.0));
-        }
     }
 
     @Override
@@ -373,7 +372,6 @@ public class WebDataFileResource extends WebDataResource implements
     }
 
     private void fastCopy(ReadableByteChannel src, WritableByteChannel dest) throws IOException {
-        OperatingSystemMXBean osMBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
         final ByteBuffer buffer = ByteBuffer.allocateDirect(bufferSize);
         int len;
         while ((len = src.read(buffer)) != -1) {

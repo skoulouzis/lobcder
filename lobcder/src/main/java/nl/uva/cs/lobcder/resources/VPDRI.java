@@ -15,6 +15,7 @@ import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.zip.GZIPOutputStream;
 import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.vlet.Global;
 import nl.uva.vlet.GlobalConfig;
