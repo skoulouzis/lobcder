@@ -44,8 +44,8 @@ import nl.uva.vlet.vfs.VFSNode;
 public class WebDataFileResource extends WebDataResource implements
         com.bradmcevoy.http.FileResource {
 
-    private static final boolean debug = false;
-    private final int bufferSize;
+    private static final boolean debug = true;
+//    private final int bufferSize;
 
     public WebDataFileResource(JDBCatalogue catalogue, LogicalData logicalData) throws CatalogueException, Exception {
         super(catalogue, logicalData);
@@ -54,9 +54,9 @@ public class WebDataFileResource extends WebDataResource implements
         }
 
         
-            OperatingSystemMXBean osMBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
-            bufferSize = (int) (osMBean.getFreePhysicalMemorySize() / 200);
-            debug("Alocated  physical memory:\t" + bufferSize / (1024.0 * 1024.0));
+//            OperatingSystemMXBean osMBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
+//            bufferSize = (int) (osMBean.getFreePhysicalMemorySize() / 200);
+//            debug("Alocated  physical memory:\t" + bufferSize / (1024.0 * 1024.0));
     }
 
     @Override
@@ -214,7 +214,7 @@ public class WebDataFileResource extends WebDataResource implements
             //IOUtils.copy(pdri.getData(), System.err); 
             fastCopy(pdri.getData(), out);
 
-//            CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer(bufferSize, pdri.getData(), out);
+//            CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer(5242880, pdri.getData(), out);
 //            cBuff.startTransfer(new Long(-1));
 //            totalWritten = cBuff.getTotalWritten();
         } catch (NotAuthorizedException ex) {
@@ -372,7 +372,7 @@ public class WebDataFileResource extends WebDataResource implements
     }
 
     private void fastCopy(ReadableByteChannel src, WritableByteChannel dest) throws IOException {
-        final ByteBuffer buffer = ByteBuffer.allocateDirect(bufferSize);
+        final ByteBuffer buffer = ByteBuffer.allocateDirect(5242880);
         int len;
         while ((len = src.read(buffer)) != -1) {
 //            System.err.println("Read size: " + len);
