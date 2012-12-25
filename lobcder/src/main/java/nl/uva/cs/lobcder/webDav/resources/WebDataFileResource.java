@@ -10,11 +10,9 @@ import com.bradmcevoy.http.exceptions.BadRequestException;
 import com.bradmcevoy.http.exceptions.ConflictException;
 import com.bradmcevoy.http.exceptions.NotAuthorizedException;
 import com.bradmcevoy.http.exceptions.NotFoundException;
-import com.sun.management.OperatingSystemMXBean;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.management.ManagementFactory;
 import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
@@ -34,7 +32,6 @@ import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.cs.lobcder.util.MMTypeTools;
 import nl.uva.vlet.data.StringUtil;
 import nl.uva.vlet.exception.VlException;
-import nl.uva.vlet.io.CircularStreamBufferTransferer;
 import nl.uva.vlet.vfs.VFSNode;
 
 /**
