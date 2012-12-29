@@ -32,6 +32,7 @@ import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.cs.lobcder.util.MMTypeTools;
 import nl.uva.vlet.data.StringUtil;
 import nl.uva.vlet.exception.VlException;
+import nl.uva.vlet.io.CircularStreamBufferTransferer;
 import nl.uva.vlet.vfs.VFSNode;
 
 /**
@@ -208,11 +209,11 @@ public class WebDataFileResource extends WebDataResource implements
             connection.commit();
             connection.close();
             debug(pdri.getURL());
-            //IOUtils.copy(pdri.getData(), System.err); 
-            fastCopy(pdri.getData(), out);
+            //IOUtils.copy(pdri.getData(), out); 
+//            fastCopy(pdri.getData(), out);
 
-//            CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer(5242880, pdri.getData(), out);
-//            cBuff.startTransfer(new Long(-1));
+            CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((10*1024*1024), pdri.getData(), out);
+            cBuff.startTransfer(new Long(-1));
 //            totalWritten = cBuff.getTotalWritten();
         } catch (NotAuthorizedException ex) {
             debug("NotAuthorizedException");

@@ -19,6 +19,7 @@ import nl.uva.vlet.GlobalConfig;
 import nl.uva.vlet.data.StringUtil;
 import nl.uva.vlet.exception.ResourceNotFoundException;
 import nl.uva.vlet.exception.VlException;
+import nl.uva.vlet.io.CircularStreamBufferTransferer;
 import nl.uva.vlet.util.cog.GridProxy;
 import nl.uva.vlet.vfs.VFSClient;
 import nl.uva.vlet.vfs.VFile;
@@ -153,11 +154,11 @@ public class VPDRI implements PDRI {
 
 //            OperatingSystemMXBean osMBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
 //            int size = (int) (osMBean.getFreePhysicalMemorySize() / 50);
-//            CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer(5242880, in, out);
-//            cBuff.startTransfer(new Long(-1));
-            final ReadableByteChannel inputChannel = Channels.newChannel(in);
-            final WritableByteChannel outputChannel = Channels.newChannel(out);
-            fastCopy(inputChannel, outputChannel);
+            CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((10*1024*1024), in, out);
+            cBuff.startTransfer(new Long(-1));
+//            final ReadableByteChannel inputChannel = Channels.newChannel(in);
+//            final WritableByteChannel outputChannel = Channels.newChannel(out);
+//            fastCopy(inputChannel, outputChannel);
         } catch (VlException ex) {
 //            throw new IOException(ex);
             if (ex instanceof ResourceNotFoundException || ex.getMessage().contains("not found") || ex.getMessage().contains("Couldn open location") || ex.getMessage().contains("not found in container")) {
