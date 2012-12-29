@@ -186,8 +186,8 @@ public class WebDataFileResource extends WebDataResource implements
     public void sendContent(OutputStream out, Range range,
             Map<String, String> params, String contentType) throws IOException,
             NotAuthorizedException, BadRequestException, NotFoundException {
-        long start = System.currentTimeMillis();
-        long totalWritten = this.getContentLength();
+//        long start = System.currentTimeMillis();
+//        long totalWritten = this.getContentLength();
 //        debug("sendContent.");
 //        debug("\t range: " + range);
 //        debug("\t params: " + params);
@@ -212,7 +212,7 @@ public class WebDataFileResource extends WebDataResource implements
             //IOUtils.copy(pdri.getData(), out); 
 //            fastCopy(pdri.getData(), out);
 
-            CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((10*1024*1024), pdri.getData(), out);
+            CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((20*1024*1024), pdri.getData(), out);
             cBuff.startTransfer(new Long(-1));
 //            totalWritten = cBuff.getTotalWritten();
         } catch (NotAuthorizedException ex) {
@@ -228,15 +228,15 @@ public class WebDataFileResource extends WebDataResource implements
                     connection.rollback();
                     connection.close();
                 }
-                System.gc();
-                long elapsed = System.currentTimeMillis() - start;
-                double speed = ((totalWritten * 8) / 1000.0 * 1000.0) / (elapsed / 1000.0);
-                debug("SendCont speed:  " + speed + " MBit/sec (SI)");
+//                System.gc();
+//                long elapsed = System.currentTimeMillis() - start;
+//                double speed = ((totalWritten * 8) / 1000.0 * 1000.0) / (elapsed / 1000.0);
+//                debug("SendCont speed:  " + speed + " MBit/sec (SI)");
                 //                if (pdri != null && pdri.getData() != null) {
                 //                    pdri.getData().close();
                 //                }
             } catch (Exception ex) {
-                Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, ex);
+                //Ignore
             }
         }
     }
