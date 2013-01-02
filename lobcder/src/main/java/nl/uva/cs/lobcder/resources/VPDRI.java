@@ -154,7 +154,7 @@ public class VPDRI implements PDRI {
 
 //            OperatingSystemMXBean osMBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
 //            int size = (int) (osMBean.getFreePhysicalMemorySize() / 50);
-            CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((10*1024*1024), in, out);
+            CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((100*1024*1024), in, out);
             cBuff.startTransfer(new Long(-1));
 //            final ReadableByteChannel inputChannel = Channels.newChannel(in);
 //            final WritableByteChannel outputChannel = Channels.newChannel(out);

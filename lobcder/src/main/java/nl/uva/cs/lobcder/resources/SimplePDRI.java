@@ -60,10 +60,11 @@ public class SimplePDRI implements PDRI {
 
     private void setResourceContent(String uri, InputStream is) throws FileNotFoundException, IOException {
         File file = new File(uri);
-        OutputStream os = new BufferedOutputStream(new FileOutputStream(file), Constants.BUF_SIZE);
+//        OutputStream os = new BufferedOutputStream(new FileOutputStream(file), Constants.BUF_SIZE);
+         OutputStream os = new FileOutputStream(file);
         try {
             int read;
-            byte[] copyBuffer = new byte[Constants.BUF_SIZE];
+            byte[] copyBuffer = new byte[10*1024*1024];
 
             while ((read = is.read(copyBuffer, 0, copyBuffer.length)) != -1) {
                 os.write(copyBuffer, 0, read);
