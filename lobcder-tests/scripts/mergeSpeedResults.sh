@@ -20,16 +20,23 @@ do
   header=$(basename $tmp ".csv")
 #   echo $header
   sed '10q;d' $f >> $header.tmp
+  sed 's/$/;/g' $header.tmp > $header-1.tmp
+  sed 's/;;;/;/g' $header-1.tmp > $header-2.tmp
+  sed 's/;;/;/g' $header-2.tmp > $header-3.tmp
+  awk -F "\"*;\"*" '{print $1}' $header-3.tmp > $header-4.tmp
+  mv $header-4.tmp $header.tmp
+  rm $header-1.tmp $header-2.tmp  $header-3.tmp $header-4.tmp
+
 done
 
 
 for f in `ls *.tmp`
 do
-#   echo $f
+   echo $f
   fname=$(basename $f ".csv-.tmp")
 #   echo $fname
   h=$h$fname";"
-  h2=$h2' <(cut -d, -f1 '$f')'
+  h2=$h2' <(cut -d, -f1 '$f')'	
 done
 
 echo $h > out.csv

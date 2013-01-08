@@ -3,7 +3,7 @@
 function initVariables {
         BASE_DIR=$HOME/workspace/lobcder-tests
         HOST_NAME="elab.lab.uvalight.net" #"149.156.10.138" 
-        SERVER_PATH="/lobcder-2.0-SNAPSHOT/dav"   #"/lobcder-2.0/dav" #"/tomcatWebDAV" #
+        SERVER_PATH="/tomcatWebDAV"   #"/lobcder-2.0/dav" #"/tomcatWebDAV" #
 
         PORT="8083"
         URL="http://$HOST_NAME:$PORT/$SERVER_PATH"
@@ -83,10 +83,12 @@ function initMeasurePathAndFile {
         then
                 echo "File $TEST_DATASET_PATH does not exist."
                 for ((i = 0 ; i < $NUM_OF_FILE ; i++)); do
-                    dd if=/dev/zero of=$TEST_DATASET_PATH.$i.dat bs=30M count=1
+ 		#for ((i = 0 ; i < 5 ; i++)); do
+                    dd if=/dev/zero of=$TEST_DATASET_PATH.$i.dat bs="$TEST_FILE_SIZE_IN_MB"'M' count=1
+  		    #dd if=/dev/zero of=$TEST_DATASET_PATH.$i.dat bs=2M count=1
                 done
         fi
-
+        
         echo "measures $BASE_DIR/measures/$HOST_NAME/$SERVER_PATH"
         echo "file $TEST_DATASET_PATH"
 }
@@ -124,7 +126,6 @@ function initMeasureFileAndCadaverScript {
                     echo put $f  >> cadaver.script
                 done
                 
-                #echo mput $TEST_FILE_NAME'*'  >> cadaver.script
         fi
 
         if [ "$DIRECTION" = "down" ] && [ "$METHOD" = "ftp" ];
@@ -134,14 +135,20 @@ function initMeasureFileAndCadaverScript {
                 #echo mget $TEST_DATASET_DIR/'*' >> cadaver.script
                 echo cd dataset >> cadaver.script 
                 echo 'mget test*' >> cadaver.script 
-        elif [ "$DIRECTION" = "down" ] && [ "$METHOD" = "lob" ] || [ "$METHOD" = "dav" ] || [ "$METHOD" = "javadav" ];
+        fi
+        if [ "$DIRECTION" = "down" ];
         then
+	   if [ "$METHOD" = "lob" ] || [ "$METHOD" = "dav" ] || [ "$METHOD" = "javadav" ];
+	   then
                 echo open $URL > cadaver.script
                 echo mget $TEST_FILE_NAME'*' >> cadaver.script
+	    fi
         fi
         echo quit >> cadaver.script
 
-        echo "BWM_FILE_PATH $BWM_FILE_SERVER_PATH"
+#         echo "BWM_FILE_PATH $BWM_FILE_SERVER_PATH"
+#         echo "-------------------"
+        cat cadaver.script
 }
 
 
@@ -158,33 +165,46 @@ function start {
  	elif [ "$METHOD" = "lob" ] || [ "$METHOD" = "dav" ] || [ "$METHOD" = "javadav" ];
  	then 
                  #cd $TEST_DATASET_DIR
-                 cadaver < $HOME/workspace/lobcder-tests/scripts/cadaver.script
+                 time cadaver < $HOME/workspace/lobcder-tests/scripts/cadaver.script
                  #cd $HOME/workspace/lobcder-tests/scripts/
  	fi
  
  	if [ "$DIRECTION" = "down" ] && [ "$METHOD" = "swift" ];
          then
- 		echo "SWIFT: python2.6  /home/$USER/Documents/scripts/swift -A $URL -U $USER_NAME -K $PASSWORD download TEST"
-                 python2.6  /home/$USER/Documents/scripts/swift -A $URL -U $USER_NAME -K $PASSWORD download TEST
+#  		echo "SWIFT: python2.6  /home/$USER/Documents/scripts/swift -A $URL -U $USER_NAME -K $PASSWORD download TEST"
+#                  python2.6  /home/$USER/Documents/scripts/swift -A $URL -U $USER_NAME -K $PASSWORD download TEST
+		FILES=$TEST_DATASET_DIR/*
+		for f in $FILES
+                do
+		  NAME=`basename $f`
+# 		  echo "SWIFT: python2.6  /home/$USER/Documents/scripts/swift -A $URL -U $USER_NAME -K $PASSWORD download TEST home/skoulouz/tmp/dataset/$NAME"
+ 		  python2.6  /home/$USER/Documents/scripts/swift -A $URL -U $USER_NAME -K $PASSWORD download TEST home/skoulouz/tmp/dataset/$NAME
+                done
  	elif [ "$DIRECTION" = "up" ] && [ "$METHOD" = "swift" ];
  	then
- 		echo "SWIFT: python2.6  /home/$USER/Documents/scripts/swift -A $URL -U $USER_NAME -K $PASSWORD upload TEST $TEST_DATASET_DIR"
- 		python2.6  /home/$USER/Documents/scripts/swift -A $URL -U $USER_NAME -K $PASSWORD upload TEST $TEST_DATASET_DIR
+#  		echo "SWIFT: python2.6  /home/$USER/Documents/scripts/swift -A $URL -U $USER_NAME -K $PASSWORD upload TEST $TEST_DATASET_DIR"
+#  		python2.6  /home/$USER/Documents/scripts/swift -A $URL -U $USER_NAME -K $PASSWORD upload TEST $TEST_DATASET_DIR
+		FILES=$TEST_DATASET_DIR/*
+		for f in $FILES
+                do
+# 		  echo "SWIFT: python2.6  /home/$USER/Documents/scripts/swift -A $URL -U $USER_NAME -K $PASSWORD upload TEST $f"
+		  python2.6  /home/$USER/Documents/scripts/swift -A $URL -U $USER_NAME -K $PASSWORD upload TEST $f
+                done
  	fi
  
          if [ "$DIRECTION" = "down" ] && [ "$METHOD" = "sftp" ];
          then
-                 echo "SFTP: -r $USER_NAME@$HOST_NAME:/home/$USER_NAME $TEST_FILE_SERVER_PATH"
+#                  echo "SFTP: -r $USER_NAME@$HOST_NAME:/home/$USER_NAME $TEST_FILE_SERVER_PATH"
                  scp -r $USER_NAME@$HOST_NAME:/home/$USER_NAME/dataset  $TEST_DATASET_DIR
          elif [ "$DIRECTION" = "up" ] && [ "$METHOD" == "sftp" ];
          then
-                 echo "SFTP: -r  $TEST_FILE_SERVER_PATH $USER_NAME@$HOST_NAME:/home/$USER_NAME"
+#                  echo "SFTP: -r  $TEST_FILE_SERVER_PATH $USER_NAME@$HOST_NAME:/home/$USER_NAME"
                  scp -r  $TEST_DATASET_DIR $USER_NAME@$HOST_NAME:/home/$USER_NAME 
          fi
 
        END="$(date +%s)"
        ELAPSED="$(expr $END - $START)"
-       let SIZE=$TEST_DATASET_SIZE_IN_MB*1024 #ls -la $TEST_DATASET_PATH | awk '{print $5}'
+       SIZE=`du -sb $TEST_DATASET_DIR | awk '{print $1}'` #$TEST_DATASET_SIZE_IN_MB*1024 #ls -la $TEST_DATASET_PATH | awk '{print $5}'
        echo Elapsed time: $ELAPSED
        #rm cadaver.script
        sleep 1
@@ -215,24 +235,24 @@ function formatOutputAndCleanUp {
         echo "Elapsed" >> $BWM_FILE_PATH
         echo $ELAPSED >> $BWM_FILE_PATH
         echo "Elapsed" $ELAPSED
-        echo "Size (MB)" >> $BWM_FILE_PATH
-        echo $TEST_DATASET_SIZE_IN_MB >> $BWM_FILE_PATH
-        echo "Speed (MB/sec)" >> $BWM_FILE_PATH
-        SPEED=$(echo "$TEST_DATASET_SIZE_IN_MB / $ELAPSED" |bc -l)
+        echo "Size (MBit)" >> $BWM_FILE_PATH
+        TEST_FILE_SIZE_IN_MBITS=$(echo "($SIZE * 8)   / (1000.0 * 1000.0)" |bc -l)
+        echo $TEST_FILE_SIZE_IN_MBITS >> $BWM_FILE_PATH
+        echo "Speed (MBit/sec)" >> $BWM_FILE_PATH
+        SPEED=$(echo "$TEST_FILE_SIZE_IN_MBITS  / $ELAPSED" |bc -l)
         echo $SPEED >> $BWM_FILE_PATH
-        echo "Speed (MB/sec): $SPEED"
+        echo "Speed (MBit/sec): $SPEED"
 
 
-        echo "unix_timestamp;iface_name;Mbytes_out_"$METHOD"_lo;Mbytes_in_"$METHOD"_lo;bytes_total_"$METHOD"_lo;packets_out;packets_in;packets_total;errors_out;errors_in" > $BWM_FILE_LO_PATH
+        echo "unix_timestamp;iface_name;MBits_out_"$METHOD"_lo;MBits_in_"$METHOD"_lo;bytes_total_"$METHOD"_lo;packets_out;packets_in;packets_total;errors_out;errors_in" > $BWM_FILE_LO_PATH
 	cp $BWM_FILE_SERVER_PATH  $BWM_FILE_SERVER_NAME
-	awk  -v s=$START -F "\"*;\"*" '{ print $1-s ";" $2 ";" $3/(1024*1024) ";" $4/(1024*1024) ";" $5/(1024*1024) ";" $6 ";" $7 ";" $9 ";" $10}' $BWM_FILE_SERVER_NAME > tmp
+	awk  -v s=$START -F "\"*;\"*" '{ print $1-s ";" $2 ";" ($3*8) / (1000*1000) ";" ($4*8) / (1000*1000) ";" ($5*8) / (1000*1000) ";" ($6*8) / (1000*1000) ";" $7 ";" $9 ";" $10}'  $BWM_FILE_SERVER_NAME > tmp
 	mv tmp $BWM_FILE_SERVER_PATH
-        
-
+	
         cat $BWM_FILE_SERVER_PATH | grep lo >> $BWM_FILE_LO_PATH
 
-
-        echo "unix_timestamp;iface_name;Mbytes_out_"$METHOD"_eth0;Mbytes_in_"$METHOD"_eth0;Mbytes_total_"$METHOD"_eth0;packets_out;packets_in;packets_total;errors_out;errors_in" > $BWM_FILE_ETH0_PATH
+	
+        echo "unix_timestamp;iface_name;MBits_out_"$METHOD"_eth0;MBits_in_"$METHOD"_eth0;MBits_total_"$METHOD"_eth0;packets_out;packets_in;packets_total;errors_out;errors_in" > $BWM_FILE_ETH0_PATH
         cat $BWM_FILE_SERVER_PATH | grep 'eth0' | sed '/peth/d' >> $BWM_FILE_ETH0_PATH
         
         if [ "$DIRECTION" = "up" ] ;
@@ -266,6 +286,13 @@ METHOD=$1
 USER_NAME=$2
 PASSWORD=$3
 TEST_DATASET_SIZE_IN_GB=$4
+
+if [ "$METHOD" = "sftp" ] || [ "$METHOD" = "ftp" ];
+then 
+  ssh $USER_NAME@$HOST_NAME 'rm -r dataset/*'
+  ssh $USER_NAME@$HOST_NAME 'rm -r testLargeUpload*'
+fi
+
 initVariables
 initMeasurePathAndFile
 initMeasureFileAndCadaverScript
@@ -287,7 +314,15 @@ find $TEST_DATASET_DIR ! -name "*.dat" -type f -exec rm {} \;
 rm $TEST_FILE_NAME*
 rm quit 
 rm -r $HOME/workspace/lobcder-tests/scripts/home
+rm -r $HOME/tmp/home
 if [ "$METHOD" = "swift" ];
 then
     python2.6  /home/$USER/Documents/scripts/swift -A $URL -U $USER_NAME -K $PASSWORD delete TEST
+fi
+
+rm -r  ~/tmp/dataset/*
+if [ "$METHOD" = "sftp" ] || [ "$METHOD" = "ftp" ];
+then 
+  ssh $USER_NAME@$HOST_NAME 'rm -r dataset/*'
+  ssh $USER_NAME@$HOST_NAME 'rm -r testLargeUpload*'
 fi

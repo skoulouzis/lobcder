@@ -3,7 +3,7 @@
 function initVariables {
         BASE_DIR=$HOME/workspace/lobcder-tests
         HOST_NAME="elab.lab.uvalight.net" #"149.156.10.138" 
-        SERVER_PATH="/lobcder-2.0-SNAPSHOT/dav" #"/tomcatWebDAV" #
+        SERVER_PATH="/tomcatWebDAV" #"/tomcatWebDAV" #
         
         PORT="8083"
         URL="http://$HOST_NAME:$PORT/$SERVER_PATH"
@@ -12,7 +12,6 @@ function initVariables {
         TEST_FILE_PATH=$HOME/tmp/$TEST_FILE_NAME
 
         INTERFACE=lo
-
 
         if [ "$METHOD" = "lob" ];
         then
@@ -75,11 +74,12 @@ function initMeasurePathAndFile {
         then
                 echo "File $TEST_FILE_PATH does not exist."
                 let COUNT=$TEST_FILE_SIZE_IN_GB*10
+#                 dd if=/dev/zero of=$TEST_FILE_PATH bs=150M count=1
                 dd if=/dev/zero of=$TEST_FILE_PATH bs=100M count=$COUNT
-                #dd if=/dev/zero of=$TEST_FILE_PATH bs=5M count=$COUNT
-                sleep 1
         fi
 
+        SIZE=$(stat -c%s "$TEST_FILE_PATH")
+        
         echo "measures $BASE_DIR/measures/$HOST_NAME/$SERVER_PATH"
         echo "file $TEST_FILE_PATH"
 }
@@ -135,7 +135,7 @@ function start {
 	START="$(date +%s)"
         if [ "$METHOD" = "ftp" ];
         then
-		ftp < cadaver.script
+		time ftp < cadaver.script
         elif [ "$DIRECTION" = "down" ] && [ "$METHOD" = "swift" ];
         then
 		echo "SWIFT: python2.6  /home/$USER/Documents/scripts/swift -A $URL -U $USER_NAME -K $PASSWORD download LOBCDER-REPLICA-v2.0 home/$USER/tmp/$TEST_FILE_NAME"
@@ -163,7 +163,6 @@ function start {
 
        END="$(date +%s)"
        ELAPSED="$(expr $END - $START)"
-       SIZE= ls -la $TEST_FILE_PATH | awk '{print $5}'
        echo Elapsed time: $ELAPSED
        #rm cadaver.script
        sleep 1
@@ -195,27 +194,26 @@ function formatOutputAndCleanUp {
         echo "Elapsed" >> $BWM_FILE_PATH_FINAL
         echo $ELAPSED >> $BWM_FILE_PATH_FINAL
         echo "Elapsed" $ELAPSED
-        echo "Size (MB)" >> $BWM_FILE_PATH_FINAL
-        TEST_FILE_SIZE_IN_MB=$(echo "$TEST_FILE_SIZE_IN_GB * 1024.0" |bc -l)
-        echo $TEST_FILE_SIZE_IN_MB >> $BWM_FILE_PATH_FINAL
-        echo "Speed (MB/sec)" >> $BWM_FILE_PATH_FINAL
-        SPEED=$(echo "$TEST_FILE_SIZE_IN_MB / $ELAPSED" |bc -l)
+        echo "Size (MBits)" >> $BWM_FILE_PATH_FINAL
+        TEST_FILE_SIZE_IN_MBITS=$(echo "($SIZE * 8) / (1000.0 * 1000.0)" |bc -l)
+        echo $TEST_FILE_SIZE_IN_MBITS >> $BWM_FILE_PATH_FINAL
+        echo "Speed (MBit/sec)" >> $BWM_FILE_PATH_FINAL
+        SPEED=$(echo "$TEST_FILE_SIZE_IN_MBITS / $ELAPSED" |bc -l)
         echo $SPEED >> $BWM_FILE_PATH_FINAL
-        echo "Speed (MB/sec): $SPEED"
+        echo "Speed (MBit/sec): $SPEED"
 
-
-        echo "unix_timestamp;iface_name;Mbytes_out_"$METHOD"_lo;Mbytes_in_"$METHOD"_lo;bytes_total_"$METHOD"_lo;packets_out;packets_in;packets_total;errors_out;errors_in" > $BWM_FILE_LO_PATH
+        echo "unix_timestamp;iface_name;MBits_out_"$METHOD"_lo;MBits_in_"$METHOD"_lo;bytes_total_"$METHOD"_lo;packets_out;packets_in;packets_total;errors_out;errors_in" > $BWM_FILE_LO_PATH
 
 
 	cp $BWM_FILE_PATH  $BWM_FILE_NAME
-	awk  -v s=$START -F "\"*;\"*" '{ print $1-s ";" $2 ";" $3/(1024*1024) ";" $4/(1024*1024) ";" $5/(1024*1024) ";" $6 ";" $7 ";" $9 ";" $10}' $BWM_FILE_NAME > tmp
+	awk  -v s=$START -F "\"*;\"*" '{ print $1-s ";" $2 ";" ($3*8)/(1000*1000) ";" ($4*8)/(1000*1000) ";" ($5*8)/(1000*1000) ";" ($6*8)/(1000*1000) ";" $7 ";" $9 ";" $10}' $BWM_FILE_NAME > tmp
 	mv tmp $BWM_FILE_PATH
 
         
         cat $BWM_FILE_PATH | grep lo >> $BWM_FILE_LO_PATH
 
 
-        echo "unix_timestamp;iface_name;Mbytes_out_"$METHOD"_eth0;Mbytes_in_"$METHOD"_eth0;Mbytes_total_"$METHOD"_eth0;packets_out;packets_in;packets_total;errors_out;errors_in" > $BWM_FILE_ETH0_PATH
+        echo "unix_timestamp;iface_name;MBits_out_"$METHOD"_eth0;MBits_in_"$METHOD"_eth0;MBits_total_"$METHOD"_eth0;packets_out;packets_in;packets_total;errors_out;errors_in" > $BWM_FILE_ETH0_PATH
         cat $BWM_FILE_PATH | grep 'eth0' | sed '/peth/d' >> $BWM_FILE_ETH0_PATH
         
         if [ "$DIRECTION" = "up" ] ;
@@ -248,6 +246,12 @@ METHOD=$1
 USER_NAME=$2
 PASSWORD=$3
 TEST_FILE_SIZE_IN_GB=$4
+if [ "$METHOD" = "sftp" ] || [ "$METHOD" = "ftp" ];
+then 
+  ssh $USER_NAME@$HOST_NAME 'rm -r dataset/*'
+  ssh $USER_NAME@$HOST_NAME 'rm -r testLargeUpload*'
+fi
+
 initVariables
 initMeasurePathAndFile
 initMeasureFileAndCadaverScript
@@ -274,4 +278,9 @@ rm -r home/$USER/tmp/$TEST_FILE_NAME
 if [ "$METHOD" = "swift" ];
 then
     python2.6  /home/$USER/Documents/scripts/swift -A $URL -U $USER_NAME -K $PASSWORD delete LOBCDER-REPLICA-v2.0 $TEST_FILE_PATH
+fi
+if [ "$METHOD" = "sftp" ] || [ "$METHOD" = "ftp" ];
+then 
+  ssh $USER_NAME@$HOST_NAME 'rm -r dataset/*'
+  ssh $USER_NAME@$HOST_NAME 'rm -r testLargeUpload*'
 fi
