@@ -58,9 +58,14 @@ public class DRItemsResource {
     @PUT
     public void setDirSupervised(@PathParam("isSupervised") Boolean param, @QueryParam("path") String path) {
         try {
+            debug("setDirSupervised:  "+path+" " + param);
             catalogue.setDirSupervised(path, param, null);
         } catch (CatalogueException ex) {
             Logger.getLogger(DRItemsResource.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+
+    private void debug(String msg) {
+        System.err.println(this.getClass().getName()+": "+msg);
     }
 }
