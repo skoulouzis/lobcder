@@ -1,0 +1,3 @@
+numOfFiles,sizeUploaded(kb),UploadTime(sec),Speed(kb/sec)
+10,64000.0,17.79,3597.5267003934796
+40,256000.0,71.088,3601.170380373622

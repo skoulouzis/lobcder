@@ -36,6 +36,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import javax.ws.rs.core.MediaType;
+import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  *
@@ -125,10 +126,10 @@ public class TestREST {
         status = this.client.executeMethod(put);
         assertEquals(HttpStatus.SC_CREATED, status);
 
-        put = new PutMethod(this.root + "testResourceId/file2");
-        put.setRequestEntity(new StringRequestEntity("foo", "text/plain", "UTF-8"));
-        status = this.client.executeMethod(put);
-        assertEquals(HttpStatus.SC_CREATED, status);
+//        put = new PutMethod(this.root + "testResourceId/file2");
+//        put.setRequestEntity(new StringRequestEntity("foo", "text/plain", "UTF-8"));
+//        status = this.client.executeMethod(put);
+//        assertEquals(HttpStatus.SC_CREATED, status);
     }
 
     private void deleteCollection() throws IOException {
@@ -138,7 +139,119 @@ public class TestREST {
     }
 
     @Test
-    public void testSetGetSupervised() throws IOException {
+    public void testDRIDataResource() throws IOException {
+        try {
+            createCollection();
+
+            ClientConfig clientConfig = new DefaultClientConfig();
+            clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
+            Client client2 = Client.create(clientConfig);
+            WebResource webResource = client2.resource(restURL);
+
+            MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+            params.add("path", "/testResourceId");
+
+
+            //Set dir as supervised
+            ClientResponse response = webResource.path("Items").path("TRUE").
+                    queryParams(params).put(ClientResponse.class);
+            assertTrue("status: " + response.getStatus(), response.getStatus() == HttpStatus.SC_OK || response.getStatus() == HttpStatus.SC_NO_CONTENT);
+
+            List<LogicalData> list = webResource.path("Items").queryParams(params).
+                    accept(MediaType.APPLICATION_XML).
+                    get(new GenericType<List<LogicalData>>() {
+            });
+
+            //Check if we get back the file in the dir 
+            assertEquals(1, list.size());
+            int uid = list.get(0).UID;
+
+            //Get the file matedata 
+            LogicalData ld = webResource.path("Item").path(String.valueOf(uid)).
+                    accept(MediaType.APPLICATION_XML).
+                    get(new GenericType<LogicalData>() {
+            });
+            //Check we got the matadata 
+            assertNotNull(ld);
+            assertEquals(uid, ld.UID);
+
+
+            //Set the file as unsupervised
+            response = webResource.path("Item").path(String.valueOf(uid)).path("supervised").path("FALSE").
+                    accept(MediaType.APPLICATION_XML).
+                    put(ClientResponse.class);
+            assertTrue("status: " + response.getStatus(), response.getStatus() == HttpStatus.SC_OK || response.getStatus() == HttpStatus.SC_NO_CONTENT);
+
+            //Get the list 
+            list = webResource.path("Items").queryParams(params).
+                    accept(MediaType.APPLICATION_XML).
+                    get(new GenericType<List<LogicalData>>() {
+            });
+            //Check that it's empty 
+            assertTrue(list.isEmpty());
+
+            //Set the file as supervised
+            response = webResource.path("Item").path(String.valueOf(uid)).path("supervised").path("TRUE").
+                    accept(MediaType.APPLICATION_XML).
+                    put(ClientResponse.class);
+            assertTrue("status: " + response.getStatus(), response.getStatus() == HttpStatus.SC_OK || response.getStatus() == HttpStatus.SC_NO_CONTENT);
+
+
+            //Get the list 
+            list = webResource.path("Items").queryParams(params).
+                    accept(MediaType.APPLICATION_XML).
+                    get(new GenericType<List<LogicalData>>() {
+            });
+
+            //Check that it's not empty 
+            assertFalse(list.isEmpty());
+
+
+            //Set its checksum 
+            int checksum = 9999;
+//            /{uid}/checksum/{checksum}
+            response = webResource.path("Item").path(String.valueOf(uid)).
+                    path("checksum").
+                    path(String.valueOf(checksum)).
+                    put(ClientResponse.class);
+            assertTrue("status: " + response.getStatus(), response.getStatus() == HttpStatus.SC_OK || response.getStatus() == HttpStatus.SC_NO_CONTENT);
+
+            ld = webResource.path("Item").path(String.valueOf(uid)).
+                    accept(MediaType.APPLICATION_XML).
+                    get(new GenericType<LogicalData>() {
+            });
+            //Check we got the matadata 
+            assertNotNull(ld);
+            assertEquals(uid, ld.UID);
+            assertEquals(checksum, ld.checksum);
+
+
+            int validationDate = 119674740;
+            response = webResource.path("Item").path(String.valueOf(uid)).
+                    path("lastValidationDate").
+                    path(String.valueOf(validationDate)).
+                    put(ClientResponse.class);
+            assertTrue("status: " + response.getStatus(), response.getStatus() == HttpStatus.SC_OK || response.getStatus() == HttpStatus.SC_NO_CONTENT);
+
+            ld = webResource.path("Item").path(String.valueOf(uid)).
+                    accept(MediaType.APPLICATION_XML).
+                    get(new GenericType<LogicalData>() {
+            });
+            //Check we got the matadata 
+            assertNotNull(ld);
+            assertEquals(uid, ld.UID);
+            assertEquals(checksum, ld.checksum);
+            assertEquals(validationDate, ld.lastValidationDate);
+
+//            @Path("/{uid}//{lastValidationDate}")
+
+        } finally {
+            deleteCollection();
+        }
+    }
+
+    @Test
+    public void testDRItems() throws IOException {
         try {
             createCollection();
             WebResource webResource;
@@ -157,20 +270,49 @@ public class TestREST {
 
             params = new MultivaluedMapImpl();
             params.add("path", "/testResourceId");
-//            List<LogicalData> use = webResource.path("Items").
+
+
+//            response = webResource.path("Items").
 //                    accept(MediaType.APPLICATION_XML).
-//                    get(new GenericType<List<LogicalData>>() {
-//            });
-
-
-            response = webResource.path("Items").
+//                    get(ClientResponse.class);
+//            String entry = response.getEntity(String.class);
+//            System.out.println(entry);
+            List<LogicalData> list = webResource.path("Items").queryParams(params).
                     accept(MediaType.APPLICATION_XML).
-                    get(ClientResponse.class);
-            String entry = response.getEntity(String.class);
-            System.out.println(entry);
+                    get(new GenericType<List<LogicalData>>() {
+            });
+
+            assertEquals(1, list.size());
+
+//            for (LogicalData ld : list) {
+//                System.out.println("-------------------");
+//                System.out.println(ld.name);
+//                System.out.println(ld.UID);
+//                System.out.println(ld.checksum);
+//                System.out.println(ld.contentTypesAsString);
+//                System.out.println(ld.createDate);
+//                System.out.println(ld.lastValidationDate);
+//                System.out.println(ld.length);
+//                System.out.println(ld.modifiedDate);
+//                System.out.println(ld.owner);
+//                System.out.println(ld.parent);
+//                System.out.println("-------------------");
+//            }
+
+            response = webResource.path("Items").path("FALSE").
+                    queryParams(params).put(ClientResponse.class);
+            assertTrue("status: " + response.getStatus(), response.getStatus() == HttpStatus.SC_OK || response.getStatus() == HttpStatus.SC_NO_CONTENT);
+
+
+            list = webResource.path("Items").queryParams(params).
+                    accept(MediaType.APPLICATION_XML).
+                    get(new GenericType<List<LogicalData>>() {
+            });
+
+            assertEquals(0, list.size());
 
         } finally {
-//            deleteCollection();
+            deleteCollection();
         }
     }
 
@@ -182,6 +324,18 @@ public class TestREST {
         }
     }
 
-    public class LogicalData {
+    @XmlRootElement
+    public static class LogicalData {
+
+        public int checksum;
+        public String contentTypesAsString;
+        public int createDate;
+        public int lastValidationDate;
+        public int length;
+        public int modifiedDate;
+        public String name;
+        public String owner;
+        public String parent;
+        public int UID;
     }
 }
