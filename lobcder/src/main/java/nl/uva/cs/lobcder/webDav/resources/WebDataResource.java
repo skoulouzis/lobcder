@@ -66,6 +66,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
             customProperties.put(Constants.DRI_SUPERVISED, new DRIsSupervisedProperty(getLogicalData()));
             customProperties.put(Constants.DRI_CHECKSUM, new DRICheckSumProperty(getLogicalData()));
             customProperties.put(Constants.DRI_LAST_VALIDATION_DATE, new DRI_lastValidationDateProperty(getLogicalData()));
+            customProperties.put(Constants.DATA_DIST_PROP_NAME, null);
 //        if(getLogicalData().getSupervised() != null) {
 //            DataDistProperty ddip = new DataDistProperty();
 //            ddip.setFormattedValue(getLogicalData().getSupervised().toString());
@@ -426,6 +427,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
             }
         }
         if (customProperties.containsKey(qname)) {
+            debug("Value is :"+customProperties.get(qname).getFormattedValue());
             return customProperties.get(qname).getFormattedValue();
         } else {
             return PropertyMetaData.UNKNOWN;

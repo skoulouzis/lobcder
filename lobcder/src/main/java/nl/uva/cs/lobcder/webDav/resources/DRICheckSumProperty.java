@@ -31,7 +31,7 @@ class DRICheckSumProperty implements CustomProperty{
 
     @Override
     public String getFormattedValue() {
-        return ld.getChecksum().toString();
+        return String.valueOf(ld.getChecksum());
     }
 
     @Override
