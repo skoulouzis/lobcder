@@ -31,7 +31,7 @@ class DRIsSupervisedProperty implements CustomProperty {
 
     @Override
     public String getFormattedValue() {
-        return ld.getSupervised().toString();
+        return String.valueOf(ld.getSupervised());
     }
 
     @Override

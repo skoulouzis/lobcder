@@ -31,7 +31,7 @@ class DRI_lastValidationDateProperty implements CustomProperty {
 
     @Override
     public String getFormattedValue() {
-        return ld.getLastValidationDate().toString();
+        return String.valueOf(ld.getLastValidationDate());
     }
 
     @Override
