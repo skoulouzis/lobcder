@@ -1156,7 +1156,7 @@ public class WebDAVTest {
             assertEquals(HttpStatus.SC_CREATED, status);
 
             DavPropertyNameSet driSupervisedNameSet = new DavPropertyNameSet();
-            DavPropertyName driChecksumName = DavPropertyName.create("dri-checksum", Namespace.getNamespace("custom:"));
+            DavPropertyName driChecksumName = DavPropertyName.create("dri-checksum-MD5", Namespace.getNamespace("custom:"));
             driSupervisedNameSet.add(driChecksumName);
 
             PropFindMethod propFind = new PropFindMethod(testcol1, driSupervisedNameSet, DavConstants.DEPTH_INFINITY);
@@ -1341,23 +1341,29 @@ public class WebDAVTest {
             generator.nextBytes(buffer);
             out.write(buffer);
         }
-
         String lobcderFilePath = this.root + testUploadFile.getName();
-        PutMethod method = new PutMethod(lobcderFilePath);
-        RequestEntity requestEntity = new InputStreamRequestEntity(
-                new FileInputStream(testUploadFile));
-        method.setRequestEntity(requestEntity);
-        int status = client.executeMethod(method);
-        assertEquals(HttpStatus.SC_CREATED, status);
-        
-        String localMD5 = checkChecksum(new FileInputStream(testUploadFile));
-        GetMethod get = new GetMethod(lobcderFilePath);
-        status = client.executeMethod(get);
-        assertEquals(HttpStatus.SC_OK, status);
-        
-        InputStream in = get.getResponseBodyAsStream();
-        String remoteMD5 = checkChecksum(in);
-        assertEquals(localMD5, remoteMD5);
+        try {
+
+            PutMethod method = new PutMethod(lobcderFilePath);
+            RequestEntity requestEntity = new InputStreamRequestEntity(
+                    new FileInputStream(testUploadFile));
+            method.setRequestEntity(requestEntity);
+            int status = client.executeMethod(method);
+            assertEquals(HttpStatus.SC_CREATED, status);
+
+            String localMD5 = checkChecksum(new FileInputStream(testUploadFile));
+            GetMethod get = new GetMethod(lobcderFilePath);
+            status = client.executeMethod(get);
+            assertEquals(HttpStatus.SC_OK, status);
+
+            InputStream in = get.getResponseBodyAsStream();
+            String remoteMD5 = checkChecksum(in);
+            assertEquals(localMD5, remoteMD5);
+        } finally {
+            DeleteMethod delete = new DeleteMethod(lobcderFilePath);
+            int status = client.executeMethod(delete);
+            assertTrue("DeleteMethod status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
+        }
     }
 
     private String checkChecksum(InputStream is) throws NoSuchAlgorithmException, FileNotFoundException, IOException {
