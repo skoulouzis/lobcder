@@ -225,6 +225,10 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                 getCatalogue().setPermissions(newResource.getUID(), new Permissions(getPrincipal()), connection);
                 PDRI pdri = createPDRI(length, newName, connection);
                 pdri.putData(inputStream);
+                Long checksum = pdri.getChecksum();
+                if(checksum !=null){
+                    newResource.setChecksum(checksum);
+                }
                 getCatalogue().registerPdriForNewEntry(newResource, pdri, connection);
             }
             connection.commit();

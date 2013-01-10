@@ -26,4 +26,6 @@ public interface PDRI {
     public long getLength() throws IOException;
     
     public void reconnect() throws IOException;
+
+    public Long getChecksum() throws IOException;
 }

@@ -5,10 +5,10 @@
 package nl.uva.cs.lobcder.resources;
 
 import java.io.*;
+import java.math.BigInteger;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.ByteBuffer;
-import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
@@ -17,10 +17,10 @@ import java.util.logging.Logger;
 import nl.uva.vlet.Global;
 import nl.uva.vlet.GlobalConfig;
 import nl.uva.vlet.data.StringUtil;
-import nl.uva.vlet.exception.ResourceNotFoundException;
 import nl.uva.vlet.exception.VlException;
 import nl.uva.vlet.io.CircularStreamBufferTransferer;
 import nl.uva.vlet.util.cog.GridProxy;
+import nl.uva.vlet.vfs.VChecksum;
 import nl.uva.vlet.vfs.VFSClient;
 import nl.uva.vlet.vfs.VFile;
 import nl.uva.vlet.vrl.VRL;
@@ -279,5 +279,19 @@ public class VPDRI implements PDRI {
         } catch (MalformedURLException ex1) {
             throw new IOException(ex1);
         }
+    }
+
+    @Override
+    public Long getChecksum() throws IOException{
+        try {
+            VFile physicalFile = vfsClient.getFile(vrl);
+            if(physicalFile instanceof VChecksum){
+                BigInteger bi = new BigInteger(((VChecksum)physicalFile).getChecksum("MD5"), 16);
+                return bi.longValue();
+            }
+        } catch (VlException ex) {
+            throw new IOException(ex);
+        }
+        return null;
     }
 }

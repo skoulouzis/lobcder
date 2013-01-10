@@ -10,8 +10,11 @@ import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.imageio.IIOException;
 import nl.uva.cs.lobcder.util.Constants;
 
 /**
@@ -61,10 +64,10 @@ public class SimplePDRI implements PDRI {
     private void setResourceContent(String uri, InputStream is) throws FileNotFoundException, IOException {
         File file = new File(uri);
 //        OutputStream os = new BufferedOutputStream(new FileOutputStream(file), Constants.BUF_SIZE);
-         OutputStream os = new FileOutputStream(file);
+        OutputStream os = new FileOutputStream(file);
         try {
             int read;
-            byte[] copyBuffer = new byte[10*1024*1024];
+            byte[] copyBuffer = new byte[10 * 1024 * 1024];
 
             while ((read = is.read(copyBuffer, 0, copyBuffer.length)) != -1) {
                 os.write(copyBuffer, 0, read);
@@ -142,5 +145,29 @@ public class SimplePDRI implements PDRI {
     @Override
     public void reconnect() throws IOException {
         //there is nowhere to connect
+    }
+
+    @Override
+    public Long getChecksum() throws IOException {
+        try {
+            MessageDigest md = MessageDigest.getInstance("MD5");
+
+            byte[] dataBytes = new byte[1024];
+
+            int nread = 0;
+            while ((nread = new FileInputStream(new File(baseLocation + file_name)).read(dataBytes)) != -1) {
+                md.update(dataBytes, 0, nread);
+            }
+            byte[] mdbytes = md.digest();
+
+            //convert the byte to hex format method 1
+            StringBuffer sb = new StringBuffer();
+            for (int i = 0; i < mdbytes.length; i++) {
+                sb.append(Integer.toString((mdbytes[i] & 0xff) + 0x100, 16).substring(1));
+            }
+            return Long.parseLong(sb.toString(), 16);
+        } catch (NoSuchAlgorithmException ex) {
+            throw new IOException(ex);
+        }
     }
 }

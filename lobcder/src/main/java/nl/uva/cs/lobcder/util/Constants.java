@@ -23,9 +23,9 @@ public class Constants {
     public static final String LOBCDER_STORAGE_PREFIX="lobcder.storage.prefix";
     public static final String STORAGE_SITES_PROP_FILES ="lobcder.storage.site.prop.files";
     public static final QName DATA_DIST_PROP_NAME = new QName("custom:", "data-distribution");
-    public static final QName DRI_SUPERVISED = new QName("custom:", "dri-supervised");
-    public static final QName DRI_CHECKSUM = new QName("custom:", "dri-checksum");
-    public static final QName DRI_LAST_VALIDATION_DATE = new QName("custom:", "dri-last-validation-date-ms");
+    public static final QName DRI_SUPERVISED_PROP_NAME = new QName("custom:", "dri-supervised");
+    public static final QName DRI_CHECKSUM_PROP_NAME = new QName("custom:", "dri-checksum-MD5");
+    public static final QName DRI_LAST_VALIDATION_DATE_PROP_NAME = new QName("custom:", "dri-last-validation-date-ms");
     public static final String CURRENT_USER_PRIVILEGE_PROP_NAME="current-user-privilege-set";
     public static final int BUF_SIZE = 2097152;
 }
