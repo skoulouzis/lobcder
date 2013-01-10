@@ -98,7 +98,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
             connection = getCatalogue().getConnection();
             connection.setAutoCommit(false);
             Permissions perm = getCatalogue().getPermissions(getLogicalData().getUID(), getLogicalData().getOwner(), connection);
-            if (getPrincipal()==null || !getPrincipal().canRead(perm)) {
+            if (getPrincipal() == null || !getPrincipal().canRead(perm)) {
                 throw new NotAuthorizedException(this);
             }
             LogicalData child = getCatalogue().getResourceEntryByLDRI(getLogicalData().getLDRI().child(childName), connection);
@@ -181,12 +181,15 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
     }
 
     @Override
-    public Resource createNew(String newName, InputStream inputStream, Long length, String contentType) throws IOException, ConflictException, NotAuthorizedException, BadRequestException {
+    public Resource createNew(String newName, InputStream inputStream, Long length, String contentType) throws IOException,
+            ConflictException, NotAuthorizedException, BadRequestException {
         debug("createNew.");
         debug("\t newName: " + newName);
         debug("\t length: " + length);
         debug("\t contentType: " + contentType);
         Connection connection = null;
+        byte[] buffer;
+        InputStream in;
         try {
             connection = getCatalogue().getConnection();
             connection.setAutoCommit(false);
@@ -201,7 +204,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                 newResource.setModifiedDate(System.currentTimeMillis());
                 newResource.addContentType(contentType);
                 getCatalogue().registerOrUpdateResourceEntry(newResource, connection);
-                PDRI pdri = createPDRI(length, newName,connection);
+                PDRI pdri = createPDRI(length, newName, connection);
                 pdri.putData(inputStream);
                 newResource = getCatalogue().registerPdriForNewEntry(newResource, pdri, connection);
             } else { // Resource does not exists, create a new one
@@ -212,7 +215,9 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                 }
                 newResource = new LogicalData(newPath, Constants.LOGICAL_FILE, getCatalogue());
                 newResource.setOwner(getPrincipal().getUserId());
+                debug("newResource owner: " + newResource.getOwner());
                 newResource.setLength(length);
+                debug("newResource len: " + length);
                 newResource.setCreateDate(System.currentTimeMillis());
                 newResource.setModifiedDate(System.currentTimeMillis());
                 newResource.addContentType(contentType);
@@ -270,11 +275,11 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
             debug("\t toCollection: " + toWDDR.getLogicalData().getLDRI().toPath());
             debug("\t name: " + name);
             Permissions copyToPerm = getCatalogue().getPermissions(getLogicalData().getUID(), getLogicalData().getOwner(), connection);
-            if(!getPrincipal().canRead(copyToPerm)){
+            if (!getPrincipal().canRead(copyToPerm)) {
                 throw new NotAuthorizedException(this);
             }
             Permissions newParentPerm = getCatalogue().getPermissions(toWDDR.getLogicalData().getUID(), toWDDR.getLogicalData().getOwner(), connection);
-            if(!getPrincipal().canWrite(newParentPerm)){
+            if (!getPrincipal().canWrite(newParentPerm)) {
                 throw new NotAuthorizedException(this);
             }
             getCatalogue().copyEntry(getLogicalData(), toWDDR.getLogicalData(), name, getPrincipal(), connection);
@@ -287,7 +292,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
             throw new NotAuthorizedException(this);
         } finally {
             try {
-                if(connection != null && !connection.isClosed()) {
+                if (connection != null && !connection.isClosed()) {
                     connection.rollback();
                     connection.close();
                 }
@@ -357,7 +362,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
 //        t.setAttribute("base", UrlPathWrapper.forEmptyPath());
 //         template.write(new AutoIndentWriter(new OutputStreamWriter(out, "UTF-8")));
 
-        debug("sendContent. " +  contentType);
+        debug("sendContent. " + contentType);
         Connection connection = null;
         try {
             connection = getCatalogue().getConnection();
@@ -369,15 +374,15 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
             Collection<LogicalData> childrenLD = getCatalogue().getChildren(getLogicalData().getLDRI().toPath(), connection);
             connection.commit();
             connection.close();
-            for (LogicalData ld : childrenLD) {               
-                if(!ld.getName().isEmpty()) {                
+            for (LogicalData ld : childrenLD) {
+                if (!ld.getName().isEmpty()) {
                     String s = ld.getName() + '\n';
                     debug(s);
                     out.write(s.getBytes());
                 }
             }
             out.flush();
-            out.close();        
+            out.close();
         } catch (NotAuthorizedException e) {
             throw e;
         } catch (Exception ex) {
@@ -404,27 +409,27 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
     public String getContentType(String accepts) {
         debug("getContentType. accepts: " + accepts);
         return "text/html";
-       /* List<String> mimeTypes;
+        /* List<String> mimeTypes;
         if (accepts != null) {
-            String[] acceptsTypes = accepts.split(",");
-            if (getLogicalData().getContentTypes() != null) {
-                mimeTypes = getLogicalData().getContentTypes();
-                for (String accessType : acceptsTypes) {
-                    for (String mimeType : mimeTypes) {
-                        if (accessType.equals(mimeType)) {
-                            System.err.println("\t\t#################Contenttype: " + mimeType);
-                            return mimeType;
-                        }
-                    }
-                }
-                System.err.println("\t\t#################Contenttype: " + mimeTypes.get(0));
-                return mimeTypes.get(0);
-            }
+        String[] acceptsTypes = accepts.split(",");
+        if (getLogicalData().getContentTypes() != null) {
+        mimeTypes = getLogicalData().getContentTypes();
+        for (String accessType : acceptsTypes) {
+        for (String mimeType : mimeTypes) {
+        if (accessType.equals(mimeType)) {
+        System.err.println("\t\t#################Contenttype: " + mimeType);
+        return mimeType;
+        }
+        }
+        }
+        System.err.println("\t\t#################Contenttype: " + mimeTypes.get(0));
+        return mimeTypes.get(0);
+        }
         } 
         System.err.println("\t\t#################Contenttype: null");
         return null;
-        * 
-        */
+         * 
+         */
     }
 
     @Override

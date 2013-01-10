@@ -74,6 +74,7 @@ public class VPDRI implements PDRI {
     private final Long storageSiteId;
     private final String baseDir = "LOBCDER-REPLICA-vTEST";//"LOBCDER-REPLICA-v2.0";
     private final String fileURI;
+    private int reconnectAttemts = 0;
 
     VPDRI(String fileURI, Long storageSiteId, String resourceUrl, String username, String password) throws IOException {
         try {
@@ -150,26 +151,35 @@ public class VPDRI implements PDRI {
     public void putData(InputStream in) throws IOException {
         OutputStream out = null;
         try {
+            vfsClient.mkdirs(vrl.getParent(), true);
+            vfsClient.createFile(vrl, true);
             out = vfsClient.getFile(vrl).getOutputStream();
 
 //            OperatingSystemMXBean osMBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
 //            int size = (int) (osMBean.getFreePhysicalMemorySize() / 50);
-            CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((100*1024*1024), in, out);
+            CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((100 * 1024 * 1024), in, out);
             cBuff.startTransfer(new Long(-1));
+
+            reconnectAttemts = 0;
 //            final ReadableByteChannel inputChannel = Channels.newChannel(in);
 //            final WritableByteChannel outputChannel = Channels.newChannel(out);
 //            fastCopy(inputChannel, outputChannel);
         } catch (VlException ex) {
-//            throw new IOException(ex);
-            if (ex instanceof ResourceNotFoundException || ex.getMessage().contains("not found") || ex.getMessage().contains("Couldn open location") || ex.getMessage().contains("not found in container")) {
-                try {
-                    vfsClient.mkdirs(vrl.getParent(), true);
-                    vfsClient.createFile(vrl, true);
-                    putData(in);
-                } catch (VlException ex1) {
-                    throw new IOException(ex1);
-                }
+            if (reconnectAttemts <= 2) {
+                reconnect();
+                putData(in);
+            } else {
+                throw new IOException(ex);
             }
+//            if (ex instanceof ResourceNotFoundException || ex.getMessage().contains("not found") || ex.getMessage().contains("Couldn open location") || ex.getMessage().contains("not found in container")) {
+//                try {
+//                    vfsClient.mkdirs(vrl.getParent(), true);
+//                    vfsClient.createFile(vrl, true);
+//                    putData(in);
+//                } catch (VlException ex1) {
+//                    throw new IOException(ex1);
+//                }
+//            }
         } finally {
             if (out != null) {
                 try {
@@ -246,5 +256,28 @@ public class VPDRI implements PDRI {
         source.transferTo(0, source.size(), target);
         source.close();
         target.close();
+    }
+
+    @Override
+    public long getLength() throws IOException {
+        try {
+            return vfsClient.getFile(vrl).getLength();
+        } catch (VlException ex) {
+            throw new IOException(ex);
+        }
+    }
+
+    @Override
+    public void reconnect() throws IOException {
+        reconnectAttemts++;
+        vfsClient.close();
+        vfsClient.dispose();
+        try {
+            initVFS();
+        } catch (VlException ex1) {
+            throw new IOException(ex1);
+        } catch (MalformedURLException ex1) {
+            throw new IOException(ex1);
+        }
     }
 }

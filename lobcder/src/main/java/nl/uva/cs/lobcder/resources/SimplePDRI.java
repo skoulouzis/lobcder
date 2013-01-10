@@ -133,4 +133,14 @@ public class SimplePDRI implements PDRI {
 
 
     }
+
+    @Override
+    public long getLength() {
+        return new File(baseLocation + file_name).length();
+    }
+
+    @Override
+    public void reconnect() throws IOException {
+        //there is nowhere to connect
+    }
 }

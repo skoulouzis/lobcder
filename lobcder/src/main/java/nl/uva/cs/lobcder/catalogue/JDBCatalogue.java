@@ -970,7 +970,7 @@ public class JDBCatalogue {
                     connection.close();
                 }
             } catch (SQLException ex) {
-                Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+                throw new CatalogueException(ex.getMessage());
             }
             throw new CatalogueException(e.getMessage());
         } finally {
@@ -986,7 +986,7 @@ public class JDBCatalogue {
                     connection.setAutoCommit(connectionAutocommit);
                 }
             } catch (SQLException ex) {
-                Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+                throw new CatalogueException(ex.getMessage());
             }
         }
     }

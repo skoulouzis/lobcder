@@ -44,6 +44,7 @@ public class WebDataFileResource extends WebDataResource implements
 
     private static final boolean debug = true;
 //    private final int bufferSize;
+    private int reconnectAttemts;
 
     public WebDataFileResource(JDBCatalogue catalogue, LogicalData logicalData) throws CatalogueException, Exception {
         super(catalogue, logicalData);
@@ -51,7 +52,7 @@ public class WebDataFileResource extends WebDataResource implements
             throw new Exception("The logical data has the wonrg type: " + logicalData.getType());
         }
 
-        
+
 //            OperatingSystemMXBean osMBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
 //            bufferSize = (int) (osMBean.getFreePhysicalMemorySize() / 200);
 //            debug("Alocated  physical memory:\t" + bufferSize / (1024.0 * 1024.0));
@@ -208,18 +209,26 @@ public class WebDataFileResource extends WebDataResource implements
             }
             connection.commit();
             connection.close();
-            debug(pdri.getURL());
+            debug("--------- " + pdri.getURL());
+            debug("getLength: " + pdri.getLength());
             //IOUtils.copy(pdri.getData(), out); 
 //            fastCopy(pdri.getData(), out);
 
-            CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((150*1024*1024), pdri.getData(), out);
+            CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((150 * 1024 * 1024), pdri.getData(), out);
             cBuff.startTransfer(new Long(-1));
-//            totalWritten = cBuff.getTotalWritten();
         } catch (NotAuthorizedException ex) {
             debug("NotAuthorizedException");
             throw new NotAuthorizedException(this);
         } catch (Exception ex) {
-            throw new IOException(ex.getMessage());
+            //Try one more time 
+            debug("reconnect");
+            pdri.reconnect();
+            CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((150 * 1024 * 1024), pdri.getData(), out);
+            try {
+                cBuff.startTransfer(new Long(-1));
+            } catch (VlException ex1) {
+                 throw new IOException(ex1.getMessage());
+            }
         } finally {
             try {
                 out.flush();

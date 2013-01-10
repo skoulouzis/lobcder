@@ -22,4 +22,8 @@ public interface PDRI {
     public InputStream getData() throws IOException;
 
     public void putData(InputStream data) throws IOException;
+
+    public long getLength() throws IOException;
+    
+    public void reconnect() throws IOException;
 }
