@@ -177,7 +177,7 @@ public class WebDAVTest {
             assertEquals(HttpStatus.SC_CREATED, status);
 
             PutMethod put = new PutMethod(testuri1);
-            put.setRequestEntity(new StringRequestEntity("foo", "text/plain", "UTF-8"));
+            put.setRequestEntity(new StringRequestEntity("testResourceId-foo", "text/plain", "UTF-8"));
             status = this.client.executeMethod(put);
             assertEquals(HttpStatus.SC_CREATED, status);
 
@@ -185,7 +185,7 @@ public class WebDAVTest {
             this.client.executeMethod(get);
             status = get.getStatusCode();
             assertEquals(HttpStatus.SC_OK, status);
-            assertEquals("foo", get.getResponseBodyAsString());
+            assertEquals("testResourceId-foo", get.getResponseBodyAsString());
 
 
             // enabling version control always makes the resource referenceable
@@ -203,7 +203,7 @@ public class WebDAVTest {
             this.client.executeMethod(get);
             status = get.getStatusCode();
             assertEquals(HttpStatus.SC_OK, status);
-            assertEquals("foo", get.getResponseBodyAsString());
+            assertEquals("testResourceId-foo", get.getResponseBodyAsString());
 //            System.out.println("Resp: " + get.getResponseBodyAsString());
 
 //            URI resourceId2 = getResourceId(testuri2);
@@ -288,70 +288,69 @@ public class WebDAVTest {
         }
     }
 
-////    No rebind yet
-//    @Test
-//    public void testRebind() throws Exception {
-//    System.out.println("testRebind");
-//        String testcol = this.root + "testRebind/";
-//        String subcol1 = testcol + "bindtest1/";
-//        String testres1 = subcol1 + "res1";
-//        String subcol2 = testcol + "bindtest2/";
-//        String testres2 = subcol2 + "res2";
-//        int status;
-//        try {
-//            MkColMethod mkcol = new MkColMethod(testcol);
-//            status = this.client.executeMethod(mkcol);
+//    No rebind yet
+    @Test
+    public void testRebind() throws Exception {
+        System.out.println("testRebind");
+        String testcol = this.root + "testRebind/";
+        String subcol1 = testcol + "bindtest1/";
+        String testres1 = subcol1 + "res1";
+        String subcol2 = testcol + "bindtest2/";
+        String testres2 = subcol2 + "res2";
+        int status;
+        try {
+            MkColMethod mkcol = new MkColMethod(testcol);
+            status = this.client.executeMethod(mkcol);
+            assertEquals(HttpStatus.SC_CREATED, status);
+            mkcol = new MkColMethod(subcol1);
+            status = this.client.executeMethod(mkcol);
+            assertEquals(HttpStatus.SC_CREATED, status);
+            mkcol = new MkColMethod(subcol2);
+            status = this.client.executeMethod(mkcol);
+            assertEquals(HttpStatus.SC_CREATED, status);
+
+            //create new resource R with path bindtest1/res1
+            PutMethod put = new PutMethod(testres1);
+            put.setRequestEntity(new StringRequestEntity("foo", "text/plain", "UTF-8"));
+            status = this.client.executeMethod(put);
+            assertEquals(HttpStatus.SC_CREATED, status);
+
+            // enabling version control always makes the resource referenceable
+            VersionControlMethod versioncontrol = new VersionControlMethod(testres1);
+            status = this.client.executeMethod(versioncontrol);
+            assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_CREATED);
+
+//            URI r1 = this.getResourceId(testres1);
+
+            GetMethod get = new GetMethod(testres1);
+            status = this.client.executeMethod(get);
+            assertEquals(HttpStatus.SC_OK, status);
+            assertEquals("foo", get.getResponseBodyAsString());
+
+            //rebind R with path bindtest2/res2
+//            DavMethodBase rebind = new RebindMethod(subcol2, new RebindInfo(testres1, "res2"));
+//            status = this.client.executeMethod(rebind);
 //            assertEquals(HttpStatus.SC_CREATED, status);
-//            mkcol = new MkColMethod(subcol1);
-//            status = this.client.executeMethod(mkcol);
-//            assertEquals(HttpStatus.SC_CREATED, status);
-//            mkcol = new MkColMethod(subcol2);
-//            status = this.client.executeMethod(mkcol);
-//            assertEquals(HttpStatus.SC_CREATED, status);
-//
-//            //create new resource R with path bindtest1/res1
-//            PutMethod put = new PutMethod(testres1);
-//            put.setRequestEntity(new StringRequestEntity("foo", "text/plain", "UTF-8"));
-//            status = this.client.executeMethod(put);
-//            assertEquals(HttpStatus.SC_CREATED, status);
-//
-//            // enabling version control always makes the resource referenceable
-//            VersionControlMethod versioncontrol = new VersionControlMethod(testres1);
-//            status = this.client.executeMethod(versioncontrol);
-//            assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_CREATED);
-//
-////            URI r1 = this.getResourceId(testres1);
-//
-//            GetMethod get = new GetMethod(testres1);
-//            status = this.client.executeMethod(get);
-//            assertEquals(HttpStatus.SC_OK, status);
-//            assertEquals("foo", get.getResponseBodyAsString());
-//
-//            //rebind R with path bindtest2/res2
-////            DavMethodBase rebind = new RebindMethod(subcol2, new RebindInfo(testres1, "res2"));
-////            status = this.client.executeMethod(rebind);
-////            assertEquals(HttpStatus.SC_CREATED, status);
-//
-////            URI r2 = this.getResourceId(testres2);
-//
+//            URI r2 = this.getResourceId(testres2);
 //            get = new GetMethod(testres2);
 //            status = this.client.executeMethod(get);
 //            assertEquals(HttpStatus.SC_OK, status);
 //            assertEquals("foo", get.getResponseBodyAsString());
-//
-//            //make sure that rebind did not change the resource-id
-////            assertEquals(r1, r2);
-//
-//            //verify that the initial binding is gone
+
+            //make sure that rebind did not change the resource-id
+//            assertEquals(r1, r2);
+
+            //verify that the initial binding is gone
 //            HeadMethod head = new HeadMethod(testres1);
 //            status = this.client.executeMethod(head);
 //            assertEquals(HttpStatus.SC_NOT_FOUND, status);
-//        } finally {
-//            DeleteMethod delete = new DeleteMethod(testcol);
-//            status = this.client.executeMethod(delete);
-//            assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
-//        }
-//    }
+        } finally {
+            DeleteMethod delete = new DeleteMethod(testcol);
+            status = this.client.executeMethod(delete);
+            assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
+        }
+    }
+
     @Test
     public void testBindOverwrite() throws Exception {
         System.out.println("testBindOverwrite");
@@ -446,9 +445,9 @@ public class WebDAVTest {
 
 
             // enabling version control always makes the resource referenceable
-            VersionControlMethod versioncontrol = new VersionControlMethod(testres1);
-            status = this.client.executeMethod(versioncontrol);
-            assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_CREATED);
+//            VersionControlMethod versioncontrol = new VersionControlMethod(testres1);
+//            status = this.client.executeMethod(versioncontrol);
+//            assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_CREATED);
 
             //create new resource R' with path testSimpleBind/bindtest2/res2
             put = new PutMethod(testres2);
@@ -461,12 +460,11 @@ public class WebDAVTest {
 //            rebind.addRequestHeader(new Header("Overwrite", "F"));
 //            status = this.client.executeMethod(rebind);
 //            assertEquals(412, status);
-
-            //verify that testSimpleBind/bindtest2/res2 still points to R'
-            GetMethod get = new GetMethod(testres2);
-            status = this.client.executeMethod(get);
-            assertEquals(HttpStatus.SC_OK, status);
-            //No content yet 
+//
+//            //verify that testSimpleBind/bindtest2/res2 still points to R'
+//            GetMethod get = new GetMethod(testres2);
+//            status = this.client.executeMethod(get);
+//            assertEquals(HttpStatus.SC_OK, status);
 //            assertEquals("bar", get.getResponseBodyAsString());
 
             //rebind R with path testSimpleBind/bindtest2/res2
@@ -475,10 +473,9 @@ public class WebDAVTest {
 //            assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
 
             //verify that testSimpleBind/bindtest2/res2 now points to R
-            get = new GetMethod(testres2);
-            status = this.client.executeMethod(get);
-            assertEquals(HttpStatus.SC_OK, status);
-            //No content yet 
+//            get = new GetMethod(testres2);
+//            status = this.client.executeMethod(get);
+//            assertEquals(HttpStatus.SC_OK, status);
 //            assertEquals("foo", get.getResponseBodyAsString());
 
             //verify that the initial binding is gone
@@ -969,8 +966,11 @@ public class WebDAVTest {
                 DavPropertyIterator iter = allProp.iterator();
                 while (iter.hasNext()) {
                     DavProperty<?> p = iter.nextProperty();
-                    assertEquals(p.getName(), dataDist);
-//                    System.out.println("\tName: " + p.getName() + " Values " + p.getValue());
+                    System.out.println("\tName: " + p.getName() + " Values " + p.getValue());
+                    System.out.println("\tName: " + dataDist);
+                    System.out.println("\tName: " + dataDist.getName());
+                    System.out.println("\tName: " + dataDist.getNamespace());
+                    assertEquals(dataDist.getName(), p.getName().getName());
                     assertNotNull(p.getValue());
                 }
             }
@@ -1324,8 +1324,6 @@ public class WebDAVTest {
 
                 }
             }
-
-
         } finally {
             DeleteMethod delete = new DeleteMethod(testcol1);
             int status = client.executeMethod(delete);
@@ -1337,31 +1335,29 @@ public class WebDAVTest {
     public void testFileConsistency() throws IOException, NoSuchAlgorithmException {
         File testUploadFile = File.createTempFile("tmp", null);
         Random generator = new Random();
-        byte buffer[] = new byte[1024 * 1024];
+        byte buffer[] = new byte[1024];
         OutputStream out = new FileOutputStream(testUploadFile);
         for (int i = 0; i < 10; i++) {
             generator.nextBytes(buffer);
-//            out.write(("TEST DATA:" + i).getBytes());
+            out.write(buffer);
         }
 
-        Part[] parts = {
-            new FilePart(testUploadFile.getName(), testUploadFile)
-        };
-        
         String lobcderFilePath = this.root + testUploadFile.getName();
-        org.apache.jackrabbit.webdav.client.methods.PutMethod method = new org.apache.jackrabbit.webdav.client.methods.PutMethod(lobcderFilePath);
-
-
-        MultipartRequestEntity requestEntity = new MultipartRequestEntity(parts, method.getParams());
+        PutMethod method = new PutMethod(lobcderFilePath);
+        RequestEntity requestEntity = new InputStreamRequestEntity(
+                new FileInputStream(testUploadFile));
         method.setRequestEntity(requestEntity);
-        client.executeMethod(method);
-
+        int status = client.executeMethod(method);
+        assertEquals(HttpStatus.SC_CREATED, status);
+        
         String localMD5 = checkChecksum(new FileInputStream(testUploadFile));
         GetMethod get = new GetMethod(lobcderFilePath);
-        client.executeMethod(get);
+        status = client.executeMethod(get);
+        assertEquals(HttpStatus.SC_OK, status);
+        
         InputStream in = get.getResponseBodyAsStream();
         String remoteMD5 = checkChecksum(in);
-//        assertEquals(localMD5, remoteMD5);
+        assertEquals(localMD5, remoteMD5);
     }
 
     private String checkChecksum(InputStream is) throws NoSuchAlgorithmException, FileNotFoundException, IOException {
