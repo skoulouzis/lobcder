@@ -9,6 +9,10 @@ import com.bradmcevoy.http.*;
 import com.bradmcevoy.http.exceptions.NotAuthorizedException;
 import com.bradmcevoy.http.values.HrefList;
 import com.bradmcevoy.http.webdav.PropertyMap;
+import com.bradmcevoy.property.MultiNamespaceCustomPropertyResource;
+import com.bradmcevoy.property.PropertySource.PropertyAccessibility;
+import com.bradmcevoy.property.PropertySource.PropertyMetaData;
+import com.bradmcevoy.property.PropertySource.PropertySetException;
 import com.ettrema.http.AccessControlledResource;
 import com.ettrema.http.acl.Principal;
 import java.io.IOException;
@@ -17,6 +21,7 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.xml.namespace.QName;
 import nl.uva.cs.lobcder.auth.test.MyAuth;
 import nl.uva.cs.lobcder.authdb.MyPrincipal;
 import nl.uva.cs.lobcder.authdb.Permissions;
@@ -33,12 +38,12 @@ import nl.uva.cs.lobcder.util.Constants;
  *
  * @author S. Koulouzis
  */
-public class WebDataResource implements PropFindableResource, Resource, AccessControlledResource, CustomPropertyResource {//, ReplaceableResource {
+public class WebDataResource implements PropFindableResource, Resource, AccessControlledResource, MultiNamespaceCustomPropertyResource {//, ReplaceableResource {
 
     private LogicalData logicalData;
     private final JDBCatalogue catalogue;
     private static final boolean debug = true;
-    private final Map<String, CustomProperty> customProperties = new HashMap<String, CustomProperty>();
+    private final Map<QName, CustomProperty> customProperties = new HashMap<QName, CustomProperty>();
     private final Map<String, PropertyMap.StandardProperty> userPrivledges = new HashMap<String, PropertyMap.StandardProperty>();
     //Collection<Integer> roles = null;
     //private String uname;
@@ -57,14 +62,16 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
     }
 
     private void initProps() {
-        customProperties.put(Constants.DRI_SUPERVISED, new DRIsSupervisedProperty(getLogicalData()));
-        customProperties.put(Constants.DRI_CHECKSUM, new DRICheckSumProperty(getLogicalData()));
-        customProperties.put(Constants.DRI_LAST_VALIDATION_DATE, new DRI_lastValidationDateProperty(getLogicalData()));
+        if (customProperties.isEmpty()) {
+            customProperties.put(Constants.DRI_SUPERVISED, new DRIsSupervisedProperty(getLogicalData()));
+            customProperties.put(Constants.DRI_CHECKSUM, new DRICheckSumProperty(getLogicalData()));
+            customProperties.put(Constants.DRI_LAST_VALIDATION_DATE, new DRI_lastValidationDateProperty(getLogicalData()));
 //        if(getLogicalData().getSupervised() != null) {
 //            DataDistProperty ddip = new DataDistProperty();
 //            ddip.setFormattedValue(getLogicalData().getSupervised().toString());
 //            customProperties.put(Constants.DATA_DIST_PROP_NAME, ddip);
 //        }
+        }
     }
 
     @Override
@@ -329,12 +336,12 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
         return null;
     }
 
-    public PDRI createPDRI(long fileLength, String fileName ,Connection connection) throws CatalogueException, IOException {
+    public PDRI createPDRI(long fileLength, String fileName, Connection connection) throws CatalogueException, IOException {
         Collection<MyStorageSite> sites = getCatalogue().getStorageSitesByUser(getPrincipal(), connection);
         if (!sites.isEmpty()) {
 //            MyStorageSite site = sites.iterator().next();
             MyStorageSite site = selectBestSite(sites);
-            return PDRIFactory.getFactory().createInstance(UUID.randomUUID().toString()+"-"+fileName,
+            return PDRIFactory.getFactory().createInstance(UUID.randomUUID().toString() + "-" + fileName,
                     site.getStorageSiteId(), site.getResourceURI(),
                     site.getCredential().getStorageSiteUsername(), site.getCredential().getStorageSitePassword());
         } else {
@@ -342,33 +349,32 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
         }
     }
 
-    @Override
-    public Set<String> getAllPropertyNames() {
-        return customProperties.keySet();
-    }
-
-    @Override
-    public CustomProperty getProperty(String propName) {
-        if (propName.equals(Constants.DATA_DIST_PROP_NAME)) {
-            try {
-                initDataDist();
-            } catch (CatalogueException ex) {
-                Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
-            } catch (SQLException ex) {
-                Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
-            } catch (NotAuthorizedException ex) {
-                Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        }
-        initProps();
-        return customProperties.get(propName);
-    }
-
-    @Override
-    public String getNameSpaceURI() {
-        return "custom:";
-    }
-
+//    @Override
+//    public Set<String> getAllPropertyNames() {
+//        return customProperties.keySet();
+//    }
+//
+//    @Override
+//    public CustomProperty getProperty(String propName) {
+//        if (propName.equals(Constants.DATA_DIST_PROP_NAME)) {
+//            try {
+//                initDataDist();
+//            } catch (CatalogueException ex) {
+//                Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
+//            } catch (SQLException ex) {
+//                Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
+//            } catch (NotAuthorizedException ex) {
+//                Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
+//            }
+//        }
+//        initProps();
+//        return customProperties.get(propName);
+//    }
+//
+//    @Override
+//    public String getNameSpaceURI() {
+//        return "custom:";
+//    }
     private void initDataDist() throws CatalogueException, SQLException, NotAuthorizedException {
         Connection connection = getCatalogue().getConnection();
         connection.setAutoCommit(false);
@@ -402,5 +408,67 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
             return s;
         }
         return null;
+    }
+
+    @Override
+    public Object getProperty(QName qname) {
+        debug("getProperty: " + qname);
+        initProps();
+        if (qname.toString().equals(Constants.DATA_DIST_PROP_NAME.toString())) {
+            try {
+                initDataDist();
+            } catch (CatalogueException ex) {
+                Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (SQLException ex) {
+                Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (NotAuthorizedException ex) {
+                Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        if (customProperties.containsKey(qname)) {
+            return customProperties.get(qname).getFormattedValue();
+        } else {
+            return PropertyMetaData.UNKNOWN;
+        }
+    }
+
+    @Override
+    public void setProperty(QName qname, Object o) throws PropertySetException, NotAuthorizedException {
+        debug("setProperty: "+qname+" "+o);
+        customProperties.get(qname).setFormattedValue((String)o);
+    }
+
+    @Override
+    public PropertyMetaData getPropertyMetaData(QName qname) {
+        debug("getPropertyMetaData: " + qname);
+        if (qname.equals(Constants.DATA_DIST_PROP_NAME)) {
+            try {
+                initDataDist();
+            } catch (CatalogueException ex) {
+                Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (SQLException ex) {
+                Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (NotAuthorizedException ex) {
+                Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        initProps();
+        if (customProperties.containsKey(qname)) {
+            return new PropertyMetaData(PropertyAccessibility.WRITABLE, String.class);
+        } else {
+            return PropertyMetaData.UNKNOWN;
+        }
+    }
+
+    @Override
+    public List<QName> getAllPropertyNames() {
+        debug("getAllPropertyNames: ");
+        initProps();
+        ArrayList<QName> list = new ArrayList<QName>();
+        list.addAll(customProperties.keySet());
+        for (QName n : list) {
+            debug("getAllPropertyNames: " + n);
+        }
+        return list;
     }
 }
