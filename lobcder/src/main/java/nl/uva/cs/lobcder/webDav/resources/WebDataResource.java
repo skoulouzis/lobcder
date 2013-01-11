@@ -421,6 +421,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
         debug("setProperty: " + qname + " " + o);
         if (o != null) {
             customProperties.put(qname, (String) o);
+            updateCatalogue(qname, (String) o);
         }
     }
 
@@ -459,5 +460,15 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
             debug("getAllPropertyNames: " + n);
         }
         return list;
+    }
+
+    private void updateCatalogue(QName qname, String value) {
+        if (qname.equals(Constants.DRI_SUPERVISED_PROP_NAME)) {
+            getLogicalData().updateSupervised(Boolean.valueOf(value));
+        } else if (qname.equals(Constants.DRI_CHECKSUM_PROP_NAME)) {
+            getLogicalData().updateChecksum(Long.valueOf(value));
+        } else if (qname.equals(Constants.DRI_LAST_VALIDATION_DATE_PROP_NAME)) {
+            getLogicalData().updateLastValidationDate(Long.valueOf(value));
+        }
     }
 }
