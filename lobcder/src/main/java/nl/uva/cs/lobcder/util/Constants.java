@@ -26,6 +26,6 @@ public class Constants {
     public static final QName DRI_SUPERVISED_PROP_NAME = new QName("custom:", "dri-supervised");
     public static final QName DRI_CHECKSUM_PROP_NAME = new QName("custom:", "dri-checksum-MD5");
     public static final QName DRI_LAST_VALIDATION_DATE_PROP_NAME = new QName("custom:", "dri-last-validation-date-ms");
-    public static final String CURRENT_USER_PRIVILEGE_PROP_NAME="current-user-privilege-set";
+    public static final QName DAV_CURRENT_USER_PRIVILAGE_SET = new QName("DAV:", "current-user-privilege-set");
     public static final int BUF_SIZE = 2097152;
 }

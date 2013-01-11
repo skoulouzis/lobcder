@@ -83,7 +83,7 @@ public class WebDavServlet implements Servlet {
                 originalResponse.set(resp);
                 com.bradmcevoy.http.Request request = new com.bradmcevoy.http.ServletRequest(req, this.getServletConfig().getServletContext());
                 com.bradmcevoy.http.Response response = new com.bradmcevoy.http.ServletResponse(resp);
-//                    servletHttpManager.process(request, response);
+//                servletHttpManager.process(request, response);
                 httpManager.process(request, response);
             } finally {
                 originalRequest.remove();

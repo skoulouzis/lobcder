@@ -43,7 +43,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
     private LogicalData logicalData;
     private final JDBCatalogue catalogue;
     private static final boolean debug = true;
-    private final Map<QName, CustomProperty> customProperties = new HashMap<QName, CustomProperty>();
+    private final Map<QName, String> customProperties = new HashMap<QName, String>();
     private final Map<String, PropertyMap.StandardProperty> userPrivledges = new HashMap<String, PropertyMap.StandardProperty>();
     //Collection<Integer> roles = null;
     //private String uname;
@@ -63,10 +63,13 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
 
     private void initProps() {
         if (customProperties.isEmpty()) {
-            customProperties.put(Constants.DRI_SUPERVISED_PROP_NAME, new DRIsSupervisedProperty(getLogicalData()));
-            customProperties.put(Constants.DRI_CHECKSUM_PROP_NAME, new DRICheckSumProperty(getLogicalData()));
-            customProperties.put(Constants.DRI_LAST_VALIDATION_DATE_PROP_NAME, new DRI_lastValidationDateProperty(getLogicalData()));
+            customProperties.put(Constants.DRI_SUPERVISED_PROP_NAME, String.valueOf(getLogicalData().getSupervised()));
+            customProperties.put(Constants.DRI_CHECKSUM_PROP_NAME, String.valueOf(getLogicalData().getChecksum()));
+            customProperties.put(Constants.DRI_LAST_VALIDATION_DATE_PROP_NAME, String.valueOf(getLogicalData().getLastValidationDate()));
             customProperties.put(Constants.DATA_DIST_PROP_NAME, null);
+
+            List<Priviledge> list = getPriviledges(null);
+            customProperties.put(Constants.DAV_CURRENT_USER_PRIVILAGE_SET, null);
 //        if(getLogicalData().getSupervised() != null) {
 //            DataDistProperty ddip = new DataDistProperty();
 //            ddip.setFormattedValue(getLogicalData().getSupervised().toString());
@@ -236,7 +239,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
         this.logicalData = logicalData;
     }
 
-    public MyPrincipal getPrincipal() {
+    protected MyPrincipal getPrincipal() {
         return (MyPrincipal) WebDavServlet.request().getAttribute("vph-user");
     }
 
@@ -254,9 +257,16 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
 //            throw new NotAuthorizedException();
 //        }
 //    }
+    /**
+     * A "principal" is a distinct human or computational actor that initiates
+     * access to resources. In this protocol, a principal is an HTTP resource
+     * that represents such an actor.
+     *
+     * @return
+     */
     @Override
     public String getPrincipalURL() {
-//        debug("getPrincipalURL");
+        debug("getPrincipalURL");
         return "thePrincipalURL";//getPrincipal().getUserId();
     }
 
@@ -271,18 +281,17 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
      */
     @Override
     public List<Priviledge> getPriviledges(Auth auth) {
-        MyPrincipal currentPrincipal = MyAuth.getInstance().checkToken(auth.getPassword());
+        MyPrincipal currentPrincipal = getPrincipal();
         List<Priviledge> priviledgesList = new ArrayList<Priviledge>();
 
-//        if (currentPrincipal.getUserId().equals(getLogicalData().getOwner())) {
-//            priviledgesList.add(Priviledge.ALL);
-//            return priviledgesList;
-//        }
+        if (currentPrincipal.getUserId().equals(getLogicalData().getOwner())) {
+            priviledgesList.add(Priviledge.ALL);
+            return priviledgesList;
+        }
 
         Set<String> currentRoles = currentPrincipal.getRoles();
         //We are supposed to get permissions for this resource for the current user
         Permissions p = getLogicalData().getPermissions();
-
         Set<String> readRoles = p.canRead();
         Set<String> writeRoles = p.canWrite();
         for (String r : currentRoles) {
@@ -297,14 +306,12 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
                 break;
             }
         }
-
         return priviledgesList;
     }
 
     @Override
     public Map<Principal, List<Priviledge>> getAccessControlList() {
         debug("getAccessControlList");
-
         // Do the mapping 
 //        List<Integer> permArray = this.logicalData.getMetadata().getPermissionArray();
 //        List<Priviledge> perm = new ArrayList<Priviledge>();
@@ -373,8 +380,8 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
         }
         sb.replace(sb.lastIndexOf(","), sb.length(), "");
         sb.append("]");
-        DataDistProperty dataDist = new DataDistProperty(sb.toString());
-        customProperties.put(Constants.DATA_DIST_PROP_NAME, dataDist);
+//        DataDistProperty dataDist = new DataDistProperty(sb.toString());
+        customProperties.put(Constants.DATA_DIST_PROP_NAME, sb.toString());
     }
 
     private MyStorageSite selectBestSite(Collection<MyStorageSite> sites) {
@@ -399,7 +406,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
                 }
             }
             if (customProperties.containsKey(qname)) {
-                return customProperties.get(qname).getFormattedValue();
+                return customProperties.get(qname);
             } else {
                 return PropertyMetaData.UNKNOWN;
             }
@@ -412,7 +419,9 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
     @Override
     public void setProperty(QName qname, Object o) throws PropertySetException, NotAuthorizedException {
         debug("setProperty: " + qname + " " + o);
-        customProperties.get(qname).setFormattedValue((String) o);
+        if (o != null) {
+            customProperties.put(qname, (String) o);
+        }
     }
 
     @Override

@@ -188,8 +188,6 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
         debug("\t length: " + length);
         debug("\t contentType: " + contentType);
         Connection connection = null;
-        byte[] buffer;
-        InputStream in;
         try {
             connection = getCatalogue().getConnection();
             connection.setAutoCommit(false);

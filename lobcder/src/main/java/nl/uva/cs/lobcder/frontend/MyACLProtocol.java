@@ -17,7 +17,9 @@ import com.bradmcevoy.http.webdav.WebDavProtocol;
 import com.bradmcevoy.property.PropertySource;
 import com.ettrema.http.AccessControlledResource;
 import com.ettrema.http.AccessControlledResource.Priviledge;
+//import com.ettrema.http.acl.DiscretePrincipal;
 import com.ettrema.http.acl.PriviledgeList;
+//import com.ettrema.http.caldav.PrincipalSearchPropertySetReport;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -65,7 +67,7 @@ class MyACLProtocol implements HttpExtension, PropertySource {
     public List<QName> getAllPropertyNames(Resource rsrc) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
-//
+
 //    private final PropertyMap propertyMap;
 //
 //    public MyACLProtocol(WebDavProtocol webdav) {
@@ -206,7 +208,7 @@ class MyACLProtocol implements HttpExtension, PropertySource {
 //
 //        @Override
 //        public String fieldName() {
-//            return Constants.CURRENT_USER_PRIVILEGE_PROP_NAME;
+//            return Constants.DAV_CURRENT_USER_PRIVILAGE_SET.toString();
 //        }
 //
 //        @Override
