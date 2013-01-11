@@ -5,6 +5,7 @@
 package nl.uva.cs.lobcder.webDav.resources;
 
 import com.bradmcevoy.http.CustomProperty;
+import com.bradmcevoy.property.PropertySource;
 import nl.uva.cs.lobcder.resources.LogicalData;
 
 /**

@@ -1,0 +1,23 @@
+As sent by Dmitry in a previous mail :
+The service description.
+1. Each file has "supervised" property. You can get the list of files (their metadata) by GET query /rest//Items?path=/path/to/parent/dir in JSON or XML format
+path parameter shall point to parent directory. The result is the matadata for all files which are located under this parent dir or any subdirectory located in this dir.
+
+2. To set "supervised" property for all files located under a specified directory a client shall send PUT query with URL /rest//Items/TRUE?path=/path/to/parent/dir
+
+3. To reset "supervised" property for all files located under a specified directory a client shall send PUT query with URL /rest//Items/FALSE?path=/path/to/parent/dir
+
+4.To get a metadata in JSON or XML format for a file specified by its UID a client shall send GET query with URL  /rest/Item/{uid} where uid is file unique identifier
+
+5. To set "supervised" flag for a specific file  a client shall send PUT query with URL  /rest/Item/{uid}/supervised/{flag} where uid is file unique identifier and flag is TRUE or FALSE
+
+6. PUT /rest/Item/{uid}/checksum/{checksum} sets checksum (checksum is an integer)
+
+7. PUT /{uid}/lastValidationDate/{lastValidationDate} sets lastValidationDate (lastValidationDate is a number of seconds from 0-date)
+
+LastValidationDate is integer, not DateTime! Take it as a generic Integer property, however I assume it is number of milliseconds from 0-date.
+
+The file properties can also be set/get using PROPFIND/PROPPATCH WebDAV command. They are located under "custom:" namespace  and have names:
+dri-supervised
+dri-checksum
+dri-last-validation-date-ms

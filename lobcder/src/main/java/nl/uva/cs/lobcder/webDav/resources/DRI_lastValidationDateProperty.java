@@ -5,6 +5,7 @@
 package nl.uva.cs.lobcder.webDav.resources;
 
 import com.bradmcevoy.http.CustomProperty;
+import com.bradmcevoy.property.PropertySource;
 import nl.uva.cs.lobcder.resources.LogicalData;
 
 /**
@@ -39,5 +40,5 @@ class DRI_lastValidationDateProperty implements CustomProperty {
         if (v != null) {
             ld.updateLastValidationDate(Long.valueOf(v));
         }
-    }    
+    }
 }

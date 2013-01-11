@@ -172,6 +172,7 @@ public class LogicalData implements Cloneable {
         return clone;
     }
 
+    @Override
     public boolean equals(Object obj) {
         if (obj instanceof LogicalData) {
             return hashCode() == obj.hashCode();
@@ -180,6 +181,7 @@ public class LogicalData implements Cloneable {
         }
     }
 
+    @Override
     public int hashCode() {
         return uid.intValue();
     }
