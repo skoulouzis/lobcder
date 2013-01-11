@@ -9,7 +9,6 @@ import com.bradmcevoy.http.http11.Http11Protocol;
 import com.bradmcevoy.http.webdav.DefaultWebDavResponseHandler;
 import com.bradmcevoy.http.webdav.WebDavProtocol;
 import com.bradmcevoy.http.webdav.WebDavResponseHandler;
-import com.ettrema.http.caldav.CalDavProtocol;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -82,7 +81,7 @@ public class WebDavServlet implements Servlet {
             try {
                 originalRequest.set(req);
                 originalResponse.set(resp);
-                com.bradmcevoy.http.Request request = new com.bradmcevoy.http.ServletRequest(req);
+                com.bradmcevoy.http.Request request = new com.bradmcevoy.http.ServletRequest(req, this.getServletConfig().getServletContext());
                 com.bradmcevoy.http.Response response = new com.bradmcevoy.http.ServletResponse(resp);
 //                    servletHttpManager.process(request, response);
                 httpManager.process(request, response);
@@ -129,12 +128,10 @@ public class WebDavServlet implements Servlet {
 
             WebDavProtocol webdav = new com.bradmcevoy.http.webdav.WebDavProtocol(defaultResponseHandler, hh);
 
-            CalDavProtocol caldav = new com.ettrema.http.caldav.CalDavProtocol(rf, defaultResponseHandler, hh, webdav);
-
-//            ACLProtocol acl = new com.ettrema.http.acl.ACLProtocol(webdav);
-            MyACLProtocol acl = new MyACLProtocol(webdav);
-            ProtocolHandlers protocolHandlers = new com.bradmcevoy.http.ProtocolHandlers(Arrays.asList(http11, webdav, acl, caldav));
-
+//            CalDavProtocol caldav = new com.ettrema.http.caldav.CalDavProtocol(rf, defaultResponseHandler, hh, webdav);
+//            MyACLProtocol acl = new MyACLProtocol(webdav);
+//            ProtocolHandlers protocolHandlers = new com.bradmcevoy.http.ProtocolHandlers(Arrays.asList(http11, webdav, acl, caldav));
+            ProtocolHandlers protocolHandlers = new com.bradmcevoy.http.ProtocolHandlers(Arrays.asList(http11, webdav));
             httpManager = new com.bradmcevoy.http.HttpManager(rf, defaultResponseHandler, protocolHandlers);
 
             Collection<Handler> handlers = httpManager.getAllHandlers();

@@ -24,21 +24,7 @@
             <version>3.2.0</version>
             <type>jar</type>
         </dependency>
-<!--
-If this dependency is here instead of the servlet-api and persistance-api we
-get en error during the DataNucleus enhancement phase: 'Exception in thread
-"main" java.lang.ClassFormatError: Absent Code attribute in method that is not
-native or abstract in class file javax/servlet/http/HttpServlet'. This is
-probably because DataNucleus tries to enhance the javaee-web-api classes but
-there are no implementations to enhance
- -->
-<!--        <dependency>
-            <groupId>javax</groupId>
-            <artifactId>javaee-web-api</artifactId>
-            <version>6.0</version>
-            <scope>provided</scope>
-        </dependency>-->
-        
+	
         
         <dependency>
             <groupId>javax.servlet</groupId>
@@ -57,13 +43,21 @@ there are no implementations to enhance
         <dependency>
             <groupId>com.ettrema</groupId>
             <artifactId>milton-servlet</artifactId>
-            <version>1.7.2</version>
+            <version>1.8.1.4</version>
         </dependency>
         
-        <dependency>
+        
+<!--        <dependency>
             <groupId>com.ettrema</groupId>
             <artifactId>milton-caldav</artifactId>
             <version>1.8.1.3</version>
+        </dependency>-->
+	
+        <dependency>
+            <groupId>com.ettrema</groupId>
+            <artifactId>milton-api</artifactId>
+            <version>1.8.1.4</version>
+            <type>jar</type>
         </dependency>
 
 <!--        <dependency>
@@ -178,12 +172,7 @@ there are no implementations to enhance
             <scope>runtime</scope>
         </dependency>
         
-        <dependency>
-            <groupId>com.ettrema</groupId>
-            <artifactId>milton-api</artifactId>
-            <version>1.8.1.4</version>
-            <type>jar</type>
-        </dependency>
+
         
         <dependency>
             <groupId>mysql</groupId>
@@ -209,43 +198,41 @@ there are no implementations to enhance
     </dependencies>
     
     <repositories>
+      
         <repository>
-            <id>ettrema-repo</id>
-            <url>http://milton.io/maven/</url>
+            <id>repo2_maven_org</id>
+            <url>http://repo2.maven.org/maven2</url>
         </repository>
-
-<!--        <repository>
-            <id>local-repo</id>
-            <url>file://${project.basedir}/src/main/webapp/WEB-INF/lib</url>
-        </repository>-->
-
-
-        <repository>
-            <id>releases</id>
-            <name>Releases</name>
-            <url>https://oss.sonatype.org/content/repositories/releases</url>
-        </repository>
-
         
-<!--        <repository>
-            <id>DataNucleus_Repos2</id>
-            <name>DataNucleus Repository</name>
-            <url>http://www.datanucleus.org/downloads/maven2</url>
-        </repository>-->
+        <repository>
+            <id>mvn-public</id>
+            <name>MVNRepository</name>
+            <url>http://mvnrepository.com</url>
+        </repository>
         
         <repository>
             <id>elab.lab.uvalight.net</id>
             <name>elab.lab.uvalight.net-releases</name>
             <url>https://elab.lab.uvalight.net:8444/artifactory/repo</url>
         </repository>
+	
+<!--       <repository>
+            <id>releases</id>
+            <name>Releases</name>
+            <url>https://oss.sonatype.org/content/repositories/releases</url>
+        </repository>-->
         
-        <repository>
+<!--        <repository>
             <url>http://download.java.net/maven/2/</url>
             <id>restapi</id>
             <layout>default</layout>
             <name>Repository for library Library[restapi]</name>
-        </repository>
+        </repository>-->
     </repositories>
+    
+   
+
+   
 
 <!--    <pluginRepositories>
         <pluginRepository>

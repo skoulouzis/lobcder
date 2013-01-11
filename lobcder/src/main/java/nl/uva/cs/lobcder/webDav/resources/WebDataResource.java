@@ -271,7 +271,6 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
      */
     @Override
     public List<Priviledge> getPriviledges(Auth auth) {
-
         MyPrincipal currentPrincipal = MyAuth.getInstance().checkToken(auth.getPassword());
         List<Priviledge> priviledgesList = new ArrayList<Priviledge>();
 
@@ -315,7 +314,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
 
     @Override
     public void setAccessControlList(Map<Principal, List<Priviledge>> map) {
-//        debug("setAccessControlList");
+        debug("setAccessControlList");
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
