@@ -1091,7 +1091,7 @@ public class WebDAVTest {
                 while (iter.hasNext()) {
                     DavProperty<?> p = iter.nextProperty();
                     assertEquals(p.getName(), driSupervisedName);
-//                    System.out.println("\tName: " + p.getName() + " Values " + p.getValue());
+                    System.out.println("\tName: " + p.getName() + " Values " + p.getValue());
                     assertNotNull(p.getValue());
                     boolean val = Boolean.valueOf(p.getValue().toString());
                     if (new URL(testcol1).getPath().equals(r.getHref())) {
