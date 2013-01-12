@@ -4,16 +4,10 @@
  */
 package nl.uva.cs.lobcder.util;
 
-import com.bradmcevoy.http.Range;
-import com.bradmcevoy.io.StreamUtils;
 import java.io.*;
 import java.nio.ByteBuffer;
-import java.nio.channels.Channels;
-import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
-import java.util.List;
-import org.apache.commons.io.IOUtils;
 
 /**
  *
@@ -111,7 +105,6 @@ public class LobIOUtils {
 //            }
 //        }
 //    }
-    
 //    public static void fastCopy(final InputStream src, final OutputStream dest) throws IOException {
 ////              if both are file streams, use channel IO
 //        if ((dest instanceof FileOutputStream) && (src instanceof FileInputStream)) {
@@ -132,7 +125,6 @@ public class LobIOUtils {
 //        final WritableByteChannel outputChannel = Channels.newChannel(dest);
 //        fastCopy(inputChannel, outputChannel);
 //    }
-
     private static void fastCopy(final ReadableByteChannel src, final WritableByteChannel dest) throws IOException {
         final ByteBuffer buffer = ByteBuffer.allocateDirect(65536);
         while (src.read(buffer) != -1) {
