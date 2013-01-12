@@ -43,7 +43,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
     private LogicalData logicalData;
     private final JDBCatalogue catalogue;
     private static final boolean debug = true;
-    private final Map<QName, String> customProperties = new HashMap<QName, String>();
+    private final Map<QName, Object> customProperties = new HashMap<QName, Object>();
     private final Map<String, PropertyMap.StandardProperty> userPrivledges = new HashMap<String, PropertyMap.StandardProperty>();
     //Collection<Integer> roles = null;
     //private String uname;
@@ -69,7 +69,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
             customProperties.put(Constants.DATA_DIST_PROP_NAME, null);
 
             List<Priviledge> list = getPriviledges(null);
-            customProperties.put(Constants.DAV_CURRENT_USER_PRIVILAGE_SET, null);
+            customProperties.put(Constants.DAV_CURRENT_USER_PRIVILAGE_SET, list);
 //        if(getLogicalData().getSupervised() != null) {
 //            DataDistProperty ddip = new DataDistProperty();
 //            ddip.setFormattedValue(getLogicalData().getSupervised().toString());

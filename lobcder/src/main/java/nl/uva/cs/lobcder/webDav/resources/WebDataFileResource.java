@@ -245,6 +245,7 @@ public class WebDataFileResource extends WebDataResource implements
                 //                    pdri.getData().close();
                 //                }
             } catch (Exception ex) {
+                debug(ex.getMessage());
                 //Ignore
             }
         }
