@@ -47,7 +47,6 @@ public class MyAuth {
                 }
             }
             
-            
             MyPrincipal principal = new MyPrincipal(token, roles);
             return principal;
         } catch (FileNotFoundException ex) {

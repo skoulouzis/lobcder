@@ -9,6 +9,8 @@ import com.bradmcevoy.http.http11.Http11Protocol;
 import com.bradmcevoy.http.webdav.DefaultWebDavResponseHandler;
 import com.bradmcevoy.http.webdav.WebDavProtocol;
 import com.bradmcevoy.http.webdav.WebDavResponseHandler;
+import com.ettrema.http.acl.ACLProtocol;
+import com.ettrema.http.caldav.CalDavProtocol;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -129,11 +131,12 @@ public class WebDavServlet implements Servlet {
             WebDavProtocol webdav = new com.bradmcevoy.http.webdav.WebDavProtocol(defaultResponseHandler, hh);
 
 //            CalDavProtocol caldav = new com.ettrema.http.caldav.CalDavProtocol(rf, defaultResponseHandler, hh, webdav);
-//            MyACLProtocol acl = new MyACLProtocol(webdav);
-//            ProtocolHandlers protocolHandlers = new com.bradmcevoy.http.ProtocolHandlers(Arrays.asList(http11, webdav, acl, caldav));
-            ProtocolHandlers protocolHandlers = new com.bradmcevoy.http.ProtocolHandlers(Arrays.asList(http11, webdav));
+            MyACLProtocol acl = new MyACLProtocol(webdav);
+//            ACLProtocol acl = new ACLProtocol(webdav);
+            ProtocolHandlers protocolHandlers = new com.bradmcevoy.http.ProtocolHandlers(Arrays.asList(http11, webdav, acl));
+//            ProtocolHandlers protocolHandlers = new com.bradmcevoy.http.ProtocolHandlers(Arrays.asList(http11, webdav));
             httpManager = new com.bradmcevoy.http.HttpManager(rf, defaultResponseHandler, protocolHandlers);
-
+            
             Collection<Handler> handlers = httpManager.getAllHandlers();
             for (Handler h : handlers) {
                 debug("httpManager Handler: " + h.getClass().getName());

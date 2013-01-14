@@ -70,9 +70,8 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
             customProperties.put(Constants.DRI_CHECKSUM_PROP_NAME, String.valueOf(getLogicalData().getChecksum()));
             customProperties.put(Constants.DRI_LAST_VALIDATION_DATE_PROP_NAME, String.valueOf(getLogicalData().getLastValidationDate()));
             customProperties.put(Constants.DATA_DIST_PROP_NAME, null);
-
-            List<Priviledge> list = getPriviledges(null);
-            customProperties.put(Constants.DAV_CURRENT_USER_PRIVILAGE_SET, list);
+//            List<Priviledge> list = getPriviledges(null);
+//            customProperties.put(Constants.DAV_CURRENT_USER_PRIVILAGE_SET_PROP_NAME, list);
 //        if(getLogicalData().getSupervised() != null) {
 //            DataDistProperty ddip = new DataDistProperty();
 //            ddip.setFormattedValue(getLogicalData().getSupervised().toString());
@@ -270,7 +269,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
     @Override
     public String getPrincipalURL() {
         debug("getPrincipalURL");
-        return "thePrincipalURL";//getPrincipal().getUserId();
+        return getPrincipal().getUserId();
     }
 
     /**
@@ -289,6 +288,10 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
 
         if (currentPrincipal.getUserId().equals(getLogicalData().getOwner())) {
             priviledgesList.add(Priviledge.ALL);
+            priviledgesList.add(Priviledge.BIND);
+            priviledgesList.add(Priviledge.READ);
+            priviledgesList.add(Priviledge.READ_ACL);
+            priviledgesList.add(Priviledge.UNBIND);
             return priviledgesList;
         }
 
@@ -383,7 +386,6 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
         }
         sb.replace(sb.lastIndexOf(","), sb.length(), "");
         sb.append("]");
-//        DataDistProperty dataDist = new DataDistProperty(sb.toString());
         customProperties.put(Constants.DATA_DIST_PROP_NAME, sb.toString());
     }
 
