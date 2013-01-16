@@ -19,6 +19,7 @@ import com.bradmcevoy.property.PropertySource.PropertySetException;
 import com.ettrema.http.AccessControlledResource;
 import com.ettrema.http.acl.Principal;
 import java.io.IOException;
+import java.net.UnknownHostException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.*;
@@ -362,7 +363,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
         }
     }
 
-    private void initDataDist() throws CatalogueException, SQLException, NotAuthorizedException {
+    private void initDataDist() throws CatalogueException, SQLException, NotAuthorizedException, UnknownHostException {
         Connection connection = getCatalogue().getConnection();
         connection.setAutoCommit(false);
         StringBuilder sb = new StringBuilder();
@@ -372,7 +373,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
             for (WebDataResource r : children) {
                 Collection<PDRI> pdris = getCatalogue().getPdriByGroupId(r.getLogicalData().getPdriGroupId(), connection);
                 for (PDRI p : pdris) {
-                    sb.append(p.getURL());
+                    sb.append(p.getHost());
                     sb.append(",");
                 }
             }
@@ -380,7 +381,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
             Collection<PDRI> pdris = getCatalogue().getPdriByGroupId(getLogicalData().getPdriGroupId(), connection);
             sb.append("[");
             for (PDRI p : pdris) {
-                sb.append(p.getURL());
+                sb.append(p.getHost());
                 sb.append(",");
             }
         }
@@ -407,6 +408,8 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
                 } catch (SQLException ex) {
                     Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
                 } catch (NotAuthorizedException ex) {
+                    Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (UnknownHostException ex) {
                     Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
@@ -440,6 +443,8 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
                 } catch (SQLException ex) {
                     Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
                 } catch (NotAuthorizedException ex) {
+                    Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (UnknownHostException ex) {
                     Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }

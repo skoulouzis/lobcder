@@ -97,7 +97,7 @@ public class JDBCatalogue {
             }
             Long newGroupId = rs.getLong(1);
             String sql = "INSERT INTO pdri_table (url, storageSiteId, pdriGroupId) VALUES("
-                    + "'" + pdri.getURL() + "', " + pdri.getStorageSiteId() + ", " + newGroupId + ")";
+                    + "'" + pdri.getURI() + "', " + pdri.getStorageSiteId() + ", " + newGroupId + ")";
             debug("##########################" + sql);
 
             s.executeUpdate(sql);

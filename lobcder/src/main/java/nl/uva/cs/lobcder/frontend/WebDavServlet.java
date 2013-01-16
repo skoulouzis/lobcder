@@ -74,6 +74,8 @@ public class WebDavServlet implements Servlet {
                     + "\t getQueryString: " + req.getQueryString() + "\n"
                     + "\t getRemoteUser: " + req.getRemoteUser() + "\n"
                     + "\t getRequestURI: " + req.getRequestURI() + "\n"
+                    + "\t getLocalAddr: " + req.getLocalAddr() + "\n"
+                    + "\t getLocalName: " + req.getLocalName() + "\n"
                     + "\t getRequestedSessionId: " + req.getRequestedSessionId());
             //            Collection<Handler> handlers = servletHttpManager.getAllHandlers();
             //            for (Handler h : handlers) {

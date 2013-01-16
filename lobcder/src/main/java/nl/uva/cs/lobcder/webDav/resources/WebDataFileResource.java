@@ -209,7 +209,7 @@ public class WebDataFileResource extends WebDataResource implements
             }
             connection.commit();
             connection.close();
-            debug("--------- " + pdri.getURL());
+            debug("--------- " + pdri.getURI());
             debug("getLength: " + pdri.getLength());
             //IOUtils.copy(pdri.getData(), out); 
 //            fastCopy(pdri.getData(), out);

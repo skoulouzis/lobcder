@@ -6,6 +6,7 @@ package nl.uva.cs.lobcder.resources;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.UnknownHostException;
 
 /**
  *
@@ -15,7 +16,9 @@ public interface PDRI {
 
     public Long getStorageSiteId();
     
-    public String getURL();
+    public String getURI();
+    
+    public String getHost() throws UnknownHostException;
     
     public void delete() throws IOException;
 

@@ -5,6 +5,8 @@
 package nl.uva.cs.lobcder.resources;
 
 import java.io.*;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
@@ -57,7 +59,7 @@ public class SimplePDRI implements PDRI {
     }
 
     @Override
-    public String getURL() {
+    public String getURI() {
         return file_name;
     }
 
@@ -169,5 +171,10 @@ public class SimplePDRI implements PDRI {
         } catch (NoSuchAlgorithmException ex) {
             throw new IOException(ex);
         }
+    }
+
+    @Override
+    public String getHost() throws UnknownHostException {
+        return InetAddress.getLocalHost().getHostName();
     }
 }
