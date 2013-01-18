@@ -39,7 +39,6 @@ public class DRItemsResource {
         }
         javax.naming.Context envContext = (javax.naming.Context) ctx.lookup("java:/comp/env");
         catalogue = (JDBCatalogue) envContext.lookup(jndiName);
-        catalogue = new JDBCatalogue();
     }
 
     @GET

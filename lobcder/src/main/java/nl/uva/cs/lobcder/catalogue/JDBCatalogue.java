@@ -13,8 +13,8 @@ import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.sql.DataSource;
-import nl.uva.cs.lobcder.authdb.MyPrincipal;
-import nl.uva.cs.lobcder.authdb.Permissions;
+import nl.uva.cs.lobcder.auth.MyPrincipal;
+import nl.uva.cs.lobcder.auth.Permissions;
 import nl.uva.cs.lobcder.resources.*;
 import nl.uva.cs.lobcder.util.Constants;
 

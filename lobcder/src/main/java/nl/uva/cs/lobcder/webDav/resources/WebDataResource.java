@@ -30,10 +30,15 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.naming.Context;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
+import javax.sql.DataSource;
 import javax.xml.namespace.QName;
-import nl.uva.cs.lobcder.auth.test.MyAuth;
-import nl.uva.cs.lobcder.authdb.MyPrincipal;
-import nl.uva.cs.lobcder.authdb.Permissions;
+import nl.uva.cs.lobcder.auth.AuthI;
+import nl.uva.cs.lobcder.auth.MyAuthTest;
+import nl.uva.cs.lobcder.auth.MyPrincipal;
+import nl.uva.cs.lobcder.auth.Permissions;
 import nl.uva.cs.lobcder.catalogue.CatalogueException;
 import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
 import nl.uva.cs.lobcder.frontend.WebDavServlet;
@@ -56,6 +61,21 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
     private final Map<String, PropertyMap.StandardProperty> userPrivledges = new HashMap<String, PropertyMap.StandardProperty>();
     //Collection<Integer> roles = null;
     //private String uname;
+    private static AuthI auth;
+
+    static {
+        try {
+            String jndiName = "bean/auth";
+            javax.naming.Context ctx = new InitialContext();
+            if (ctx == null) {
+                throw new Exception("JNDI could not create InitalContext ");
+            }
+            javax.naming.Context envContext = (javax.naming.Context) ctx.lookup("java:/comp/env");
+            auth = (AuthI) envContext.lookup(jndiName);
+        } catch (Exception ex) {
+            Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
 
     public WebDataResource(JDBCatalogue catalogue, LogicalData logicalData) {
         this.logicalData = logicalData;
@@ -113,7 +133,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
 //                + "\t user: " + user
 //                + "\t password: " + password);
         String token = password;
-        MyPrincipal principal = MyAuth.getInstance().checkToken(token);
+        MyPrincipal principal = auth.checkToken(token);
         WebDavServlet.request().setAttribute("vph-user", principal);
         return principal;
     }
@@ -329,7 +349,6 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
         }
         // Do the mapping
         DavPrincipal p = new AbstractDavPrincipal(getPrincipalURL()) {
-
             @Override
             public boolean matches(Auth auth, Resource current) {
                 return true;
@@ -356,7 +375,6 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
         for (String r : getPrincipal().getRoles()) {
             perm = new ArrayList<Priviledge>();
             p = new AbstractDavPrincipal(r) {
-
                 @Override
                 public boolean matches(Auth auth, Resource current) {
                     return true;
@@ -370,7 +388,6 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
         for (String r : getPrincipal().getRoles()) {
             perm = new ArrayList<Priviledge>();
             p = new AbstractDavPrincipal(r) {
-
                 @Override
                 public boolean matches(Auth auth, Resource current) {
                     return true;

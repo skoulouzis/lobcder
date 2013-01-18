@@ -35,7 +35,6 @@ public class DRIDataResource {
         }
         javax.naming.Context envContext = (javax.naming.Context) ctx.lookup("java:/comp/env");
         catalogue = (JDBCatalogue) envContext.lookup(jndiName);
-        catalogue = new JDBCatalogue();
     }
     
     @Path("/{uid}")

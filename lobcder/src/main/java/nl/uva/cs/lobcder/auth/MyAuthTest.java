@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package nl.uva.cs.lobcder.auth.test;
+package nl.uva.cs.lobcder.auth;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import nl.uva.cs.lobcder.authdb.*;
 import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.cs.lobcder.util.PropertiesLoader;
 
@@ -18,14 +17,9 @@ import nl.uva.cs.lobcder.util.PropertiesLoader;
  *
  * @author skoulouz
  */
-public class MyAuth {
-    
-    static MyAuth auth = new MyAuth();
-    
-    public static MyAuth getInstance() {
-        return auth;
-    }
-    
+public class MyAuthTest implements AuthI {
+        
+    @Override
     public MyPrincipal checkToken(String token) {
         try {
             HashSet<String> roles = new HashSet<String>();
@@ -50,9 +44,9 @@ public class MyAuth {
             MyPrincipal principal = new MyPrincipal(token, roles);
             return principal;
         } catch (FileNotFoundException ex) {
-            Logger.getLogger(MyAuth.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(MyAuthTest.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
-            Logger.getLogger(MyAuth.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(MyAuthTest.class.getName()).log(Level.SEVERE, null, ex);
         }
         return null;
     }

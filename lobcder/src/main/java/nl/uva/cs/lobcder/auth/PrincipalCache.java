@@ -12,28 +12,39 @@ import java.util.Map;
  *
  * @author dvasunin
  */
-public class PrincipalCache {
+public class PrincipalCache implements PrincipalCacheI {
     
+    private class TimedPrincipal {
+        public final Date date;
+        public final MyPrincipal principal;
+        TimedPrincipal(Date date, MyPrincipal principal){
+            this.date = date;
+            this.principal = principal;
+        }
+    }
     
-    private Map<String, MyPrincipal> cache = new HashMap<String, MyPrincipal>();
+    private Map<String, TimedPrincipal> cache = new HashMap<String, TimedPrincipal>();
     private long timeout; // msec
     
     public final static PrincipalCache pcache = new PrincipalCache();
     
+    @Override
     public synchronized  MyPrincipal getPrincipal(String token){
-        MyPrincipal res = cache.get(token);
+        TimedPrincipal res = cache.get(token);
         if(res != null){
-            if(new Date(res.getDate().getTime() + getTimeout()).after(new Date()))
-                return res;
-            else
+            if(new Date(res.date.getTime() + getTimeout()).after(new Date())) {
+                return res.principal;
+            }
+            else {
                 cache.remove(token);
+            }
         }
         return null;
     }
     
-    public synchronized void putPrincipal(MyPrincipal principal){
-        cache.put(principal.getToken(), principal);
-        principal.setDate(new Date());
+    @Override
+    public synchronized void putPrincipal(String token, MyPrincipal principal){
+        cache.put(token, new TimedPrincipal(new Date(), principal));
     }
 
     public long getTimeout() {

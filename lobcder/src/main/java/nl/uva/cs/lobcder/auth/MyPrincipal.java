@@ -4,9 +4,7 @@
  */
 package nl.uva.cs.lobcder.auth;
 
-import java.util.Date;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -14,45 +12,51 @@ import java.util.Set;
  * @author dvasunin
  */
 public class MyPrincipal {
-    private String token;
-    private Integer uid;
-    private Set<Integer> roles;
-    private Date date;
 
-    public class Exception extends java.lang.Exception {
-        Exception(String reason){
-            super(reason);
-        }
+    private String userId;
+    private Set<String> roles;
+
+    public MyPrincipal(String userId, Set<String> roles) {
+        this.userId = userId;
+        this.roles = roles;
     }
     
-    
-    public MyPrincipal(String token, List<Integer> blob) throws Exception{
-        if(blob == null || blob.isEmpty())
-            throw new Exception("Wrong parameter");
-        uid = blob.iterator().next();
-        roles = new HashSet<Integer>(blob.subList(1, blob.size()));               
-        this.token = token;
+    public String getUserId() {
+        return userId;
     }
     
-    public String getToken() {
-        return token;
-    }
-
-    public Integer getUid() {
-        return uid;
-    }
-
-
-    public Set<Integer> getRoles() {
+    public Set<String> getRoles(){
         return roles;
     }
-
-    public Date getDate() {
-        return date;
+    
+    public String getRolesStr(){
+        StringBuilder sb = new StringBuilder();
+        boolean first = true;
+        for(String s : roles){
+            if(first){
+                sb.append(s);
+                first = false;
+            } else {
+                sb.append(',').append(s);                
+            }
+        }
+        return sb.toString();
     }
     
-    public void setDate(Date date) {
-        this.date = date;
+    public boolean canRead(Permissions p){
+        if(p.getOwner().equals(userId))
+            return true;
+        Set<String> r1 = new HashSet<String>(roles);
+        r1.retainAll(p.canRead());
+        return !r1.isEmpty();
+    }
+    
+    public boolean canWrite(Permissions p){
+        if(p.getOwner().equals(userId))
+            return true;
+        Set<String> r1 = new HashSet<String>(roles);
+        r1.retainAll(p.canWrite());
+        return !r1.isEmpty();
     }
     
 }
