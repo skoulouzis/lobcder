@@ -17,6 +17,11 @@ import com.bradmcevoy.property.PropertySource.PropertyAccessibility;
 import com.bradmcevoy.property.PropertySource.PropertyMetaData;
 import com.bradmcevoy.property.PropertySource.PropertySetException;
 import com.ettrema.http.AccessControlledResource;
+import com.ettrema.http.acl.DavPrincipal;
+import com.ettrema.http.acl.DavPrincipals;
+import com.ettrema.http.acl.DavPrincipals.AbstractDavPrincipal;
+import com.ettrema.http.acl.DavPrincipals.AllDavPrincipal;
+import com.ettrema.http.acl.DavPrincipals.AuthenticatedDavPrincipal;
 import com.ettrema.http.acl.Principal;
 import java.io.IOException;
 import java.net.UnknownHostException;
@@ -71,6 +76,9 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
             customProperties.put(Constants.DRI_CHECKSUM_PROP_NAME, String.valueOf(getLogicalData().getChecksum()));
             customProperties.put(Constants.DRI_LAST_VALIDATION_DATE_PROP_NAME, String.valueOf(getLogicalData().getLastValidationDate()));
             customProperties.put(Constants.DATA_DIST_PROP_NAME, null);
+
+//            getLogicalData().getPermissions()
+//            customProperties.put(Constants.DAV_ACL_PROP_NAME, null);
 //            List<Priviledge> list = getPriviledges(null);
 //            customProperties.put(Constants.DAV_CURRENT_USER_PRIVILAGE_SET_PROP_NAME, list);
 //        if(getLogicalData().getSupervised() != null) {
@@ -289,10 +297,6 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
 
         if (currentPrincipal.getUserId().equals(getLogicalData().getOwner())) {
             priviledgesList.add(Priviledge.ALL);
-            priviledgesList.add(Priviledge.BIND);
-            priviledgesList.add(Priviledge.READ);
-            priviledgesList.add(Priviledge.READ_ACL);
-            priviledgesList.add(Priviledge.UNBIND);
             return priviledgesList;
         }
 
@@ -319,17 +323,83 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
     @Override
     public Map<Principal, List<Priviledge>> getAccessControlList() {
         debug("getAccessControlList");
-        // Do the mapping 
-//        List<Integer> permArray = this.logicalData.getMetadata().getPermissionArray();
-//        List<Priviledge> perm = new ArrayList<Priviledge>();
-//        HashMap<Principal, List<Priviledge>> acl = new HashMap<Principal, List<Priviledge>>();
-        throw new UnsupportedOperationException("Not supported yets.");
+        //Ceck if this principal can get the acl
+        if (!getPrincipal().canRead(getLogicalData().getPermissions())) {
+//            throw new RuntimeException(new NotAuthorizedException(this));
+        }
+        // Do the mapping
+        DavPrincipal p = new AbstractDavPrincipal(getPrincipalURL()) {
+
+            @Override
+            public boolean matches(Auth auth, Resource current) {
+                return true;
+            }
+        };
+        List<Priviledge> perm = new ArrayList<Priviledge>();
+        if (getPrincipal().canRead(getLogicalData().getPermissions())) {
+            perm.add(Priviledge.READ);
+        }
+        if (getPrincipal().canWrite(getLogicalData().getPermissions())) {
+            perm.add(Priviledge.WRITE);
+        }
+        HashMap<Principal, List<Priviledge>> acl = new HashMap<Principal, List<Priviledge>>();
+        acl.put(p, perm);
+
+        Set<String> roles = getPrincipal().getRoles();
+        for (String r : roles) {
+        }
+
+
+
+        Set<String> readRoles = getLogicalData().getPermissions().canRead();
+        Set<String> writeRoles = getLogicalData().getPermissions().canWrite();
+        for (String r : getPrincipal().getRoles()) {
+            perm = new ArrayList<Priviledge>();
+            p = new AbstractDavPrincipal(r) {
+
+                @Override
+                public boolean matches(Auth auth, Resource current) {
+                    return true;
+                }
+            };
+            if (readRoles.contains(r)) {
+                perm.add(Priviledge.READ);
+            }
+            acl.put(p, perm);
+        }
+        for (String r : getPrincipal().getRoles()) {
+            perm = new ArrayList<Priviledge>();
+            p = new AbstractDavPrincipal(r) {
+
+                @Override
+                public boolean matches(Auth auth, Resource current) {
+                    return true;
+                }
+            };
+            if (writeRoles.contains(r)) {
+                perm.add(Priviledge.WRITE);
+            }
+            acl.put(p, perm);
+        }
+
+        return acl;
     }
 
     @Override
     public void setAccessControlList(Map<Principal, List<Priviledge>> map) {
         debug("setAccessControlList");
-        throw new UnsupportedOperationException("Not supported yet.");
+
+        if (!getLogicalData().getPermissions().getOwner().equals(getPrincipal().getUserId())) {
+            throw new RuntimeException(new NotAuthorizedException(this));
+        }
+        Set<Principal> principals = map.keySet();
+        for (Principal p : principals) {
+            List<Priviledge> davPerm = map.get(p);
+            MyPrincipal princpal = new MyPrincipal(p.getIdenitifer().getValue(), null);
+
+//            Permissions perm = new Permissions(princpal);
+//            getLogicalData().setPermissions(perm);
+        }
     }
 
     /**
@@ -344,10 +414,9 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
      */
     @Override
     public HrefList getPrincipalCollectionHrefs() {
-//        HrefList list = new HrefList();
-//        list.add("/users/");
-//        return list;
-        return null;
+        HrefList list = new HrefList();
+        list.add("");
+        return list;
     }
 
     public PDRI createPDRI(long fileLength, String fileName, Connection connection) throws CatalogueException, IOException {
@@ -398,7 +467,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
     }
 
     @Override
-    public Object getProperty(QName qname) {
+    public Object getProperty(QName qname) throws RuntimeException {
         try {
             debug("getProperty: " + qname);
             initProps();
@@ -408,7 +477,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
                 } catch (SQLException ex) {
                     Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
                 } catch (NotAuthorizedException ex) {
-                    Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
+                    throw new RuntimeException(ex);
                 } catch (UnknownHostException ex) {
                     Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
                 }
@@ -467,7 +536,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
         initProps();
         list.addAll(customProperties.keySet());
         for (QName n : list) {
-            debug("getAllPropertyNames: " + n);
+            debug("Names: " + n);
         }
         return list;
     }
