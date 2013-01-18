@@ -8,14 +8,10 @@ import com.bradmcevoy.http.*;
 import com.bradmcevoy.http.http11.Http11Protocol;
 import com.bradmcevoy.http.webdav.DefaultWebDavResponseHandler;
 import com.bradmcevoy.http.webdav.WebDavProtocol;
-import com.bradmcevoy.http.webdav.WebDavResponseHandler;
-import com.ettrema.http.acl.ACLProtocol;
 import com.ettrema.http.caldav.CalDavProtocol;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.servlet.Servlet;
@@ -25,7 +21,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
 import nl.uva.cs.lobcder.webDav.resources.WebDataResourceFactory;
-import nl.uva.cs.lobcder.webDav.resources.WebDataResourceFactoryFactory;
 
 /**
  *
@@ -38,7 +33,7 @@ public class WebDavServlet implements Servlet {
     protected com.bradmcevoy.http.ServletHttpManager servletHttpManager;
     private ServletConfig config;
 //    private Logger log = LoggerFactory.getLogger(this.getClass());
-    private static final boolean debug = true;
+    private static final boolean debug = false;
     private ResourceFactory rf;
     private JDBCatalogue catalogue = null;
 
