@@ -168,65 +168,65 @@ public class TestWebWAVFS {
 
         return allProp;
     }
+
+    @Test
+    public void testSetGetPropertySet() throws IOException, DavException {
+        String testFileURI1 = this.uri.toASCIIString() + TestSettings.TEST_FILE_NAME1 + ".txt";
+        PutMethod put = new PutMethod(testFileURI1);
+        put.setRequestEntity(new StringRequestEntity(TestSettings.TEST_DATA, "text/plain", "UTF-8"));
+        int status = client1.executeMethod(put);
+        assertEquals(HttpStatus.SC_CREATED, status);
+
+        PropFindMethod propFind = new PropFindMethod(testFileURI1, DavConstants.PROPFIND_ALL_PROP_INCLUDE, DavConstants.DEPTH_0);
+        status = client1.executeMethod(propFind);
+        assertEquals(HttpStatus.SC_MULTI_STATUS, status);
+        MultiStatus multiStatus = propFind.getResponseBodyAsMultiStatus();
+        MultiStatusResponse[] responses = multiStatus.getResponses();
+        assertEquals(HttpStatus.SC_OK, responses[0].getStatus()[0].getStatusCode());
+        DavPropertySet allProp = getProperties(responses[0]);
+
+//        DavPropertyIterator iter = allProp.iterator();
+//        while (iter.hasNext()) {
+//            DavProperty<?> p = iter.nextProperty();
+//            System.out.println("P: " + p.getName() + " " + p.getValue());
+//        }
+
+        String isCollStr = (String) allProp.get(DavPropertyName.ISCOLLECTION).getValue();
+        Boolean isCollection = Boolean.getBoolean(isCollStr);
+        assertFalse(isCollection);
+        String lenStr = (String) allProp.get(DavPropertyName.GETCONTENTLENGTH).getValue();
+        assertEquals(Long.valueOf(lenStr), Long.valueOf(TestSettings.TEST_DATA.length()));
+        String contentType = (String) allProp.get(DavPropertyName.GETCONTENTTYPE).getValue();
+        //This is a bug on the milton-api. See http://jira.ettrema.com:8080/browse/MIL-119
+//        assertEquals("text/plain; charset=UTF-8", contentType);
+        assertTrue(contentType.contains("text"));
+
+
+//        DavPropertySet newProps = new DavPropertySet();
+//        DavPropertyNameSet removeProperties = new DavPropertyNameSet();
 //
-//    @Test
-//    public void testSetGetPropertySet() throws IOException, DavException {
-//        String testFileURI1 = this.uri.toASCIIString() + TestSettings.TEST_FILE_NAME1 + ".txt";
-//        PutMethod put = new PutMethod(testFileURI1);
-//        put.setRequestEntity(new StringRequestEntity(TestSettings.TEST_DATA, "text/plain", "UTF-8"));
-//        int status = client1.executeMethod(put);
-//        assertEquals(HttpStatus.SC_CREATED, status);
+//        DavProperty testProp = new DefaultDavProperty("TheAnswer", "42", DavConstants.NAMESPACE);
+//        newProps.add(testProp);
+//        PropPatchMethod proPatch = new PropPatchMethod(testFileURI1, newProps, removeProperties);
 //
-//        PropFindMethod propFind = new PropFindMethod(testFileURI1, DavConstants.PROPFIND_ALL_PROP_INCLUDE, DavConstants.DEPTH_0);
-//        status = client1.executeMethod(propFind);
+//        status = client.executeMethod(proPatch);
 //        assertEquals(HttpStatus.SC_MULTI_STATUS, status);
-//        MultiStatus multiStatus = propFind.getResponseBodyAsMultiStatus();
-//        MultiStatusResponse[] responses = multiStatus.getResponses();
-//        assertEquals(HttpStatus.SC_OK, responses[0].getStatus()[0].getStatusCode());
-//        DavPropertySet allProp = getProperties(responses[0]);
+//        
+//        
+//        multiStatus = propFind.getResponseBodyAsMultiStatus();
+//        responses = multiStatus.getResponses();
+//        
+//        allProp = getProperties(responses[0]);
 //
-////        DavPropertyIterator iter = allProp.iterator();
-////        while (iter.hasNext()) {
-////            DavProperty<?> p = iter.nextProperty();
-////            System.out.println("P: " + p.getName() + " " + p.getValue());
-////        }
-//
-//        String isCollStr = (String) allProp.get(DavPropertyName.ISCOLLECTION).getValue();
-//        Boolean isCollection = Boolean.getBoolean(isCollStr);
-//        assertFalse(isCollection);
-//        String lenStr = (String) allProp.get(DavPropertyName.GETCONTENTLENGTH).getValue();
-//        assertEquals(Long.valueOf(lenStr), Long.valueOf(TestSettings.TEST_DATA.length()));
-//        String contentType = (String) allProp.get(DavPropertyName.GETCONTENTTYPE).getValue();
-//        //This is a bug on the milton-api. See http://jira.ettrema.com:8080/browse/MIL-119
-////        assertEquals("text/plain; charset=UTF-8", contentType);
-//        assertTrue(contentType.contains("text"));
-//
-//
-////        DavPropertySet newProps = new DavPropertySet();
-////        DavPropertyNameSet removeProperties = new DavPropertyNameSet();
-////
-////        DavProperty testProp = new DefaultDavProperty("TheAnswer", "42", DavConstants.NAMESPACE);
-////        newProps.add(testProp);
-////        PropPatchMethod proPatch = new PropPatchMethod(testFileURI1, newProps, removeProperties);
-////
-////        status = client.executeMethod(proPatch);
-////        assertEquals(HttpStatus.SC_MULTI_STATUS, status);
-////        
-////        
-////        multiStatus = propFind.getResponseBodyAsMultiStatus();
-////        responses = multiStatus.getResponses();
-////        
-////        allProp = getProperties(responses[0]);
-////
-////        DavPropertyIterator iter = allProp.iterator();
-////        while (iter.hasNext()) {
-////            DavProperty<?> p = iter.nextProperty();
-////            System.out.println("P: " + p.getName() + " " + p.getValue());
-////        }
-//
-//        delete(testFileURI1);
-//    }
-//
+//        DavPropertyIterator iter = allProp.iterator();
+//        while (iter.hasNext()) {
+//            DavProperty<?> p = iter.nextProperty();
+//            System.out.println("P: " + p.getName() + " " + p.getValue());
+//        }
+
+        delete(testFileURI1);
+    }
+
 
     @Test
     public void testPROPFIND_PUT_PROPFIND_GET_PUT() throws IOException, DavException {
