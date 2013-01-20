@@ -5,11 +5,18 @@
 package nl.uva.cs.lobcder.webDav.resources;
 
 import com.bradmcevoy.http.Auth;
+import com.bradmcevoy.http.LockInfo;
+import com.bradmcevoy.http.LockResult;
+import com.bradmcevoy.http.LockTimeout;
+import com.bradmcevoy.http.LockToken;
+import com.bradmcevoy.http.LockableResource;
 import com.bradmcevoy.http.PropFindableResource;
 import com.bradmcevoy.http.Request;
 import com.bradmcevoy.http.Request.Method;
 import com.bradmcevoy.http.Resource;
+import com.bradmcevoy.http.exceptions.LockedException;
 import com.bradmcevoy.http.exceptions.NotAuthorizedException;
+import com.bradmcevoy.http.exceptions.PreConditionFailedException;
 import com.bradmcevoy.http.values.HrefList;
 import com.bradmcevoy.http.webdav.PropertyMap;
 import com.bradmcevoy.property.MultiNamespaceCustomPropertyResource;
@@ -18,10 +25,7 @@ import com.bradmcevoy.property.PropertySource.PropertyMetaData;
 import com.bradmcevoy.property.PropertySource.PropertySetException;
 import com.ettrema.http.AccessControlledResource;
 import com.ettrema.http.acl.DavPrincipal;
-import com.ettrema.http.acl.DavPrincipals;
 import com.ettrema.http.acl.DavPrincipals.AbstractDavPrincipal;
-import com.ettrema.http.acl.DavPrincipals.AllDavPrincipal;
-import com.ettrema.http.acl.DavPrincipals.AuthenticatedDavPrincipal;
 import com.ettrema.http.acl.Principal;
 import java.io.IOException;
 import java.net.UnknownHostException;
@@ -30,13 +34,9 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.naming.Context;
 import javax.naming.InitialContext;
-import javax.naming.NamingException;
-import javax.sql.DataSource;
 import javax.xml.namespace.QName;
 import nl.uva.cs.lobcder.auth.AuthI;
-import nl.uva.cs.lobcder.auth.MyAuthTest;
 import nl.uva.cs.lobcder.auth.MyPrincipal;
 import nl.uva.cs.lobcder.auth.Permissions;
 import nl.uva.cs.lobcder.catalogue.CatalogueException;
@@ -52,7 +52,7 @@ import nl.uva.cs.lobcder.util.Constants;
  *
  * @author S. Koulouzis
  */
-public class WebDataResource implements PropFindableResource, Resource, AccessControlledResource, MultiNamespaceCustomPropertyResource {//, ReplaceableResource {
+public class WebDataResource implements PropFindableResource, Resource, AccessControlledResource, MultiNamespaceCustomPropertyResource, LockableResource {
 
     private LogicalData logicalData;
     private final JDBCatalogue catalogue;
@@ -76,6 +76,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
             Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
+    private CurrentLock lock;
 
     public WebDataResource(JDBCatalogue catalogue, LogicalData logicalData) {
         this.logicalData = logicalData;
@@ -349,6 +350,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
         }
         // Do the mapping
         DavPrincipal p = new AbstractDavPrincipal(getPrincipalURL()) {
+
             @Override
             public boolean matches(Auth auth, Resource current) {
                 return true;
@@ -364,17 +366,12 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
         HashMap<Principal, List<Priviledge>> acl = new HashMap<Principal, List<Priviledge>>();
         acl.put(p, perm);
 
-        Set<String> roles = getPrincipal().getRoles();
-        for (String r : roles) {
-        }
-
-
-
         Set<String> readRoles = getLogicalData().getPermissions().canRead();
         Set<String> writeRoles = getLogicalData().getPermissions().canWrite();
         for (String r : getPrincipal().getRoles()) {
             perm = new ArrayList<Priviledge>();
             p = new AbstractDavPrincipal(r) {
+
                 @Override
                 public boolean matches(Auth auth, Resource current) {
                     return true;
@@ -388,6 +385,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
         for (String r : getPrincipal().getRoles()) {
             perm = new ArrayList<Priviledge>();
             p = new AbstractDavPrincipal(r) {
+
                 @Override
                 public boolean matches(Auth auth, Resource current) {
                     return true;
@@ -492,11 +490,11 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
                 try {
                     initDataDist();
                 } catch (SQLException ex) {
-                    Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
+                    throw new RuntimeException(ex);
                 } catch (NotAuthorizedException ex) {
                     throw new RuntimeException(ex);
                 } catch (UnknownHostException ex) {
-                    Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
+                    throw new RuntimeException(ex);
                 }
             }
             if (customProperties.containsKey(qname)) {
@@ -505,13 +503,16 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
                 return PropertyMetaData.UNKNOWN;
             }
         } catch (CatalogueException ex) {
-            Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
+            throw new RuntimeException(ex);
         }
-        return PropertyMetaData.UNKNOWN;
+//        return PropertyMetaData.UNKNOWN;
     }
 
     @Override
     public void setProperty(QName qname, Object o) throws PropertySetException, NotAuthorizedException {
+        if (!getPrincipal().canWrite(getLogicalData().getPermissions())) {
+            throw new NotAuthorizedException(this);
+        }
         debug("setProperty: " + qname + " " + o);
         if (o != null) {
             customProperties.put(qname, (String) o);
@@ -527,11 +528,11 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
                 try {
                     initDataDist();
                 } catch (SQLException ex) {
-                    Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
+                    throw new RuntimeException(ex);
                 } catch (NotAuthorizedException ex) {
-                    Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
+                    throw new RuntimeException(ex);
                 } catch (UnknownHostException ex) {
-                    Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
+                    throw new RuntimeException(ex);
                 }
             }
             initProps();
@@ -566,5 +567,80 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
         } else if (qname.equals(Constants.DRI_LAST_VALIDATION_DATE_PROP_NAME)) {
             getLogicalData().updateLastValidationDate(Long.valueOf(value));
         }
+    }
+
+    @Override
+    public LockResult lock(LockTimeout timeout, LockInfo lockInfo) throws NotAuthorizedException, PreConditionFailedException, LockedException {
+//        if (!getPrincipal().canWrite(getLogicalData().getPermissions())) {
+//            throw new NotAuthorizedException(this);
+//        }
+        LockTimeout.DateAndSeconds lockedUntil = timeout.getLockedUntil(60l, 3600l);
+        // create a new lock
+        lock = new CurrentLock(lockedUntil.date, UUID.randomUUID().toString(), lockedUntil.seconds, lockInfo);
+        LockToken token = new LockToken();
+        token.info = lockInfo;
+        token.timeout = new LockTimeout(lockedUntil.seconds);
+
+        token.tokenId = this.lock.lockId;
+        return LockResult.success(token);
+
+    }
+
+    @Override
+    public LockResult refreshLock(String token) throws NotAuthorizedException, PreConditionFailedException {
+        // reset the current token
+        if (lock == null) {
+            throw new RuntimeException("not locked");
+        }
+
+        if (!lock.lockId.equals(token)) {
+            throw new RuntimeException("invalid lock id");
+        }
+//        if (!getPrincipal().canWrite(getLogicalData().getPermissions())) {
+//            throw new NotAuthorizedException(this);
+//        }
+
+        this.lock = lock.refresh();
+        //create the lock token with new details
+        LockToken lockToken = new LockToken();
+        lockToken.info = lock.lockInfo;
+        lockToken.timeout = new LockTimeout(lock.seconds);
+        lockToken.tokenId = lock.lockId;
+        return LockResult.success(lockToken);
+
+    }
+
+    @Override
+    public void unlock(String token) throws NotAuthorizedException, PreConditionFailedException {
+        if (lock == null) {
+            return;
+        }
+
+        if (!lock.lockId.equals(token)) {
+            throw new RuntimeException("Invalid lock token");
+
+        }
+//        if (!getPrincipal().canWrite(getLogicalData().getPermissions())) {
+//            throw new NotAuthorizedException(this);
+//        }
+        this.lock = null;
+    }
+
+    @Override
+    public LockToken getCurrentLock() {
+//        MyPrincipal thisPrincipal = getPrincipal();
+//        Permissions perm = getLogicalData().getPermissions();
+//        boolean canRead = thisPrincipal.canRead(perm);
+//        if (! canRead ) {
+//            throw new RuntimeException("Not Authorized to get lock");
+//        }
+        if (this.lock == null) {
+            return null;
+        }
+        LockToken token = new LockToken();
+        token.info = this.lock.lockInfo;
+        token.timeout = new LockTimeout(this.lock.seconds);
+        token.tokenId = this.lock.lockId;
+        return token;
     }
 }
