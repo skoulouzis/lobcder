@@ -1249,6 +1249,300 @@ public class JDBCatalogue {
         }
     }
 
+    public void setLockTokenID(Long uid, String lockTokenID, Connection connection) throws CatalogueException {
+        PreparedStatement ps = null;
+        boolean connectionIsProvided = (connection == null) ? false : true;
+        boolean connectionAutocommit = false;
+        try {
+            if (connection == null) {
+                connection = getConnection();
+                connection.setAutoCommit(false);
+            } else {
+                connectionAutocommit = connection.getAutoCommit();
+                connection.setAutoCommit(false);
+            }
+            ps = connection.prepareStatement("UPDATE ldata_table SET lockTokenID = ? WHERE uid = ?");
+            ps.setString(1, lockTokenID);
+            ps.setLong(2, uid);
+            ps.executeUpdate();
+            ps.close();
+        } catch (Exception e) {
+            try {
+                if (ps != null && !ps.isClosed()) {
+                    ps.close();
+                    ps = null;
+                }
+                if (!connectionIsProvided && !connection.isClosed()) {
+                    connection.rollback();
+                    connection.close();
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            throw new CatalogueException(e.getMessage());
+        } finally {
+            try {
+                if (ps != null && !ps.isClosed()) {
+                    ps.close();
+                }
+                if (!connectionIsProvided && !connection.isClosed()) {
+                    connection.commit();
+                    connection.close();
+                }
+                if (connectionIsProvided && !connection.isClosed()) {
+                    connection.setAutoCommit(connectionAutocommit);
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+
+    public void setLockTimeout(Long uid, Long lockTimeout, Connection connection) throws CatalogueException {
+        PreparedStatement ps = null;
+        boolean connectionIsProvided = (connection == null) ? false : true;
+        boolean connectionAutocommit = false;
+        try {
+            if (connection == null) {
+                connection = getConnection();
+                connection.setAutoCommit(false);
+            } else {
+                connectionAutocommit = connection.getAutoCommit();
+                connection.setAutoCommit(false);
+            }
+            ps = connection.prepareStatement("UPDATE ldata_table SET lockTimeout = ? WHERE uid = ?");
+            ps.setLong(1, lockTimeout);
+            ps.setLong(2, uid);
+            ps.executeUpdate();
+            ps.close();
+        } catch (Exception e) {
+            try {
+                if (ps != null && !ps.isClosed()) {
+                    ps.close();
+                    ps = null;
+                }
+                if (!connectionIsProvided && !connection.isClosed()) {
+                    connection.rollback();
+                    connection.close();
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            throw new CatalogueException(e.getMessage());
+        } finally {
+            try {
+                if (ps != null && !ps.isClosed()) {
+                    ps.close();
+                }
+                if (!connectionIsProvided && !connection.isClosed()) {
+                    connection.commit();
+                    connection.close();
+                }
+                if (connectionIsProvided && !connection.isClosed()) {
+                    connection.setAutoCommit(connectionAutocommit);
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+
+    public void setLockDepth(Long uid, String lockDepth, Connection connection) throws CatalogueException {
+        PreparedStatement ps = null;
+        boolean connectionIsProvided = (connection == null) ? false : true;
+        boolean connectionAutocommit = false;
+        try {
+            if (connection == null) {
+                connection = getConnection();
+                connection.setAutoCommit(false);
+            } else {
+                connectionAutocommit = connection.getAutoCommit();
+                connection.setAutoCommit(false);
+            }
+            ps = connection.prepareStatement("UPDATE ldata_table SET lockDepth = ? WHERE uid = ?");
+            ps.setString(1, lockDepth);
+            ps.setLong(2, uid);
+            ps.executeUpdate();
+            ps.close();
+        } catch (Exception e) {
+            try {
+                if (ps != null && !ps.isClosed()) {
+                    ps.close();
+                    ps = null;
+                }
+                if (!connectionIsProvided && !connection.isClosed()) {
+                    connection.rollback();
+                    connection.close();
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            throw new CatalogueException(e.getMessage());
+        } finally {
+            try {
+                if (ps != null && !ps.isClosed()) {
+                    ps.close();
+                }
+                if (!connectionIsProvided && !connection.isClosed()) {
+                    connection.commit();
+                    connection.close();
+                }
+                if (connectionIsProvided && !connection.isClosed()) {
+                    connection.setAutoCommit(connectionAutocommit);
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+
+    public void setLockByUser(Long uid, String lockedByUser, Connection connection) throws CatalogueException {
+        PreparedStatement ps = null;
+        boolean connectionIsProvided = (connection == null) ? false : true;
+        boolean connectionAutocommit = false;
+        try {
+            if (connection == null) {
+                connection = getConnection();
+                connection.setAutoCommit(false);
+            } else {
+                connectionAutocommit = connection.getAutoCommit();
+                connection.setAutoCommit(false);
+            }
+            ps = connection.prepareStatement("UPDATE ldata_table SET lockedByUser = ? WHERE uid = ?");
+            ps.setString(1, lockedByUser);
+            ps.setLong(2, uid);
+            ps.executeUpdate();
+            ps.close();
+        } catch (Exception e) {
+            try {
+                if (ps != null && !ps.isClosed()) {
+                    ps.close();
+                    ps = null;
+                }
+                if (!connectionIsProvided && !connection.isClosed()) {
+                    connection.rollback();
+                    connection.close();
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            throw new CatalogueException(e.getMessage());
+        } finally {
+            try {
+                if (ps != null && !ps.isClosed()) {
+                    ps.close();
+                }
+                if (!connectionIsProvided && !connection.isClosed()) {
+                    connection.commit();
+                    connection.close();
+                }
+                if (connectionIsProvided && !connection.isClosed()) {
+                    connection.setAutoCommit(connectionAutocommit);
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+
+    public void setLockScope(Long uid, String lockScope, Connection connection) throws CatalogueException {
+        PreparedStatement ps = null;
+        boolean connectionIsProvided = (connection == null) ? false : true;
+        boolean connectionAutocommit = false;
+        try {
+            if (connection == null) {
+                connection = getConnection();
+                connection.setAutoCommit(false);
+            } else {
+                connectionAutocommit = connection.getAutoCommit();
+                connection.setAutoCommit(false);
+            }
+            ps = connection.prepareStatement("UPDATE ldata_table SET lockScope = ? WHERE uid = ?");
+            ps.setString(1, lockScope);
+            ps.setLong(2, uid);
+            ps.executeUpdate();
+            ps.close();
+        } catch (Exception e) {
+            try {
+                if (ps != null && !ps.isClosed()) {
+                    ps.close();
+                    ps = null;
+                }
+                if (!connectionIsProvided && !connection.isClosed()) {
+                    connection.rollback();
+                    connection.close();
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            throw new CatalogueException(e.getMessage());
+        } finally {
+            try {
+                if (ps != null && !ps.isClosed()) {
+                    ps.close();
+                }
+                if (!connectionIsProvided && !connection.isClosed()) {
+                    connection.commit();
+                    connection.close();
+                }
+                if (connectionIsProvided && !connection.isClosed()) {
+                    connection.setAutoCommit(connectionAutocommit);
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+
+    public void setLockType(Long uid, String lockType, Connection connection) throws CatalogueException {
+        PreparedStatement ps = null;
+        boolean connectionIsProvided = (connection == null) ? false : true;
+        boolean connectionAutocommit = false;
+        try {
+            if (connection == null) {
+                connection = getConnection();
+                connection.setAutoCommit(false);
+            } else {
+                connectionAutocommit = connection.getAutoCommit();
+                connection.setAutoCommit(false);
+            }
+            ps = connection.prepareStatement("UPDATE ldata_table SET lockType = ? WHERE uid = ?");
+            ps.setString(1, lockType);
+            ps.setLong(2, uid);
+            ps.executeUpdate();
+            ps.close();
+        } catch (Exception e) {
+            try {
+                if (ps != null && !ps.isClosed()) {
+                    ps.close();
+                    ps = null;
+                }
+                if (!connectionIsProvided && !connection.isClosed()) {
+                    connection.rollback();
+                    connection.close();
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            throw new CatalogueException(e.getMessage());
+        } finally {
+            try {
+                if (ps != null && !ps.isClosed()) {
+                    ps.close();
+                }
+                if (!connectionIsProvided && !connection.isClosed()) {
+                    connection.commit();
+                    connection.close();
+                }
+                if (connectionIsProvided && !connection.isClosed()) {
+                    connection.setAutoCommit(connectionAutocommit);
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+
     private void debug(String msg) {
         if (debug) {
             System.err.println(this.getClass().getName() + ": " + msg);
@@ -1275,53 +1569,5 @@ public class JDBCatalogue {
                 }
             }
         };
-    }
-
-    public void setLockTokenID(Long uid, String tokenID, Connection connection) {
-        throw new UnsupportedOperationException("Not yet implemented");
-    }
-
-    public void setLockTimeout(Long uid, Long lockTimeout, Connection connection) {
-        throw new UnsupportedOperationException("Not yet implemented");
-    }
-
-    public void setLockDepth(Long uid, String lockDepth, Connection connection) {
-        throw new UnsupportedOperationException("Not yet implemented");
-    }
-
-    public void setLockByUser(Long uid, String lockedByUser, Connection connection) {
-        throw new UnsupportedOperationException("Not yet implemented");
-    }
-
-    public void setLockScope(Long uid, String lockScope, Connection connection) {
-        throw new UnsupportedOperationException("Not yet implemented");
-    }
-
-    public void setLockType(Long uid, String lockType, Connection connection) {
-        throw new UnsupportedOperationException("Not yet implemented");
-    }
-
-    public String getLockTokenID(Long uid, Connection connection) {
-        throw new UnsupportedOperationException("Not yet implemented");
-    }
-
-    public String getLockScope(Long uid, Connection connection) {
-        throw new UnsupportedOperationException("Not yet implemented");
-    }
-
-    public String getLockType(Long uid, Connection connection) {
-        throw new UnsupportedOperationException("Not yet implemented");
-    }
-
-    public String getLockedByUser(Long uid, Connection connection) {
-        throw new UnsupportedOperationException("Not yet implemented");
-    }
-
-    public String getLockDepth(Long uid, Connection connection) {
-        throw new UnsupportedOperationException("Not yet implemented");
-    }
-
-    public Long getLockTimeout(Long uid, Connection connection) {
-        throw new UnsupportedOperationException("Not yet implemented");
     }
 }

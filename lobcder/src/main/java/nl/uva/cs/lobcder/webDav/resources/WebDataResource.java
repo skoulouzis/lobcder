@@ -571,49 +571,63 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
 
     @Override
     public LockResult lock(LockTimeout timeout, LockInfo lockInfo) throws NotAuthorizedException, PreConditionFailedException, LockedException {
-//        if (!getPrincipal().canWrite(getLogicalData().getPermissions())) {
-//            throw new NotAuthorizedException(this);
-//        }
-        
-        LockToken token = new LockToken(UUID.randomUUID().toString(), lockInfo, timeout);
-        
-        getLogicalData().lock(token);
-        return LockResult.success(token);
+        try {
+            //        if (!getPrincipal().canWrite(getLogicalData().getPermissions())) {
+            //        }
+            //        }
+
+            LockToken token = new LockToken(UUID.randomUUID().toString(), lockInfo, timeout);
+
+            getLogicalData().lock(token);
+            return LockResult.success(token);
+        } catch (CatalogueException ex) {
+            throw new PreConditionFailedException(this);
+        }
 
     }
 
     @Override
     public LockResult refreshLock(String token) throws NotAuthorizedException, PreConditionFailedException {
-        // reset the current token
-        if (getLogicalData().getCurrentLock() == null) {
-            throw new RuntimeException("not locked");
-        }
+        try {
+            // reset the current token
+            if (getLogicalData().getCurrentLock() == null) {
+                throw new RuntimeException("not locked");
+            }
 
-        if (!getLogicalData().getCurrentLock().tokenId.equals(token)) {
-            throw new RuntimeException("invalid lock id");
+            if (!getLogicalData().getCurrentLock().tokenId.equals(token)) {
+                throw new RuntimeException("invalid lock id");
+            }
+            //        if (!getPrincipal().canWrite(getLogicalData().getPermissions())) {
+            //            throw new NotAuthorizedException(this);
+            //        }
+            LockToken lockToken = getLogicalData().refreshLock(token);
+            return LockResult.success(lockToken);
+        } catch (RuntimeException ex) {
+            throw ex;
+        } catch (CatalogueException ex) {
+            throw new PreConditionFailedException(this);
         }
-//        if (!getPrincipal().canWrite(getLogicalData().getPermissions())) {
-//            throw new NotAuthorizedException(this);
-//        }
-        LockToken lockToken = getLogicalData().refreshLock(token);
-        return LockResult.success(lockToken);
 
     }
 
     @Override
     public void unlock(String token) throws NotAuthorizedException, PreConditionFailedException {
-        if (getLogicalData().getCurrentLock() == null) {
-            return;
-        }
+        try {
+            if (getLogicalData().getCurrentLock() == null) {
+                return;
+            }
 
-        if (!getLogicalData().getCurrentLock().tokenId.equals(token)) {
-            throw new RuntimeException("Invalid lock token");
+            if (!getLogicalData().getCurrentLock().tokenId.equals(token)) {
+                throw new RuntimeException("Invalid lock token");
 
+            }
+            //        if (!getPrincipal().canWrite(getLogicalData().getPermissions())) {
+            //            throw new NotAuthorizedException(this);
+            //        }
+            getLogicalData().unlock();
+        } catch (CatalogueException ex) {
+            throw new PreConditionFailedException(this);
         }
-//        if (!getPrincipal().canWrite(getLogicalData().getPermissions())) {
-//            throw new NotAuthorizedException(this);
-//        }
-        getLogicalData().unlock();
     }
 
     @Override
