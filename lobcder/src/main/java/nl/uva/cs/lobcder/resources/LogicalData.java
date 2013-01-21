@@ -5,6 +5,10 @@
 package nl.uva.cs.lobcder.resources;
 
 import com.bradmcevoy.common.Path;
+import com.bradmcevoy.http.LockInfo;
+import com.bradmcevoy.http.LockTimeout;
+import com.bradmcevoy.http.LockToken;
+import java.sql.Connection;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -296,6 +300,63 @@ public class LogicalData implements Cloneable {
             catalogue.setLastValidationDate(uid, aLong, null);
         } catch (Exception ex) {
             Logger.getLogger(LogicalData.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    public void lock(LockToken lockToken) {
+        Connection connection = null;
+        String tokenID = lockToken.tokenId;
+        catalogue.setLockTokenID(uid, tokenID, connection);
+        Long lockTimeout = lockToken.timeout.getSeconds();
+        catalogue.setLockTimeout(uid, lockTimeout, connection);
+        String lockDepth = lockToken.info.depth.toString();
+        catalogue.setLockDepth(uid, lockDepth, connection);
+        String lockedByUser = lockToken.info.lockedByUser;
+        catalogue.setLockByUser(uid, lockedByUser, connection);
+        String lockScope = lockToken.info.scope.toString();
+        catalogue.setLockScope(uid, lockScope, connection);
+        String lockType = lockToken.info.type.toString();
+        catalogue.setLockType(uid, lockType, connection);
+    }
+
+    public void unlock() {
+        Connection connection = null;
+        catalogue.setLockTokenID(uid, null, connection);
+    }
+
+    public LockToken refreshLock(String token) throws RuntimeException {
+        Connection connection = null;
+
+
+        Long lockTimeout = System.currentTimeMillis() + Constants.LOCK_TIME;
+        catalogue.setLockTimeout(uid, lockTimeout, connection);
+
+
+        String scope = catalogue.getLockScope(uid, connection);
+        String type = catalogue.getLockType(uid, connection);
+        String lockedByUser = catalogue.getLockedByUser(uid, connection);
+        String depth = catalogue.getLockDepth(uid, connection);
+        LockInfo lockInfo = new LockInfo(LockInfo.LockScope.valueOf(scope), LockInfo.LockType.valueOf(type), lockedByUser, LockInfo.LockDepth.valueOf(depth));
+//        Long time = catalogue.getLockTimeout(uid, connection);
+        LockTimeout lockTimeOut = new LockTimeout(lockTimeout);
+        return new LockToken(token, lockInfo, lockTimeOut);
+    }
+
+    public LockToken getCurrentLock() {
+        Connection connection = null;
+        String lockTokenID = catalogue.getLockTokenID(uid, connection);
+
+        if (lockTokenID == null) {
+            return null;
+        } else {
+            String scope = catalogue.getLockScope(uid, connection);
+            String type = catalogue.getLockType(uid, connection);
+            String lockedByUser = catalogue.getLockedByUser(uid, connection);
+            String depth = catalogue.getLockDepth(uid, connection);
+            LockInfo lockInfo = new LockInfo(LockInfo.LockScope.valueOf(scope), LockInfo.LockType.valueOf(type), lockedByUser, LockInfo.LockDepth.valueOf(depth));
+            Long time = catalogue.getLockTimeout(uid, connection);
+            LockTimeout lockTimeOut = new LockTimeout(time);
+            return new LockToken(lockTokenID, lockInfo, lockTimeOut);
         }
     }
 }

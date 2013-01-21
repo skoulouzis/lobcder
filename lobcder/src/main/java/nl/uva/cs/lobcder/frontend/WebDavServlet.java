@@ -30,10 +30,10 @@ public class WebDavServlet implements Servlet {
 
     private static final ThreadLocal<HttpServletRequest> originalRequest = new ThreadLocal<HttpServletRequest>();
     private static final ThreadLocal<HttpServletResponse> originalResponse = new ThreadLocal<HttpServletResponse>();
-    protected com.bradmcevoy.http.ServletHttpManager servletHttpManager;
+//    protected com.bradmcevoy.http.ServletHttpManager servletHttpManager;
     private ServletConfig config;
 //    private Logger log = LoggerFactory.getLogger(this.getClass());
-    private static final boolean debug = true;
+    private static final boolean debug = false;
     private ResourceFactory rf;
     private JDBCatalogue catalogue = null;
 
@@ -72,10 +72,10 @@ public class WebDavServlet implements Servlet {
                     + "\t getLocalAddr: " + req.getLocalAddr() + "\n"
                     + "\t getLocalName: " + req.getLocalName() + "\n"
                     + "\t getRequestedSessionId: " + req.getRequestedSessionId());
-                        Collection<Handler> handlers = httpManager.getAllHandlers();
-                        for (Handler h : handlers) {
-                            debug("servletHttpManager Handler: " + h.getClass().getName());
-                        }
+//                        Collection<Handler> handlers = httpManager.getAllHandlers();
+//                        for (Handler h : handlers) {
+//                            debug("servletHttpManager Handler: " + h.getClass().getName());
+//                        }
 
             try {
                 originalRequest.set(req);
@@ -126,7 +126,6 @@ public class WebDavServlet implements Servlet {
             Http11Protocol http11 = new com.bradmcevoy.http.http11.Http11Protocol(defaultResponseHandler, hh);
 
             WebDavProtocol webdav = new com.bradmcevoy.http.webdav.WebDavProtocol(defaultResponseHandler, hh);
-
             CalDavProtocol caldav = new com.ettrema.http.caldav.CalDavProtocol(rf, defaultResponseHandler, hh, webdav);
             MyACLProtocol acl = new MyACLProtocol(webdav);
 //            ACLProtocol acl = new ACLProtocol(webdav);
@@ -222,10 +221,11 @@ public class WebDavServlet implements Servlet {
         if (catalogue != null) {
             catalogue.stopSweep();
         }
-        if (servletHttpManager == null) {
-            return;
-        }
-        servletHttpManager.destroy(servletHttpManager);
+//        if (servletHttpManager == null) {
+//            return;
+//        }
+//        servletHttpManager.destroy(servletHttpManager);
+        httpManager.shutdown();
     }
 
     private void debug(String msg) {

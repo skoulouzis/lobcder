@@ -31,4 +31,5 @@ public class Constants {
     public static final QName DAV_ACL_PROP_NAME = new QName("DAV:", "acl");
     public static final QName[] PROP_NAMES = new QName[]{new QName("custom:", "data-distribution"), new QName("custom:", "dri-supervised"), new QName("custom:", "dri-checksum-MD5"), new QName("custom:", "dri-last-validation-date-ms"), new QName("DAV:", "current-user-privilege-set"),};
     public static final int BUF_SIZE = 2097152;
+    public static Long LOCK_TIME = new Long(60000);
 }

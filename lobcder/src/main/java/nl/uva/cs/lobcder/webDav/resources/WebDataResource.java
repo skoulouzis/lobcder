@@ -14,6 +14,7 @@ import com.bradmcevoy.http.PropFindableResource;
 import com.bradmcevoy.http.Request;
 import com.bradmcevoy.http.Request.Method;
 import com.bradmcevoy.http.Resource;
+import com.bradmcevoy.http.Utils;
 import com.bradmcevoy.http.exceptions.LockedException;
 import com.bradmcevoy.http.exceptions.NotAuthorizedException;
 import com.bradmcevoy.http.exceptions.PreConditionFailedException;
@@ -76,7 +77,6 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
             Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    private CurrentLock lock;
 
     public WebDataResource(JDBCatalogue catalogue, LogicalData logicalData) {
         this.logicalData = logicalData;
@@ -574,14 +574,10 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
 //        if (!getPrincipal().canWrite(getLogicalData().getPermissions())) {
 //            throw new NotAuthorizedException(this);
 //        }
-        LockTimeout.DateAndSeconds lockedUntil = timeout.getLockedUntil(60l, 3600l);
-        // create a new lock
-        lock = new CurrentLock(lockedUntil.date, UUID.randomUUID().toString(), lockedUntil.seconds, lockInfo);
-        LockToken token = new LockToken();
-        token.info = lockInfo;
-        token.timeout = new LockTimeout(lockedUntil.seconds);
-
-        token.tokenId = this.lock.lockId;
+        
+        LockToken token = new LockToken(UUID.randomUUID().toString(), lockInfo, timeout);
+        
+        getLogicalData().lock(token);
         return LockResult.success(token);
 
     }
@@ -589,41 +585,35 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
     @Override
     public LockResult refreshLock(String token) throws NotAuthorizedException, PreConditionFailedException {
         // reset the current token
-        if (lock == null) {
+        if (getLogicalData().getCurrentLock() == null) {
             throw new RuntimeException("not locked");
         }
 
-        if (!lock.lockId.equals(token)) {
+        if (!getLogicalData().getCurrentLock().tokenId.equals(token)) {
             throw new RuntimeException("invalid lock id");
         }
 //        if (!getPrincipal().canWrite(getLogicalData().getPermissions())) {
 //            throw new NotAuthorizedException(this);
 //        }
-
-        this.lock = lock.refresh();
-        //create the lock token with new details
-        LockToken lockToken = new LockToken();
-        lockToken.info = lock.lockInfo;
-        lockToken.timeout = new LockTimeout(lock.seconds);
-        lockToken.tokenId = lock.lockId;
+        LockToken lockToken = getLogicalData().refreshLock(token);
         return LockResult.success(lockToken);
 
     }
 
     @Override
     public void unlock(String token) throws NotAuthorizedException, PreConditionFailedException {
-        if (lock == null) {
+        if (getLogicalData().getCurrentLock() == null) {
             return;
         }
 
-        if (!lock.lockId.equals(token)) {
+        if (!getLogicalData().getCurrentLock().tokenId.equals(token)) {
             throw new RuntimeException("Invalid lock token");
 
         }
 //        if (!getPrincipal().canWrite(getLogicalData().getPermissions())) {
 //            throw new NotAuthorizedException(this);
 //        }
-        this.lock = null;
+        getLogicalData().unlock();
     }
 
     @Override
@@ -634,13 +624,8 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
 //        if (! canRead ) {
 //            throw new RuntimeException("Not Authorized to get lock");
 //        }
-        if (this.lock == null) {
-            return null;
-        }
-        LockToken token = new LockToken();
-        token.info = this.lock.lockInfo;
-        token.timeout = new LockTimeout(this.lock.seconds);
-        token.tokenId = this.lock.lockId;
+        debug("getCurrentLock: ");
+        LockToken token = getLogicalData().getCurrentLock();
         return token;
     }
 }

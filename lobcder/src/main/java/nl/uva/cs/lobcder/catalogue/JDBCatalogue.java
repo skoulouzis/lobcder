@@ -1276,4 +1276,52 @@ public class JDBCatalogue {
             }
         };
     }
+
+    public void setLockTokenID(Long uid, String tokenID, Connection connection) {
+        throw new UnsupportedOperationException("Not yet implemented");
+    }
+
+    public void setLockTimeout(Long uid, Long lockTimeout, Connection connection) {
+        throw new UnsupportedOperationException("Not yet implemented");
+    }
+
+    public void setLockDepth(Long uid, String lockDepth, Connection connection) {
+        throw new UnsupportedOperationException("Not yet implemented");
+    }
+
+    public void setLockByUser(Long uid, String lockedByUser, Connection connection) {
+        throw new UnsupportedOperationException("Not yet implemented");
+    }
+
+    public void setLockScope(Long uid, String lockScope, Connection connection) {
+        throw new UnsupportedOperationException("Not yet implemented");
+    }
+
+    public void setLockType(Long uid, String lockType, Connection connection) {
+        throw new UnsupportedOperationException("Not yet implemented");
+    }
+
+    public String getLockTokenID(Long uid, Connection connection) {
+        throw new UnsupportedOperationException("Not yet implemented");
+    }
+
+    public String getLockScope(Long uid, Connection connection) {
+        throw new UnsupportedOperationException("Not yet implemented");
+    }
+
+    public String getLockType(Long uid, Connection connection) {
+        throw new UnsupportedOperationException("Not yet implemented");
+    }
+
+    public String getLockedByUser(Long uid, Connection connection) {
+        throw new UnsupportedOperationException("Not yet implemented");
+    }
+
+    public String getLockDepth(Long uid, Connection connection) {
+        throw new UnsupportedOperationException("Not yet implemented");
+    }
+
+    public Long getLockTimeout(Long uid, Connection connection) {
+        throw new UnsupportedOperationException("Not yet implemented");
+    }
 }
