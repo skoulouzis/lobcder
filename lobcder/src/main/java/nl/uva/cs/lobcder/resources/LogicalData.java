@@ -54,11 +54,11 @@ public class LogicalData implements Cloneable {
     private Boolean supervised;
     private Long checkSum;
     private Long lastValidationDate;
+    private String lockTokenID;
     private String lockScope;
     private String lockType;
     private String lockedByUser;
     private String lockDepth;
-    private String lockTokenID;
     private Long lockTimeout;
 
     public Boolean getSupervised() {
@@ -312,18 +312,21 @@ public class LogicalData implements Cloneable {
 
     public void lock(LockToken lockToken) throws CatalogueException {
         Connection connection = null;
-        String tokenID = lockToken.tokenId;
-        catalogue.setLockTokenID(uid, tokenID, connection);
-        Long lockTimeout = lockToken.timeout.getSeconds();
-        catalogue.setLockTimeout(uid, lockTimeout, connection);
-        String lockDepth = lockToken.info.depth.toString();
-        catalogue.setLockDepth(uid, lockDepth, connection);
-        String lockedByUser = lockToken.info.lockedByUser;
-        catalogue.setLockByUser(uid, lockedByUser, connection);
-        String lockScope = lockToken.info.scope.toString();
+        lockTokenID = lockToken.tokenId;
+        catalogue.setLockTokenID(uid, lockTokenID, connection);
+        lockScope = lockToken.info.scope.toString();
         catalogue.setLockScope(uid, lockScope, connection);
-        String lockType = lockToken.info.type.toString();
+        lockType = lockToken.info.type.toString();
         catalogue.setLockType(uid, lockType, connection);
+        lockedByUser = lockToken.info.lockedByUser;
+        catalogue.setLockByUser(uid, lockedByUser, connection);
+        lockDepth = lockToken.info.depth.toString();
+        catalogue.setLockDepth(uid, lockDepth, connection);
+        lockTimeout = lockToken.timeout.getSeconds();
+        catalogue.setLockTimeout(uid, lockTimeout, connection);
+
+
+
     }
 
     public void unlock() throws CatalogueException {
@@ -333,7 +336,7 @@ public class LogicalData implements Cloneable {
 
     public LockToken refreshLock(String token) throws RuntimeException, CatalogueException {
         Connection connection = null;
-        
+
         lockTimeout = System.currentTimeMillis() + Constants.LOCK_TIME;
         catalogue.setLockTimeout(uid, lockTimeout, connection);
         LockInfo lockInfo = new LockInfo(LockInfo.LockScope.valueOf(this.lockScope), LockInfo.LockType.valueOf(this.lockType), this.lockedByUser, LockInfo.LockDepth.valueOf(this.lockDepth));
@@ -349,5 +352,29 @@ public class LogicalData implements Cloneable {
             LockTimeout lockTimeOut = new LockTimeout(this.lockTimeout);
             return new LockToken(lockTokenID, lockInfo, lockTimeOut);
         }
+    }
+
+    public void setLockTokenID(String lockTokenID) {
+        this.lockTokenID = lockTokenID;
+    }
+
+    public void setLockScope(String lockScope) {
+        this.lockScope = lockScope;
+    }
+
+    public void setLockType(String lockType) {
+        this.lockType = lockType;
+    }
+
+    public void setLockedByUser(String lockedByUser) {
+        this.lockedByUser = lockedByUser;
+    }
+
+    public void setLockDepth(String lockDepth) {
+        this.lockDepth = lockDepth;
+    }
+
+    public void setLockTimeout(long lockTimeout) {
+        this.lockTimeout = lockTimeout;
     }
 }

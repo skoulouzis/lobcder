@@ -577,7 +577,6 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
             //        }
 
             LockToken token = new LockToken(UUID.randomUUID().toString(), lockInfo, timeout);
-
             getLogicalData().lock(token);
             return LockResult.success(token);
         } catch (CatalogueException ex) {
@@ -638,8 +637,8 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
 //        if (! canRead ) {
 //            throw new RuntimeException("Not Authorized to get lock");
 //        }
-        debug("getCurrentLock: ");
         LockToken token = getLogicalData().getCurrentLock();
+        debug("getCurrentLock: "+token);
         return token;
     }
 }

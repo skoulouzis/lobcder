@@ -301,7 +301,7 @@ public class JDBCatalogue {
             connectionAutocommit = connection.getAutoCommit();
             connection.setAutoCommit(false);
             ps = connection.prepareStatement(
-                    "SELECT uid, ownerId, datatype, createDate, modifiedDate, ld_length, contentTypesStr, pdriGroupId, isSupervised, checksum, lastValidationDate FROM ldata_table where ldata_table.parent = ? AND ldata_table.ld_name = ?");
+                    "SELECT uid, ownerId, datatype, createDate, modifiedDate, ld_length, contentTypesStr, pdriGroupId, isSupervised, checksum, lastValidationDate, lockTokenID, lockScope, lockType, lockedByUser, lockDepth, lockTimeout FROM ldata_table where ldata_table.parent = ? AND ldata_table.ld_name = ?");
             if (logicalResourceName.isRoot()) {
                 ps.setString(1, "");
                 ps.setString(2, "");
@@ -310,6 +310,7 @@ public class JDBCatalogue {
                 ps.setString(2, logicalResourceName.getName());
             }
             ResultSet rs = ps.executeQuery();
+
             if (rs.next()) {
                 Long UID = rs.getLong(1);
                 String owner = rs.getString(2);
@@ -325,6 +326,12 @@ public class JDBCatalogue {
                 res.setSupervised(rs.getBoolean(9));
                 res.setChecksum(rs.getLong(10));
                 res.setLastValidationDate(rs.getLong(11));
+                res.setLockTokenID(rs.getString(12));
+                res.setLockScope(rs.getString(13));
+                res.setLockType(rs.getString(14));
+                res.setLockedByUser(rs.getString(15));
+                res.setLockDepth(rs.getString(16));
+                res.setLockTimeout(rs.getLong(17));
             }
             return res;
         } catch (Exception e) {
@@ -483,7 +490,7 @@ public class JDBCatalogue {
                 connection.setAutoCommit(false);
             }
             s = connection.createStatement();
-            ResultSet rs = s.executeQuery("SELECT ownerId, datatype, ld_name, parent, createDate, modifiedDate, ld_length, contentTypesStr, pdriGroupId, isSupervised, checksum, lastValidationDate FROM ldata_table WHERE ldata_table.uid = " + UID);
+            ResultSet rs = s.executeQuery("SELECT ownerId, datatype, ld_name, parent, createDate, modifiedDate, ld_length, contentTypesStr, pdriGroupId, isSupervised, checksum, lastValidationDate, lockTokenID, lockScope, lockType, lockedByUser, lockDepth, lockTimeout FROM ldata_table WHERE ldata_table.uid = " + UID);
             if (rs.next()) {
                 res = new LogicalData(this);
                 res.setUID(UID);
@@ -499,6 +506,12 @@ public class JDBCatalogue {
                 res.setSupervised(rs.getBoolean(10));
                 res.setChecksum(rs.getLong(11));
                 res.setLastValidationDate(rs.getLong(12));
+                res.setLockTokenID(rs.getString(12));
+                res.setLockScope(rs.getString(13));
+                res.setLockType(rs.getString(14));
+                res.setLockedByUser(rs.getString(15));
+                res.setLockDepth(rs.getString(16));
+                res.setLockTimeout(rs.getLong(17));
             }
             return res;
         } catch (Exception e) {
