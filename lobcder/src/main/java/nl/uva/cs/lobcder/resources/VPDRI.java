@@ -45,7 +45,7 @@ public class VPDRI implements PDRI {
         try {
             InitGlobalVFS();
         } catch (Exception ex) {
-            Logger.getLogger(StorageSite.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(VPDRI.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -53,7 +53,7 @@ public class VPDRI implements PDRI {
         try {
             GlobalConfig.setBaseLocation(new URL("http://dummy/url"));
         } catch (MalformedURLException ex) {
-            Logger.getLogger(StorageSite.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(VPDRI.class.getName()).log(Level.SEVERE, null, ex);
         }
         // runtime configuration
         GlobalConfig.setHasUI(false);
