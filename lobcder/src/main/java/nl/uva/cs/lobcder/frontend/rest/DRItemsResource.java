@@ -41,6 +41,7 @@ public class DRItemsResource {
         catalogue = (JDBCatalogue) envContext.lookup(jndiName);
     }
 
+/*    
     @GET
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public List<LogicalData> getXml(@QueryParam("path") String path) {
@@ -51,6 +52,14 @@ public class DRItemsResource {
             Logger.getLogger(DRItemsResource.class.getName()).log(Level.SEVERE, null, ex);
         }
         return res;
+    }
+*/
+    
+    @GET
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public List<LogicalData> getXml(@Context UriInfo info) throws CatalogueException {
+        List<LogicalData> res = null;
+        return catalogue.queryLogicalData(info.getQueryParameters(), null);
     }
     
     @Path("/{isSupervised}")

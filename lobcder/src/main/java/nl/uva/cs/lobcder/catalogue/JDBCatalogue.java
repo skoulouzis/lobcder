@@ -7,12 +7,14 @@ package nl.uva.cs.lobcder.catalogue;
 import com.bradmcevoy.common.Path;
 import java.sql.*;
 import java.util.*;
+import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.sql.DataSource;
+import javax.ws.rs.core.MultivaluedMap;
 import nl.uva.cs.lobcder.auth.MyPrincipal;
 import nl.uva.cs.lobcder.auth.Permissions;
 import nl.uva.cs.lobcder.resources.*;
@@ -1582,5 +1584,99 @@ public class JDBCatalogue {
                 }
             }
         };
+    }
+
+    public LinkedList<LogicalData> queryLogicalData(MultivaluedMap<String, String> queryParameters, Connection connection) throws CatalogueException {
+                Statement s = null;
+        boolean connectionIsProvided = (connection == null) ? false : true;
+        boolean connectionAutocommit = false;
+        try {
+            if (connection == null) {
+                connection = getConnection();
+                connection.setAutoCommit(false);
+            } else {
+                connectionAutocommit = connection.getAutoCommit();
+                connection.setAutoCommit(false);
+            }
+            s = connection.createStatement();
+            StringBuilder query = new StringBuilder("SELECT uid, ownerId, datatype, ld_name, parent, createDate, modifiedDate, ld_length, contentTypesStr, pdriGroupId, isSupervised, checksum, lastValidationDate FROM ldata_table WHERE datatype = 'logical.file'");
+            if(queryParameters.containsKey("path") && queryParameters.get("path").iterator().hasNext()){
+                String path = queryParameters.get("path").iterator().next();
+                query.append(" AND parent LIKE '").append(path).append("%'");
+                queryParameters.remove("path");
+            }
+            if(queryParameters.containsKey("mStartDate") && queryParameters.get("mStartDate").iterator().hasNext()
+                    && queryParameters.containsKey("mEndDate") && queryParameters.get("mEndDate").iterator().hasNext()) {
+                String mStartDate = Long.valueOf(queryParameters.get("mStartDate").iterator().next()).toString();
+                String mEndDate = Long.valueOf(queryParameters.get("mEndDate").iterator().next()).toString();
+                query.append(" AND modifiedDate BETWEEN FROM_UNIXTIME(").append(mStartDate).append(") AND FROM_UNIXTIME(").append(mEndDate).append(")");
+                queryParameters.remove("mStartDate");
+                queryParameters.remove("mEndDate");
+            } else if(queryParameters.containsKey("mStartDate") && queryParameters.get("mStartDate").iterator().hasNext()) {
+                String mStartDate = Long.valueOf(queryParameters.get("mStartDate").iterator().next()).toString();
+                query.append(" AND modifiedDate >= UNIXTIME(").append(mStartDate).append(")");
+                queryParameters.remove("mStartDate");
+            } else if(queryParameters.containsKey("mEndDate") && queryParameters.get("mEndDate").iterator().hasNext()) {
+                String mEndDate = Long.valueOf(queryParameters.get("mEndDate").iterator().next()).toString();
+                query.append(" AND modifiedDate <= UNIXTIME(").append(mEndDate).append(")");
+                queryParameters.remove("mEndDate");
+            }
+            if(queryParameters.containsKey("isSupervised") && queryParameters.get("isSupervised").iterator().hasNext()) {
+               String isSupervised = Boolean.valueOf(queryParameters.get("isSupervised").iterator().next()).toString();
+               query.append(" AND isSupervised = ").append(isSupervised); 
+               queryParameters.remove("isSupervised");
+            }
+            debug("queryLogicalData() SQL: " + query.toString());        
+            ResultSet rs = s.executeQuery(query.toString());
+            LinkedList<LogicalData> ld_list = new LinkedList<LogicalData>();
+            while (rs.next()) {
+                LogicalData element = new LogicalData(this);
+                element.setUID(rs.getLong(1));
+                element.setOwner(rs.getString(2));
+                element.setType(rs.getString(3));
+                element.setName(rs.getString(4));
+                element.setParent(rs.getString(5));
+                element.setCreateDate(rs.getTimestamp(6).getTime());
+                element.setModifiedDate(rs.getTimestamp(7).getTime());
+                element.setLength(rs.getLong(8));
+                element.setContentTypesAsString(rs.getString(9));
+                element.setPdriGroupId(rs.getLong(10));
+                element.setChecksum(rs.getLong(11));
+                element.setLastValidationDate(rs.getLong(12));
+                ld_list.add(element);
+            }
+            rs.close();
+            s.close();
+            return ld_list;
+        } catch (Exception e) {
+            try {
+                if (s != null && !s.isClosed()) {
+                    s.close();
+                    s = null;
+                }
+                if (!connectionIsProvided && !connection.isClosed()) {
+                    connection.rollback();
+                    connection.close();
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            throw new CatalogueException(e.getMessage());
+        } finally {
+            try {
+                if (s != null && !s.isClosed()) {
+                    s.close();
+                }
+                if (!connectionIsProvided && !connection.isClosed()) {
+                    connection.commit();
+                    connection.close();
+                }
+                if (connectionIsProvided && !connection.isClosed()) {
+                    connection.setAutoCommit(connectionAutocommit);
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
     }
 }
