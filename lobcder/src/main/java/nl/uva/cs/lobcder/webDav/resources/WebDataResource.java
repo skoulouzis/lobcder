@@ -122,12 +122,14 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
 
     @Override
     public Object authenticate(String user, String password) {
-//        debug("authenticate.\n"
-//                + "\t user: " + user
-//                + "\t password: " + password);
+        debug("authenticate.\n"
+                + "\t user: " + user
+                + "\t password: " + password);
         String token = password;
         MyPrincipal principal = auth.checkToken(token);
         WebDavServlet.request().setAttribute("vph-user", principal);
+        debug(principal.getUserId());
+        debug(principal.getRolesStr());
         return principal;
     }
 

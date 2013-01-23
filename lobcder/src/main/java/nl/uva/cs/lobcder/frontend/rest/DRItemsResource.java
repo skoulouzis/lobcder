@@ -58,7 +58,6 @@ public class DRItemsResource {
     @GET
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public List<LogicalData> getXml(@Context UriInfo info) throws CatalogueException {
-        List<LogicalData> res = null;
         return catalogue.queryLogicalData(info.getQueryParameters(), null);
     }
     
