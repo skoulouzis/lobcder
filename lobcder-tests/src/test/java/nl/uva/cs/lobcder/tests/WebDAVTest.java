@@ -828,7 +828,7 @@ public class WebDAVTest {
             put.setRequestEntity(new StringRequestEntity("2"));
             put.setRequestHeader("If", "(<" + locktoken + ">)");
             status = this.client.executeMethod(put);
-            assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
+            assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_CREATED);
 
             // try to overwrite using correct lock token, using Tagged-list format
             // and full URI
@@ -836,7 +836,7 @@ public class WebDAVTest {
             put.setRequestEntity(new StringRequestEntity("3"));
             put.setRequestHeader("If", "<" + testuri + ">" + "(<" + locktoken + ">)");
             status = this.client.executeMethod(put);
-            assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
+            assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_CREATED);
 
             // try to overwrite using correct lock token, using Tagged-list format
             // and absolute path only
@@ -844,14 +844,19 @@ public class WebDAVTest {
             put.setRequestEntity(new StringRequestEntity("4"));
             put.setRequestHeader("If", "<" + new URI(testuri).getRawPath() + ">" + "(<" + locktoken + ">)");
             status = this.client.executeMethod(put);
-            assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
+            assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_CREATED);
 
-            // try to overwrite using correct lock token, using Tagged-list format
-            // and bad path
-            put = new PutMethod(testuri);
-            put.setRequestEntity(new StringRequestEntity("5"));
-            put.setRequestHeader("If", "</foobar>" + "(<" + locktoken + ">)");
-            status = this.client.executeMethod(put);
+//            // try to overwrite using correct lock token, using Tagged-list format
+//            // and bad path
+//            put = new PutMethod(testuri);
+//            put.setRequestEntity(new StringRequestEntity("5"));
+//            put.setRequestHeader("If", "</foobar>" + "(<" + locktoken + ">)");
+//            status = this.client.executeMethod(put);
+//            assertTrue("status: " + status, status == HttpStatus.SC_NOT_FOUND || status == 412);
+            
+            
+            UnLockMethod unlock = new UnLockMethod(testuri, locktoken);
+            status = this.client.executeMethod(unlock);
             assertTrue("status: " + status, status == HttpStatus.SC_NOT_FOUND || status == 412);
         } finally {
             DeleteMethod delete = new DeleteMethod(testuri);
