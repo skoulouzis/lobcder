@@ -4,7 +4,6 @@ import com.bradmcevoy.common.Path;
 import com.bradmcevoy.http.Resource;
 import com.bradmcevoy.http.ResourceFactory;
 import java.io.File;
-import java.util.logging.Level;
 import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
 import nl.uva.cs.lobcder.resources.LogicalData;
 import nl.uva.cs.lobcder.util.Constants;
@@ -27,22 +26,6 @@ public class WebDataResourceFactory implements ResourceFactory {
             debug("getResource:  strPath: " + strPath + " path: " + Path.path(strPath) + " ldri: " + ldri);
             debug("getResource:  host: " + host + " path: " + ldri);
 
-//            Collection<IStorageSite> sites;
-//            if (ldri.isRoot() || ldri.toString().equals("")) {
-//                LogicalData root = new LogicalData(ldri, Constants.LOGICAL_FOLDER);
-//                ArrayList<Integer> permArr = new ArrayList<Integer>();
-//                permArr.add(0);
-//                permArr.add(Permissions.OWNER_ROLE | Permissions.READWRITE);
-//                permArr.add(Permissions.REST_ROLE | Permissions.NOACCESS);
-//                permArr.add(Permissions.ROOT_ADMIN | Permissions.READWRITE);
-//                Metadata meta = root.getMetadata();
-//                meta.setPermissionArray(permArr);
-//                root.setMetadata(meta);
-//                
-//                WebDataDirResource webRoot = new WebDataDirResource(catalogue, root);                
-//                return webRoot;
-//            }
-
             LogicalData entry = catalogue.getResourceEntryByLDRI(ldri, null);
             if (entry == null) {
                 return null;
@@ -56,9 +39,9 @@ public class WebDataResourceFactory implements ResourceFactory {
             }
             return new WebDataResource(catalogue, entry);
         } catch (Exception ex) {
-            java.util.logging.Logger.getLogger(WebDataResourceFactory.class.getName()).log(Level.SEVERE, null, ex);
+            throw new RuntimeException(ex);
         }
-        return null;
+//        return null;
     }
 
     private void debug(String msg) {
@@ -67,17 +50,4 @@ public class WebDataResourceFactory implements ResourceFactory {
 //        log.debug(msg);
         }
     }
-//    private void initStorageSites() throws Exception {
-//        String[] names = new String[]{"storage1.prop", "storage2.prop", "storage3.prop"};
-//
-//        Properties[] storageSitesProps = PropertiesLoader.getStorageSitesProps();
-//        for (Properties p : storageSitesProps) {
-//            if (!catalogue.storageSiteExists(p)) {
-//                catalogue.registerStorageSite(p);
-//            }
-//        }
-//    }
-//    public void setUserName(String remoteUser) {
-//        this.uname = remoteUser;
-//    }
 }

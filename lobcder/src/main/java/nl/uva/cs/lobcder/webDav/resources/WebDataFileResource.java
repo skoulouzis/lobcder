@@ -8,8 +8,10 @@ import com.bradmcevoy.common.Path;
 import com.bradmcevoy.http.*;
 import com.bradmcevoy.http.exceptions.BadRequestException;
 import com.bradmcevoy.http.exceptions.ConflictException;
+import com.bradmcevoy.http.exceptions.LockedException;
 import com.bradmcevoy.http.exceptions.NotAuthorizedException;
 import com.bradmcevoy.http.exceptions.NotFoundException;
+import com.bradmcevoy.http.exceptions.PreConditionFailedException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -40,7 +42,7 @@ import nl.uva.vlet.vfs.VFSNode;
  * @author S. Koulouzis
  */
 public class WebDataFileResource extends WebDataResource implements
-        com.bradmcevoy.http.FileResource {
+        com.bradmcevoy.http.FileResource, LockableResource {
 
     private static final boolean debug = true;
 //    private final int bufferSize;
@@ -227,7 +229,7 @@ public class WebDataFileResource extends WebDataResource implements
             try {
                 cBuff.startTransfer(new Long(-1));
             } catch (VlException ex1) {
-                 throw new IOException(ex1.getMessage());
+                throw new IOException(ex1.getMessage());
             }
         } finally {
             try {
@@ -393,5 +395,79 @@ public class WebDataFileResource extends WebDataResource implements
         while (buffer.hasRemaining()) {
             dest.write(buffer);
         }
+    }
+
+    @Override
+    public LockResult lock(LockTimeout timeout, LockInfo lockInfo) throws NotAuthorizedException, PreConditionFailedException, LockedException {
+        try {
+            //        if (!getPrincipal().canWrite(getLogicalData().getPermissions())) {
+            //        }
+            //        }
+            if(getCurrentLock()!=null){
+                throw new LockedException(this);
+            }
+            LockToken token = new LockToken(UUID.randomUUID().toString(), lockInfo, timeout);
+            getLogicalData().lock(token);
+            return LockResult.success(token);
+        } catch (CatalogueException ex) {
+            throw new PreConditionFailedException(this);
+        }
+
+    }
+
+    @Override
+    public LockResult refreshLock(String token) throws NotAuthorizedException, PreConditionFailedException {
+        try {
+            // reset the current token
+            if (getLogicalData().getCurrentLock() == null) {
+                throw new RuntimeException("not locked");
+            }
+
+            if (!getLogicalData().getCurrentLock().tokenId.equals(token)) {
+                throw new RuntimeException("invalid lock id");
+            }
+            //        if (!getPrincipal().canWrite(getLogicalData().getPermissions())) {
+            //            throw new NotAuthorizedException(this);
+            //        }
+            LockToken lockToken = getLogicalData().refreshLock(token);
+            return LockResult.success(lockToken);
+        } catch (RuntimeException ex) {
+            throw ex;
+        } catch (CatalogueException ex) {
+            throw new PreConditionFailedException(this);
+        }
+
+    }
+
+    @Override
+    public void unlock(String token) throws NotAuthorizedException, PreConditionFailedException {
+        try {
+            if (getLogicalData().getCurrentLock() == null) {
+                return;
+            }
+
+//            if (!getLogicalData().getCurrentLock().tokenId.equals(token)) {
+//                throw new RuntimeException("Invalid lock token");
+//            }
+            //        if (!getPrincipal().canWrite(getLogicalData().getPermissions())) {
+            //            throw new NotAuthorizedException(this);
+            //        }
+            getLogicalData().unlock();
+        } catch (CatalogueException ex) {
+            throw new PreConditionFailedException(this);
+        }
+    }
+
+    @Override
+    public LockToken getCurrentLock() {
+//        MyPrincipal thisPrincipal = getPrincipal();
+//        Permissions perm = getLogicalData().getPermissions();
+//        boolean canRead = thisPrincipal.canRead(perm);
+//        if (! canRead ) {
+//            throw new RuntimeException("Not Authorized to get lock");
+//        }
+        LockToken token = getLogicalData().getCurrentLock();
+        debug("getCurrentLock: " + token);
+        return token;
     }
 }

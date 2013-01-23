@@ -7,6 +7,7 @@ package nl.uva.cs.lobcder.frontend;
 import com.bradmcevoy.http.*;
 import com.bradmcevoy.http.http11.Http11Protocol;
 import com.bradmcevoy.http.webdav.DefaultWebDavResponseHandler;
+import com.bradmcevoy.http.webdav.LockHandler;
 import com.bradmcevoy.http.webdav.WebDavProtocol;
 import com.ettrema.http.caldav.CalDavProtocol;
 import java.io.IOException;
@@ -33,7 +34,7 @@ public class WebDavServlet implements Servlet {
 //    protected com.bradmcevoy.http.ServletHttpManager servletHttpManager;
     private ServletConfig config;
 //    private Logger log = LoggerFactory.getLogger(this.getClass());
-    private static final boolean debug = false;
+    private static final boolean debug = true;
     private ResourceFactory rf;
     private JDBCatalogue catalogue = null;
 
@@ -122,22 +123,18 @@ public class WebDavServlet implements Servlet {
 
             AuthenticationService authService = new com.bradmcevoy.http.AuthenticationService();
             HandlerHelper hh = new com.bradmcevoy.http.HandlerHelper(authService);
-            DefaultWebDavResponseHandler defaultResponseHandler = new com.bradmcevoy.http.webdav.DefaultWebDavResponseHandler(authService);
+            com.bradmcevoy.http.webdav.WebDavResponseHandler defaultResponseHandler = new com.bradmcevoy.http.webdav.DefaultWebDavResponseHandler(authService);
+
             Http11Protocol http11 = new com.bradmcevoy.http.http11.Http11Protocol(defaultResponseHandler, hh);
 
             WebDavProtocol webdav = new com.bradmcevoy.http.webdav.WebDavProtocol(defaultResponseHandler, hh);
             CalDavProtocol caldav = new com.ettrema.http.caldav.CalDavProtocol(rf, defaultResponseHandler, hh, webdav);
             MyACLProtocol acl = new MyACLProtocol(webdav);
 //            ACLProtocol acl = new ACLProtocol(webdav);
-            ProtocolHandlers protocolHandlers = new com.bradmcevoy.http.ProtocolHandlers(Arrays.asList(http11, webdav, acl,caldav));
+            ProtocolHandlers protocolHandlers = new com.bradmcevoy.http.ProtocolHandlers(Arrays.asList(http11, webdav, acl, caldav));
 //            ProtocolHandlers protocolHandlers = new com.bradmcevoy.http.ProtocolHandlers(Arrays.asList(http11, webdav));
             httpManager = new com.bradmcevoy.http.HttpManager(rf, defaultResponseHandler, protocolHandlers);
-            
-//            Collection<Handler> handlers = httpManager.getAllHandlers();
-//            for (Handler h : handlers) {
-//                debug("httpManager Handler: " + h.getClass().getName());
-//            }
-
+//            httpManager.addFilter(httpManager.getFilters().size() - 1, new MyWebDavFilter(defaultResponseHandler));
         } catch (Exception ex) {
             debug("Exception starting WebDavServlet servlet " + ex);
             throw new RuntimeException(ex);
@@ -154,7 +151,6 @@ public class WebDavServlet implements Servlet {
 //        }
 //        init(rf, responseHandler, authHandlers);
 //    }
-
 //    protected void init(ResourceFactory rf, WebDavResponseHandler responseHandler, List<String> authHandlers) throws ServletException {
 //        AuthenticationService authService;
 //        List<com.bradmcevoy.http.AuthenticationHandler> list = new ArrayList<com.bradmcevoy.http.AuthenticationHandler>();
@@ -194,7 +190,6 @@ public class WebDavServlet implements Servlet {
 //        servletHttpManager.addFilter(0, new WebDavFilter());
 //
 //    }
-
 //    protected <T> T instantiate(String className) throws ServletException {
 //        try {
 //            Class c = Class.forName(className);
@@ -204,7 +199,6 @@ public class WebDavServlet implements Servlet {
 //            throw new ServletException("Failed to instantiate: " + className, ex);
 //        }
 //    }
-
     @Override
     public ServletConfig getServletConfig() {
         return config;
@@ -234,7 +228,6 @@ public class WebDavServlet implements Servlet {
 //        log.debug(msg);
         }
     }
-
 //    /**
 //     * Returns null, or a list of configured authentication handler class names
 //     *
@@ -256,7 +249,6 @@ public class WebDavServlet implements Servlet {
 //        }
 //        return list;
 //    }
-
 //    protected void initFromFactoryFactory(List<String> authHandlers) throws ServletException {
 //        com.bradmcevoy.http.ResourceFactoryFactory rff = new WebDataResourceFactoryFactory();
 //        rff.init();

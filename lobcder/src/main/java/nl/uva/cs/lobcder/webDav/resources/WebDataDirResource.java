@@ -8,6 +8,7 @@ import com.bradmcevoy.common.Path;
 import com.bradmcevoy.http.*;
 import com.bradmcevoy.http.exceptions.BadRequestException;
 import com.bradmcevoy.http.exceptions.ConflictException;
+import com.bradmcevoy.http.exceptions.LockedException;
 import com.bradmcevoy.http.exceptions.NotAuthorizedException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,6 +26,7 @@ import nl.uva.cs.lobcder.catalogue.ResourceExistsException;
 import nl.uva.cs.lobcder.resources.LogicalData;
 import nl.uva.cs.lobcder.resources.PDRI;
 import nl.uva.cs.lobcder.util.Constants;
+import nl.uva.cs.lobcder.webDav.exceptions.WebDavException;
 import nl.uva.vlet.exception.VlException;
 
 /**
@@ -188,16 +190,21 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
         debug("\t length: " + length);
         debug("\t contentType: " + contentType);
         Connection connection = null;
+        LogicalData newResource = null;
         try {
             connection = getCatalogue().getConnection();
             connection.setAutoCommit(false);
             Path newPath = Path.path(getLogicalData().getLDRI(), newName);
-            LogicalData newResource = getCatalogue().getResourceEntryByLDRI(newPath, connection);
+            newResource = getCatalogue().getResourceEntryByLDRI(newPath, connection);
             if (newResource != null) { // Resource exists, update
                 Permissions p = getCatalogue().getPermissions(newResource.getUID(), newResource.getOwner(), connection);
                 if (!getPrincipal().canWrite(p)) {
                     throw new NotAuthorizedException(this);
                 }
+//                if (newResource.getCurrentLock() != null || !newResource.getCurrentLock().isExpired()) {
+//                    throw new LockedException(new WebDataFileResource(getCatalogue(), newResource));
+//                    return new WebDataFileResource(getCatalogue(), newResource);
+//                }
                 newResource.setLength(length);
                 newResource.setModifiedDate(System.currentTimeMillis());
                 newResource.addContentType(contentType);
@@ -224,7 +231,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                 PDRI pdri = createPDRI(length, newName, connection);
                 pdri.putData(inputStream);
                 Long checksum = pdri.getChecksum();
-                if(checksum !=null){
+                if (checksum != null) {
                     newResource.setChecksum(checksum);
                 }
                 getCatalogue().registerPdriForNewEntry(newResource, pdri, connection);
@@ -236,8 +243,12 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
             debug("NotAuthorizedException");
             throw e;
         } catch (Exception ex) {
-            Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, ex);
-            throw new BadRequestException(this, ex.getMessage());
+//            if (ex instanceof LockedException) {
+//                throw new RuntimeException("423");
+////                throw new BadRequestException("423");
+//            } else {
+                throw new BadRequestException(this, ex.getMessage());
+//            }
         } finally {
             try {
                 if (connection != null && !connection.isClosed()) {
