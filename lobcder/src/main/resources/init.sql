@@ -54,6 +54,7 @@ CREATE TABLE ldata_table (
  lockedByUser  VARCHAR(255),
  lockDepth  VARCHAR(255),
  lockTimeout  BIGINT NOT NULL DEFAULT 0
+ customComment  VARCHAR(255),
 );
 
 CREATE TABLE permission_table (
