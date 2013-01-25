@@ -853,8 +853,8 @@ public class WebDAVTest {
 //            put.setRequestHeader("If", "</foobar>" + "(<" + locktoken + ">)");
 //            status = this.client.executeMethod(put);
 //            assertTrue("status: " + status, status == HttpStatus.SC_NOT_FOUND || status == 412);
-            
-            
+
+
 //            UnLockMethod unlock = new UnLockMethod(testuri, locktoken);
 //            status = this.client.executeMethod(unlock);
         } finally {
@@ -888,7 +888,7 @@ public class WebDAVTest {
             PropFindMethod propfind = new PropFindMethod(testuri, DavConstants.PROPFIND_ALL_PROP_INCLUDE, names, 0);
             status = client.executeMethod(propfind);
             assertEquals(HttpStatus.SC_MULTI_STATUS, status);
-            
+
             MultiStatus multistatus = propfind.getResponseBodyAsMultiStatus();
             MultiStatusResponse[] responses = multistatus.getResponses();
             assertEquals(1, responses.length);
@@ -1325,6 +1325,91 @@ public class WebDAVTest {
                     if (new URL(testcol1).getPath().equals(r.getHref())) {
                         Long val = Long.valueOf(p.getValue().toString());
                         assertEquals(date, val);
+                    }
+                }
+            }
+        } finally {
+            DeleteMethod delete = new DeleteMethod(testcol1);
+            int status = client.executeMethod(delete);
+            assertTrue("DeleteMethod status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
+        }
+    }
+
+    @Test
+    public void testGetSetDescription() throws UnsupportedEncodingException, IOException, DavException {
+        System.out.println("testGetSetCustomComment");
+        String testcol1 = this.root + "testResourceId/";
+        String testuri1 = testcol1 + "file1";
+        try {
+
+            DeleteMethod delete = new DeleteMethod(testcol1);
+            int status = client.executeMethod(delete);
+
+
+            MkColMethod mkcol = new MkColMethod(testcol1);
+            status = client.executeMethod(mkcol);
+            assertEquals(HttpStatus.SC_CREATED, status);
+
+            PutMethod put = new PutMethod(testuri1);
+            put.setRequestEntity(new StringRequestEntity("foo", "text/plain", "UTF-8"));
+            status = this.client.executeMethod(put);
+            assertEquals(HttpStatus.SC_CREATED, status);
+
+            DavPropertyNameSet commentNameSet = new DavPropertyNameSet();
+            DavPropertyName commentName = DavPropertyName.create("description", Namespace.getNamespace("custom:"));
+            commentNameSet.add(commentName);
+
+            PropFindMethod propFind = new PropFindMethod(testuri1, commentNameSet, DavConstants.DEPTH_INFINITY);
+            status = client.executeMethod(propFind);
+            assertEquals(HttpStatus.SC_MULTI_STATUS, status);
+
+
+            MultiStatus multiStatus = propFind.getResponseBodyAsMultiStatus();
+            MultiStatusResponse[] responses = multiStatus.getResponses();
+
+            for (MultiStatusResponse r : responses) {
+//                System.out.println("Responce: " + r.getHref());
+                DavPropertySet allProp = getProperties(r);
+
+                DavPropertyIterator iter = allProp.iterator();
+                while (iter.hasNext()) {
+                    DavProperty<?> p = iter.nextProperty();
+//                    System.out.println(p.getName() + " : " + p.getValue());
+                    assertEquals(p.getName(), commentName);
+                }
+            }
+
+            DavPropertySet descriptionSet = new DavPropertySet();
+            String description = "this is a comment for a file, blah blah aaaaa";
+            DavProperty<String> driProp = new DefaultDavProperty<String>(commentName, description);
+            descriptionSet.add(driProp);
+            PropPatchMethod proPatch = new PropPatchMethod(testuri1, descriptionSet, commentNameSet);
+            status = client.executeMethod(proPatch);
+            assertEquals(HttpStatus.SC_MULTI_STATUS, status);
+
+
+
+            propFind = new PropFindMethod(testuri1, commentNameSet, DavConstants.DEPTH_INFINITY);
+            status = client.executeMethod(propFind);
+            assertEquals(HttpStatus.SC_MULTI_STATUS, status);
+
+
+            multiStatus = propFind.getResponseBodyAsMultiStatus();
+            responses = multiStatus.getResponses();
+
+            for (MultiStatusResponse r : responses) {
+                System.out.println("Responce: " + r.getHref());
+                DavPropertySet allProp = getProperties(r);
+
+                DavPropertyIterator iter = allProp.iterator();
+                while (iter.hasNext()) {
+                    DavProperty<?> p = iter.nextProperty();
+                    assertEquals(p.getName(), commentName);
+                    System.out.println(p.getName() + " : " + p.getValue());
+                    assertNotNull(p.getValue());
+                    if (new URL(testcol1).getPath().equals(r.getHref())) {
+                        String val = p.getValue().toString();
+                        assertEquals(description, val);
                     }
                 }
             }
