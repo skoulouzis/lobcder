@@ -42,6 +42,12 @@ CREATE TABLE ldata_table (
  isSupervised BOOLEAN NOT NULL DEFAULT FALSE, INDEX(isSupervised), 
  checksum BIGINT NOT NULL DEFAULT 0,
  lastValidationDate BIGINT NOT NULL DEFAULT 0
+ lockTokenID  VARCHAR(255),
+ lockScope  VARCHAR(255),
+ lockType  VARCHAR(255),
+ lockedByUser  VARCHAR(255),
+ lockDepth  VARCHAR(255),
+ lockTimeout  BIGINT NOT NULL DEFAULT 0
 );
 
 CREATE TABLE permission_table (
