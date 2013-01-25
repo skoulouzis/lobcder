@@ -128,8 +128,8 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
         String token = password;
         MyPrincipal principal = auth.checkToken(token);
         WebDavServlet.request().setAttribute("vph-user", principal);
-        debug(principal.getUserId());
-        debug(principal.getRolesStr());
+        debug("getUserId: "+principal.getUserId());
+        debug("getRolesStr: "+principal.getRolesStr());
         return principal;
     }
 

@@ -8,7 +8,6 @@ import com.bradmcevoy.common.Path;
 import com.bradmcevoy.http.*;
 import com.bradmcevoy.http.exceptions.BadRequestException;
 import com.bradmcevoy.http.exceptions.ConflictException;
-import com.bradmcevoy.http.exceptions.LockedException;
 import com.bradmcevoy.http.exceptions.NotAuthorizedException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,7 +25,6 @@ import nl.uva.cs.lobcder.catalogue.ResourceExistsException;
 import nl.uva.cs.lobcder.resources.LogicalData;
 import nl.uva.cs.lobcder.resources.PDRI;
 import nl.uva.cs.lobcder.util.Constants;
-import nl.uva.cs.lobcder.webDav.exceptions.WebDavException;
 import nl.uva.vlet.exception.VlException;
 
 /**
