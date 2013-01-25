@@ -5,6 +5,10 @@
 package nl.uva.cs.lobcder.resources;
 
 import com.bradmcevoy.common.Path;
+import com.bradmcevoy.http.LockInfo;
+import com.bradmcevoy.http.LockTimeout;
+import com.bradmcevoy.http.LockToken;
+import java.sql.Connection;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -12,7 +16,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
-import nl.uva.cs.lobcder.authdb.Permissions;
+import nl.uva.cs.lobcder.auth.Permissions;
+import nl.uva.cs.lobcder.catalogue.CatalogueException;
 import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
 import nl.uva.cs.lobcder.util.Constants;
 
@@ -44,11 +49,16 @@ public class LogicalData implements Cloneable {
     @XmlTransient
     private List<String> decodedContentTypes = null;
     @XmlTransient
-    private static final boolean debug = false;
-    @XmlTransient
+    private static final boolean debug = true;
     private Boolean supervised;
     private Long checkSum;
     private Long lastValidationDate;
+    private String lockTokenID;
+    private String lockScope;
+    private String lockType;
+    private String lockedByUser;
+    private String lockDepth;
+    private Long lockTimeout;
 
     public Boolean getSupervised() {
         return supervised;
@@ -172,6 +182,7 @@ public class LogicalData implements Cloneable {
         return clone;
     }
 
+    @Override
     public boolean equals(Object obj) {
         if (obj instanceof LogicalData) {
             return hashCode() == obj.hashCode();
@@ -180,6 +191,7 @@ public class LogicalData implements Cloneable {
         }
     }
 
+    @Override
     public int hashCode() {
         return uid.intValue();
     }
@@ -295,5 +307,73 @@ public class LogicalData implements Cloneable {
         } catch (Exception ex) {
             Logger.getLogger(LogicalData.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+
+    public void lock(LockToken lockToken) throws CatalogueException {
+        Connection connection = null;
+        lockTokenID = lockToken.tokenId;
+        catalogue.setLockTokenID(uid, lockTokenID, connection);
+        lockScope = lockToken.info.scope.toString();
+        catalogue.setLockScope(uid, lockScope, connection);
+        lockType = lockToken.info.type.toString();
+        catalogue.setLockType(uid, lockType, connection);
+        lockedByUser = lockToken.info.lockedByUser;
+        catalogue.setLockByUser(uid, lockedByUser, connection);
+        lockDepth = lockToken.info.depth.toString();
+        catalogue.setLockDepth(uid, lockDepth, connection);
+        lockTimeout = lockToken.timeout.getSeconds();
+        catalogue.setLockTimeout(uid, lockTimeout, connection);
+
+
+
+    }
+
+    public void unlock() throws CatalogueException {
+        Connection connection = null;
+        catalogue.setLockTokenID(uid, null, connection);
+    }
+
+    public LockToken refreshLock(String token) throws RuntimeException, CatalogueException {
+        Connection connection = null;
+
+        lockTimeout = System.currentTimeMillis() + Constants.LOCK_TIME;
+        catalogue.setLockTimeout(uid, lockTimeout, connection);
+        LockInfo lockInfo = new LockInfo(LockInfo.LockScope.valueOf(this.lockScope), LockInfo.LockType.valueOf(this.lockType), this.lockedByUser, LockInfo.LockDepth.valueOf(this.lockDepth));
+        LockTimeout lockTimeOut = new LockTimeout(lockTimeout);
+        return new LockToken(token, lockInfo, lockTimeOut);
+    }
+
+    public LockToken getCurrentLock() {
+        if (this.lockTokenID == null) {
+            return null;
+        } else {
+            LockInfo lockInfo = new LockInfo(LockInfo.LockScope.valueOf(this.lockScope), LockInfo.LockType.valueOf(this.lockType), this.lockedByUser, LockInfo.LockDepth.valueOf(this.lockDepth));
+            LockTimeout lockTimeOut = new LockTimeout(this.lockTimeout);
+            return new LockToken(lockTokenID, lockInfo, lockTimeOut);
+        }
+    }
+
+    public void setLockTokenID(String lockTokenID) {
+        this.lockTokenID = lockTokenID;
+    }
+
+    public void setLockScope(String lockScope) {
+        this.lockScope = lockScope;
+    }
+
+    public void setLockType(String lockType) {
+        this.lockType = lockType;
+    }
+
+    public void setLockedByUser(String lockedByUser) {
+        this.lockedByUser = lockedByUser;
+    }
+
+    public void setLockDepth(String lockDepth) {
+        this.lockDepth = lockDepth;
+    }
+
+    public void setLockTimeout(long lockTimeout) {
+        this.lockTimeout = lockTimeout;
     }
 }

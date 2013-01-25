@@ -17,13 +17,12 @@ public class PDRIFactory {
     static public PDRIFactory getFactory() {
         return factory;
     }
-    
+
     public PDRI createInstance(String url, Long storageSiteId, String resourceUrl, String username, String password) throws IOException {
-         return new VPDRI(url, storageSiteId, resourceUrl, username, password);
-//        if(resourceUrl.startsWith("file://")) {
+//        if (resourceUrl.startsWith("file://")) {
 //            return new SimplePDRI(storageSiteId, url);
 //        } else {
-//            return new VPDRI(url, storageSiteId, resourceUrl, username, password);
+            return new VPDRI(url, storageSiteId, resourceUrl, username, password);
 //        }
     }
 }

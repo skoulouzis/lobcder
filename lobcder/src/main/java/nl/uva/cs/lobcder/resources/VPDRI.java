@@ -4,20 +4,29 @@
  */
 package nl.uva.cs.lobcder.resources;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
+import java.math.BigInteger;
+import java.net.InetAddress;
 import java.net.MalformedURLException;
+import java.net.NetworkInterface;
+import java.net.SocketException;
 import java.net.URL;
+import java.net.UnknownHostException;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.channels.ReadableByteChannel;
+import java.nio.channels.WritableByteChannel;
+import java.util.Enumeration;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import nl.uva.cs.lobcder.util.LobIOUtils;
 import nl.uva.vlet.Global;
 import nl.uva.vlet.GlobalConfig;
 import nl.uva.vlet.data.StringUtil;
-import nl.uva.vlet.exception.ResourceNotFoundException;
+import nl.uva.vlet.exception.VRLSyntaxException;
 import nl.uva.vlet.exception.VlException;
+import nl.uva.vlet.io.CircularStreamBufferTransferer;
 import nl.uva.vlet.util.cog.GridProxy;
+import nl.uva.vlet.vfs.VChecksum;
 import nl.uva.vlet.vfs.VFSClient;
 import nl.uva.vlet.vfs.VFile;
 import nl.uva.vlet.vrl.VRL;
@@ -36,7 +45,7 @@ public class VPDRI implements PDRI {
         try {
             InitGlobalVFS();
         } catch (Exception ex) {
-            Logger.getLogger(StorageSite.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(VPDRI.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -44,7 +53,7 @@ public class VPDRI implements PDRI {
         try {
             GlobalConfig.setBaseLocation(new URL("http://dummy/url"));
         } catch (MalformedURLException ex) {
-            Logger.getLogger(StorageSite.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(VPDRI.class.getName()).log(Level.SEVERE, null, ex);
         }
         // runtime configuration
         GlobalConfig.setHasUI(false);
@@ -69,8 +78,10 @@ public class VPDRI implements PDRI {
     private final String username;
     private final String password;
     private final Long storageSiteId;
-    private final String baseDir = "LOBCDER-REPLICA-v2.0";
+    private final String baseDir = "LOBCDER-REPLICA-vTEST";//"LOBCDER-REPLICA-v2.0";
     private final String fileURI;
+    private int reconnectAttemts = 0;
+    private final static boolean debug = true;
 
     VPDRI(String fileURI, Long storageSiteId, String resourceUrl, String username, String password) throws IOException {
         try {
@@ -129,11 +140,9 @@ public class VPDRI implements PDRI {
 
     @Override
     public void delete() throws IOException {
-        try {
-            this.vfsClient.openLocation(vrl).delete();
-        } catch (VlException ex) {
-            throw new IOException(ex);
-        }
+        //it's void so do it asynchronously
+        Runnable asyncDel = getAsyncDelete(this.vfsClient, vrl);
+        asyncDel.run();
     }
 
     @Override
@@ -149,32 +158,45 @@ public class VPDRI implements PDRI {
     public void putData(InputStream in) throws IOException {
         OutputStream out = null;
         try {
-            out = this.vfsClient.getFile(vrl).getOutputStream();
-            LobIOUtils.copy(in, out);
+            vfsClient.mkdirs(vrl.getParent(), true);
+            vfsClient.createFile(vrl, true);
+            out = vfsClient.getFile(vrl).getOutputStream();
+
+//            OperatingSystemMXBean osMBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
+//            int size = (int) (osMBean.getFreePhysicalMemorySize() / 50);
+            CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((100 * 1024 * 1024), in, out);
+            cBuff.startTransfer(new Long(-1));
+
+            reconnectAttemts = 0;
+//            final ReadableByteChannel inputChannel = Channels.newChannel(in);
+//            final WritableByteChannel outputChannel = Channels.newChannel(out);
+//            fastCopy(inputChannel, outputChannel);
         } catch (VlException ex) {
-            if (ex instanceof ResourceNotFoundException || ex.getMessage().contains("Couldn open location. Get NULL object for")) {
-                try {
-                    out = this.vfsClient.createFile(vrl, false).getOutputStream();
-                    LobIOUtils.copy(in, out);
-                } catch (Exception ex1) {
-                    try {
-                        vfsClient.mkdirs(vrl.getParent());
-                        out = this.vfsClient.createFile(vrl, false).getOutputStream();
-                        LobIOUtils.copy(in, out);
-                    } catch (VlException ex2) {
-                        Logger.getLogger(VPDRI.class.getName()).log(Level.SEVERE, null, ex2);
-                    }
-                }
+            if (reconnectAttemts <= 2) {
+                reconnect();
+                putData(in);
             } else {
                 throw new IOException(ex);
             }
+//            if (ex instanceof ResourceNotFoundException || ex.getMessage().contains("not found") || ex.getMessage().contains("Couldn open location") || ex.getMessage().contains("not found in container")) {
+//                try {
+//                    vfsClient.mkdirs(vrl.getParent(), true);
+//                    vfsClient.createFile(vrl, true);
+//                    putData(in);
+//                } catch (VlException ex1) {
+//                    throw new IOException(ex1);
+//                }
+//            }
         } finally {
-            try {
-                if (out != null) {
+            if (out != null) {
+                try {
+                    out.flush();
                     out.close();
+                } catch (java.io.IOException ex) {
                 }
-            } catch (IOException ex) {
-                throw ex;
+            }
+            if (in != null) {
+                in.close();
             }
         }
     }
@@ -185,7 +207,117 @@ public class VPDRI implements PDRI {
     }
 
     @Override
-    public String getURL() {
+    public String getURI() {
         return this.fileURI;
+    }
+
+    @Override
+    public String getHost() throws UnknownHostException {
+        debug("getHostName: " + InetAddress.getLocalHost().getHostName());
+        if (vrl.getScheme().equals("file")
+                || StringUtil.isEmpty(vrl.getHostname())
+                || vrl.getHostname().equals("localhost")
+                || vrl.getHostname().equals("127.0.0.1")) {
+            return InetAddress.getLocalHost().getHostName();
+        } else {
+            return vrl.getHostname();
+        }
+    }
+
+    private Runnable getAsyncDelete(final VFSClient vfsClient, final VRL vrl) {
+        return new Runnable() {
+
+            @Override
+            public void run() {
+                try {
+                    vfsClient.openLocation(vrl).delete();
+                } catch (VlException ex) {
+                    Logger.getLogger(VPDRI.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        };
+    }
+
+    private Runnable getAsyncPutData(final VFSClient vfsClient, final InputStream in) {
+        return new Runnable() {
+
+            @Override
+            public void run() {
+            }
+        };
+    }
+
+    private void fastCopy(ReadableByteChannel src, WritableByteChannel dest) throws IOException {
+//        OperatingSystemMXBean osMBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
+//        int size = (int) (osMBean.getFreePhysicalMemorySize() / 50);
+        final ByteBuffer buffer = ByteBuffer.allocateDirect(5242880);
+        int len;
+        try {
+            while ((len = src.read(buffer)) != -1) {
+//            System.err.println("Read size: " + len);
+                buffer.flip();
+                dest.write(buffer);
+                buffer.compact();
+            }
+//        System.err.println("--------------");
+            buffer.flip();
+            while (buffer.hasRemaining()) {
+                dest.write(buffer);
+            }
+        } finally {
+            src.close();
+            dest.close();
+        }
+    }
+
+    private void channelCopy(OutputStream out, InputStream in) throws IOException {
+        FileChannel target = ((FileOutputStream) out).getChannel();
+        FileChannel source = ((FileInputStream) in).getChannel();
+        source.transferTo(0, source.size(), target);
+        source.close();
+        target.close();
+    }
+
+    @Override
+    public long getLength() throws IOException {
+        try {
+            return vfsClient.getFile(vrl).getLength();
+        } catch (VlException ex) {
+            throw new IOException(ex);
+        }
+    }
+
+    @Override
+    public void reconnect() throws IOException {
+        reconnectAttemts++;
+        vfsClient.close();
+        vfsClient.dispose();
+        try {
+            initVFS();
+        } catch (VlException ex1) {
+            throw new IOException(ex1);
+        } catch (MalformedURLException ex1) {
+            throw new IOException(ex1);
+        }
+    }
+
+    @Override
+    public Long getChecksum() throws IOException {
+        try {
+            VFile physicalFile = vfsClient.getFile(vrl);
+            if (physicalFile instanceof VChecksum) {
+                BigInteger bi = new BigInteger(((VChecksum) physicalFile).getChecksum("MD5"), 16);
+                return bi.longValue();
+            }
+        } catch (VlException ex) {
+            throw new IOException(ex);
+        }
+        return null;
+    }
+
+    private void debug(String msg) {
+        if (debug) {
+            System.err.println(this.getClass().getName() + ": " + msg);
+        }
     }
 }

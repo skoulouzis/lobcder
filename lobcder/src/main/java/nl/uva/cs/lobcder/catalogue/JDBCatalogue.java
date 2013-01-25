@@ -7,13 +7,16 @@ package nl.uva.cs.lobcder.catalogue;
 import com.bradmcevoy.common.Path;
 import java.sql.*;
 import java.util.*;
+import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.naming.Context;
 import javax.naming.InitialContext;
+import javax.naming.NamingException;
 import javax.sql.DataSource;
-import nl.uva.cs.lobcder.authdb.MyPrincipal;
-import nl.uva.cs.lobcder.authdb.Permissions;
+import javax.ws.rs.core.MultivaluedMap;
+import nl.uva.cs.lobcder.auth.MyPrincipal;
+import nl.uva.cs.lobcder.auth.Permissions;
 import nl.uva.cs.lobcder.resources.*;
 import nl.uva.cs.lobcder.util.Constants;
 
@@ -24,6 +27,13 @@ import nl.uva.cs.lobcder.util.Constants;
 public class JDBCatalogue {
 
     private DataSource datasource = null;
+    private static final boolean debug = false;
+
+    public JDBCatalogue() throws NamingException, Exception {
+
+        Runnable init = initDatasource();
+        init.run();
+    }
 
     public Connection getConnection() throws CatalogueException {
         try {
@@ -40,9 +50,6 @@ public class JDBCatalogue {
         } catch (Exception e) {
             throw new CatalogueException(e.getMessage());
         }
-    }
-
-    public JDBCatalogue() {
     }
     private Timer timer = null;
 
@@ -92,7 +99,7 @@ public class JDBCatalogue {
             }
             Long newGroupId = rs.getLong(1);
             String sql = "INSERT INTO pdri_table (url, storageSiteId, pdriGroupId) VALUES("
-                    + "'" + pdri.getURL() + "', " + pdri.getStorageSiteId() + ", " + newGroupId + ")";
+                    + "'" + pdri.getURI() + "', " + pdri.getStorageSiteId() + ", " + newGroupId + ")";
             debug("##########################" + sql);
 
             s.executeUpdate(sql);
@@ -296,7 +303,7 @@ public class JDBCatalogue {
             connectionAutocommit = connection.getAutoCommit();
             connection.setAutoCommit(false);
             ps = connection.prepareStatement(
-                    "SELECT uid, ownerId, datatype, createDate, modifiedDate, ld_length, contentTypesStr, pdriGroupId, isSupervised, checksum, lastValidationDate FROM ldata_table where ldata_table.parent = ? AND ldata_table.ld_name = ?");
+                    "SELECT uid, ownerId, datatype, createDate, modifiedDate, ld_length, contentTypesStr, pdriGroupId, isSupervised, checksum, lastValidationDate, lockTokenID, lockScope, lockType, lockedByUser, lockDepth, lockTimeout FROM ldata_table where ldata_table.parent = ? AND ldata_table.ld_name = ?");
             if (logicalResourceName.isRoot()) {
                 ps.setString(1, "");
                 ps.setString(2, "");
@@ -305,6 +312,7 @@ public class JDBCatalogue {
                 ps.setString(2, logicalResourceName.getName());
             }
             ResultSet rs = ps.executeQuery();
+
             if (rs.next()) {
                 Long UID = rs.getLong(1);
                 String owner = rs.getString(2);
@@ -320,6 +328,12 @@ public class JDBCatalogue {
                 res.setSupervised(rs.getBoolean(9));
                 res.setChecksum(rs.getLong(10));
                 res.setLastValidationDate(rs.getLong(11));
+                res.setLockTokenID(rs.getString(12));
+                res.setLockScope(rs.getString(13));
+                res.setLockType(rs.getString(14));
+                res.setLockedByUser(rs.getString(15));
+                res.setLockDepth(rs.getString(16));
+                res.setLockTimeout(rs.getLong(17));
             }
             return res;
         } catch (Exception e) {
@@ -478,7 +492,7 @@ public class JDBCatalogue {
                 connection.setAutoCommit(false);
             }
             s = connection.createStatement();
-            ResultSet rs = s.executeQuery("SELECT ownerId, datatype, ld_name, parent, createDate, modifiedDate, ld_length, contentTypesStr, pdriGroupId, isSupervised, checksum, lastValidationDate FROM ldata_table WHERE ldata_table.uid = " + UID);
+            ResultSet rs = s.executeQuery("SELECT ownerId, datatype, ld_name, parent, createDate, modifiedDate, ld_length, contentTypesStr, pdriGroupId, isSupervised, checksum, lastValidationDate, lockTokenID, lockScope, lockType, lockedByUser, lockDepth, lockTimeout FROM ldata_table WHERE ldata_table.uid = " + UID);
             if (rs.next()) {
                 res = new LogicalData(this);
                 res.setUID(UID);
@@ -494,6 +508,12 @@ public class JDBCatalogue {
                 res.setSupervised(rs.getBoolean(10));
                 res.setChecksum(rs.getLong(11));
                 res.setLastValidationDate(rs.getLong(12));
+                res.setLockTokenID(rs.getString(12));
+                res.setLockScope(rs.getString(13));
+                res.setLockType(rs.getString(14));
+                res.setLockedByUser(rs.getString(15));
+                res.setLockDepth(rs.getString(16));
+                res.setLockTimeout(rs.getLong(17));
             }
             return res;
         } catch (Exception e) {
@@ -965,7 +985,7 @@ public class JDBCatalogue {
                     connection.close();
                 }
             } catch (SQLException ex) {
-                Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+                throw new CatalogueException(ex.getMessage());
             }
             throw new CatalogueException(e.getMessage());
         } finally {
@@ -981,7 +1001,7 @@ public class JDBCatalogue {
                     connection.setAutoCommit(connectionAutocommit);
                 }
             } catch (SQLException ex) {
-                Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+                throw new CatalogueException(ex.getMessage());
             }
         }
     }
@@ -1244,7 +1264,419 @@ public class JDBCatalogue {
         }
     }
 
+    public void setLockTokenID(Long uid, String lockTokenID, Connection connection) throws CatalogueException {
+        PreparedStatement ps = null;
+        boolean connectionIsProvided = (connection == null) ? false : true;
+        boolean connectionAutocommit = false;
+        try {
+            if (connection == null) {
+                connection = getConnection();
+                connection.setAutoCommit(false);
+            } else {
+                connectionAutocommit = connection.getAutoCommit();
+                connection.setAutoCommit(false);
+            }
+            ps = connection.prepareStatement("UPDATE ldata_table SET lockTokenID = ? WHERE uid = ?");
+            ps.setString(1, lockTokenID);
+            ps.setLong(2, uid);
+            ps.executeUpdate();
+            ps.close();
+        } catch (Exception e) {
+            try {
+                if (ps != null && !ps.isClosed()) {
+                    ps.close();
+                    ps = null;
+                }
+                if (!connectionIsProvided && !connection.isClosed()) {
+                    connection.rollback();
+                    connection.close();
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            throw new CatalogueException(e.getMessage());
+        } finally {
+            try {
+                if (ps != null && !ps.isClosed()) {
+                    ps.close();
+                }
+                if (!connectionIsProvided && !connection.isClosed()) {
+                    connection.commit();
+                    connection.close();
+                }
+                if (connectionIsProvided && !connection.isClosed()) {
+                    connection.setAutoCommit(connectionAutocommit);
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+
+    public void setLockTimeout(Long uid, Long lockTimeout, Connection connection) throws CatalogueException {
+        PreparedStatement ps = null;
+        boolean connectionIsProvided = (connection == null) ? false : true;
+        boolean connectionAutocommit = false;
+        try {
+            if (connection == null) {
+                connection = getConnection();
+                connection.setAutoCommit(false);
+            } else {
+                connectionAutocommit = connection.getAutoCommit();
+                connection.setAutoCommit(false);
+            }
+            ps = connection.prepareStatement("UPDATE ldata_table SET lockTimeout = ? WHERE uid = ?");
+            ps.setLong(1, lockTimeout);
+            ps.setLong(2, uid);
+            ps.executeUpdate();
+            ps.close();
+        } catch (Exception e) {
+            try {
+                if (ps != null && !ps.isClosed()) {
+                    ps.close();
+                    ps = null;
+                }
+                if (!connectionIsProvided && !connection.isClosed()) {
+                    connection.rollback();
+                    connection.close();
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            throw new CatalogueException(e.getMessage());
+        } finally {
+            try {
+                if (ps != null && !ps.isClosed()) {
+                    ps.close();
+                }
+                if (!connectionIsProvided && !connection.isClosed()) {
+                    connection.commit();
+                    connection.close();
+                }
+                if (connectionIsProvided && !connection.isClosed()) {
+                    connection.setAutoCommit(connectionAutocommit);
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+
+    public void setLockDepth(Long uid, String lockDepth, Connection connection) throws CatalogueException {
+        PreparedStatement ps = null;
+        boolean connectionIsProvided = (connection == null) ? false : true;
+        boolean connectionAutocommit = false;
+        try {
+            if (connection == null) {
+                connection = getConnection();
+                connection.setAutoCommit(false);
+            } else {
+                connectionAutocommit = connection.getAutoCommit();
+                connection.setAutoCommit(false);
+            }
+            ps = connection.prepareStatement("UPDATE ldata_table SET lockDepth = ? WHERE uid = ?");
+            ps.setString(1, lockDepth);
+            ps.setLong(2, uid);
+            ps.executeUpdate();
+            ps.close();
+        } catch (Exception e) {
+            try {
+                if (ps != null && !ps.isClosed()) {
+                    ps.close();
+                    ps = null;
+                }
+                if (!connectionIsProvided && !connection.isClosed()) {
+                    connection.rollback();
+                    connection.close();
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            throw new CatalogueException(e.getMessage());
+        } finally {
+            try {
+                if (ps != null && !ps.isClosed()) {
+                    ps.close();
+                }
+                if (!connectionIsProvided && !connection.isClosed()) {
+                    connection.commit();
+                    connection.close();
+                }
+                if (connectionIsProvided && !connection.isClosed()) {
+                    connection.setAutoCommit(connectionAutocommit);
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+
+    public void setLockByUser(Long uid, String lockedByUser, Connection connection) throws CatalogueException {
+        PreparedStatement ps = null;
+        boolean connectionIsProvided = (connection == null) ? false : true;
+        boolean connectionAutocommit = false;
+        try {
+            if (connection == null) {
+                connection = getConnection();
+                connection.setAutoCommit(false);
+            } else {
+                connectionAutocommit = connection.getAutoCommit();
+                connection.setAutoCommit(false);
+            }
+            ps = connection.prepareStatement("UPDATE ldata_table SET lockedByUser = ? WHERE uid = ?");
+            ps.setString(1, lockedByUser);
+            ps.setLong(2, uid);
+            ps.executeUpdate();
+            ps.close();
+        } catch (Exception e) {
+            try {
+                if (ps != null && !ps.isClosed()) {
+                    ps.close();
+                    ps = null;
+                }
+                if (!connectionIsProvided && !connection.isClosed()) {
+                    connection.rollback();
+                    connection.close();
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            throw new CatalogueException(e.getMessage());
+        } finally {
+            try {
+                if (ps != null && !ps.isClosed()) {
+                    ps.close();
+                }
+                if (!connectionIsProvided && !connection.isClosed()) {
+                    connection.commit();
+                    connection.close();
+                }
+                if (connectionIsProvided && !connection.isClosed()) {
+                    connection.setAutoCommit(connectionAutocommit);
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+
+    public void setLockScope(Long uid, String lockScope, Connection connection) throws CatalogueException {
+        PreparedStatement ps = null;
+        boolean connectionIsProvided = (connection == null) ? false : true;
+        boolean connectionAutocommit = false;
+        try {
+            if (connection == null) {
+                connection = getConnection();
+                connection.setAutoCommit(false);
+            } else {
+                connectionAutocommit = connection.getAutoCommit();
+                connection.setAutoCommit(false);
+            }
+            ps = connection.prepareStatement("UPDATE ldata_table SET lockScope = ? WHERE uid = ?");
+            ps.setString(1, lockScope);
+            ps.setLong(2, uid);
+            ps.executeUpdate();
+            ps.close();
+        } catch (Exception e) {
+            try {
+                if (ps != null && !ps.isClosed()) {
+                    ps.close();
+                    ps = null;
+                }
+                if (!connectionIsProvided && !connection.isClosed()) {
+                    connection.rollback();
+                    connection.close();
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            throw new CatalogueException(e.getMessage());
+        } finally {
+            try {
+                if (ps != null && !ps.isClosed()) {
+                    ps.close();
+                }
+                if (!connectionIsProvided && !connection.isClosed()) {
+                    connection.commit();
+                    connection.close();
+                }
+                if (connectionIsProvided && !connection.isClosed()) {
+                    connection.setAutoCommit(connectionAutocommit);
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+
+    public void setLockType(Long uid, String lockType, Connection connection) throws CatalogueException {
+        PreparedStatement ps = null;
+        boolean connectionIsProvided = (connection == null) ? false : true;
+        boolean connectionAutocommit = false;
+        try {
+            if (connection == null) {
+                connection = getConnection();
+                connection.setAutoCommit(false);
+            } else {
+                connectionAutocommit = connection.getAutoCommit();
+                connection.setAutoCommit(false);
+            }
+            ps = connection.prepareStatement("UPDATE ldata_table SET lockType = ? WHERE uid = ?");
+            ps.setString(1, lockType);
+            ps.setLong(2, uid);
+            ps.executeUpdate();
+            ps.close();
+        } catch (Exception e) {
+            try {
+                if (ps != null && !ps.isClosed()) {
+                    ps.close();
+                    ps = null;
+                }
+                if (!connectionIsProvided && !connection.isClosed()) {
+                    connection.rollback();
+                    connection.close();
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            throw new CatalogueException(e.getMessage());
+        } finally {
+            try {
+                if (ps != null && !ps.isClosed()) {
+                    ps.close();
+                }
+                if (!connectionIsProvided && !connection.isClosed()) {
+                    connection.commit();
+                    connection.close();
+                }
+                if (connectionIsProvided && !connection.isClosed()) {
+                    connection.setAutoCommit(connectionAutocommit);
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+
     private void debug(String msg) {
-//        System.err.println(this.getClass().getName()+": "+msg);
+        if (debug) {
+            System.err.println(this.getClass().getName() + ": " + msg);
+        }
+    }
+
+    private Runnable initDatasource() {
+        return new Runnable() {
+
+            @Override
+            public void run() {
+                if (datasource == null) {
+                    try {
+                        String jndiName = "jdbc/lobcder";
+                        Context ctx = new InitialContext();
+                        if (ctx == null) {
+                            throw new Exception("JNDI could not create InitalContext ");
+                        }
+                        Context envContext = (Context) ctx.lookup("java:/comp/env");
+                        datasource = (DataSource) envContext.lookup(jndiName);
+                    } catch (Exception ex) {
+                        Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            }
+        };
+    }
+
+    public LinkedList<LogicalData> queryLogicalData(MultivaluedMap<String, String> queryParameters, Connection connection) throws CatalogueException {
+                Statement s = null;
+        boolean connectionIsProvided = (connection == null) ? false : true;
+        boolean connectionAutocommit = false;
+        try {
+            if (connection == null) {
+                connection = getConnection();
+                connection.setAutoCommit(false);
+            } else {
+                connectionAutocommit = connection.getAutoCommit();
+                connection.setAutoCommit(false);
+            }
+            s = connection.createStatement();
+            StringBuilder query = new StringBuilder("SELECT uid, ownerId, datatype, ld_name, parent, createDate, modifiedDate, ld_length, contentTypesStr, pdriGroupId, isSupervised, checksum, lastValidationDate FROM ldata_table WHERE datatype = 'logical.file'");
+            if(queryParameters.containsKey("path") && queryParameters.get("path").iterator().hasNext()){
+                String path = queryParameters.get("path").iterator().next();
+                query.append(" AND parent LIKE '").append(path).append("%'");
+                queryParameters.remove("path");
+            }
+            if(queryParameters.containsKey("mStartDate") && queryParameters.get("mStartDate").iterator().hasNext()
+                    && queryParameters.containsKey("mEndDate") && queryParameters.get("mEndDate").iterator().hasNext()) {
+                String mStartDate = Long.valueOf(queryParameters.get("mStartDate").iterator().next()).toString();
+                String mEndDate = Long.valueOf(queryParameters.get("mEndDate").iterator().next()).toString();
+                query.append(" AND modifiedDate BETWEEN FROM_UNIXTIME(").append(mStartDate).append(") AND FROM_UNIXTIME(").append(mEndDate).append(")");
+                queryParameters.remove("mStartDate");
+                queryParameters.remove("mEndDate");
+            } else if(queryParameters.containsKey("mStartDate") && queryParameters.get("mStartDate").iterator().hasNext()) {
+                String mStartDate = Long.valueOf(queryParameters.get("mStartDate").iterator().next()).toString();
+                query.append(" AND modifiedDate >= UNIXTIME(").append(mStartDate).append(")");
+                queryParameters.remove("mStartDate");
+            } else if(queryParameters.containsKey("mEndDate") && queryParameters.get("mEndDate").iterator().hasNext()) {
+                String mEndDate = Long.valueOf(queryParameters.get("mEndDate").iterator().next()).toString();
+                query.append(" AND modifiedDate <= UNIXTIME(").append(mEndDate).append(")");
+                queryParameters.remove("mEndDate");
+            }
+            if(queryParameters.containsKey("isSupervised") && queryParameters.get("isSupervised").iterator().hasNext()) {
+               String isSupervised = Boolean.valueOf(queryParameters.get("isSupervised").iterator().next()).toString();
+               query.append(" AND isSupervised = ").append(isSupervised); 
+               queryParameters.remove("isSupervised");
+            }
+            debug("queryLogicalData() SQL: " + query.toString());        
+            ResultSet rs = s.executeQuery(query.toString());
+            LinkedList<LogicalData> ld_list = new LinkedList<LogicalData>();
+            while (rs.next()) {
+                LogicalData element = new LogicalData(this);
+                element.setUID(rs.getLong(1));
+                element.setOwner(rs.getString(2));
+                element.setType(rs.getString(3));
+                element.setName(rs.getString(4));
+                element.setParent(rs.getString(5));
+                element.setCreateDate(rs.getTimestamp(6).getTime());
+                element.setModifiedDate(rs.getTimestamp(7).getTime());
+                element.setLength(rs.getLong(8));
+                element.setContentTypesAsString(rs.getString(9));
+                element.setPdriGroupId(rs.getLong(10));
+                element.setChecksum(rs.getLong(11));
+                element.setLastValidationDate(rs.getLong(12));
+                ld_list.add(element);
+            }
+            rs.close();
+            s.close();
+            return ld_list;
+        } catch (Exception e) {
+            try {
+                if (s != null && !s.isClosed()) {
+                    s.close();
+                    s = null;
+                }
+                if (!connectionIsProvided && !connection.isClosed()) {
+                    connection.rollback();
+                    connection.close();
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            throw new CatalogueException(e.getMessage());
+        } finally {
+            try {
+                if (s != null && !s.isClosed()) {
+                    s.close();
+                }
+                if (!connectionIsProvided && !connection.isClosed()) {
+                    connection.commit();
+                    connection.close();
+                }
+                if (connectionIsProvided && !connection.isClosed()) {
+                    connection.setAutoCommit(connectionAutocommit);
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
     }
 }

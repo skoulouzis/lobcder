@@ -4,10 +4,7 @@
  */
 package nl.uva.cs.lobcder.util;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.io.*;
 import java.util.Properties;
 
 /**
@@ -15,6 +12,7 @@ import java.util.Properties;
  * @author skoulouz
  */
 public class PropertiesLoader {
+
     private static int numOfStorgeSites = -1;
 
     public static Properties getLobcderProperties()
@@ -53,12 +51,20 @@ public class PropertiesLoader {
 
     public static Properties getProperties(File file)
             throws FileNotFoundException, IOException {
-        Properties properties = new Properties();
+        InputStream fis = null;
+        try {
+            Properties properties = new Properties();
 
-        if (!file.exists()) {
-            throw new FileNotFoundException("Configuration file " + file.getAbsolutePath() + " not found");
+            if (!file.exists()) {
+                throw new FileNotFoundException("Configuration file " + file.getAbsolutePath() + " not found");
+            }
+            fis = new FileInputStream(file);
+            properties.load(fis);
+            return properties;
+        } finally {
+            if (fis != null) {
+                fis.close();
+            }
         }
-        properties.load(new FileInputStream(file));
-        return properties;
     }
 }
