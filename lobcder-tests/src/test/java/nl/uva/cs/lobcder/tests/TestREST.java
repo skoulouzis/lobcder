@@ -186,7 +186,10 @@ public class TestREST {
                     accept(MediaType.APPLICATION_XML).
                     get(new GenericType<List<LogicalData>>() {
             });
-            //Check that it's empty 
+            
+//            for(LogicalData l : list ){
+//                System.out.println(l.UID);
+//            }
             assertTrue(list.isEmpty());
 
             //Set the file as supervised
