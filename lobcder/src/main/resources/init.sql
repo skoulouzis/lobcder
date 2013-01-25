@@ -41,7 +41,7 @@ CREATE TABLE ldata_table (
  pdriGroupId BIGINT UNSIGNED,
  isSupervised BOOLEAN NOT NULL DEFAULT FALSE, INDEX(isSupervised), 
  checksum BIGINT NOT NULL DEFAULT 0,
- lastValidationDate BIGINT NOT NULL DEFAULT 0
+ lastValidationDate BIGINT NOT NULL DEFAULT 0,
  lockTokenID  VARCHAR(255),
  lockScope  VARCHAR(255),
  lockType  VARCHAR(255),
@@ -207,3 +207,15 @@ INSERT INTO storage_site_table(resourceURI, credentialRef, currentNum, currentSi
 SET @ssId = LAST_INSERT_ID();
 INSERT INTO role_to_ss_table(role_name, ss_id) values   ('admin', @ssId),
                                                         ('other', @ssId);
+# Here we createtables for built-in user IDs/roles
+CREATE TABLE IF NOT EXISTS auth_usernames_table (
+    id SERIAL PRIMARY KEY,
+    uname VARCHAR(255), index(uname)
+);
+
+CREATE TABLE IF NOT EXISTS auth_roles_tables (
+    id SERIAL PRIMARY KEY,
+    role_name VARCHAR(255), index(role_name),
+    uname_id BIGINT unsigned, FOREIGN KEY(uname_id) REFERENCES auth_usernames_table(id) ON DELETE CASCADE
+)
+
