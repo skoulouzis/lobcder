@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package nl.uva.cs.lobcder.rest;
+package nl.uva.cs.lobcder.frontend.rest;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -35,7 +35,6 @@ public class DRIDataResource {
         }
         javax.naming.Context envContext = (javax.naming.Context) ctx.lookup("java:/comp/env");
         catalogue = (JDBCatalogue) envContext.lookup(jndiName);
-        catalogue = new JDBCatalogue();
     }
     
     @Path("/{uid}")

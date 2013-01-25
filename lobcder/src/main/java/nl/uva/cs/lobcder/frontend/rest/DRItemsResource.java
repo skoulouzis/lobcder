@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package nl.uva.cs.lobcder.rest;
+package nl.uva.cs.lobcder.frontend.rest;
 
 import java.util.List;
 import java.util.logging.Level;
@@ -39,9 +39,9 @@ public class DRItemsResource {
         }
         javax.naming.Context envContext = (javax.naming.Context) ctx.lookup("java:/comp/env");
         catalogue = (JDBCatalogue) envContext.lookup(jndiName);
-        catalogue = new JDBCatalogue();
     }
 
+/*    
     @GET
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public List<LogicalData> getXml(@QueryParam("path") String path) {
@@ -53,14 +53,26 @@ public class DRItemsResource {
         }
         return res;
     }
+*/
+    
+    @GET
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public List<LogicalData> getXml(@Context UriInfo info) throws CatalogueException {
+        return catalogue.queryLogicalData(info.getQueryParameters(), null);
+    }
     
     @Path("/{isSupervised}")
     @PUT
     public void setDirSupervised(@PathParam("isSupervised") Boolean param, @QueryParam("path") String path) {
         try {
+            debug("setDirSupervised:  "+path+" " + param);
             catalogue.setDirSupervised(path, param, null);
         } catch (CatalogueException ex) {
             Logger.getLogger(DRItemsResource.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+
+    private void debug(String msg) {
+        System.err.println(this.getClass().getName()+": "+msg);
     }
 }
