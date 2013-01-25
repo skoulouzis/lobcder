@@ -199,10 +199,6 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                 if (!getPrincipal().canWrite(p)) {
                     throw new NotAuthorizedException(this);
                 }
-//                if (newResource.getCurrentLock() != null || !newResource.getCurrentLock().isExpired()) {
-//                    throw new LockedException(new WebDataFileResource(getCatalogue(), newResource));
-//                    return new WebDataFileResource(getCatalogue(), newResource);
-//                }
                 newResource.setLength(length);
                 newResource.setModifiedDate(System.currentTimeMillis());
                 newResource.addContentType(contentType);

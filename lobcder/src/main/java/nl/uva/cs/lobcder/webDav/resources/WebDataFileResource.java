@@ -6,12 +6,7 @@ package nl.uva.cs.lobcder.webDav.resources;
 
 import com.bradmcevoy.common.Path;
 import com.bradmcevoy.http.*;
-import com.bradmcevoy.http.exceptions.BadRequestException;
-import com.bradmcevoy.http.exceptions.ConflictException;
-import com.bradmcevoy.http.exceptions.LockedException;
-import com.bradmcevoy.http.exceptions.NotAuthorizedException;
-import com.bradmcevoy.http.exceptions.NotFoundException;
-import com.bradmcevoy.http.exceptions.PreConditionFailedException;
+import com.bradmcevoy.http.exceptions.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
