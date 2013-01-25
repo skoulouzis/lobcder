@@ -888,7 +888,7 @@ public class WebDAVTest {
             PropFindMethod propfind = new PropFindMethod(testuri, DavConstants.PROPFIND_ALL_PROP_INCLUDE, names, 0);
             status = client.executeMethod(propfind);
             assertEquals(HttpStatus.SC_MULTI_STATUS, status);
-
+            
             MultiStatus multistatus = propfind.getResponseBodyAsMultiStatus();
             MultiStatusResponse[] responses = multistatus.getResponses();
             assertEquals(1, responses.length);
