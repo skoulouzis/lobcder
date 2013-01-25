@@ -74,7 +74,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
         this.catalogue = catalogue;
 
     }
-    
+
     @Override
     public Date getCreateDate() {
         return new Date(getLogicalData().getCreateDate());
@@ -377,7 +377,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
             return null;
         }
     }
-    
+
     private MyStorageSite selectBestSite(Collection<MyStorageSite> sites) {
         for (MyStorageSite s : sites) {
             return s;
@@ -414,7 +414,6 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
                 sb.append("]");
                 return sb.toString();
             } catch (UnknownHostException ex) {
-                Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
             } catch (SQLException ex) {
                 Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
             } catch (NotAuthorizedException ex) {
@@ -434,6 +433,8 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
         } else if (qname.equals(Constants.DAV_ACL_PROP_NAME)) {
             List<Priviledge> list = getPriviledges(null);
             return "";
+        } else if (qname.equals(Constants.DESCRIPTION_PROP_NAME)) {
+            return getLogicalData().getDescription();
         }
 
         return PropertyMetaData.UNKNOWN;
@@ -453,6 +454,12 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
                 getLogicalData().updateChecksum(Long.valueOf(value));
             } else if (qname.equals(Constants.DRI_LAST_VALIDATION_DATE_PROP_NAME)) {
                 getLogicalData().updateLastValidationDate(Long.valueOf(value));
+            } else if (qname.equals(Constants.DESCRIPTION_PROP_NAME)) {
+                try {
+                    getLogicalData().updateDescription(value);
+                } catch (CatalogueException ex) {
+                    Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
+                }
             }
         }
 

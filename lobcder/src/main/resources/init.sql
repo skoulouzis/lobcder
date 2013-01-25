@@ -42,19 +42,13 @@ CREATE TABLE ldata_table (
  isSupervised BOOLEAN NOT NULL DEFAULT FALSE, INDEX(isSupervised), 
  checksum BIGINT NOT NULL DEFAULT 0,
  lastValidationDate BIGINT NOT NULL DEFAULT 0,
- lockTokenID  VARCHAR(255),
- lockScope  VARCHAR(255),
- lockType  VARCHAR(255),
- lockedByUser  VARCHAR(255),
- lockDepth  VARCHAR(255),
- lockTimeout  BIGINT NOT NULL DEFAULT 0
- lockTokenID  VARCHAR(255),
- lockScope  VARCHAR(255),
- lockType  VARCHAR(255),
- lockedByUser  VARCHAR(255),
- lockDepth  VARCHAR(255),
- lockTimeout  BIGINT NOT NULL DEFAULT 0
- customComment  VARCHAR(255),
+ lockTokenID VARCHAR(255),
+ lockScope VARCHAR(255),
+ lockType VARCHAR(255),
+ lockedByUser VARCHAR(255),
+ lockDepth VARCHAR(255),
+ lockTimeout BIGINT NOT NULL DEFAULT 0,
+ description VARCHAR(255)
 );
 
 CREATE TABLE permission_table (
@@ -210,7 +204,7 @@ INSERT INTO permission_table (perm_type, ld_uid_ref, role_name) VALUES  ('read',
 INSERT INTO  credential_table(username, password) VALUES ('USER', 'PASS');
 SET @credID = LAST_INSERT_ID();
 INSERT INTO storage_site_table(resourceURI, credentialRef, currentNum, currentSize, quotaNum, quotaSize)
-            VALUES('swift://149.156.10.131:8443/auth/v1.0', @credID, -1, -1, -1, -1);
+            VALUES('file:////tmp', @credID, -1, -1, -1, -1);
 SET @ssId = LAST_INSERT_ID();
 INSERT INTO role_to_ss_table(role_name, ss_id) values   ('admin', @ssId),
                                                         ('other', @ssId);
