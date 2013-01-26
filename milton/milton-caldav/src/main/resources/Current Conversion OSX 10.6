@@ -1,0 +1,406 @@
+PROPFIND / HTTP/1.1
+Host: localhost:9080
+Content-Length: 474
+User-Agent: DAVKit/4.0.3 (732); CalendarStore/4.0.4 (997); iCal/4.0.4 (1395); Mac OS X/10.6.5 (10H574)
+Depth: 0
+Connection: close
+Content-Type: text/xml
+<?xml version="1.0" encoding="utf-8"?>
+<x0:propfind xmlns:x1="urn:ietf:params:xml:ns:caldav" xmlns:x0="DAV:" xmlns:x2="http://calendarserver.org/ns/">
+ <x0:prop>
+  <x0:principal-collection-set/>
+  <x1:calendar-home-set/>
+  <x1:calendar-user-address-set/>
+  <x1:schedule-inbox-URL/>
+  <x1:schedule-outbox-URL/>
+  <x2:dropbox-home-URL/>
+  <x2:xmpp-uri/>
+  <x2:notification-URL/>
+  <x0:displayname/>
+  <x0:principal-URL/>
+  <x0:supported-report-set/>
+ </x0:prop>
+</x0:propfind>
+
+HTTP/1.1 207
+Content-Length: 1695
+DATE: Tue, 21 Dec 2010 00:56:31 GMT
+Content-Type: text/xml; charset=UTF-8
+<?xml version="1.0" encoding="utf-8" ?>
+<D:multistatus xmlns:ns2="http://calendarserver.org/ns/" xmlns:D="DAV:" xmlns:ns1="urn:ietf:params:xml:ns:caldav">
+<D:response>
+<D:href>http://localhost:9080/</D:href>
+<D:propstat>
+<D:prop>
+<ns1:schedule-outbox-URL><D:href>
+http://localhost:7080/scheduleOutBoxUrl</D:href>
+</ns1:schedule-outbox-URL>
+<supported-report-set>
+<supported-report>
+<report>
+<principal-search-property-set/></report>
+</supported-report>
+<supported-report>
+<report>
+<calendar-multiget/></report>
+</supported-report>
+<supported-report>
+<report>
+<expand-property/></report>
+</supported-report>
+<supported-report>
+<report>
+<principal-property-search/></report>
+</supported-report>
+<supported-report>
+<report>
+<acl-principal-prop-set/></report>
+</supported-report>
+<supported-report>
+<report>
+<principal-match/></report>
+</supported-report>
+</supported-report-set>
+<ns1:calendar-user-address-set><D:href>
+/caldav/users</D:href>
+<D:href>
+/caldav/staff</D:href>
+</ns1:calendar-user-address-set>
+<ns1:calendar-home-set><D:href>
+/calendarHome</D:href>
+</ns1:calendar-home-set>
+<ns2:notification-URL><D:href>
+http://localhost:7080/notificationUrl</D:href>
+</ns2:notification-URL>
+<ns2:dropbox-home-URL><D:href>
+http://localhost:7080/dropBoxHomeUrl</D:href>
+</ns2:dropbox-home-URL>
+<ns1:schedule-inbox-URL><D:href>
+http://localhost:7080/scheduleInBoxUrl</D:href>
+</ns1:schedule-inbox-URL>
+<D:displayname>http://localhost:9080</D:displayname>
+<D:principal-URL/><ns2:xmpp-uri>xmpp:romeo@montague.net</ns2:xmpp-uri>
+<D:principal-collection-set><D:href>
+/principals</D:href>
+</D:principal-collection-set>
+</D:prop>
+<D:status>HTTP/1.1 200</D:status>
+</D:propstat>
+</D:response>
+</D:multistatus>
+=========================================================================================================================================
+REPORT /principals/ HTTP/1.1
+Host: localhost:9080
+Content-Length: 91
+User-Agent: DAVKit/4.0.3 (732); CalendarStore/4.0.4 (997); iCal/4.0.4 (1395); Mac OS X/10.6.5 (10H574)
+Depth: 0
+Connection: close
+Content-Type: text/xml
+<?xml version="1.0" encoding="utf-8" ?>
+<x0:principal-search-property-set xmlns:x0="DAV:"/>
+
+HTTP/1.1 207
+
+<?xml version='1.0' encoding='UTF-8'?>
+<principal-search-property-set xmlns='DAV:'>
+<principal-search-property>
+<prop>
+<displayname/>
+</prop>
+<description xml:lang='en'>Display Name</description>
+</principal-search-property>
+<principal-search-property>
+<prop>
+<email-address-set xmlns='http://calendarserver.org/ns/'/>
+</prop>
+<description xml:lang='en'>Email Addresses</description>
+</principal-search-property>
+<principal-search-property>
+<prop>
+<last-name xmlns='http://calendarserver.org/ns/'/>
+</prop>
+<description xml:lang='en'>Last Name</description>
+</principal-search-property>
+<principal-search-property>
+<prop>
+<calendar-user-type xmlns='urn:ietf:params:xml:ns:caldav'/>
+</prop>
+<description xml:lang='en'>Calendar User Type</description>
+</principal-search-property>
+<principal-search-property>
+<prop>
+<first-name xmlns='http://calendarserver.org/ns/'/>
+</prop>
+<description xml:lang='en'>First Name</description>
+</principal-search-property>
+<principal-search-property>
+<prop>
+<calendar-user-address-set xmlns='urn:ietf:params:xml:ns:caldav'/>
+</prop>
+<description xml:lang='en'>Calendar User Address Set</description>
+</principal-search-property>
+</principal-search-property-set>
+=========================================================================================================================================
+PROPFIND / HTTP/1.1
+Host: localhost:9080
+Content-Length: 474
+User-Agent: DAVKit/4.0.3 (732); CalendarStore/4.0.4 (997); iCal/4.0.4 (1395); Mac OS X/10.6.5 (10H574)
+Depth: 0
+Connection: keep-alive
+Content-Type: text/xml
+<?xml version="1.0" encoding="utf-8"?>
+<x0:propfind xmlns:x1="urn:ietf:params:xml:ns:caldav" xmlns:x0="DAV:" xmlns:x2="http://calendarserver.org/ns/">
+ <x0:prop>
+  <x0:principal-collection-set/>
+  <x1:calendar-home-set/>
+  <x1:calendar-user-address-set/>
+  <x1:schedule-inbox-URL/>
+  <x1:schedule-outbox-URL/>
+  <x2:dropbox-home-URL/>
+  <x2:xmpp-uri/>
+  <x2:notification-URL/>
+  <x0:displayname/>
+  <x0:principal-URL/>
+  <x0:supported-report-set/>
+ </x0:prop>
+</x0:propfind>
+
+HTTP/1.1 207
+Content-Length: 1695
+DATE: Tue, 21 Dec 2010 00:56:32 GMT
+Content-Type: text/xml; charset=UTF-8
+<?xml version="1.0" encoding="utf-8" ?>
+<D:multistatus xmlns:ns2="http://calendarserver.org/ns/" xmlns:D="DAV:" xmlns:ns1="urn:ietf:params:xml:ns:caldav">
+<D:response>
+<D:href>http://localhost:9080/</D:href>
+<D:propstat>
+<D:prop>
+<ns1:schedule-outbox-URL><D:href>
+http://localhost:7080/scheduleOutBoxUrl</D:href>
+</ns1:schedule-outbox-URL>
+<supported-report-set>
+<supported-report>
+<report>
+<principal-search-property-set/></report>
+</supported-report>
+<supported-report>
+<report>
+<calendar-multiget/></report>
+</supported-report>
+<supported-report>
+<report>
+<expand-property/></report>
+</supported-report>
+<supported-report>
+<report>
+<principal-property-search/></report>
+</supported-report>
+<supported-report>
+<report>
+<acl-principal-prop-set/></report>
+</supported-report>
+<supported-report>
+<report>
+<principal-match/></report>
+</supported-report>
+</supported-report-set>
+<ns1:calendar-user-address-set><D:href>
+/caldav/users</D:href>
+<D:href>
+/caldav/staff</D:href>
+</ns1:calendar-user-address-set>
+<ns1:calendar-home-set><D:href>
+/calendarHome</D:href>
+</ns1:calendar-home-set>
+<ns2:notification-URL><D:href>
+http://localhost:7080/notificationUrl</D:href>
+</ns2:notification-URL>
+<ns2:dropbox-home-URL><D:href>
+http://localhost:7080/dropBoxHomeUrl</D:href>
+</ns2:dropbox-home-URL>
+<ns1:schedule-inbox-URL><D:href>
+http://localhost:7080/scheduleInBoxUrl</D:href>
+</ns1:schedule-inbox-URL>
+<D:displayname>http://localhost:9080</D:displayname>
+<D:principal-URL/><ns2:xmpp-uri>xmpp:romeo@montague.net</ns2:xmpp-uri>
+<D:principal-collection-set><D:href>
+/principals</D:href>
+</D:principal-collection-set>
+</D:prop>
+<D:status>HTTP/1.1 200</D:status>
+</D:propstat>
+</D:response>
+</D:multistatus>
+=========================================================================================================================================
+REPORT /principals/ HTTP/1.1
+Host: localhost:9080
+Content-Length: 91
+User-Agent: DAVKit/4.0.3 (732); CalendarStore/4.0.4 (997); iCal/4.0.4 (1395); Mac OS X/10.6.5 (10H574)
+Depth: 0
+Connection: keep-alive
+Content-Type: text/xml
+<?xml version="1.0" encoding="utf-8" ?>
+<x0:principal-search-property-set xmlns:x0="DAV:"/>
+
+HTTP/1.1 207
+
+<?xml version='1.0' encoding='UTF-8'?>
+<principal-search-property-set xmlns='DAV:'>
+<principal-search-property>
+<prop>
+<displayname/>
+</prop>
+<description xml:lang='en'>Display Name</description>
+</principal-search-property>
+<principal-search-property>
+<prop>
+<email-address-set xmlns='http://calendarserver.org/ns/'/>
+</prop>
+<description xml:lang='en'>Email Addresses</description>
+</principal-search-property>
+<principal-search-property>
+<prop>
+<last-name xmlns='http://calendarserver.org/ns/'/>
+</prop>
+<description xml:lang='en'>Last Name</description>
+</principal-search-property>
+<principal-search-property>
+<prop>
+<calendar-user-type xmlns='urn:ietf:params:xml:ns:caldav'/>
+</prop>
+<description xml:lang='en'>Calendar User Type</description>
+</principal-search-property>
+<principal-search-property>
+<prop>
+<first-name xmlns='http://calendarserver.org/ns/'/>
+</prop>
+<description xml:lang='en'>First Name</description>
+</principal-search-property>
+<principal-search-property>
+<prop>
+<calendar-user-address-set xmlns='urn:ietf:params:xml:ns:caldav'/>
+</prop>
+<description xml:lang='en'>Calendar User Address Set</description>
+</principal-search-property>
+</principal-search-property-set>
+=========================================================================================================================================
+PROPFIND /calendarHome/ HTTP/1.1
+Host: localhost:9080
+Content-Length: 862
+User-Agent: DAVKit/4.0.3 (732); CalendarStore/4.0.4 (997); iCal/4.0.4 (1395); Mac OS X/10.6.5 (10H574)
+Depth: 1
+Connection: keep-alive
+Content-Type: text/xml
+<?xml version="1.0" encoding="utf-8"?>
+<x0:propfind xmlns:x0="DAV:" xmlns:x3="http://apple.com/ns/ical/" xmlns:x1="http://calendarserver.org/ns/" xmlns:x2="urn:ietf:params:xml:ns:caldav">
+ <x0:prop>
+  <x1:xmpp-server/>
+  <x1:xmpp-uri/>
+  <x1:getctag/>
+  <x0:displayname/>
+  <x2:calendar-description/>
+  <x3:calendar-color/>
+  <x3:calendar-order/>
+  <x2:supported-calendar-component-set/>
+  <x0:resourcetype/>
+  <x0:owner/>
+  <x2:calendar-free-busy-set/>
+  <x2:schedule-calendar-transp/>
+  <x2:schedule-default-calendar-URL/>
+  <x0:quota-available-bytes/>
+  <x0:quota-used-bytes/>
+  <x2:calendar-timezone/>
+  <x0:current-user-privilege-set/>
+  <x1:source/>
+  <x1:subscribed-strip-alarms/>
+  <x1:subscribed-strip-attachments/>
+  <x1:subscribed-strip-todos/>
+  <x3:refreshrate/>
+  <x1:push-transports/>
+  <x1:pushkey/>
+  <x1:publish-url/>
+ </x0:prop>
+</x0:propfind>
+
+HTTP/1.1 207
+Content-Length: 3091
+DATE: Tue, 21 Dec 2010 00:56:33 GMT
+Content-Type: text/xml; charset=UTF-8
+<?xml version="1.0" encoding="utf-8" ?>
+<D:multistatus xmlns:ns1="http://calendarserver.org/ns/" xmlns:D="DAV:" xmlns:ns2="urn:ietf:params:xml:ns:caldav">
+<D:response>
+<D:href>http://localhost:9080/calendarHome/</D:href>
+<D:propstat>
+<D:prop>
+<D:displayname>http://localhost:9080</D:displayname>
+<ns1:getctag>858319113</ns1:getctag>
+<D:quota-used-bytes/><D:quota-available-bytes/><ns2:calendar-description>http://localhost:9080</ns2:calendar-description>
+<D:resourcetype>
+<D:collection/>
+</D:resourcetype>
+<ns1:xmpp-uri>xmpp:romeo@montague.net</ns1:xmpp-uri>
+</D:prop>
+<D:status>HTTP/1.1 200</D:status>
+</D:propstat>
+<D:propstat>
+<D:prop>
+<ns1:source/><D:owner/><D:current-user-privilege-set/><calendar-color/><ns2:supported-calendar-component-set/><ns2:calendar-free-busy-set/><ns1:subscribed-strip-attachments/><calendar-order/><ns2:calendar-timezone/><ns2:schedule-calendar-transp/><ns1:push-transports/><ns1:subscribed-strip-alarms/><ns2:schedule-default-calendar-URL/><ns1:pushkey/><ns1:subscribed-strip-todos/><refreshrate/><ns1:publish-url/><ns1:xmpp-server/></D:prop>
+<D:status>HTTP/1.1 404</D:status>
+</D:propstat>
+</D:response>
+<D:response>
+<D:href>http://localhost:9080/calendarHome/folder1/</D:href>
+<D:propstat>
+<D:prop>
+<D:displayname>folder1</D:displayname>
+<ns1:getctag>964814846</ns1:getctag>
+<D:quota-used-bytes/><D:quota-available-bytes/><ns2:calendar-description>folder1</ns2:calendar-description>
+<D:resourcetype>
+<D:collection/>
+</D:resourcetype>
+<ns1:xmpp-uri>xmpp:romeo@montague.net</ns1:xmpp-uri>
+</D:prop>
+<D:status>HTTP/1.1 200</D:status>
+</D:propstat>
+<D:propstat>
+<D:prop>
+<ns1:source/><D:owner/><D:current-user-privilege-set/><calendar-color/><ns2:supported-calendar-component-set/><ns2:calendar-free-busy-set/><ns1:subscribed-strip-attachments/><calendar-order/><ns2:calendar-timezone/><ns2:schedule-calendar-transp/><ns1:push-transports/><ns1:subscribed-strip-alarms/><ns2:schedule-default-calendar-URL/><ns1:pushkey/><ns1:subscribed-strip-todos/><refreshrate/><ns1:publish-url/><ns1:xmpp-server/></D:prop>
+<D:status>HTTP/1.1 404</D:status>
+</D:propstat>
+</D:response>
+<D:response>
+<D:href>http://localhost:9080/calendarHome/principals/</D:href>
+<D:propstat>
+<D:prop>
+<D:displayname>principals</D:displayname>
+<ns1:getctag>2141581872</ns1:getctag>
+<D:quota-used-bytes/><D:quota-available-bytes/><ns2:calendar-description>principals</ns2:calendar-description>
+<D:resourcetype>
+<D:collection/>
+</D:resourcetype>
+<ns1:xmpp-uri>xmpp:romeo@montague.net</ns1:xmpp-uri>
+</D:prop>
+<D:status>HTTP/1.1 200</D:status>
+</D:propstat>
+<D:propstat>
+<D:prop>
+<ns1:source/><D:owner/><D:current-user-privilege-set/><calendar-color/><ns2:supported-calendar-component-set/><ns2:calendar-free-busy-set/><ns1:subscribed-strip-attachments/><calendar-order/><ns2:calendar-timezone/><ns2:schedule-calendar-transp/><ns1:push-transports/><ns1:subscribed-strip-alarms/><ns2:schedule-default-calendar-URL/><ns1:pushkey/><ns1:subscribed-strip-todos/><refreshrate/><ns1:publish-url/><ns1:xmpp-server/></D:prop>
+<D:status>HTTP/1.1 404</D:status>
+</D:propstat>
+</D:response>
+</D:multistatus>
+=========================================================================================================================================
+
+
+=========================================================================================================================================
+
+
+=========================================================================================================================================
+
+
+
+
+
+
+
+

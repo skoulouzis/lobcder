@@ -1,0 +1,1545 @@
+polaris:~ root# tcpdump -A -n -i lo0 port 8008
+tcpdump: verbose output suppressed, use -v or -vv for full protocol decode
+
+=========================================================================================================================================
+
+PROPFIND /principals/__uids__/admin/ HTTP/1.1
+Host: localhost:8008
+User-Agent: DAVKit/4.0.3 (732); CalendarStore/4.0.3 (991); iCal/4.0.3 (1388); Mac OS X/10.6.4 (10F569)
+Depth: 0
+Content-Type: text/xml
+Content-Length: 474
+Connection: keep-alive
+<?xml version="1.0" encoding="utf-8"?>
+<x0:propfind xmlns:x1="urn:ietf:params:xml:ns:caldav" xmlns:x0="DAV:" xmlns:x2="http://calendarserver.org/ns/">
+ <x0:prop>
+  <x0:principal-collection-set/>
+  <x1:calendar-home-set/>
+  <x1:calendar-user-address-set/>
+  <x1:schedule-inbox-URL/>
+  <x1:schedule-outbox-URL/>
+  <x2:dropbox-home-URL/>
+  <x2:xmpp-uri/>
+  <x2:notification-URL/>
+  <x0:displayname/>
+  <x0:principal-URL/>
+  <x0:supported-report-set/>
+ </x0:prop>
+</x0:propfind>
+
+HTTP/1.1 401 Unauthorized
+Content-Length: 141
+Server: CalendarServer/trunk(r5958) Twisted/10.0.0 TwistedWeb/9.0.0+r5958
+DAV: 1, access-control, calendar-access, calendar-schedule, calendar-auto-schedule, calendar-availability, inbox-availability, calendar-proxy, calendarserver-private-events, calendarserver-private-comments, calendarserver-sharing, addressbook, calendarserver-principal-property-search
+Date: Thu, 29 Jul 2010 09:42:32 GMT
+Content-Type: text/html
+WWW-Authenticate: digest nonce="575425224305052965475086383985441016335015555656425296365", realm="Test Realm", algorithm="md5"
+WWW-Authenticate: basic realm="Test Realm"
+
+<html><head><title>Unauthorized</title></head><body><h1>Unauthorized</h1><p>You are not authorized to access this resource.</p></body></html>
+
+=========================================================================================================================================
+
+PROPFIND /principals/__uids__/admin/ HTTP/1.1
+Host: localhost:8008
+User-Agent: DAVKit/4.0.3 (732); CalendarStore/4.0.3 (991); iCal/4.0.3 (1388); Mac OS X/10.6.4 (10F569)
+Authorization: Digest username="admin", realm="Test Realm", nonce="575425224305052965475086383985441016335015555656425296365", uri="/principals/__uids__/admin/", response="223ca576932c41d278c715ba1c23cd80", algorithm="md5"
+Depth: 0
+Content-Type: text/xml
+Content-Length: 474
+Connection: keep-alive
+
+<?xml version="1.0" encoding="utf-8"?>
+<x0:propfind xmlns:x1="urn:ietf:params:xml:ns:caldav" xmlns:x0="DAV:" xmlns:x2="http://calendarserver.org/ns/">
+ <x0:prop>
+  <x0:principal-collection-set/>
+  <x1:calendar-home-set/>
+  <x1:calendar-user-address-set/>
+  <x1:schedule-inbox-URL/>
+  <x1:schedule-outbox-URL/>
+  <x2:dropbox-home-URL/>
+  <x2:xmpp-uri/>
+  <x2:notification-URL/>
+  <x0:displayname/>
+  <x0:principal-URL/>
+  <x0:supported-report-set/>
+ </x0:prop>
+</x0:propfind>
+
+
+HTTP/1.1 207 Multi-Status
+Content-Length: 2665
+Accept-Ranges: bytes
+Server: CalendarServer/trunk(r5958) Twisted/10.0.0 TwistedWeb/9.0.0+r5958
+Last-Modified: Thu, 29 Jul 2010 09:40:38 GMT
+DAV: 1, access-control, calendar-access, calendar-schedule, calendar-auto-schedule, calendar-availability, inbox-availability, calendar-proxy, calendarserver-private-events, calendarserver-private-comments, calendarserver-sharing, addressbook, calendarserver-principal-property-search
+Date: Thu, 29 Jul 2010 09:42:32 GMT
+Content-Type: text/xml
+
+<?xml version='1.0' encoding='UTF-8'?>
+<multistatus xmlns='DAV:'>
+  <response>
+    <href>/principals/__uids__/admin/</href>
+    <propstat>
+      <prop>
+
+        <calendar-home-set xmlns='urn:ietf:params:xml:ns:caldav'>
+          <href xmlns='DAV:'>/calendars/__uids__/admin</href>
+        </calendar-home-set>
+
+        <calendar-user-address-set xmlns='urn:ietf:params:xml:ns:caldav'>
+          <href xmlns='DAV:'>http://polaris.home.j2anywhere.com:8008/principals/users/admin/</href>
+          <href xmlns='DAV:'>urn:uuid:admin</href>
+          <href xmlns='DAV:'>http://polaris.home.j2anywhere.com:8008/principals/__uids__/admin/</href>
+          <href xmlns='DAV:'>/principals/__uids__/admin/</href>
+          <href xmlns='DAV:'>/principals/users/admin/</href>
+        </calendar-user-address-set>
+
+        <schedule-inbox-URL xmlns='urn:ietf:params:xml:ns:caldav'>
+          <href xmlns='DAV:'>/calendars/__uids__/admin/inbox/</href>
+        </schedule-inbox-URL>
+
+        <schedule-outbox-URL xmlns='urn:ietf:params:xml:ns:caldav'>
+          <href xmlns='DAV:'>/calendars/__uids__/admin/outbox/</href>
+        </schedule-outbox-URL>
+
+        <dropbox-home-URL xmlns='http://calendarserver.org/ns/'>
+          <href xmlns='DAV:'>/calendars/__uids__/admin/dropbox/</href>
+        </dropbox-home-URL>
+
+        <notification-URL xmlns='http://calendarserver.org/ns/'>
+          <href xmlns='DAV:'>/calendars/__uids__/admin/notification/</href>
+        </notification-URL>
+
+        <displayname>Super User</displayname>
+
+        <principal-collection-set>
+          <href>/principals/</href>
+        </principal-collection-set>
+
+        <principal-URL>
+          <href>/principals/__uids__/admin/</href>
+        </principal-URL>
+        <supported-report-set>
+          <supported-report>
+            <report>
+              <acl-principal-prop-set/>
+            </report>
+          </supported-report>
+          <supported-report>
+            <report>
+              <principal-match/>
+            </report>
+          </supported-report>
+          <supported-report>
+            <report>
+              <principal-property-search/>
+            </report>
+          </supported-report>
+          <supported-report>
+            <report>
+              <expand-property/>
+            </report>
+          </supported-report>
+        </supported-report-set>
+      </prop>
+      <status>HTTP/1.1 200 OK</status>
+    </propstat>
+    <propstat>
+      <prop>
+        <xmpp-uri xmlns='http://calendarserver.org/ns/'/>
+      </prop>
+      <status>HTTP/1.1 404 Not Found</status>
+    </propstat>
+  </response>
+</multistatus>
+
+=========================================================================================================================================
+
+REPORT /principals/ HTTP/1.1
+Host: localhost:8008
+User-Agent: DAVKit/4.0.3 (732); CalendarStore/4.0.3 (991); iCal/4.0.3 (1388); Mac OS X/10.6.4 (10F569)
+Authorization: Digest username="admin", realm="Test Realm", nonce="575425224305052965475086383985441016335015555656425296365", uri="/principals/", response="06a37ed7a8808f9007f67053293908da", algorithm="md5"
+Depth: 0
+Content-Type: text/xml
+Content-Length: 91
+Connection: keep-alive
+
+[
+REPORT /caldavdemo/principals/ HTTP/1.1
+content-type: text/xml
+connection: close
+host: localhost:7080
+content-length: 91
+user-agent: DAVKit/4.0.3 (732); CalendarStore/4.0.3 (991); iCal/4.0.3 (1388); Mac OS X/10.6.4 (10F569)
+depth: 0
+<?xml version="1.0" encoding="utf-8" ?>
+<x0:principal-search-property-set xmlns:x0="DAV:"/>
+]
+
+HTTP/1.1 200 OK
+Content-Length: 1362
+Accept-Ranges: bytes
+Server: CalendarServer/trunk(r5958) Twisted/10.0.0 TwistedWeb/9.0.0+r5958
+Last-Modified: Thu, 29 Jul 2010 08:53:58 GMT
+DAV: 1, access-control, calendar-access, calendar-schedule, calendar-auto-schedule, calendar-availability, inbox-availability, calendar-proxy, calendarserver-private-events, calendarserver-private-comments, calendarserver-sharing, addressbook, calendarserver-principal-property-search
+Date: Thu, 29 Jul 2010 09:42:32 GMT
+
+<?xml version='1.0' encoding='UTF-8'?>
+<principal-search-property-set xmlns='DAV:'>
+  <principal-search-property>
+    <prop>
+      <displayname/>
+    </prop>
+    <description xml:lang='en'>Display Name</description>
+  </principal-search-property>
+  <principal-search-property>
+    <prop>
+      <email-address-set xmlns='http://calendarserver.org/ns/'/>
+    </prop>
+    <description xml:lang='en'>Email Addresses</description>
+  </principal-search-property>
+  <principal-search-property>
+    <prop>
+      <last-name xmlns='http://calendarserver.org/ns/'/>
+    </prop>
+    <description xml:lang='en'>Last Name</description>
+  </principal-search-property>
+  <principal-search-property>
+    <prop>
+      <calendar-user-type xmlns='urn:ietf:params:xml:ns:caldav'/>
+    </prop>
+    <description xml:lang='en'>Calendar User Type</description>
+  </principal-search-property>
+  <principal-search-property>
+    <prop>
+      <first-name xmlns='http://calendarserver.org/ns/'/>
+    </prop>
+    <description xml:lang='en'>First Name</description>
+  </principal-search-property>
+  <principal-search-property>
+    <prop>
+      <calendar-user-address-set xmlns='urn:ietf:params:xml:ns:caldav'/>
+    </prop>
+    <description xml:lang='en'>Calendar User Address Set</description>
+  </principal-search-property>
+</principal-search-property-set>
+
+=========================================================================================================================================
+
+PROPFIND /calendars/__uids__/admin/ HTTP/1.1
+Host: localhost:8008
+User-Agent: DAVKit/4.0.3 (732); CalendarStore/4.0.3 (991); iCal/4.0.3 (1388); Mac OS X/10.6.4 (10F569)
+Authorization: Digest username="admin", realm="Test Realm", nonce="575425224305052965475086383985441016335015555656425296365", uri="/calendars/__uids__/admin/", response="060d22f8ab5ec3815ebeed6a2b8ce64d", algorithm="md5"
+Depth: 1
+Content-Type: text/xml
+Content-Length: 862
+Connection: keep-alive
+
+<?xml version="1.0" encoding="utf-8"?>
+<x0:propfind xmlns:x0="DAV:" xmlns:x3="http://apple.com/ns/ical/" xmlns:x1="http://calendarserver.org/ns/" xmlns:x2="urn:ietf:params:xml:ns:caldav">
+ <x0:prop>
+  <x1:xmpp-server/>
+  <x1:xmpp-uri/>
+  <x1:getctag/>
+  <x0:displayname/>
+  <x2:calendar-description/>
+  <x3:calendar-color/>
+  <x3:calendar-order/>
+  <x2:supported-calendar-component-set/>
+  <x0:resourcetype/>
+  <x0:owner/>
+  <x2:calendar-free-busy-set/>
+  <x2:schedule-calendar-transp/>
+  <x2:schedule-default-calendar-URL/>
+  <x0:quota-available-bytes/>
+  <x0:quota-used-bytes/>
+  <x2:calendar-timezone/>
+  <x0:current-user-privilege-set/>
+  <x1:source/>
+  <x1:subscribed-strip-alarms/>
+  <x1:subscribed-strip-attachments/>
+  <x1:subscribed-strip-todos/>
+  <x3:refreshrate/>
+  <x1:push-transports/>
+  <x1:pushkey/>
+  <x1:publish-url/>
+ </x0:prop>
+</x0:propfind>
+
+HTTP/1.1 207 Multi-Status
+Content-Length: 21947
+Accept-Ranges: bytes
+Server: CalendarServer/trunk(r5958) Twisted/10.0.0 TwistedWeb/9.0.0+r5958
+Last-Modified: Thu, 29 Jul 2010 08:54:28 GMT
+DAV: 1, access-control, calendar-access, calendar-schedule, calendar-auto-schedule, calendar-availability, inbox-availability, calendar-proxy, calendarserver-private-events, calendarserver-private-comments, calendarserver-sharing, addressbook, calendarserver-principal-property-search
+ETag: "43AA34-EE-4C5141C4"
+Date: Thu, 29 Jul 2010 09:42:32 GMT
+Content-Type: text/xml
+
+<?xml version='1.0' encoding='UTF-8'?>
+<multistatus xmlns='DAV:'>
+  <response>
+    <href>/calendars/__uids__/admin/</href>
+    <propstat>
+      <prop>
+        <xmpp-server xmlns='http://calendarserver.org/ns/'/>
+        <xmpp-uri xmlns='http://calendarserver.org/ns/'/>
+        <displayname>Super User</displayname>
+        <resourcetype/>
+        <owner>
+          <href>/principals/__uids__/admin/</href>
+        </owner>
+        <quota-available-bytes>104856691</quota-available-bytes>
+        <quota-used-bytes>909</quota-used-bytes>
+        <current-user-privilege-set>
+          <privilege>
+            <all/>
+          </privilege>
+          <privilege>
+            <read/>
+          </privilege>
+          <privilege>
+            <read-free-busy xmlns='urn:ietf:params:xml:ns:caldav'/>
+          </privilege>
+          <privilege>
+            <write/>
+          </privilege>
+          <privilege>
+            <write-properties/>
+          </privilege>
+          <privilege>
+            <write-content/>
+          </privilege>
+          <privilege>
+            <bind/>
+          </privilege>
+          <privilege>
+            <unbind/>
+          </privilege>
+          <privilege>
+            <unlock/>
+          </privilege>
+          <privilege>
+            <read-acl/>
+          </privilege>
+          <privilege>
+            <write-acl/>
+          </privilege>
+          <privilege>
+            <read-current-user-privilege-set/>
+          </privilege>
+        </current-user-privilege-set>
+        <push-transports xmlns='http://calendarserver.org/ns/'/>
+        <pushkey xmlns='http://calendarserver.org/ns/'/>
+      </prop>
+      <status>HTTP/1.1 200 OK</status>
+    </propstat>
+    <propstat>
+      <prop>
+        <getctag xmlns='http://calendarserver.org/ns/'/>
+        <calendar-description xmlns='urn:ietf:params:xml:ns:caldav'/>
+        <calendar-color xmlns='http://apple.com/ns/ical/'/>
+        <calendar-order xmlns='http://apple.com/ns/ical/'/>
+        <supported-calendar-component-set xmlns='urn:ietf:params:xml:ns:caldav'/>
+        <calendar-free-busy-set xmlns='urn:ietf:params:xml:ns:caldav'/>
+        <schedule-calendar-transp xmlns='urn:ietf:params:xml:ns:caldav'/>
+        <schedule-default-calendar-URL xmlns='urn:ietf:params:xml:ns:caldav'/>
+        <calendar-timezone xmlns='urn:ietf:params:xml:ns:caldav'/>
+        <source xmlns='http://calendarserver.org/ns/'/>
+        <subscribed-strip-alarms xmlns='http://calendarserver.org/ns/'/>
+        <subscribed-strip-attachments xmlns='http://calendarserver.org/ns/'/>
+        <subscribed-strip-todos xmlns='http://calendarserver.org/ns/'/>
+        <refreshrate xmlns='http://apple.com/ns/ical/'/>
+        <publish-url xmlns='http://calendarserver.org/ns/'/>
+      </prop>
+      <status>HTTP/1.1 404 Not Found</status>
+    </propstat>
+  </response>
+  <response>
+    <href>/calendars/__uids__/admin/dropbox/</href>
+    <propstat>
+      <prop>
+        <resourcetype>
+          <collection/>
+          <dropbox-home xmlns='http://calendarserver.org/ns/'/>
+        </resourcetype>
+        <owner>
+          <href>/principals/__uids__/admin/</href>
+        </owner>
+        <quota-available-bytes>104856691</quota-available-bytes>
+        <quota-used-bytes>909</quota-used-bytes>
+        <current-user-privilege-set>
+          <privilege>
+            <all/>
+          </privilege>
+          <privilege>
+            <read-free-busy xmlns='urn:ietf:params:xml:ns:caldav'/>
+          </privilege>
+        </current-user-privilege-set>
+      </prop>
+      <status>HTTP/1.1 200 OK</status>
+    </propstat>
+    <propstat>
+      <prop>
+        <xmpp-server xmlns='http://calendarserver.org/ns/'/>
+        <xmpp-uri xmlns='http://calendarserver.org/ns/'/>
+        <getctag xmlns='http://calendarserver.org/ns/'/>
+        <displayname/>
+        <calendar-description xmlns='urn:ietf:params:xml:ns:caldav'/>
+        <calendar-color xmlns='http://apple.com/ns/ical/'/>
+        <calendar-order xmlns='http://apple.com/ns/ical/'/>
+        <supported-calendar-component-set xmlns='urn:ietf:params:xml:ns:caldav'/>
+        <calendar-free-busy-set xmlns='urn:ietf:params:xml:ns:caldav'/>
+        <schedule-calendar-transp xmlns='urn:ietf:params:xml:ns:caldav'/>
+        <schedule-default-calendar-URL xmlns='urn:ietf:params:xml:ns:caldav'/>
+        <calendar-timezone xmlns='urn:ietf:params:xml:ns:caldav'/>
+        <source xmlns='http://calendarserver.org/ns/'/>
+        <subscribed-strip-alarms xmlns='http://calendarserver.org/ns/'/>
+        <subscribed-strip-attachments xmlns='http://calendarserver.org/ns/'/>
+        <subscribed-strip-todos xmlns='http://calendarserver.org/ns/'/>
+        <refreshrate xmlns='http://apple.com/ns/ical/'/>
+        <push-transports xmlns='http://calendarserver.org/ns/'/>
+        <pushkey xmlns='http://calendarserver.org/ns/'/>
+        <publish-url xmlns='http://calendarserver.org/ns/'/>
+      </prop>
+      <status>HTTP/1.1 404 Not Found</status>
+    </propstat>
+  </response>
+  <response>
+    <href>/calendars/__uids__/admin/inbox/</href>
+    <propstat>
+      <prop>
+        <getctag xmlns='http://calendarserver.org/ns/'>77004b8e-eab7-4b13-92ae-38a8f30da417#1</getctag>
+        <displayname>inbox</displayname>
+        <supported-calendar-component-set xmlns='urn:ietf:params:xml:ns:caldav'>
+          <comp name='VEVENT'/>
+          <comp name='VTODO'/>
+          <comp name='VTIMEZONE'/>
+          <comp name='VFREEBUSY'/>
+        </supported-calendar-component-set>
+        <resourcetype>
+          <collection/>
+          <schedule-inbox xmlns='urn:ietf:params:xml:ns:caldav'/>
+        </resourcetype>
+        <owner>
+          <href>/principals/__uids__/admin/</href>
+        </owner>
+        <calendar-free-busy-set xmlns='urn:ietf:params:xml:ns:caldav'>
+          <href xmlns='DAV:'>/calendars/__uids__/admin/calendar</href>
+        </calendar-free-busy-set>
+        <schedule-default-calendar-URL xmlns='urn:ietf:params:xml:ns:caldav'>
+          <href xmlns='DAV:'>/calendars/__uids__/admin/calendar</href>
+        </schedule-default-calendar-URL>
+        <quota-available-bytes>104856691</quota-available-bytes>
+        <quota-used-bytes>909</quota-used-bytes>
+        <current-user-privilege-set>
+          <privilege>
+            <schedule-deliver xmlns='urn:ietf:params:xml:ns:caldav'/>
+          </privilege>
+          <privilege>
+            <schedule xmlns='urn:ietf:params:xml:ns:caldav'/>
+          </privilege>
+          <privilege>
+            <all/>
+          </privilege>
+          <privilege>
+            <read/>
+          </privilege>
+          <privilege>
+            <write/>
+          </privilege>
+          <privilege>
+            <write-properties/>
+          </privilege>
+          <privilege>
+            <write-content/>
+          </privilege>
+          <privilege>
+            <bind/>
+          </privilege>
+          <privilege>
+            <unbind/>
+          </privilege>
+          <privilege>
+            <unlock/>
+          </privilege>
+          <privilege>
+            <read-acl/>
+          </privilege>
+          <privilege>
+            <write-acl/>
+          </privilege>
+          <privilege>
+            <read-current-user-privilege-set/>
+          </privilege>
+          <privilege>
+            <read-free-busy xmlns='urn:ietf:params:xml:ns:caldav'/>
+          </privilege>
+        </current-user-privilege-set>
+      </prop>
+      <status>HTTP/1.1 200 OK</status>
+    </propstat>
+    <propstat>
+      <prop>
+        <xmpp-server xmlns='http://calendarserver.org/ns/'/>
+        <xmpp-uri xmlns='http://calendarserver.org/ns/'/>
+        <calendar-description xmlns='urn:ietf:params:xml:ns:caldav'/>
+        <calendar-color xmlns='http://apple.com/ns/ical/'/>
+        <calendar-order xmlns='http://apple.com/ns/ical/'/>
+        <schedule-calendar-transp xmlns='urn:ietf:params:xml:ns:caldav'/>
+        <calendar-timezone xmlns='urn:ietf:params:xml:ns:caldav'/>
+        <source xmlns='http://calendarserver.org/ns/'/>
+        <subscribed-strip-alarms xmlns='http://calendarserver.org/ns/'/>
+        <subscribed-strip-attachments xmlns='http://calendarserver.org/ns/'/>
+        <subscribed-strip-todos xmlns='http://calendarserver.org/ns/'/>
+        <refreshrate xmlns='http://apple.com/ns/ical/'/>
+        <push-transports xmlns='http://calendarserver.org/ns/'/>
+        <pushkey xmlns='http://calendarserver.org/ns/'/>
+        <publish-url xmlns='http://calendarserver.org/ns/'/>
+      </prop>
+      <status>HTTP/1.1 404 Not Found</status>
+    </propstat>
+  </response>
+  <response>
+    <href>/calendars/__uids__/admin/freebusy</href>
+    <propstat>
+      <prop>
+        <resourcetype>
+          <free-busy-url xmlns='http://calendarserver.org/ns/'/>
+        </resourcetype>
+        <owner>
+          <href>/principals/__uids__/admin/</href>
+        </owner>
+        <quota-available-bytes>104856691</quota-available-bytes>
+        <quota-used-bytes>909</quota-used-bytes>
+        <current-user-privilege-set>
+          <privilege>
+            <read/>
+          </privilege>
+          <privilege>
+            <schedule-deliver xmlns='urn:ietf:params:xml:ns:caldav'/>
+          </privilege>
+          <privilege>
+            <schedule xmlns='urn:ietf:params:xml:ns:caldav'/>
+          </privilege>
+          <privilege>
+            <all/>
+          </privilege>
+          <privilege>
+            <write/>
+          </privilege>
+          <privilege>
+            <write-properties/>
+          </privilege>
+          <privilege>
+            <write-content/>
+          </privilege>
+          <privilege>
+            <bind/>
+          </privilege>
+          <privilege>
+            <unbind/>
+          </privilege>
+          <privilege>
+            <unlock/>
+          </privilege>
+          <privilege>
+            <read-acl/>
+          </privilege>
+          <privilege>
+            <write-acl/>
+          </privilege>
+          <privilege>
+            <read-current-user-privilege-set/>
+          </privilege>
+          <privilege>
+            <read-free-busy xmlns='urn:ietf:params:xml:ns:caldav'/>
+          </privilege>
+        </current-user-privilege-set>
+      </prop>
+      <status>HTTP/1.1 200 OK</status>
+    </propstat>
+    <propstat>
+      <prop>
+        <xmpp-server xmlns='http://calendarserver.org/ns/'/>
+        <xmpp-uri xmlns='http://calendarserver.org/ns/'/>
+        <getctag xmlns='http://calendarserver.org/ns/'/>
+        <displayname/>
+        <calendar-description xmlns='urn:ietf:params:xml:ns:caldav'/>
+        <calendar-color xmlns='http://apple.com/ns/ical/'/>
+        <calendar-order xmlns='http://apple.com/ns/ical/'/>
+        <supported-calendar-component-set xmlns='urn:ietf:params:xml:ns:caldav'/>
+        <calendar-free-busy-set xmlns='urn:ietf:params:xml:ns:caldav'/>
+        <schedule-calendar-transp xmlns='urn:ietf:params:xml:ns:caldav'/>
+        <schedule-default-calendar-URL xmlns='urn:ietf:params:xml:ns:caldav'/>
+        <calendar-timezone xmlns='urn:ietf:params:xml:ns:caldav'/>
+        <source xmlns='http://calendarserver.org/ns/'/>
+        <subscribed-strip-alarms xmlns='http://calendarserver.org/ns/'/>
+        <subscribed-strip-attachments xmlns='http://calendarserver.org/ns/'/>
+        <subscribed-strip-todos xmlns='http://calendarserver.org/ns/'/>
+        <refreshrate xmlns='http://apple.com/ns/ical/'/>
+        <push-transports xmlns='http://calendarserver.org/ns/'/>
+        <pushkey xmlns='http://calendarserver.org/ns/'/>
+        <publish-url xmlns='http://calendarserver.org/ns/'/>
+      </prop>
+      <status>HTTP/1.1 404 Not Found</status>
+    </propstat>
+  </response>
+  <response>
+    <href>/calendars/__uids__/admin/outbox/</href>
+    <propstat>
+      <prop>
+        <displayname/>
+        <supported-calendar-component-set xmlns='urn:ietf:params:xml:ns:caldav'>
+          <comp name='VEVENT'/>
+          <comp name='VTODO'/>
+          <comp name='VTIMEZONE'/>
+          <comp name='VFREEBUSY'/>
+        </supported-calendar-component-set>
+        <resourcetype>
+          <collection/>
+          <schedule-outbox xmlns='urn:ietf:params:xml:ns:caldav'/>
+        </resourcetype>
+        <owner>
+          <href>/principals/__uids__/admin/</href>
+        </owner>
+        <quota-available-bytes>104856691</quota-available-bytes>
+        <quota-used-bytes>909</quota-used-bytes>
+        <current-user-privilege-set>
+          <privilege>
+            <all/>
+          </privilege>
+          <privilege>
+            <read/>
+          </privilege>
+          <privilege>
+            <write/>
+          </privilege>
+          <privilege>
+            <write-properties/>
+          </privilege>
+          <privilege>
+            <write-content/>
+          </privilege>
+          <privilege>
+            <bind/>
+          </privilege>
+          <privilege>
+            <unbind/>
+          </privilege>
+          <privilege>
+            <unlock/>
+          </privilege>
+          <privilege>
+            <read-acl/>
+          </privilege>
+          <privilege>
+            <write-acl/>
+          </privilege>
+          <privilege>
+            <read-current-user-privilege-set/>
+          </privilege>
+          <privilege>
+            <schedule-send xmlns='urn:ietf:params:xml:ns:caldav'/>
+          </privilege>
+          <privilege>
+            <schedule xmlns='urn:ietf:params:xml:ns:caldav'/>
+          </privilege>
+          <privilege>
+            <read-free-busy xmlns='urn:ietf:params:xml:ns:caldav'/>
+          </privilege>
+        </current-user-privilege-set>
+      </prop>
+      <status>HTTP/1.1 200 OK</status>
+    </propstat>
+    <propstat>
+      <prop>
+        <xmpp-server xmlns='http://calendarserver.org/ns/'/>
+        <xmpp-uri xmlns='http://calendarserver.org/ns/'/>
+        <getctag xmlns='http://calendarserver.org/ns/'/>
+        <calendar-description xmlns='urn:ietf:params:xml:ns:caldav'/>
+        <calendar-color xmlns='http://apple.com/ns/ical/'/>
+        <calendar-order xmlns='http://apple.com/ns/ical/'/>
+        <calendar-free-busy-set xmlns='urn:ietf:params:xml:ns:caldav'/>
+        <schedule-calendar-transp xmlns='urn:ietf:params:xml:ns:caldav'/>
+        <schedule-default-calendar-URL xmlns='urn:ietf:params:xml:ns:caldav'/>
+        <calendar-timezone xmlns='urn:ietf:params:xml:ns:caldav'/>
+        <source xmlns='http://calendarserver.org/ns/'/>
+        <subscribed-strip-alarms xmlns='http://calendarserver.org/ns/'/>
+        <subscribed-strip-attachments xmlns='http://calendarserver.org/ns/'/>
+        <subscribed-strip-todos xmlns='http://calendarserver.org/ns/'/>
+        <refreshrate xmlns='http://apple.com/ns/ical/'/>
+        <push-transports xmlns='http://calendarserver.org/ns/'/>
+        <pushkey xmlns='http://calendarserver.org/ns/'/>
+        <publish-url xmlns='http://calendarserver.org/ns/'/>
+      </prop>
+      <status>HTTP/1.1 404 Not Found</status>
+    </propstat>
+  </response>
+  <response>
+    <href>/calendars/__uids__/admin/notification/</href>
+    <propstat>
+      <prop>
+        <displayname>notification</displayname>
+        <resourcetype>
+          <collection/>
+          <notification xmlns='http://calendarserver.org/ns/'/>
+        </resourcetype>
+        <owner>
+          <href>/principals/__uids__/admin/</href>
+        </owner>
+        <quota-available-bytes>104856691</quota-available-bytes>
+        <quota-used-bytes>909</quota-used-bytes>
+        <current-user-privilege-set> 
+	  <privilege>
+            <all/>
+          </privilege>
+          <privilege>
+            <read/>
+          </privilege>
+          <privilege>
+            <read-free-busy xmlns='urn:ietf:params:xml:ns:caldav'/>
+          </privilege>
+          <privilege>
+            <write/>
+          </privilege>
+          <privilege>
+            <write-properties/>
+          </privilege>
+          <privilege>
+            <write-content/>
+          </privilege>
+          <privilege>
+            <bind/>
+          </privilege>
+          <privilege>
+            <unbind/>
+          </privilege>
+          <privilege>
+            <unlock/>
+          </privilege>
+          <privilege>
+            <read-acl/>
+          </privilege>
+          <privilege>
+            <write-acl/>
+          </privilege>
+          <privilege>
+            <read-current-user-privilege-set/>
+          </privilege>
+        </current-user-privilege-set>
+      </prop>
+      <status>HTTP/1.1 200 OK</status>
+    </propstat>
+    <propstat>
+      <prop>
+        <xmpp-server xmlns='http://calendarserver.org/ns/'/>
+        <xmpp-uri xmlns='http://calendarserver.org/ns/'/>
+        <getctag xmlns='http://calendarserver.org/ns/'/>
+        <calendar-description xmlns='urn:ietf:params:xml:ns:caldav'/>
+        <calendar-color xmlns='http://apple.com/ns/ical/'/>
+        <calendar-order xmlns='http://apple.com/ns/ical/'/>
+        <supported-calendar-component-set xmlns='urn:ietf:params:xml:ns:caldav'/>
+        <calendar-free-busy-set xmlns='urn:ietf:params:xml:ns:caldav'/>
+        <schedule-calendar-transp xmlns='urn:ietf:params:xml:ns:caldav'/>
+        <schedule-default-calendar-URL xmlns='urn:ietf:params:xml:ns:caldav'/>
+        <calendar-timezone xmlns='urn:ietf:params:xml:ns:caldav'/>
+        <source xmlns='http://calendarserver.org/ns/'/>
+        <subscribed-strip-alarms xmlns='http://calendarserver.org/ns/'/>
+        <subscribed-strip-attachments xmlns='http://calendarserver.org/ns/'/>
+        <subscribed-strip-todos xmlns='http://calendarserver.org/ns/'/>
+        <refreshrate xmlns='http://apple.com/ns/ical/'/>
+        <push-transports xmlns='http://calendarserver.org/ns/'/>
+        <pushkey xmlns='http://calendarserver.org/ns/'/>
+        <publish-url xmlns='http://calendarserver.org/ns/'/>
+      </prop>
+      <status>HTTP/1.1 404 Not Found</status>
+    </propstat>
+  </response>
+  <response>
+    <href>/calendars/__uids__/admin/calendar/</href>
+    <propstat>
+      <prop>
+        <getctag xmlns='http://calendarserver.org/ns/'>32bb766e-c21d-4e59-829b-08ab86b1b264#12</getctag>
+        <displayname>calendar</displayname>
+        <calendar-color xmlns='http://apple.com/ns/ical/'>#B027AEFF</calendar-color>
+        <calendar-order xmlns='http://apple.com/ns/ical/'>1</calendar-order>
+        <supported-calendar-component-set xmlns='urn:ietf:params:xml:ns:caldav'>
+          <comp name='VEVENT'/>
+          <comp name='VTODO'/>
+          <comp name='VTIMEZONE'/>
+          <comp name='VFREEBUSY'/>
+        </supported-calendar-component-set>
+        <resourcetype>
+          <collection/>
+          <calendar xmlns='urn:ietf:params:xml:ns:caldav'/>
+        </resourcetype>
+        <owner>
+          <href>/principals/__uids__/admin/</href>
+        </owner>
+        <schedule-calendar-transp xmlns='urn:ietf:params:xml:ns:caldav'>
+          <opaque/>
+        </schedule-calendar-transp>
+        <quota-available-bytes>104856691</quota-available-bytes>
+        <quota-used-bytes>909</quota-used-bytes>
+        <calendar-timezone xmlns='urn:ietf:params:xml:ns:caldav'><![CDATA[BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Apple Inc.//iCal 4.0.3//EN
+CALSCALE:GREGORIAN
+BEGIN:VTIMEZONE
+TZID:Australia/Perth
+BEGIN:DAYLIGHT
+TZOFFSETFROM:+0800
+RRULE:FREQ=YEARLY;UNTIL=20081025T180000Z;BYMONTH=10;BYDAY=-1SU
+DTSTART:20071028T020000
+TZNAME:GMT+08:00
+TZOFFSETTO:+0900
+END:DAYLIGHT
+BEGIN:STANDARD
+TZOFFSETFROM:+0900
+DTSTART:20090329T030000
+TZNAME:GMT+08:00
+TZOFFSETTO:+0800
+END:STANDARD
+END:VTIMEZONE
+END:VCALENDAR
+]]></calendar-timezone>
+        <current-user-privilege-set>
+          <privilege>
+            <all/>
+          </privilege>
+          <privilege>
+            <read/>
+          </privilege>
+          <privilege>
+            <read-free-busy xmlns='urn:ietf:params:xml:ns:caldav'/>
+          </privilege>
+          <privilege>
+            <write/>
+          </privilege>
+          <privilege>
+            <write-properties/>
+          </privilege>
+          <privilege>
+            <write-content/>
+          </privilege>
+          <privilege>
+            <bind/>
+          </privilege>
+          <privilege>
+            <unbind/>
+          </privilege>
+          <privilege>
+            <unlock/>
+          </privilege>
+          <privilege>
+            <read-acl/>
+          </privilege>
+          <privilege>
+            <write-acl/>
+          </privilege>
+          <privilege>
+            <read-current-user-privilege-set/>
+          </privilege>
+        </current-user-privilege-set>
+        <pushkey xmlns='http://calendarserver.org/ns/'/>
+      </prop>
+      <status>HTTP/1.1 200 OK</status>
+    </propstat>
+    <propstat>
+      <prop>
+        <xmpp-server xmlns='http://calendarserver.org/ns/'/>
+        <xmpp-uri xmlns='http://calendarserver.org/ns/'/>
+        <calendar-description xmlns='urn:ietf:params:xml:ns:caldav'/>
+        <calendar-free-busy-set xmlns='urn:ietf:params:xml:ns:caldav'/>
+        <schedule-default-calendar-URL xmlns='urn:ietf:params:xml:ns:caldav'/>
+        <source xmlns='http://calendarserver.org/ns/'/>
+        <subscribed-strip-alarms xmlns='http://calendarserver.org/ns/'/>
+        <subscribed-strip-attachments xmlns='http://calendarserver.org/ns/'/>
+        <subscribed-strip-todos xmlns='http://calendarserver.org/ns/'/>
+        <refreshrate xmlns='http://apple.com/ns/ical/'/>
+        <push-transports xmlns='http://calendarserver.org/ns/'/>
+        <publish-url xmlns='http://calendarserver.org/ns/'/>
+      </prop>
+      <status>HTTP/1.1 404 Not Found</status>
+    </propstat>
+  </response>
+</multistatus>
+
+=========================================================================================================================================
+
+PROPFIND /calendars/__uids__/admin/calendar/ HTTP/1.1
+Host: localhost:8008
+User-Agent: DAVKit/4.0.3 (732); CalendarStore/4.0.3 (991); iCal/4.0.3 (1388); Mac OS X/10.6.4 (10F569)
+Authorization: Digest username="admin", realm="Test Realm", nonce="575425224305052965475086383985441016335015555656425296365", uri="/calendars/__uids__/admin/calendar/", response="cda83634958bd458b99f36c9ce6a7c3f", algorithm="md5"
+Depth: 1
+Content-Type: text/xml
+Content-Length: 209
+Connection: keep-alive
+
+<?xml version="1.0" encoding="utf-8"?>
+<x0:propfind xmlns:x0="DAV:" xmlns:x1="http://calendarserver.org/ns/">
+ <x0:prop>
+  <x0:getetag/>
+  <x0:resourcetype/>
+  <x1:notificationtype/>
+ </x0:prop>
+</x0:propfind>
+
+HTTP/1.1 207 Multi-Status
+Content-Length: 1115
+Accept-Ranges: bytes
+Server: CalendarServer/trunk(r5958) Twisted/10.0.0 TwistedWeb/9.0.0+r5958
+Last-Modified: Thu, 29 Jul 2010 09:41:10 GMT
+DAV: 1, access-control, calendar-access, calendar-schedule, calendar-auto-schedule, calendar-availability, inbox-availability, calendar-proxy, calendarserver-private-events, calendarserver-private-comments, calendarserver-sharing, addressbook, calendarserver-principal-property-search
+ETag: "43AA35-AA-4C514CB6"
+Date: Thu, 29 Jul 2010 09:42:32 GMT
+Content-Type: text/xml
+
+<?xml version='1.0' encoding='UTF-8'?>
+<multistatus xmlns='DAV:'>
+  <response>
+    <href>/calendars/__uids__/admin/calendar/</href>
+    <propstat>
+      <prop>
+        <getetag>"43AA35-AA-4C514CB6"</getetag>
+        <resourcetype>
+          <collection/>
+          <calendar xmlns='urn:ietf:params:xml:ns:caldav'/>
+        </resourcetype>
+      </prop>
+      <status>HTTP/1.1 200 OK</status>
+    </propstat>
+    <propstat>
+      <prop>
+        <notificationtype xmlns='http://calendarserver.org/ns/'/>
+      </prop>
+      <status>HTTP/1.1 404 Not Found</status>
+    </propstat>
+  </response>
+  <response>
+    <href>/calendars/__uids__/admin/calendar/AC92833C-7B7E-4478-A68E-6E7C2426AE5C.ics</href>
+    <propstat>
+      <prop>
+        <getetag>"7d0107b478c7739e2f4edf45e464f66a"</getetag>
+        <resourcetype/>
+      </prop>
+      <status>HTTP/1.1 200 OK</status>
+    </propstat>
+    <propstat>
+      <prop>
+        <notificationtype xmlns='http://calendarserver.org/ns/'/>
+      </prop>
+      <status>HTTP/1.1 404 Not Found</status>
+    </propstat>
+  </response>
+</multistatus>
+
+=========================================================================================================================================
+
+PROPFIND /calendars/__uids__/admin/notification/ HTTP/1.1
+Host: localhost:8008
+User-Agent: DAVKit/4.0.3 (732); CalendarStore/4.0.3 (991); iCal/4.0.3 (1388); Mac OS X/10.6.4 (10F569)
+Authorization: Digest username="admin", realm="Test Realm", nonce="575425224305052965475086383985441016335015555656425296365", uri="/calendars/__uids__/admin/notification/", response="1df93ddb784797af8536f83e5bc36fd2", algorithm="md5"
+Depth: 1
+Content-Type: text/xml
+Content-Length: 209
+Connection: keep-alive
+
+<?xml version="1.0" encoding="utf-8"?>
+<x0:propfind xmlns:x0="DAV:" xmlns:x1="http://calendarserver.org/ns/">
+ <x0:prop>
+  <x0:getetag/>
+  <x0:resourcetype/>
+  <x1:notificationtype/>
+ </x0:prop>
+</x0:propfind>
+
+HTTP/1.1 207 Multi-Status
+Content-Length: 634
+Accept-Ranges: bytes
+Server: CalendarServer/trunk(r5958) Twisted/10.0.0 TwistedWeb/9.0.0+r5958
+Last-Modified: Thu, 29 Jul 2010 08:54:28 GMT
+DAV: 1, access-control, calendar-access, calendar-schedule, calendar-auto-schedule, calendar-availability, inbox-availability, calendar-proxy, calendarserver-private-events, calendarserver-private-comments, calendarserver-sharing, addressbook, calendarserver-principal-property-search
+ETag: "43AA3B-44-4C5141C4"
+Date: Thu, 29 Jul 2010 09:42:32 GMT
+Content-Type: text/xml
+
+<?xml version='1.0' encoding='UTF-8'?>
+<multistatus xmlns='DAV:'>
+  <response>
+    <href>/calendars/__uids__/admin/notification/</href>
+    <propstat>
+      <prop>
+        <getetag>"43AA3B-44-4C5141C4"</getetag>
+        <resourcetype>
+          <collection/>
+          <notification xmlns='http://calendarserver.org/ns/'/>
+        </resourcetype>
+      </prop>
+      <status>HTTP/1.1 200 OK</status>
+    </propstat>
+    <propstat>
+      <prop>
+        <notificationtype xmlns='http://calendarserver.org/ns/'/>
+      </prop>
+      <status>HTTP/1.1 404 Not Found</status>
+    </propstat>
+  </response>
+</multistatus>
+
+=========================================================================================================================================
+
+REPORT /principals/__uids__/admin/ HTTP/1.1
+Host: localhost:8008
+User-Agent: DAVKit/4.0.3 (732); CalendarStore/4.0.3 (991); iCal/4.0.3 (1388); Mac OS X/10.6.4 (10F569)
+Authorization: Digest username="admin", realm="Test Realm", nonce="575425224305052965475086383985441016335015555656425296365", uri="/principals/__uids__/admin/", response="1cbc4973958fcc7cca4906f49c786884", algorithm="md5"
+Depth: 0
+Content-Type: text/xml
+Content-Length: 612
+Connection: keep-alive
+
+HTTP/1.1 207 Multi-Status
+Content-Length: 407
+Accept-Ranges: bytes
+Server: CalendarServer/trunk(r5958) Twisted/10.0.0 TwistedWeb/9.0.0+r5958
+Last-Modified: Thu, 29 Jul 2010 09:40:38 GMT
+DAV: 1, access-control, calendar-access, calendar-schedule, calendar-auto-schedule, calendar-availability, inbox-availability, calendar-proxy, calendarserver-private-events, calendarserver-private-comments, calendarserver-sharing, addressbook, calendarserver-principal-property-search
+Date: Thu, 29 Jul 2010 09:42:32 GMT
+Content-Type: text/xml
+
+<?xml version='1.0' encoding='UTF-8'?>
+<multistatus xmlns='DAV:'>
+  <response>
+    <href>/principals/__uids__/admin/</href>
+    <propstat>
+      <prop>
+        <calendar-proxy-write-for xmlns='http://calendarserver.org/ns/'/>
+        <calendar-proxy-read-for xmlns='http://calendarserver.org/ns/'/>
+      </prop>
+      <status>HTTP/1.1 200 OK</status>
+    </propstat>
+  </response>
+</multistatus>
+
+=========================================================================================================================================
+
+17:42:32.812263 IP 127.0.0.1.55476 > 127.0.0.1.8008: Flags [.], ack 948, win 40356, options [nop,nop,TS val 504427408 ecr 504427408], length 0
+E..4SX@.@..............H(G..H.h......(.....
+........
+17:42:32.812886 IP 127.0.0.1.55476 > 127.0.0.1.8008: Flags [F.], seq 1089, ack 948, win 40830, options [nop,nop,TS val 504427408 ecr 504427408], length 0
+E..4Nx@.@..............H(G..H.h....~.(.....
+........
+17:42:32.812902 IP 127.0.0.1.8008 > 127.0.0.1.55476: Flags [.], ack 1090, win 40830, options [nop,nop,TS val 504427408 ecr 504427408], length 0
+E..4.V@.@............H..H.h.(G.....~.(.....
+........
+17:42:32.812910 IP 127.0.0.1.55476 > 127.0.0.1.8008: Flags [.], ack 948, win 40830, options [nop,nop,TS val 504427408 ecr 504427408], length 0
+E..4.*@.@..............H(G..H.h....~.(.....
+........
+17:42:40.107754 IP6 ::1.55487 > ::1.8008: Flags [S], seq 3333729552, win 65535, options [mss 16324,nop,wscale 1,nop,nop,TS val 504427480 ecr 0,sackOK,eol], length 0
+`....,.@...................................H.............9....?........
+............
+17:42:40.107777 IP6 ::1.8008 > ::1.55487: Flags [R.], seq 0, ack 3333729553, win 0, length 0
+`......@.................................H..........P...D...
+17:42:40.107938 IP6 fe80::1.55488 > fe80::1.8008: Flags [S], seq 3643211239, win 65535, options [mss 16324,nop,wscale 1,nop,nop,TS val 504427480 ecr 0,sackOK,eol], length 0
+`....,.@...................................H.&................?........
+............
+17:42:40.107950 IP6 fe80::1.8008 > fe80::1.55488: Flags [R.], seq 0, ack 3643211240, win 0, length 0
+`......@.................................H.......&..P.......
+17:42:40.108073 IP 127.0.0.1.55489 > 127.0.0.1.8008: Flags [S], seq 990404307, win 65535, options [mss 16344,nop,wscale 1,nop,nop,TS val 504427480 ecr 0,sackOK,eol], length 0
+E..@#/@.@..............H;.^..........4....?........
+............
+17:42:40.108111 IP 127.0.0.1.8008 > 127.0.0.1.55489: Flags [S.], seq 315784752, ack 990404308, win 65535, options [mss 16344,nop,wscale 1,nop,nop,TS val 504427480 ecr 504427480,sackOK,eol], length 0
+E..@.:@.@............H....~0;.^......4....?........
+............
+17:42:40.108120 IP 127.0.0.1.55489 > 127.0.0.1.8008: Flags [.], ack 1, win 40830, options [nop,nop,TS val 504427480 ecr 504427480], length 0
+E..4.7@.@..............H;.^...~1...~.(.....
+........
+17:42:40.108293 IP 127.0.0.1.55489 > 127.0.0.1.8008: Flags [P.], seq 1:565, ack 1, win 40830, options [nop,nop,TS val 504427480 ecr 504427480], length 564
+E..h.z@.@..............H;.^...~1...~.].....
+........PUT /calendars/__uids__/admin/calendar/9822F46F-7478-4F28-9C10-26EC9FA14621.ics HTTP/1.1
+Host: localhost:8008
+User-Agent: DAVKit/4.0.3 (732); CalendarStore/4.0.3 (991); iCal/4.0.3 (1388); Mac OS X/10.6.4 (10F569)
+Authorization: Digest username="admin", realm="Test Realm", nonce="575425224305052965475086383985441016335015555656425296365", uri="/calendars/__uids__/admin/calendar/9822F46F-7478-4F28-9C10-26EC9FA14621.ics", response="169fb68013dde923502d8abc8620f752", algorithm="md5"
+Content-Type: text/calendar
+Content-Length: 699
+Connection: keep-alive
+
+
+17:42:40.108306 IP 127.0.0.1.8008 > 127.0.0.1.55489: Flags [.], ack 565, win 40548, options [nop,nop,TS val 504427480 ecr 504427480], length 0
+E..4b	@.@............H....~1;.a....d.(.....
+........
+17:42:40.108380 IP 127.0.0.1.55489 > 127.0.0.1.8008: Flags [P.], seq 565:1264, ack 1, win 40830, options [nop,nop,TS val 504427480 ecr 504427480], length 699
+E...8:@.@..............H;.a...~1...~.......
+........BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Apple Inc.//iCal 4.0.3//EN
+CALSCALE:GREGORIAN
+BEGIN:VTIMEZONE
+TZID:Australia/Perth
+BEGIN:DAYLIGHT
+TZOFFSETFROM:+0800
+RRULE:FREQ=YEARLY;UNTIL=20081025T180000Z;BYMONTH=10;BYDAY=-1SU
+DTSTART:20071028T020000
+TZNAME:GMT+08:00
+TZOFFSETTO:+0900
+END:DAYLIGHT
+BEGIN:STANDARD
+TZOFFSETFROM:+0900
+DTSTART:20090329T030000
+TZNAME:GMT+08:00
+TZOFFSETTO:+0800
+END:STANDARD
+END:VTIMEZONE
+BEGIN:VEVENT
+CREATED:20100729T094235Z
+UID:9822F46F-7478-4F28-9C10-26EC9FA14621
+DTEND;TZID=Australia/Perth:20100629T190000
+TRANSP:OPAQUE
+SUMMARY:New Event
+DTSTART;TZID=Australia/Perth:20100629T180000
+DTSTAMP:20100729T094235Z
+SEQUENCE:1
+END:VEVENT
+END:VCALENDAR
+
+17:42:40.108392 IP 127.0.0.1.8008 > 127.0.0.1.55489: Flags [.], ack 1264, win 40198, options [nop,nop,TS val 504427480 ecr 504427480], length 0
+E..4Ln@.@............H....~1;.c......(.....
+........
+17:42:40.186745 IP 127.0.0.1.8008 > 127.0.0.1.55489: Flags [P.], seq 1:484, ack 1264, win 40830, options [nop,nop,TS val 504427481 ecr 504427480], length 483
+E...S3@.@............H....~1;.c....~.......
+........HTTP/1.1 201 Created
+Date: Thu, 29 Jul 2010 09:42:40 GMT
+DAV: 1, access-control, calendar-access, calendar-schedule, calendar-auto-schedule, calendar-availability, inbox-availability, calendar-proxy, calendarserver-private-events, calendarserver-private-comments, calendarserver-sharing, addressbook, calendarserver-principal-property-search
+ETag: "1ebff81ba09130faa3d09f8325660aa3"
+Content-Length: 0
+Server: CalendarServer/trunk(r5958) Twisted/10.0.0 TwistedWeb/9.0.0+r5958
+
+
+17:42:40.186769 IP 127.0.0.1.55489 > 127.0.0.1.8008: Flags [.], ack 484, win 40588, options [nop,nop,TS val 504427481 ecr 504427481], length 0
+E..4.c@.@..............H;.c..........(.....
+........
+17:42:40.187426 IP 127.0.0.1.55489 > 127.0.0.1.8008: Flags [F.], seq 1264, ack 484, win 40830, options [nop,nop,TS val 504427481 ecr 504427481], length 0
+E..4.r@.@..............H;.c........~.(.....
+........
+17:42:40.187448 IP 127.0.0.1.8008 > 127.0.0.1.55489: Flags [.], ack 1265, win 40830, options [nop,nop,TS val 504427481 ecr 504427481], length 0
+E..4.[@.@............H......;.c....~.(.....
+........
+17:42:40.187456 IP 127.0.0.1.55489 > 127.0.0.1.8008: Flags [.], ack 484, win 40830, options [nop,nop,TS val 504427481 ecr 504427481], length 0
+E..4..@.@..............H;.c........~.(.....
+........
+17:42:43.973611 IP6 ::1.55495 > ::1.8008: Flags [S], seq 1475701713, win 65535, options [mss 16324,nop,wscale 1,nop,nop,TS val 504427519 ecr 0,sackOK,eol], length 0
+`....,.@...................................HW.k........./	....?........
+............
+17:42:43.973634 IP6 ::1.8008 > ::1.55495: Flags [R.], seq 0, ack 1475701714, win 0, length 0
+`......@.................................H......W.k.P.......
+17:42:43.973758 IP6 fe80::1.55496 > fe80::1.8008: Flags [S], seq 679086608, win 65535, options [mss 16324,nop,wscale 1,nop,nop,TS val 504427519 ecr 0,sackOK,eol], length 0
+`....,.@...................................H(z
+..........B....?........
+............
+17:42:43.973770 IP6 fe80::1.8008 > fe80::1.55496: Flags [R.], seq 0, ack 679086609, win 0, length 0
+`......@.................................H......(z
+.P....1..
+17:42:43.973910 IP 127.0.0.1.55497 > 127.0.0.1.8008: Flags [S], seq 2214443684, win 65535, options [mss 16344,nop,wscale 1,nop,nop,TS val 504427519 ecr 0,sackOK,eol], length 0
+E..@.K@.@..............H.............4....?........
+............
+17:42:43.973947 IP 127.0.0.1.8008 > 127.0.0.1.55497: Flags [S.], seq 1692698345, ack 2214443685, win 65535, options [mss 16344,nop,wscale 1,nop,nop,TS val 504427519 ecr 504427519,sackOK,eol], length 0
+E..@..@.@............H..d............4....?........
+............
+17:42:43.973957 IP 127.0.0.1.55497 > 127.0.0.1.8008: Flags [.], ack 1, win 40830, options [nop,nop,TS val 504427519 ecr 504427519], length 0
+E..4p7@.@..............H....d......~.(.....
+........
+17:42:43.974140 IP 127.0.0.1.55497 > 127.0.0.1.8008: Flags [P.], seq 1:583, ack 1, win 40830, options [nop,nop,TS val 504427519 ecr 504427519], length 582
+E..z.K@.@..............H....d......~.o.....
+........DELETE /calendars/__uids__/admin/calendar/AC92833C-7B7E-4478-A68E-6E7C2426AE5C.ics HTTP/1.1
+Host: localhost:8008
+User-Agent: DAVKit/4.0.3 (732); CalendarStore/4.0.3 (991); iCal/4.0.3 (1388); Mac OS X/10.6.4 (10F569)
+Authorization: Digest username="admin", realm="Test Realm", nonce="575425224305052965475086383985441016335015555656425296365", uri="/calendars/__uids__/admin/calendar/AC92833C-7B7E-4478-A68E-6E7C2426AE5C.ics", response="96e961ecf83da74cf839e980032a96ac", algorithm="md5"
+If-Match: "7d0107b478c7739e2f4edf45e464f66a"
+Content-Length: 0
+Connection: keep-alive
+
+
+17:42:43.974154 IP 127.0.0.1.8008 > 127.0.0.1.55497: Flags [.], ack 583, win 40539, options [nop,nop,TS val 504427519 ecr 504427519], length 0
+E..4ZZ@.@............H..d..........[.(.....
+........
+17:42:44.007100 IP 127.0.0.1.8008 > 127.0.0.1.55497: Flags [P.], seq 1:533, ack 583, win 40830, options [nop,nop,TS val 504427519 ecr 504427519], length 532
+E..HJ.@.@............H..d..........~.=.....
+........HTTP/1.1 204 No Content
+Content-Length: 0
+Server: CalendarServer/trunk(r5958) Twisted/10.0.0 TwistedWeb/9.0.0+r5958
+Last-Modified: Thu, 29 Jul 2010 09:41:10 GMT
+DAV: 1, access-control, calendar-access, calendar-schedule, calendar-auto-schedule, calendar-availability, inbox-availability, calendar-proxy, calendarserver-private-events, calendarserver-private-comments, calendarserver-sharing, addressbook, calendarserver-principal-property-search
+ETag: "7d0107b478c7739e2f4edf45e464f66a"
+Date: Thu, 29 Jul 2010 09:42:44 GMT
+
+
+17:42:44.007129 IP 127.0.0.1.55497 > 127.0.0.1.8008: Flags [.], ack 533, win 40564, options [nop,nop,TS val 504427519 ecr 504427519], length 0
+E..4.(@.@..............H....d......t.(.....
+........
+17:42:44.007567 IP 127.0.0.1.55497 > 127.0.0.1.8008: Flags [F.], seq 583, ack 533, win 40830, options [nop,nop,TS val 504427519 ecr 504427519], length 0
+E..4..@.@..............H....d......~.(.....
+........
+17:42:44.007589 IP 127.0.0.1.8008 > 127.0.0.1.55497: Flags [.], ack 584, win 40830, options [nop,nop,TS val 504427519 ecr 504427519], length 0
+E..4;!@.@............H..d..........~.(.....
+........
+17:42:44.007598 IP 127.0.0.1.55497 > 127.0.0.1.8008: Flags [.], ack 533, win 40830, options [nop,nop,TS val 504427519 ecr 504427519], length 0
+E..4.B@.@..............H....d......~.(.....
+........
+17:42:45.664313 IP6 ::1.55501 > ::1.8008: Flags [S], seq 3831424708, win 65535, options [mss 16324,nop,wscale 1,nop,nop,TS val 504427536 ecr 0,sackOK,eol], length 0
+`....,.@...................................H.^..........'.....?........
+............
+17:42:45.664334 IP6 ::1.8008 > ::1.55501: Flags [R.], seq 0, ack 3831424709, win 0, length 0
+`......@.................................H.......^..P.......
+17:42:45.664524 IP6 fe80::1.55502 > fe80::1.8008: Flags [S], seq 2383062022, win 65535, options [mss 16324,nop,wscale 1,nop,nop,TS val 504427536 ecr 0,sackOK,eol], length 0
+`....,.@...................................H.
+................?........
+............
+17:42:45.664538 IP6 fe80::1.8008 > fe80::1.55502: Flags [R.], seq 0, ack 2383062023, win 0, length 0
+`......@.................................H.......
+..P.......
+17:42:45.664634 IP 127.0.0.1.55503 > 127.0.0.1.8008: Flags [S], seq 2088716175, win 65535, options [mss 16344,nop,wscale 1,nop,nop,TS val 504427536 ecr 0,sackOK,eol], length 0
+E..@E.@.@..............H|.G..........4....?........
+............
+17:42:45.664669 IP 127.0.0.1.8008 > 127.0.0.1.55503: Flags [S.], seq 925471399, ack 2088716176, win 65535, options [mss 16344,nop,wscale 1,nop,nop,TS val 504427536 ecr 504427536,sackOK,eol], length 0
+E..@.8@.@............H..7)..|.G......4....?........
+............
+17:42:45.664678 IP 127.0.0.1.55503 > 127.0.0.1.8008: Flags [.], ack 1, win 40830, options [nop,nop,TS val 504427536 ecr 504427536], length 0
+E..4..@.@..............H|.G.7).....~.(.....
+........
+17:42:45.664822 IP 127.0.0.1.55503 > 127.0.0.1.8008: Flags [P.], seq 1:583, ack 1, win 40830, options [nop,nop,TS val 504427536 ecr 504427536], length 582
+E..z..@.@..............H|.G.7).....~.o.....
+........DELETE /calendars/__uids__/admin/calendar/9822F46F-7478-4F28-9C10-26EC9FA14621.ics HTTP/1.1
+Host: localhost:8008
+User-Agent: DAVKit/4.0.3 (732); CalendarStore/4.0.3 (991); iCal/4.0.3 (1388); Mac OS X/10.6.4 (10F569)
+Authorization: Digest username="admin", realm="Test Realm", nonce="575425224305052965475086383985441016335015555656425296365", uri="/calendars/__uids__/admin/calendar/9822F46F-7478-4F28-9C10-26EC9FA14621.ics", response="03807d2061de9d4803e1d643246f48e6", algorithm="md5"
+If-Match: "1ebff81ba09130faa3d09f8325660aa3"
+Content-Length: 0
+Connection: keep-alive
+
+
+17:42:45.664836 IP 127.0.0.1.8008 > 127.0.0.1.55503: Flags [.], ack 583, win 40539, options [nop,nop,TS val 504427536 ecr 504427536], length 0
+E..4..@.@............H..7)..|.I....[.(.....
+........
+17:42:45.701385 IP 127.0.0.1.8008 > 127.0.0.1.55503: Flags [P.], seq 1:533, ack 583, win 40830, options [nop,nop,TS val 504427536 ecr 504427536], length 532
+E..HR.@.@............H..7)..|.I....~.=.....
+........HTTP/1.1 204 No Content
+Content-Length: 0
+Server: CalendarServer/trunk(r5958) Twisted/10.0.0 TwistedWeb/9.0.0+r5958
+Last-Modified: Thu, 29 Jul 2010 09:42:40 GMT
+DAV: 1, access-control, calendar-access, calendar-schedule, calendar-auto-schedule, calendar-availability, inbox-availability, calendar-proxy, calendarserver-private-events, calendarserver-private-comments, calendarserver-sharing, addressbook, calendarserver-principal-property-search
+ETag: "1ebff81ba09130faa3d09f8325660aa3"
+Date: Thu, 29 Jul 2010 09:42:45 GMT
+
+
+17:42:45.701415 IP 127.0.0.1.55503 > 127.0.0.1.8008: Flags [.], ack 533, win 40564, options [nop,nop,TS val 504427536 ecr 504427536], length 0
+E..4.}@.@..............H|.I.7).....t.(.....
+........
+17:42:45.701759 IP 127.0.0.1.55503 > 127.0.0.1.8008: Flags [F.], seq 583, ack 533, win 40830, options [nop,nop,TS val 504427536 ecr 504427536], length 0
+E..4}l@.@..............H|.I.7).....~.(.....
+........
+17:42:45.701781 IP 127.0.0.1.8008 > 127.0.0.1.55503: Flags [.], ack 584, win 40830, options [nop,nop,TS val 504427536 ecr 504427536], length 0
+E..4`.@.@............H..7)..|.I....~.(.....
+........
+17:42:45.701789 IP 127.0.0.1.55503 > 127.0.0.1.8008: Flags [.], ack 533, win 40830, options [nop,nop,TS val 504427536 ecr 504427536], length 0
+E..4.p@.@..............H|.I.7).....~.(.....
+........
+17:42:47.539975 IP6 ::1.55505 > ::1.8008: Flags [S], seq 1297012194, win 65535, options [mss 16324,nop,wscale 1,nop,nop,TS val 504427555 ecr 0,sackOK,eol], length 0
+`....,.@...................................HMN...........p....?........
+...#........
+17:42:47.539992 IP6 ::1.8008 > ::1.55505: Flags [R.], seq 0, ack 1297012195, win 0, length 0
+`......@.................................H......MN..P.......
+17:42:47.540160 IP6 fe80::1.55506 > fe80::1.8008: Flags [S], seq 212588192, win 65535, options [mss 16324,nop,wscale 1,nop,nop,TS val 504427555 ecr 0,sackOK,eol], length 0
+`....,.@...................................H.............S....?........
+...#........
+17:42:47.540171 IP6 fe80::1.8008 > fe80::1.55506: Flags [R.], seq 0, ack 212588193, win 0, length 0
+`......@.................................H..........P....e..
+17:42:47.540365 IP 127.0.0.1.55507 > 127.0.0.1.8008: Flags [S], seq 525541907, win 65535, options [mss 16344,nop,wscale 1,nop,nop,TS val 504427555 ecr 0,sackOK,eol], length 0
+E..@hM@.@..............H.S"..........4....?........
+...#........
+17:42:47.540399 IP 127.0.0.1.8008 > 127.0.0.1.55507: Flags [S.], seq 1163712548, ack 525541908, win 65535, options [mss 16344,nop,wscale 1,nop,nop,TS val 504427555 ecr 504427555,sackOK,eol], length 0
+E..@.r@.@............H..E\.$.S"......4....?........
+...#...#....
+17:42:47.540408 IP 127.0.0.1.55507 > 127.0.0.1.8008: Flags [.], ack 1, win 40830, options [nop,nop,TS val 504427555 ecr 504427555], length 0
+E..4..@.@..............H.S".E\.%...~.(.....
+...#...#
+17:42:47.540578 IP 127.0.0.1.55507 > 127.0.0.1.8008: Flags [P.], seq 1:565, ack 1, win 40830, options [nop,nop,TS val 504427555 ecr 504427555], length 564
+E..h.x@.@..............H.S".E\.%...~.].....
+...#...#PUT /calendars/__uids__/admin/calendar/FC53A674-0F2E-4C2F-A038-BCBE306D181E.ics HTTP/1.1
+Host: localhost:8008
+User-Agent: DAVKit/4.0.3 (732); CalendarStore/4.0.3 (991); iCal/4.0.3 (1388); Mac OS X/10.6.4 (10F569)
+Authorization: Digest username="admin", realm="Test Realm", nonce="575425224305052965475086383985441016335015555656425296365", uri="/calendars/__uids__/admin/calendar/FC53A674-0F2E-4C2F-A038-BCBE306D181E.ics", response="6a04a5e693f3d7a114534774974cd9b2", algorithm="md5"
+Content-Type: text/calendar
+Content-Length: 699
+Connection: keep-alive
+
+
+17:42:47.540591 IP 127.0.0.1.8008 > 127.0.0.1.55507: Flags [.], ack 565, win 40548, options [nop,nop,TS val 504427555 ecr 504427555], length 0
+E..4.`@.@............H..E\.%.S$H...d.(.....
+...#...#
+17:42:47.540662 IP 127.0.0.1.55507 > 127.0.0.1.8008: Flags [P.], seq 565:1264, ack 1, win 40830, options [nop,nop,TS val 504427555 ecr 504427555], length 699
+E....*@.@..............H.S$HE\.%...~.......
+...#...#BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Apple Inc.//iCal 4.0.3//EN
+CALSCALE:GREGORIAN
+BEGIN:VTIMEZONE
+TZID:Australia/Perth
+BEGIN:DAYLIGHT
+TZOFFSETFROM:+0800
+RRULE:FREQ=YEARLY;UNTIL=20081025T180000Z;BYMONTH=10;BYDAY=-1SU
+DTSTART:20071028T020000
+TZNAME:GMT+08:00
+TZOFFSETTO:+0900
+END:DAYLIGHT
+BEGIN:STANDARD
+TZOFFSETFROM:+0900
+DTSTART:20090329T030000
+TZNAME:GMT+08:00
+TZOFFSETTO:+0800
+END:STANDARD
+END:VTIMEZONE
+BEGIN:VEVENT
+CREATED:20100729T094245Z
+UID:FC53A674-0F2E-4C2F-A038-BCBE306D181E
+DTEND;TZID=Australia/Perth:20100630T190000
+TRANSP:OPAQUE
+SUMMARY:New Event
+DTSTART;TZID=Australia/Perth:20100630T180000
+DTSTAMP:20100729T094245Z
+SEQUENCE:1
+END:VEVENT
+END:VCALENDAR
+
+17:42:47.540674 IP 127.0.0.1.8008 > 127.0.0.1.55507: Flags [.], ack 1264, win 40198, options [nop,nop,TS val 504427555 ecr 504427555], length 0
+E..4#<@.@............H..E\.%.S'......(.....
+...#...#
+17:42:47.609282 IP 127.0.0.1.8008 > 127.0.0.1.55507: Flags [P.], seq 1:484, ack 1264, win 40830, options [nop,nop,TS val 504427555 ecr 504427555], length 483
+E.....@.@............H..E\.%.S'....~.......
+...#...#HTTP/1.1 201 Created
+Date: Thu, 29 Jul 2010 09:42:47 GMT
+DAV: 1, access-control, calendar-access, calendar-schedule, calendar-auto-schedule, calendar-availability, inbox-availability, calendar-proxy, calendarserver-private-events, calendarserver-private-comments, calendarserver-sharing, addressbook, calendarserver-principal-property-search
+ETag: "41dd5fa8a4c86052148acf4e229a6cd2"
+Content-Length: 0
+Server: CalendarServer/trunk(r5958) Twisted/10.0.0 TwistedWeb/9.0.0+r5958
+
+
+17:42:47.609302 IP 127.0.0.1.55507 > 127.0.0.1.8008: Flags [.], ack 484, win 40588, options [nop,nop,TS val 504427555 ecr 504427555], length 0
+E..4..@.@..............H.S'.E\.......(.....
+...#...#
+17:42:47.610084 IP 127.0.0.1.55507 > 127.0.0.1.8008: Flags [F.], seq 1264, ack 484, win 40830, options [nop,nop,TS val 504427555 ecr 504427555], length 0
+E..4.M@.@..............H.S'.E\.....~.(.....
+...#...#
+17:42:47.610102 IP 127.0.0.1.8008 > 127.0.0.1.55507: Flags [.], ack 1265, win 40830, options [nop,nop,TS val 504427555 ecr 504427555], length 0
+E..4.R@.@............H..E\...S'....~.(.....
+...#...#
+17:42:47.610110 IP 127.0.0.1.55507 > 127.0.0.1.8008: Flags [.], ack 484, win 40830, options [nop,nop,TS val 504427555 ecr 504427555], length 0
+E..4.d@.@..............H.S'.E\.....~.(.....
+...#...#
+17:42:50.614409 IP6 ::1.55509 > ::1.8008: Flags [S], seq 2156676920, win 65535, options [mss 16324,nop,wscale 1,nop,nop,TS val 504427585 ecr 0,sackOK,eol], length 0
+`....,.@...................................H..G8........*.....?........
+...A........
+17:42:50.614460 IP6 ::1.8008 > ::1.55509: Flags [R.], seq 0, ack 2156676921, win 0, length 0
+`......@.................................H........G9P.......
+17:42:50.614652 IP6 fe80::1.55510 > fe80::1.8008: Flags [S], seq 4253984787, win 65535, options [mss 16324,nop,wscale 1,nop,nop,TS val 504427585 ecr 0,sackOK,eol], length 0
+`....,.@...................................H............O.....?........
+...A........
+17:42:50.614668 IP6 fe80::1.8008 > fe80::1.55510: Flags [R.], seq 0, ack 4253984788, win 0, length 0
+`......@.................................H..........P.......
+17:42:50.614785 IP 127.0.0.1.55511 > 127.0.0.1.8008: Flags [S], seq 3323398027, win 65535, options [mss 16344,nop,wscale 1,nop,nop,TS val 504427585 ecr 0,sackOK,eol], length 0
+E..@.p@.@..............H.............4....?........
+...A........
+17:42:50.614821 IP 127.0.0.1.8008 > 127.0.0.1.55511: Flags [S.], seq 369739740, ack 3323398028, win 65535, options [mss 16344,nop,wscale 1,nop,nop,TS val 504427585 ecr 504427585,sackOK,eol], length 0
+E..@.X@.@............H...	...........4....?........
+...A...A....
+17:42:50.614832 IP 127.0.0.1.55511 > 127.0.0.1.8008: Flags [.], ack 1, win 40830, options [nop,nop,TS val 504427585 ecr 504427585], length 0
+E..4.S@.@..............H.....	.....~.(.....
+...A...A
+17:42:50.614957 IP 127.0.0.1.55511 > 127.0.0.1.8008: Flags [P.], seq 1:565, ack 1, win 40830, options [nop,nop,TS val 504427585 ecr 504427585], length 564
+E..h.4@.@..............H.....	.....~.].....
+...A...APUT /calendars/__uids__/admin/calendar/AD1B72C9-B228-4560-8F59-1F092DFA369C.ics HTTP/1.1
+Host: localhost:8008
+User-Agent: DAVKit/4.0.3 (732); CalendarStore/4.0.3 (991); iCal/4.0.3 (1388); Mac OS X/10.6.4 (10F569)
+Authorization: Digest username="admin", realm="Test Realm", nonce="575425224305052965475086383985441016335015555656425296365", uri="/calendars/__uids__/admin/calendar/AD1B72C9-B228-4560-8F59-1F092DFA369C.ics", response="cdc08f51788b9226c29370873fba7321", algorithm="md5"
+Content-Type: text/calendar
+Content-Length: 699
+Connection: keep-alive
+
+
+17:42:50.614972 IP 127.0.0.1.8008 > 127.0.0.1.55511: Flags [.], ack 565, win 40548, options [nop,nop,TS val 504427585 ecr 504427585], length 0
+E..4RC@.@............H...	....	....d.(.....
+...A...A
+17:42:50.615019 IP 127.0.0.1.55511 > 127.0.0.1.8008: Flags [P.], seq 565:1264, ack 1, win 40830, options [nop,nop,TS val 504427585 ecr 504427585], length 699
+E.....@.@..............H..	..	.....~.......
+...A...ABEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Apple Inc.//iCal 4.0.3//EN
+CALSCALE:GREGORIAN
+BEGIN:VTIMEZONE
+TZID:Australia/Perth
+BEGIN:DAYLIGHT
+TZOFFSETFROM:+0800
+RRULE:FREQ=YEARLY;UNTIL=20081025T180000Z;BYMONTH=10;BYDAY=-1SU
+DTSTART:20071028T020000
+TZNAME:GMT+08:00
+TZOFFSETTO:+0900
+END:DAYLIGHT
+BEGIN:STANDARD
+TZOFFSETFROM:+0900
+DTSTART:20090329T030000
+TZNAME:GMT+08:00
+TZOFFSETTO:+0800
+END:STANDARD
+END:VTIMEZONE
+BEGIN:VEVENT
+CREATED:20100729T094249Z
+UID:AD1B72C9-B228-4560-8F59-1F092DFA369C
+DTEND;TZID=Australia/Perth:20100629T190000
+TRANSP:OPAQUE
+SUMMARY:New Event
+DTSTART;TZID=Australia/Perth:20100629T180000
+DTSTAMP:20100729T094249Z
+SEQUENCE:1
+END:VEVENT
+END:VCALENDAR
+
+17:42:50.615031 IP 127.0.0.1.8008 > 127.0.0.1.55511: Flags [.], ack 1264, win 40198, options [nop,nop,TS val 504427585 ecr 504427585], length 0
+E..4..@.@............H...	.....{.....(.....
+...A...A
+17:42:50.685453 IP 127.0.0.1.8008 > 127.0.0.1.55511: Flags [P.], seq 1:484, ack 1264, win 40830, options [nop,nop,TS val 504427586 ecr 504427585], length 483
+E....7@.@............H...	.....{...~.......
+...B...AHTTP/1.1 201 Created
+Date: Thu, 29 Jul 2010 09:42:50 GMT
+DAV: 1, access-control, calendar-access, calendar-schedule, calendar-auto-schedule, calendar-availability, inbox-availability, calendar-proxy, calendarserver-private-events, calendarserver-private-comments, calendarserver-sharing, addressbook, calendarserver-principal-property-search
+ETag: "85cb22f720213d7bf33ab9e577ec7d9f"
+Content-Length: 0
+Server: CalendarServer/trunk(r5958) Twisted/10.0.0 TwistedWeb/9.0.0+r5958
+
+
+17:42:50.685484 IP 127.0.0.1.55511 > 127.0.0.1.8008: Flags [.], ack 484, win 40588, options [nop,nop,TS val 504427586 ecr 504427586], length 0
+E..4..@.@..............H...{.	.......(.....
+...B...B
+17:42:50.686265 IP 127.0.0.1.55511 > 127.0.0.1.8008: Flags [F.], seq 1264, ack 484, win 40830, options [nop,nop,TS val 504427586 ecr 504427586], length 0
+E..4
+e@.@..............H...{.	.....~.(.....
+...B...B
+17:42:50.686286 IP 127.0.0.1.8008 > 127.0.0.1.55511: Flags [.], ack 1265, win 40830, options [nop,nop,TS val 504427586 ecr 504427586], length 0
+E..4.(@.@............H...	.....|...~.(.....
+...B...B
+17:42:50.686294 IP 127.0.0.1.55511 > 127.0.0.1.8008: Flags [.], ack 484, win 40830, options [nop,nop,TS val 504427586 ecr 504427586], length 0
+E..4..@.@..............H...|.	.....~.(.....
+...B...B
+17:42:53.232505 IP6 ::1.55517 > ::1.8008: Flags [S], seq 2947273611, win 65535, options [mss 16324,nop,wscale 1,nop,nop,TS val 504427612 ecr 0,sackOK,eol], length 0
+`....,.@...................................H............o%....?........
+...\........
+17:42:53.232525 IP6 ::1.8008 > ::1.55517: Flags [R.], seq 0, ack 2947273612, win 0, length 0
+`......@.................................H..........P...4q..
+17:42:53.232698 IP6 fe80::1.55518 > fe80::1.8008: Flags [S], seq 3296864890, win 65535, options [mss 16324,nop,wscale 1,nop,nop,TS val 504427612 ecr 0,sackOK,eol], length 0
+`....,.@...................................H..*z.........]....?........
+...\........
+17:42:53.232711 IP6 fe80::1.8008 > fe80::1.55518: Flags [R.], seq 0, ack 3296864891, win 0, length 0
+`......@.................................H........*{P.......
+17:42:53.232834 IP 127.0.0.1.55519 > 127.0.0.1.8008: Flags [S], seq 932764090, win 65535, options [mss 16344,nop,wscale 1,nop,nop,TS val 504427612 ecr 0,sackOK,eol], length 0
+E..@h*@.@..............H7............4....?........
+...\........
+17:42:53.232871 IP 127.0.0.1.8008 > 127.0.0.1.55519: Flags [S.], seq 1769587105, ack 932764091, win 65535, options [mss 16344,nop,wscale 1,nop,nop,TS val 504427612 ecr 504427612,sackOK,eol], length 0
+E..@.~@.@............H..iy..7........4....?........
+...\...\....
+17:42:53.232880 IP 127.0.0.1.55519 > 127.0.0.1.8008: Flags [.], ack 1, win 40830, options [nop,nop,TS val 504427612 ecr 504427612], length 0
+E..4.3@.@..............H7...iy.....~.(.....
+...\...\
+17:42:53.233052 IP 127.0.0.1.55519 > 127.0.0.1.8008: Flags [P.], seq 1:583, ack 1, win 40830, options [nop,nop,TS val 504427612 ecr 504427612], length 582
+E..z.J@.@..............H7...iy.....~.o.....
+...\...\DELETE /calendars/__uids__/admin/calendar/FC53A674-0F2E-4C2F-A038-BCBE306D181E.ics HTTP/1.1
+Host: localhost:8008
+User-Agent: DAVKit/4.0.3 (732); CalendarStore/4.0.3 (991); iCal/4.0.3 (1388); Mac OS X/10.6.4 (10F569)
+Authorization: Digest username="admin", realm="Test Realm", nonce="575425224305052965475086383985441016335015555656425296365", uri="/calendars/__uids__/admin/calendar/FC53A674-0F2E-4C2F-A038-BCBE306D181E.ics", response="8c5f708a2583c74b8d18e2162d75d186", algorithm="md5"
+If-Match: "41dd5fa8a4c86052148acf4e229a6cd2"
+Content-Length: 0
+Connection: keep-alive
+
+
+17:42:53.233065 IP 127.0.0.1.8008 > 127.0.0.1.55519: Flags [.], ack 583, win 40539, options [nop,nop,TS val 504427612 ecr 504427612], length 0
+E..4fw@.@............H..iy..7......[.(.....
+...\...\
+17:42:53.266286 IP 127.0.0.1.8008 > 127.0.0.1.55519: Flags [P.], seq 1:533, ack 583, win 40830, options [nop,nop,TS val 504427612 ecr 504427612], length 532
+E..H.8@.@............H..iy..7......~.=.....
+...\...\HTTP/1.1 204 No Content
+Content-Length: 0
+Server: CalendarServer/trunk(r5958) Twisted/10.0.0 TwistedWeb/9.0.0+r5958
+Last-Modified: Thu, 29 Jul 2010 09:42:47 GMT
+DAV: 1, access-control, calendar-access, calendar-schedule, calendar-auto-schedule, calendar-availability, inbox-availability, calendar-proxy, calendarserver-private-events, calendarserver-private-comments, calendarserver-sharing, addressbook, calendarserver-principal-property-search
+ETag: "41dd5fa8a4c86052148acf4e229a6cd2"
+Date: Thu, 29 Jul 2010 09:42:53 GMT
+
+
+17:42:53.266316 IP 127.0.0.1.55519 > 127.0.0.1.8008: Flags [.], ack 533, win 40564, options [nop,nop,TS val 504427612 ecr 504427612], length 0
+@.@..............H7...iy.....t.(.....
+...\...\
+17:42:53.267011 IP 127.0.0.1.55519 > 127.0.0.1.8008: Flags [F.], seq 583, ack 533, win 40830, options [nop,nop,TS val 504427612 ecr 504427612], length 0
+E..4so@.@..............H7...iy.....~.(.....
+...\...\
+17:42:53.267032 IP 127.0.0.1.8008 > 127.0.0.1.55519: Flags [.], ack 584, win 40830, options [nop,nop,TS val 504427612 ecr 504427612], length 0
+E..4.%@.@............H..iy..7......~.(.....
+...\...\
+17:42:53.267040 IP 127.0.0.1.55519 > 127.0.0.1.8008: Flags [.], ack 533, win 40830, options [nop,nop,TS val 504427612 ecr 504427612], length 0
+E..4.t@.@..............H7...iy.....~.(.....
+...\...\
+17:43:02.147254 IP6 ::1.55526 > ::1.8008: Flags [S], seq 2799258508, win 65535, options [mss 16324,nop,wscale 1,nop,nop,TS val 504427701 ecr 0,sackOK,eol], length 0
+`....,.@...................................H..K...............?........
+............
+17:43:02.147274 IP6 ::1.8008 > ::1.55526: Flags [R.], seq 0, ack 2799258509, win 0, length 0
+`......@.................................H........K.P....9..
+17:43:02.147502 IP6 fe80::1.55527 > fe80::1.8008: Flags [S], seq 4183096510, win 65535, options [mss 16324,nop,wscale 1,nop,nop,TS val 504427701 ecr 0,sackOK,eol], length 0
+`....,.@...................................H.T................?........
+............
+17:43:02.147513 IP6 fe80::1.8008 > fe80::1.55527: Flags [R.], seq 0, ack 4183096511, win 0, length 0
+`......@.................................H.......T..P.......
+17:43:02.147643 IP 127.0.0.1.55528 > 127.0.0.1.8008: Flags [S], seq 2629924980, win 65535, options [mss 16344,nop,wscale 1,nop,nop,TS val 504427701 ecr 0,sackOK,eol], length 0
+E..@,+@.@..............H..xt.........4....?........
+............
+17:43:02.147679 IP 127.0.0.1.8008 > 127.0.0.1.55528: Flags [S.], seq 720144573, ack 2629924981, win 65535, options [mss 16344,nop,wscale 1,nop,nop,TS val 504427701 ecr 504427701,sackOK,eol], length 0
+E..@7.@.@............H..*.....xu.....4....?........
+............
+17:43:02.147688 IP 127.0.0.1.55528 > 127.0.0.1.8008: Flags [.], ack 1, win 40830, options [nop,nop,TS val 504427701 ecr 504427701], length 0
+E..4;.@.@..............H..xu*......~.(.....
+........
+17:43:02.147857 IP 127.0.0.1.55528 > 127.0.0.1.8008: Flags [P.], seq 1:583, ack 1, win 40830, options [nop,nop,TS val 504427701 ecr 504427701], length 582
+E..z..@.@..............H..xu*......~.o.....
+........DELETE /calendars/__uids__/admin/calendar/AD1B72C9-B228-4560-8F59-1F092DFA369C.ics HTTP/1.1
+Host: localhost:8008
+User-Agent: DAVKit/4.0.3 (732); CalendarStore/4.0.3 (991); iCal/4.0.3 (1388); Mac OS X/10.6.4 (10F569)
+Authorization: Digest username="admin", realm="Test Realm", nonce="575425224305052965475086383985441016335015555656425296365", uri="/calendars/__uids__/admin/calendar/AD1B72C9-B228-4560-8F59-1F092DFA369C.ics", response="4ad5a6bd371ec3e8ce7b60c1ee36e87c", algorithm="md5"
+If-Match: "85cb22f720213d7bf33ab9e577ec7d9f"
+Content-Length: 0
+Connection: keep-alive
+
+
+17:43:02.147870 IP 127.0.0.1.8008 > 127.0.0.1.55528: Flags [.], ack 583, win 40539, options [nop,nop,TS val 504427701 ecr 504427701], length 0
+E..4.l@.@............H..*.....z....[.(.....
+........
+17:43:02.178563 IP 127.0.0.1.8008 > 127.0.0.1.55528: Flags [P.], seq 1:533, ack 583, win 40830, options [nop,nop,TS val 504427701 ecr 504427701], length 532
+E..HG#@.@............H..*.....z....~.=.....
+........HTTP/1.1 204 No Content
+Content-Length: 0
+Server: CalendarServer/trunk(r5958) Twisted/10.0.0 TwistedWeb/9.0.0+r5958
+Last-Modified: Thu, 29 Jul 2010 09:42:50 GMT
+DAV: 1, access-control, calendar-access, calendar-schedule, calendar-auto-schedule, calendar-availability, inbox-availability, calendar-proxy, calendarserver-private-events, calendarserver-private-comments, calendarserver-sharing, addressbook, calendarserver-principal-property-search
+ETag: "85cb22f720213d7bf33ab9e577ec7d9f"
+Date: Thu, 29 Jul 2010 09:43:02 GMT
+
+
+17:43:02.178593 IP 127.0.0.1.55528 > 127.0.0.1.8008: Flags [.], ack 533, win 40564, options [nop,nop,TS val 504427701 ecr 504427701], length 0
+E..4.w@.@..............H..z.*......t.(.....
+........
+17:43:02.179032 IP 127.0.0.1.55528 > 127.0.0.1.8008: Flags [F.], seq 583, ack 533, win 40830, options [nop,nop,TS val 504427701 ecr 504427701], length 0
+E..4)%@.@..............H..z.*......~.(.....
+........
+17:43:02.179053 IP 127.0.0.1.8008 > 127.0.0.1.55528: Flags [.], ack 584, win 40830, options [nop,nop,TS val 504427701 ecr 504427701], length 0
+E..4^.@.@............H..*.....z....~.(.....
+........
+17:43:02.179061 IP 127.0.0.1.55528 > 127.0.0.1.8008: Flags [.], ack 533, win 40830, options [nop,nop,TS val 504427701 ecr 504427701], length 0
+E..4.t@.@..............H..z.*......~.(.....
+........
+
