@@ -855,8 +855,13 @@ public class WebDAVTest {
 //            assertTrue("status: " + status, status == HttpStatus.SC_NOT_FOUND || status == 412);
 
 
-//            UnLockMethod unlock = new UnLockMethod(testuri, locktoken);
-//            status = this.client.executeMethod(unlock);
+            UnLockMethod unlock = new UnLockMethod(testuri, "wrong");
+            status = this.client.executeMethod(unlock);
+            assertTrue("status: " + status, status == HttpStatus.SC_FAILED_DEPENDENCY || status == HttpStatus.SC_PRECONDITION_FAILED);
+            
+            unlock = new UnLockMethod(testuri, locktoken);
+            status = this.client.executeMethod(unlock);
+            assertTrue("status: " + status, status == HttpStatus.SC_NO_CONTENT );
         } finally {
             DeleteMethod delete = new DeleteMethod(testuri);
             if (locktoken != null) {
