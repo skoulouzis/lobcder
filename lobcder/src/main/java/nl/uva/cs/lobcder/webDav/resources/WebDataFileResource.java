@@ -398,7 +398,7 @@ public class WebDataFileResource extends WebDataResource implements
             //        if (!getPrincipal().canWrite(getLogicalData().getPermissions())) {
             //        }
             //        }
-            if(getCurrentLock()!=null){
+            if (getCurrentLock() != null) {
                 throw new LockedException(this);
             }
             LockToken token = new LockToken(UUID.randomUUID().toString(), lockInfo, timeout);
@@ -441,9 +441,9 @@ public class WebDataFileResource extends WebDataResource implements
                 return;
             }
 
-//            if (!getLogicalData().getCurrentLock().tokenId.equals(token)) {
-//                throw new RuntimeException("Invalid lock token");
-//            }
+            if (!getLogicalData().getCurrentLock().tokenId.equals(token)) {
+                throw new PreConditionFailedException(this);
+            }
             //        if (!getPrincipal().canWrite(getLogicalData().getPermissions())) {
             //            throw new NotAuthorizedException(this);
             //        }
