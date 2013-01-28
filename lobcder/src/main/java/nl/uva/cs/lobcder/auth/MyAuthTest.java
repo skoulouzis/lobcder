@@ -43,12 +43,24 @@ public class MyAuthTest extends Debug implements AuthI {
     public MyPrincipal checkToken(String token) {
         Connection connection = null;
         try {
+            String uname;
+            int id;
             connection = getConnection();
             Statement s = connection.createStatement();
             HashSet<String> roles = new HashSet<String>();
-            String query = "SELECT role_name FROM auth_roles_tables JOIN auth_usernames_table ON auth_usernames_table.id = auth_roles_tables.uname_id WHERE auth_usernames_table.uname = '" + token + "'";
+            String query = "SELECT id, uname FROM auth_usernames_table WHERE token = '" + token + "'";
+            //String query = "SELECT role_name FROM auth_roles_tables JOIN auth_usernames_table ON auth_usernames_table.id = auth_roles_tables.uname_id WHERE auth_usernames_table.uname = '" + token + "'";
             debug(query);
             ResultSet rs = s.executeQuery(query);
+            if(rs.next()){
+                id = rs.getInt(1);
+                uname = rs.getString(2);
+            } else {
+                return null;
+            }
+            query = "SELECT role_name FROM auth_roles_tables WHERE uname_id = " + id;
+            debug(query);
+            rs = s.executeQuery(query);
             while (rs.next()) {
                 roles.add(rs.getString(1));
             }

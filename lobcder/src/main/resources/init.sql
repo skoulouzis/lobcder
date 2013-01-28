@@ -210,6 +210,7 @@ INSERT INTO role_to_ss_table(role_name, ss_id) values   ('admin', @ssId),
 # Here we createtables for built-in user IDs/roles
 CREATE TABLE IF NOT EXISTS auth_usernames_table (
     id SERIAL PRIMARY KEY,
+    token VARCHAR(1024), index(token),
     uname VARCHAR(255), index(uname)
 );
 
