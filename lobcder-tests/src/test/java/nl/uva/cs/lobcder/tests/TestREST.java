@@ -187,10 +187,11 @@ public class TestREST {
                     get(new GenericType<List<LogicalData>>() {
             });
             
-//            for(LogicalData l : list ){
-//                System.out.println(l.UID);
-//            }
-            assertTrue(list.isEmpty());
+            for(LogicalData l : list ){
+                System.out.println(l.UID);
+                System.out.println(l.supervised);
+            }
+            assertFalse(list.get(0).supervised);
 
             //Set the file as supervised
             response = webResource.path("Item").path(String.valueOf(uid)).path("supervised").path("TRUE").
@@ -207,6 +208,7 @@ public class TestREST {
 
             //Check that it's not empty 
             assertFalse(list.isEmpty());
+            assertTrue(list.get(0).supervised);
 
 
             //Set its checksum 
@@ -285,6 +287,7 @@ public class TestREST {
             });
 
             assertEquals(1, list.size());
+            assertTrue(list.get(0).supervised);
 
 //            for (LogicalData ld : list) {
 //                System.out.println("-------------------");
@@ -311,7 +314,8 @@ public class TestREST {
                     get(new GenericType<List<LogicalData>>() {
             });
 
-            assertEquals(0, list.size());
+//            assertEquals(0, list.size());
+            assertFalse(list.get(0).supervised);
 
         } finally {
             deleteCollection();
@@ -339,5 +343,6 @@ public class TestREST {
         public String owner;
         public String parent;
         public int UID;
+        public boolean supervised;
     }
 }
