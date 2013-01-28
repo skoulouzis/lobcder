@@ -42,12 +42,12 @@ CREATE TABLE ldata_table (
  isSupervised BOOLEAN NOT NULL DEFAULT FALSE, INDEX(isSupervised), 
  checksum BIGINT NOT NULL DEFAULT 0,
  lastValidationDate BIGINT NOT NULL DEFAULT 0,
- lockTokenID VARCHAR(255),
- lockScope VARCHAR(255),
- lockType VARCHAR(255),
- lockedByUser VARCHAR(255),
- lockDepth VARCHAR(255),
- lockTimeout BIGINT NOT NULL DEFAULT 0,
+ lockTokenID  VARCHAR(255),
+ lockScope  VARCHAR(255),
+ lockType  VARCHAR(255),
+ lockedByUser  VARCHAR(255),
+ lockDepth  VARCHAR(255),
+ lockTimeout  BIGINT NOT NULL DEFAULT 0, 
  description VARCHAR(255)
 );
 
@@ -200,11 +200,22 @@ SET @rootID = LAST_INSERT_ID();
 
 INSERT INTO permission_table (perm_type, ld_uid_ref, role_name) VALUES  ('read', @rootID, 'other'),
                                                                         ('read', @rootID, 'admin'),
-                                                                        ('write', @rootID, 'admin');  
-INSERT INTO  credential_table(username, password) VALUES ('USER', 'PASS');
+                                                                        ('write', @rootID, 'admin');
+INSERT INTO  credential_table(username, password) VALUES ('fakeusername', 'fakepassword');
 SET @credID = LAST_INSERT_ID();
 INSERT INTO storage_site_table(resourceURI, credentialRef, currentNum, currentSize, quotaNum, quotaSize)
-            VALUES('file:////tmp', @credID, -1, -1, -1, -1);
+            VALUES('file://localhost/tmp/', @credID, -1, -1, -1, -1);
 SET @ssId = LAST_INSERT_ID();
 INSERT INTO role_to_ss_table(role_name, ss_id) values   ('admin', @ssId),
                                                         ('other', @ssId);
+# Here we createtables for built-in user IDs/roles
+CREATE TABLE IF NOT EXISTS auth_usernames_table (
+    id SERIAL PRIMARY KEY,
+    uname VARCHAR(255), index(uname)
+);
+
+CREATE TABLE IF NOT EXISTS auth_roles_tables (
+    id SERIAL PRIMARY KEY,
+    role_name VARCHAR(255), index(role_name),
+    uname_id BIGINT unsigned, FOREIGN KEY(uname_id) REFERENCES auth_usernames_table(id) ON DELETE CASCADE
+)

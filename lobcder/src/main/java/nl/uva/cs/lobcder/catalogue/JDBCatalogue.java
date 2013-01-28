@@ -1699,11 +1699,11 @@ public class JDBCatalogue {
                 element.setLength(rs.getLong(8));
                 element.setContentTypesAsString(rs.getString(9));
                 element.setPdriGroupId(rs.getLong(10));
-                element.setChecksum(rs.getLong(11));
-                element.setLastValidationDate(rs.getLong(12));
+                element.setSupervised(rs.getBoolean(11));
+                element.setChecksum(rs.getLong(12));
+                element.setLastValidationDate(rs.getLong(13));
                 ld_list.add(element);
             }
-            rs.close();
             s.close();
             return ld_list;
         } catch (Exception e) {

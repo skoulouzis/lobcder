@@ -4,50 +4,69 @@
  */
 package nl.uva.cs.lobcder.auth;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import nl.uva.cs.lobcder.util.Constants;
-import nl.uva.cs.lobcder.util.PropertiesLoader;
+import javax.naming.Context;
+import javax.naming.InitialContext;
+import javax.sql.DataSource;
+import nl.uva.cs.lobcder.util.Debug;
 
 /**
  *
  * @author skoulouz
  */
-public class MyAuthTest implements AuthI {
-        
+public class MyAuthTest extends Debug implements AuthI {
+
+    private DataSource datasource = null;
+    @Override
+    protected boolean debug() { return true;}
+
+    public Connection getConnection() throws Exception {
+        if (datasource == null) {
+            String jndiName = "jdbc/lobcder";
+            Context ctx = new InitialContext();
+            if (ctx == null) {
+                throw new Exception("JNDI could not create InitalContext ");
+            }
+            Context envContext = (Context) ctx.lookup("java:/comp/env");
+            datasource = (DataSource) envContext.lookup(jndiName);
+        }
+        return datasource.getConnection();
+    }
+
     @Override
     public MyPrincipal checkToken(String token) {
+        Connection connection = null;
         try {
+            connection = getConnection();
+            Statement s = connection.createStatement();
             HashSet<String> roles = new HashSet<String>();
-            if (token.equals("token0")) {
-                roles.add("megarole1");
-                roles.add("other");
-                roles.add("admin");
-            } else if (token.equals("token1")) {
-                roles.add("other");
-            } else {
-                File f = new File(Constants.LOBCDER_CONF_DIR + "lob-users.prop");
-                Properties props = PropertiesLoader.getProperties(f);
-                for (int i = 0; i < 5; i++) {
-                    String pass = props.getProperty("password" + i);
-                    if (pass != null && pass.equals(token)) {
-                        String[] userRoles = props.getProperty("roles" + i).split(",");
-                        roles.addAll(Arrays.asList(userRoles));
-                    }
-                }
+            String query = "SELECT role_name FROM auth_roles_tables JOIN auth_usernames_table ON auth_usernames_table.id = auth_roles_tables.uname_id WHERE auth_usernames_table.uname = '" + token + "'";
+            debug(query);
+            ResultSet rs = s.executeQuery(query);
+            while (rs.next()) {
+                roles.add(rs.getString(1));
             }
-            
-            MyPrincipal principal = new MyPrincipal(token, roles);
-            return principal;
-        } catch (FileNotFoundException ex) {
-            Logger.getLogger(MyAuthTest.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (IOException ex) {
-            Logger.getLogger(MyAuthTest.class.getName()).log(Level.SEVERE, null, ex);
+            if (roles.isEmpty()) {
+                return null;
+            } else {
+                return new MyPrincipal(token, roles);
+            }
+        } catch (Exception ex) {
+            return null;
+        } finally {
+            try {
+                if (connection != null) {
+                    connection.close();
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(MyAuthTest.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
-        return null;
     }
 }
