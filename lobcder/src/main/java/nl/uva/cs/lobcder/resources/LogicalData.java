@@ -48,7 +48,7 @@ public class LogicalData implements Cloneable {
     private JDBCatalogue catalogue;
     @XmlTransient
     private List<String> decodedContentTypes = null;
-    @XmlTransient
+    //@XmlTransient
     private static final boolean debug = true;
     private Boolean supervised;
     private Long checkSum;
