@@ -1,4 +1,6 @@
- ALTER TABLE ldata_table ADD isSupervised BOOLEAN NOT NULL DEFAULT FALSE, INDEX(isSupervised);
+ 
+ ALTER TABLE ldata_table ADD isSupervised BOOLEAN NOT NULL DEFAULT FALSE; 
+ ALTER TABLE ldata_table ADD INDEX(isSupervised);
  ALTER TABLE ldata_table ADD checksum BIGINT NOT NULL DEFAULT 0;
  ALTER TABLE ldata_table ADD lastValidationDate BIGINT NOT NULL DEFAULT 0;
  ALTER TABLE ldata_table ADD lockTokenID VARCHAR(255);
