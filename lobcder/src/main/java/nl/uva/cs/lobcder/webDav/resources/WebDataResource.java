@@ -280,7 +280,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
 //            throw new RuntimeException(new NotAuthorizedException(this));
         }
         // Do the mapping
-        DavPrincipal p = new AbstractDavPrincipal(getPrincipalURL()) {
+        Principal p = new AbstractDavPrincipal(getPrincipalURL()) {
 
             @Override
             public boolean matches(Auth auth, Resource current) {

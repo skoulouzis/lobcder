@@ -7,7 +7,6 @@ package nl.uva.cs.lobcder.catalogue;
 import com.bradmcevoy.common.Path;
 import java.sql.*;
 import java.util.*;
-import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.naming.Context;
@@ -27,7 +26,7 @@ import nl.uva.cs.lobcder.util.Constants;
 public class JDBCatalogue {
 
     private DataSource datasource = null;
-    private static final boolean debug = false;
+    private static final boolean debug = true;
 
     public JDBCatalogue() throws NamingException, Exception {
 

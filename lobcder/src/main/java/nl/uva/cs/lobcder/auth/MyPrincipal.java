@@ -4,17 +4,8 @@
  */
 package nl.uva.cs.lobcder.auth;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Properties;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import nl.uva.cs.lobcder.util.Constants;
-import nl.uva.cs.lobcder.util.PropertiesLoader;
 
 /**
  *

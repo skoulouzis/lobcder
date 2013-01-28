@@ -18,7 +18,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.naming.InitialContext;
 import javax.net.ssl.*;
-import nl.uva.cs.lobcder.webDav.resources.WebDataResource;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
 /**
@@ -39,7 +38,7 @@ public class AuthRemote implements AuthI {
             javax.naming.Context envContext = (javax.naming.Context) ctx.lookup("java:/comp/env");
             pc = (PrincipalCacheI) envContext.lookup(jndiName);
         } catch (Exception ex) {
-            Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AuthRemote.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
     private String serviceURL;
