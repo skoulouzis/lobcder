@@ -1656,7 +1656,12 @@ public class JDBCatalogue {
                 connection.setAutoCommit(false);
             }
             s = connection.createStatement();
-            StringBuilder query = new StringBuilder("SELECT uid, ownerId, datatype, ld_name, parent, createDate, modifiedDate, ld_length, contentTypesStr, pdriGroupId, isSupervised, checksum, lastValidationDate FROM ldata_table WHERE datatype = 'logical.file'");
+            StringBuilder query = new StringBuilder("SELECT uid, ownerId, datatype, "
+                    + "ld_name, parent, createDate, modifiedDate, ld_length, "
+                    + "contentTypesStr, pdriGroupId, isSupervised, checksum, "
+                    + "lastValidationDate, lockTokenID, lockScope, "
+                    + "lockType, lockedByUser, lockDepth, lockTimeout, description "
+                    + "FROM ldata_table WHERE datatype = 'logical.file'");
             if (queryParameters.containsKey("path") && queryParameters.get("path").iterator().hasNext()) {
                 String path = queryParameters.get("path").iterator().next();
                 query.append(" AND parent LIKE '").append(path).append("%'");
@@ -1701,6 +1706,13 @@ public class JDBCatalogue {
                 element.setSupervised(rs.getBoolean(11));
                 element.setChecksum(rs.getLong(12));
                 element.setLastValidationDate(rs.getLong(13));
+//                element.setLockTokenID(rs.getString(14));
+//                element.setLockScope(rs.getString(15));
+//                element.setLockType(rs.getString(16));
+//                element.setLockedByUser(rs.getString(17));
+//                element.setLockDepth(rs.getString(18));
+//                element.setLockTimeout(rs.getLong(19));
+                element.setDescription(rs.getString(14));
                 ld_list.add(element);
             }
             s.close();
