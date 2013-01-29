@@ -165,7 +165,7 @@ public class VPDRI implements PDRI {
 //            OperatingSystemMXBean osMBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
 //            int size = (int) (osMBean.getFreePhysicalMemorySize() / 1000);
 //            debug("\tAlocated buff size: "+size);
-            CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((20*1024*1024), in, out);
+            CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((1024), in, out);
             cBuff.startTransfer(new Long(-1));
             
             reconnectAttemts = 0;

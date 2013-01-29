@@ -238,6 +238,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
             debug("NotAuthorizedException");
             throw e;
         } catch (Exception ex) {
+            Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, ex);
 //            if (ex instanceof LockedException) {
 //                throw new RuntimeException("423");
 ////                throw new BadRequestException("423");
