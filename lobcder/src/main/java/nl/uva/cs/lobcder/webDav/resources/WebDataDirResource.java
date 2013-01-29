@@ -199,10 +199,6 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                 if (!getPrincipal().canWrite(p)) {
                     throw new NotAuthorizedException(this);
                 }
-//                if (newResource.getCurrentLock() != null || !newResource.getCurrentLock().isExpired()) {
-//                    throw new LockedException(new WebDataFileResource(getCatalogue(), newResource));
-//                    return new WebDataFileResource(getCatalogue(), newResource);
-//                }
                 newResource.setLength(length);
                 newResource.setModifiedDate(System.currentTimeMillis());
                 newResource.addContentType(contentType);
@@ -236,6 +232,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
             }
             connection.commit();
             connection.close();
+            debug("\t Returning new: " + newResource.getName());
             return new WebDataFileResource(getCatalogue(), newResource);
         } catch (NotAuthorizedException e) {
             debug("NotAuthorizedException");

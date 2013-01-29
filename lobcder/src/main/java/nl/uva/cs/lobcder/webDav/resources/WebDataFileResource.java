@@ -6,11 +6,7 @@ package nl.uva.cs.lobcder.webDav.resources;
 
 import com.bradmcevoy.common.Path;
 import com.bradmcevoy.http.*;
-import com.bradmcevoy.http.exceptions.BadRequestException;
-import com.bradmcevoy.http.exceptions.ConflictException;
-import com.bradmcevoy.http.exceptions.LockedException;
-import com.bradmcevoy.http.exceptions.NotAuthorizedException;
-import com.bradmcevoy.http.exceptions.NotFoundException;
+import com.bradmcevoy.http.exceptions.*;
 import com.bradmcevoy.http.exceptions.PreConditionFailedException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -403,7 +399,7 @@ public class WebDataFileResource extends WebDataResource implements
             //        if (!getPrincipal().canWrite(getLogicalData().getPermissions())) {
             //        }
             //        }
-            if(getCurrentLock()!=null){
+            if (getCurrentLock() != null) {
                 throw new LockedException(this);
             }
             LockToken token = new LockToken(UUID.randomUUID().toString(), lockInfo, timeout);
@@ -446,9 +442,9 @@ public class WebDataFileResource extends WebDataResource implements
                 return;
             }
 
-//            if (!getLogicalData().getCurrentLock().tokenId.equals(token)) {
-//                throw new RuntimeException("Invalid lock token");
-//            }
+            if (!getLogicalData().getCurrentLock().tokenId.equals(token)) {
+                throw new PreConditionFailedException(this);
+            }
             //        if (!getPrincipal().canWrite(getLogicalData().getPermissions())) {
             //            throw new NotAuthorizedException(this);
             //        }

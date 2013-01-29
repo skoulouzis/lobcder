@@ -59,6 +59,7 @@ public class LogicalData implements Cloneable {
     private String lockedByUser;
     private String lockDepth;
     private Long lockTimeout;
+    private String description;
 
     public Boolean getSupervised() {
         return supervised;
@@ -375,5 +376,18 @@ public class LogicalData implements Cloneable {
 
     public void setLockTimeout(long lockTimeout) {
         this.lockTimeout = lockTimeout;
+    }
+
+    public String getDescription() {
+        return this.description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public void updateDescription(String description) throws CatalogueException {
+        this.description = description;
+        catalogue.setDescription(uid, description, null);
     }
 }

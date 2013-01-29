@@ -4,6 +4,8 @@ import com.bradmcevoy.common.Path;
 import com.bradmcevoy.http.Resource;
 import com.bradmcevoy.http.ResourceFactory;
 import java.io.File;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
 import nl.uva.cs.lobcder.resources.LogicalData;
 import nl.uva.cs.lobcder.util.Constants;
@@ -39,6 +41,7 @@ public class WebDataResourceFactory implements ResourceFactory {
             }
             return new WebDataResource(catalogue, entry);
         } catch (Exception ex) {
+            Logger.getLogger(WebDataResourceFactory.class.getName()).log(Level.SEVERE, null, ex);
             throw new RuntimeException(ex);
         }
 //        return null;

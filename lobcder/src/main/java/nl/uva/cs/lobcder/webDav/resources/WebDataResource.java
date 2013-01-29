@@ -11,7 +11,6 @@ import com.bradmcevoy.http.Request.Method;
 import com.bradmcevoy.http.Resource;
 import com.bradmcevoy.http.exceptions.NotAuthorizedException;
 import com.bradmcevoy.http.values.HrefList;
-import com.bradmcevoy.http.webdav.PropertyMap;
 import com.bradmcevoy.property.MultiNamespaceCustomPropertyResource;
 import com.bradmcevoy.property.PropertySource.PropertyAccessibility;
 import com.bradmcevoy.property.PropertySource.PropertyMetaData;
@@ -50,10 +49,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
     private LogicalData logicalData;
     private final JDBCatalogue catalogue;
     private static final boolean debug = true;
-    private final Map<QName, Object> customProperties = new HashMap<QName, Object>();
-    private final Map<String, PropertyMap.StandardProperty> userPrivledges = new HashMap<String, PropertyMap.StandardProperty>();
-    //Collection<Integer> roles = null;
-    //private String uname;
+//    private final Map<QName, Object> customProperties = new HashMap<QName, Object>();
     private static AuthI auth;
 
     static {
@@ -77,46 +73,20 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
 //        }
         this.catalogue = catalogue;
 
-        //We can't init the data dist props here cause there is no authorization 
-        //yet. So the getPrincipal will return null
-//        initProps();
-
-    }
-
-    private void initProps() {
-        if (customProperties.isEmpty()) {
-            customProperties.put(Constants.DRI_SUPERVISED_PROP_NAME, String.valueOf(getLogicalData().getSupervised()));
-            customProperties.put(Constants.DRI_CHECKSUM_PROP_NAME, String.valueOf(getLogicalData().getChecksum()));
-            customProperties.put(Constants.DRI_LAST_VALIDATION_DATE_PROP_NAME, String.valueOf(getLogicalData().getLastValidationDate()));
-            customProperties.put(Constants.DATA_DIST_PROP_NAME, null);
-
-//            getLogicalData().getPermissions()
-//            customProperties.put(Constants.DAV_ACL_PROP_NAME, null);
-//            List<Priviledge> list = getPriviledges(null);
-//            customProperties.put(Constants.DAV_CURRENT_USER_PRIVILAGE_SET_PROP_NAME, list);
-//        if(getLogicalData().getSupervised() != null) {
-//            DataDistProperty ddip = new DataDistProperty();
-//            ddip.setFormattedValue(getLogicalData().getSupervised().toString());
-//            customProperties.put(Constants.DATA_DIST_PROP_NAME, ddip);
-//        }
-        }
     }
 
     @Override
     public Date getCreateDate() {
-//        debug("getCreateDate.");
         return new Date(getLogicalData().getCreateDate());
     }
 
     @Override
     public String getUniqueId() {
-//        debug("getUniqueId.");
         return String.valueOf(getLogicalData().getUID());
     }
 
     @Override
     public String getName() {
-//        debug("getName.");
         return getLogicalData().getLDRI().getName();
     }
 
@@ -198,13 +168,11 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
 
     @Override
     public String getRealm() {
-//        debug("getRealm.");
         return "realm";
     }
 
     @Override
     public Date getModifiedDate() {
-//        debug("getModifiedDate.");
         return new Date(getLogicalData().getModifiedDate());
     }
 
@@ -227,24 +195,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
         if (debug) {
             System.err.println(this.getClass().getSimpleName() + "." + getLogicalData().getLDRI() + ": " + msg);
         }
-//        log.debug(msg);
     }
-//    @Override
-//    public void delete() throws NotAuthorizedException, ConflictException, BadRequestException {
-//        try {
-//            Collection<IStorageSite> sites = logicalData.getStorageSites();
-//            if (sites != null && !sites.isEmpty()) {
-//                for (IStorageSite s : sites) {
-//                    s.deleteVNode(logicalData.getLDRI());
-//                }
-//            }
-//            catalogue.unregisterResourceEntry(logicalData);
-//        } catch (CatalogueException ex) {
-//            throw new BadRequestException(this, ex.toString());
-//        } catch (VlException ex) {
-//            throw new BadRequestException(this, ex.toString());
-//        }
-//    }
 
     /**
      * @return the catalogue
@@ -271,20 +222,6 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
         return (MyPrincipal) WebDavServlet.request().getAttribute("vph-user");
     }
 
-//    public void isReadable(Permissions perm) throws NotAuthorizedException {
-//        MyPrincipal principal = getPrincipal();
-//        if (!principal.canRead(perm)) {
-//            throw new NotAuthorizedException();
-//        }
-//
-//    }
-//
-//    public void isWritable(Permissions perm) throws NotAuthorizedException {
-//        MyPrincipal principal = getPrincipal();
-//        if (!principal.canWrite(perm)) {
-//            throw new NotAuthorizedException();
-//        }
-//    }
     /**
      * A "principal" is a distinct human or computational actor that initiates
      * access to resources. In this protocol, a principal is an HTTP resource
@@ -345,7 +282,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
 //            throw new RuntimeException(new NotAuthorizedException(this));
         }
         // Do the mapping
-        DavPrincipal p = new AbstractDavPrincipal(getPrincipalURL()) {
+        Principal p = new AbstractDavPrincipal(getPrincipalURL()) {
 
             @Override
             public boolean matches(Auth auth, Resource current) {
@@ -443,33 +380,6 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
         }
     }
 
-    private void initDataDist() throws CatalogueException, SQLException, NotAuthorizedException, UnknownHostException {
-        Connection connection = getCatalogue().getConnection();
-        connection.setAutoCommit(false);
-        StringBuilder sb = new StringBuilder();
-        if (getLogicalData().isFolder()) {
-            List<? extends WebDataResource> children = (List<? extends WebDataResource>) ((WebDataDirResource) (this)).getChildren();
-            sb.append("[");
-            for (WebDataResource r : children) {
-                Collection<PDRI> pdris = getCatalogue().getPdriByGroupId(r.getLogicalData().getPdriGroupId(), connection);
-                for (PDRI p : pdris) {
-                    sb.append(p.getHost());
-                    sb.append(",");
-                }
-            }
-        } else {
-            Collection<PDRI> pdris = getCatalogue().getPdriByGroupId(getLogicalData().getPdriGroupId(), connection);
-            sb.append("[");
-            for (PDRI p : pdris) {
-                sb.append(p.getHost());
-                sb.append(",");
-            }
-        }
-        sb.replace(sb.lastIndexOf(","), sb.length(), "");
-        sb.append("]");
-        customProperties.put(Constants.DATA_DIST_PROP_NAME, sb.toString());
-    }
-
     private MyStorageSite selectBestSite(Collection<MyStorageSite> sites) {
         for (MyStorageSite s : sites) {
             return s;
@@ -479,29 +389,57 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
 
     @Override
     public Object getProperty(QName qname) throws RuntimeException {
-        try {
-            debug("getProperty: " + qname);
-            initProps();
-            if (qname.toString().equals(Constants.DATA_DIST_PROP_NAME.toString())) {
-                try {
-                    initDataDist();
-                } catch (SQLException ex) {
-                    throw new RuntimeException(ex);
-                } catch (NotAuthorizedException ex) {
-                    throw new RuntimeException(ex);
-                } catch (UnknownHostException ex) {
-                    throw new RuntimeException(ex);
+        if (qname.equals(Constants.DATA_DIST_PROP_NAME)) {
+            try {
+                Connection connection = getCatalogue().getConnection();
+                connection.setAutoCommit(false);
+                StringBuilder sb = new StringBuilder();
+                if (getLogicalData().isFolder()) {
+                    List<? extends WebDataResource> children = (List<? extends WebDataResource>) ((WebDataDirResource) (this)).getChildren();
+                    sb.append("[");
+                    for (WebDataResource r : children) {
+                        Collection<PDRI> pdris = getCatalogue().getPdriByGroupId(r.getLogicalData().getPdriGroupId(), connection);
+                        for (PDRI p : pdris) {
+                            sb.append(p.getHost());
+                            sb.append(",");
+                        }
+                    }
+                } else {
+                    Collection<PDRI> pdris = getCatalogue().getPdriByGroupId(getLogicalData().getPdriGroupId(), connection);
+                    sb.append("[");
+                    for (PDRI p : pdris) {
+                        sb.append(p.getHost());
+                        sb.append(",");
+                    }
                 }
+                sb.replace(sb.lastIndexOf(","), sb.length(), "");
+                sb.append("]");
+                return sb.toString();
+            } catch (UnknownHostException ex) {
+            } catch (SQLException ex) {
+                Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (NotAuthorizedException ex) {
+                Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (CatalogueException ex) {
+                Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
             }
-            if (customProperties.containsKey(qname)) {
-                return customProperties.get(qname);
-            } else {
-                return PropertyMetaData.UNKNOWN;
-            }
-        } catch (CatalogueException ex) {
-            throw new RuntimeException(ex);
+        } else if (qname.equals(Constants.DRI_SUPERVISED_PROP_NAME)) {
+            return String.valueOf(getLogicalData().getSupervised());
+        } else if (qname.equals(Constants.DRI_CHECKSUM_PROP_NAME)) {
+            return String.valueOf(getLogicalData().getChecksum());
+        } else if (qname.equals(Constants.DRI_LAST_VALIDATION_DATE_PROP_NAME)) {
+            return String.valueOf(getLogicalData().getLastValidationDate());
+        } else if (qname.equals(Constants.DAV_CURRENT_USER_PRIVILAGE_SET_PROP_NAME)) {
+            List<Priviledge> list = getPriviledges(null);
+            return "";
+        } else if (qname.equals(Constants.DAV_ACL_PROP_NAME)) {
+            List<Priviledge> list = getPriviledges(null);
+            return "";
+        } else if (qname.equals(Constants.DESCRIPTION_PROP_NAME)) {
+            return getLogicalData().getDescription();
         }
-//        return PropertyMetaData.UNKNOWN;
+
+        return PropertyMetaData.UNKNOWN;
     }
 
     @Override
@@ -511,57 +449,39 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
         }
         debug("setProperty: " + qname + " " + o);
         if (o != null) {
-            customProperties.put(qname, (String) o);
-            updateCatalogue(qname, (String) o);
+            String value = (String) o;
+            if (qname.equals(Constants.DRI_SUPERVISED_PROP_NAME)) {
+                getLogicalData().updateSupervised(Boolean.valueOf(value));
+            } else if (qname.equals(Constants.DRI_CHECKSUM_PROP_NAME)) {
+                getLogicalData().updateChecksum(Long.valueOf(value));
+            } else if (qname.equals(Constants.DRI_LAST_VALIDATION_DATE_PROP_NAME)) {
+                getLogicalData().updateLastValidationDate(Long.valueOf(value));
+            } else if (qname.equals(Constants.DESCRIPTION_PROP_NAME)) {
+                try {
+                    getLogicalData().updateDescription(value);
+                } catch (CatalogueException ex) {
+                    Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
         }
+
     }
 
     @Override
     public PropertyMetaData getPropertyMetaData(QName qname) {
-        try {
-            debug("getPropertyMetaData: " + qname);
-            if (qname.equals(Constants.DATA_DIST_PROP_NAME)) {
-                try {
-                    initDataDist();
-                } catch (SQLException ex) {
-                    throw new RuntimeException(ex);
-                } catch (NotAuthorizedException ex) {
-                    throw new RuntimeException(ex);
-                } catch (UnknownHostException ex) {
-                    throw new RuntimeException(ex);
-                }
-            }
-            initProps();
-            if (customProperties.containsKey(qname)) {
+        if (qname.equals(Constants.DATA_DIST_PROP_NAME)) {
+            return new PropertyMetaData(PropertyAccessibility.READ_ONLY, String.class);
+        }
+        for (QName n : Constants.PROP_NAMES) {
+            if (n.equals(qname) && !n.equals(Constants.DATA_DIST_PROP_NAME)) {
                 return new PropertyMetaData(PropertyAccessibility.WRITABLE, String.class);
-            } else {
-                return PropertyMetaData.UNKNOWN;
             }
-        } catch (CatalogueException ex) {
-            Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
         }
         return PropertyMetaData.UNKNOWN;
     }
 
     @Override
     public List<QName> getAllPropertyNames() {
-        ArrayList<QName> list = new ArrayList<QName>();
-        debug("getAllPropertyNames: ");
-        initProps();
-        list.addAll(customProperties.keySet());
-        for (QName n : list) {
-            debug("Names: " + n);
-        }
-        return list;
-    }
-
-    private void updateCatalogue(QName qname, String value) {
-        if (qname.equals(Constants.DRI_SUPERVISED_PROP_NAME)) {
-            getLogicalData().updateSupervised(Boolean.valueOf(value));
-        } else if (qname.equals(Constants.DRI_CHECKSUM_PROP_NAME)) {
-            getLogicalData().updateChecksum(Long.valueOf(value));
-        } else if (qname.equals(Constants.DRI_LAST_VALIDATION_DATE_PROP_NAME)) {
-            getLogicalData().updateLastValidationDate(Long.valueOf(value));
-        }
+        return Arrays.asList(Constants.PROP_NAMES);
     }
 }

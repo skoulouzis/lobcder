@@ -303,7 +303,10 @@ public class JDBCatalogue {
             connectionAutocommit = connection.getAutoCommit();
             connection.setAutoCommit(false);
             ps = connection.prepareStatement(
-                    "SELECT uid, ownerId, datatype, createDate, modifiedDate, ld_length, contentTypesStr, pdriGroupId, isSupervised, checksum, lastValidationDate, lockTokenID, lockScope, lockType, lockedByUser, lockDepth, lockTimeout FROM ldata_table where ldata_table.parent = ? AND ldata_table.ld_name = ?");
+                    "SELECT uid, ownerId, datatype, createDate, modifiedDate, ld_length, "
+                    + "contentTypesStr, pdriGroupId, isSupervised, checksum, lastValidationDate, "
+                    + "lockTokenID, lockScope, lockType, lockedByUser, lockDepth, lockTimeout, description "
+                    + "FROM ldata_table where ldata_table.parent = ? AND ldata_table.ld_name = ?");
             if (logicalResourceName.isRoot()) {
                 ps.setString(1, "");
                 ps.setString(2, "");
@@ -334,6 +337,7 @@ public class JDBCatalogue {
                 res.setLockedByUser(rs.getString(15));
                 res.setLockDepth(rs.getString(16));
                 res.setLockTimeout(rs.getLong(17));
+                res.setDescription(rs.getString(18));
             }
             return res;
         } catch (Exception e) {
@@ -492,7 +496,11 @@ public class JDBCatalogue {
                 connection.setAutoCommit(false);
             }
             s = connection.createStatement();
-            ResultSet rs = s.executeQuery("SELECT ownerId, datatype, ld_name, parent, createDate, modifiedDate, ld_length, contentTypesStr, pdriGroupId, isSupervised, checksum, lastValidationDate, lockTokenID, lockScope, lockType, lockedByUser, lockDepth, lockTimeout FROM ldata_table WHERE ldata_table.uid = " + UID);
+            ResultSet rs = s.executeQuery("SELECT ownerId, datatype, ld_name, parent, "
+                    + "createDate, modifiedDate, ld_length, contentTypesStr, pdriGroupId, "
+                    + "isSupervised, checksum, lastValidationDate, lockTokenID, lockScope, "
+                    + "lockType, lockedByUser, lockDepth, lockTimeout, description "
+                    + "FROM ldata_table WHERE ldata_table.uid = " + UID);
             if (rs.next()) {
                 res = new LogicalData(this);
                 res.setUID(UID);
@@ -514,6 +522,7 @@ public class JDBCatalogue {
                 res.setLockedByUser(rs.getString(15));
                 res.setLockDepth(rs.getString(16));
                 res.setLockTimeout(rs.getLong(17));
+                res.setDescription(rs.getString(18));
             }
             return res;
         } catch (Exception e) {
@@ -1587,7 +1596,7 @@ public class JDBCatalogue {
     }
 
     public LinkedList<LogicalData> queryLogicalData(MultivaluedMap<String, String> queryParameters, Connection connection) throws CatalogueException {
-                Statement s = null;
+        Statement s = null;
         boolean connectionIsProvided = (connection == null) ? false : true;
         boolean connectionAutocommit = false;
         try {
@@ -1599,34 +1608,39 @@ public class JDBCatalogue {
                 connection.setAutoCommit(false);
             }
             s = connection.createStatement();
-            StringBuilder query = new StringBuilder("SELECT uid, ownerId, datatype, ld_name, parent, createDate, modifiedDate, ld_length, contentTypesStr, pdriGroupId, isSupervised, checksum, lastValidationDate FROM ldata_table WHERE datatype = 'logical.file'");
-            if(queryParameters.containsKey("path") && queryParameters.get("path").iterator().hasNext()){
+            StringBuilder query = new StringBuilder("SELECT uid, ownerId, datatype, "
+                    + "ld_name, parent, createDate, modifiedDate, ld_length, "
+                    + "contentTypesStr, pdriGroupId, isSupervised, checksum, "
+                    + "lastValidationDate, lockTokenID, lockScope, "
+                    + "lockType, lockedByUser, lockDepth, lockTimeout, description "
+                    + "FROM ldata_table WHERE datatype = 'logical.file'");
+            if (queryParameters.containsKey("path") && queryParameters.get("path").iterator().hasNext()) {
                 String path = queryParameters.get("path").iterator().next();
                 query.append(" AND parent LIKE '").append(path).append("%'");
                 queryParameters.remove("path");
             }
-            if(queryParameters.containsKey("mStartDate") && queryParameters.get("mStartDate").iterator().hasNext()
+            if (queryParameters.containsKey("mStartDate") && queryParameters.get("mStartDate").iterator().hasNext()
                     && queryParameters.containsKey("mEndDate") && queryParameters.get("mEndDate").iterator().hasNext()) {
                 String mStartDate = Long.valueOf(queryParameters.get("mStartDate").iterator().next()).toString();
                 String mEndDate = Long.valueOf(queryParameters.get("mEndDate").iterator().next()).toString();
                 query.append(" AND modifiedDate BETWEEN FROM_UNIXTIME(").append(mStartDate).append(") AND FROM_UNIXTIME(").append(mEndDate).append(")");
                 queryParameters.remove("mStartDate");
                 queryParameters.remove("mEndDate");
-            } else if(queryParameters.containsKey("mStartDate") && queryParameters.get("mStartDate").iterator().hasNext()) {
+            } else if (queryParameters.containsKey("mStartDate") && queryParameters.get("mStartDate").iterator().hasNext()) {
                 String mStartDate = Long.valueOf(queryParameters.get("mStartDate").iterator().next()).toString();
                 query.append(" AND modifiedDate >= UNIXTIME(").append(mStartDate).append(")");
                 queryParameters.remove("mStartDate");
-            } else if(queryParameters.containsKey("mEndDate") && queryParameters.get("mEndDate").iterator().hasNext()) {
+            } else if (queryParameters.containsKey("mEndDate") && queryParameters.get("mEndDate").iterator().hasNext()) {
                 String mEndDate = Long.valueOf(queryParameters.get("mEndDate").iterator().next()).toString();
                 query.append(" AND modifiedDate <= UNIXTIME(").append(mEndDate).append(")");
                 queryParameters.remove("mEndDate");
             }
-            if(queryParameters.containsKey("isSupervised") && queryParameters.get("isSupervised").iterator().hasNext()) {
-               String isSupervised = Boolean.valueOf(queryParameters.get("isSupervised").iterator().next()).toString();
-               query.append(" AND isSupervised = ").append(isSupervised); 
-               queryParameters.remove("isSupervised");
+            if (queryParameters.containsKey("isSupervised") && queryParameters.get("isSupervised").iterator().hasNext()) {
+                String isSupervised = Boolean.valueOf(queryParameters.get("isSupervised").iterator().next()).toString();
+                query.append(" AND isSupervised = ").append(isSupervised);
+                queryParameters.remove("isSupervised");
             }
-            debug("queryLogicalData() SQL: " + query.toString());        
+            debug("queryLogicalData() SQL: " + query.toString());
             ResultSet rs = s.executeQuery(query.toString());
             LinkedList<LogicalData> ld_list = new LinkedList<LogicalData>();
             while (rs.next()) {
@@ -1644,9 +1658,15 @@ public class JDBCatalogue {
                 element.setSupervised(rs.getBoolean(11));
                 element.setChecksum(rs.getLong(12));
                 element.setLastValidationDate(rs.getLong(13));
+//                element.setLockTokenID(rs.getString(14));
+//                element.setLockScope(rs.getString(15));
+//                element.setLockType(rs.getString(16));
+//                element.setLockedByUser(rs.getString(17));
+//                element.setLockDepth(rs.getString(18));
+//                element.setLockTimeout(rs.getLong(19));
+                element.setDescription(rs.getString(14));
                 ld_list.add(element);
             }
-            rs.close();
             s.close();
             return ld_list;
         } catch (Exception e) {
@@ -1667,6 +1687,55 @@ public class JDBCatalogue {
             try {
                 if (s != null && !s.isClosed()) {
                     s.close();
+                }
+                if (!connectionIsProvided && !connection.isClosed()) {
+                    connection.commit();
+                    connection.close();
+                }
+                if (connectionIsProvided && !connection.isClosed()) {
+                    connection.setAutoCommit(connectionAutocommit);
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+
+    public void setDescription(Long uid, String description, Connection connection) throws CatalogueException {
+        PreparedStatement ps = null;
+        boolean connectionIsProvided = (connection == null) ? false : true;
+        boolean connectionAutocommit = false;
+        try {
+            if (connection == null) {
+                connection = getConnection();
+                connection.setAutoCommit(false);
+            } else {
+                connectionAutocommit = connection.getAutoCommit();
+                connection.setAutoCommit(false);
+            }
+            ps = connection.prepareStatement("UPDATE ldata_table SET description = ? WHERE uid = ?");
+            ps.setString(1, description);
+            ps.setLong(2, uid);
+            ps.executeUpdate();
+            ps.close();
+        } catch (Exception e) {
+            try {
+                if (ps != null && !ps.isClosed()) {
+                    ps.close();
+                    ps = null;
+                }
+                if (!connectionIsProvided && !connection.isClosed()) {
+                    connection.rollback();
+                    connection.close();
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            throw new CatalogueException(e.getMessage());
+        } finally {
+            try {
+                if (ps != null && !ps.isClosed()) {
+                    ps.close();
                 }
                 if (!connectionIsProvided && !connection.isClosed()) {
                     connection.commit();
