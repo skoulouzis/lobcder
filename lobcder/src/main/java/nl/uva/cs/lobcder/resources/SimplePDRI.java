@@ -69,7 +69,7 @@ public class SimplePDRI implements PDRI {
         OutputStream os = new FileOutputStream(file);
         try {
             int read;
-            byte[] copyBuffer = new byte[10 * 1024 * 1024];
+            byte[] copyBuffer = new byte[2 * 1024 * 1024];
 
             while ((read = is.read(copyBuffer, 0, copyBuffer.length)) != -1) {
                 os.write(copyBuffer, 0, read);

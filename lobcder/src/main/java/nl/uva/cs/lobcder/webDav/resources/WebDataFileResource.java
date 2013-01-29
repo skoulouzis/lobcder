@@ -212,7 +212,7 @@ public class WebDataFileResource extends WebDataResource implements
             //IOUtils.copy(pdri.getData(), out); 
 //            fastCopy(pdri.getData(), out);
 
-            CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((150 * 1024 * 1024), pdri.getData(), out);
+            CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((20 * 1024 * 1024), pdri.getData(), out);
             cBuff.startTransfer(new Long(-1));
         } catch (NotAuthorizedException ex) {
             debug("NotAuthorizedException");
@@ -221,7 +221,7 @@ public class WebDataFileResource extends WebDataResource implements
             //Try one more time 
             debug("reconnect");
             pdri.reconnect();
-            CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((150 * 1024 * 1024), pdri.getData(), out);
+            CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((20 * 1024 * 1024), pdri.getData(), out);
             try {
                 cBuff.startTransfer(new Long(-1));
             } catch (VlException ex1) {

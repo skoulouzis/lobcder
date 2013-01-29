@@ -4,25 +4,24 @@
  */
 package nl.uva.cs.lobcder.resources;
 
+import com.sun.management.OperatingSystemMXBean;
 import java.io.*;
+import java.lang.management.ManagementFactory;
 import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
-import java.net.NetworkInterface;
-import java.net.SocketException;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
+import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
-import java.util.Enumeration;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import nl.uva.vlet.Global;
 import nl.uva.vlet.GlobalConfig;
 import nl.uva.vlet.data.StringUtil;
-import nl.uva.vlet.exception.VRLSyntaxException;
 import nl.uva.vlet.exception.VlException;
 import nl.uva.vlet.io.CircularStreamBufferTransferer;
 import nl.uva.vlet.util.cog.GridProxy;
@@ -157,22 +156,26 @@ public class VPDRI implements PDRI {
     @Override
     public void putData(InputStream in) throws IOException {
         OutputStream out = null;
+        debug("putData:");
         try {
             vfsClient.mkdirs(vrl.getParent(), true);
             vfsClient.createFile(vrl, true);
             out = vfsClient.getFile(vrl).getOutputStream();
 
 //            OperatingSystemMXBean osMBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
-//            int size = (int) (osMBean.getFreePhysicalMemorySize() / 50);
-            CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((100 * 1024 * 1024), in, out);
+//            int size = (int) (osMBean.getFreePhysicalMemorySize() / 1000);
+//            debug("\tAlocated buff size: "+size);
+            CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((20*1024*1024), in, out);
             cBuff.startTransfer(new Long(-1));
-
+            
             reconnectAttemts = 0;
 //            final ReadableByteChannel inputChannel = Channels.newChannel(in);
 //            final WritableByteChannel outputChannel = Channels.newChannel(out);
 //            fastCopy(inputChannel, outputChannel);
         } catch (VlException ex) {
+            debug("\tVlException "+ex.getMessage());
             if (reconnectAttemts <= 2) {
+                debug("\treconnectAttemts "+reconnectAttemts);
                 reconnect();
                 putData(in);
             } else {
@@ -248,9 +251,11 @@ public class VPDRI implements PDRI {
     }
 
     private void fastCopy(ReadableByteChannel src, WritableByteChannel dest) throws IOException {
+        debug("fastCopy:");
 //        OperatingSystemMXBean osMBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
-//        int size = (int) (osMBean.getFreePhysicalMemorySize() / 50);
-        final ByteBuffer buffer = ByteBuffer.allocateDirect(5242880);
+//        int size = (int) (osMBean.getFreePhysicalMemorySize() / 2000);
+//        debug("\talloocated size: "+size);
+        final ByteBuffer buffer = ByteBuffer.allocateDirect(1024*10);
         int len;
         try {
             while ((len = src.read(buffer)) != -1) {
