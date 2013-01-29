@@ -67,7 +67,7 @@ public class MyAuthTest extends Debug implements AuthI {
             if (roles.isEmpty()) {
                 return null;
             } else {
-                return new MyPrincipal(token, roles);
+                return new MyPrincipal(uname, roles);
             }
         } catch (Exception ex) {
             return null;
