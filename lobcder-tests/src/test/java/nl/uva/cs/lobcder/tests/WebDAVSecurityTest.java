@@ -6,8 +6,11 @@ package nl.uva.cs.lobcder.tests;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpStatus;
@@ -128,153 +131,153 @@ public class WebDAVSecurityTest {
 //         acMgr = getAccessControlManager(superuser);
     }
 
-//    @Test
-//    public void testGetCurrentUserPrivilegeSet() throws UnsupportedEncodingException, IOException, DavException {
-//        String testFileURI1 = uri.toASCIIString() + TestSettings.TEST_FILE_NAME1 + ".txt";
-//        try {
-//            
-//            DeleteMethod delete = new DeleteMethod(testFileURI1);
-//            int status = client1.executeMethod(delete);
-//            
-//            
-//            PutMethod put = new PutMethod(testFileURI1);
-//            put.setRequestEntity(new StringRequestEntity(TestSettings.TEST_DATA, "text/plain", "UTF-8"));
-//            status = client1.executeMethod(put);
-//            assertEquals(HttpStatus.SC_CREATED, status);
-//            
-//            DavPropertyNameSet d = new DavPropertyNameSet();
-//            DavPropertyName userPriv = DavPropertyName.create("current-user-privilege-set");
-//            d.add(userPriv);
-//            
-//            PropFindMethod propFind = new PropFindMethod(testFileURI1, d, DavConstants.DEPTH_INFINITY);
-//            status = client1.executeMethod(propFind);
-//            assertEquals(HttpStatus.SC_MULTI_STATUS, status);
-//            
-//            
-//            MultiStatus multiStatus = propFind.getResponseBodyAsMultiStatus();
-//            MultiStatusResponse[] responses = multiStatus.getResponses();
-//            
-//            for (MultiStatusResponse r : responses) {
-//                System.out.println("Responce: " + r.getHref());
-//                DavPropertySet allProp = getProperties(r);
-//                
-//                DavPropertyIterator iter = allProp.iterator();
-//                while (iter.hasNext()) {
-//                    DavProperty<?> p = iter.nextProperty();
-//                    System.out.println("\tName: " + p.getName() + " Values " + p.getValue());
-//                }
-//            }
-//            
-//            assertEquals(HttpStatus.SC_OK, responses[0].getStatus()[0].getStatusCode());
-//            DavPropertySet allProp = getProperties(responses[0]);
-//            DavProperty<?> prop = allProp.get(userPriv);
-//            assertEquals(userPriv, prop.getName());
-//            
-////             ArrayList<org.apache.xerces.dom.DeferredElementNSImpl> value =  (ArrayList<org.apache.xerces.dom.DeferredElementNSImpl>) prop.getValue();
-////             for(org.apache.xerces.dom.DeferredElementNSImpl el : value){
-////                 System.out.println("DeferredElementNSImpl: "+el.getBaseURI());
-////                 System.out.println("getLocalName: "+el.getLocalName());
-////                 System.out.println("getNodeValue: "+el.getNodeValue());
-////             }
-////            String value = (String) prop.getValue();
-////            assertTrue(value.contains("READ") || value.contains("ALL"));
-//            System.out.println("Name: " + prop.getName() + " Values " + prop.getValue() + " class: " + prop.getValue().getClass().getName()+" "+prop.getValue().getClass().getName());
-//        } finally {
-//            DeleteMethod delete = new DeleteMethod(testFileURI1);
-//            int status = client1.executeMethod(delete);
-//            assertTrue("DeleteMethod status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
-//        }
-//    }
-//    
-//    @Test
-//    public void testUnothorizedCreateFile() {
-//        try {
-//            String testFileURI1 = uri.toASCIIString() + TestSettings.TEST_FILE_NAME1 + ".txt";
-//            PutMethod put = new PutMethod(testFileURI1);
-//            put.setRequestEntity(new StringRequestEntity("foo", "text/plain", "UTF-8"));
-//            
-//            client2.getState().setCredentials(
-//                    new AuthScope(uri.getHost(), uri.getPort()),
-//                    new UsernamePasswordCredentials(username2, "WRONG_PASSWORD"));
-//            
-//            int status = client2.executeMethod(put);
-//            assertEquals(HttpStatus.SC_UNAUTHORIZED, status);
-//            
-//        } catch (IOException ex) {
-//            Logger.getLogger(WebDAVSecurityTest.class.getName()).log(Level.SEVERE, null, ex);
-//        }
-//    }
-//    
-//    @Test
-//    public void testGetSetACL() throws IOException, DavException {
-//         String testFileURI1 = uri.toASCIIString() + TestSettings.TEST_FILE_NAME1;
-//        DeleteMethod del = new DeleteMethod(testFileURI1);
-//        client1.executeMethod(del);
-//        
-//        PutMethod put = new PutMethod(testFileURI1);
-//        put.setRequestEntity(new StringRequestEntity(TestSettings.TEST_DATA, "text/plain", "UTF-8"));
-//        int status = client1.executeMethod(put);
-//        assertEquals(HttpStatus.SC_CREATED, status);
-//        
-//        DavPropertyNameSet d = new DavPropertyNameSet();
-//        d.add(SecurityConstants.ACL);
-//        PropFindMethod propFind = new PropFindMethod(testFileURI1, d, DavConstants.DEPTH_INFINITY);
-//        
-//        status = client1.executeMethod(propFind);
-//        assertEquals(HttpStatus.SC_MULTI_STATUS, status);
-//
-//
-//        MultiStatus multiStatus = propFind.getResponseBodyAsMultiStatus();
-//        MultiStatusResponse[] responses = multiStatus.getResponses();
-//
-//        for (MultiStatusResponse r : responses) {
-//            System.out.println("Responce: " + r.getHref());
-//            DavPropertySet allProp = getProperties(r);
-//
-//            DavPropertyIterator iter = allProp.iterator();
-//            while (iter.hasNext()) {
-//                DavProperty<?> p = iter.nextProperty();
-////                assertNotNull(p.getValue());
-//                System.out.println("\tName: " + p.getName() + " Values " + p.getValue());
-//            }
-//
-//        }
-//    }
+    @Test
+    public void testGetCurrentUserPrivilegeSet() throws UnsupportedEncodingException, IOException, DavException {
+        String testFileURI1 = uri.toASCIIString() + TestSettings.TEST_FILE_NAME1 + ".txt";
+        try {
+
+            DeleteMethod delete = new DeleteMethod(testFileURI1);
+            int status = client1.executeMethod(delete);
+
+
+            PutMethod put = new PutMethod(testFileURI1);
+            put.setRequestEntity(new StringRequestEntity(TestSettings.TEST_DATA, "text/plain", "UTF-8"));
+            status = client1.executeMethod(put);
+            assertEquals(HttpStatus.SC_CREATED, status);
+
+            DavPropertyNameSet d = new DavPropertyNameSet();
+            DavPropertyName userPriv = DavPropertyName.create("current-user-privilege-set");
+            d.add(userPriv);
+
+            PropFindMethod propFind = new PropFindMethod(testFileURI1, d, DavConstants.DEPTH_INFINITY);
+            status = client1.executeMethod(propFind);
+            assertEquals(HttpStatus.SC_MULTI_STATUS, status);
+
+
+            MultiStatus multiStatus = propFind.getResponseBodyAsMultiStatus();
+            MultiStatusResponse[] responses = multiStatus.getResponses();
+
+            for (MultiStatusResponse r : responses) {
+                System.out.println("Responce: " + r.getHref());
+                DavPropertySet allProp = getProperties(r);
+
+                DavPropertyIterator iter = allProp.iterator();
+                while (iter.hasNext()) {
+                    DavProperty<?> p = iter.nextProperty();
+                    System.out.println("\tName: " + p.getName() + " Values " + p.getValue());
+                }
+            }
+
+            assertEquals(HttpStatus.SC_OK, responses[0].getStatus()[0].getStatusCode());
+            DavPropertySet allProp = getProperties(responses[0]);
+            DavProperty<?> prop = allProp.get(userPriv);
+            assertEquals(userPriv, prop.getName());
+
+//             ArrayList<org.apache.xerces.dom.DeferredElementNSImpl> value =  (ArrayList<org.apache.xerces.dom.DeferredElementNSImpl>) prop.getValue();
+//             for(org.apache.xerces.dom.DeferredElementNSImpl el : value){
+//                 System.out.println("DeferredElementNSImpl: "+el.getBaseURI());
+//                 System.out.println("getLocalName: "+el.getLocalName());
+//                 System.out.println("getNodeValue: "+el.getNodeValue());
+//             }
+//            String value = (String) prop.getValue();
+//            assertTrue(value.contains("READ") || value.contains("ALL"));
+            System.out.println("Name: " + prop.getName() + " Values " + prop.getValue() + " class: " + prop.getValue().getClass().getName() + " " + prop.getValue().getClass().getName());
+        } finally {
+            DeleteMethod delete = new DeleteMethod(testFileURI1);
+            int status = client1.executeMethod(delete);
+            assertTrue("DeleteMethod status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
+        }
+    }
+
+    @Test
+    public void testUnothorizedCreateFile() {
+        try {
+            String testFileURI1 = uri.toASCIIString() + TestSettings.TEST_FILE_NAME1 + ".txt";
+            PutMethod put = new PutMethod(testFileURI1);
+            put.setRequestEntity(new StringRequestEntity("foo", "text/plain", "UTF-8"));
+
+            client2.getState().setCredentials(
+                    new AuthScope(uri.getHost(), uri.getPort()),
+                    new UsernamePasswordCredentials(username2, "WRONG_PASSWORD"));
+
+            int status = client2.executeMethod(put);
+            assertEquals(HttpStatus.SC_UNAUTHORIZED, status);
+
+        } catch (IOException ex) {
+            Logger.getLogger(WebDAVSecurityTest.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    @Test
+    public void testGetSetACL() throws IOException, DavException {
+        String testFileURI1 = uri.toASCIIString() + TestSettings.TEST_FILE_NAME1;
+        DeleteMethod del = new DeleteMethod(testFileURI1);
+        client1.executeMethod(del);
+
+        PutMethod put = new PutMethod(testFileURI1);
+        put.setRequestEntity(new StringRequestEntity(TestSettings.TEST_DATA, "text/plain", "UTF-8"));
+        int status = client1.executeMethod(put);
+        assertEquals(HttpStatus.SC_CREATED, status);
+
+        DavPropertyNameSet d = new DavPropertyNameSet();
+        d.add(SecurityConstants.ACL);
+        PropFindMethod propFind = new PropFindMethod(testFileURI1, d, DavConstants.DEPTH_INFINITY);
+
+        status = client1.executeMethod(propFind);
+        assertEquals(HttpStatus.SC_MULTI_STATUS, status);
+
+
+        MultiStatus multiStatus = propFind.getResponseBodyAsMultiStatus();
+        MultiStatusResponse[] responses = multiStatus.getResponses();
+
+        for (MultiStatusResponse r : responses) {
+            System.out.println("Responce: " + r.getHref());
+            DavPropertySet allProp = getProperties(r);
+
+            DavPropertyIterator iter = allProp.iterator();
+            while (iter.hasNext()) {
+                DavProperty<?> p = iter.nextProperty();
+//                assertNotNull(p.getValue());
+                System.out.println("\tName: " + p.getName() + " Values " + p.getValue());
+            }
+
+        }
+    }
+
     @Test
     public void testSetGetACL() throws IOException, DavException {
         String testFileURI1 = uri.toASCIIString() + TestSettings.TEST_FILE_NAME1;
         DeleteMethod del = new DeleteMethod(testFileURI1);
         client1.executeMethod(del);
-        
+
         PutMethod put = new PutMethod(testFileURI1);
         put.setRequestEntity(new StringRequestEntity(TestSettings.TEST_DATA, "text/plain", "UTF-8"));
         int status = client1.executeMethod(put);
         assertEquals(HttpStatus.SC_CREATED, status);
-        
-        
-        Privilege[] privs =new Privilege[]{
+
+
+        Privilege[] privs = new Privilege[]{
             Privilege.PRIVILEGE_WRITE,
-            Privilege.PRIVILEGE_READ,
-            ///Privilege.getPrivilege("schedule-query-freebusy", SecurityConstants.NAMESPACE)
+            Privilege.PRIVILEGE_READ, ///Privilege.getPrivilege("schedule-query-freebusy", SecurityConstants.NAMESPACE)
         };
-        
+
         Principal principal = Principal.getHrefPrincipal(password1);
-        System.out.println("principal: "+principal.getHref());
-        System.out.println("principal: "+principal.getPropertyName());
-        
+        System.out.println("principal: " + principal.getHref());
+        System.out.println("principal: " + principal.getPropertyName());
+
         Ace ace = AclProperty.createGrantAce(Principal.getSelfPrincipal(),
                 privs, false, false, null);
-        
+
         AclMethod acl = new AclMethod(testFileURI1, new AclProperty(new Ace[]{ace}));
         Header[] headers = acl.getRequestHeaders();
-        for(Header h : headers ){
-            System.out.println("getRequestHeaders: "+h.getName() +" : "+h.getValue());
+        for (Header h : headers) {
+            System.out.println("getRequestHeaders: " + h.getName() + " : " + h.getValue());
         }
-            
+
         status = client1.executeMethod(acl);
         assertEquals(HttpStatus.SC_OK, status);
-        
-        
+
+
         DavPropertyNameSet d = new DavPropertyNameSet();
         d.add(SecurityConstants.ACL);
 //        d.add(SecurityConstants.ACL_RESTRICTIONS);
@@ -289,7 +292,7 @@ public class WebDAVSecurityTest {
 //        d.add(SecurityConstants.PRINCIPAL_URL);
 //        d.add(SecurityConstants.SUPPORTED_PRIVILEGE_SET);
         PropFindMethod propFind = new PropFindMethod(testFileURI1, d, DavConstants.DEPTH_INFINITY);
-        
+
         status = client1.executeMethod(propFind);
         assertEquals(HttpStatus.SC_MULTI_STATUS, status);
 
