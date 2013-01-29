@@ -4,8 +4,6 @@ import com.bradmcevoy.common.Path;
 import com.bradmcevoy.http.Resource;
 import com.bradmcevoy.http.ResourceFactory;
 import java.io.File;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
 import nl.uva.cs.lobcder.resources.LogicalData;
 import nl.uva.cs.lobcder.util.Constants;
@@ -22,7 +20,9 @@ public class WebDataResourceFactory implements ResourceFactory {
     @Override
     public Resource getResource(String host, String strPath) {
 
-        Path ldri = Path.path(new File(strPath).getPath()).getStripFirst().getStripFirst();
+        //Path ldri = Path.path(new File(strPath).getPath()).getStripFirst().getStripFirst();
+        String s1 = strPath.substring(strPath.indexOf("/", 1));
+        Path ldri = Path.path(s1.substring(s1.indexOf("/", 1)));
         try {
             //Gets the root path. If instead we called :'ldri = Path.path(strPath);' we get back '/lobcder-1.0-SNAPSHOT'
             debug("getResource:  strPath: " + strPath + " path: " + Path.path(strPath) + " ldri: " + ldri);
@@ -41,7 +41,6 @@ public class WebDataResourceFactory implements ResourceFactory {
             }
             return new WebDataResource(catalogue, entry);
         } catch (Exception ex) {
-            Logger.getLogger(WebDataResourceFactory.class.getName()).log(Level.SEVERE, null, ex);
             throw new RuntimeException(ex);
         }
 //        return null;

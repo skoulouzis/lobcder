@@ -59,14 +59,14 @@
             <version>1.8.0-SNAPSHOT</version>
         </dependency>
 
-<!--        <dependency>
+        <!--        <dependency>
             <groupId>org.jglobus</groupId>
             <artifactId>JGlobus-Core</artifactId>
             <version>2.0.2</version>
             <scope>runtime</scope>
         </dependency>-->
 
-<!--        <dependency>
+        <!--        <dependency>
             <groupId>org.jglobus</groupId>
             <artifactId>cog-jglobus</artifactId>
             <version>1.8.0</version>
@@ -140,7 +140,7 @@
             <scope>runtime</scope>
         </dependency>
         
-<!--        dependency for gftp driver -->
+        <!--        dependency for gftp driver -->
         <dependency>
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcprov-jdk16</artifactId>
@@ -200,7 +200,7 @@
             <version>1.14</version>
         </dependency>
         
-<!--        <dependency>
+        <!--        <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
             <version>1.7.2</version>
@@ -226,13 +226,13 @@
             <url>https://elab.lab.uvalight.net:8444/artifactory/repo</url>
         </repository>
 	
-<!--       <repository>
+        <!--       <repository>
             <id>releases</id>
             <name>Releases</name>
             <url>https://oss.sonatype.org/content/repositories/releases</url>
         </repository>-->
         
-<!--        <repository>
+        <!--        <repository>
             <url>http://download.java.net/maven/2/</url>
             <id>restapi</id>
             <layout>default</layout>
@@ -244,7 +244,7 @@
 
    
 
-<!--    <pluginRepositories>
+    <!--    <pluginRepositories>
         <pluginRepository>
             <id>DataNucleus_2</id>
             <url>http://www.datanucleus.org/downloads/maven2/</url>
@@ -262,7 +262,7 @@
                     <compilerArguments>
                         <endorseddirs>${endorsed.dir}</endorseddirs>
                     </compilerArguments>
-<!--                    <skipTests>true</skipTests>-->
+                    <!--                    <skipTests>true</skipTests>-->
                 </configuration>
                 <version>2.3.2</version>
             </plugin>
@@ -299,8 +299,8 @@
                     </execution>
                 </executions>
             </plugin>
-            
-<!--            <plugin>
+
+            <!--            <plugin>
                 <groupId>org.datanucleus</groupId>
                 <artifactId>maven-datanucleus-plugin</artifactId>
                 <version>3.0.1</version>
@@ -320,7 +320,7 @@
             </plugin>-->
 
 
-<!--            <plugin>
+            <!--            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
@@ -336,10 +336,10 @@
 
     </build>
     
-<!--NOT WORKING     -->
+    <!--NOT WORKING     -->
     <reporting>
         <plugins>
-<!--            <plugin>
+            <!--            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <reportSets>
