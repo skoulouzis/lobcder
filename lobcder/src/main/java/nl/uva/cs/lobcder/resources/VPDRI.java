@@ -25,9 +25,7 @@ import nl.uva.vlet.data.StringUtil;
 import nl.uva.vlet.exception.VlException;
 import nl.uva.vlet.io.CircularStreamBufferTransferer;
 import nl.uva.vlet.util.cog.GridProxy;
-import nl.uva.vlet.vfs.VChecksum;
-import nl.uva.vlet.vfs.VFSClient;
-import nl.uva.vlet.vfs.VFile;
+import nl.uva.vlet.vfs.*;
 import nl.uva.vlet.vrl.VRL;
 import nl.uva.vlet.vrs.ServerInfo;
 import nl.uva.vlet.vrs.VRS;
@@ -157,25 +155,28 @@ public class VPDRI implements PDRI {
     public void putData(InputStream in) throws IOException {
         OutputStream out = null;
         debug("putData:");
+        VFile tmpFile = null;
         try {
-            vfsClient.mkdirs(vrl.getParent(), true);
+
+//            upload(in);
+        VDir remoteDir = vfsClient.mkdirs(vrl.getParent(), true);
             vfsClient.createFile(vrl, true);
             out = vfsClient.getFile(vrl).getOutputStream();
 
 //            OperatingSystemMXBean osMBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
 //            int size = (int) (osMBean.getFreePhysicalMemorySize() / 1000);
 //            debug("\tAlocated buff size: "+size);
-            CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((1024), in, out);
+            CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((2*1024*1024), in, out);
             cBuff.startTransfer(new Long(-1));
-            
+
             reconnectAttemts = 0;
 //            final ReadableByteChannel inputChannel = Channels.newChannel(in);
 //            final WritableByteChannel outputChannel = Channels.newChannel(out);
 //            fastCopy(inputChannel, outputChannel);
         } catch (VlException ex) {
-            debug("\tVlException "+ex.getMessage());
+            debug("\tVlException " + ex.getMessage());
             if (reconnectAttemts <= 2) {
-                debug("\treconnectAttemts "+reconnectAttemts);
+                debug("\treconnectAttemts " + reconnectAttemts);
                 reconnect();
                 putData(in);
             } else {
@@ -200,6 +201,13 @@ public class VPDRI implements PDRI {
             }
             if (in != null) {
                 in.close();
+            }
+            if (tmpFile != null) {
+                try {
+                    tmpFile.delete();
+                } catch (VlException ex) {
+                    Logger.getLogger(VPDRI.class.getName()).log(Level.SEVERE, null, ex);
+                }
             }
         }
     }
@@ -255,7 +263,7 @@ public class VPDRI implements PDRI {
 //        OperatingSystemMXBean osMBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
 //        int size = (int) (osMBean.getFreePhysicalMemorySize() / 2000);
 //        debug("\talloocated size: "+size);
-        final ByteBuffer buffer = ByteBuffer.allocateDirect(1024*10);
+        final ByteBuffer buffer = ByteBuffer.allocateDirect(1024 * 10);
         int len;
         try {
             while ((len = src.read(buffer)) != -1) {
@@ -323,6 +331,23 @@ public class VPDRI implements PDRI {
     private void debug(String msg) {
         if (debug) {
             System.err.println(this.getClass().getName() + ": " + msg);
+        }
+    }
+
+    private void upload(InputStream in) throws VlException, InterruptedException {
+        VDir remoteDir = vfsClient.mkdirs(vrl.getParent(), true);
+        VRL tmpVRL = new VRL("file:///" + System.getProperty("java.io.tmpdir"));
+        VRL tmpFileVRL = tmpVRL.append(fileURI);
+        VFile tmpFile = vfsClient.createFile(tmpFileVRL, true);
+        OutputStream out = tmpFile.getOutputStream();
+        CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((1 * 1024 * 1024), in, out);
+        cBuff.startTransfer(new Long(-1));
+        VFSTransfer trans = vfsClient.asyncCopy(tmpFile, remoteDir);
+        int time = 100;
+        while (!trans.isDone()) {
+            debug("trans.getProgress(): " + trans.getProgress());
+            Thread.sleep(time);
+            time = time * 2;
         }
     }
 }
