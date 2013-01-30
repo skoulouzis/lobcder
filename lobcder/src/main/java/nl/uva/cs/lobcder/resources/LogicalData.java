@@ -53,11 +53,17 @@ public class LogicalData implements Cloneable {
     private Boolean supervised;
     private Long checkSum;
     private Long lastValidationDate;
+    @XmlTransient
     private String lockTokenID;
+    @XmlTransient
     private String lockScope;
+    @XmlTransient
     private String lockType;
+    @XmlTransient
     private String lockedByUser;
+    @XmlTransient
     private String lockDepth;
+    @XmlTransient
     private Long lockTimeout;
     private String description;
 
