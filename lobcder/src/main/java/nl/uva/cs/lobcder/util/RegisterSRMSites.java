@@ -9,12 +9,16 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.naming.NamingException;
+import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
 import nl.uva.cs.lobcder.resources.VPDRI;
 import nl.uva.vlet.Global;
 import nl.uva.vlet.GlobalConfig;
 import nl.uva.vlet.data.StringUtil;
 import nl.uva.vlet.exception.VlException;
+import nl.uva.vlet.util.bdii.BdiiService;
 import nl.uva.vlet.util.bdii.ServiceInfo;
+import nl.uva.vlet.util.bdii.StorageArea;
 import nl.uva.vlet.util.cog.GridProxy;
 import nl.uva.vlet.vfs.VFSClient;
 import nl.uva.vlet.vrs.ServerInfo;
@@ -35,6 +39,7 @@ public class RegisterSRMSites {
         }
     }
     private static VFSClient vfsClient;
+    private static ArrayList<StorageArea> srms;
 
     private static void InitGlobalVFS() throws MalformedURLException, VlException, Exception {
         try {
@@ -50,7 +55,7 @@ public class RegisterSRMSites {
         GlobalConfig.setInitURLStreamFactory(false);
         GlobalConfig.setAllowUserInteraction(false);
         GlobalConfig.setUserHomeLocation(new URL("file:///" + System.getProperty("user.home")));
-        GlobalConfig.setSystemProperty(GlobalConfig.PROP_BDII_HOSTNAME, null);
+        GlobalConfig.setSystemProperty(GlobalConfig.PROP_BDII_HOSTNAME, "bdii2.grid.sara.nl:2170");
         // user configuration 
 //        GlobalConfig.setUsePersistantUserConfiguration(false);
 //        GlobalConfig.setUserHomeLocation(new URL("file:////" + this.tmpVPHuserHome.getAbsolutePath()));
@@ -60,16 +65,18 @@ public class RegisterSRMSites {
     
     
     
-      private static void initVFS() throws VlException, MalformedURLException {
+      private static void initVFS() throws VlException, MalformedURLException, NamingException, Exception {
         vfsClient = new VFSClient();
         VRSContext context = vfsClient.getVRSContext();
+                BdiiService bdii = context.getBdiiService();
+        srms = bdii.getSRMv22SAsforVO("biomed");
+//        
         debug("srms: "+context.getConfigManager().getBdiiHost());
         
-        ArrayList<ServiceInfo> srms = VRS.createVRSClient(context).queryServiceInfo("biomed", ServiceInfo.ServiceInfoType.SRMV11);
-        
-        for(ServiceInfo inf : srms){
-           debug("srms: "+inf.getHost());
-        }
+        for(StorageArea inf : srms){
+           debug("srms: "+inf.getVOStorageLocation());
+        }        
+//        JDBCatalogue cat = new JDBCatalogue();
     }
 
     private static void debug(String msg) {
@@ -80,9 +87,7 @@ public class RegisterSRMSites {
     public static void main(String args[]){
         try {
             initVFS();
-        } catch (VlException ex) {
-            Logger.getLogger(RegisterSRMSites.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (MalformedURLException ex) {
+        } catch (Exception ex) {
             Logger.getLogger(RegisterSRMSites.class.getName()).log(Level.SEVERE, null, ex);
         }finally{
             VRS.exit();

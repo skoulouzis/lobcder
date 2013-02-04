@@ -109,7 +109,8 @@ public class VPDRI implements PDRI {
 
         if (StringUtil.equals(authScheme, ServerInfo.GSI_AUTH)) {
             //Use the username and password to get access to MyProxy 
-            GridProxy proxy = null;
+            GridProxy proxy = new GridProxy(context);
+            String pr = context.getProxyAsString();
             context.setGridProxy(proxy);
         }
 
