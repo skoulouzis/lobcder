@@ -11,6 +11,7 @@ import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
@@ -83,7 +84,10 @@ public class VPDRI implements PDRI {
     VPDRI(String fileURI, Long storageSiteId, String resourceUrl, String username, String password) throws IOException {
         try {
             this.fileURI = fileURI;
-            vrl = new VRL(resourceUrl).appendPath(baseDir).append(fileURI);
+            vrl = new VRL(resourceUrl).appendPath(baseDir).append(URLEncoder.encode(fileURI, "UTF-8"));
+            //Encode:
+//            String strURI = vrl.toURI().toASCIIString();
+//            vrl = new VRL(strURI);
             this.storageSiteId = storageSiteId;
             this.username = username;
             this.password = password;
