@@ -29,6 +29,7 @@ import java.util.logging.Logger;
 import javax.naming.InitialContext;
 import javax.xml.namespace.QName;
 import nl.uva.cs.lobcder.auth.AuthI;
+import nl.uva.cs.lobcder.auth.MyAuthTest;
 import nl.uva.cs.lobcder.auth.MyPrincipal;
 import nl.uva.cs.lobcder.auth.Permissions;
 import nl.uva.cs.lobcder.catalogue.CatalogueException;
@@ -97,6 +98,11 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
                 + "\t password: " + password);
         String token = password;
         MyPrincipal principal = auth.checkToken(token);
+        //Try the local db 
+        if (principal == null) {
+            MyAuthTest authT = new MyAuthTest();
+            principal = authT.checkToken(token);
+        }
         if (principal != null) {
             WebDavServlet.request().setAttribute("vph-user", principal);
             debug("getUserId: " + principal.getUserId());

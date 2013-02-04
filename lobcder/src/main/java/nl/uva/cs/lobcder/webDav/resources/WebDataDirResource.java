@@ -137,12 +137,13 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
     public List<? extends Resource> getChildren() throws NotAuthorizedException {
         debug(getLogicalData().getLDRI().toPath() + " collection: getChildren.");
         Connection connection = null;
+        MyPrincipal pr = null;
         try {
             List<WebDataResource> children = new LinkedList<WebDataResource>();
             connection = getCatalogue().getConnection();
             connection.setAutoCommit(false);
             Permissions perm = getCatalogue().getPermissions(getLogicalData().getUID(), getLogicalData().getOwner(), connection);
-            MyPrincipal pr = getPrincipal();
+            pr = getPrincipal();
             if (!pr.canRead(perm)) {
                 throw new NotAuthorizedException(this);
             }
@@ -166,6 +167,9 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
         } catch (NotAuthorizedException e) {
             throw e;
         } catch (Exception ex) {
+            if(pr == null){
+                throw new NotAuthorizedException(this);
+            }
             Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, ex);
             return null;
         } finally {
