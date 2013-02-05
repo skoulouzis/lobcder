@@ -11,17 +11,14 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.naming.NamingException;
 import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
+import nl.uva.cs.lobcder.resources.Credential;
 import nl.uva.cs.lobcder.resources.VPDRI;
 import nl.uva.vlet.Global;
 import nl.uva.vlet.GlobalConfig;
-import nl.uva.vlet.data.StringUtil;
 import nl.uva.vlet.exception.VlException;
 import nl.uva.vlet.util.bdii.BdiiService;
-import nl.uva.vlet.util.bdii.ServiceInfo;
 import nl.uva.vlet.util.bdii.StorageArea;
-import nl.uva.vlet.util.cog.GridProxy;
 import nl.uva.vlet.vfs.VFSClient;
-import nl.uva.vlet.vrs.ServerInfo;
 import nl.uva.vlet.vrs.VRS;
 import nl.uva.vlet.vrs.VRSContext;
 
@@ -76,7 +73,10 @@ public class RegisterSRMSites {
         for(StorageArea inf : srms){
            debug("srms: "+inf.getVOStorageLocation());
         }        
-//        JDBCatalogue cat = new JDBCatalogue();
+        JDBCatalogue cat = new JDBCatalogue();
+        String resourceURI = "";
+        Credential credentials = new Credential();
+        cat.registerStorageSite(resourceURI, credentials, -1, -1, -1, -1, null);
     }
 
     private static void debug(String msg) {

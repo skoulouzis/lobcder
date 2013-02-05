@@ -1749,4 +1749,29 @@ public class JDBCatalogue {
             }
         }
     }
+
+    public void registerStorageSite(String resourceURI, Credential credentials, int currentNum, int currentSize, int quotaNum, int quotaSize, Connection connection) throws CatalogueException {
+        PreparedStatement ps = null;
+        boolean connectionIsProvided = (connection == null) ? false : true;
+        boolean connectionAutocommit = false;
+        PreparedStatement ps01 = null;
+        try {
+            if (connection == null) {
+                connection = getConnection();
+                connection.setAutoCommit(false);
+            } else {
+                connectionAutocommit = connection.getAutoCommit();
+                connection.setAutoCommit(false);
+            }
+//            ps01 = connection.prepareStatement(
+//                    "SELECT uid, ownerId, datatype, ld_name, parent, createDate, modifiedDate, ld_length, contentTypesStr, pdriGroupId FROM ldata_table where ldata_table.parent = ? AND ldata_table.ld_name = ?", ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
+//            ps01.setString(1, entry.getParent());
+//            ps01.setString(2, entry.getName());
+//            ResultSet rs = ps01.executeQuery();
+
+
+        } catch (SQLException ex) {
+            throw new CatalogueException(ex.getMessage());
+        }
+    }
 }

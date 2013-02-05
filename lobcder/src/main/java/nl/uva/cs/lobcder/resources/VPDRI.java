@@ -10,6 +10,7 @@ import java.lang.management.ManagementFactory;
 import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.net.UnknownHostException;
@@ -164,14 +165,14 @@ public class VPDRI implements PDRI {
         try {
 
 //            upload(in);
-        VDir remoteDir = vfsClient.mkdirs(vrl.getParent(), true);
+            VDir remoteDir = vfsClient.mkdirs(vrl.getParent(), true);
             vfsClient.createFile(vrl, true);
             out = vfsClient.getFile(vrl).getOutputStream();
 
 //            OperatingSystemMXBean osMBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
 //            int size = (int) (osMBean.getFreePhysicalMemorySize() / 1000);
 //            debug("\tAlocated buff size: "+size);
-            CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((2*1024*1024), in, out);
+            CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((2 * 1024 * 1024), in, out);
             cBuff.startTransfer(new Long(-1));
 
             reconnectAttemts = 0;
@@ -179,7 +180,9 @@ public class VPDRI implements PDRI {
 //            final WritableByteChannel outputChannel = Channels.newChannel(out);
 //            fastCopy(inputChannel, outputChannel);
         } catch (VlException ex) {
-            debug("\tVlException " + ex.getMessage());
+            if (ex.getMessage() != null) {
+                debug("\tVlException " + ex.getMessage());
+            }
             if (reconnectAttemts <= 2) {
                 debug("\treconnectAttemts " + reconnectAttemts);
                 reconnect();
@@ -211,7 +214,7 @@ public class VPDRI implements PDRI {
                 try {
                     tmpFile.delete();
                 } catch (VlException ex) {
-                    Logger.getLogger(VPDRI.class.getName()).log(Level.SEVERE, null, ex);
+                    throw new IOException(ex);
                 }
             }
         }
