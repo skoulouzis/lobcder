@@ -509,13 +509,6 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
     }
 
     @Override
-    protected void debug(String msg) {
-        if (debug) {
-            System.err.println(this.getClass().getSimpleName() + "." + getLogicalData().getLDRI() + ": " + msg);
-        }
-    }
-
-    @Override
     public boolean isLockedOutRecursive(Request rqst) {
         return false;
     }

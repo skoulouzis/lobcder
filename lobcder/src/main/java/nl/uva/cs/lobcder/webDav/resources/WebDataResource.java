@@ -66,6 +66,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
             Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
+    private String user;
 
     public WebDataResource(JDBCatalogue catalogue, LogicalData logicalData) {
         this.logicalData = logicalData;
@@ -93,6 +94,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
 
     @Override
     public Object authenticate(String user, String password) {
+        this.user = user;
         debug("authenticate.\n"
                 + "\t user: " + user
                 + "\t password: " + password);
@@ -199,7 +201,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
 
     protected void debug(String msg) {
         if (debug) {
-            System.err.println(this.getClass().getSimpleName() + "." + getLogicalData().getLDRI() + "."+getPrincipalURL()+": " + msg);
+            System.err.println(this.getClass().getSimpleName() + "." + getLogicalData().getLDRI() + "."+this.user+": " + msg);
         }
     }
 

@@ -39,8 +39,6 @@ import nl.uva.vlet.vfs.VFSNode;
  */
 public class WebDataFileResource extends WebDataResource implements
         com.bradmcevoy.http.FileResource, LockableResource {
-
-    private static final boolean debug = true;
 //    private final int bufferSize;
     private int reconnectAttemts;
 
