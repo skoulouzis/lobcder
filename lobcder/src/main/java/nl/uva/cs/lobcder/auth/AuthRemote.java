@@ -91,7 +91,7 @@ public class AuthRemote implements AuthI {
                 pc.putPrincipal(token, res);
             }
         } catch (Exception e) {
-            Logger.getLogger(AuthRemote.class.getName()).log(Level.SEVERE, null, e);
+//            Logger.getLogger(AuthRemote.class.getName()).log(Level.SEVERE, null, e);
         }
         return res;
     }
