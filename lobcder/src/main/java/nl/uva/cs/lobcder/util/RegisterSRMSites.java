@@ -76,6 +76,7 @@ public class RegisterSRMSites {
         JDBCatalogue cat = new JDBCatalogue();
         String resourceURI = "";
         Credential credentials = new Credential();
+        
         cat.registerStorageSite(resourceURI, credentials, -1, -1, -1, -1, null);
     }
 

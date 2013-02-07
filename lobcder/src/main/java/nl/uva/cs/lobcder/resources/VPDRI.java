@@ -150,11 +150,13 @@ public class VPDRI implements PDRI {
 
     @Override
     public InputStream getData() throws IOException {
+        InputStream in = null;
         try {
-            return ((VFile) this.vfsClient.openLocation(vrl)).getInputStream();
+            in = ((VFile) this.vfsClient.openLocation(vrl)).getInputStream();
         } catch (VlException ex) {
             throw new IOException(ex);
         }
+        return in;
     }
 
     @Override
