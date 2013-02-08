@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 import javax.ws.rs.core.MultivaluedMap;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpStatus;
@@ -51,6 +52,7 @@ public class TestREST {
     private String testres2;
     private String testcol;
     private String restURL;
+    private Client restClient;
 
     @Before
     public void setUp() throws Exception {
@@ -108,6 +110,13 @@ public class TestREST {
 
         testcol = this.root + "testResourceId/";
 
+
+
+        ClientConfig clientConfig = new DefaultClientConfig();
+        clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
+        restClient = Client.create(clientConfig);
+        restClient.addFilter(new com.sun.jersey.api.client.filter.HTTPBasicAuthFilter(username, password));
+
     }
 
     @After
@@ -141,11 +150,7 @@ public class TestREST {
     public void testDRIDataResource() throws IOException {
         try {
             createCollection();
-
-            ClientConfig clientConfig = new DefaultClientConfig();
-            clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
-            Client client2 = Client.create(clientConfig);
-            WebResource webResource = client2.resource(restURL);
+            WebResource webResource = restClient.resource(restURL);
 
             MultivaluedMap<String, String> params = new MultivaluedMapImpl();
             params.add("path", "/testResourceId");
@@ -186,8 +191,8 @@ public class TestREST {
                     accept(MediaType.APPLICATION_XML).
                     get(new GenericType<List<LogicalData>>() {
             });
-            
-            for(LogicalData l : list ){
+
+            for (LogicalData l : list) {
                 System.out.println(l.UID);
                 System.out.println(l.supervised);
             }
@@ -259,11 +264,8 @@ public class TestREST {
         try {
             createCollection();
             WebResource webResource;
-
-            ClientConfig clientConfig = new DefaultClientConfig();
-            clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
-            Client client2 = Client.create(clientConfig);
-            webResource = client2.resource(restURL);
+            
+            webResource = restClient.resource(restURL);
 
             MultivaluedMap<String, String> params = new MultivaluedMapImpl();
             params.add("path", "/testResourceId");
@@ -322,14 +324,6 @@ public class TestREST {
         }
     }
 
-    public class DataItemsResponse {
-
-        public LogicalData[] category;
-
-        public DataItemsResponse() {
-        }
-    }
-
     @XmlRootElement
     public static class LogicalData {
 
@@ -344,5 +338,13 @@ public class TestREST {
         public String parent;
         public int UID;
         public boolean supervised;
+        public Set<Permissions> permissions;
+        
     }
+    
+    @XmlRootElement
+    public static class Permissions{
+        
+    }
+    
 }

@@ -227,7 +227,6 @@ public class TestWebWAVFS {
         delete(testFileURI1);
     }
 
-
     @Test
     public void testPROPFIND_PUT_PROPFIND_GET_PUT() throws IOException, DavException {
         //Make sure it's deleted 
@@ -307,6 +306,23 @@ public class TestWebWAVFS {
 
 
         delete(testFileURI1);
+    }
+
+    @Test
+    public void testUpDownloadFileWithSpace() throws IOException, DavException {
+//        String testFileURI1 = uri.toASCIIString() + "file with spaces";
+//        PutMethod put = new PutMethod(testFileURI1);
+//        put.setRequestEntity(new StringRequestEntity(TestSettings.TEST_DATA, "text/plain", "UTF-8"));
+//        int status = client1.executeMethod(put);
+//        assertEquals(HttpStatus.SC_CREATED, status);
+//
+//
+//        GetMethod get = new GetMethod(testFileURI1);
+//        status = client1.executeMethod(get);
+//        assertEquals(HttpStatus.SC_OK, status);
+//        assertEquals(TestSettings.TEST_DATA, get.getResponseBodyAsString());
+//
+//        delete(testFileURI1);
     }
 //
 //    @Test
