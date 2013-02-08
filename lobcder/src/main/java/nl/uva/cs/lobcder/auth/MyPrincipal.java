@@ -48,6 +48,9 @@ public class MyPrincipal {
             return true;
         }
         Set<String> r1 = new HashSet<String>(roles);
+        if (r1.contains("admin")){
+            return true;
+        }
         r1.retainAll(p.canRead());
         return !r1.isEmpty();
     }
@@ -57,6 +60,9 @@ public class MyPrincipal {
             return true;
         }
         Set<String> r1 = new HashSet<String>(roles);
+        if (r1.contains("admin")){
+            return true;
+        }
         r1.retainAll(p.canWrite());
         return !r1.isEmpty();
     }

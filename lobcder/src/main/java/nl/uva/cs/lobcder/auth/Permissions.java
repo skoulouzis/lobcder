@@ -6,11 +6,15 @@ package nl.uva.cs.lobcder.auth;
 
 import java.util.HashSet;
 import java.util.Set;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
 
 /**
  *
  * @author dvasunin
  */
+@XmlAccessorType(XmlAccessType.NONE)
 public class Permissions {
     private Set<String> read = new HashSet<String>();
     private Set<String> write = new HashSet<String>();
@@ -24,13 +28,19 @@ public class Permissions {
         read.addAll(mp.getRoles());
     }
     
+    @XmlElement
     public String getOwner(){
         return owner;
     }
     
     public void setOwner(String owner) {
         this.owner = owner;
-    }
+    }    
+    
+    @XmlElement
+    public Set<String> getCanRead() {
+        return read;
+    } 
     
     public Set<String> canRead() {
         return read;
@@ -48,6 +58,11 @@ public class Permissions {
             }
         }
         return sb.toString();
+    }
+    
+    @XmlElement
+    public Set<String> getCanWrite(){
+        return write;
     }
     
     public Set<String> canWrite(){

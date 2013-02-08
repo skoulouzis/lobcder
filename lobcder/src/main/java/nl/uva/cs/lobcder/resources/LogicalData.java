@@ -33,6 +33,7 @@ import nl.uva.cs.lobcder.util.Constants;
 public class LogicalData implements Cloneable {
 
     private Long uid = Long.valueOf(0);
+    @XmlTransient
     private String ownerId = "";
     @XmlTransient
     private String datatype = "";
@@ -251,7 +252,6 @@ public class LogicalData implements Cloneable {
         decodedContentTypes = null;
     }
 
-    @XmlTransient
     public Permissions getPermissions() {
         try {
             return catalogue.getPermissions(uid, ownerId, null);
@@ -274,6 +274,7 @@ public class LogicalData implements Cloneable {
         return datatype.equals(Constants.LOGICAL_FOLDER);
     }
 
+    @XmlTransient
     public String getOwner() {
         return ownerId;
     }

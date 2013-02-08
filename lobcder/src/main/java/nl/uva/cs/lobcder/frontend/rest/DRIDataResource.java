@@ -7,6 +7,7 @@ package nl.uva.cs.lobcder.frontend.rest;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.naming.InitialContext;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
@@ -24,8 +25,8 @@ public class DRIDataResource {
     
     JDBCatalogue catalogue = null;
     
-    @Context
-    private UriInfo context;
+    
+    @Context HttpServletRequest request;
     
     public DRIDataResource() throws Exception {
         String jndiName = "bean/JDBCatalog";

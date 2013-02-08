@@ -8,10 +8,12 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.naming.InitialContext;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
+import nl.uva.cs.lobcder.auth.MyPrincipal;
 import nl.uva.cs.lobcder.catalogue.CatalogueException;
 import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
 import nl.uva.cs.lobcder.resources.LogicalData;
@@ -27,6 +29,9 @@ public class DRItemsResource {
     JDBCatalogue catalogue = null;
     @Context
     private UriInfo context;
+    
+    @Context
+    private HttpServletRequest request;
 
     /**
      * Creates a new instance of ItemsResource

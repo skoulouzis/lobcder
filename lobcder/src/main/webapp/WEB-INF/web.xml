@@ -33,16 +33,24 @@
     <servlet-name>Jersey REST Service</servlet-name>
     <url-pattern>/rest/*</url-pattern>
   </servlet-mapping>
-    <session-config>
-        <session-timeout>
+  <filter>
+    <filter-class>nl.uva.cs.lobcder.frontend.BasicAuthFilter</filter-class>
+    <filter-name>BasicAuthFilter</filter-name>
+  </filter>
+  <filter-mapping>
+    <filter-name>BasicAuthFilter</filter-name>
+    <servlet-name>Jersey REST Service</servlet-name>
+  </filter-mapping>  
+  <session-config>
+    <session-timeout>
             30
-        </session-timeout>
-    </session-config>
-    <welcome-file-list>
+    </session-timeout>
+  </session-config>
+  <welcome-file-list>
         <welcome-file>
             index.jsp
         </welcome-file>
-    </welcome-file-list>
+  </welcome-file-list>
     <!--
     <security-constraint>
         <web-resource-collection>
@@ -70,12 +78,12 @@
     </security-role>
     -->
     <!--   
-    Security roles referenced by this web application 
-    <security-role>
-        <description>
-            The role that is required to access the HTML Manager pages
-        </description>
-        <role-name>betaTester</role-name>
-    </security-role>
--->
+        Security roles referenced by this web application 
+        <security-role>
+            <description>
+                The role that is required to access the HTML Manager pages
+            </description>
+            <role-name>betaTester</role-name>
+        </security-role>
+    -->
 </web-app>

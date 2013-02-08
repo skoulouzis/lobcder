@@ -406,17 +406,20 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
                     List<? extends WebDataResource> children = (List<? extends WebDataResource>) ((WebDataDirResource) (this)).getChildren();
                     sb.append("[");
                     for (WebDataResource r : children) {
-                        Collection<PDRI> pdris = getCatalogue().getPdriByGroupId(r.getLogicalData().getPdriGroupId(), connection);
-                        for (PDRI p : pdris) {
-                            sb.append(p.getHost());
-                            sb.append(",");
+                        if(r instanceof WebDataFileResource){
+                            sb.append("'").append(r.getName()).append("' : [");
+                            Collection<PDRI> pdris = getCatalogue().getPdriByGroupId(r.getLogicalData().getPdriGroupId(), connection);
+                            for (PDRI p : pdris) {
+                                sb.append("'").append(p.getHost()).append("',");
+                            }
+                            sb.replace(sb.lastIndexOf(","), sb.length(), "").append("],");
                         }
                     }
                 } else {
                     Collection<PDRI> pdris = getCatalogue().getPdriByGroupId(getLogicalData().getPdriGroupId(), connection);
                     sb.append("[");
                     for (PDRI p : pdris) {
-                        sb.append(p.getHost());
+                        sb.append("'").append(p.getHost()).append("'");
                         sb.append(",");
                     }
                 }

@@ -6,6 +6,7 @@ package nl.uva.cs.lobcder.auth;
 
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.GenericType;
+import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.json.JSONConfiguration;
@@ -91,7 +92,6 @@ public class AuthRemote implements AuthI {
                 pc.putPrincipal(token, res);
             }
         } catch (Exception e) {
-//            Logger.getLogger(AuthRemote.class.getName()).log(Level.SEVERE, null, e);
         }
         return res;
     }
