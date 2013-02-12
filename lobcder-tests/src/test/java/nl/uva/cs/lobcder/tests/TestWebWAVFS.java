@@ -42,6 +42,7 @@ public class TestWebWAVFS {
     private static HttpClient client2;
     private static String username2;
     private static String password2;
+    private static Properties prop;
 
     @BeforeClass
     public static void setUpClass() throws Exception {
@@ -49,7 +50,7 @@ public class TestWebWAVFS {
         String propBasePath = System.getProperty("user.home") + File.separator
                 + "workspace" + File.separator + "lobcder-tests"
                 + File.separator + "etc" + File.separator + "test.proprties";
-        Properties prop = TestSettings.getTestProperties(propBasePath);
+        prop = TestSettings.getTestProperties(propBasePath);
 
         String testURL = prop.getProperty("webdav.test.url");
         //Some problem with the pom.xml. The properties are set but System.getProperty gets null
@@ -306,6 +307,33 @@ public class TestWebWAVFS {
 
 
         delete(testFileURI1);
+    }
+
+    @Test
+    public void testUploadFileOnRootWithoutAdminRole() throws IOException, DavException {
+        String uname = prop.getProperty(("webdav.test.non.admin.username1"), "nonAdmin");
+        assertNotNull(uname);
+        String pass = prop.getProperty(("webdav.test.non.admin.password1"), "secret");
+        assertNotNull(pass);
+
+
+        client2 = new HttpClient();
+
+        assertNotNull(uri.getHost());
+        assertNotNull(uri.getPort());
+        assertNotNull(client2);
+
+        client2.getState().setCredentials(
+                new AuthScope(uri.getHost(), uri.getPort()),
+                new UsernamePasswordCredentials(uname, pass));
+
+
+
+        String testFileURI1 = this.uri.toASCIIString() + TestSettings.TEST_FILE_NAME1 + ".txt";
+        PutMethod put = new PutMethod(testFileURI1);
+        put.setRequestEntity(new StringRequestEntity(TestSettings.TEST_DATA, "text/plain", "UTF-8"));
+        int status = client2.executeMethod(put);
+        assertEquals(HttpStatus.SC_UNAUTHORIZED, status);
     }
 
     @Test
