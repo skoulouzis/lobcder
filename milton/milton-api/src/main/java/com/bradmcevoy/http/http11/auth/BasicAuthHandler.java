@@ -16,6 +16,7 @@ public class BasicAuthHandler implements AuthenticationHandler {
 
     private static final Logger log = LoggerFactory.getLogger( BasicAuthHandler.class );
 
+	@Override
     public boolean supports( Resource r, Request request ) {
         Auth auth = request.getAuthorization();
         if( auth == null ) {
@@ -25,6 +26,7 @@ public class BasicAuthHandler implements AuthenticationHandler {
         return auth.getScheme().equals( Scheme.BASIC );
     }
 
+	@Override
     public Object authenticate( Resource resource, Request request ) {
         log.trace( "authenticate" );
         Auth auth = request.getAuthorization();
