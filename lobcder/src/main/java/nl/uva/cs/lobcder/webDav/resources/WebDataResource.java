@@ -9,6 +9,7 @@ import com.bradmcevoy.http.PropFindableResource;
 import com.bradmcevoy.http.Request;
 import com.bradmcevoy.http.Request.Method;
 import com.bradmcevoy.http.Resource;
+import com.bradmcevoy.http.Response;
 import com.bradmcevoy.http.exceptions.NotAuthorizedException;
 import com.bradmcevoy.http.values.HrefList;
 import com.bradmcevoy.property.MultiNamespaceCustomPropertyResource;
@@ -201,7 +202,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
 
     protected void debug(String msg) {
         if (debug) {
-            System.err.println(this.getClass().getSimpleName() + "." + getLogicalData().getLDRI() + "."+this.user+": " + msg);
+            System.err.println(this.getClass().getSimpleName() + "." + getLogicalData().getLDRI() + "." + this.user + ": " + msg);
         }
     }
 
@@ -406,7 +407,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
                     List<? extends WebDataResource> children = (List<? extends WebDataResource>) ((WebDataDirResource) (this)).getChildren();
                     sb.append("[");
                     for (WebDataResource r : children) {
-                        if(r instanceof WebDataFileResource){
+                        if (r instanceof WebDataFileResource) {
                             sb.append("'").append(r.getName()).append("' : [");
                             Collection<PDRI> pdris = getCatalogue().getPdriByGroupId(r.getLogicalData().getPdriGroupId(), connection);
                             for (PDRI p : pdris) {
@@ -448,6 +449,8 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
             return "";
         } else if (qname.equals(Constants.DESCRIPTION_PROP_NAME)) {
             return getLogicalData().getDescription();
+        } else if (qname.equals(Constants.DATA_LOC_PREF_NAME)) {
+            return getLogicalData().getDataLocationPreference();
         }
 
         return PropertyMetaData.UNKNOWN;
@@ -459,23 +462,24 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
             throw new NotAuthorizedException(this);
         }
         debug("setProperty: " + qname + " " + o);
-        if (o != null) {
-            String value = (String) o;
-            if (qname.equals(Constants.DRI_SUPERVISED_PROP_NAME)) {
-                getLogicalData().updateSupervised(Boolean.valueOf(value));
-            } else if (qname.equals(Constants.DRI_CHECKSUM_PROP_NAME)) {
-                getLogicalData().updateChecksum(Long.valueOf(value));
-            } else if (qname.equals(Constants.DRI_LAST_VALIDATION_DATE_PROP_NAME)) {
-                getLogicalData().updateLastValidationDate(Long.valueOf(value));
-            } else if (qname.equals(Constants.DESCRIPTION_PROP_NAME)) {
-                try {
+        try {
+            if (o != null) {
+                String value = (String) o;
+                if (qname.equals(Constants.DRI_SUPERVISED_PROP_NAME)) {
+                    getLogicalData().updateSupervised(Boolean.valueOf(value));
+                } else if (qname.equals(Constants.DRI_CHECKSUM_PROP_NAME)) {
+                    getLogicalData().updateChecksum(Long.valueOf(value));
+                } else if (qname.equals(Constants.DRI_LAST_VALIDATION_DATE_PROP_NAME)) {
+                    getLogicalData().updateLastValidationDate(Long.valueOf(value));
+                } else if (qname.equals(Constants.DESCRIPTION_PROP_NAME)) {
                     getLogicalData().updateDescription(value);
-                } catch (CatalogueException ex) {
-                    Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
+                } else if (qname.equals(Constants.DATA_LOC_PREF_NAME)) {
+                    getLogicalData().setDataLocationPreference(value);
                 }
             }
+        } catch (CatalogueException ex) {
+            throw new PropertySetException(Response.Status.SC_BAD_REQUEST, ex.getMessage());
         }
-
     }
 
     @Override

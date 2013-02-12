@@ -67,6 +67,7 @@ public class LogicalData implements Cloneable {
     @XmlTransient
     private Long lockTimeout;
     private String description;
+    private String locationPreference;
 
     public Boolean getSupervised() {
         return supervised;
@@ -396,5 +397,15 @@ public class LogicalData implements Cloneable {
     public void updateDescription(String description) throws CatalogueException {
         this.description = description;
         catalogue.setDescription(uid, description, null);
+    }
+
+    public void setDataLocationPreference(String locationPreference) throws CatalogueException {
+        this.locationPreference = locationPreference;
+        catalogue.setLocationPreference(uid, locationPreference, null);
+    }
+    
+    
+    public String getDataLocationPreference(){
+        return this.locationPreference;
     }
 }

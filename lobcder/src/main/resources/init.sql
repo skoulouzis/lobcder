@@ -48,7 +48,8 @@ CREATE TABLE ldata_table (
  lockedByUser  VARCHAR(255),
  lockDepth  VARCHAR(255),
  lockTimeout  BIGINT NOT NULL DEFAULT 0,
- description VARCHAR(255)
+ description VARCHAR(255),
+ locationPreference VARCHAR(255)
 );
 
 CREATE TABLE permission_table (
@@ -201,10 +202,10 @@ SET @rootID = LAST_INSERT_ID();
 INSERT INTO permission_table (perm_type, ld_uid_ref, role_name) VALUES  ('read', @rootID, 'other'),
                                                                         ('read', @rootID, 'admin'),
                                                                         ('write', @rootID, 'admin');
-INSERT INTO  credential_table(username, password) VALUES ('fakeusername', 'fakepassword');
+INSERT INTO  credential_table(username, password) VALUES ('USER', 'PASS');
 SET @credID = LAST_INSERT_ID();
 INSERT INTO storage_site_table(resourceURI, credentialRef, currentNum, currentSize, quotaNum, quotaSize)
-            VALUES('file://localhost/tmp/', @credID, -1, -1, -1, -1);
+            VALUES('file:///tmp', @credID, -1, -1, -1, -1);
 SET @ssId = LAST_INSERT_ID();
 INSERT INTO role_to_ss_table(role_name, ss_id) values   ('admin', @ssId),
                                                         ('other', @ssId);
