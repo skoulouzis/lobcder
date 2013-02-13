@@ -315,15 +315,13 @@ public class TestWebWAVFS {
         assertNotNull(uname);
         String pass = prop.getProperty(("webdav.test.non.admin.password1"), "secret");
         assertNotNull(pass);
-
-
-        client2 = new HttpClient();
+        HttpClient client = new HttpClient();
 
         assertNotNull(uri.getHost());
         assertNotNull(uri.getPort());
-        assertNotNull(client2);
+        assertNotNull(client);
 
-        client2.getState().setCredentials(
+        client.getState().setCredentials(
                 new AuthScope(uri.getHost(), uri.getPort()),
                 new UsernamePasswordCredentials(uname, pass));
 
@@ -332,7 +330,7 @@ public class TestWebWAVFS {
         String testFileURI1 = this.uri.toASCIIString() + TestSettings.TEST_FILE_NAME1 + ".txt";
         PutMethod put = new PutMethod(testFileURI1);
         put.setRequestEntity(new StringRequestEntity(TestSettings.TEST_DATA, "text/plain", "UTF-8"));
-        int status = client2.executeMethod(put);
+        int status = client.executeMethod(put);
         assertEquals(HttpStatus.SC_UNAUTHORIZED, status);
     }
 
