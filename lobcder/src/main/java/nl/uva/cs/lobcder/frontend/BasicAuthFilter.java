@@ -17,7 +17,6 @@ import javax.servlet.http.HttpServletResponse;
 import nl.uva.cs.lobcder.auth.AuthI;
 import nl.uva.cs.lobcder.auth.MyAuthTest;
 import nl.uva.cs.lobcder.auth.MyPrincipal;
-import nl.uva.cs.lobcder.webDav.resources.WebDataResource;
 
 import org.apache.commons.codec.binary.Base64;
 //import org.apache.commons.lang.StringUtils;
@@ -32,9 +31,6 @@ import org.apache.commons.codec.binary.Base64;
  */
 public class BasicAuthFilter implements Filter {
 
-    public static final String PARAM_USER = "user";
-    public static final String PARAM_PASSWORD = "password";
-    public static final String PARAM_REALM = "realm";
     private String _realm;
     private AuthI auth;
 

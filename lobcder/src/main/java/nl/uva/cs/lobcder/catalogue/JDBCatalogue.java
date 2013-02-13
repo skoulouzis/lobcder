@@ -46,7 +46,9 @@ public class JDBCatalogue {
                 Context envContext = (Context) ctx.lookup("java:/comp/env");
                 datasource = (DataSource) envContext.lookup(jndiName);
             }
-            return datasource.getConnection();
+            Connection cn = datasource.getConnection();
+            cn.setAutoCommit(false);
+            return cn;
         } catch (Exception e) {
             throw new CatalogueException(e.getMessage());
         }
@@ -55,7 +57,6 @@ public class JDBCatalogue {
 
     public void startSweep() {
         TimerTask gcTask = new TimerTask() {
-
             Runnable sweep = deleteSweep();
 
             @Override
@@ -394,13 +395,65 @@ public class JDBCatalogue {
             s = connection.createStatement(java.sql.ResultSet.TYPE_FORWARD_ONLY,
                     java.sql.ResultSet.CONCUR_UPDATABLE);
             s.addBatch("DELETE FROM permission_table WHERE permission_table.ld_uid_ref = " + UID);
-            for (String cr : perm.canRead()) {
+            for (String cr : perm.getRead()) {
                 s.addBatch("INSERT INTO permission_table (perm_type, ld_uid_ref, role_name) VALUES ('read', " + UID + " , '" + cr + "')");
             }
-            for (String cw : perm.canWrite()) {
+            for (String cw : perm.getWrite()) {
                 s.addBatch("INSERT INTO permission_table (perm_type, ld_uid_ref, role_name) VALUES ('write', " + UID + " , '" + cw + "')");
             }
             s.executeBatch();
+        } catch (Exception e) {
+            try {
+                if (s != null && !s.isClosed()) {
+                    s.close();
+                    s = null;
+                }
+                if (!connectionIsProvided && !connection.isClosed()) {
+                    connection.rollback();
+                    connection.close();
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            throw new CatalogueException(e.getMessage());
+        } finally {
+            try {
+                if (s != null && !s.isClosed()) {
+                    s.close();
+                }
+                if (!connectionIsProvided && !connection.isClosed()) {
+                    connection.commit();
+                    connection.close();
+                }
+                if (connectionIsProvided && !connection.isClosed()) {
+                    connection.setAutoCommit(connectionAutocommit);
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+
+    public void setPermissions(String parentDir, Permissions perm, MyPrincipal principal, Connection connection) throws CatalogueException {
+        Statement s = null;
+        boolean connectionIsProvided = (connection == null) ? false : true;
+        boolean connectionAutocommit = false;
+        try {
+            if (connection == null) {
+                connection = getConnection();
+                connection.setAutoCommit(false);
+            } else {
+                connectionAutocommit = connection.getAutoCommit();
+                connection.setAutoCommit(false);
+            }
+            CallableStatement cs = connection.prepareCall("{call updatePermissionsProc(?, ?, ?, ?, ?, ?)}");
+            cs.setString(1, principal.getUserId());
+            cs.setString(2, principal.getRolesStr());
+            cs.setString(3, perm.getOwner());
+            cs.setString(4, perm.getReadStr());
+            cs.setString(5, perm.getWriteStr());
+            cs.setString(6, parentDir);
+            cs.execute();
         } catch (Exception e) {
             try {
                 if (s != null && !s.isClosed()) {
@@ -449,13 +502,17 @@ public class JDBCatalogue {
             }
             s = connection.createStatement();
             ResultSet rs = s.executeQuery("SELECT perm_type, role_name FROM permission_table WHERE permission_table.ld_uid_ref = " + UID);
+            Set<String> canRead = new HashSet<String>();
+            Set<String> canWrite = new HashSet<String>();
             while (rs.next()) {
                 if (rs.getString(1).equals("read")) {
-                    p.canRead().add(rs.getString(2));
+                    canRead.add(rs.getString(2));
                 } else {
-                    p.canWrite().add(rs.getString(2));
+                    canWrite.add(rs.getString(2));
                 }
             }
+            p.setRead(canRead);
+            p.setWrite(canWrite);
             return p;
         } catch (Exception e) {
             try {
@@ -866,7 +923,6 @@ public class JDBCatalogue {
     public Runnable deleteSweep() {
         final JDBCatalogue self = this;
         return new Runnable() {
-
             @Override
             public void run() {
                 Connection connection = null;
@@ -1088,6 +1144,59 @@ public class JDBCatalogue {
         }
     }
 
+    public void setDirSupervised2(String parentDir, Boolean flag, MyPrincipal principal, Connection connection) throws CatalogueException {
+        Statement s = null;
+        boolean connectionIsProvided = (connection == null) ? false : true;
+        boolean connectionAutocommit = false;
+        try {
+            if (connection == null) {
+                connection = getConnection();
+                connection.setAutoCommit(false);
+            } else {
+                connectionAutocommit = connection.getAutoCommit();
+                connection.setAutoCommit(false);
+            }
+            String parent = Path.path(parentDir).getParent().toPath();
+            String name = Path.path(parentDir).getName();
+
+            CallableStatement cs = connection.prepareCall("{call updateDriFlagProc(?, ?, ?, ?)}");
+            cs.setString(1, principal.getUserId());
+            cs.setString(2, principal.getRolesStr());
+            cs.setBoolean(3, flag);
+            cs.setString(4, parentDir);
+            cs.execute();
+        } catch (Exception e) {
+            try {
+                if (s != null && !s.isClosed()) {
+                    s.close();
+                    s = null;
+                }
+                if (!connectionIsProvided && !connection.isClosed()) {
+                    connection.rollback();
+                    connection.close();
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            throw new CatalogueException(e.getMessage());
+        } finally {
+            try {
+                if (s != null && !s.isClosed()) {
+                    s.close();
+                }
+                if (!connectionIsProvided && !connection.isClosed()) {
+                    connection.commit();
+                    connection.close();
+                }
+                if (connectionIsProvided && !connection.isClosed()) {
+                    connection.setAutoCommit(connectionAutocommit);
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+
     public void setDirSupervised(String parentDir, Boolean flag, Connection connection) throws CatalogueException {
         Statement s = null;
         boolean connectionIsProvided = (connection == null) ? false : true;
@@ -1100,8 +1209,11 @@ public class JDBCatalogue {
                 connectionAutocommit = connection.getAutoCommit();
                 connection.setAutoCommit(false);
             }
+            String parent = Path.path(parentDir).getParent().toPath();
+            String name = Path.path(parentDir).getName();
             s = connection.createStatement();
-            s.executeUpdate("UPDATE ldata_table SET isSupervised = " + flag.toString() + " WHERE datatype = 'logical.file' AND parent LIKE '" + parentDir + "%'");
+            s.executeUpdate("UPDATE ldata_table SET isSupervised = " + flag.toString() + " WHERE parent = '" + parent + "' AND ld_name = '" + name + "'");
+            s.executeUpdate("UPDATE ldata_table SET isSupervised = " + flag.toString() + " WHERE parent LIKE '" + parentDir + "%'");
             s.close();
         } catch (Exception e) {
             try {
@@ -1582,7 +1694,6 @@ public class JDBCatalogue {
 
     private Runnable initDatasource() {
         return new Runnable() {
-
             @Override
             public void run() {
                 if (datasource == null) {
@@ -1615,36 +1726,44 @@ public class JDBCatalogue {
                 connection.setAutoCommit(false);
             }
             s = connection.createStatement();
+            boolean where = false;
             StringBuilder query = new StringBuilder("SELECT uid, ownerId, datatype, "
                     + "ld_name, parent, createDate, modifiedDate, ld_length, "
                     + "contentTypesStr, pdriGroupId, isSupervised, checksum, "
                     + "lastValidationDate, lockTokenID, lockScope, "
                     + "lockType, lockedByUser, lockDepth, lockTimeout, description "
-                    + "FROM ldata_table WHERE datatype = 'logical.file'");
+                    + "FROM ldata_table");
             if (queryParameters.containsKey("path") && queryParameters.get("path").iterator().hasNext()) {
                 String path = queryParameters.get("path").iterator().next();
-                query.append(" AND parent LIKE '").append(path).append("%'");
+                if (!path.equals("/")) {
+                    query.append(where ? " AND" : " WHERE" + " parent LIKE '").append(path).append("%'");
+                    where = true;
+                }
                 queryParameters.remove("path");
             }
             if (queryParameters.containsKey("mStartDate") && queryParameters.get("mStartDate").iterator().hasNext()
                     && queryParameters.containsKey("mEndDate") && queryParameters.get("mEndDate").iterator().hasNext()) {
                 String mStartDate = Long.valueOf(queryParameters.get("mStartDate").iterator().next()).toString();
                 String mEndDate = Long.valueOf(queryParameters.get("mEndDate").iterator().next()).toString();
-                query.append(" AND modifiedDate BETWEEN FROM_UNIXTIME(").append(mStartDate).append(") AND FROM_UNIXTIME(").append(mEndDate).append(")");
+                query.append(where ? " AND" : " WHERE" + " modifiedDate BETWEEN FROM_UNIXTIME(").append(mStartDate).append(") AND FROM_UNIXTIME(").append(mEndDate).append(")");
+                where = true;
                 queryParameters.remove("mStartDate");
                 queryParameters.remove("mEndDate");
             } else if (queryParameters.containsKey("mStartDate") && queryParameters.get("mStartDate").iterator().hasNext()) {
                 String mStartDate = Long.valueOf(queryParameters.get("mStartDate").iterator().next()).toString();
-                query.append(" AND modifiedDate >= UNIXTIME(").append(mStartDate).append(")");
+                query.append(where ? " AND" : " WHERE" + " modifiedDate >= UNIXTIME(").append(mStartDate).append(")");
+                where = true;
                 queryParameters.remove("mStartDate");
             } else if (queryParameters.containsKey("mEndDate") && queryParameters.get("mEndDate").iterator().hasNext()) {
                 String mEndDate = Long.valueOf(queryParameters.get("mEndDate").iterator().next()).toString();
-                query.append(" AND modifiedDate <= UNIXTIME(").append(mEndDate).append(")");
+                query.append(where ? " AND" : " WHERE" + " modifiedDate <= UNIXTIME(").append(mEndDate).append(")");
+                where = true;
                 queryParameters.remove("mEndDate");
             }
             if (queryParameters.containsKey("isSupervised") && queryParameters.get("isSupervised").iterator().hasNext()) {
                 String isSupervised = Boolean.valueOf(queryParameters.get("isSupervised").iterator().next()).toString();
-                query.append(" AND isSupervised = ").append(isSupervised);
+                query.append(where ? " AND" : " WHERE" + " isSupervised = ").append(isSupervised);
+                where = true;
                 queryParameters.remove("isSupervised");
             }
             debug("queryLogicalData() SQL: " + query.toString());

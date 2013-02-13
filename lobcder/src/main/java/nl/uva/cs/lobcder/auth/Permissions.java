@@ -6,15 +6,14 @@ package nl.uva.cs.lobcder.auth;
 
 import java.util.HashSet;
 import java.util.Set;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  *
  * @author dvasunin
  */
-@XmlAccessorType(XmlAccessType.NONE)
+
+@XmlRootElement
 public class Permissions {
     private Set<String> read = new HashSet<String>();
     private Set<String> write = new HashSet<String>();
@@ -28,7 +27,6 @@ public class Permissions {
         read.addAll(mp.getRoles());
     }
     
-    @XmlElement
     public String getOwner(){
         return owner;
     }
@@ -37,15 +35,14 @@ public class Permissions {
         this.owner = owner;
     }    
     
-    @XmlElement
-    public Set<String> getCanRead() {
-        return read;
+    public Set<String> getRead() {
+        return new HashSet<String>(read);
     } 
     
-    public Set<String> canRead() {
-        return read;
+    public void setRead(Set<String> read) {
+        this.read = read;
     }
-    
+       
     public String getReadStr(){
         StringBuilder sb = new StringBuilder();
         boolean first = true;
@@ -60,13 +57,13 @@ public class Permissions {
         return sb.toString();
     }
     
-    @XmlElement
-    public Set<String> getCanWrite(){
-        return write;
+ 
+    public Set<String> getWrite(){
+        return new HashSet<String>(write);
     }
     
-    public Set<String> canWrite(){
-        return write;
+    public void setWrite(Set<String> write) {
+        this.write = write;
     }
     
     public String getWriteStr(){

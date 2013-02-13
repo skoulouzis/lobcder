@@ -265,20 +265,16 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
 
         Set<String> currentRoles = currentPrincipal.getRoles();
         //We are supposed to get permissions for this resource for the current user
-        Permissions p = getLogicalData().getPermissions();
-        Set<String> readRoles = p.canRead();
-        Set<String> writeRoles = p.canWrite();
-        for (String r : currentRoles) {
-            if (readRoles.contains(r)) {
-                priviledgesList.add(Priviledge.READ);
-                break;
-            }
+        Permissions p = getLogicalData().getPermissions();        
+        Set<String> readRoles = p.getRead();
+        Set<String> writeRoles = p.getWrite();
+        readRoles.retainAll(currentRoles);
+        if(!readRoles.isEmpty()) {
+            priviledgesList.add(Priviledge.READ);
         }
-        for (String r : currentRoles) {
-            if (writeRoles.contains(r)) {
-                priviledgesList.add(Priviledge.WRITE);
-                break;
-            }
+        writeRoles.retainAll(currentRoles);
+        if(!writeRoles.isEmpty()) {
+            priviledgesList.add(Priviledge.WRITE);
         }
         return priviledgesList;
     }
@@ -308,8 +304,8 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
         HashMap<Principal, List<Priviledge>> acl = new HashMap<Principal, List<Priviledge>>();
         acl.put(p, perm);
 
-        Set<String> readRoles = getLogicalData().getPermissions().canRead();
-        Set<String> writeRoles = getLogicalData().getPermissions().canWrite();
+        Set<String> readRoles = getLogicalData().getPermissions().getRead();
+        Set<String> writeRoles = getLogicalData().getPermissions().getWrite();
         for (String r : getPrincipal().getRoles()) {
             perm = new ArrayList<Priviledge>();
             p = new AbstractDavPrincipal(r) {

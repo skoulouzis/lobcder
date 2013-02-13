@@ -51,7 +51,7 @@ public class MyPrincipal {
         if (r1.contains("admin")){
             return true;
         }
-        r1.retainAll(p.canRead());
+        r1.retainAll(p.getRead());
         return !r1.isEmpty();
     }
 
@@ -63,7 +63,7 @@ public class MyPrincipal {
         if (r1.contains("admin")){
             return true;
         }
-        r1.retainAll(p.canWrite());
+        r1.retainAll(p.getWrite());
         return !r1.isEmpty();
     }
 }

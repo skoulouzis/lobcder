@@ -35,8 +35,15 @@ public class LogicalData implements Cloneable {
     private Long uid = Long.valueOf(0);
     @XmlTransient
     private String ownerId = "";
-    @XmlTransient
     private String datatype = "";
+
+    public String getDatatype() {
+        return datatype;
+    }
+
+    public void setDatatype(String datatype) {
+        this.datatype = datatype;
+    }
     private String ld_name = "";
     private String parent = "";
     private Long createDate = Long.valueOf(0);
