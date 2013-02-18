@@ -202,7 +202,7 @@ public class DRIDataResource {
             if (!mp.canRead(res.getPermissions())) {
                 throw new WebApplicationException(Response.Status.UNAUTHORIZED);
             }
-            return new Date(res.getLastValidationDate()).toString();
+            return new Date(res.getLastValidationDate() * 1000).toString();
         } catch (CatalogueException ex) {
             Logger.getLogger(DRItemsResource.class.getName()).log(Level.SEVERE, null, ex);
             throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
