@@ -14,7 +14,9 @@ import com.sun.jersey.api.json.JSONConfiguration;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
@@ -147,17 +149,413 @@ public class TestREST {
     }
 
     @Test
-    public void testItemsQuery() throws IOException {
+    public void testQueryItems() throws IOException {
         try {
             createCollection();
             WebResource webResource = restClient.resource(restURL);
 
             MultivaluedMap<String, String> params = new MultivaluedMapImpl();
             params.add("path", "/testResourceId");
-            
+
             WebResource res = webResource.path("items").path("query").queryParams(params);
-            ClientResponse response = res.put(ClientResponse.class);
+//            ClientResponse response = res.put(ClientResponse.class);
+//            assertTrue("status: " + response.getStatus(), response.getStatus() == HttpStatus.SC_OK || response.getStatus() == HttpStatus.SC_NO_CONTENT);            
+
+            List<LogicalData> list = res.accept(MediaType.APPLICATION_XML).
+                    get(new GenericType<List<LogicalData>>() {
+            });
+            assertNotNull(list);
+            assertFalse(list.isEmpty());
+            assertEquals(list.size(), 1);
+            LogicalData element = list.get(0);
+            assertEquals(element.datatype, "logical.file");
+            for (Permissions p : element.permissions) {
+                assertEquals(p.owner, username);
+                assertEquals(p.read.iterator().next(), "admin");
+//                for (String s : p.read) {
+//                    System.err.println("Read:" + s);
+//                }
+                assertNull(p.write);
+//                for (String s : p.write) {
+//                    System.err.println("write:" + s);
+//                }
+            }
+            assertEquals(element.name, "file1");
+            assertFalse(element.supervised);
+            assertEquals(element.parent, "/testResourceId");
+            assertEquals(element.contentTypesAsString, "application/octet-stream");
+
+
+
+        } finally {
+            deleteCollection();
+        }
+    }
+
+    @Test
+    public void testQueryItem() throws IOException {
+        try {
+            createCollection();
+            WebResource webResource = restClient.resource(restURL);
+
+            MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+            params.add("path", "/testResourceId");
+
+            WebResource res = webResource.path("items").path("query").queryParams(params);
+            List<LogicalData> list = res.accept(MediaType.APPLICATION_XML).
+                    get(new GenericType<List<LogicalData>>() {
+            });
+
+            assertNotNull(list);
+            assertFalse(list.isEmpty());
+            assertEquals(list.size(), 1);
+            LogicalData element = list.get(0);
+            assertEquals(element.datatype, "logical.file");
+            for (Permissions p : element.permissions) {
+                assertEquals(p.owner, username);
+                assertEquals(p.read.iterator().next(), "admin");
+//                for (String s : p.read) {
+//                    System.err.println("Read:" + s);
+//                }
+                assertNull(p.write);
+//                for (String s : p.write) {
+//                    System.err.println("write:" + s);
+//                }
+            }
+            assertEquals(element.name, "file1");
+            assertFalse(element.supervised);
+            assertEquals(element.parent, "/testResourceId");
+            assertEquals(element.contentTypesAsString, "application/octet-stream");
+
+            //Get the uid 
+            int fileUID = element.UID;
+            res = webResource.path("item").path("query").path(String.valueOf(fileUID));
+            LogicalData theFile = res.accept(MediaType.APPLICATION_XML).
+                    get(new GenericType<LogicalData>() {
+            });
+            assertEquals(fileUID, theFile.UID);
+            assertNotNull(theFile);
+
+
+            assertEquals(theFile.datatype, "logical.file");
+            for (Permissions p : theFile.permissions) {
+                assertEquals(p.owner, username);
+                assertEquals(p.read.iterator().next(), "admin");
+//                for (String s : p.read) {
+//                    System.err.println("Read:" + s);
+//                }
+                assertNull(p.write);
+//                for (String s : p.write) {
+//                    System.err.println("write:" + s);
+//                }
+            }
+            assertEquals(theFile.name, "file1");
+            assertFalse(theFile.supervised);
+            assertEquals(theFile.parent, "/testResourceId");
+            assertEquals(theFile.contentTypesAsString, "application/octet-stream");
+
+        } finally {
+            deleteCollection();
+        }
+    }
+
+    @Test
+    public void testDataItem() throws IOException {
+        try {
+            createCollection();
+            WebResource webResource = restClient.resource(restURL);
+
+            MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+            params.add("path", "/testResourceId");
+
+            WebResource res = webResource.path("items").path("query").queryParams(params);
+            List<LogicalData> list = res.accept(MediaType.APPLICATION_XML).
+                    get(new GenericType<List<LogicalData>>() {
+            });
+
+            assertNotNull(list);
+            assertFalse(list.isEmpty());
+            assertEquals(list.size(), 1);
+            LogicalData element = list.get(0);
+            assertEquals(element.datatype, "logical.file");
+            for (Permissions p : element.permissions) {
+                assertEquals(p.owner, username);
+                assertEquals(p.read.iterator().next(), "admin");
+//                for (String s : p.read) {
+//                    System.err.println("Read:" + s);
+//                }
+                assertNull(p.write);
+//                for (String s : p.write) {
+//                    System.err.println("write:" + s);
+//                }
+            }
+            assertEquals(element.name, "file1");
+            assertFalse(element.supervised);
+            assertEquals(element.parent, "/testResourceId");
+            assertEquals(element.contentTypesAsString, "application/octet-stream");
+
+            //Get the uid 
+            int fileUID = element.UID;
+            res = webResource.path("item").path("data").path(String.valueOf(fileUID));
+            ClientResponse response = res.get(ClientResponse.class);
+            assertTrue("status: " + response.getStatus(), response.getStatus() == HttpStatus.SC_OK);
+            InputStream ins = response.getEntityInputStream();
+            byte[] d = new byte[3];
+            ins.read(d);
+            ins.close();
+            assertEquals(new String(d), "foo");
+
+        } finally {
+            deleteCollection();
+        }
+    }
+
+    @Test
+    public void testGetSetSupervisedItems() throws IOException {
+
+        try {
+            createCollection();
+            WebResource webResource = restClient.resource(restURL);
+
+            MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+            params.add("path", "/testResourceId");
+
+            //Get all unsupervised under testResourceId
+            WebResource res = webResource.path("items").path("dri").path("supervised").path("false").queryParams(params);
+            List<LogicalData> list = res.accept(MediaType.APPLICATION_XML).
+                    get(new GenericType<List<LogicalData>>() {
+            });
+
+            assertNotNull(list);
+            assertFalse(list.isEmpty());
+            assertEquals(list.size(), 1);
+
+            LogicalData element = list.get(0);
+            assertEquals(element.datatype, "logical.file");
+            for (Permissions p : element.permissions) {
+                assertEquals(p.owner, username);
+                assertEquals(p.read.iterator().next(), "admin");
+//                for (String s : p.read) {
+//                    System.err.println("Read:" + s);
+//                }
+                assertNull(p.write);
+//                for (String s : p.write) {
+//                    System.err.println("write:" + s);
+//                }
+            }
+            assertEquals(element.name, "file1");
+            assertFalse(element.supervised);
+            assertEquals(element.parent, "/testResourceId");
+            assertEquals(element.contentTypesAsString, "application/octet-stream");
+
+
+            //Set supervised
+            res = webResource.path("items").path("dri").path("supervised").path("true").queryParams(params);
+            ClientResponse response = res.accept(MediaType.APPLICATION_XML).
+                    put(ClientResponse.class);
+
             assertTrue("status: " + response.getStatus(), response.getStatus() == HttpStatus.SC_OK || response.getStatus() == HttpStatus.SC_NO_CONTENT);
+
+
+            //Get all unsupervised under testResourceId
+            res = webResource.path("items").path("dri").path("supervised").path("false").queryParams(params);
+            list = res.accept(MediaType.APPLICATION_XML).
+                    get(new GenericType<List<LogicalData>>() {
+            });
+
+            assertNotNull(list);
+            assertTrue(list.isEmpty());
+
+
+
+            //Get all supervised under testResourceId
+            res = webResource.path("items").path("dri").path("supervised").path("true").queryParams(params);
+            list = res.accept(MediaType.APPLICATION_XML).
+                    get(new GenericType<List<LogicalData>>() {
+            });
+
+            assertNotNull(list);
+            assertFalse(list.isEmpty());
+            assertEquals(list.size(), 1);
+
+            element = list.get(0);
+            assertEquals(element.datatype, "logical.file");
+            for (Permissions p : element.permissions) {
+                assertEquals(p.owner, username);
+                assertEquals(p.read.iterator().next(), "admin");
+//                for (String s : p.read) {
+//                    System.err.println("Read:" + s);
+//                }
+                assertNull(p.write);
+//                for (String s : p.write) {
+//                    System.err.println("write:" + s);
+//                }
+            }
+            assertEquals(element.name, "file1");
+            assertTrue(element.supervised);
+            assertEquals(element.parent, "/testResourceId");
+            assertEquals(element.contentTypesAsString, "application/octet-stream");
+
+        } finally {
+            deleteCollection();
+        }
+    }
+
+    @Test
+    public void testGetSetSupervisedItem() throws IOException {
+        try {
+            createCollection();
+            WebResource webResource = restClient.resource(restURL);
+
+            MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+            params.add("path", "/testResourceId");
+
+            WebResource res = webResource.path("items").path("query").queryParams(params);
+            List<LogicalData> list = res.accept(MediaType.APPLICATION_XML).
+                    get(new GenericType<List<LogicalData>>() {
+            });
+
+            assertNotNull(list);
+            assertFalse(list.isEmpty());
+            assertEquals(list.size(), 1);
+            LogicalData element = list.get(0);
+            assertEquals(element.datatype, "logical.file");
+            for (Permissions p : element.permissions) {
+                assertEquals(p.owner, username);
+                assertEquals(p.read.iterator().next(), "admin");
+//                for (String s : p.read) {
+//                    System.err.println("Read:" + s);
+//                }
+                assertNull(p.write);
+//                for (String s : p.write) {
+//                    System.err.println("write:" + s);
+//                }
+            }
+            assertEquals(element.name, "file1");
+            assertFalse(element.supervised);
+            assertEquals(element.parent, "/testResourceId");
+            assertEquals(element.contentTypesAsString, "application/octet-stream");
+
+            //Get the uid 
+            int fileUID = element.UID;
+            res = webResource.path("item").path("dri").path(String.valueOf(fileUID)).path("supervised");
+
+            ClientResponse response = res.get(ClientResponse.class);
+            assertTrue("status: " + response.getStatus(), response.getStatus() == HttpStatus.SC_OK);
+            InputStream ins = response.getEntityInputStream();
+            byte[] d = new byte[85];
+            ins.read(d);
+            ins.close();
+
+//            System.err.println(new String(d));
+            assertEquals(new String(d), "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><supervised>false</supervised>");
+
+
+
+//            - PUT http://.../rest/item/dri/{uid}/supervised/{flag}/ - sets/resets supervised  property for file with uid ID (flag = TRUE or FALSE)
+            res = webResource.path("item").path("dri").path(String.valueOf(fileUID)).path("supervised").path(String.valueOf(Boolean.TRUE));
+            response = res.put(ClientResponse.class);
+            assertTrue("status: " + response.getStatus(), response.getStatus() == HttpStatus.SC_OK || response.getStatus() == HttpStatus.SC_NO_CONTENT);
+
+
+
+            res = webResource.path("item").path("dri").path(String.valueOf(fileUID)).path("supervised");
+            response = res.get(ClientResponse.class);
+            assertTrue("status: " + response.getStatus(), response.getStatus() == HttpStatus.SC_OK);
+            ins = response.getEntityInputStream();
+            d = new byte[84];
+            ins.read(d);
+            ins.close();
+
+            System.err.println(new String(d));
+            assertEquals(new String(d), "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><supervised>true</supervised>");
+
+
+        } finally {
+            deleteCollection();
+        }
+    }
+
+    @Test
+    public void testGetSetPermissionsItems() throws IOException {
+        try {
+            createCollection();
+            WebResource webResource = restClient.resource(restURL);
+
+            MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+            params.add("path", "/testResourceId");
+
+            //Get permissions
+            WebResource res = webResource.path("items").path("query").queryParams(params);
+            List<LogicalData> list = res.accept(MediaType.APPLICATION_XML).
+                    get(new GenericType<List<LogicalData>>() {
+            });
+            assertNotNull(list);
+            assertFalse(list.isEmpty());
+            assertEquals(list.size(), 1);
+            LogicalData element = list.get(0);
+            assertEquals(element.datatype, "logical.file");
+            for (Permissions p : element.permissions) {
+                assertEquals(p.owner, username);
+                assertEquals(p.read.iterator().next(), "admin");
+//                for (String s : p.read) {
+//                    System.err.println("Read:" + s);
+//                }
+                assertNull(p.write);
+//                for (String s : p.write) {
+//                    System.err.println("write:" + s);
+//                }
+            }
+            assertEquals(element.name, "file1");
+            assertFalse(element.supervised);
+            assertEquals(element.parent, "/testResourceId");
+            assertEquals(element.contentTypesAsString, "application/octet-stream");
+
+
+            //Set permissions
+            res = webResource.path("items").path("permissions").queryParams(params);
+            Permissions perm = new Permissions();
+            perm.owner = "aNewOwner";
+            perm.read = new HashSet<String>();
+            perm.read.add("myFriend1");
+            perm.read.add("myFriend2");
+
+            perm.write = new HashSet<String>();
+            perm.write.add("user1");
+            perm.write.add("user2");
+            ClientResponse response = res.accept(MediaType.APPLICATION_XML).put(ClientResponse.class, perm);
+            assertTrue("status: " + response.getStatus(), response.getStatus() == HttpStatus.SC_OK || response.getStatus() == HttpStatus.SC_NO_CONTENT);
+
+
+
+            //Get permissions
+            res = webResource.path("items").path("query").queryParams(params);
+            list = res.accept(MediaType.APPLICATION_XML).
+                    get(new GenericType<List<LogicalData>>() {
+            });
+            assertNotNull(list);
+            assertFalse(list.isEmpty());
+            assertEquals(list.size(), 1);
+            element = list.get(0);
+            assertEquals(element.datatype, "logical.file");
+            for (Permissions p : element.permissions) {
+                assertEquals(p.owner, "aNewOwner");
+                assertTrue(p.read.contains("myFriend1"));
+                assertTrue(p.read.contains("myFriend2"));
+//                for (String s : p.read) {
+//                    System.err.println("Read:" + s);
+//                }
+//                for (String s : p.write) {
+//                    System.err.println("write:" + s);
+//                }
+                assertTrue(p.write.contains("user1"));
+                assertTrue(p.write.contains("user2"));
+            }
+            assertEquals(element.name, "file1");
+            assertFalse(element.supervised);
+            assertEquals(element.parent, "/testResourceId");
+            assertEquals(element.contentTypesAsString, "application/octet-stream");
+
         } finally {
             deleteCollection();
         }
@@ -340,25 +738,28 @@ public class TestREST {
 //            deleteCollection();
 //        }
 //    }
-
     @XmlRootElement
     public static class LogicalData {
 
         public int checksum;
-        public String contentTypesAsString;
         public int createDate;
+        public String datatype;
         public int lastValidationDate;
         public int length;
         public int modifiedDate;
         public String name;
-        public String owner;
         public String parent;
-        public int UID;
-        public boolean supervised;
         public Set<Permissions> permissions;
+        public boolean supervised;
+        public int UID;
+        public String contentTypesAsString;
     }
 
     @XmlRootElement
     public static class Permissions {
+
+        public String owner;
+        public Set<String> read;
+        public Set<String> write;
     }
 }
