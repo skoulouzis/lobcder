@@ -28,7 +28,8 @@ public class WebDataResourceFactory implements ResourceFactory {
 
             LogicalData entry = catalogue.getResourceEntryByLDRI(ldri, null);
             if (entry == null) {
-                return null;
+                System.err.println("NULL!!!!!!!!!!!!!");
+                return null; 
             }
 
             if (entry.getType().equals(Constants.LOGICAL_FOLDER)) {

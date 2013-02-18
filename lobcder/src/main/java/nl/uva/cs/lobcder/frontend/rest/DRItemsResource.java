@@ -70,6 +70,7 @@ public class DRItemsResource extends Debug {
         try {
             MultivaluedMap<String, String> queryParameters = info.getPathParameters();
             queryParameters.add("isSupervised", param.toString());
+            queryParameters.add("path", path);
             MyPrincipal mp = (MyPrincipal) request.getAttribute("myprincipal");
             List<LogicalData> resq = catalogue.queryLogicalData(queryParameters, null);
             List<LogicalData> res = new LinkedList<LogicalData>();

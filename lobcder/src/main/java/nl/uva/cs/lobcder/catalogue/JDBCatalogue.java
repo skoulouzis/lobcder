@@ -1736,7 +1736,7 @@ public class JDBCatalogue {
             if (queryParameters.containsKey("path") && queryParameters.get("path").iterator().hasNext()) {
                 String path = queryParameters.get("path").iterator().next();
                 if (!path.equals("/")) {
-                    query.append(where ? " AND" : " WHERE" + " parent LIKE '").append(path).append("%'");
+                    query.append(where ? " AND" : " WHERE").append(" parent LIKE '").append(path).append("%'");
                     where = true;
                 }
                 queryParameters.remove("path");
@@ -1745,24 +1745,24 @@ public class JDBCatalogue {
                     && queryParameters.containsKey("mEndDate") && queryParameters.get("mEndDate").iterator().hasNext()) {
                 String mStartDate = Long.valueOf(queryParameters.get("mStartDate").iterator().next()).toString();
                 String mEndDate = Long.valueOf(queryParameters.get("mEndDate").iterator().next()).toString();
-                query.append(where ? " AND" : " WHERE" + " modifiedDate BETWEEN FROM_UNIXTIME(").append(mStartDate).append(") AND FROM_UNIXTIME(").append(mEndDate).append(")");
+                        query.append(where ? " AND" : " WHERE").append(" modifiedDate BETWEEN FROM_UNIXTIME(").append(mStartDate).append(") AND FROM_UNIXTIME(").append(mEndDate).append(")");
                 where = true;
                 queryParameters.remove("mStartDate");
                 queryParameters.remove("mEndDate");
             } else if (queryParameters.containsKey("mStartDate") && queryParameters.get("mStartDate").iterator().hasNext()) {
                 String mStartDate = Long.valueOf(queryParameters.get("mStartDate").iterator().next()).toString();
-                query.append(where ? " AND" : " WHERE" + " modifiedDate >= UNIXTIME(").append(mStartDate).append(")");
+                query.append(where ? " AND" : " WHERE").append(" modifiedDate >= UNIXTIME(").append(mStartDate).append(")");
                 where = true;
                 queryParameters.remove("mStartDate");
             } else if (queryParameters.containsKey("mEndDate") && queryParameters.get("mEndDate").iterator().hasNext()) {
                 String mEndDate = Long.valueOf(queryParameters.get("mEndDate").iterator().next()).toString();
-                query.append(where ? " AND" : " WHERE" + " modifiedDate <= UNIXTIME(").append(mEndDate).append(")");
+                query.append(where ? " AND" : " WHERE").append(" modifiedDate <= UNIXTIME(").append(mEndDate).append(")");
                 where = true;
                 queryParameters.remove("mEndDate");
             }
             if (queryParameters.containsKey("isSupervised") && queryParameters.get("isSupervised").iterator().hasNext()) {
                 String isSupervised = Boolean.valueOf(queryParameters.get("isSupervised").iterator().next()).toString();
-                query.append(where ? " AND" : " WHERE" + " isSupervised = ").append(isSupervised);
+                query.append(where ? " AND" : " WHERE").append(" isSupervised = ").append(isSupervised);
                 where = true;
                 queryParameters.remove("isSupervised");
             }
