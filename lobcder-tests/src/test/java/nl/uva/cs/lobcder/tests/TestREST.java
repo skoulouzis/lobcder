@@ -467,9 +467,159 @@ public class TestREST {
             ins.read(d);
             ins.close();
 
-            System.err.println(new String(d));
+//            System.err.println(new String(d));
             assertEquals(new String(d), "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><supervised>true</supervised>");
 
+
+        } finally {
+            deleteCollection();
+        }
+    }
+
+    @Test
+    public void testGetSetItemChecksum() throws IOException {
+        try {
+            createCollection();
+            WebResource webResource = restClient.resource(restURL);
+
+            MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+            params.add("path", "/testResourceId");
+
+            WebResource res = webResource.path("items").path("query").queryParams(params);
+            List<LogicalData> list = res.accept(MediaType.APPLICATION_XML).
+                    get(new GenericType<List<LogicalData>>() {
+            });
+
+            assertNotNull(list);
+            assertFalse(list.isEmpty());
+            assertEquals(list.size(), 1);
+            LogicalData element = list.get(0);
+            assertEquals(element.datatype, "logical.file");
+            for (Permissions p : element.permissions) {
+                assertEquals(p.owner, username);
+                assertEquals(p.read.iterator().next(), "admin");
+//                for (String s : p.read) {
+//                    System.err.println("Read:" + s);
+//                }
+                assertNull(p.write);
+//                for (String s : p.write) {
+//                    System.err.println("write:" + s);
+//                }
+            }
+            assertEquals(element.name, "file1");
+            assertFalse(element.supervised);
+            assertEquals(element.parent, "/testResourceId");
+            assertEquals(element.contentTypesAsString, "application/octet-stream");
+
+            //Get the uid 
+            int fileUID = element.UID;
+            res = webResource.path("item").path("dri").path(String.valueOf(fileUID)).path("checksum");
+
+            ClientResponse response = res.get(ClientResponse.class);
+            assertTrue("status: " + response.getStatus(), response.getStatus() == HttpStatus.SC_OK);
+            InputStream ins = response.getEntityInputStream();
+            byte[] d = new byte[77];
+            ins.read(d);
+            ins.close();
+            assertEquals(new String(d), "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><checksum>0</checksum>");
+
+
+            String checksum = "999";
+            res = webResource.path("item").path("dri").path(String.valueOf(fileUID)).path("checksum").path(checksum);
+            response = res.put(ClientResponse.class);
+            assertTrue("status: " + response.getStatus(), response.getStatus() == HttpStatus.SC_OK || response.getStatus() == HttpStatus.SC_NO_CONTENT);
+
+
+            res = webResource.path("item").path("dri").path(String.valueOf(fileUID)).path("checksum");
+            response = res.get(ClientResponse.class);
+            assertTrue("status: " + response.getStatus(), response.getStatus() == HttpStatus.SC_OK);
+            ins = response.getEntityInputStream();
+            d = new byte[79];
+            ins.read(d);
+            ins.close();
+            assertEquals(new String(d), "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><checksum>" + checksum + "</checksum>");
+
+
+            //- GET http://.../rest/item/dri{uid}/checksum/ - returns value of checksum property  for file with uid ID
+            //- PUT http://.../rest/item/dri/{uid}/checksum/{checksum}/ sets checksum property  for file with uid ID
+
+        } finally {
+            deleteCollection();
+        }
+    }
+
+    @Test
+    public void testGetSetItemLastValidationDate() throws IOException {
+        try {
+            createCollection();
+            WebResource webResource = restClient.resource(restURL);
+
+            MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+            params.add("path", "/testResourceId");
+
+            WebResource res = webResource.path("items").path("query").queryParams(params);
+            List<LogicalData> list = res.accept(MediaType.APPLICATION_XML).
+                    get(new GenericType<List<LogicalData>>() {
+            });
+
+            assertNotNull(list);
+            assertFalse(list.isEmpty());
+            assertEquals(list.size(), 1);
+            LogicalData element = list.get(0);
+            assertEquals(element.datatype, "logical.file");
+            for (Permissions p : element.permissions) {
+                assertEquals(p.owner, username);
+                assertEquals(p.read.iterator().next(), "admin");
+//                for (String s : p.read) {
+//                    System.err.println("Read:" + s);
+//                }
+                assertNull(p.write);
+//                for (String s : p.write) {
+//                    System.err.println("write:" + s);
+//                }
+            }
+            assertEquals(element.name, "file1");
+            assertFalse(element.supervised);
+            assertEquals(element.parent, "/testResourceId");
+            assertEquals(element.contentTypesAsString, "application/octet-stream");
+
+            //Get the uid 
+            int fileUID = element.UID;
+
+
+//- GET http://.../rest/item/dri/{uid}/lastValidationDate/ - returns value of lastValidationDate property  for file with uid ID
+            res = webResource.path("item").path("dri").path(String.valueOf(fileUID)).path("lastValidationDate");
+
+            ClientResponse response = res.get(ClientResponse.class);
+            assertTrue("status: " + response.getStatus(), response.getStatus() == HttpStatus.SC_OK);
+            InputStream ins = response.getEntityInputStream();
+            byte[] d = new byte[28];
+            ins.read(d);
+            ins.close();
+            System.err.println(new String(d));
+            assertEquals(new String(d), "Thu Jan 01 01:00:00 CET 1970");
+
+
+            //- PUT http://.../rest/item/dri/ {uid}/lastValidationDate/{lastValidationDate}/ -  sets lastValidationDate property  for file with uid ID
+            String lastValidationDate = "122355000";
+            res = webResource.path("item").path("dri").path(String.valueOf(fileUID)).path("lastValidationDate").path(lastValidationDate);
+            response = res.put(ClientResponse.class);
+            assertTrue("status: " + response.getStatus(), response.getStatus() == HttpStatus.SC_OK || response.getStatus() == HttpStatus.SC_NO_CONTENT);
+
+
+            res = webResource.path("item").path("dri").path(String.valueOf(fileUID)).path("lastValidationDate");
+            response = res.get(ClientResponse.class);
+            assertTrue("status: " + response.getStatus(), response.getStatus() == HttpStatus.SC_OK);
+            ins = response.getEntityInputStream();
+            d = new byte[28];
+            ins.read(d);
+            ins.close();
+//            System.err.println(new String(d));
+            assertEquals(new String(d), "Sat Nov 17 04:30:00 CET 1973");
+
+
+            //- GET http://.../rest/item/dri{uid}/checksum/ - returns value of checksum property  for file with uid ID
+            //- PUT http://.../rest/item/dri/{uid}/checksum/{checksum}/ sets checksum property  for file with uid ID
 
         } finally {
             deleteCollection();
@@ -556,6 +706,91 @@ public class TestREST {
             assertEquals(element.parent, "/testResourceId");
             assertEquals(element.contentTypesAsString, "application/octet-stream");
 
+        } finally {
+            deleteCollection();
+        }
+    }
+
+    @Test
+    public void testGetSetItemPermissions() throws IOException {
+        try {
+            createCollection();
+            WebResource webResource = restClient.resource(restURL);
+
+            MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+            params.add("path", "/testResourceId");
+
+            WebResource res = webResource.path("items").path("query").queryParams(params);
+            List<LogicalData> list = res.accept(MediaType.APPLICATION_XML).
+                    get(new GenericType<List<LogicalData>>() {
+            });
+
+            assertNotNull(list);
+            assertFalse(list.isEmpty());
+            assertEquals(list.size(), 1);
+            LogicalData element = list.get(0);
+            assertEquals(element.datatype, "logical.file");
+            for (Permissions p : element.permissions) {
+                assertEquals(p.owner, username);
+                assertEquals(p.read.iterator().next(), "admin");
+//                for (String s : p.read) {
+//                    System.err.println("Read:" + s);
+//                }
+                assertNull(p.write);
+//                for (String s : p.write) {
+//                    System.err.println("write:" + s);
+//                }
+            }
+            assertEquals(element.name, "file1");
+            assertFalse(element.supervised);
+            assertEquals(element.parent, "/testResourceId");
+            assertEquals(element.contentTypesAsString, "application/octet-stream");
+
+            //Get the uid 
+            int fileUID = element.UID;
+//            - GET http://.../rest/item/permissions/{uid}/ - returns permissions for a file (or folder) by its uid
+            res = webResource.path("item").path("permissions").path(String.valueOf(fileUID));
+            Permissions perm = res.accept(MediaType.APPLICATION_XML).
+                    get(new GenericType<Permissions>() {
+            });
+            assertNotNull(perm);
+            assertNull(perm.write);
+            assertNotNull(perm.read);
+            assertEquals(perm.read.iterator().next(), "admin");
+            assertEquals(perm.owner, username);
+
+            //Set permissions
+//            PUT  http://.../rest/item/permissions//{uid}/ 
+            res = webResource.path("item").path("permissions").path(String.valueOf(fileUID));
+            perm = new Permissions();
+            perm.owner = "aNewOwner";
+            perm.read = new HashSet<String>();
+            perm.read.add("myFriend1");
+            perm.read.add("myFriend2");
+
+            perm.write = new HashSet<String>();
+            perm.write.add("user1");
+            perm.write.add("user2");
+            ClientResponse response = res.accept(MediaType.APPLICATION_XML).put(ClientResponse.class, perm);
+            assertTrue("status: " + response.getStatus(), response.getStatus() == HttpStatus.SC_OK || response.getStatus() == HttpStatus.SC_NO_CONTENT);
+
+
+
+            res = webResource.path("item").path("permissions").path(String.valueOf(fileUID));
+            perm = res.accept(MediaType.APPLICATION_XML).
+                    get(new GenericType<Permissions>() {
+            });
+            assertNotNull(perm);
+            assertNotNull(perm.write);
+            assertTrue(perm.write.contains("user1"));
+            assertTrue(perm.write.contains("user2"));
+            
+            assertNotNull(perm.read);
+            assertTrue(perm.read.contains("myFriend1"));
+            assertTrue(perm.read.contains("myFriend2"));
+            
+            assertEquals(perm.owner, "aNewOwner");
+            
         } finally {
             deleteCollection();
         }
