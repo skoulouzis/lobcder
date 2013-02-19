@@ -171,7 +171,7 @@ public class TestREST {
             assertEquals(element.datatype, "logical.file");
             for (Permissions p : element.permissions) {
                 assertEquals(p.owner, username);
-                assertEquals(p.read.iterator().next(), "admin");
+                assertTrue(p.read.contains("admin"));
 //                for (String s : p.read) {
 //                    System.err.println("Read:" + s);
 //                }
@@ -213,7 +213,7 @@ public class TestREST {
             assertEquals(element.datatype, "logical.file");
             for (Permissions p : element.permissions) {
                 assertEquals(p.owner, username);
-                assertEquals(p.read.iterator().next(), "admin");
+                assertTrue(p.read.contains("admin"));
 //                for (String s : p.read) {
 //                    System.err.println("Read:" + s);
 //                }
@@ -240,7 +240,7 @@ public class TestREST {
             assertEquals(theFile.datatype, "logical.file");
             for (Permissions p : theFile.permissions) {
                 assertEquals(p.owner, username);
-                assertEquals(p.read.iterator().next(), "admin");
+               assertTrue(p.read.contains("admin"));
 //                for (String s : p.read) {
 //                    System.err.println("Read:" + s);
 //                }
@@ -280,7 +280,7 @@ public class TestREST {
             assertEquals(element.datatype, "logical.file");
             for (Permissions p : element.permissions) {
                 assertEquals(p.owner, username);
-                assertEquals(p.read.iterator().next(), "admin");
+                assertTrue(p.read.contains("admin"));
 //                for (String s : p.read) {
 //                    System.err.println("Read:" + s);
 //                }
@@ -334,7 +334,7 @@ public class TestREST {
             assertEquals(element.datatype, "logical.file");
             for (Permissions p : element.permissions) {
                 assertEquals(p.owner, username);
-                assertEquals(p.read.iterator().next(), "admin");
+                assertTrue(p.read.contains("admin"));
 //                for (String s : p.read) {
 //                    System.err.println("Read:" + s);
 //                }
@@ -382,7 +382,7 @@ public class TestREST {
             assertEquals(element.datatype, "logical.file");
             for (Permissions p : element.permissions) {
                 assertEquals(p.owner, username);
-                assertEquals(p.read.iterator().next(), "admin");
+                assertTrue(p.read.contains("admin"));
 //                for (String s : p.read) {
 //                    System.err.println("Read:" + s);
 //                }
@@ -422,7 +422,7 @@ public class TestREST {
             assertEquals(element.datatype, "logical.file");
             for (Permissions p : element.permissions) {
                 assertEquals(p.owner, username);
-                assertEquals(p.read.iterator().next(), "admin");
+                assertTrue(p.read.contains("admin"));
 //                for (String s : p.read) {
 //                    System.err.println("Read:" + s);
 //                }
@@ -497,7 +497,7 @@ public class TestREST {
             assertEquals(element.datatype, "logical.file");
             for (Permissions p : element.permissions) {
                 assertEquals(p.owner, username);
-                assertEquals(p.read.iterator().next(), "admin");
+                assertTrue(p.read.contains("admin"));
 //                for (String s : p.read) {
 //                    System.err.println("Read:" + s);
 //                }
@@ -569,7 +569,7 @@ public class TestREST {
             assertEquals(element.datatype, "logical.file");
             for (Permissions p : element.permissions) {
                 assertEquals(p.owner, username);
-                assertEquals(p.read.iterator().next(), "admin");
+                assertTrue(p.read.contains("admin"));
 //                for (String s : p.read) {
 //                    System.err.println("Read:" + s);
 //                }
@@ -647,7 +647,7 @@ public class TestREST {
             assertEquals(element.datatype, "logical.file");
             for (Permissions p : element.permissions) {
                 assertEquals(p.owner, username);
-                assertEquals(p.read.iterator().next(), "admin");
+                assertTrue(p.read.contains("admin"));
 //                for (String s : p.read) {
 //                    System.err.println("Read:" + s);
 //                }
@@ -732,7 +732,7 @@ public class TestREST {
             assertEquals(element.datatype, "logical.file");
             for (Permissions p : element.permissions) {
                 assertEquals(p.owner, username);
-                assertEquals(p.read.iterator().next(), "admin");
+                assertTrue(p.read.contains("admin"));
 //                for (String s : p.read) {
 //                    System.err.println("Read:" + s);
 //                }
@@ -756,7 +756,7 @@ public class TestREST {
             assertNotNull(perm);
             assertNull(perm.write);
             assertNotNull(perm.read);
-            assertEquals(perm.read.iterator().next(), "admin");
+            assertTrue(perm.read.contains("admin"));
             assertEquals(perm.owner, username);
 
             //Set permissions
