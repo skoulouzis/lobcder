@@ -24,6 +24,7 @@ import java.util.logging.Logger;
 import nl.uva.vlet.Global;
 import nl.uva.vlet.GlobalConfig;
 import nl.uva.vlet.data.StringUtil;
+import nl.uva.vlet.exception.VRLSyntaxException;
 import nl.uva.vlet.exception.VlException;
 import nl.uva.vlet.io.CircularStreamBufferTransferer;
 import nl.uva.vlet.util.cog.GridProxy;
@@ -358,6 +359,18 @@ public class VPDRI implements PDRI {
             debug("trans.getProgress(): " + trans.getProgress());
             Thread.sleep(time);
             time = time * 2;
+        }
+    }
+
+    @Override
+    public void replicate(PDRI source) throws IOException {
+        try {
+            VFile vSourceFile = this.vfsClient.openFile(new VRL(source.getURI()));
+            VDir remoteDir = vfsClient.mkdirs(vrl.getParent(), true);
+            VFile vDestFile = vfsClient.createFile(vrl, true);
+            this.vfsClient.copy(vSourceFile, vDestFile);
+        } catch (VlException ex) {
+            throw new IOException(ex);
         }
     }
 }

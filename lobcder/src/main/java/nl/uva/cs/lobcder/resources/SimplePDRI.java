@@ -177,4 +177,9 @@ public class SimplePDRI implements PDRI {
     public String getHost() throws UnknownHostException {
         return InetAddress.getLocalHost().getHostName();
     }
+
+    @Override
+    public void replicate(PDRI source) throws IOException {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 }
