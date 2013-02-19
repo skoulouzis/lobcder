@@ -202,10 +202,10 @@ SET @rootID = LAST_INSERT_ID();
 INSERT INTO permission_table (perm_type, ld_uid_ref, role_name) VALUES  ('read', @rootID, 'other'),
                                                                         ('read', @rootID, 'admin'),
                                                                         ('write', @rootID, 'admin');
-INSERT INTO  credential_table(username, password) VALUES ('USER', 'PASS');
+INSERT INTO  credential_table(username, password) VALUES ('vphdemo:vphdemo', 'LibiDibi7');
 SET @credID = LAST_INSERT_ID();
 INSERT INTO storage_site_table(resourceURI, credentialRef, currentNum, currentSize, quotaNum, quotaSize)
-            VALUES('file:///tmp', @credID, -1, -1, -1, -1);
+            VALUES('swift://149.156.10.131:8443/auth/v1.0/', @credID, -1, -1, -1, -1);
 SET @ssId = LAST_INSERT_ID();
 INSERT INTO role_to_ss_table(role_name, ss_id) values   ('admin', @ssId),
                                                         ('other', @ssId);

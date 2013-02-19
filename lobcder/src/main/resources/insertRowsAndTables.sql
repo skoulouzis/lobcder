@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS auth_roles_tables (
     id SERIAL PRIMARY KEY,
     role_name VARCHAR(255), index(role_name),
     uname_id BIGINT unsigned, FOREIGN KEY(uname_id) REFERENCES auth_usernames_table(id) ON DELETE CASCADE
-)
+);
 
 DELIMITER $$
 
@@ -110,3 +110,54 @@ $$
 
 DELIMITER ;
 
+
+DELIMITER $$
+
+DROP PROCEDURE IF EXISTS updateDriFlagProc $$
+CREATE PROCEDURE updateDriFlagProc(IN mowner VARCHAR(255), IN mroles VARCHAR(10240), IN flag BOOLEAN, IN mparent VARCHAR(10240))
+MAIN_BLOCK: BEGIN
+    DECLARE a INT Default 0; 
+    DECLARE isadmin INT Default 0;
+    DECLARE str VARCHAR(255);
+    DECLARE parent1 VARCHAR(10240);
+    DECLARE name1 VARCHAR(255);
+
+    DROP TABLE IF EXISTS myroles;
+    CREATE temporary table myroles(
+      mrole VARCHAR(255)
+    );
+
+    SET a=0;
+    insert_myroles_loop: 
+    LOOP
+        SET a=a+1;
+        SET str=SPLIT_STR(mroles,",",a);
+        IF str='' THEN
+            LEAVE insert_myroles_loop;
+        END IF;
+        INSERT INTO myroles(mrole) VALUES (str);
+    END LOOP insert_myroles_loop;
+    SET isadmin = FIND_IN_SET('admin', mroles);
+    SET name1 = SUBSTRING_INDEX(TRIM(TRAILING '/' FROM mparent), '/', -1);
+    SET parent1 = TRIM(TRAILING '/' FROM REVERSE(SUBSTR(REVERSE(TRIM(TRAILING '/' FROM mparent)), INSTR(REVERSE(TRIM(TRAILING '/' FROM mparent)), '/'))));
+
+    UPDATE ldata_table SET isSupervised = flag
+    WHERE ldata_table.parent = parent1 AND ldata_table.ld_name = name1 AND (ldata_table.ownerId = mowner OR isadmin != 0 OR 
+        EXISTS(
+            SELECT 1 FROM permission_table JOIN myroles ON permission_table.role_name = myroles.mrole 
+            WHERE permission_table.perm_type = 'write' AND permission_table.ld_uid_ref = ldata_table.uid
+        )
+    );
+
+    UPDATE ldata_table SET isSupervised = flag
+    WHERE ldata_table.parent LIKE CONCAT(mparent, '%') AND (ldata_table.ownerId = mowner OR isadmin != 0 OR 
+        EXISTS(
+            SELECT 1 FROM permission_table JOIN myroles ON permission_table.role_name = myroles.mrole 
+            WHERE permission_table.perm_type = 'write' AND permission_table.ld_uid_ref = ldata_table.uid
+        )
+    );
+END
+
+$$
+
+DELIMITER ;
