@@ -32,9 +32,7 @@ import nl.uva.vlet.exception.VlException;
  * @author S. Koulouzis
  */
 public class WebDataDirResource extends WebDataResource implements FolderResource, CollectionResource, DeletableCollectionResource {
-
-    private static final boolean debug = true;
-
+    
     public WebDataDirResource(JDBCatalogue catalogue, LogicalData entry) throws IOException, Exception {
         super(catalogue, entry);
         if (!getLogicalData().getType().equals(Constants.LOGICAL_FOLDER)) {

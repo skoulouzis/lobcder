@@ -57,7 +57,6 @@ public class LogicalData implements Cloneable {
     @XmlTransient
     private List<String> decodedContentTypes = null;
     //@XmlTransient
-    private static final boolean debug = true;
     private Boolean supervised;
     private Long checkSum;
     private Long lastValidationDate;
@@ -125,12 +124,6 @@ public class LogicalData implements Cloneable {
 
     public void setUID(Long uid) {
         this.uid = uid;
-    }
-
-    private void debug(String msg) {
-        if (debug) {
-            System.err.println(this.getClass().getName() + "." + Path.path(parent).child(ld_name) + ": " + msg);
-        }
     }
 
     public boolean isRedirectAllowed() {

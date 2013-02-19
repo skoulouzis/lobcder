@@ -17,7 +17,6 @@ import com.bradmcevoy.property.PropertySource.PropertyAccessibility;
 import com.bradmcevoy.property.PropertySource.PropertyMetaData;
 import com.bradmcevoy.property.PropertySource.PropertySetException;
 import com.ettrema.http.AccessControlledResource;
-import com.ettrema.http.acl.DavPrincipal;
 import com.ettrema.http.acl.DavPrincipals.AbstractDavPrincipal;
 import com.ettrema.http.acl.Principal;
 import java.io.IOException;
@@ -41,6 +40,7 @@ import nl.uva.cs.lobcder.resources.MyStorageSite;
 import nl.uva.cs.lobcder.resources.PDRI;
 import nl.uva.cs.lobcder.resources.PDRIFactory;
 import nl.uva.cs.lobcder.util.Constants;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -53,6 +53,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
     private static final boolean debug = true;
 //    private final Map<QName, Object> customProperties = new HashMap<QName, Object>();
     private static AuthI auth;
+    private static final org.slf4j.Logger log = LoggerFactory.getLogger( WebDataResource.class );
 
     static {
         try {
@@ -201,9 +202,10 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
     }
 
     protected void debug(String msg) {
-        if (debug) {
-            System.err.println(this.getClass().getSimpleName() + "." + getLogicalData().getLDRI() + "." + this.user + ": " + msg);
-        }
+//        if (debug) {
+//            System.err.println(this.getClass().getSimpleName() + "." + getLogicalData().getLDRI() + "." + this.user + ": " + msg);
+//        }
+        log.debug(getLogicalData().getLDRI() + "." + this.user + ": " + msg);
     }
 
     /**

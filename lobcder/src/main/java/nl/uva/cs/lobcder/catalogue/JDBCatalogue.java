@@ -7,7 +7,6 @@ package nl.uva.cs.lobcder.catalogue;
 import com.bradmcevoy.common.Path;
 import java.sql.*;
 import java.util.*;
-import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.naming.Context;
@@ -19,6 +18,7 @@ import nl.uva.cs.lobcder.auth.MyPrincipal;
 import nl.uva.cs.lobcder.auth.Permissions;
 import nl.uva.cs.lobcder.resources.*;
 import nl.uva.cs.lobcder.util.Constants;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -28,6 +28,7 @@ public class JDBCatalogue {
 
     private DataSource datasource = null;
     private static final boolean debug = true;
+    private static final org.slf4j.Logger log = LoggerFactory.getLogger( JDBCatalogue.class );
 
     public JDBCatalogue() throws NamingException, Exception {
 
@@ -1688,7 +1689,8 @@ public class JDBCatalogue {
 
     private void debug(String msg) {
         if (debug) {
-            System.err.println(this.getClass().getName() + ": " + msg);
+//            System.err.println(this.getClass().getName() + ": " + msg);
+            log.debug(msg);
         }
     }
 

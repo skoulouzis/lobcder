@@ -14,7 +14,9 @@ import java.util.logging.Logger;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.sql.DataSource;
+import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
 import nl.uva.cs.lobcder.util.Debug;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -23,8 +25,19 @@ import nl.uva.cs.lobcder.util.Debug;
 public class MyAuthTest extends Debug implements AuthI {
 
     private DataSource datasource = null;
+    private static final org.slf4j.Logger log = LoggerFactory.getLogger(MyAuthTest.class);
+
     @Override
-    protected boolean debug() { return true;}
+    protected boolean debug() {
+        return true;
+    }
+
+    @Override
+    protected void debug(String msg) {
+        if (debug()) {
+            log.debug(msg);
+        }
+    }
 
     public Connection getConnection() throws Exception {
         if (datasource == null) {
@@ -52,7 +65,7 @@ public class MyAuthTest extends Debug implements AuthI {
             //String query = "SELECT role_name FROM auth_roles_tables JOIN auth_usernames_table ON auth_usernames_table.id = auth_roles_tables.uname_id WHERE auth_usernames_table.uname = '" + token + "'";
             debug(query);
             ResultSet rs = s.executeQuery(query);
-            if(rs.next()){
+            if (rs.next()) {
                 id = rs.getInt(1);
                 uname = rs.getString(2);
             } else {

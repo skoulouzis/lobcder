@@ -7,7 +7,6 @@ package nl.uva.cs.lobcder.frontend.rest;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.naming.InitialContext;
-import javax.naming.NamingException;
 import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
 
 /**
