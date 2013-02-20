@@ -4,23 +4,20 @@
  */
 package nl.uva.cs.lobcder.resources;
 
-import com.sun.management.OperatingSystemMXBean;
 import java.io.*;
-import java.lang.management.ManagementFactory;
 import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
-import java.net.URI;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
-import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import nl.uva.cs.lobcder.webDav.resources.WebDataResource;
 import nl.uva.vlet.Global;
 import nl.uva.vlet.GlobalConfig;
 import nl.uva.vlet.data.StringUtil;
@@ -29,10 +26,12 @@ import nl.uva.vlet.exception.VlException;
 import nl.uva.vlet.io.CircularStreamBufferTransferer;
 import nl.uva.vlet.util.cog.GridProxy;
 import nl.uva.vlet.vfs.*;
+import nl.uva.vlet.vfs.cloud.CloudFile;
 import nl.uva.vlet.vrl.VRL;
 import nl.uva.vlet.vrs.ServerInfo;
 import nl.uva.vlet.vrs.VRS;
 import nl.uva.vlet.vrs.VRSContext;
+import org.slf4j.LoggerFactory;
 
 /**
  * A test PDRI to implement the delete get/set data methods with the VRS API
@@ -79,14 +78,15 @@ public class VPDRI implements PDRI {
     private final String password;
     private final Long storageSiteId;
     private final String baseDir = "LOBCDER-REPLICA-vTEST";//"LOBCDER-REPLICA-v2.0";
-    private final String fileURI;
+    private final String fileName;
     private int reconnectAttemts = 0;
     private final static boolean debug = true;
+    private static final org.slf4j.Logger log = LoggerFactory.getLogger( VPDRI.class );
 
-    VPDRI(String fileURI, Long storageSiteId, String resourceUrl, String username, String password) throws IOException {
+    VPDRI(String fileName, Long storageSiteId, String resourceUrl, String username, String password) throws IOException {
         try {
-            this.fileURI = fileURI;
-            vrl = new VRL(resourceUrl).appendPath(baseDir).append(URLEncoder.encode(fileURI, "UTF-8"));
+            this.fileName = fileName;
+            vrl = new VRL(resourceUrl).appendPath(baseDir).append(URLEncoder.encode(fileName, "UTF-8"));
             //Encode:
 //            String strURI = vrl.toURI().toASCIIString();
 //            vrl = new VRL(strURI);
@@ -137,9 +137,7 @@ public class VPDRI implements PDRI {
         //patch for bug with ssh driver 
         info.setAttribute("sshKnownHostsFile", System.getProperty("user.home") + "/.ssh/known_hosts");
 //        }
-
         info.store();
-
     }
 
     @Override
@@ -229,8 +227,8 @@ public class VPDRI implements PDRI {
     }
 
     @Override
-    public String getURI() {
-        return this.fileURI;
+    public String getFileName() {
+        return this.fileName;
     }
 
     @Override
@@ -348,7 +346,7 @@ public class VPDRI implements PDRI {
     private void upload(InputStream in) throws VlException, InterruptedException {
         VDir remoteDir = vfsClient.mkdirs(vrl.getParent(), true);
         VRL tmpVRL = new VRL("file:///" + System.getProperty("java.io.tmpdir"));
-        VRL tmpFileVRL = tmpVRL.append(fileURI);
+        VRL tmpFileVRL = tmpVRL.append(fileName);
         VFile tmpFile = vfsClient.createFile(tmpFileVRL, true);
         OutputStream out = tmpFile.getOutputStream();
         CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((1 * 1024 * 1024), in, out);
@@ -362,8 +360,30 @@ public class VPDRI implements PDRI {
         }
     }
 
-    @Override 
+    @Override
     public void replicate(PDRI source) throws IOException {
-        putData(source.getData());
+        try {
+            VRL sourceVRL = new VRL(source.getURI());
+//            VRL destVRL = this.vrl.getParent();
+            log.debug("replicate from "+sourceVRL+" to "+vrl);
+            VFile sourceFile = this.vfsClient.openFile(sourceVRL);
+            VFile destFile = this.vfsClient.createFile(vrl, true);
+            if (destFile instanceof CloudFile) {
+                ((CloudFile) destFile).uploadFrom(sourceFile);
+            } else {
+                putData(source.getData());
+            }
+        } catch (VlException ex) {
+            throw new IOException(ex);
+        }
+    }
+
+    @Override
+    public String getURI() throws IOException {
+        try {
+            return this.vrl.toURIString();
+        } catch (VRLSyntaxException ex) {
+            throw new IOException(ex);
+        }
     }
 }

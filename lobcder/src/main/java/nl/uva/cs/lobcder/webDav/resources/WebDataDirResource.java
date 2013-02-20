@@ -32,7 +32,7 @@ import nl.uva.vlet.exception.VlException;
  * @author S. Koulouzis
  */
 public class WebDataDirResource extends WebDataResource implements FolderResource, CollectionResource, DeletableCollectionResource {
-    
+
     public WebDataDirResource(JDBCatalogue catalogue, LogicalData entry) throws IOException, Exception {
         super(catalogue, entry);
         if (!getLogicalData().getType().equals(Constants.LOGICAL_FOLDER)) {
@@ -165,7 +165,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
         } catch (NotAuthorizedException e) {
             throw e;
         } catch (Exception ex) {
-            if(pr == null){
+            if (pr == null) {
                 throw new NotAuthorizedException(this);
             }
             Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, ex);
@@ -241,12 +241,13 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
             throw e;
         } catch (Exception ex) {
             Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, ex);
-//            if (ex instanceof LockedException) {
+            if (ex instanceof IOException) {
+                throw (IOException) ex;
 //                throw new RuntimeException("423");
 ////                throw new BadRequestException("423");
-//            } else {
+            } else {
                 throw new BadRequestException(this, ex.getMessage());
-//            }
+            }
         } finally {
             try {
                 if (connection != null && !connection.isClosed()) {
@@ -420,26 +421,19 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
     public String getContentType(String accepts) {
         debug("getContentType. accepts: " + accepts);
         return "text/html";
-        /* List<String> mimeTypes;
-        if (accepts != null) {
-        String[] acceptsTypes = accepts.split(",");
-        if (getLogicalData().getContentTypes() != null) {
-        mimeTypes = getLogicalData().getContentTypes();
-        for (String accessType : acceptsTypes) {
-        for (String mimeType : mimeTypes) {
-        if (accessType.equals(mimeType)) {
-        System.err.println("\t\t#################Contenttype: " + mimeType);
-        return mimeType;
-        }
-        }
-        }
-        System.err.println("\t\t#################Contenttype: " + mimeTypes.get(0));
-        return mimeTypes.get(0);
-        }
-        } 
-        System.err.println("\t\t#################Contenttype: null");
-        return null;
-         * 
+        /*
+         * List<String> mimeTypes; if (accepts != null) { String[] acceptsTypes
+         * = accepts.split(","); if (getLogicalData().getContentTypes() != null)
+         * { mimeTypes = getLogicalData().getContentTypes(); for (String
+         * accessType : acceptsTypes) { for (String mimeType : mimeTypes) { if
+         * (accessType.equals(mimeType)) {
+         * System.err.println("\t\t#################Contenttype: " + mimeType);
+         * return mimeType; } } }
+         * System.err.println("\t\t#################Contenttype: " +
+         * mimeTypes.get(0)); return mimeTypes.get(0); } }
+         * System.err.println("\t\t#################Contenttype: null"); return
+         * null;
+         *
          */
     }
 

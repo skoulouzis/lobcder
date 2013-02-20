@@ -15,11 +15,11 @@ import java.net.UnknownHostException;
 public interface PDRI {
 
     public Long getStorageSiteId();
-    
-    public String getURI();
-    
+
+    public String getFileName();
+
     public String getHost() throws UnknownHostException;
-    
+
     public void delete() throws IOException;
 
     public InputStream getData() throws IOException;
@@ -27,10 +27,12 @@ public interface PDRI {
     public void putData(InputStream data) throws IOException;
 
     public long getLength() throws IOException;
-    
+
     public void reconnect() throws IOException;
 
     public Long getChecksum() throws IOException;
-    
+
     public void replicate(PDRI source) throws IOException;
+
+    public String getURI() throws IOException;
 }

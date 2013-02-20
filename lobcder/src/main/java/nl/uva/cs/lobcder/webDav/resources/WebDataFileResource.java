@@ -208,7 +208,7 @@ public class WebDataFileResource extends WebDataResource implements
             } else {
                 throw new NotFoundException("Resource has no physical data");
             }
-            debug("--------- " + pdri.getURI());
+            debug("--------- " + pdri.getFileName());
             in = pdri.getData();
             CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((5 * 1024 * 1024), in, out);
             cBuff.startTransfer(new Long(-1));

@@ -12,8 +12,6 @@ import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import nl.uva.cs.lobcder.catalogue.CatalogueException;
@@ -25,44 +23,48 @@ import nl.uva.cs.lobcder.util.Constants;
  * @author dvasunin
  */
 public class CachePDRI implements PDRI {
-   
-    
+
     private final static CatalogueHelper ch = new CatalogueHelper();
-    private final static String baseLocation; 
-    static{
+    private final static String baseLocation;
+
+    static {
         String bl = null;
         try {
             bl = ch.getCatalogue().getStorageSitesById(Constants.CACHE_STORAGE_SITE_ID, null).getResourceURI().replaceFirst("^file://[aA-zZ.]*/", "/");
         } catch (CatalogueException ex) {
             Logger.getLogger(CachePDRI.class.getName()).log(Level.SEVERE, null, ex);
         }
-        baseLocation =  bl + "LOBCDER-REPLICA-vTEST/";
-    } 
+        if (!bl.endsWith("/")) {
+            bl += "/";
+        }
+        baseLocation = bl + "LOBCDER-REPLICA-vTEST/";
+    }
     final private String file_name;
     final private Long ssid;
+    private final File file;
 
-    public CachePDRI(String file_name){
+    public CachePDRI(String file_name) {
         this.ssid = Long.valueOf(Constants.CACHE_STORAGE_SITE_ID);
         this.file_name = file_name;
+        file = new File(baseLocation + file_name);
     }
 
     @Override
     public void delete() throws IOException {
-        File fd = new File(baseLocation + file_name);
-        fd.delete();
+
+        file.delete();
     }
 
     @Override
     public InputStream getData() throws IOException {
-        File f = new File(baseLocation + file_name);
-        return new BufferedInputStream(new FileInputStream(f));
+        return new BufferedInputStream(new FileInputStream(file));
     }
 
     @Override
     public void putData(InputStream data) throws IOException {
 //        Runnable asyncPut = getAsyncPutData(baseLocation + file_name, data);
 //        asyncPut.run();
-        setResourceContent(baseLocation + file_name, data);
+        setResourceContent(data);
     }
 
     @Override
@@ -71,12 +73,11 @@ public class CachePDRI implements PDRI {
     }
 
     @Override
-    public String getURI() {
+    public String getFileName() {
         return file_name;
     }
 
-    private void setResourceContent(String uri, InputStream is) throws FileNotFoundException, IOException {
-        File file = new File(uri);
+    private void setResourceContent(InputStream is) throws FileNotFoundException, IOException {
 //        OutputStream os = new BufferedOutputStream(new FileOutputStream(file), Constants.BUF_SIZE);
         OutputStream os = new FileOutputStream(file);
         try {
@@ -190,10 +191,14 @@ public class CachePDRI implements PDRI {
     public String getHost() throws UnknownHostException {
         return InetAddress.getLocalHost().getHostName();
     }
-    
-    @Override 
+
+    @Override
     public void replicate(PDRI source) throws IOException {
         putData(source.getData());
     }
-    
+
+    @Override
+    public String getURI() throws IOException {
+        return file.toURI().toString();
+    }
 }
