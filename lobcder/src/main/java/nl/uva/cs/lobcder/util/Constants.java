@@ -12,7 +12,8 @@ import javax.xml.namespace.QName;
  */
 public class Constants {
 
-    public static final String LOBCDER_CONF_DIR = System.getProperty("user.home") + "/.lobcder-test/";
+    //public static final String LOBCDER_CONF_DIR = System.getProperty("user.home") + "/.lobcder-test/";
+    public static final Long CACHE_STORAGE_SITE_ID = Long.valueOf(1);
     public static final String VPH_USERNAMES = "vph.users";
     public static final String STORAGE_SITE_USERNAME = "storage.site.username";
     public static final String STORAGE_SITE_PASSWORD = "storage.site.password";

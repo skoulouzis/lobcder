@@ -362,15 +362,8 @@ public class VPDRI implements PDRI {
         }
     }
 
-    @Override
+    @Override 
     public void replicate(PDRI source) throws IOException {
-        try {
-            VFile vSourceFile = this.vfsClient.openFile(new VRL(source.getURI()));
-            VDir remoteDir = vfsClient.mkdirs(vrl.getParent(), true);
-            VFile vDestFile = vfsClient.createFile(vrl, true);
-            this.vfsClient.copy(vSourceFile, vDestFile);
-        } catch (VlException ex) {
-            throw new IOException(ex);
-        }
+        putData(source.getData());
     }
 }

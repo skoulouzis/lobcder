@@ -4,6 +4,7 @@
  */
 package nl.uva.cs.lobcder.frontend.rest;
 
+import nl.uva.cs.lobcder.util.CatalogueHelper;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.servlet.http.HttpServletRequest;

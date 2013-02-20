@@ -12,7 +12,7 @@ import java.util.Properties;
  * @author skoulouz
  */
 public class PropertiesLoader {
-
+/*
     private static int numOfStorgeSites = -1;
 
     public static Properties getLobcderProperties()
@@ -67,4 +67,5 @@ public class PropertiesLoader {
             }
         }
     }
+    */   
 }

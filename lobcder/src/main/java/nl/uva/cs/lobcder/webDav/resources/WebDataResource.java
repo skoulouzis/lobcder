@@ -35,6 +35,7 @@ import nl.uva.cs.lobcder.auth.Permissions;
 import nl.uva.cs.lobcder.catalogue.CatalogueException;
 import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
 import nl.uva.cs.lobcder.frontend.WebDavServlet;
+import nl.uva.cs.lobcder.resources.CachePDRI;
 import nl.uva.cs.lobcder.resources.LogicalData;
 import nl.uva.cs.lobcder.resources.MyStorageSite;
 import nl.uva.cs.lobcder.resources.PDRI;
@@ -375,6 +376,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
     }
 
     public PDRI createPDRI(long fileLength, String fileName, Connection connection) throws CatalogueException, IOException {
+    /*        
         Collection<MyStorageSite> sites = getCatalogue().getStorageSitesByUser(getPrincipal(), connection);
         if (!sites.isEmpty()) {
 //            MyStorageSite site = sites.iterator().next();
@@ -385,13 +387,8 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
         } else {
             return null;
         }
-    }
-
-    private MyStorageSite selectBestSite(Collection<MyStorageSite> sites) {
-        for (MyStorageSite s : sites) {
-            return s;
-        }
-        return null;
+    */
+        return new CachePDRI(UUID.randomUUID().toString() + "-" + fileName);
     }
 
     @Override

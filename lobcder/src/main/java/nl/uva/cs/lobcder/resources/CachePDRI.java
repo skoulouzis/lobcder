@@ -24,7 +24,7 @@ import nl.uva.cs.lobcder.util.Constants;
  *
  * @author dvasunin
  */
-public class SimplePDRI implements PDRI {
+public class CachePDRI implements PDRI {
    
     
     private final static CatalogueHelper ch = new CatalogueHelper();
@@ -34,14 +34,14 @@ public class SimplePDRI implements PDRI {
         try {
             bl = ch.getCatalogue().getStorageSitesById(Constants.CACHE_STORAGE_SITE_ID, null).getResourceURI().replaceFirst("^file://[aA-zZ.]*/", "/");
         } catch (CatalogueException ex) {
-            Logger.getLogger(SimplePDRI.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(CachePDRI.class.getName()).log(Level.SEVERE, null, ex);
         }
         baseLocation =  bl + "LOBCDER-REPLICA-vTEST/";
     } 
     final private String file_name;
     final private Long ssid;
 
-    public SimplePDRI(String file_name){
+    public CachePDRI(String file_name){
         this.ssid = Long.valueOf(Constants.CACHE_STORAGE_SITE_ID);
         this.file_name = file_name;
     }
@@ -123,12 +123,12 @@ public class SimplePDRI implements PDRI {
                     final WritableByteChannel outputChannel = Channels.newChannel(dest);
                     fastCopy(inputChannel, outputChannel);
                 } catch (IOException ex) {
-                    Logger.getLogger(SimplePDRI.class.getName()).log(Level.SEVERE, null, ex);
+                    Logger.getLogger(CachePDRI.class.getName()).log(Level.SEVERE, null, ex);
                 } finally {
                     try {
                         dest.close();
                     } catch (IOException ex) {
-                        Logger.getLogger(SimplePDRI.class.getName()).log(Level.SEVERE, null, ex);
+                        Logger.getLogger(CachePDRI.class.getName()).log(Level.SEVERE, null, ex);
                     }
                 }
             }

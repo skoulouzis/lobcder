@@ -13,6 +13,7 @@
         <endorsed.dir>${project.build.directory}/endorsed</endorsed.dir>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <skipTests>true</skipTests>
+        <netbeans.hint.deploy.server>Tomcat</netbeans.hint.deploy.server>
     </properties>
 
     <dependencies>
@@ -168,15 +169,6 @@
             <groupId>nl.uva.vlet</groupId>
             <artifactId>vlet-vfs.lfc</artifactId>
             <version>1.5.0-dev-1</version>
-            <scope>runtime</scope>
-        </dependency>
-        
-
-        
-        <dependency>
-            <groupId>mysql</groupId>
-            <artifactId>mysql-connector-java</artifactId>
-            <version>5.1.21</version>
             <scope>runtime</scope>
         </dependency>
         <dependency>
