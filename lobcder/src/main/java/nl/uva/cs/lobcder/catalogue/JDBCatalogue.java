@@ -59,10 +59,12 @@ public class JDBCatalogue {
     public void startSweep() {
         TimerTask gcTask = new TimerTask() {
             Runnable sweep = deleteSweep();
+            Runnable replicate = replicateCacheSweep();
 
             @Override
             public void run() {
                 sweep.run();
+                replicate.run();
             }
         };
         timer = new Timer(true);
@@ -222,9 +224,9 @@ public class JDBCatalogue {
                     "SELECT uid, ownerId, datatype, ld_name, parent, createDate, "
                     + "modifiedDate, ld_length, contentTypesStr, pdriGroupId "
                     + "FROM ldata_table where ldata_table.parent = ? "
-                    + "AND ldata_table.ld_name = ?", 
+                    + "AND ldata_table.ld_name = ?",
                     ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
-            
+
             ps01.setString(1, entry.getParent());
             ps01.setString(2, entry.getName());
             ResultSet rs = ps01.executeQuery();
@@ -847,6 +849,72 @@ public class JDBCatalogue {
         }
     }
 
+    public Collection<MyStorageSite> getStorageSites(Connection connection) throws CatalogueException {
+        Statement s = null;
+        boolean connectionIsProvided = (connection == null) ? false : true;
+        boolean connectionAutocommit = false;
+        try {
+            if (connection == null) {
+                connection = getConnection();
+                connection.setAutoCommit(false);
+            } else {
+                connectionAutocommit = connection.getAutoCommit();
+                connection.setAutoCommit(false);
+            }
+            boolean first = true;
+            s = connection.createStatement();
+            String sql = "SELECT storageSiteId, resourceURI, currentNum, currentSize, quotaNum, quotaSize, username, password FROM storage_site_table JOIN credential_table ON credentialRef = credintialId WHERE storageSiteId != " + Constants.CACHE_STORAGE_SITE_ID;
+            ResultSet rs = s.executeQuery(sql);
+            LinkedList<MyStorageSite> res = new LinkedList<MyStorageSite>();
+            while (rs.next()) {
+                Credential c = new Credential();
+                c.setStorageSiteUsername(rs.getString(7));
+                c.setStorageSitePassword(rs.getString(8));
+                MyStorageSite ss = new MyStorageSite();
+                ss.setStorageSiteId(rs.getLong(1));
+                ss.setCredential(c);
+                ss.setResourceURI(rs.getString(2));
+                ss.setCurrentNum(rs.getLong(3));
+                ss.setCurrentSize(rs.getLong(4));
+                ss.setQuotaNum(rs.getLong(5));
+                ss.setQuotaSize(rs.getLong(6));
+                res.add(ss);
+            }
+            rs.close();
+            return res;
+        } catch (Exception e) {
+            try {
+                if (s != null && !s.isClosed()) {
+                    s.close();
+                    s = null;
+                }
+                if (!connectionIsProvided && !connection.isClosed()) {
+                    connection.rollback();
+                    connection.close();
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            e.printStackTrace();
+            throw new CatalogueException(e.getMessage());
+        } finally {
+            try {
+                if (s != null && !s.isClosed()) {
+                    s.close();
+                }
+                if (!connectionIsProvided && !connection.isClosed()) {
+                    connection.commit();
+                    connection.close();
+                }
+                if (connectionIsProvided && !connection.isClosed()) {
+                    connection.setAutoCommit(connectionAutocommit);
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+
     public Collection<MyStorageSite> getStorageSitesByUser(MyPrincipal user, Connection connection) throws CatalogueException {
         Statement s = null;
         boolean connectionIsProvided = (connection == null) ? false : true;
@@ -860,14 +928,17 @@ public class JDBCatalogue {
                 connection.setAutoCommit(false);
             }
             boolean first = true;
-            String sql = "SELECT DISTINCT storageSiteId, resourceURI, currentNum, currentSize, quotaNum, quotaSize, username, password FROM role_to_ss_table JOIN storage_site_table ON ss_id = storageSiteId JOIN credential_table ON credentialRef = credintialId WHERE ";
+            String sql = "SELECT DISTINCT storageSiteId, resourceURI, currentNum, currentSize, quotaNum, quotaSize, username, password FROM role_to_ss_table JOIN storage_site_table ON ss_id = storageSiteId JOIN credential_table ON credentialRef = credintialId WHERE storageSiteId != " + Constants.CACHE_STORAGE_SITE_ID;
             for (String role : user.getRoles()) {
                 if (first) {
-                    sql += "role_name = '" + role + "'";
+                    sql += " AND (role_name = '" + role + "'";
                     first = false;
                 } else {
                     sql += " OR role_name = '" + role + "'";
                 }
+            }
+            if (!first) {
+                sql += ")";
             }
             s = connection.createStatement();
             debug(sql);
@@ -886,6 +957,71 @@ public class JDBCatalogue {
                 ss.setQuotaNum(rs.getLong(5));
                 ss.setQuotaSize(rs.getLong(6));
                 res.add(ss);
+            }
+            rs.close();
+            return res;
+        } catch (Exception e) {
+            try {
+                if (s != null && !s.isClosed()) {
+                    s.close();
+                    s = null;
+                }
+                if (!connectionIsProvided && !connection.isClosed()) {
+                    connection.rollback();
+                    connection.close();
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            throw new CatalogueException(e.getMessage());
+        } finally {
+            try {
+                if (s != null && !s.isClosed()) {
+                    s.close();
+                }
+                if (!connectionIsProvided && !connection.isClosed()) {
+                    connection.commit();
+                    connection.close();
+                }
+                if (connectionIsProvided && !connection.isClosed()) {
+                    connection.setAutoCommit(connectionAutocommit);
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+
+    public MyStorageSite getStorageSitesById(Long id, Connection connection) throws CatalogueException {
+        Statement s = null;
+        boolean connectionIsProvided = (connection == null) ? false : true;
+        boolean connectionAutocommit = false;
+        try {
+            if (connection == null) {
+                connection = getConnection();
+                connection.setAutoCommit(false);
+            } else {
+                connectionAutocommit = connection.getAutoCommit();
+                connection.setAutoCommit(false);
+            }
+            String sql = "SELECT storageSiteId, resourceURI, currentNum, currentSize, quotaNum, quotaSize, username, password FROM storage_site_table JOIN credential_table ON credentialRef = credintialId WHERE storageSiteId = " + id;
+            s = connection.createStatement();
+            debug(sql);
+            ResultSet rs = s.executeQuery(sql);
+            MyStorageSite res = null;
+            while (rs.next()) {
+                Credential c = new Credential();
+                c.setStorageSiteUsername(rs.getString(7));
+                c.setStorageSitePassword(rs.getString(8));
+                MyStorageSite ss = new MyStorageSite();
+                ss.setStorageSiteId(rs.getLong(1));
+                ss.setCredential(c);
+                ss.setResourceURI(rs.getString(2));
+                ss.setCurrentNum(rs.getLong(3));
+                ss.setCurrentSize(rs.getLong(4));
+                ss.setQuotaNum(rs.getLong(5));
+                ss.setQuotaSize(rs.getLong(6));
+                res = ss;
             }
             rs.close();
             return res;
@@ -958,7 +1094,6 @@ public class JDBCatalogue {
                         rs1.beforeFirst();
                     }
                 } catch (Exception e) {
-                    e.printStackTrace();
                     try {
                         if (s1 != null && !s1.isClosed()) {
                             s1.close();
@@ -994,6 +1129,73 @@ public class JDBCatalogue {
                 }
 
 
+            }
+        };
+    }
+
+    Runnable replicateCacheSweep() {
+        final JDBCatalogue self = this;
+        return new Runnable() {
+            private Collection<MyStorageSite> availableStorage = null;
+            private Iterator<MyStorageSite> it = null;
+
+            MyStorageSite findBestSite() {
+                if (it == null || !it.hasNext()) {
+                    it = availableStorage.iterator();
+                }
+                return it.next();
+            }
+
+            @Override
+            public void run() {
+                Connection connection = null;
+                Statement s1 = null;
+                try {
+                    connection = self.getConnection();
+                    connection.setAutoCommit(false);
+                    availableStorage = getStorageSites(connection);
+                    s1 = connection.createStatement(java.sql.ResultSet.TYPE_FORWARD_ONLY,
+                            java.sql.ResultSet.CONCUR_UPDATABLE);
+                    ResultSet rs1 = s1.executeQuery("SELECT pdriId, url, storageSiteId, pdriGroupId FROM pdri_table WHERE pdri_table.storageSiteId = " + Constants.CACHE_STORAGE_SITE_ID);
+                    while (rs1.next()) {
+                        String url = rs1.getString(2);
+                        Long pdriGroupId = rs1.getLong(4);
+                        CachePDRI source = new CachePDRI(url);
+                        MyStorageSite ss = findBestSite();
+                        PDRI replica = PDRIFactory.getFactory().createInstance(url, ss.getStorageSiteId(), ss.getResourceURI(), ss.getCredential().getStorageSiteUsername(), ss.getCredential().getStorageSitePassword());
+                        replica.replicate(source);
+                        rs1.updateLong(3, replica.getStorageSiteId());
+                        rs1.updateRow();      
+                        source.delete();
+                    }
+                    connection.commit();
+                } catch (Exception e) {
+                    try {
+                        if (s1 != null && !s1.isClosed()) {
+                            s1.close();
+                            s1 = null;
+                        }
+                        if (connection != null && !connection.isClosed()) {
+                            connection.rollback();
+                            connection.close();
+                        }
+                    } catch (SQLException ex) {
+                        Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                    Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, e);
+                } finally {
+                    try {
+                        if (s1 != null && !s1.isClosed()) {
+                            s1.close();
+                        }
+                        if (connection != null && !connection.isClosed()) {
+                            connection.commit();
+                            connection.close();
+                        }
+                    } catch (SQLException ex) {
+                        Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
             }
         };
     }
@@ -1747,7 +1949,7 @@ public class JDBCatalogue {
                     && queryParameters.containsKey("mEndDate") && queryParameters.get("mEndDate").iterator().hasNext()) {
                 String mStartDate = Long.valueOf(queryParameters.get("mStartDate").iterator().next()).toString();
                 String mEndDate = Long.valueOf(queryParameters.get("mEndDate").iterator().next()).toString();
-                        query.append(where ? " AND" : " WHERE").append(" modifiedDate BETWEEN FROM_UNIXTIME(").append(mStartDate).append(") AND FROM_UNIXTIME(").append(mEndDate).append(")");
+                query.append(where ? " AND" : " WHERE").append(" modifiedDate BETWEEN FROM_UNIXTIME(").append(mStartDate).append(") AND FROM_UNIXTIME(").append(mEndDate).append(")");
                 where = true;
                 queryParameters.remove("mStartDate");
                 queryParameters.remove("mEndDate");
