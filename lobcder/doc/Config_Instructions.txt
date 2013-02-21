@@ -1,0 +1,35 @@
+This is are some basic instruction on how to configure and deploy LOBCDER 
+
+
+1. How to create MySQL DB
+
+Connect to the local database server as user root
+You will be prompted for a password.
+
+$mysql -h localhost  -u root -p
+$mysql> create database mydb;
+
+Now we create the user 'username' and give him full permissions on the new 
+database
+
+$mysql>GRANT SUPER ON *.* to username@localhost IDENTIFIED by 'password';
+
+
+2. Run the init.sql script as username: 
+    mysql --user=username --password=password mydb < init.sql
+
+
+3. Edit context.xml:
+
+    edit or add this line:
+    <Resource auth="Container" driverClassName="com.mysql.jdbc.Driver" maxActive="100" maxIdle="30" maxWait="10000" name="jdbc/mydb" password="password" removeAbandoned="true" removeAbandonedTimeout="30" type="javax.sql.DataSource" url="jdbc:mysql://localhost:3306/mydb" username="username"/>
+
+4. Authentication:
+    In the context.xml file edit or add this line to include the ticket validation service:
+    <Resource auth="Container" factory="org.apache.naming.factory.BeanFactory" name="bean/auth" serviceURL="https://masterinterface.vph-share.eu/validatetkt/?ticket=" type="nl.uva.cs.lobcder.auth.AuthRemote"/>  
+
+4. Deploy LOBCDER
+
+4.1 Using NetBeans
+    Build the project and run it. To specify an application server see
+    (http://wiki.netbeans.org/AddExternalTomcat) 
