@@ -35,6 +35,7 @@ $mysql> create database mydb;
 
 Now we create the user 'username' and give him super permissions on the new database. SUPER is required for enabling the delete and replicate tigers (for mysql version 5.0.95). 
 \begin{lstlisting}
+$mysql>grant ALL PRIVILEGES on mydb.* to username@localhost identified by 'password'
 $mysql>GRANT SUPER ON *.* to username@localhost IDENTIFIED by 'password';
 \end{lstlisting}
 
