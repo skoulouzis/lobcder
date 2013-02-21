@@ -54,7 +54,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
     private static final boolean debug = true;
 //    private final Map<QName, Object> customProperties = new HashMap<QName, Object>();
     private static AuthI auth;
-    private static final org.slf4j.Logger log = LoggerFactory.getLogger( WebDataResource.class );
+    private static final org.slf4j.Logger log = LoggerFactory.getLogger(WebDataResource.class);
 
     static {
         try {
@@ -70,6 +70,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
         }
     }
     private String user;
+    private MyAuthTest authT;
 
     public WebDataResource(JDBCatalogue catalogue, LogicalData logicalData) {
         this.logicalData = logicalData;
@@ -102,12 +103,16 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
                 + "\t user: " + user
                 + "\t password: " + password);
         String token = password;
-        MyPrincipal principal = auth.checkToken(token);
+        if (authT == null) {
+            authT = new MyAuthTest();
+        }
+        MyPrincipal principal = authT.checkToken(token);
+
         //Try the local db 
         if (principal == null) {
-            MyAuthTest authT = new MyAuthTest();
-            principal = authT.checkToken(token);
+            principal = auth.checkToken(token);
         }
+
         if (principal != null) {
             WebDavServlet.request().setAttribute("vph-user", principal);
             debug("getUserId: " + principal.getUserId());
@@ -268,15 +273,15 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
 
         Set<String> currentRoles = currentPrincipal.getRoles();
         //We are supposed to get permissions for this resource for the current user
-        Permissions p = getLogicalData().getPermissions();        
+        Permissions p = getLogicalData().getPermissions();
         Set<String> readRoles = p.getRead();
         Set<String> writeRoles = p.getWrite();
         readRoles.retainAll(currentRoles);
-        if(!readRoles.isEmpty()) {
+        if (!readRoles.isEmpty()) {
             priviledgesList.add(Priviledge.READ);
         }
         writeRoles.retainAll(currentRoles);
-        if(!writeRoles.isEmpty()) {
+        if (!writeRoles.isEmpty()) {
             priviledgesList.add(Priviledge.WRITE);
         }
         return priviledgesList;
@@ -291,7 +296,6 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
         }
         // Do the mapping
         Principal p = new AbstractDavPrincipal(getPrincipalURL()) {
-
             @Override
             public boolean matches(Auth auth, Resource current) {
                 return true;
@@ -312,7 +316,6 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
         for (String r : getPrincipal().getRoles()) {
             perm = new ArrayList<Priviledge>();
             p = new AbstractDavPrincipal(r) {
-
                 @Override
                 public boolean matches(Auth auth, Resource current) {
                     return true;
@@ -326,7 +329,6 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
         for (String r : getPrincipal().getRoles()) {
             perm = new ArrayList<Priviledge>();
             p = new AbstractDavPrincipal(r) {
-
                 @Override
                 public boolean matches(Auth auth, Resource current) {
                     return true;
@@ -376,18 +378,18 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
     }
 
     public PDRI createPDRI(long fileLength, String fileName, Connection connection) throws CatalogueException, IOException {
-    /*        
-        Collection<MyStorageSite> sites = getCatalogue().getStorageSitesByUser(getPrincipal(), connection);
-        if (!sites.isEmpty()) {
-//            MyStorageSite site = sites.iterator().next();
-            MyStorageSite site = selectBestSite(sites);
-            return PDRIFactory.getFactory().createInstance(UUID.randomUUID().toString() + "-" + fileName,
-                    site.getStorageSiteId(), site.getResourceURI(),
-                    site.getCredential().getStorageSiteUsername(), site.getCredential().getStorageSitePassword());
-        } else {
-            return null;
-        }
-    */
+        /*        
+         Collection<MyStorageSite> sites = getCatalogue().getStorageSitesByUser(getPrincipal(), connection);
+         if (!sites.isEmpty()) {
+         //            MyStorageSite site = sites.iterator().next();
+         MyStorageSite site = selectBestSite(sites);
+         return PDRIFactory.getFactory().createInstance(UUID.randomUUID().toString() + "-" + fileName,
+         site.getStorageSiteId(), site.getResourceURI(),
+         site.getCredential().getStorageSiteUsername(), site.getCredential().getStorageSitePassword());
+         } else {
+         return null;
+         }
+         */
         return new CachePDRI(UUID.randomUUID().toString() + "-" + fileName);
     }
 

@@ -12,6 +12,7 @@ import com.bradmcevoy.http.exceptions.NotAuthorizedException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.URLEncoder;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.*;
@@ -186,6 +187,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
     public Resource createNew(String newName, InputStream inputStream, Long length, String contentType) throws IOException,
             ConflictException, NotAuthorizedException, BadRequestException {
         debug("createNew.");
+//        newName = URLEncoder.encode(newName, "UTF-8");
         debug("\t newName: " + newName);
         debug("\t length: " + length);
         debug("\t contentType: " + contentType);

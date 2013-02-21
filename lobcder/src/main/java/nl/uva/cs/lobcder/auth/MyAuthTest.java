@@ -26,6 +26,21 @@ public class MyAuthTest extends Debug implements AuthI {
 
     private DataSource datasource = null;
     private static final org.slf4j.Logger log = LoggerFactory.getLogger(MyAuthTest.class);
+    private static PrincipalCacheI pc = null;
+
+    static {
+        try {
+            String jndiName = "bean/PrincipalCache";
+            javax.naming.Context ctx = new InitialContext();
+            if (ctx == null) {
+                throw new Exception("JNDI could not create InitalContext ");
+            }
+            javax.naming.Context envContext = (javax.naming.Context) ctx.lookup("java:/comp/env");
+            pc = (PrincipalCacheI) envContext.lookup(jndiName);
+        } catch (Exception ex) {
+            Logger.getLogger(AuthRemote.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
 
     @Override
     protected boolean debug() {
@@ -55,33 +70,43 @@ public class MyAuthTest extends Debug implements AuthI {
     @Override
     public MyPrincipal checkToken(String token) {
         Connection connection = null;
+        MyPrincipal res = null;
         try {
-            String uname;
-            int id;
-            connection = getConnection();
-            Statement s = connection.createStatement();
-            HashSet<String> roles = new HashSet<String>();
-            String query = "SELECT id, uname FROM auth_usernames_table WHERE token = '" + token + "'";
-            //String query = "SELECT role_name FROM auth_roles_tables JOIN auth_usernames_table ON auth_usernames_table.id = auth_roles_tables.uname_id WHERE auth_usernames_table.uname = '" + token + "'";
-            debug(query);
-            ResultSet rs = s.executeQuery(query);
-            if (rs.next()) {
-                id = rs.getInt(1);
-                uname = rs.getString(2);
-            } else {
-                return null;
+            if (pc != null) {
+                res = pc.getPrincipal(token);
             }
-            query = "SELECT role_name FROM auth_roles_tables WHERE uname_id = " + id;
-            debug(query);
-            rs = s.executeQuery(query);
-            while (rs.next()) {
-                roles.add(rs.getString(1));
+            if (res == null) {
+                String uname;
+                int id;
+                connection = getConnection();
+                Statement s = connection.createStatement();
+                HashSet<String> roles = new HashSet<String>();
+                String query = "SELECT id, uname FROM auth_usernames_table WHERE token = '" + token + "'";
+                //String query = "SELECT role_name FROM auth_roles_tables JOIN auth_usernames_table ON auth_usernames_table.id = auth_roles_tables.uname_id WHERE auth_usernames_table.uname = '" + token + "'";
+                debug(query);
+                ResultSet rs = s.executeQuery(query);
+                if (rs.next()) {
+                    id = rs.getInt(1);
+                    uname = rs.getString(2);
+                } else {
+                    return null;
+                }
+                query = "SELECT role_name FROM auth_roles_tables WHERE uname_id = " + id;
+                debug(query);
+                rs = s.executeQuery(query);
+                while (rs.next()) {
+                    roles.add(rs.getString(1));
+                }
+                if (roles.isEmpty()) {
+                    res = null;
+                } else {
+                    res = new MyPrincipal(uname, roles);
+                }
             }
-            if (roles.isEmpty()) {
-                return null;
-            } else {
-                return new MyPrincipal(uname, roles);
+            if (pc != null) {
+                pc.putPrincipal(token, res);
             }
+            return res;
         } catch (Exception ex) {
             return null;
         } finally {
