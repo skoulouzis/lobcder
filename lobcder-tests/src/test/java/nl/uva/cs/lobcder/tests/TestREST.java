@@ -128,13 +128,13 @@ public class TestREST {
     private void createCollection() throws IOException {
         MkColMethod mkcol = new MkColMethod(testcol);
         int status = this.client.executeMethod(mkcol);
-        assertEquals(HttpStatus.SC_CREATED, status);
+        assertEquals(status, HttpStatus.SC_CREATED);
 
 
         PutMethod put = new PutMethod(this.root + "testResourceId/file1");
         put.setRequestEntity(new StringRequestEntity("foo", "text/plain", "UTF-8"));
         status = this.client.executeMethod(put);
-        assertEquals(HttpStatus.SC_CREATED, status);
+        assertEquals(status, HttpStatus.SC_CREATED);
 
 //        put = new PutMethod(this.root + "testResourceId/file2");
 //        put.setRequestEntity(new StringRequestEntity("foo", "text/plain", "UTF-8"));
@@ -240,7 +240,7 @@ public class TestREST {
             assertEquals(theFile.datatype, "logical.file");
             for (Permissions p : theFile.permissions) {
                 assertEquals(p.owner, username);
-               assertTrue(p.read.contains("admin"));
+                assertTrue(p.read.contains("admin"));
 //                for (String s : p.read) {
 //                    System.err.println("Read:" + s);
 //                }
@@ -784,13 +784,13 @@ public class TestREST {
             assertNotNull(perm.write);
             assertTrue(perm.write.contains("user1"));
             assertTrue(perm.write.contains("user2"));
-            
+
             assertNotNull(perm.read);
             assertTrue(perm.read.contains("myFriend1"));
             assertTrue(perm.read.contains("myFriend2"));
-            
+
             assertEquals(perm.owner, "aNewOwner");
-            
+
         } finally {
             deleteCollection();
         }
