@@ -7,6 +7,7 @@ package nl.uva.cs.lobcder.webDav.resources;
 import com.bradmcevoy.common.Path;
 import com.bradmcevoy.http.*;
 import com.bradmcevoy.http.exceptions.*;
+import com.bradmcevoy.http.exceptions.PreConditionFailedException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -38,9 +39,8 @@ import nl.uva.vlet.vfs.VFSNode;
  */
 public class WebDataFileResource extends WebDataResource implements
         com.bradmcevoy.http.FileResource, LockableResource {
-
-    private static final boolean debug = true;
 //    private final int bufferSize;
+
     private int reconnectAttemts;
 
     public WebDataFileResource(JDBCatalogue catalogue, LogicalData logicalData) throws CatalogueException, Exception {
@@ -192,6 +192,8 @@ public class WebDataFileResource extends WebDataResource implements
 //        debug("\t contentType: " + contentType);
         Connection connection = null;
         PDRI pdri = null;
+        InputStream in = null;
+        Iterator<PDRI> it = null;
         try {
             connection = getCatalogue().getConnection();
             connection.setAutoCommit(false);
@@ -200,32 +202,58 @@ public class WebDataFileResource extends WebDataResource implements
                 throw new NotAuthorizedException(this);
             }
 
-            Iterator<PDRI> it = getCatalogue().getPdriByGroupId(getLogicalData().getPdriGroupId(), connection).iterator();
-            if (it.hasNext()) {
+            it = getCatalogue().getPdriByGroupId(getLogicalData().getPdriGroupId(), connection).iterator();
+            if (it != null && it.hasNext()) {
                 pdri = it.next();
+            } else {
+                throw new NotFoundException("Resource has no physical data");
             }
+            debug("--------- " + pdri.getFileName());
+            in = pdri.getData();
+            CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((5 * 1024 * 1024), in, out);
+            cBuff.startTransfer(new Long(-1));
             connection.commit();
             connection.close();
-            debug("--------- " + pdri.getURI());
-            debug("getLength: " + pdri.getLength());
-            //IOUtils.copy(pdri.getData(), out); 
-//            fastCopy(pdri.getData(), out);
-
-            CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((150 * 1024 * 1024), pdri.getData(), out);
-            cBuff.startTransfer(new Long(-1));
-        } catch (NotAuthorizedException ex) {
-            debug("NotAuthorizedException");
-            throw new NotAuthorizedException(this);
         } catch (Exception ex) {
-            //Try one more time 
-            debug("reconnect");
-            pdri.reconnect();
-            CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((150 * 1024 * 1024), pdri.getData(), out);
-            try {
-                cBuff.startTransfer(new Long(-1));
-            } catch (VlException ex1) {
-                throw new IOException(ex1.getMessage());
+            if (ex instanceof NotAuthorizedException) {
+                throw new NotAuthorizedException(this);
             }
+            if (ex.getMessage() != null && ex.getMessage().contains("Couldn open location")
+                    || in == null) {
+                debug("Try another source");
+                boolean found = false;
+                while (it.hasNext()) {
+                    in = pdri.getData();
+                    CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((5 * 1024 * 1024), in, out);
+                    try {
+                        cBuff.startTransfer(new Long(-1));
+                        found = true;
+                        break;
+                    } catch (VlException ex1) {
+                        throw new IOException(ex1.getMessage());
+                    }
+                }
+                if (!found) {
+//                    try {
+//                        delete();
+//                    } catch (ConflictException ex1) {
+//                        throw new NotFoundException(ex1.getMessage());
+//                    }
+                    throw new NotFoundException(ex.getMessage());
+                }
+
+            } else {
+                //Try one more time 
+                debug("reconnect");
+                pdri.reconnect();
+                CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((5 * 1024 * 1024), pdri.getData(), out);
+                try {
+                    cBuff.startTransfer(new Long(-1));
+                } catch (VlException ex1) {
+                    throw new IOException(ex1.getMessage());
+                }
+            }
+
         } finally {
             try {
                 out.flush();
@@ -234,13 +262,6 @@ public class WebDataFileResource extends WebDataResource implements
                     connection.rollback();
                     connection.close();
                 }
-//                System.gc();
-//                long elapsed = System.currentTimeMillis() - start;
-//                double speed = ((totalWritten * 8) / 1000.0 * 1000.0) / (elapsed / 1000.0);
-//                debug("SendCont speed:  " + speed + " MBit/sec (SI)");
-                //                if (pdri != null && pdri.getData() != null) {
-                //                    pdri.getData().close();
-                //                }
             } catch (Exception ex) {
                 debug(ex.getMessage());
                 //Ignore

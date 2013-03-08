@@ -6,15 +6,14 @@ import com.bradmcevoy.http.ResourceFactoryFactory;
 import com.bradmcevoy.http.webdav.DefaultWebDavResponseHandler;
 import com.bradmcevoy.http.webdav.WebDavResponseHandler;
 import java.util.logging.Level;
-import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class WebDataResourceFactoryFactory implements ResourceFactoryFactory {
 
-    private Logger log = LoggerFactory.getLogger(WebDataResourceFactoryFactory.class);
     private static AuthenticationService authenticationService;
     private static WebDataResourceFactory resourceFactory;
     private static final boolean debug = false;
+    private static final org.slf4j.Logger log = LoggerFactory.getLogger( WebDataResourceFactoryFactory.class );
 
     @Override
     public ResourceFactory createResourceFactory() {
@@ -41,9 +40,10 @@ public class WebDataResourceFactoryFactory implements ResourceFactoryFactory {
     }
 
     private void debug(String msg) {
-        if (debug) {
-            System.err.println(this.getClass().getSimpleName() + ": " + msg);
+//        if (debug) {
+//            System.err.println(this.getClass().getSimpleName() + ": " + msg);
 //        log.debug(msg);
-        }
+//        }
+        log.debug(msg);
     }
 }

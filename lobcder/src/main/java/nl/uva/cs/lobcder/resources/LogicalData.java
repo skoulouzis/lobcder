@@ -33,9 +33,17 @@ import nl.uva.cs.lobcder.util.Constants;
 public class LogicalData implements Cloneable {
 
     private Long uid = Long.valueOf(0);
-    private String ownerId = "";
     @XmlTransient
+    private String ownerId = "";
     private String datatype = "";
+
+    public String getDatatype() {
+        return datatype;
+    }
+
+    public void setDatatype(String datatype) {
+        this.datatype = datatype;
+    }
     private String ld_name = "";
     private String parent = "";
     private Long createDate = Long.valueOf(0);
@@ -49,17 +57,23 @@ public class LogicalData implements Cloneable {
     @XmlTransient
     private List<String> decodedContentTypes = null;
     //@XmlTransient
-    private static final boolean debug = true;
     private Boolean supervised;
     private Long checkSum;
     private Long lastValidationDate;
+    @XmlTransient
     private String lockTokenID;
+    @XmlTransient
     private String lockScope;
+    @XmlTransient
     private String lockType;
+    @XmlTransient
     private String lockedByUser;
+    @XmlTransient
     private String lockDepth;
+    @XmlTransient
     private Long lockTimeout;
     private String description;
+    private String locationPreference;
 
     public Boolean getSupervised() {
         return supervised;
@@ -110,12 +124,6 @@ public class LogicalData implements Cloneable {
 
     public void setUID(Long uid) {
         this.uid = uid;
-    }
-
-    private void debug(String msg) {
-        if (debug) {
-            System.err.println(this.getClass().getName() + "." + Path.path(parent).child(ld_name) + ": " + msg);
-        }
     }
 
     public boolean isRedirectAllowed() {
@@ -245,7 +253,6 @@ public class LogicalData implements Cloneable {
         decodedContentTypes = null;
     }
 
-    @XmlTransient
     public Permissions getPermissions() {
         try {
             return catalogue.getPermissions(uid, ownerId, null);
@@ -268,6 +275,7 @@ public class LogicalData implements Cloneable {
         return datatype.equals(Constants.LOGICAL_FOLDER);
     }
 
+    @XmlTransient
     public String getOwner() {
         return ownerId;
     }
@@ -389,5 +397,15 @@ public class LogicalData implements Cloneable {
     public void updateDescription(String description) throws CatalogueException {
         this.description = description;
         catalogue.setDescription(uid, description, null);
+    }
+
+    public void setDataLocationPreference(String locationPreference) throws CatalogueException {
+        this.locationPreference = locationPreference;
+        catalogue.setLocationPreference(uid, locationPreference, null);
+    }
+    
+    
+    public String getDataLocationPreference(){
+        return this.locationPreference;
     }
 }

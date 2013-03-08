@@ -6,13 +6,10 @@ package nl.uva.cs.lobcder.frontend;
 
 import com.bradmcevoy.http.*;
 import com.bradmcevoy.http.http11.Http11Protocol;
-import com.bradmcevoy.http.webdav.DefaultWebDavResponseHandler;
-import com.bradmcevoy.http.webdav.LockHandler;
 import com.bradmcevoy.http.webdav.WebDavProtocol;
 import com.ettrema.http.caldav.CalDavProtocol;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Collection;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.servlet.Servlet;
@@ -22,6 +19,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
 import nl.uva.cs.lobcder.webDav.resources.WebDataResourceFactory;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -33,7 +31,7 @@ public class WebDavServlet implements Servlet {
     private static final ThreadLocal<HttpServletResponse> originalResponse = new ThreadLocal<HttpServletResponse>();
 //    protected com.bradmcevoy.http.ServletHttpManager servletHttpManager;
     private ServletConfig config;
-//    private Logger log = LoggerFactory.getLogger(this.getClass());
+    private static final org.slf4j.Logger log = LoggerFactory.getLogger(WebDavServlet.class);
     private static final boolean debug = true;
     private ResourceFactory rf;
     private JDBCatalogue catalogue = null;
@@ -224,8 +222,8 @@ public class WebDavServlet implements Servlet {
 
     private void debug(String msg) {
         if (debug) {
-            System.err.println(this.getClass().getSimpleName() + ": " + msg);
-//        log.debug(msg);
+//            System.err.println(this.getClass().getSimpleName() + ": " + msg);
+            log.debug(msg);
         }
     }
 //    /**

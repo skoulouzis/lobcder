@@ -16,7 +16,6 @@ import com.bradmcevoy.http.webdav.WebDavProtocol;
 import com.bradmcevoy.property.PropertySource;
 import com.ettrema.http.AccessControlledResource;
 import com.ettrema.http.AccessControlledResource.Priviledge;
-import com.ettrema.http.acl.DiscretePrincipal;
 import com.ettrema.http.acl.Principal;
 import com.ettrema.http.acl.PriviledgeList;
 import com.ettrema.http.caldav.PrincipalSearchPropertySetReport;
@@ -26,9 +25,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.xml.namespace.QName;
-import nl.uva.cs.lobcder.auth.MyPrincipal;
 import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.cs.lobcder.webDav.resources.WebDataResource;
+import org.slf4j.LoggerFactory;
 
 /**
  * Copied from
@@ -39,6 +38,7 @@ import nl.uva.cs.lobcder.webDav.resources.WebDataResource;
 class MyACLProtocol implements HttpExtension, PropertySource {
 
     private final PropertyMap propertyMap;
+    private static final org.slf4j.Logger log = LoggerFactory.getLogger( MyACLProtocol.class );
 
     public MyACLProtocol(WebDavProtocol webdav) {
         propertyMap = new PropertyMap(WebDavProtocol.NS_DAV.getName());
@@ -104,7 +104,8 @@ class MyACLProtocol implements HttpExtension, PropertySource {
     }
 
     private void debug(String msg) {
-        System.err.println(this.getClass().getName() + ": " + msg);
+//        System.err.println(this.getClass().getName() + ": " + msg);
+        log.debug(msg);
     }
 
     class PrincipalUrl implements StandardProperty<String> {

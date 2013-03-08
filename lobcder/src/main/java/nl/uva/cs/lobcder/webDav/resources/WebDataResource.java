@@ -9,6 +9,7 @@ import com.bradmcevoy.http.PropFindableResource;
 import com.bradmcevoy.http.Request;
 import com.bradmcevoy.http.Request.Method;
 import com.bradmcevoy.http.Resource;
+import com.bradmcevoy.http.Response;
 import com.bradmcevoy.http.exceptions.NotAuthorizedException;
 import com.bradmcevoy.http.values.HrefList;
 import com.bradmcevoy.property.MultiNamespaceCustomPropertyResource;
@@ -16,7 +17,6 @@ import com.bradmcevoy.property.PropertySource.PropertyAccessibility;
 import com.bradmcevoy.property.PropertySource.PropertyMetaData;
 import com.bradmcevoy.property.PropertySource.PropertySetException;
 import com.ettrema.http.AccessControlledResource;
-import com.ettrema.http.acl.DavPrincipal;
 import com.ettrema.http.acl.DavPrincipals.AbstractDavPrincipal;
 import com.ettrema.http.acl.Principal;
 import java.io.IOException;
@@ -29,16 +29,19 @@ import java.util.logging.Logger;
 import javax.naming.InitialContext;
 import javax.xml.namespace.QName;
 import nl.uva.cs.lobcder.auth.AuthI;
+import nl.uva.cs.lobcder.auth.MyAuthTest;
 import nl.uva.cs.lobcder.auth.MyPrincipal;
 import nl.uva.cs.lobcder.auth.Permissions;
 import nl.uva.cs.lobcder.catalogue.CatalogueException;
 import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
 import nl.uva.cs.lobcder.frontend.WebDavServlet;
+import nl.uva.cs.lobcder.resources.CachePDRI;
 import nl.uva.cs.lobcder.resources.LogicalData;
 import nl.uva.cs.lobcder.resources.MyStorageSite;
 import nl.uva.cs.lobcder.resources.PDRI;
 import nl.uva.cs.lobcder.resources.PDRIFactory;
 import nl.uva.cs.lobcder.util.Constants;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -51,6 +54,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
     private static final boolean debug = true;
 //    private final Map<QName, Object> customProperties = new HashMap<QName, Object>();
     private static AuthI auth;
+    private static final org.slf4j.Logger log = LoggerFactory.getLogger(WebDataResource.class);
 
     static {
         try {
@@ -65,6 +69,8 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
             Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
+    private String user;
+    private MyAuthTest authT;
 
     public WebDataResource(JDBCatalogue catalogue, LogicalData logicalData) {
         this.logicalData = logicalData;
@@ -92,11 +98,21 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
 
     @Override
     public Object authenticate(String user, String password) {
+        this.user = user;
         debug("authenticate.\n"
                 + "\t user: " + user
                 + "\t password: " + password);
         String token = password;
-        MyPrincipal principal = auth.checkToken(token);
+        if (authT == null) {
+            authT = new MyAuthTest();
+        }
+        MyPrincipal principal = authT.checkToken(token);
+
+        //Try the local db 
+        if (principal == null) {
+            principal = auth.checkToken(token);
+        }
+
         if (principal != null) {
             WebDavServlet.request().setAttribute("vph-user", principal);
             debug("getUserId: " + principal.getUserId());
@@ -192,9 +208,10 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
     }
 
     protected void debug(String msg) {
-        if (debug) {
-            System.err.println(this.getClass().getSimpleName() + "." + getLogicalData().getLDRI() + ": " + msg);
-        }
+//        if (debug) {
+//            System.err.println(this.getClass().getSimpleName() + "." + getLogicalData().getLDRI() + "." + this.user + ": " + msg);
+//        }
+        log.debug(getLogicalData().getLDRI() + "." + this.user + ": " + msg);
     }
 
     /**
@@ -257,19 +274,15 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
         Set<String> currentRoles = currentPrincipal.getRoles();
         //We are supposed to get permissions for this resource for the current user
         Permissions p = getLogicalData().getPermissions();
-        Set<String> readRoles = p.canRead();
-        Set<String> writeRoles = p.canWrite();
-        for (String r : currentRoles) {
-            if (readRoles.contains(r)) {
-                priviledgesList.add(Priviledge.READ);
-                break;
-            }
+        Set<String> readRoles = p.getRead();
+        Set<String> writeRoles = p.getWrite();
+        readRoles.retainAll(currentRoles);
+        if (!readRoles.isEmpty()) {
+            priviledgesList.add(Priviledge.READ);
         }
-        for (String r : currentRoles) {
-            if (writeRoles.contains(r)) {
-                priviledgesList.add(Priviledge.WRITE);
-                break;
-            }
+        writeRoles.retainAll(currentRoles);
+        if (!writeRoles.isEmpty()) {
+            priviledgesList.add(Priviledge.WRITE);
         }
         return priviledgesList;
     }
@@ -283,7 +296,6 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
         }
         // Do the mapping
         Principal p = new AbstractDavPrincipal(getPrincipalURL()) {
-
             @Override
             public boolean matches(Auth auth, Resource current) {
                 return true;
@@ -299,12 +311,11 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
         HashMap<Principal, List<Priviledge>> acl = new HashMap<Principal, List<Priviledge>>();
         acl.put(p, perm);
 
-        Set<String> readRoles = getLogicalData().getPermissions().canRead();
-        Set<String> writeRoles = getLogicalData().getPermissions().canWrite();
+        Set<String> readRoles = getLogicalData().getPermissions().getRead();
+        Set<String> writeRoles = getLogicalData().getPermissions().getWrite();
         for (String r : getPrincipal().getRoles()) {
             perm = new ArrayList<Priviledge>();
             p = new AbstractDavPrincipal(r) {
-
                 @Override
                 public boolean matches(Auth auth, Resource current) {
                     return true;
@@ -318,7 +329,6 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
         for (String r : getPrincipal().getRoles()) {
             perm = new ArrayList<Priviledge>();
             p = new AbstractDavPrincipal(r) {
-
                 @Override
                 public boolean matches(Auth auth, Resource current) {
                     return true;
@@ -368,23 +378,19 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
     }
 
     public PDRI createPDRI(long fileLength, String fileName, Connection connection) throws CatalogueException, IOException {
-        Collection<MyStorageSite> sites = getCatalogue().getStorageSitesByUser(getPrincipal(), connection);
-        if (!sites.isEmpty()) {
-//            MyStorageSite site = sites.iterator().next();
-            MyStorageSite site = selectBestSite(sites);
-            return PDRIFactory.getFactory().createInstance(UUID.randomUUID().toString() + "-" + fileName,
-                    site.getStorageSiteId(), site.getResourceURI(),
-                    site.getCredential().getStorageSiteUsername(), site.getCredential().getStorageSitePassword());
-        } else {
-            return null;
-        }
-    }
-
-    private MyStorageSite selectBestSite(Collection<MyStorageSite> sites) {
-        for (MyStorageSite s : sites) {
-            return s;
-        }
-        return null;
+        /*        
+         Collection<MyStorageSite> sites = getCatalogue().getStorageSitesByUser(getPrincipal(), connection);
+         if (!sites.isEmpty()) {
+         //            MyStorageSite site = sites.iterator().next();
+         MyStorageSite site = selectBestSite(sites);
+         return PDRIFactory.getFactory().createInstance(UUID.randomUUID().toString() + "-" + fileName,
+         site.getStorageSiteId(), site.getResourceURI(),
+         site.getCredential().getStorageSiteUsername(), site.getCredential().getStorageSitePassword());
+         } else {
+         return null;
+         }
+         */
+        return new CachePDRI(UUID.randomUUID().toString() + "-" + fileName);
     }
 
     @Override
@@ -398,17 +404,20 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
                     List<? extends WebDataResource> children = (List<? extends WebDataResource>) ((WebDataDirResource) (this)).getChildren();
                     sb.append("[");
                     for (WebDataResource r : children) {
-                        Collection<PDRI> pdris = getCatalogue().getPdriByGroupId(r.getLogicalData().getPdriGroupId(), connection);
-                        for (PDRI p : pdris) {
-                            sb.append(p.getHost());
-                            sb.append(",");
+                        if (r instanceof WebDataFileResource) {
+                            sb.append("'").append(r.getName()).append("' : [");
+                            Collection<PDRI> pdris = getCatalogue().getPdriByGroupId(r.getLogicalData().getPdriGroupId(), connection);
+                            for (PDRI p : pdris) {
+                                sb.append("'").append(p.getHost()).append("',");
+                            }
+                            sb.replace(sb.lastIndexOf(","), sb.length(), "").append("],");
                         }
                     }
                 } else {
                     Collection<PDRI> pdris = getCatalogue().getPdriByGroupId(getLogicalData().getPdriGroupId(), connection);
                     sb.append("[");
                     for (PDRI p : pdris) {
-                        sb.append(p.getHost());
+                        sb.append("'").append(p.getHost()).append("'");
                         sb.append(",");
                     }
                 }
@@ -437,6 +446,8 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
             return "";
         } else if (qname.equals(Constants.DESCRIPTION_PROP_NAME)) {
             return getLogicalData().getDescription();
+        } else if (qname.equals(Constants.DATA_LOC_PREF_NAME)) {
+            return getLogicalData().getDataLocationPreference();
         }
 
         return PropertyMetaData.UNKNOWN;
@@ -448,21 +459,23 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
             throw new NotAuthorizedException(this);
         }
         debug("setProperty: " + qname + " " + o);
-        if (o != null) {
-            String value = (String) o;
-            if (qname.equals(Constants.DRI_SUPERVISED_PROP_NAME)) {
-                getLogicalData().updateSupervised(Boolean.valueOf(value));
-            } else if (qname.equals(Constants.DRI_CHECKSUM_PROP_NAME)) {
-                getLogicalData().updateChecksum(Long.valueOf(value));
-            } else if (qname.equals(Constants.DRI_LAST_VALIDATION_DATE_PROP_NAME)) {
-                getLogicalData().updateLastValidationDate(Long.valueOf(value));
-            } else if (qname.equals(Constants.DESCRIPTION_PROP_NAME)) {
-                try {
+        try {
+            if (o != null) {
+                String value = (String) o;
+                if (qname.equals(Constants.DRI_SUPERVISED_PROP_NAME)) {
+                    getLogicalData().updateSupervised(Boolean.valueOf(value));
+                } else if (qname.equals(Constants.DRI_CHECKSUM_PROP_NAME)) {
+                    getLogicalData().updateChecksum(Long.valueOf(value));
+                } else if (qname.equals(Constants.DRI_LAST_VALIDATION_DATE_PROP_NAME)) {
+                    getLogicalData().updateLastValidationDate(Long.valueOf(value));
+                } else if (qname.equals(Constants.DESCRIPTION_PROP_NAME)) {
                     getLogicalData().updateDescription(value);
-                } catch (CatalogueException ex) {
-                    Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
+                } else if (qname.equals(Constants.DATA_LOC_PREF_NAME)) {
+                    getLogicalData().setDataLocationPreference(value);
                 }
             }
+        } catch (CatalogueException ex) {
+            throw new PropertySetException(Response.Status.SC_BAD_REQUEST, ex.getMessage());
         }
 
     }

@@ -33,8 +33,6 @@ import nl.uva.vlet.exception.VlException;
  */
 public class WebDataDirResource extends WebDataResource implements FolderResource, CollectionResource, DeletableCollectionResource {
 
-    private static final boolean debug = true;
-
     public WebDataDirResource(JDBCatalogue catalogue, LogicalData entry) throws IOException, Exception {
         super(catalogue, entry);
         if (!getLogicalData().getType().equals(Constants.LOGICAL_FOLDER)) {
@@ -137,12 +135,13 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
     public List<? extends Resource> getChildren() throws NotAuthorizedException {
         debug(getLogicalData().getLDRI().toPath() + " collection: getChildren.");
         Connection connection = null;
+        MyPrincipal pr = null;
         try {
             List<WebDataResource> children = new LinkedList<WebDataResource>();
             connection = getCatalogue().getConnection();
             connection.setAutoCommit(false);
             Permissions perm = getCatalogue().getPermissions(getLogicalData().getUID(), getLogicalData().getOwner(), connection);
-            MyPrincipal pr = getPrincipal();
+            pr = getPrincipal();
             if (!pr.canRead(perm)) {
                 throw new NotAuthorizedException(this);
             }
@@ -166,6 +165,9 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
         } catch (NotAuthorizedException e) {
             throw e;
         } catch (Exception ex) {
+            if (pr == null) {
+                throw new NotAuthorizedException(this);
+            }
             Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, ex);
             return null;
         } finally {
@@ -184,6 +186,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
     public Resource createNew(String newName, InputStream inputStream, Long length, String contentType) throws IOException,
             ConflictException, NotAuthorizedException, BadRequestException {
         debug("createNew.");
+//        newName = URLEncoder.encode(newName, "UTF-8");
         debug("\t newName: " + newName);
         debug("\t length: " + length);
         debug("\t contentType: " + contentType);
@@ -238,12 +241,14 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
             debug("NotAuthorizedException");
             throw e;
         } catch (Exception ex) {
-//            if (ex instanceof LockedException) {
+            Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, ex);
+            if (ex instanceof IOException) {
+                throw (IOException) ex;
 //                throw new RuntimeException("423");
 ////                throw new BadRequestException("423");
-//            } else {
+            } else {
                 throw new BadRequestException(this, ex.getMessage());
-//            }
+            }
         } finally {
             try {
                 if (connection != null && !connection.isClosed()) {
@@ -417,26 +422,19 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
     public String getContentType(String accepts) {
         debug("getContentType. accepts: " + accepts);
         return "text/html";
-        /* List<String> mimeTypes;
-        if (accepts != null) {
-        String[] acceptsTypes = accepts.split(",");
-        if (getLogicalData().getContentTypes() != null) {
-        mimeTypes = getLogicalData().getContentTypes();
-        for (String accessType : acceptsTypes) {
-        for (String mimeType : mimeTypes) {
-        if (accessType.equals(mimeType)) {
-        System.err.println("\t\t#################Contenttype: " + mimeType);
-        return mimeType;
-        }
-        }
-        }
-        System.err.println("\t\t#################Contenttype: " + mimeTypes.get(0));
-        return mimeTypes.get(0);
-        }
-        } 
-        System.err.println("\t\t#################Contenttype: null");
-        return null;
-         * 
+        /*
+         * List<String> mimeTypes; if (accepts != null) { String[] acceptsTypes
+         * = accepts.split(","); if (getLogicalData().getContentTypes() != null)
+         * { mimeTypes = getLogicalData().getContentTypes(); for (String
+         * accessType : acceptsTypes) { for (String mimeType : mimeTypes) { if
+         * (accessType.equals(mimeType)) {
+         * System.err.println("\t\t#################Contenttype: " + mimeType);
+         * return mimeType; } } }
+         * System.err.println("\t\t#################Contenttype: " +
+         * mimeTypes.get(0)); return mimeTypes.get(0); } }
+         * System.err.println("\t\t#################Contenttype: null"); return
+         * null;
+         *
          */
     }
 
@@ -501,13 +499,6 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
         debug("getCreateDate.");
         debug("\t entry.getCreateDate(): " + getLogicalData().getCreateDate());
         return new Date(getLogicalData().getCreateDate());
-    }
-
-    @Override
-    protected void debug(String msg) {
-        if (debug) {
-            System.err.println(this.getClass().getSimpleName() + "." + getLogicalData().getLDRI() + ": " + msg);
-        }
     }
 
     @Override

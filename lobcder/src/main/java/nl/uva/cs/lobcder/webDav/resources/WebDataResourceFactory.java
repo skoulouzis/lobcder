@@ -3,17 +3,18 @@ package nl.uva.cs.lobcder.webDav.resources;
 import com.bradmcevoy.common.Path;
 import com.bradmcevoy.http.Resource;
 import com.bradmcevoy.http.ResourceFactory;
-import java.io.File;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
 import nl.uva.cs.lobcder.resources.LogicalData;
 import nl.uva.cs.lobcder.util.Constants;
+import org.slf4j.LoggerFactory;
 
 public class WebDataResourceFactory implements ResourceFactory {
 
     private JDBCatalogue catalogue;
     private static final boolean debug = true;
+    private static final org.slf4j.Logger log = LoggerFactory.getLogger(WebDataResourceFactory.class);
 
     public WebDataResourceFactory(JDBCatalogue catalogue) throws Exception {
         this.catalogue = catalogue;
@@ -22,7 +23,7 @@ public class WebDataResourceFactory implements ResourceFactory {
     @Override
     public Resource getResource(String host, String strPath) {
 
-        Path ldri = Path.path(new File(strPath).getPath()).getStripFirst().getStripFirst();
+        Path ldri = Path.path(strPath).getStripFirst().getStripFirst();
         try {
             //Gets the root path. If instead we called :'ldri = Path.path(strPath);' we get back '/lobcder-1.0-SNAPSHOT'
             debug("getResource:  strPath: " + strPath + " path: " + Path.path(strPath) + " ldri: " + ldri);
@@ -48,9 +49,10 @@ public class WebDataResourceFactory implements ResourceFactory {
     }
 
     private void debug(String msg) {
-        if (debug) {
-            System.err.println(this.getClass().getSimpleName() + ": " + msg);
-//        log.debug(msg);
-        }
+//        if (debug) {
+//            System.err.println(this.getClass().getSimpleName() + ": " + msg);
+////        log.debug(msg);
+//        }
+        log.debug(msg);
     }
 }

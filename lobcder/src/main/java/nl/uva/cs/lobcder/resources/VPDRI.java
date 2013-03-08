@@ -9,6 +9,7 @@ import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
@@ -19,16 +20,17 @@ import java.util.logging.Logger;
 import nl.uva.vlet.Global;
 import nl.uva.vlet.GlobalConfig;
 import nl.uva.vlet.data.StringUtil;
+import nl.uva.vlet.exception.VRLSyntaxException;
 import nl.uva.vlet.exception.VlException;
 import nl.uva.vlet.io.CircularStreamBufferTransferer;
 import nl.uva.vlet.util.cog.GridProxy;
-import nl.uva.vlet.vfs.VChecksum;
-import nl.uva.vlet.vfs.VFSClient;
-import nl.uva.vlet.vfs.VFile;
+import nl.uva.vlet.vfs.*;
+import nl.uva.vlet.vfs.cloud.CloudFile;
 import nl.uva.vlet.vrl.VRL;
 import nl.uva.vlet.vrs.ServerInfo;
 import nl.uva.vlet.vrs.VRS;
 import nl.uva.vlet.vrs.VRSContext;
+import org.slf4j.LoggerFactory;
 
 /**
  * A test PDRI to implement the delete get/set data methods with the VRS API
@@ -75,14 +77,18 @@ public class VPDRI implements PDRI {
     private final String password;
     private final Long storageSiteId;
     private final String baseDir = "LOBCDER-REPLICA-vTEST";//"LOBCDER-REPLICA-v2.0";
-    private final String fileURI;
+    private final String fileName;
     private int reconnectAttemts = 0;
     private final static boolean debug = true;
+    private static final org.slf4j.Logger log = LoggerFactory.getLogger( VPDRI.class );
 
-    VPDRI(String fileURI, Long storageSiteId, String resourceUrl, String username, String password) throws IOException {
+    VPDRI(String fileName, Long storageSiteId, String resourceUrl, String username, String password) throws IOException {
         try {
-            this.fileURI = fileURI;
-            vrl = new VRL(resourceUrl).appendPath(baseDir).append(fileURI);
+            this.fileName = fileName;
+            vrl = new VRL(resourceUrl).appendPath(baseDir).append(URLEncoder.encode(fileName, "UTF-8"));
+            //Encode:
+//            String strURI = vrl.toURI().toASCIIString();
+//            vrl = new VRL(strURI);
             this.storageSiteId = storageSiteId;
             this.username = username;
             this.password = password;
@@ -104,7 +110,8 @@ public class VPDRI implements PDRI {
 
         if (StringUtil.equals(authScheme, ServerInfo.GSI_AUTH)) {
             //Use the username and password to get access to MyProxy 
-            GridProxy proxy = null;
+            GridProxy proxy = new GridProxy(context);
+            String pr = context.getProxyAsString();
             context.setGridProxy(proxy);
         }
 
@@ -129,9 +136,7 @@ public class VPDRI implements PDRI {
         //patch for bug with ssh driver 
         info.setAttribute("sshKnownHostsFile", System.getProperty("user.home") + "/.ssh/known_hosts");
 //        }
-
         info.store();
-
     }
 
     @Override
@@ -143,24 +148,31 @@ public class VPDRI implements PDRI {
 
     @Override
     public InputStream getData() throws IOException {
+        InputStream in = null;
         try {
-            return ((VFile) this.vfsClient.openLocation(vrl)).getInputStream();
+            in = ((VFile) this.vfsClient.openLocation(vrl)).getInputStream();
         } catch (VlException ex) {
             throw new IOException(ex);
         }
+        return in;
     }
 
     @Override
     public void putData(InputStream in) throws IOException {
         OutputStream out = null;
+        debug("putData:");
+        VFile tmpFile = null;
         try {
-            vfsClient.mkdirs(vrl.getParent(), true);
+
+//            upload(in);
+            VDir remoteDir = vfsClient.mkdirs(vrl.getParent(), true);
             vfsClient.createFile(vrl, true);
             out = vfsClient.getFile(vrl).getOutputStream();
 
 //            OperatingSystemMXBean osMBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
-//            int size = (int) (osMBean.getFreePhysicalMemorySize() / 50);
-            CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((100 * 1024 * 1024), in, out);
+//            int size = (int) (osMBean.getFreePhysicalMemorySize() / 1000);
+//            debug("\tAlocated buff size: "+size);
+            CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((2 * 1024 * 1024), in, out);
             cBuff.startTransfer(new Long(-1));
 
             reconnectAttemts = 0;
@@ -168,7 +180,11 @@ public class VPDRI implements PDRI {
 //            final WritableByteChannel outputChannel = Channels.newChannel(out);
 //            fastCopy(inputChannel, outputChannel);
         } catch (VlException ex) {
+            if (ex.getMessage() != null) {
+                debug("\tVlException " + ex.getMessage());
+            }
             if (reconnectAttemts <= 2) {
+                debug("\treconnectAttemts " + reconnectAttemts);
                 reconnect();
                 putData(in);
             } else {
@@ -194,6 +210,13 @@ public class VPDRI implements PDRI {
             if (in != null) {
                 in.close();
             }
+            if (tmpFile != null) {
+                try {
+                    tmpFile.delete();
+                } catch (VlException ex) {
+                    throw new IOException(ex);
+                }
+            }
         }
     }
 
@@ -203,8 +226,8 @@ public class VPDRI implements PDRI {
     }
 
     @Override
-    public String getURI() {
-        return this.fileURI;
+    public String getFileName() {
+        return this.fileName;
     }
 
     @Override
@@ -244,9 +267,11 @@ public class VPDRI implements PDRI {
     }
 
     private void fastCopy(ReadableByteChannel src, WritableByteChannel dest) throws IOException {
+        debug("fastCopy:");
 //        OperatingSystemMXBean osMBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
-//        int size = (int) (osMBean.getFreePhysicalMemorySize() / 50);
-        final ByteBuffer buffer = ByteBuffer.allocateDirect(5242880);
+//        int size = (int) (osMBean.getFreePhysicalMemorySize() / 2000);
+//        debug("\talloocated size: "+size);
+        final ByteBuffer buffer = ByteBuffer.allocateDirect(1024 * 10);
         int len;
         try {
             while ((len = src.read(buffer)) != -1) {
@@ -314,6 +339,50 @@ public class VPDRI implements PDRI {
     private void debug(String msg) {
         if (debug) {
             System.err.println(this.getClass().getName() + ": " + msg);
+        }
+    }
+
+    private void upload(InputStream in) throws VlException, InterruptedException {
+        VDir remoteDir = vfsClient.mkdirs(vrl.getParent(), true);
+        VRL tmpVRL = new VRL("file:///" + System.getProperty("java.io.tmpdir"));
+        VRL tmpFileVRL = tmpVRL.append(fileName);
+        VFile tmpFile = vfsClient.createFile(tmpFileVRL, true);
+        OutputStream out = tmpFile.getOutputStream();
+        CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((1 * 1024 * 1024), in, out);
+        cBuff.startTransfer(new Long(-1));
+        VFSTransfer trans = vfsClient.asyncCopy(tmpFile, remoteDir);
+        int time = 100;
+        while (!trans.isDone()) {
+            debug("trans.getProgress(): " + trans.getProgress());
+            Thread.sleep(time);
+            time = time * 2;
+        }
+    }
+
+    @Override
+    public void replicate(PDRI source) throws IOException {
+        try {
+            VRL sourceVRL = new VRL(source.getURI());
+//            VRL destVRL = this.vrl.getParent();
+            log.debug("replicate from "+sourceVRL+" to "+vrl);
+            VFile sourceFile = this.vfsClient.openFile(sourceVRL);
+            VFile destFile = this.vfsClient.createFile(vrl, true);
+            if (destFile instanceof CloudFile) {
+                ((CloudFile) destFile).uploadFrom(sourceFile);
+            } else {
+                putData(source.getData());
+            }
+        } catch (VlException ex) {
+            throw new IOException(ex);
+        }
+    }
+
+    @Override
+    public String getURI() throws IOException {
+        try {
+            return this.vrl.toURIString();
+        } catch (VRLSyntaxException ex) {
+            throw new IOException(ex);
         }
     }
 }

@@ -12,7 +12,8 @@ import javax.xml.namespace.QName;
  */
 public class Constants {
 
-    public static final String LOBCDER_CONF_DIR = System.getProperty("user.home") + "/.lobcder-test/";
+    //public static final String LOBCDER_CONF_DIR = System.getProperty("user.home") + "/.lobcder-test/";
+    public static final Long CACHE_STORAGE_SITE_ID = Long.valueOf(1);
     public static final String VPH_USERNAMES = "vph.users";
     public static final String STORAGE_SITE_USERNAME = "storage.site.username";
     public static final String STORAGE_SITE_PASSWORD = "storage.site.password";
@@ -30,7 +31,8 @@ public class Constants {
     public static final QName DESCRIPTION_PROP_NAME = new QName("custom:", "description");
     public static final QName DAV_CURRENT_USER_PRIVILAGE_SET_PROP_NAME = new QName("current-user-privilege-set");
     public static final QName DAV_ACL_PROP_NAME = new QName("DAV:", "acl");
-    public static final QName[] PROP_NAMES = new QName[]{DATA_DIST_PROP_NAME, DRI_SUPERVISED_PROP_NAME, DRI_CHECKSUM_PROP_NAME, DRI_LAST_VALIDATION_DATE_PROP_NAME,DESCRIPTION_PROP_NAME};
+    public static final QName DATA_LOC_PREF_NAME = new QName("custom:", "data-location-preference");
+    public static final QName[] PROP_NAMES = new QName[]{DATA_DIST_PROP_NAME, DRI_SUPERVISED_PROP_NAME, DRI_CHECKSUM_PROP_NAME, DRI_LAST_VALIDATION_DATE_PROP_NAME,DESCRIPTION_PROP_NAME,DATA_LOC_PREF_NAME};
     public static final int BUF_SIZE = 2097152;
     public static Long LOCK_TIME = new Long(60000);
 }
