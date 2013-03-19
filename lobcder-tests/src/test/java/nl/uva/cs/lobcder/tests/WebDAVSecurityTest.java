@@ -262,13 +262,17 @@ public class WebDAVSecurityTest {
         };
 
         Principal principal = Principal.getHrefPrincipal(username1);
-        System.out.println("principal: " + principal.getHref());
-        System.out.println("principal: " + principal.getPropertyName());
 
-        Ace ace = AclProperty.createGrantAce(principal,
+        Ace ace1 = AclProperty.createGrantAce(principal,
                 privs, false, false, null);
+        
+        
 
-        AclMethod acl = new AclMethod(testFileURI1, new AclProperty(new Ace[]{ace}));
+        Principal principal2 = Principal.getHrefPrincipal("someUser");
+
+        Ace ace2 = AclProperty.createDenyAce(principal2, privs, true, true, null);
+
+        AclMethod acl = new AclMethod(testFileURI1, new AclProperty(new Ace[]{ace1,ace2}));
         Header[] headers = acl.getRequestHeaders();
         for (Header h : headers) {
             System.out.println("getRequestHeaders: " + h.getName() + " : " + h.getValue());
