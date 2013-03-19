@@ -20,20 +20,30 @@ import com.bradmcevoy.io.StreamUtils;
 import com.bradmcevoy.io.WritingException;
 import com.ettrema.http.AccessControlledResource;
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 import java.util.logging.Level;
+import javax.xml.bind.JAXB;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementWrapper;
+import javax.xml.bind.annotation.XmlElements;
+import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.namespace.QName;
+import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
+import javax.xml.stream.events.XMLEvent;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -105,11 +115,6 @@ public class ACLHandler implements Handler {
             }
             handlerHelper.checkExpects(responseHandler, request, response);
             AccessControlledResource resource = (AccessControlledResource) r;
-            Map<String, String> headers = request.getHeaders();
-            Set<String> keys = headers.keySet();
-            for (String k : keys) {
-                System.err.println(k + " : " + headers.get(keys));
-            }
             in = request.getInputStream();
             ParseResult res = requestParser.getRequestedFields(in);
 
@@ -134,128 +139,105 @@ public class ACLHandler implements Handler {
 
         public ParseResult getRequestedFields(InputStream in) {
             try {
-                ByteArrayOutputStream bout = new ByteArrayOutputStream();
-                StreamUtils.readTo(in, bout, false, true);
-                byte[] arr = bout.toByteArray();
-                return parseContent(arr);
-//                return parseContent(in);
+//                ByteArrayOutputStream bout = new ByteArrayOutputStream();
+//                StreamUtils.readTo(in, bout, false, true);
+//                byte[] arr = bout.toByteArray();
+//                return parseContent(arr);
+                return parseContent(in);
             } catch (Exception ex) {
                 throw new RuntimeException(ex);
             }
         }
 
-        private ParseResult parseContent(byte[] arr) throws IOException, SAXException {
-            if (arr.length > 0) {
-                ByteArrayInputStream bin = new ByteArrayInputStream(arr);
-                XMLReader reader = XMLReaderFactory.createXMLReader();
-                DefaultHandler handler = new DefaultHandler();
-                reader.setContentHandler(handler);
-                reader.parse(new InputSource(bin));
-                return new ParseResult(null, null);
-            } else {
-                return new ParseResult(new HashMap<QName, String>(), new HashSet<QName>());
-            }
-        }
-
         private ParseResult parseContent(InputStream in) throws XMLStreamException {
-            XMLInputFactory factory = XMLInputFactory.newInstance();
-            XMLStreamReader reader = factory.createXMLStreamReader(in);
+//            XMLInputFactory factory = XMLInputFactory.newInstance();
+//            XMLEventReader reader = factory.createXMLEventReader(in);
 
-            while (reader.hasNext()) {
+//            while (reader.hasNext()) {
+//                XMLEvent event = reader.nextEvent();
+//                System.err.println(event);
+//            }
 
-                System.err.println("name: " + reader.getLocalName() + " getElementText: " + reader.getElementText() + " text: " + reader.getText() + " getName: " + reader.getName());
+            ACL test = JAXB.unmarshal(in, ACL.class);
+            Iterator<ACE> iter = test.ace.iterator();
+            while (iter.hasNext()) {
+                ACE pr = iter.next();
+                if (pr.principal != null) {
+                    System.err.println("principal: " + pr.principal);
+                    System.err.println("principal.href: \t" + pr.principal.href);
+                }
 
-//                System.err.println(reader.getText());
-                reader.next();
+                if (pr.grant != null) {
+                    System.err.println("grant: " + pr.grant);
+
+//                    System.err.println("grant.privilege: \t" + pr.grant.privilege);
+                    Iterator<Privilege> ii = pr.grant.privilege.iterator();
+                    while (ii.hasNext()) {
+                        Privilege privi = ii.next();
+                        System.err.println("grant.privilege.read: \t\t" + privi.read);
+                        System.err.println("grant.privilege.write: \t\t" + privi.write);
+                    }
+                }
+
+                if (pr.deny != null) {
+//                    System.err.println("deny: " + pr.deny);
+
+//                    System.err.println("deny.privilege: \t" + pr.deny.privilege);
+                    Iterator<Privilege> ii = pr.deny.privilege.iterator();
+                    while (ii.hasNext()) {
+                        Privilege privi = ii.next();
+                        System.err.println("deny.privilege.read: \t\t" + privi.read);
+                        System.err.println("deny.privilege.write: \t\t" + privi.write);
+                    }
+                }
+
+
             }
 
-            return null;
+            return new ParseResult(null, null);
         }
     }
 
-    private static class ACLSaxHandler extends DefaultHandler {
+    @XmlRootElement(namespace = "DAV:")
+    public static class ACL {
 
-        private final static Logger log = LoggerFactory.getLogger(PropPatchSaxHandler.class);
-        private Stack<String> elementPath = new Stack<String>();
-        private Map<QName, String> attributesCurrent; // will switch between the following
-        private Map<QName, String> attributesSet = new LinkedHashMap<QName, String>();
-        private Map<QName, String> attributesRemove = new LinkedHashMap<QName, String>();
-        private StringBuilder sb = new StringBuilder();
-        private boolean inProp;
+        @XmlElement(name = "ace", namespace = "DAV:")
+        public Set<ACE> ace;
+    }
 
-        @Override
-        public void startElement(String uri, String localName, String name, Attributes attributes) throws SAXException {
-            if (inProp) {
-                sb.append("<" + localName + ">");
-            }
-            for (String s : elementPath) {
-                System.err.println(s);
-            }
-            if (elementPath.size() > 0) {
-                if (attributesCurrent != null) {
-                    if (elementPath.peek().endsWith("prop")) {
-                        inProp = true;
-                    }
-                } else {
-                    if (elementPath.peek().endsWith("set")) {
-                        attributesCurrent = attributesSet;
-                    }
-                    if (elementPath.peek().endsWith("remove")) {
-                        attributesCurrent = attributesRemove;
-                    }
-                }
+    private static class ACE {
 
-            }
-            elementPath.push(localName);
-            super.startElement(uri, localName, name, attributes);
-        }
+        @XmlElement(name = "principal", namespace = "DAV:")
+        public Principal principal;
+        @XmlElement(name = "grant", namespace = "DAV:")
+        public Grant grant;
+        @XmlElement(name = "deny", namespace = "DAV:")
+        public Deny deny;
+    }
 
-        @Override
-        public void characters(char[] ch, int start, int length) throws SAXException {
-            if (inProp) {
-                sb.append(ch, start, length);
-            }
-        }
+    private static class Principal {
 
-        @Override
-        public void endElement(String uri, String localName, String name) throws SAXException {
-            elementPath.pop();
+        @XmlElement(name = "href", namespace = "DAV:")
+        public String href;
+    }
 
-            for (String s : elementPath) {
-                System.err.println(s);
-            }
+    private static class Grant {
 
-            if (elementPath.size() > 0) {
-                if (elementPath.peek().endsWith("prop")) {
-                    if (sb != null) {
-                        String s = sb.toString().trim();
-                        QName qname = new QName(uri, localName);
-                        attributesCurrent.put(qname, s);
-                    }
-                    sb = new StringBuilder();
-                } else {
-                    if (inProp) {
-                        sb.append("</" + localName + ">");
-                    }
+        @XmlElement(name = "privilege", namespace = "DAV:")
+        public Set<Privilege> privilege;
+    }
 
-                    if (elementPath.peek().endsWith("set")) {
-                        attributesCurrent = null;
-                    } else if (elementPath.peek().endsWith("remove")) {
-                        attributesCurrent = null;
-                    }
-                }
+    private static class Deny {
 
-            }
+        @XmlElement(name = "privilege", namespace = "DAV:")
+        public Set<Privilege> privilege;
+    }
 
-            super.endElement(uri, localName, name);
-        }
+    private static class Privilege {
 
-        public Map<QName, String> getAttributesToSet() {
-            return attributesSet;
-        }
-
-        public Map<QName, String> getAttributesToRemove() {
-            return attributesRemove;
-        }
+        @XmlElement(name = "read", namespace = "DAV:")
+        public String read;
+        @XmlElement(name = "write", namespace = "DAV:")
+        public String write;
     }
 }
