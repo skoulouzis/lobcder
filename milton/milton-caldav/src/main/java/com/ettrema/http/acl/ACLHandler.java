@@ -10,50 +10,24 @@ import com.bradmcevoy.http.Response;
 import com.bradmcevoy.http.exceptions.BadRequestException;
 import com.bradmcevoy.http.exceptions.ConflictException;
 import com.bradmcevoy.http.exceptions.NotAuthorizedException;
-import com.bradmcevoy.http.webdav.DefaultPropPatchParser;
-import com.bradmcevoy.http.webdav.PropPatchRequestParser;
-import com.bradmcevoy.http.webdav.PropPatchRequestParser.ParseResult;
-import com.bradmcevoy.http.webdav.PropPatchSaxHandler;
 import com.bradmcevoy.http.webdav.WebDavResponseHandler;
-import com.bradmcevoy.io.ReadingException;
-import com.bradmcevoy.io.StreamUtils;
-import com.bradmcevoy.io.WritingException;
 import com.ettrema.http.AccessControlledResource;
 import com.ettrema.http.AccessControlledResource.Priviledge;
-import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Stack;
 import java.util.logging.Level;
 import javax.xml.bind.JAXB;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElementWrapper;
-import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.namespace.QName;
-import javax.xml.stream.XMLEventReader;
-import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamReader;
-import javax.xml.stream.events.XMLEvent;
-import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.xml.sax.Attributes;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-import org.xml.sax.XMLReader;
-import org.xml.sax.helpers.DefaultHandler;
-import org.xml.sax.helpers.XMLReaderFactory;
 
 /**
  *
@@ -124,17 +98,18 @@ public class ACLHandler implements Handler {
             ACL acl = requestParser.parseContent(in);
             Map<com.ettrema.http.acl.Principal, List<Priviledge>> aclMap = new HashMap<com.ettrema.http.acl.Principal, List<Priviledge>>();
             Iterator<ACE> iter = acl.ace.iterator();
+            com.ettrema.http.acl.Principal ettremaPrincipal = null;
             while (iter.hasNext()) {
                 ACE pr = iter.next();
                 if (pr.principal != null) {
 //                    System.err.println("principal: " + pr.principal);
 //                    System.err.println("principal.href: \t" + pr.principal.href);
-                    Principal ettremaPrincipal = new Principal();
-                    ettremaPrincipal.href = pr.principal.href;
+                    ettremaPrincipal = DavPrincipals.All;
+//                    ettremaPrincipal.
                 }
                 List<Priviledge> priviledges = new ArrayList<Priviledge>();
                 if (pr.grant != null) {
-                    System.err.println("grant: " + pr.grant);
+//                    System.err.println("grant: " + pr.grant);
 
 //                    System.err.println("grant.privilege: \t" + pr.grant.privilege);
                     Iterator<Privilege> ii = pr.grant.privilege.iterator();
@@ -168,7 +143,7 @@ public class ACLHandler implements Handler {
 //                        System.err.println("deny.privilege.write: \t\t" + privi.write);
                     }
                 }
-
+                aclMap.put(ettremaPrincipal, priviledges);
 
             }
             resource.setAccessControlList(aclMap);
