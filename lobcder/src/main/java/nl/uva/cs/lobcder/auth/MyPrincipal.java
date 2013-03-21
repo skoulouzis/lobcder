@@ -17,26 +17,8 @@ public class MyPrincipal {
     private Set<String> roles;
 
     public MyPrincipal(String userId, Set<String> roles) {
-//        try {
-            this.userId = userId;
-            this.roles = roles;
-
-
-//            //This is here becuse at the moment we don't have any roles 
-//            File f = new File(Constants.LOBCDER_CONF_DIR + "lob-users.prop");
-//            Properties props = PropertiesLoader.getProperties(f);
-//            for (int i = 0; i < 15; i++) {
-//                String user = props.getProperty("username" + i);
-//                if (user != null && user.equals(userId)) {
-//                    String[] userRoles = props.getProperty("roles" + i).split(",");
-//                    this.roles.addAll(Arrays.asList(userRoles));
-//                }
-//            }
-//        } catch (FileNotFoundException ex) {
-//            Logger.getLogger(MyPrincipal.class.getName()).log(Level.SEVERE, null, ex);
-//        } catch (IOException ex) {
-//            Logger.getLogger(MyPrincipal.class.getName()).log(Level.SEVERE, null, ex);
-//        }
+        this.userId = userId;
+        this.roles = roles;
     }
 
     public String getUserId() {
@@ -66,7 +48,7 @@ public class MyPrincipal {
             return true;
         }
         Set<String> r1 = new HashSet<String>(roles);
-        if (r1.contains("admin")){
+        if (r1.contains("admin")) {
             return true;
         }
         r1.retainAll(p.getRead());
@@ -78,7 +60,7 @@ public class MyPrincipal {
             return true;
         }
         Set<String> r1 = new HashSet<String>(roles);
-        if (r1.contains("admin")){
+        if (r1.contains("admin")) {
             return true;
         }
         r1.retainAll(p.getWrite());

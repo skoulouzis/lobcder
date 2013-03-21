@@ -355,8 +355,12 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
             List<Priviledge> davPerm = map.get(p);
             MyPrincipal princpal = new MyPrincipal(p.getIdenitifer().getValue(), null);
 
-//            Permissions perm = new Permissions(princpal);
-//            getLogicalData().setPermissions(perm);
+            Permissions perm = new Permissions(princpal);
+            perm.setRead(null);
+            perm.setWrite(null);
+            getLogicalData().setPermissions(perm);
+            
+            
         }
     }
 
