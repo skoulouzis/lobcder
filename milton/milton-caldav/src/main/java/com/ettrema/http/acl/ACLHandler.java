@@ -19,6 +19,7 @@ import com.bradmcevoy.io.ReadingException;
 import com.bradmcevoy.io.StreamUtils;
 import com.bradmcevoy.io.WritingException;
 import com.ettrema.http.AccessControlledResource;
+import com.ettrema.http.AccessControlledResource.Priviledge;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -89,8 +90,12 @@ public class ACLHandler implements Handler {
         // Find a resource if it exists
         Resource r = httpManager.getResourceFactory().getResource(host, url);
         if (r != null) {
-            log.debug("locking existing resource: " + r.getName());
-            processExistingResource(httpManager, request, response, r);
+            try {
+                log.debug("locking existing resource: " + r.getName());
+                processExistingResource(httpManager, request, response, r);
+            } catch (XMLStreamException ex) {
+                throw new BadRequestException(r);
+            }
         } else {
             log.debug("lock target doesnt exist, attempting lock null..");
             processNonExistingResource(httpManager, request, response, host, url);
@@ -102,7 +107,7 @@ public class ACLHandler implements Handler {
         return (res instanceof AccessControlledResource);
     }
 
-    private void processExistingResource(HttpManager httpManager, Request request, Response response, Resource r) {
+    private void processExistingResource(HttpManager httpManager, Request request, Response response, Resource r) throws XMLStreamException {
         InputStream in = null;
         try {
             if (handlerHelper.isNotCompatible(r, request.getMethod()) || !isCompatible(r)) {
@@ -116,11 +121,61 @@ public class ACLHandler implements Handler {
             handlerHelper.checkExpects(responseHandler, request, response);
             AccessControlledResource resource = (AccessControlledResource) r;
             in = request.getInputStream();
-            ParseResult res = requestParser.getRequestedFields(in);
+            ACL acl = requestParser.parseContent(in);
+            Map<com.ettrema.http.acl.Principal, List<Priviledge>> aclMap = new HashMap<com.ettrema.http.acl.Principal, List<Priviledge>>();
+            Iterator<ACE> iter = acl.ace.iterator();
+            while (iter.hasNext()) {
+                ACE pr = iter.next();
+                if (pr.principal != null) {
+//                    System.err.println("principal: " + pr.principal);
+//                    System.err.println("principal.href: \t" + pr.principal.href);
+                    Principal ettremaPrincipal = new Principal();
+                    ettremaPrincipal.href = pr.principal.href;
+                }
+                List<Priviledge> priviledges = new ArrayList<Priviledge>();
+                if (pr.grant != null) {
+                    System.err.println("grant: " + pr.grant);
 
+//                    System.err.println("grant.privilege: \t" + pr.grant.privilege);
+                    Iterator<Privilege> ii = pr.grant.privilege.iterator();
+                    while (ii.hasNext()) {
+                        Privilege privi = ii.next();
+                        if (privi.read != null) {
+                            priviledges.add(Priviledge.READ);
+                        }
+                        if (privi.write != null) {
+                            priviledges.add(Priviledge.WRITE);
+                        }
+//                        System.err.println("grant.privilege.read: \t\t" + privi.read);
+//                        System.err.println("grant.privilege.write: \t\t" + privi.write);
+                    }
+                }
+
+                if (pr.deny != null) {
+//                    System.err.println("deny: " + pr.deny);
+
+//                    System.err.println("deny.privilege: \t" + pr.deny.privilege);
+                    Iterator<Privilege> ii = pr.deny.privilege.iterator();
+                    while (ii.hasNext()) {
+                        Privilege privi = ii.next();
+                        if (privi.read != null) {
+                            priviledges.add(Priviledge.DENY_READ);
+                        }
+                        if (privi.write != null) {
+                            priviledges.add(Priviledge.DENY_WRITE);
+                        }
+//                        System.err.println("deny.privilege.read: \t\t" + privi.read);
+//                        System.err.println("deny.privilege.write: \t\t" + privi.write);
+                    }
+                }
+
+
+            }
+            resource.setAccessControlList(aclMap);
             response.setContentTypeHeader(Response.XML);
             response.setStatus(Response.Status.SC_OK);
         } catch (IOException ex) {
+            response.setStatus(Response.Status.SC_INTERNAL_SERVER_ERROR);
             java.util.logging.Logger.getLogger(ACLHandler.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
             try {
@@ -137,64 +192,9 @@ public class ACLHandler implements Handler {
 
     private static class ACLRequestParser {
 
-        public ParseResult getRequestedFields(InputStream in) {
-            try {
-//                ByteArrayOutputStream bout = new ByteArrayOutputStream();
-//                StreamUtils.readTo(in, bout, false, true);
-//                byte[] arr = bout.toByteArray();
-//                return parseContent(arr);
-                return parseContent(in);
-            } catch (Exception ex) {
-                throw new RuntimeException(ex);
-            }
-        }
-
-        private ParseResult parseContent(InputStream in) throws XMLStreamException {
-//            XMLInputFactory factory = XMLInputFactory.newInstance();
-//            XMLEventReader reader = factory.createXMLEventReader(in);
-
-//            while (reader.hasNext()) {
-//                XMLEvent event = reader.nextEvent();
-//                System.err.println(event);
-//            }
-
-            ACL test = JAXB.unmarshal(in, ACL.class);
-            Iterator<ACE> iter = test.ace.iterator();
-            while (iter.hasNext()) {
-                ACE pr = iter.next();
-                if (pr.principal != null) {
-                    System.err.println("principal: " + pr.principal);
-                    System.err.println("principal.href: \t" + pr.principal.href);
-                }
-
-                if (pr.grant != null) {
-                    System.err.println("grant: " + pr.grant);
-
-//                    System.err.println("grant.privilege: \t" + pr.grant.privilege);
-                    Iterator<Privilege> ii = pr.grant.privilege.iterator();
-                    while (ii.hasNext()) {
-                        Privilege privi = ii.next();
-                        System.err.println("grant.privilege.read: \t\t" + privi.read);
-                        System.err.println("grant.privilege.write: \t\t" + privi.write);
-                    }
-                }
-
-                if (pr.deny != null) {
-//                    System.err.println("deny: " + pr.deny);
-
-//                    System.err.println("deny.privilege: \t" + pr.deny.privilege);
-                    Iterator<Privilege> ii = pr.deny.privilege.iterator();
-                    while (ii.hasNext()) {
-                        Privilege privi = ii.next();
-                        System.err.println("deny.privilege.read: \t\t" + privi.read);
-                        System.err.println("deny.privilege.write: \t\t" + privi.write);
-                    }
-                }
-
-
-            }
-
-            return new ParseResult(null, null);
+        public ACL parseContent(InputStream in) throws XMLStreamException {
+            ACL acl = JAXB.unmarshal(in, ACL.class);
+            return acl;
         }
     }
 
