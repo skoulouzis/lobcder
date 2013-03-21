@@ -352,15 +352,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
         }
         Set<Principal> principals = map.keySet();
         for (Principal p : principals) {
-            List<Priviledge> davPerm = map.get(p);
-            MyPrincipal princpal = new MyPrincipal(p.getIdenitifer().getValue(), null);
-
-            Permissions perm = new Permissions(princpal);
-            perm.setRead(null);
-            perm.setWrite(null);
-            getLogicalData().setPermissions(perm);
-            
-            
+            List<Priviledge> davPerm = map.get(p);            
         }
     }
 

@@ -4,14 +4,17 @@
  */
 package nl.uva.cs.lobcder.auth;
 
+import com.bradmcevoy.http.webdav.WebDavProtocol;
+import com.ettrema.http.acl.Principal;
 import java.util.HashSet;
 import java.util.Set;
+import javax.xml.namespace.QName;
 
 /**
  *
  * @author dvasunin
  */
-public class MyPrincipal {
+public class MyPrincipal implements Principal{
 
     private String userId;
     private Set<String> roles;
@@ -65,5 +68,22 @@ public class MyPrincipal {
         }
         r1.retainAll(p.getWrite());
         return !r1.isEmpty();
+    }
+
+    @Override
+    public PrincipleId getIdenitifer() {
+        return new PrincipleId() {
+
+            @Override
+            public QName getIdType() {
+                return new QName( WebDavProtocol.NS_DAV.getName(), userId);
+            }
+
+            @Override
+            public String getValue() {
+                return userId;
+            }
+        };
+        
     }
 }
