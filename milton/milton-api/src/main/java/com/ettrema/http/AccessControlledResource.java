@@ -55,7 +55,9 @@ public interface AccessControlledResource extends Resource {
     public enum Priviledge {
 
         READ,
+		DENY_READ,
         WRITE,
+		DENY_WRITE,
         READ_ACL,
         WRITE_ACL,
         UNLOCK,
