@@ -1,0 +1,4 @@
+1. on copyEntry in JDBCatalogue copyFolderContentProc stored procedure does not copy all fields due to new columns
+    in the table ldata_table
+
+2. check copy and move: what happens if an entry with same name exists in target directory?
