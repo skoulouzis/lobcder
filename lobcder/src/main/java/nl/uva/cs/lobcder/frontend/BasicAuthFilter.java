@@ -1,34 +1,26 @@
 package nl.uva.cs.lobcder.frontend;
 
-import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.naming.InitialContext;
+import lombok.extern.java.Log;
+import nl.uva.cs.lobcder.auth.AuthI;
+import nl.uva.cs.lobcder.auth.LocalDbAuth;
+import nl.uva.cs.lobcder.auth.MyPrincipal;
+import org.apache.commons.codec.binary.Base64;
 
-//import javax.annotation.Nonnull;
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.FilterConfig;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
+import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import nl.uva.cs.lobcder.auth.AuthI;
-import nl.uva.cs.lobcder.auth.MyAuthTest;
-import nl.uva.cs.lobcder.auth.MyPrincipal;
+import java.io.IOException;
+import java.util.logging.Level;
 
-import org.apache.commons.codec.binary.Base64;
-//import org.apache.commons.lang.StringUtils;
-
-//import com.google.common.base.Charsets;
 /**
- * A very simple Servlet Filter for HTTP Basic Auth. Only supports exactly one
- * user with a password. Please note, HTTP Basic Auth is not encrypted and hence
- * unsafe!
+ * A very simple Servlet Filter for HTTP Basic Auth.
  * 
 * @author Timo B. Huebel (me@tbh.name) (initial creation)
  */
+
+@Log
 public class BasicAuthFilter implements Filter {
 
     private String _realm;
@@ -57,7 +49,12 @@ public class BasicAuthFilter implements Filter {
                 MyPrincipal principal = auth.checkToken(token);
                 //Try the local db 
                 if (principal == null) {
-                    MyAuthTest authT = new MyAuthTest();
+                    LocalDbAuth authT = null;
+                    try {
+                        authT = new LocalDbAuth();
+                    } catch (NamingException e) {
+                        throw new ServletException(e);
+                    }
                     principal = authT.checkToken(token);
                 }
                 if(principal != null) {
@@ -78,13 +75,10 @@ public class BasicAuthFilter implements Filter {
         try {
             String jndiName = "bean/auth";
             javax.naming.Context ctx = new InitialContext();
-            if (ctx == null) {
-                throw new Exception("JNDI could not create InitalContext ");
-            }
             javax.naming.Context envContext = (javax.naming.Context) ctx.lookup("java:/comp/env");
             auth = (AuthI) envContext.lookup(jndiName);
         } catch (Exception ex) {
-            Logger.getLogger(BasicAuthFilter.class.getName()).log(Level.SEVERE, null, ex);
+            log.log(Level.SEVERE, null, ex);
         }
     }
 }

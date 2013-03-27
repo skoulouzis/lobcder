@@ -4,15 +4,18 @@
  */
 package nl.uva.cs.lobcder.auth;
 
+import lombok.Data;
+
+import javax.xml.bind.annotation.XmlRootElement;
 import java.util.HashSet;
 import java.util.Set;
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  *
  * @author dvasunin
  */
 
+@Data
 @XmlRootElement
 public class Permissions {
     private Set<String> read = new HashSet<String>();
@@ -26,23 +29,7 @@ public class Permissions {
         owner = mp.getUserId();
         read.addAll(mp.getRoles());
     }
-    
-    public String getOwner(){
-        return owner;
-    }
-    
-    public void setOwner(String owner) {
-        this.owner = owner;
-    }    
-    
-    public Set<String> getRead() {
-        return new HashSet<String>(read);
-    } 
-    
-    public void setRead(Set<String> read) {
-        this.read = read;
-    }
-       
+
     public String getReadStr(){
         StringBuilder sb = new StringBuilder();
         boolean first = true;
@@ -55,15 +42,6 @@ public class Permissions {
             }
         }
         return sb.toString();
-    }
-    
- 
-    public Set<String> getWrite(){
-        return new HashSet<String>(write);
-    }
-    
-    public void setWrite(Set<String> write) {
-        this.write = write;
     }
     
     public String getWriteStr(){

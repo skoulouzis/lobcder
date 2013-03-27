@@ -18,11 +18,7 @@ public class PDRIFactory {
         return factory;
     }
 
-    public PDRI createInstance(String url, Long storageSiteId, String resourceUrl, String username, String password) throws IOException {
-//        if (resourceUrl.startsWith("file://")) {
-//            return new SimplePDRI(storageSiteId, url);
-//        } else {
-            return new VPDRI(url, storageSiteId, resourceUrl, username, password);
-//        }
+    public PDRI createInstance(PDRIDescr descr) throws IOException {
+        return new VPDRI(descr.getName(), descr.getStorageSiteId(), descr.getResourceUrl(), descr.getUsername(), descr.getPassword());
     }
 }

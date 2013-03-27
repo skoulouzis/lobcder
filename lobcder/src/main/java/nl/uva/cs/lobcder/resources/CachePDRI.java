@@ -4,6 +4,9 @@
  */
 package nl.uva.cs.lobcder.resources;
 
+import nl.uva.cs.lobcder.util.CatalogueHelper;
+import nl.uva.cs.lobcder.util.Constants;
+
 import java.io.*;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -14,9 +17,6 @@ import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import nl.uva.cs.lobcder.catalogue.CatalogueException;
-import nl.uva.cs.lobcder.util.CatalogueHelper;
-import nl.uva.cs.lobcder.util.Constants;
 
 /**
  *
@@ -28,16 +28,7 @@ public class CachePDRI implements PDRI {
     private final static String baseLocation;
 
     static {
-        String bl = null;
-        try {
-            bl = ch.getCatalogue().getStorageSitesById(Constants.CACHE_STORAGE_SITE_ID, null).getResourceURI().replaceFirst("^file://[aA-zZ.]*/", "/");
-        } catch (CatalogueException ex) {
-            Logger.getLogger(CachePDRI.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        if (!bl.endsWith("/")) {
-            bl += "/";
-        }
-        baseLocation = bl + "LOBCDER-REPLICA-vTEST/";
+        baseLocation ="/TMP/LOBCDER-REPLICA-vTEST/";
     }
     final private String file_name;
     final private Long ssid;

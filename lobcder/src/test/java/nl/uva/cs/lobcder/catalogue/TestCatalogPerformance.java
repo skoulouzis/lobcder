@@ -109,7 +109,7 @@
 //        //Query N times for the entry and measure time
 //        for (int i = 0; i < N; i++) {
 //            double start = System.currentTimeMillis();
-//            ILogicalData res = instance.getResourceEntryByLDRI(path);
+//            ILogicalData res = instance.getLogicalDataByPath(path);
 //            double end = System.currentTimeMillis();
 //            total += (end - start);
 //        }
@@ -123,7 +123,7 @@
 //        //Query N times for the entry and measure time
 //        for (int i = 0; i < N; i++) {
 //            double start = System.currentTimeMillis();
-//            ILogicalData res = instance.getResourceEntryByLDRI(path);
+//            ILogicalData res = instance.getLogicalDataByPath(path);
 //            double end = System.currentTimeMillis();
 //            total += (end - start);
 //        }

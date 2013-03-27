@@ -15,10 +15,12 @@ public class MyPrincipal {
 
     private String userId;
     private Set<String> roles;
+    private boolean admin;
 
     public MyPrincipal(String userId, Set<String> roles) {
         this.userId = userId;
         this.roles = roles;
+        admin = roles.contains("admin");
     }
 
     public String getUserId() {
@@ -47,10 +49,10 @@ public class MyPrincipal {
         if (p.getOwner().equals(userId)) {
             return true;
         }
-        Set<String> r1 = new HashSet<String>(roles);
-        if (r1.contains("admin")){
+        if (isAdmin()){
             return true;
         }
+        Set<String> r1 = new HashSet<String>(roles);
         r1.retainAll(p.getRead());
         return !r1.isEmpty();
     }
@@ -59,11 +61,15 @@ public class MyPrincipal {
         if (p.getOwner().equals(userId)) {
             return true;
         }
-        Set<String> r1 = new HashSet<String>(roles);
-        if (r1.contains("admin")){
+        if (isAdmin()){
             return true;
         }
+        Set<String> r1 = new HashSet<String>(roles);
         r1.retainAll(p.getWrite());
         return !r1.isEmpty();
+    }
+
+    public boolean isAdmin() {
+        return admin;
     }
 }

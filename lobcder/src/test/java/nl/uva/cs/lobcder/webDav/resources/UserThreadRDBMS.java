@@ -166,7 +166,7 @@
 //            debug("testUpdateResourceEntry");
 //            LogicalData newEntry = new LogicalData(Path.path("testFileThread" + getName()), Constants.LOGICAL_FILE);
 //            instance.registerResourceEntry(newEntry);
-//            loaded = instance.getResourceEntryByLDRI(newEntry.getLDRI());
+//            loaded = instance.getLogicalDataByPath(newEntry.getLDRI());
 //            boolean same = compareEntries(newEntry, loaded);
 //            assertTrue(same);
 //
@@ -191,7 +191,7 @@
 ////            newEntry.setStorageSites(sites);
 //
 //            instance.updateResourceEntry(newEntry);
-//            loaded = instance.getResourceEntryByLDRI(newEntry.getLDRI());
+//            loaded = instance.getLogicalDataByPath(newEntry.getLDRI());
 //            same = compareEntries(newEntry, loaded);
 //            assertTrue(same);
 //
@@ -234,18 +234,18 @@
 //        debug("Unregister: " + child.getLDRI() + " " + child.getUID());
 //        instance.registerResourceEntry(child);
 //
-//        ILogicalData loadedChildEntry = instance.getResourceEntryByLDRI(childPath);
+//        ILogicalData loadedChildEntry = instance.getLogicalDataByPath(childPath);
 //        boolean theSame = compareEntries(child, loadedChildEntry);
 //        debug("Loaded: " + loadedChildEntry.getLDRI() + " " + loadedChildEntry.getUID());
 //        assertTrue(theSame);
 //
 //        debug("Unregister: " + child.getLDRI() + " " + child.getUID());
 //        instance.unregisterResourceEntry(child);
-//        ILogicalData result = instance.getResourceEntryByLDRI(childPath);
+//        ILogicalData result = instance.getLogicalDataByPath(childPath);
 //        assertNull(result);
 //
 //        instance.unregisterResourceEntry(parent);
-//        result = instance.getResourceEntryByLDRI(parentPath);
+//        result = instance.getLogicalDataByPath(parentPath);
 //        assertNull(result);
 //    }
 //
@@ -270,7 +270,7 @@
 //
 //            //When registering the entry, the storage site is set to null
 //            instance.registerResourceEntry(lParent);
-//            lParent = instance.getResourceEntryByLDRI(parentPath);
+//            lParent = instance.getLogicalDataByPath(parentPath);
 //
 //            theSites = lParent.getStorageSites();
 //

@@ -4,7 +4,8 @@
  */
 package nl.uva.cs.lobcder.util;
 
-import com.bradmcevoy.common.Path;
+
+import io.milton.common.Path;
 
 /**
  *

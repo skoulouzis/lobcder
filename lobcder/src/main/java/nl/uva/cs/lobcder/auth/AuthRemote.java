@@ -6,24 +6,20 @@ package nl.uva.cs.lobcder.auth;
 
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.GenericType;
-import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.json.JSONConfiguration;
 import com.sun.jersey.client.urlconnection.HTTPSProperties;
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
+
+import javax.naming.InitialContext;
+import javax.net.ssl.*;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.naming.InitialContext;
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSession;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
 /**
  *
@@ -87,6 +83,7 @@ public class AuthRemote implements AuthI {
                 User u = client.resource(getServiceURL() + token).get(new GenericType<User>() {
                 });
                 res = new MyPrincipal(u.username, new HashSet(Arrays.asList(u.role)));
+                res.getRoles().add("other");
             }
             if (pc != null) {
                 pc.putPrincipal(token, res);

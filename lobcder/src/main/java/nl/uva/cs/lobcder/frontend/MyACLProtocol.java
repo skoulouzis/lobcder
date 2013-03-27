@@ -4,30 +4,29 @@
  */
 package nl.uva.cs.lobcder.frontend;
 
-import com.bradmcevoy.http.*;
-import com.bradmcevoy.http.exceptions.NotAuthorizedException;
-import com.bradmcevoy.http.http11.CustomPostHandler;
-import com.bradmcevoy.http.values.HrefList;
-import com.bradmcevoy.http.values.WrappedHref;
-import com.bradmcevoy.http.webdav.PropertyMap;
-import com.bradmcevoy.http.webdav.PropertyMap.StandardProperty;
-import com.bradmcevoy.http.webdav.PropertyMap.WritableStandardProperty;
-import com.bradmcevoy.http.webdav.WebDavProtocol;
-import com.bradmcevoy.property.PropertySource;
-import com.ettrema.http.AccessControlledResource;
-import com.ettrema.http.AccessControlledResource.Priviledge;
-import com.ettrema.http.acl.Principal;
-import com.ettrema.http.acl.PriviledgeList;
-import com.ettrema.http.caldav.PrincipalSearchPropertySetReport;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import javax.xml.namespace.QName;
+
+import io.milton.http.Auth;
+import io.milton.http.Handler;
+import io.milton.http.HttpExtension;
+import io.milton.http.HttpManager;
+import io.milton.http.exceptions.NotAuthorizedException;
+import io.milton.http.http11.CustomPostHandler;
+import io.milton.http.values.HrefList;
+import io.milton.http.values.WrappedHref;
+import io.milton.http.webdav.PropertyMap;
+import io.milton.http.webdav.WebDavProtocol;
+import io.milton.principal.Principal;
+import io.milton.principal.PriviledgeList;
+import io.milton.property.PropertySource;
+import io.milton.resource.AccessControlledResource;
+import io.milton.resource.PropFindableResource;
+import io.milton.resource.Resource;
 import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.cs.lobcder.webDav.resources.WebDataResource;
 import org.slf4j.LoggerFactory;
+
+import javax.xml.namespace.QName;
+import java.util.*;
 
 /**
  * Copied from
@@ -51,7 +50,7 @@ class MyACLProtocol implements HttpExtension, PropertySource {
         //log.debug("registering the ACLProtocol as a property source");
         webdav.addPropertySource(this);
         //Adding supported reports
-        webdav.addReport(new PrincipalSearchPropertySetReport());
+       // webdav.addReport(new PrincipalSearchPropertySetReport());
     }
 
     @Override
@@ -108,7 +107,7 @@ class MyACLProtocol implements HttpExtension, PropertySource {
         log.debug(msg);
     }
 
-    class PrincipalUrl implements StandardProperty<String> {
+    class PrincipalUrl implements PropertyMap.StandardProperty<String> {
 
         @Override
         public String fieldName() {
@@ -138,7 +137,7 @@ class MyACLProtocol implements HttpExtension, PropertySource {
         }
     }
 
-    class PrincipalCollectionSetProperty implements StandardProperty<WrappedHref> {
+    class PrincipalCollectionSetProperty implements PropertyMap.StandardProperty<WrappedHref> {
 
         @Override
         public String fieldName() {
@@ -169,7 +168,7 @@ class MyACLProtocol implements HttpExtension, PropertySource {
         }
     }
 
-    class CurrentUserPrincipalProperty implements StandardProperty<HrefList> {
+    class CurrentUserPrincipalProperty implements PropertyMap.StandardProperty<HrefList> {
 
         @Override
         public String fieldName() {
@@ -206,7 +205,7 @@ class MyACLProtocol implements HttpExtension, PropertySource {
         }
     }
 
-    class CurrentUserPrivledges implements StandardProperty<List<AccessControlledResource.Priviledge>> {
+    class CurrentUserPrivledges implements PropertyMap.StandardProperty<List<AccessControlledResource.Priviledge>> {
 
         @Override
         public String fieldName() {
@@ -214,11 +213,11 @@ class MyACLProtocol implements HttpExtension, PropertySource {
         }
 
         @Override
-        public List<Priviledge> getValue(PropFindableResource res) {
+        public List<AccessControlledResource.Priviledge> getValue(PropFindableResource res) {
             if (res instanceof AccessControlledResource) {
                 AccessControlledResource acr = (AccessControlledResource) res;
                 Auth auth = HttpManager.request().getAuthorization();
-                List<Priviledge> list = acr.getPriviledges(auth);
+                List<AccessControlledResource.Priviledge> list = acr.getPriviledges(auth);
 //                PriviledgeList privs = new PriviledgeList(list);
                 return list;//privs;
             } else {
@@ -232,7 +231,7 @@ class MyACLProtocol implements HttpExtension, PropertySource {
         }
     }
 
-    class ACLProperty implements WritableStandardProperty<Map<Principal, List<Priviledge>>> {
+    class ACLProperty implements PropertyMap.WritableStandardProperty<Map<Principal, List<AccessControlledResource.Priviledge>>> {
 
         @Override
         public String fieldName() {
@@ -246,7 +245,7 @@ class MyACLProtocol implements HttpExtension, PropertySource {
         }
 
         @Override
-        public void setValue(PropFindableResource pfr, Map<Principal, List<Priviledge>> t) {
+        public void setValue(PropFindableResource pfr, Map<Principal, List<AccessControlledResource.Priviledge>> t) {
             debug("setValue: " + pfr.getName());
             if (pfr instanceof AccessControlledResource) {
                 AccessControlledResource acr = (AccessControlledResource) pfr;
@@ -255,7 +254,7 @@ class MyACLProtocol implements HttpExtension, PropertySource {
         }
 
         @Override
-        public Map<Principal, List<Priviledge>> getValue(PropFindableResource pfr) {
+        public Map<Principal, List<AccessControlledResource.Priviledge>> getValue(PropFindableResource pfr) {
             debug("getValue: " + pfr.getName());
             if (pfr instanceof AccessControlledResource) {
                 AccessControlledResource acr = (AccessControlledResource) pfr;

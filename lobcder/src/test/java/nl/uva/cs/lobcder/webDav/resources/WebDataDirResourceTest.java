@@ -243,12 +243,12 @@
 //        catalogue.registerResourceEntry(testLogicalFolder);
 //
 //
-//        ILogicalData loaded = catalogue.getResourceEntryByLDRI(testLogicalFolder.getLDRI());
+//        ILogicalData loaded = catalogue.getLogicalDataByPath(testLogicalFolder.getLDRI());
 //        WebDataDirResource instance = createDirResource(catalogue, loaded);
 //        WebDataFileResource result = (WebDataFileResource) instance.createNew(ConstantsAndSettings.TEST_FILE_NAME_1, bais, new Long(ConstantsAndSettings.TEST_DATA.getBytes().length), "text/plain");
 //        assertNotNull(result);
 //        assertEquals(new Long(ConstantsAndSettings.TEST_DATA.getBytes().length), result.getContentLength());
-//        loaded = catalogue.getResourceEntryByLDRI(Path.path(testLogicalFolder.getLDRI(), ConstantsAndSettings.TEST_FILE_NAME_1));
+//        loaded = catalogue.getLogicalDataByPath(Path.path(testLogicalFolder.getLDRI(), ConstantsAndSettings.TEST_FILE_NAME_1));
 //        assertNotNull(loaded);
 //
 //        ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -260,14 +260,14 @@
 //        assertEquals(ConstantsAndSettings.TEST_DATA, content);
 //
 //
-//        loaded = catalogue.getResourceEntryByLDRI(testLogicalFolder.getLDRI());
+//        loaded = catalogue.getLogicalDataByPath(testLogicalFolder.getLDRI());
 //        instance = new WebDataDirResource(catalogue, loaded);
 //        instance.delete();
 //
-//        loaded = catalogue.getResourceEntryByLDRI(testLogicalFolder.getLDRI());
+//        loaded = catalogue.getLogicalDataByPath(testLogicalFolder.getLDRI());
 //        assertNull(loaded);
 //
-//        loaded = catalogue.getResourceEntryByLDRI(Path.path(testLogicalFolder.getLDRI(), ConstantsAndSettings.TEST_FILE_NAME_1));
+//        loaded = catalogue.getLogicalDataByPath(Path.path(testLogicalFolder.getLDRI(), ConstantsAndSettings.TEST_FILE_NAME_1));
 //        assertNull(loaded);
 //    }
 //

@@ -4,20 +4,6 @@
  */
 package nl.uva.cs.lobcder.resources;
 
-import java.io.*;
-import java.math.BigInteger;
-import java.net.InetAddress;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLEncoder;
-import java.net.UnknownHostException;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
-import java.nio.channels.ReadableByteChannel;
-import java.nio.channels.WritableByteChannel;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import nl.uva.cs.lobcder.webDav.resources.WebDataResource;
 import nl.uva.vlet.Global;
 import nl.uva.vlet.GlobalConfig;
 import nl.uva.vlet.data.StringUtil;
@@ -26,12 +12,21 @@ import nl.uva.vlet.exception.VlException;
 import nl.uva.vlet.io.CircularStreamBufferTransferer;
 import nl.uva.vlet.util.cog.GridProxy;
 import nl.uva.vlet.vfs.*;
-import nl.uva.vlet.vfs.cloud.CloudFile;
 import nl.uva.vlet.vrl.VRL;
 import nl.uva.vlet.vrs.ServerInfo;
 import nl.uva.vlet.vrs.VRS;
 import nl.uva.vlet.vrs.VRSContext;
 import org.slf4j.LoggerFactory;
+
+import java.io.*;
+import java.math.BigInteger;
+import java.net.*;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.channels.ReadableByteChannel;
+import java.nio.channels.WritableByteChannel;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * A test PDRI to implement the delete get/set data methods with the VRS API
@@ -71,8 +66,9 @@ public class VPDRI implements PDRI {
         VRS.getRegistry().addVRSDriverClass(nl.uva.vlet.vfs.cloud.CloudFSFactory.class);
         Global.init();
     }
+
     private VFSClient vfsClient;
-//    private MyStorageSite storageSite;
+    //    private MyStorageSite storageSite;
     private VRL vrl;
     private final String username;
     private final String password;
@@ -81,7 +77,7 @@ public class VPDRI implements PDRI {
     private final String fileName;
     private int reconnectAttemts = 0;
     private final static boolean debug = true;
-    private static final org.slf4j.Logger log = LoggerFactory.getLogger( VPDRI.class );
+    private static final org.slf4j.Logger log = LoggerFactory.getLogger(VPDRI.class);
 
     VPDRI(String fileName, Long storageSiteId, String resourceUrl, String username, String password) throws IOException {
         try {
@@ -360,23 +356,31 @@ public class VPDRI implements PDRI {
         }
     }
 
+
     @Override
     public void replicate(PDRI source) throws IOException {
-        try {
-            VRL sourceVRL = new VRL(source.getURI());
-//            VRL destVRL = this.vrl.getParent();
-            log.debug("replicate from "+sourceVRL+" to "+vrl);
-            VFile sourceFile = this.vfsClient.openFile(sourceVRL);
-            VFile destFile = this.vfsClient.createFile(vrl, true);
-            if (destFile instanceof CloudFile) {
-                ((CloudFile) destFile).uploadFrom(sourceFile);
-            } else {
-                putData(source.getData());
-            }
-        } catch (VlException ex) {
-            throw new IOException(ex);
-        }
+        putData(source.getData());
     }
+
+
+//
+//    @Override
+//    public void replicate(PDRI source) throws IOException {
+//        try {
+//            VRL sourceVRL = new VRL(source.getURI());
+////            VRL destVRL = this.vrl.getParent();
+//            log.debug("replicate from "+sourceVRL+" to "+vrl);
+//            VFile sourceFile = this.vfsClient.openFile(sourceVRL);
+//            VFile destFile = this.vfsClient.createFile(vrl, true);
+//            if (destFile instanceof CloudFile) {
+//                ((CloudFile) destFile).uploadFrom(sourceFile);
+//            } else {
+//                putData(source.getData());
+//            }
+//        } catch (VlException ex) {
+//            throw new IOException(ex);
+//        }
+//    }
 
     @Override
     public String getURI() throws IOException {

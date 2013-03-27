@@ -67,7 +67,7 @@
 //        testLogicalFolder.setStorageSites(sites);
 //        catalogue.registerResourceEntry(testLogicalFolder);
 //
-//        ILogicalData loaded = catalogue.getResourceEntryByLDRI(testLogicalFolder.getLDRI());
+//        ILogicalData loaded = catalogue.getLogicalDataByPath(testLogicalFolder.getLDRI());
 //        WebDataDirResource instance = createDirResource(catalogue, loaded);
 //
 //        double N = 2.0;
@@ -136,7 +136,7 @@
 //        testLogicalFolder.setStorageSites(sites);
 //        catalogue.registerResourceEntry(testLogicalFolder);
 //
-//        ILogicalData loaded = catalogue.getResourceEntryByLDRI(testLogicalFolder.getLDRI());
+//        ILogicalData loaded = catalogue.getLogicalDataByPath(testLogicalFolder.getLDRI());
 //        WebDataDirResource instance = createDirResource(catalogue, loaded);
 //
 //

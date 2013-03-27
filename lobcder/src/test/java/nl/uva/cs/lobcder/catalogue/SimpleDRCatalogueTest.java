@@ -67,7 +67,7 @@
 ////            instance.registerResourceEntry(entry);
 ////            System.out.println("entry:          " + entry.getLDRI());
 ////
-////            ILogicalData loadedEntry = instance.getResourceEntryByLDRI(path);
+////            ILogicalData loadedEntry = instance.getLogicalDataByPath(path);
 ////            assertNotNull(loadedEntry);
 ////
 ////            boolean theSame = compareEntries(entry, loadedEntry);
@@ -83,7 +83,7 @@
 ////            }
 ////        } finally {
 ////            instance.unregisterResourceEntry(entry);
-////            ILogicalData result = instance.getResourceEntryByLDRI(path);
+////            ILogicalData result = instance.getLogicalDataByPath(path);
 ////            assertNull(result);
 ////        }
 ////    }
@@ -106,17 +106,17 @@
 ////        LogicalData child = new LogicalData(childPath, Constants.LOGICAL_DATA);
 ////        instance.registerResourceEntry(child);
 ////
-////        ILogicalData loadedChildEntry = instance.getResourceEntryByLDRI(childPath);
+////        ILogicalData loadedChildEntry = instance.getLogicalDataByPath(childPath);
 ////        boolean theSame = compareEntries(child, loadedChildEntry);
 ////        assertTrue(theSame);
 ////
 ////        System.out.println("Unregister: " + child.getLDRI() + " " + child.getUID());
 ////        instance.unregisterResourceEntry(child);
-////        ILogicalData result = instance.getResourceEntryByLDRI(childPath);
+////        ILogicalData result = instance.getLogicalDataByPath(childPath);
 ////        assertNull(result);
 ////
 ////        instance.unregisterResourceEntry(parent);
-////        result = instance.getResourceEntryByLDRI(parentPath);
+////        result = instance.getLogicalDataByPath(parentPath);
 ////        assertNull(result);
 ////    }
 ////
@@ -142,7 +142,7 @@
 ////        assertEquals(expResult, result);
 ////
 ////        instance.unregisterResourceEntry(entry);
-////        ILogicalData loaded = instance.getResourceEntryByLDRI(path);
+////        ILogicalData loaded = instance.getLogicalDataByPath(path);
 ////        assertNull(loaded);
 ////    }
 ////
@@ -231,20 +231,20 @@
 ////                }
 ////
 ////
-////                loaded = instance.getResourceEntryByLDRI(entry21.getLDRI());
+////                loaded = instance.getLogicalDataByPath(entry21.getLDRI());
 ////                assertNull(loaded);
 ////
-////                loaded = instance.getResourceEntryByLDRI(entry11.getLDRI());
+////                loaded = instance.getLogicalDataByPath(entry11.getLDRI());
 ////                assertNull(loaded);
 ////
-////                loaded = instance.getResourceEntryByLDRI(topEntry3.getLDRI());
+////                loaded = instance.getLogicalDataByPath(topEntry3.getLDRI());
 ////                assertNull(loaded);
 ////
 ////
-////                loaded = instance.getResourceEntryByLDRI(topEntry2.getLDRI());
+////                loaded = instance.getLogicalDataByPath(topEntry2.getLDRI());
 ////                assertNull(loaded);
 ////
-////                loaded = instance.getResourceEntryByLDRI(topEntry1.getLDRI());
+////                loaded = instance.getLogicalDataByPath(topEntry1.getLDRI());
 ////                assertNull(loaded);
 ////
 ////
@@ -272,12 +272,12 @@
 ////
 ////            instance.renameEntry(originalPath, newPath);
 ////
-////            loaded = instance.getResourceEntryByLDRI(newPath);
+////            loaded = instance.getLogicalDataByPath(newPath);
 ////            assertNotNull(loaded);
 ////            assertEquals(newPath.toString(), loaded.getLDRI().toString());
 ////
 ////
-////            ILogicalData loadedOriginal = instance.getResourceEntryByLDRI(originalPath);
+////            ILogicalData loadedOriginal = instance.getLogicalDataByPath(originalPath);
 ////            assertNull(loadedOriginal);
 ////
 ////
@@ -286,7 +286,7 @@
 ////        } finally {
 ////            try {
 ////                instance.unregisterResourceEntry(loaded);
-////                loaded = instance.getResourceEntryByLDRI(newPath);
+////                loaded = instance.getLogicalDataByPath(newPath);
 ////                assertNull(loaded);
 ////
 ////            } catch (Exception ex) {
@@ -328,7 +328,7 @@
 ////            instance.renameEntry(originalPath, newPath);
 ////
 ////
-////            loaded = instance.getResourceEntryByLDRI(newPath);
+////            loaded = instance.getLogicalDataByPath(newPath);
 ////
 ////            assertNotNull(loaded);
 ////            assertEquals(newPath.toString(), loaded.getLDRI().toString());
@@ -349,22 +349,22 @@
 ////        } finally {
 ////            try {
 ////
-////                childLoaded = instance.getResourceEntryByLDRI(Path.path(newPath, childName1));
+////                childLoaded = instance.getLogicalDataByPath(Path.path(newPath, childName1));
 ////                assertNotNull(childLoaded);
 ////                instance.unregisterResourceEntry(childLoaded);
-////                childLoaded = instance.getResourceEntryByLDRI(Path.path(newPath, childName1));
+////                childLoaded = instance.getLogicalDataByPath(Path.path(newPath, childName1));
 ////                assertNull(childLoaded);
 ////
 ////
-////                childLoaded = instance.getResourceEntryByLDRI(Path.path(newPath, childName2));
+////                childLoaded = instance.getLogicalDataByPath(Path.path(newPath, childName2));
 ////                assertNotNull(childLoaded);
 ////                instance.unregisterResourceEntry(childLoaded);
-////                childLoaded = instance.getResourceEntryByLDRI(Path.path(newPath, childName2));
+////                childLoaded = instance.getLogicalDataByPath(Path.path(newPath, childName2));
 ////                assertNull(childLoaded);
 ////
 ////
 ////                instance.unregisterResourceEntry(loaded);
-////                parentLoaded = instance.getResourceEntryByLDRI(loaded.getLDRI());
+////                parentLoaded = instance.getLogicalDataByPath(loaded.getLDRI());
 ////                assertNull(parentLoaded);
 ////            } catch (Exception ex) {
 ////                fail("Unexpected Exception: " + ex.getMessage());
@@ -388,7 +388,7 @@
 ////            instance = new SimpleDLCatalogue();
 ////            instance.registerResourceEntry(logicalCollection);
 ////            //Check if the collection is registered
-////            ILogicalData loadedLogicalCollection = instance.getResourceEntryByLDRI(tesCollectionPath);
+////            ILogicalData loadedLogicalCollection = instance.getLogicalDataByPath(tesCollectionPath);
 ////            assertNotNull(loadedLogicalCollection);
 ////            compareEntries(loadedLogicalCollection, logicalCollection);
 ////
@@ -396,25 +396,25 @@
 ////            logicalChild = new LogicalData(testChildPath, Constants.LOGICAL_FILE);
 ////            instance.registerResourceEntry(logicalChild);
 ////            //Check if the child is registered
-////            ILogicalData loadedLogicalChild = instance.getResourceEntryByLDRI(testChildPath);
+////            ILogicalData loadedLogicalChild = instance.getLogicalDataByPath(testChildPath);
 ////            assertNotNull(loadedLogicalChild);
 ////            compareEntries(loadedLogicalChild, logicalChild);
 ////
 ////            //Check if collection has the child 
-////            loadedLogicalCollection = instance.getResourceEntryByLDRI(tesCollectionPath);
+////            loadedLogicalCollection = instance.getLogicalDataByPath(tesCollectionPath);
 ////            Path loadedChildPath = loadedLogicalCollection.getChild(testChildPath);
 ////            assertEquals(loadedChildPath.toString(), testChildPath.toString());
 ////
 ////            //Rename child 
 ////            testNewChildPath = Path.path(tesCollectionPath.toString() + "/testNewChild");
 ////            instance.renameEntry(testChildPath, testNewChildPath);
-////            loadedRenamedLogicalChild = instance.getResourceEntryByLDRI(testNewChildPath);
+////            loadedRenamedLogicalChild = instance.getLogicalDataByPath(testNewChildPath);
 ////            assertNotNull(loadedRenamedLogicalChild);
 ////
-////            loadedLogicalChild = instance.getResourceEntryByLDRI(testChildPath);
+////            loadedLogicalChild = instance.getLogicalDataByPath(testChildPath);
 ////            assertNull(loadedLogicalChild);
 ////            //check if collection has renamed child
-////            ILogicalData loadedCollection = instance.getResourceEntryByLDRI(logicalCollection.getLDRI());
+////            ILogicalData loadedCollection = instance.getLogicalDataByPath(logicalCollection.getLDRI());
 ////            Path loadedNewChild = loadedCollection.getChild(testNewChildPath);
 ////            assertNotNull(loadedNewChild);
 ////
@@ -426,13 +426,13 @@
 ////            try {
 ////
 ////                instance.unregisterResourceEntry(logicalCollection);
-////                ILogicalData loadedCollection = instance.getResourceEntryByLDRI(tesCollectionPath);
+////                ILogicalData loadedCollection = instance.getLogicalDataByPath(tesCollectionPath);
 ////                assertNull(loadedCollection);
 ////
-////                ILogicalData loadedChild = instance.getResourceEntryByLDRI(logicalChild.getLDRI());
+////                ILogicalData loadedChild = instance.getLogicalDataByPath(logicalChild.getLDRI());
 ////                assertNull(loadedChild);
 ////
-////                loadedChild = instance.getResourceEntryByLDRI(loadedRenamedLogicalChild.getLDRI());
+////                loadedChild = instance.getLogicalDataByPath(loadedRenamedLogicalChild.getLDRI());
 ////                assertNull(loadedChild);
 ////
 ////            } catch (CatalogueException ex) {
@@ -472,7 +472,7 @@
 ////            newPath = Path.path("/oldResourceName/" + childName1 + "/newChild2");
 ////            instance.renameEntry(originalChildPath2, newPath);
 ////
-////            loaded = instance.getResourceEntryByLDRI(newPath);
+////            loaded = instance.getLogicalDataByPath(newPath);
 ////
 ////            assertNotNull(loaded);
 ////            assertEquals(newPath.toString(), loaded.getLDRI().toString());
@@ -482,15 +482,15 @@
 ////        } finally {
 ////            try {
 ////                instance.unregisterResourceEntry(loaded);
-////                childEntry2Loaded = instance.getResourceEntryByLDRI(loaded.getLDRI());
+////                childEntry2Loaded = instance.getLogicalDataByPath(loaded.getLDRI());
 ////                assertNull(childEntry2Loaded);
 ////
 ////                instance.unregisterResourceEntry(childEntry1);
-////                childEntry1 = instance.getResourceEntryByLDRI(childEntry1.getLDRI());
+////                childEntry1 = instance.getLogicalDataByPath(childEntry1.getLDRI());
 ////                assertNull(childEntry1);
 ////
 ////                instance.unregisterResourceEntry(parent);
-////                parent = instance.getResourceEntryByLDRI(parent.getLDRI());
+////                parent = instance.getLogicalDataByPath(parent.getLDRI());
 ////                assertNull(parent);
 ////            } catch (Exception ex) {
 ////                fail("Unexpected Exception: " + ex.getMessage());
@@ -516,7 +516,7 @@
 ////
 ////
 ////            SimpleDLCatalogue instance2 = new SimpleDLCatalogue();
-////            ILogicalData entry = instance2.getResourceEntryByLDRI(originalPath);
+////            ILogicalData entry = instance2.getLogicalDataByPath(originalPath);
 ////            meta = entry.getMetadata();
 ////
 ////            assertNotNull(meta);
@@ -566,7 +566,7 @@
 ////        } finally {
 ////            try {
 ////                //Since we got an exeption the entry should not be there 
-////                res = instance.getResourceEntryByLDRI(lChild.getLDRI());
+////                res = instance.getLogicalDataByPath(lChild.getLDRI());
 ////                assertNull(res);
 ////            } catch (Exception ex) {
 ////                fail("Exception: " + ex.getMessage());
@@ -593,7 +593,7 @@
 ////            instance.registerResourceEntry(lParent);
 ////
 ////            instance.registerResourceEntry(lChild);
-////            ILogicalData res = instance.getResourceEntryByLDRI(childPath);
+////            ILogicalData res = instance.getLogicalDataByPath(childPath);
 ////            boolean theSame = compareEntries(lChild, res);
 ////            assertTrue(theSame);
 ////
@@ -634,7 +634,7 @@
 ////
 ////            //When registering the entry, the storage site is set to null
 ////            instance.registerResourceEntry(lParent);
-////            lParent = instance.getResourceEntryByLDRI(parentPath);
+////            lParent = instance.getLogicalDataByPath(parentPath);
 ////
 ////            theSites = lParent.getStorageSites();
 ////
@@ -699,7 +699,7 @@
 ////
 ////            LogicalData newEntry = new LogicalData(ConstantsAndSettings.TEST_FILE_PATH_1, Constants.LOGICAL_FILE);
 ////            instance.registerResourceEntry(newEntry);
-////            loaded = instance.getResourceEntryByLDRI(newEntry.getLDRI());
+////            loaded = instance.getLogicalDataByPath(newEntry.getLDRI());
 ////            boolean same = compareEntries(newEntry, loaded);
 ////            assertTrue(same);
 ////
@@ -724,7 +724,7 @@
 //////            newEntry.setStorageSites(sites);
 ////
 ////            instance.updateResourceEntry(newEntry);
-////            loaded = instance.getResourceEntryByLDRI(newEntry.getLDRI());
+////            loaded = instance.getLogicalDataByPath(newEntry.getLDRI());
 ////            same = compareEntries(newEntry, loaded);
 ////            assertTrue(same);
 ////

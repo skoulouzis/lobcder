@@ -35,4 +35,7 @@ public class Constants {
     public static final QName[] PROP_NAMES = new QName[]{DATA_DIST_PROP_NAME, DRI_SUPERVISED_PROP_NAME, DRI_CHECKSUM_PROP_NAME, DRI_LAST_VALIDATION_DATE_PROP_NAME,DESCRIPTION_PROP_NAME,DATA_LOC_PREF_NAME};
     public static final int BUF_SIZE = 2097152;
     public static Long LOCK_TIME = new Long(60000);
+
+    public static final int RECONNECT_NTRY = 5;
+
 }
