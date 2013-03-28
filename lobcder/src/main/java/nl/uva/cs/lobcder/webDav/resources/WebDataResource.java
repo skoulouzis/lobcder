@@ -78,10 +78,8 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
 
     @Override
     public Object authenticate(String user, String password) {
-        WebDataResource.log.fine("authenticate.\n"
-                + "\t user: " + user
-                + "\t password: " + password);
-        @SuppressWarnings("UnnecessaryLocalVariable") String token = password;
+        WebDataResource.log.log(Level.FINE,"authenticate.\n" + "\t user: {0}\t password: {1}", new Object[]{user, password});
+        String token = password;
         MyPrincipal principal = null;
         if (auth2 != null) {
             principal = auth2.checkToken(token);
@@ -91,8 +89,8 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
         }
         if (principal != null) {
             principalHolder.set(principal);
-            WebDataResource.log.fine("getUserId: " + principal.getUserId());
-            WebDataResource.log.fine("getRolesStr: " + principal.getRolesStr());
+            WebDataResource.log.log(Level.FINE, "getUserId: {0}", principal.getUserId());
+            WebDataResource.log.log(Level.FINE, "getRolesStr: {0}", principal.getRolesStr());
         }
         return principal;
     }
@@ -142,7 +140,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
                 case GET:
                     return getPrincipal().canRead(getPermissions());
                 case OPTIONS:
-                    break;
+                     return getPrincipal().canRead(getPermissions());
                 case POST:
                     return getPrincipal().canWrite(getPermissions());
                 case PUT:
@@ -160,7 +158,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
             WebDataResource.log.log(Level.SEVERE, "Exception in authorize for a resource " + getPath(), th);
             return false;
         }
-        return false;
+//        return false;
     }
 
     @Override
