@@ -22,19 +22,20 @@
         <url-pattern>/rest/*</url-pattern>
     </servlet-mapping>
     <filter>
-        <filter-class>nl.uva.cs.lobcder.frontend.BasicAuthFilter</filter-class>
         <filter-name>BasicAuthFilter</filter-name>
+        <filter-class>nl.uva.cs.lobcder.frontend.BasicAuthFilter</filter-class>
     </filter>
+    
     <filter>
         <filter-name>MiltonFilter</filter-name>
         <filter-class>io.milton.servlet.MiltonFilter</filter-class>
 
         <!-- This param shows how to exclude certain paths from the MiltonFilter -->
         <!-- These paths will "fall through" the filter and be handled as normal servlet resources -->
-        <init-param>
+<!--        <init-param>
             <param-name>milton.exclude.paths</param-name>
-            <param-value>/rest,/dev</param-value>
-        </init-param>
+            <param-value>/,/rest/</param-value>
+        </init-param>-->
         <init-param>
             <param-name>resource.factory.class</param-name>
             <param-value>nl.uva.cs.lobcder.webDav.resources.WebDataResourceFactory</param-value>
@@ -46,7 +47,7 @@
     </filter>
     <filter-mapping>
         <filter-name>MiltonFilter</filter-name>
-        <url-pattern>/*</url-pattern>
+        <url-pattern>/dav/*</url-pattern>
     </filter-mapping>
     <filter-mapping>
         <filter-name>BasicAuthFilter</filter-name>

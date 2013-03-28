@@ -46,8 +46,8 @@ public class JDBCatalogue extends MyDataSource{
 
             @Override
             public void run() {
-                deleteSweep.run();
-                replicateSweep.run();
+//                deleteSweep.run();
+//                replicateSweep.run();
             }
         };
         timer = new Timer(true);

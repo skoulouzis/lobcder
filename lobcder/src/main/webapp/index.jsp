@@ -8,6 +8,9 @@
         <title>JSP Page</title>
     </head>
     <body>
-        <h1>Hello World!</h1>
+        <h1>
+            Welcome to the Large OBject Cloud Data storagE fedeRation (LOBCDER) service.
+        </h1>
+         LOBCDER is a storage federation service that aims to ensure reliable, managed access to distributed scientific data stored in various storage frameworks and providers. 
     </body>
 </html>
