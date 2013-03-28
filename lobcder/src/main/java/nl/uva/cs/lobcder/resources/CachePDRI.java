@@ -28,7 +28,7 @@ public class CachePDRI implements PDRI {
     private final static String baseLocation;
 
     static {
-        baseLocation ="/TMP/LOBCDER-REPLICA-vTEST/";
+        baseLocation ="/tmp/LOBCDER-REPLICA-vTEST/";
     }
     final private String file_name;
     final private Long ssid;
