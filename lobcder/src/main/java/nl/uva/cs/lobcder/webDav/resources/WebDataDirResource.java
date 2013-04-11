@@ -21,6 +21,7 @@ import nl.uva.cs.lobcder.auth.Permissions;
 import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
 import nl.uva.cs.lobcder.resources.LogicalData;
 import nl.uva.cs.lobcder.resources.PDRI;
+import nl.uva.cs.lobcder.resources.PDRIDescr;
 import nl.uva.cs.lobcder.util.Constants;
 
 import javax.annotation.Nonnull;
@@ -32,16 +33,16 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.logging.Level;
+import nl.uva.cs.lobcder.resources.PDRIFactory;
 
 /**
  *
  * @author S. Koulouzis
  */
-
 @Log
 public class WebDataDirResource extends WebDataResource implements FolderResource, CollectionResource, DeletableCollectionResource {
 
-    public WebDataDirResource(@Nonnull LogicalData logicalData, Path path, @Nonnull JDBCatalogue catalogue, @Nonnull AuthI auth1,  AuthI auth2) {
+    public WebDataDirResource(@Nonnull LogicalData logicalData, Path path, @Nonnull JDBCatalogue catalogue, @Nonnull AuthI auth1, AuthI auth2) {
         super(logicalData, path, catalogue, auth1, auth2);
         WebDataDirResource.log.fine("Init. WebDataDirResource:  " + getPath());
     }
@@ -60,7 +61,6 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
             return false;
         }
     }
-
 
     @Override
     public CollectionResource createCollection(String newName) throws NotAuthorizedException, ConflictException, BadRequestException {
@@ -124,7 +124,6 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
         }
     }
 
-
     @Override
     public List<? extends Resource> getChildren() throws NotAuthorizedException {
         WebDataDirResource.log.fine("getChildren() for " + getPath());
@@ -150,15 +149,44 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
     @Override
     public Resource createNew(String newName, InputStream inputStream, Long length, String contentType) throws IOException,
             ConflictException, NotAuthorizedException, BadRequestException {
-        WebDataDirResource.log.fine("createNew. for " + getPath() + "\n\t newName:\t" + newName + "\n\t length:\t" + length + "\n\t contentType:\t" + contentType);
+        WebDataDirResource.log.log(Level.FINE, "createNew. for {0}\n\t newName:\t{1}\n\t length:\t{2}\n\t contentType:\t{3}", new Object[]{getPath(), newName, length, contentType});
+        LogicalData fileLogicalData;
+        List<PDRIDescr> pdriDescrList;
+
         try (Connection connection = getCatalogue().getConnection()) {
             try {
-                Long uid = getCatalogue().getLogicalDataUidByParentRefAndName(getLogicalData().getUid(), newName, connection);
-                if (uid != null) { // Resource exists, conflict
-                    throw new ConflictException(this, newName);
+//                Long uid = getCatalogue().getLogicalDataUidByParentRefAndName(getLogicalData().getUid(), newName, connection);
+                Path newPath = Path.path(getPath(), newName);
+                fileLogicalData = getCatalogue().getLogicalDataByPath(newPath, connection);
+                if (fileLogicalData != null) {  // Resource exists, update
+//                    throw new ConflictException(this, newName);
+                    Permissions p = getCatalogue().getPermissions(fileLogicalData.getUid(), fileLogicalData.getOwner(), connection);
+                    if (!getPrincipal().canWrite(p)) {
+                        throw new NotAuthorizedException(this);
+                    }
+                    fileLogicalData.setLength(length);
+                    fileLogicalData.setModifiedDate(System.currentTimeMillis());
+                    fileLogicalData.addContentType(contentType);
+//                    getCatalogue().updateLogicalData(fileLogicalData, connection);
+                    
+                    //Create new
+                    PDRI newPdri = createPDRI(fileLogicalData.getLength(), newName);
+                    newPdri.putData(inputStream);
+                    
+                    //Clean up old replicas 
+                    pdriDescrList = getCatalogue().getPdriDescrByGroupId(fileLogicalData.getPdriGroupId(), connection);
+                    for (PDRIDescr pdriDescr : pdriDescrList) {
+                        PDRI pdri = PDRIFactory.getFactory().createInstance(pdriDescr);
+                        pdri.delete();
+//                        getCatalogue().
+                    }
+                    
+                    fileLogicalData = getCatalogue().updateLogicalDataAndPdri(fileLogicalData, newPdri, connection);
+                    connection.commit();
+                    return new WebDataFileResource(fileLogicalData, Path.path(getPath(), newName), getCatalogue(), auth1, auth2);
                 } else { // Resource does not exists, create a new one
                     // new need write prmissions for current collection
-                    LogicalData fileLogicalData = new LogicalData();
+                    fileLogicalData = new LogicalData();
                     fileLogicalData.setName(newName);
                     fileLogicalData.setParentRef(getLogicalData().getUid());
                     fileLogicalData.setType(Constants.LOGICAL_FILE);
@@ -212,7 +240,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
     @Override
     public void delete() throws NotAuthorizedException, ConflictException, BadRequestException {
         WebDataDirResource.log.fine("delete() for " + getPath());
-        if(getPath().isRoot()){
+        if (getPath().isRoot()) {
             throw new ConflictException(this, "Cannot delete root");
         }
         try (Connection connection = getCatalogue().getConnection()) {
@@ -234,12 +262,12 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
     public void sendContent(OutputStream out, Range range, Map<String, String> params, String contentType) throws IOException, NotAuthorizedException, BadRequestException {
         WebDataDirResource.log.fine("sendContent(" + contentType + ") for " + getPath());
         try (PrintStream ps = new PrintStream(out)) {
-            ps.println("<HTML>\n" +
-                    "\n" +
-                    "<HEAD>\n" +
-                    "<TITLE>" + getPath() + "</TITLE>\n" +
-                    "</HEAD>\n" +
-                    "<BODY BGCOLOR=\"#FFFFFF\" TEXT=\"#000000\">");
+            ps.println("<HTML>\n"
+                    + "\n"
+                    + "<HEAD>\n"
+                    + "<TITLE>" + getPath() + "</TITLE>\n"
+                    + "</HEAD>\n"
+                    + "<BODY BGCOLOR=\"#FFFFFF\" TEXT=\"#000000\">");
             ps.println("<dl>");
             for (LogicalData ld : getCatalogue().getChildrenByParentRef(getLogicalData().getUid())) {
                 if (ld.isFolder()) {
@@ -253,9 +281,9 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                 }
             }
             ps.println("</dl>");
-            ps.println("</BODY>\n" +
-                    "\n" +
-                    "</HTML>");
+            ps.println("</BODY>\n"
+                    + "\n"
+                    + "</HTML>");
         } catch (SQLException e) {
             WebDataDirResource.log.log(Level.SEVERE, null, e);
             throw new BadRequestException(this);

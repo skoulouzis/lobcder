@@ -66,6 +66,9 @@ public class LogicalData implements Cloneable{
     }
 
     public void addContentType(String contentType) {
+        if(contentTypesAsString == null){
+            contentTypesAsString = new String();
+        }
         String ct[] = contentTypesAsString.split(",");
         if (!Arrays.asList(ct).contains(contentType)) {
             contentTypesAsString += contentTypesAsString.isEmpty() ? contentType : ("," + contentType);

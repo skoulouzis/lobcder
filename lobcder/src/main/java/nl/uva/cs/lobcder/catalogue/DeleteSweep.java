@@ -91,7 +91,7 @@ class DeleteSweep implements Runnable {
                         + "JOIN storage_site_table ON storageSiteRef = storageSiteId "
                         + "JOIN credential_table ON credentialRef = credintialId "
                         + "WHERE pdriGroupRef = " + groupId);
-
+                
                 while (rs2.next()) {
 
                     PDRIDescr pdriDescr = new PDRIDescr(
