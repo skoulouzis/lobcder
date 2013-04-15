@@ -5,12 +5,19 @@
 <html>
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <title>JSP Page</title>
+        <title>L.OB.C.D.E.R. Service</title>
     </head>
     <body>
         <h1>
-            Welcome to the Large OBject Cloud Data storagE fedeRation (LOBCDER) service.
+            <img src="https://masterinterface.vph-share.eu/static/logo-web.png">
+            <img src="http://www.how-to-draw-funny-cartoons.com/image-files/cartoon-lobster-7.gif"?w=100&h=100" width="100" height="100">
         </h1>
-         LOBCDER is a storage federation service that aims to ensure reliable, managed access to distributed scientific data stored in various storage frameworks and providers. 
+        <h2>
+            Welcome to the Large OBject Cloud Data storagE fedeRation (LOBCDER) service.
+        </h2>
+        
+         LOBCDER is a storage federation service that aims to ensure reliable, managed access to distributed scientific data stored in various storage frameworks and providers.
+         
+         
     </body>
 </html>
