@@ -43,7 +43,8 @@ public class BasicAuthFilter implements Filter {
 
             final int index = autheader.indexOf(' ');
             if (index > 0) {
-                final String credentials = new String(Base64.decodeBase64(autheader.substring(index)), "UTF8");
+                final String credentials = new String(Base64.decodeBase64(autheader.substring(index).getBytes()), "UTF8");
+//                final String credentials = new String(Base64.decodeBase64(autheader.substring(index)), "UTF8");
                 final String uname = credentials.substring(0, credentials.indexOf(":"));
                 final String token = credentials.substring(credentials.indexOf(":") + 1);
                 MyPrincipal principal = auth.checkToken(token);

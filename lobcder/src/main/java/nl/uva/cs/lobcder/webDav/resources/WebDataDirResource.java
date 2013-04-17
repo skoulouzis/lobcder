@@ -57,14 +57,14 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                     return super.authorise(request, method, auth);
             }
         } catch (Throwable th) {
-            WebDataDirResource.log.log(Level.SEVERE, "Exception in authorize for a resource " + getPath(), th);
+            WebDataDirResource.log.log(Level.FINER, "Exception in authorize for a resource " + getPath(), th);
             return false;
         }
     }
 
     @Override
     public CollectionResource createCollection(String newName) throws NotAuthorizedException, ConflictException, BadRequestException {
-        WebDataDirResource.log.fine("createCollection " + newName + " in " + getPath());
+        WebDataDirResource.log.log(Level.FINE, "createCollection {0} in {1}", new Object[]{newName, getPath()});
         try (Connection connection = getCatalogue().getConnection()) {
             try {
                 Path newCollectionPath = Path.path(getPath(), newName);
@@ -173,13 +173,13 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                     PDRI newPdri = createPDRI(fileLogicalData.getLength(), newName);
                     newPdri.putData(inputStream);
                     
-                    //Clean up old replicas 
-                    pdriDescrList = getCatalogue().getPdriDescrByGroupId(fileLogicalData.getPdriGroupId(), connection);
-                    for (PDRIDescr pdriDescr : pdriDescrList) {
-                        PDRI pdri = PDRIFactory.getFactory().createInstance(pdriDescr);
-                        pdri.delete();
-//                        getCatalogue().
-                    }
+//                    //Clean up old replicas 
+//                    pdriDescrList = getCatalogue().getPdriDescrByGroupId(fileLogicalData.getPdriGroupId(), connection);
+//                    for (PDRIDescr pdriDescr : pdriDescrList) {
+//                        PDRI pdri = PDRIFactory.getFactory().createInstance(pdriDescr);
+//                        pdri.delete();
+////                        getCatalogue().
+//                    }
                     
                     fileLogicalData = getCatalogue().updateLogicalDataAndPdri(fileLogicalData, newPdri, connection);
                     connection.commit();
@@ -239,7 +239,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
 
     @Override
     public void delete() throws NotAuthorizedException, ConflictException, BadRequestException {
-        WebDataDirResource.log.fine("delete() for " + getPath());
+        WebDataDirResource.log.log(Level.FINE, "delete() for {0}", getPath());
         if (getPath().isRoot()) {
             throw new ConflictException(this, "Cannot delete root");
         }

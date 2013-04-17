@@ -132,13 +132,15 @@ public class JDBCatalogue extends MyDataSource {
 //        try (Statement statement = connection.createStatement(java.sql.ResultSet.TYPE_FORWARD_ONLY, java.sql.ResultSet.CONCUR_UPDATABLE)) {
 //            statement.executeUpdate("DELETE FROM pdri_table WHERE pdri_table.pdriId = " + groupId);
 //        }
+        
         try (Statement statement = connection.createStatement(java.sql.ResultSet.TYPE_FORWARD_ONLY, java.sql.ResultSet.CONCUR_UPDATABLE)) {
             statement.executeUpdate("INSERT INTO pdrigroup_table (refCount) VALUES(1)", Statement.RETURN_GENERATED_KEYS);
             ResultSet rs = statement.getGeneratedKeys();
             rs.next();
             Long newGroupId = rs.getLong(1);
             
-            try (PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO pdri_table (fileName, storageSiteRef, pdriGroupRef) VALUES(?, ?, ?)")) {
+            try (PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO pdri_table "
+                    + "(fileName, storageSiteRef, pdriGroupRef) VALUES(?, ?, ?)")) {
                 preparedStatement.setString(1, pdri.getFileName());
                 preparedStatement.setLong(2, pdri.getStorageSiteId());
                 preparedStatement.setLong(3, newGroupId);

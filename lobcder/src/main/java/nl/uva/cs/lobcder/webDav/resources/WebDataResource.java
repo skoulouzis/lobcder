@@ -343,7 +343,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
                     try {
                         StringBuilder sb = new StringBuilder();
                         if (getLogicalData().isFolder()) {
-                            @SuppressWarnings("unchecked") List<? extends WebDataResource> children = (List<? extends WebDataResource>) ((WebDataDirResource) (this)).getChildren();
+                            List<? extends WebDataResource> children = (List<? extends WebDataResource>) ((WebDataDirResource) (this)).getChildren();
                             sb.append("[");
                             for (WebDataResource r : children) {
                                 if (r instanceof WebDataFileResource) {
@@ -367,7 +367,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
                         sb.append("]");
                         connection.commit();
                         return sb.toString();
-                    } catch (Exception e) {
+                    } catch (NotAuthorizedException | SQLException e) {
                         connection.rollback();
                     }
                 }
@@ -426,7 +426,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
                     }
                     connection.commit();
                 }
-            } catch (Exception e) {
+            } catch (SQLException | NumberFormatException e) {
                 connection.rollback();
                 throw new PropertySource.PropertySetException(Response.Status.SC_INTERNAL_SERVER_ERROR, e.getMessage());
             }

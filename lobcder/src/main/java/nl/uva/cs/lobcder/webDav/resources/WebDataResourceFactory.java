@@ -36,8 +36,7 @@ public class WebDataResourceFactory implements ResourceFactory {
 //        }
 
         try (Connection cn = catalogue.getConnection()) {
-            WebDataResourceFactory.log.fine("getResource:  strPath: " + strPath + " path: " + Path.path(strPath) + " ldri: " + ldri + "\n"
-                    + "\tgetResource:  host: " + host + " path: " + ldri);
+            WebDataResourceFactory.log.log(Level.FINE,"getResource:  strPath: {0} path: {1} ldri: {2}" + "\n" + "\tgetResource:  host: {3} path: {4}", new Object[]{strPath, Path.path(strPath), ldri, host, ldri});
 
             LogicalData entry = catalogue.getLogicalDataByPath(ldri, cn);
             if (entry == null) {
