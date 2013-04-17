@@ -313,10 +313,10 @@ public class WebDAVTest {
             status = this.client.executeMethod(put);
             assertEquals(HttpStatus.SC_CREATED, status);
 
-            // enabling version control always makes the resource referenceable
-            VersionControlMethod versioncontrol = new VersionControlMethod(testres1);
-            status = this.client.executeMethod(versioncontrol);
-            assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_CREATED);
+//            // enabling version control always makes the resource referenceable
+//            VersionControlMethod versioncontrol = new VersionControlMethod(testres1);
+//            status = this.client.executeMethod(versioncontrol);
+//            assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_CREATED);
 
 //            URI r1 = this.getResourceId(testres1);
 
@@ -714,14 +714,11 @@ public class WebDAVTest {
             //if resource /a/b/c/d.html is to be created and /a/b/c/ does not
             //exist, then the request must fail.
             //http://www.webdav.org/specs/rfc2518.html#rfc.section.8.7.2
-            //In our case (milton API) we will keep going one level up till we 
-            //find an existing resource, in this case root.
-            //When found root will run the <code>child</code> method without 
-            //before running the <code>authenticate</code> method, resulting in 
-            //an SC_UNAUTHORIZED return code
+            //In our case (milton API) will create the 
             PutMethod put = new PutMethod(testuri);
             status = this.client.executeMethod(put);
-            assertTrue("status: " + status, status == HttpStatus.SC_CONFLICT || status == HttpStatus.SC_UNAUTHORIZED);
+            assertTrue("status: " + status, status == HttpStatus.SC_CONFLICT);
+//            assertTrue("status: " + status, status == HttpStatus.SC_CREATED);
 
 
             MkColMethod mkCol = new MkColMethod(testcol);
