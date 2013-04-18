@@ -133,21 +133,21 @@
 		</dependency>
 		
 		<dependency>
-			<groupId>${project.groupId}</groupId>
+			<groupId>io.milton</groupId>
 			<artifactId>milton-mail-api</artifactId>
 			<version>2.4.2.5</version>
 		</dependency>
 		
 		
 		<dependency>
-			<groupId>${project.groupId}</groupId>
+			<groupId>io.milton</groupId>
 			<artifactId>milton-mail-server</artifactId>
 			<version>2.4.2.5</version>
 		</dependency>
 		
 		
 		<dependency>
-			<groupId>${project.groupId}</groupId>
+			<groupId>io.milton</groupId>
 			<artifactId>milton-api</artifactId>
 			<version>2.4.2.5</version>
 		</dependency>
