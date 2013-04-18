@@ -57,7 +57,7 @@ public class LocalDbAuth implements AuthI {
                 } else {
                     return null;
                 }
-                query = "SELECT roleName FROM auth_roles_tables WHERE id = " + id;
+                query = "SELECT roleName FROM auth_roles_tables WHERE unameRef = " + id;
                 LocalDbAuth.log.fine(query);
                 rs = s.executeQuery(query);
                 while (rs.next()) {

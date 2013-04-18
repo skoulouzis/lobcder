@@ -272,12 +272,10 @@ public class VPDRI implements PDRI {
         int len;
         try {
             while ((len = src.read(buffer)) != -1) {
-//            System.err.println("Read size: " + len);
                 buffer.flip();
                 dest.write(buffer);
                 buffer.compact();
             }
-//        System.err.println("--------------");
             buffer.flip();
             while (buffer.hasRemaining()) {
                 dest.write(buffer);
@@ -335,7 +333,8 @@ public class VPDRI implements PDRI {
 
     private void debug(String msg) {
         if (debug) {
-            System.err.println(this.getClass().getName() + ": " + msg);
+//            System.err.println(this.getClass().getName() + ": " + msg);
+            log.debug(msg);
         }
     }
 
