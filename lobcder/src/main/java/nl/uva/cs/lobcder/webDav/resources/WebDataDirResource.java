@@ -123,12 +123,12 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
             return null;
         }
     }
-
+    
     @Override
     public List<? extends Resource> getChildren() throws NotAuthorizedException {
         WebDataDirResource.log.fine("getChildren() for " + getPath());
         try {
-            List<WebDataResource> children = new ArrayList<>();
+            List<Resource> children = new ArrayList<>();
             Collection<LogicalData> childrenLD = getCatalogue().getChildrenByParentRef(getLogicalData().getUid());
             if (childrenLD != null) {
                 for (LogicalData childLD : childrenLD) {

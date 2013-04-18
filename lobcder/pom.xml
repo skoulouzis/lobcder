@@ -178,17 +178,6 @@
             <name>Repository for library Library[restapi]</name>
         </repository>-->
     </repositories>
-    
-   
-
-   
-
-    <!--    <pluginRepositories>
-        <pluginRepository>
-            <id>DataNucleus_2</id>
-            <url>http://www.datanucleus.org/downloads/maven2/</url>
-        </pluginRepository>
-    </pluginRepositories>-->
 
     <build>
         <plugins>
@@ -211,39 +200,6 @@
                 <!--If the version is not set to 2.1.1 we get the error: 'com.thoughtworks.xstream.converters.ConversionException: Cannot construct org.apache.maven.plugin.war.util.WebappStructure as it does not have a no-args constructor'-->
                 <version>2.3</version>
             </plugin>
-
-
-            <!--            <plugin>
-                <groupId>org.datanucleus</groupId>
-                <artifactId>maven-datanucleus-plugin</artifactId>
-                <version>3.0.1</version>
-                <configuration>
-                    <log4jConfiguration>${project.basedir}/log4j.properties</log4jConfiguration>
-                    <verbose>false</verbose>
-                    <props>${project.basedir}/datanucleus.prop</props>
-                </configuration>
-                <executions>
-                    <execution>
-                        <phase>process-classes</phase>
-                        <goals>
-                            <goal>enhance</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>-->
-
-
-            <!--            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <configuration>
-                    <systemPropertyVariables>
-                        <webdav.test.url>http://localhost:8080/lobcder-1.0-SNAPSHOT/</webdav.test.url>
-                        <webdav.test.username>user</webdav.test.username>
-                        <webdav.test.password>passwd</webdav.test.password>
-                    </systemPropertyVariables>
-                </configuration>
-            </plugin>-->
 
         </plugins>
 
