@@ -33,14 +33,14 @@ $mysql> create database mydb;
 \end{lstlisting}
 
 
-Now we create the user 'username' and give him super permissions on the new database. SUPER is required for enabling the delete and replicate tigers (for mysql version 5.0.95). 
+Now we create the user 'username' and give him super permissions on the new database. SUPER is required for enabling the delete and replicate triggers (for mysql version 5.0.95). 
 \begin{lstlisting}
-$mysql>grant ALL PRIVILEGES on mydb.* to username@localhost identified by 'password'
+$mysql>grant ALL PRIVILEGES on mydb.* to username@localhost identified by 'password';
 $mysql>GRANT SUPER ON *.* to username@localhost IDENTIFIED by 'password';
 \end{lstlisting}
 
 
-\subsection{Initialize the logical file system and the tigers}
+\subsection{Initialize the logical file system and the triggers}
 You may want to edit the init.sql file to include the proper backends. These will be used by lobcder to hold the physical data.
 
 in the init.sql add or edit this line: 
@@ -68,7 +68,7 @@ mysql --user=username --password=password mydb < init.sql
 \end{lstlisting}
 
 \section{Configure LOBCDER to connect to the DB}
-In the context.xml file edit or add this line:
+In the META-INF/context.xml file edit or add this line:
 
 \begin{lstlisting}
 <Resource auth="Container" driverClassName="com.mysql.jdbc.Driver" 
@@ -84,6 +84,15 @@ In the context.xml file edit or add this line:
 			  username="username"/>
 \end{lstlisting}
 
+In the WEB-INF/web.xml file edit or add this line:
+\begin{lstlisting}
+    <resource-ref>
+        <description>DB Connection Pooling</description>
+        <res-ref-name>jdbc/mydb</res-ref-name>
+        <res-type>javax.sql.DataSource</res-type>
+        <res-auth>Container</res-auth>
+    </resource-ref>
+\end{lstlisting}
 
 \section{User Authorization / Authentication and Roles}\label{sec:auth}
 
