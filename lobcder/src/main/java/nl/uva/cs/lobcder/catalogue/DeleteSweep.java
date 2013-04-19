@@ -77,6 +77,8 @@ class DeleteSweep implements Runnable {
                             connection.commit();
                         }
                     }
+                                        //Some times pdris are left in the pdriGrop with ref 1 while there is no refernace from the ldri. 
+                    //We'll try to sweep them as well
                 }
             } catch (SQLException | IOException e) {
                 DeleteSweep.log.log(Level.SEVERE, null, e);
