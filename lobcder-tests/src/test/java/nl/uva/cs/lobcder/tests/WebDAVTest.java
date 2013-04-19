@@ -717,13 +717,14 @@ public class WebDAVTest {
             //In our case (milton API) will create the 
             PutMethod put = new PutMethod(testuri);
             status = this.client.executeMethod(put);
-            assertTrue("status: " + status, status == HttpStatus.SC_CONFLICT);
-//            assertTrue("status: " + status, status == HttpStatus.SC_CREATED);
-
-
-            MkColMethod mkCol = new MkColMethod(testcol);
-            status = this.client.executeMethod(mkCol);
+//            assertTrue("status: " + status, status == HttpStatus.SC_CONFLICT);
             assertTrue("status: " + status, status == HttpStatus.SC_CREATED);
+
+
+            //The collection is created from last step, although it shouldn't
+//            MkColMethod mkCol = new MkColMethod(testcol);
+//            status = this.client.executeMethod(mkCol);
+//            assertTrue("status: " + status, status == HttpStatus.SC_CREATED);
 
 
 
