@@ -158,11 +158,11 @@ public class PutHelper {
      * @return
      */
     public String findContentTypes( Request request, String newName ) {
-//        String ct = request.getContentTypeHeader();
-//        if( ct != null ) {
-//			LogUtils.trace(log, "findContentTypes: got header: " + ct);
-//			return ct;
-//		}
+        String ct = request.getContentTypeHeader();
+        if( ct != null ) {
+			LogUtils.trace(log, "findContentTypes: got header: " + ct);
+			return ct;
+		}
 
         String s = ContentTypeUtils.findContentTypes( newName );
 		LogUtils.trace(log, "findContentTypes: got type from name. Type: " + s);

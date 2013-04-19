@@ -129,9 +129,9 @@ public class PutHandler implements Handler {
 			}
 
 			Resource parent = manager.getResourceFactory().getResource(host, path.getParent().toString());
-			if(parent == null ){
+//			if(parent == null ){
 //				throw new ConflictException(path+" has no ancestors");
-			}
+//			}
 			if (parent instanceof CollectionResource) {
 				CollectionResource parentCol = (CollectionResource) parent;
 				storageErr = handlerHelper.checkStorageOnReplace(request, parentCol, existingResource, host);
