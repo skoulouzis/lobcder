@@ -20,10 +20,10 @@ import java.util.List;
  * Time: 18:38
  * To change this template use File | Settings | File Templates.
  */
-
 @XmlRootElement
 @Data
-public class LogicalData implements Cloneable{
+public class LogicalData implements Cloneable {
+
     private Long uid = Long.valueOf(0);
     @XmlTransient
     private String owner = "";
@@ -55,18 +55,19 @@ public class LogicalData implements Cloneable{
     private String description;
     private String dataLocationPreference;
 
-
-    @XmlElement
-    public List<String> getContentTypes() {
-        if(contentTypesAsString == null){
-            return null;
-        } else {
-            return  Arrays.asList(contentTypesAsString.split(","));
-        }
-    }
-
+//    @XmlElement
+//    public List<String> getContentTypes() {
+//        if(contentTypesAsString == null){
+//            return null;
+//        } else {
+//            return  Arrays.asList(contentTypesAsString.split(","));
+//        }
+//    }
     public void addContentType(String contentType) {
-        if(contentTypesAsString == null){
+        if (contentType == null) {
+            contentType = "application/octet-stream";
+        }
+        if (contentTypesAsString == null) {
             contentTypesAsString = new String();
         }
         String ct[] = contentTypesAsString.split(",");

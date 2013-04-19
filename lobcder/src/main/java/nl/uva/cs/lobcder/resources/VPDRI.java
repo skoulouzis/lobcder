@@ -90,10 +90,9 @@ public class VPDRI implements PDRI {
             this.username = username;
             this.password = password;
 //            this.resourceUrl = resourceUrl;
+            log.debug("fileName: "+fileName+", storageSiteId: "+storageSiteId+", username: "+username+", password: "+password+", VRL: "+vrl);
             initVFS();
-        } catch (VlException ex) {
-            throw new IOException(ex);
-        } catch (MalformedURLException ex) {
+        } catch (VlException | MalformedURLException ex) {
             throw new IOException(ex);
         }
     }

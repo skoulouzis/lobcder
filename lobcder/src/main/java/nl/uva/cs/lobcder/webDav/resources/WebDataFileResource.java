@@ -12,6 +12,8 @@ import io.milton.http.exceptions.*;
 import io.milton.resource.CollectionResource;
 import io.milton.resource.FileResource;
 import io.milton.resource.LockableResource;
+import io.milton.resource.ReplaceableResource;
+import java.io.InputStream;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.auth.AuthI;
 import nl.uva.cs.lobcder.auth.Permissions;
@@ -40,7 +42,7 @@ import java.util.logging.Level;
  */
 @Log
 public class WebDataFileResource extends WebDataResource implements
-        FileResource, LockableResource {
+        FileResource, LockableResource {//, ReplaceableResource {
 
     public WebDataFileResource(@Nonnull LogicalData logicalData, Path path, @Nonnull JDBCatalogue catalogue, @Nonnull AuthI auth1,  AuthI auth2) {
         super(logicalData, path, catalogue, auth1, auth2);
@@ -57,7 +59,7 @@ public class WebDataFileResource extends WebDataResource implements
     @Override
     public void copyTo(CollectionResource collectionResource, String name) throws NotAuthorizedException, BadRequestException, ConflictException {
         WebDataDirResource toWDDR = (WebDataDirResource) collectionResource;
-        log.fine("copyTo('" + toWDDR.getPath() + "', '" + name + "') for " + getPath());
+        log.log(Level.FINE, "copyTo(''{0}'', ''{1}'') for {2}", new Object[]{toWDDR.getPath(), name, getPath()});
         try (Connection connection = getCatalogue().getConnection()) {
             try {
                 Permissions newParentPerm = getCatalogue().getPermissions(toWDDR.getLogicalData().getUid(), toWDDR.getLogicalData().getOwner(), connection);
@@ -127,7 +129,7 @@ public class WebDataFileResource extends WebDataResource implements
     @Override
     public String getContentType(String accepts) {
         String res = ContentTypeUtils.findAcceptableContentType(getLogicalData().getContentTypesAsString(), accepts);
-        log.fine("getContentType('" + accepts + "') = '" + res + "'  for " + getPath());
+        log.log(Level.FINE, "getContentType(''{0}'') = ''{1}''  for {2}", new Object[]{accepts, res, getPath()});
         return res;
     }
 

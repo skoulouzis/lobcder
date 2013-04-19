@@ -24,8 +24,6 @@ import java.io.IOException;
 import java.sql.*;
 import java.sql.Date;
 import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *

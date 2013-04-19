@@ -27,28 +27,29 @@ class DeleteSweep implements Runnable {
 
     @Override
     public void run() {
+        PDRIFactory factory;
         try (Connection connection = datasource.getConnection()) {
             try {
                 connection.setAutoCommit(false);
                 try (Statement s1 = connection.createStatement(java.sql.ResultSet.TYPE_FORWARD_ONLY,
-                        java.sql.ResultSet.CONCUR_UPDATABLE)) {
+                                java.sql.ResultSet.CONCUR_UPDATABLE)) {
                     ResultSet rs1 = s1.executeQuery("SELECT pdriGroupId FROM pdrigroup_table WHERE refCount = 0");
                     while (rs1.next()) {
                         Long groupId = rs1.getLong(1);
                         try (PreparedStatement ps2 = connection.prepareStatement(
-                                "SELECT pdriId, fileName, storageSiteRef FROM pdri_table WHERE pdriGroupRef = ?",
-                                java.sql.ResultSet.TYPE_FORWARD_ONLY,
-                                java.sql.ResultSet.CONCUR_UPDATABLE)) {
+                                        "SELECT pdriId, fileName, storageSiteRef FROM pdri_table WHERE pdriGroupRef = ?",
+                                        java.sql.ResultSet.TYPE_FORWARD_ONLY,
+                                        java.sql.ResultSet.CONCUR_UPDATABLE)) {
                             ps2.setLong(1, groupId);
                             ResultSet rs2 = ps2.executeQuery();
                             while (rs2.next()) {
                                 // here better to use a kind a local cache, i.e. hashmap
                                 try (PreparedStatement ps3 = connection.prepareStatement(
-                                        "SELECT resourceUri, username, password FROM storage_site_table "
+                                                "SELECT resourceUri, username, password FROM storage_site_table "
                                                 + "JOIN credential_table ON credentialRef = credintialId "
                                                 + "WHERE storageSiteId = ?",
-                                        java.sql.ResultSet.TYPE_FORWARD_ONLY,
-                                        ResultSet.CONCUR_READ_ONLY)) {
+                                                java.sql.ResultSet.TYPE_FORWARD_ONLY,
+                                                ResultSet.CONCUR_READ_ONLY)) {
                                     String fileName = rs2.getString(2);
                                     Long storageSiteRef = rs2.getLong(3);
                                     ps3.setLong(1, storageSiteRef);
@@ -58,7 +59,13 @@ class DeleteSweep implements Runnable {
                                         String username = rs3.getString(2);
                                         String password = rs3.getString(3);
                                         PDRIDescr pdriDescr = new PDRIDescr(fileName, storageSiteRef, resourceUri, username, password);
-                                        PDRI pdri = PDRIFactory.getFactory().createInstance(pdriDescr);
+                                        DeleteSweep.log.log(Level.FINE, "PDRI Description: {0}, {1}, {2}, {3}, {4}", new Object[]{fileName, storageSiteRef, resourceUri, username, password});
+                                        DeleteSweep.log.log(Level.FINE, "PDRI pdriDescr: {0}", new Object[]{pdriDescr});
+                                        factory = PDRIFactory.getFactory();
+                                        DeleteSweep.log.log(Level.FINE, "PDRIFactory: {0}", factory);
+                                        PDRI pdri = factory.createInstance(pdriDescr);
+                                        DeleteSweep.log.log(Level.FINE, "pdri: {0}", pdri);
+                                        DeleteSweep.log.log(Level.FINE, "PDRI Instance file name: {0}", new Object[]{pdri.getFileName()});
                                         pdri.delete();
                                         DeleteSweep.log.log(Level.FINE, "DELETE:", pdri.getURI());
                                         rs2.deleteRow();
