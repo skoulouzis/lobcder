@@ -25,8 +25,12 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
+import java.security.NoSuchAlgorithmException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.crypto.Cipher;
+import javax.crypto.CipherOutputStream;
+import javax.crypto.NoSuchPaddingException;
 
 /**
  * A test PDRI to implement the delete get/set data methods with the VRS API
@@ -311,9 +315,7 @@ public class VPDRI implements PDRI {
         vfsClient.dispose();
         try {
             initVFS();
-        } catch (VlException ex1) {
-            throw new IOException(ex1);
-        } catch (MalformedURLException ex1) {
+        } catch (VlException | MalformedURLException ex1) {
             throw new IOException(ex1);
         }
     }
@@ -358,7 +360,31 @@ public class VPDRI implements PDRI {
 
     @Override
     public void replicate(PDRI source, boolean encrypt) throws IOException {
-        putData(source.getData());
+        if (!encrypt) {
+            putData(source.getData());
+        } else {
+            try {
+                VDir remoteDir = vfsClient.mkdirs(vrl.getParent(), true);
+                vfsClient.createFile(vrl, true);
+                OutputStream out = vfsClient.getFile(vrl).getOutputStream();
+                encrypt(source.getData(), null);
+            } catch (VlException ex) {
+                Logger.getLogger(VPDRI.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (NoSuchAlgorithmException | NoSuchPaddingException ex) {
+                throw new IOException(ex);
+            }
+        }
+    }
+
+    private void encrypt(InputStream in, OutputStream out) throws NoSuchAlgorithmException, NoSuchPaddingException, IOException {
+        Cipher ecipher = Cipher.getInstance("DES/CBC/PKCS5Padding");
+        out = new CipherOutputStream(out, ecipher);
+        byte[] buf = new byte[2 * 1024 * 1024];
+        int numRead = 0;
+        while ((numRead = in.read(buf)) >= 0) {
+            out.write(buf, 0, numRead);
+        }
+        out.close();
     }
 
 //

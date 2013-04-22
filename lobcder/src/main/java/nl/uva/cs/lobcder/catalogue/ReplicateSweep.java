@@ -22,7 +22,7 @@ import java.util.logging.Level;
 class ReplicateSweep implements Runnable {
 
     private final DataSource datasource;
-    private boolean encrypt = true;
+    private boolean encrypt = false;
 
     public ReplicateSweep(DataSource datasource) {
         this.datasource = datasource;
