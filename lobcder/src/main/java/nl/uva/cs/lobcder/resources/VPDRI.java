@@ -25,12 +25,17 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.security.spec.AlgorithmParameterSpec;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.crypto.Cipher;
 import javax.crypto.CipherOutputStream;
 import javax.crypto.NoSuchPaddingException;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.IvParameterSpec;
 
 /**
  * A test PDRI to implement the delete get/set data methods with the VRS API
@@ -368,16 +373,19 @@ public class VPDRI implements PDRI {
                 vfsClient.createFile(vrl, true);
                 OutputStream out = vfsClient.getFile(vrl).getOutputStream();
                 encrypt(source.getData(), null);
-            } catch (VlException ex) {
-                Logger.getLogger(VPDRI.class.getName()).log(Level.SEVERE, null, ex);
-            } catch (NoSuchAlgorithmException | NoSuchPaddingException ex) {
+            } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | InvalidAlgorithmParameterException | VlException ex) {
                 throw new IOException(ex);
             }
         }
     }
 
-    private void encrypt(InputStream in, OutputStream out) throws NoSuchAlgorithmException, NoSuchPaddingException, IOException {
+    private void encrypt(InputStream in, OutputStream out) throws NoSuchAlgorithmException, NoSuchPaddingException, IOException, InvalidKeyException, InvalidAlgorithmParameterException {
+
+        byte[] iv = new byte[]{(byte) 0x6E, 0x11, 0x40, (byte) 0x9C, 0x07, 0x72, 0x6F, 0x5A};
+        AlgorithmParameterSpec paramSpec = new IvParameterSpec(iv);
+        SecretKey key = null;
         Cipher ecipher = Cipher.getInstance("DES/CBC/PKCS5Padding");
+        ecipher.init(Cipher.ENCRYPT_MODE, key, paramSpec);
         out = new CipherOutputStream(out, ecipher);
         byte[] buf = new byte[2 * 1024 * 1024];
         int numRead = 0;

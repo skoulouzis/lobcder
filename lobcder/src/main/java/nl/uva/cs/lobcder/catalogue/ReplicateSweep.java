@@ -5,19 +5,18 @@ import nl.uva.cs.lobcder.resources.*;
 
 import javax.sql.DataSource;
 import java.io.IOException;
+import java.security.spec.AlgorithmParameterSpec;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.logging.Level;
+import javax.crypto.spec.IvParameterSpec;
 
 /**
- * User: dvasunin
- * Date: 25.02.13
- * Time: 17:28
- * To change this template use File | Settings | File Templates.
+ * User: dvasunin Date: 25.02.13 Time: 17:28 To change this template use File |
+ * Settings | File Templates.
  */
-
 @Log
 class ReplicateSweep implements Runnable {
 
@@ -27,9 +26,8 @@ class ReplicateSweep implements Runnable {
     public ReplicateSweep(DataSource datasource) {
         this.datasource = datasource;
     }
-
+    
     private Collection<MyStorageSite> availableStorage = null;
-
     private Iterator<MyStorageSite> it = null;
 
     private MyStorageSite findBestSite() {
@@ -39,9 +37,8 @@ class ReplicateSweep implements Runnable {
         return it.next();
     }
 
-
     private Collection<MyStorageSite> getStorageSites(Connection connection) throws SQLException {
-        try (Statement s = connection.createStatement()){
+        try (Statement s = connection.createStatement()) {
             ResultSet rs = s.executeQuery("SELECT storageSiteId, resourceURI, "
                     + "currentNum, currentSize, quotaNum, quotaSize, username, "
                     + "password FROM storage_site_table JOIN credential_table ON "
@@ -65,7 +62,8 @@ class ReplicateSweep implements Runnable {
         }
     }
 
-    class CacheDescr{
+    class CacheDescr {
+
         Long pdriId;
         String name;
         Long pdriGroupRef;
@@ -87,10 +85,10 @@ class ReplicateSweep implements Runnable {
                 availableStorage = getStorageSites(connection);
                 ArrayList<CacheDescr> toReplicate = new ArrayList<>();
                 try (Statement statement = connection.createStatement()) {
-                    String sql = "SELECT pdriId, fileName, pdri_table.pdriGroupRef FROM pdri_table JOIN (" +
-                            "SELECT  pdriGroupRef, count(pdri_table.storageSiteRef) AS refcnt FROM pdri_table GROUP BY pdriGroupRef)  AS t ON pdri_table.pdriGroupRef = t.pdriGroupRef " +
-                            "JOIN storage_site_table ON pdri_table.storageSiteRef = storage_site_table.storageSiteId  " +
-                            "WHERE refcnt = 1 AND isCache LIMIT 100";
+                    String sql = "SELECT pdriId, fileName, pdri_table.pdriGroupRef FROM pdri_table JOIN ("
+                            + "SELECT  pdriGroupRef, count(pdri_table.storageSiteRef) AS refcnt FROM pdri_table GROUP BY pdriGroupRef)  AS t ON pdri_table.pdriGroupRef = t.pdriGroupRef "
+                            + "JOIN storage_site_table ON pdri_table.storageSiteRef = storage_site_table.storageSiteId  "
+                            + "WHERE refcnt = 1 AND isCache LIMIT 100";
                     ResultSet rs = statement.executeQuery(sql);
                     while (rs.next()) {
                         CacheDescr cd = new CacheDescr();
@@ -110,10 +108,9 @@ class ReplicateSweep implements Runnable {
                                 ss.getStorageSiteId(),
                                 ss.getResourceURI(),
                                 ss.getCredential().getStorageSiteUsername(),
-                                ss.getCredential().getStorageSitePassword()
-                        );
+                                ss.getCredential().getStorageSitePassword());
                         PDRI replica = PDRIFactory.getFactory().createInstance(pdriDescr);
-                        replica.replicate(source,encrypt);
+                        replica.replicate(source, encrypt);
                         preparedStatement.setString(1, cd.name);
                         preparedStatement.setLong(2, ss.getStorageSiteId());
                         preparedStatement.setLong(3, cd.pdriGroupRef);
