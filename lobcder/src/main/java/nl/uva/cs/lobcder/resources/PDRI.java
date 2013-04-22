@@ -32,7 +32,7 @@ public interface PDRI {
 
     public Long getChecksum() throws IOException;
 
-    public void replicate(PDRI source) throws IOException;
+    public void replicate(PDRI source,boolean encrypt) throws IOException;
 
     public String getURI() throws IOException;
 }

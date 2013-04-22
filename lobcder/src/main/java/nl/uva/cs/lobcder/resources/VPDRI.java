@@ -357,7 +357,7 @@ public class VPDRI implements PDRI {
     }
 
     @Override
-    public void replicate(PDRI source) throws IOException {
+    public void replicate(PDRI source, boolean encrypt) throws IOException {
         putData(source.getData());
     }
 

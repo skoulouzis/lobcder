@@ -22,6 +22,7 @@ import java.util.logging.Level;
 class ReplicateSweep implements Runnable {
 
     private final DataSource datasource;
+    private boolean encrypt = true;
 
     public ReplicateSweep(DataSource datasource) {
         this.datasource = datasource;
@@ -112,7 +113,7 @@ class ReplicateSweep implements Runnable {
                                 ss.getCredential().getStorageSitePassword()
                         );
                         PDRI replica = PDRIFactory.getFactory().createInstance(pdriDescr);
-                        replica.replicate(source);
+                        replica.replicate(source,encrypt);
                         preparedStatement.setString(1, cd.name);
                         preparedStatement.setLong(2, ss.getStorageSiteId());
                         preparedStatement.setLong(3, cd.pdriGroupRef);
