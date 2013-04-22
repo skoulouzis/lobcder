@@ -55,7 +55,7 @@ public class JDBCatalogue extends MyDataSource {
 
     public void stopSweep() {
         timer.cancel();
-        timer.purge();
+//        timer.purge();
     }
 
     public LogicalData registerDirLogicalData(LogicalData entry, @Nonnull Connection connection) throws SQLException {

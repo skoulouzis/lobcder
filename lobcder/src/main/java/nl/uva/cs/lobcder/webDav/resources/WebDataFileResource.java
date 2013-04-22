@@ -104,7 +104,7 @@ public class WebDataFileResource extends WebDataResource implements
 
     @Override
     public void delete() throws NotAuthorizedException, BadRequestException, ConflictException {
-        log.fine("delete() file " + getPath());
+        log.log(Level.FINE, "delete() file {0}", getPath());
         try (Connection connection = getCatalogue().getConnection()) {
             try {
                 getCatalogue().remove(getLogicalData(), getPrincipal(), connection);
