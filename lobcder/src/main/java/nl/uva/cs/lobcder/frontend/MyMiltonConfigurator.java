@@ -62,4 +62,10 @@ public class MyMiltonConfigurator extends DefaultMiltonConfigurator {
             MyMiltonConfigurator.log.log(Level.SEVERE, null, e);
         }
     }
+    
+    @Override
+    public void shutdown(){
+        super.shutdown();
+        catalogue.stopSweep();
+    }
 }
