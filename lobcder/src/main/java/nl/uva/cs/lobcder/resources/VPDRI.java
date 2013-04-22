@@ -66,7 +66,6 @@ public class VPDRI implements PDRI {
         VRS.getRegistry().addVRSDriverClass(nl.uva.vlet.vfs.cloud.CloudFSFactory.class);
         Global.init();
     }
-
     private VFSClient vfsClient;
     //    private MyStorageSite storageSite;
     private VRL vrl;
@@ -90,7 +89,7 @@ public class VPDRI implements PDRI {
             this.username = username;
             this.password = password;
 //            this.resourceUrl = resourceUrl;
-            log.debug("fileName: "+fileName+", storageSiteId: "+storageSiteId+", username: "+username+", password: "+password+", VRL: "+vrl);
+            log.debug("fileName: " + fileName + ", storageSiteId: " + storageSiteId + ", username: " + username + ", password: " + password + ", VRL: " + vrl);
             initVFS();
         } catch (VlException | MalformedURLException ex) {
             throw new IOException(ex);
@@ -137,9 +136,14 @@ public class VPDRI implements PDRI {
 
     @Override
     public void delete() throws IOException {
-        //it's void so do it asynchronously
-        Runnable asyncDel = getAsyncDelete(this.vfsClient, vrl);
-        asyncDel.run();
+        try {
+            vfsClient.openLocation(vrl).delete();
+        } catch (VlException ex) {
+            Logger.getLogger(VPDRI.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        //        //it's void so do it asynchronously
+        //        Runnable asyncDel = getAsyncDelete(this.vfsClient, vrl);
+        //        asyncDel.run();
     }
 
     @Override
@@ -241,7 +245,6 @@ public class VPDRI implements PDRI {
 
     private Runnable getAsyncDelete(final VFSClient vfsClient, final VRL vrl) {
         return new Runnable() {
-
             @Override
             public void run() {
                 try {
@@ -255,7 +258,6 @@ public class VPDRI implements PDRI {
 
     private Runnable getAsyncPutData(final VFSClient vfsClient, final InputStream in) {
         return new Runnable() {
-
             @Override
             public void run() {
             }
@@ -354,12 +356,10 @@ public class VPDRI implements PDRI {
         }
     }
 
-
     @Override
     public void replicate(PDRI source) throws IOException {
         putData(source.getData());
     }
-
 
 //
 //    @Override
@@ -379,7 +379,6 @@ public class VPDRI implements PDRI {
 //            throw new IOException(ex);
 //        }
 //    }
-
     @Override
     public String getURI() throws IOException {
         try {
