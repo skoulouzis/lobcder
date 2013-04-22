@@ -41,7 +41,10 @@ class ReplicateSweep implements Runnable {
 
     private Collection<MyStorageSite> getStorageSites(Connection connection) throws SQLException {
         try (Statement s = connection.createStatement()){
-            ResultSet rs = s.executeQuery("SELECT storageSiteId, resourceURI, currentNum, currentSize, quotaNum, quotaSize, username, password FROM storage_site_table JOIN credential_table ON credentialRef = credintialId WHERE isCache != TRUE");
+            ResultSet rs = s.executeQuery("SELECT storageSiteId, resourceURI, "
+                    + "currentNum, currentSize, quotaNum, quotaSize, username, "
+                    + "password FROM storage_site_table JOIN credential_table ON "
+                    + "credentialRef = credintialId WHERE isCache != TRUE");
             ArrayList<MyStorageSite> res = new ArrayList<>();
             while (rs.next()) {
                 Credential c = new Credential();
