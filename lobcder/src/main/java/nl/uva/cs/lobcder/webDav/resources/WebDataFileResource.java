@@ -4,7 +4,6 @@
  */
 package nl.uva.cs.lobcder.webDav.resources;
 
-
 import io.milton.common.ContentTypeUtils;
 import io.milton.common.Path;
 import io.milton.http.*;
@@ -42,15 +41,17 @@ import java.util.logging.Level;
 public class WebDataFileResource extends WebDataResource implements
         FileResource, LockableResource {//, ReplaceableResource {
 
-    public WebDataFileResource(@Nonnull LogicalData logicalData, Path path, @Nonnull JDBCatalogue catalogue, @Nonnull AuthI auth1,  AuthI auth2) {
+    public WebDataFileResource(@Nonnull LogicalData logicalData, Path path, @Nonnull JDBCatalogue catalogue, @Nonnull AuthI auth1, AuthI auth2) {
         super(logicalData, path, catalogue, auth1, auth2);
     }
 
     @Override
     public boolean authorise(Request request, Request.Method method, Auth auth) {
-        switch(method) {
-            case MKCOL : return false;
-            default: return super.authorise(request, method, auth);
+        switch (method) {
+            case MKCOL:
+                return false;
+            default:
+                return super.authorise(request, method, auth);
         }
     }
 
@@ -82,7 +83,7 @@ public class WebDataFileResource extends WebDataResource implements
         WebDataDirResource toWDDR = (WebDataDirResource) collectionResource;
         log.fine("moveTo('" + toWDDR.getPath() + "', '" + name + "') for " + getPath());
         try (Connection connection = getCatalogue().getConnection()) {
-            try{
+            try {
                 Permissions destPerm = getCatalogue().getPermissions(toWDDR.getLogicalData().getUid(), toWDDR.getLogicalData().getOwner(), connection);
                 if (!getPrincipal().canWrite(destPerm)) {
                     throw new NotAuthorizedException(this);
@@ -159,7 +160,7 @@ public class WebDataFileResource extends WebDataResource implements
         } catch (Exception e) {
             if (pdri == null) {
                 //noinspection ConstantConditions
-                throw (IOException)e;
+                throw (IOException) e;
             } else {
                 if (e.getMessage() != null && e.getMessage().contains("Couldn open location")) {
                     circularStreamBufferTransferer(it, out, 0, null);
@@ -179,17 +180,23 @@ public class WebDataFileResource extends WebDataResource implements
             Map<String, String> params, String contentType) throws IOException,
             NotAuthorizedException, BadRequestException, NotFoundException {
         Iterator<PDRIDescr> it;
-        try{
+        try {
             it = getCatalogue().getPdriDescrByGroupId(getLogicalData().getPdriGroupId()).iterator();
             circularStreamBufferTransferer(it, out, 0, null);
-        } catch (SQLException | IOException e) {
-            throw new BadRequestException(this, e.getMessage());
+        } catch (SQLException ex) {
+            throw new BadRequestException(this, ex.getMessage());
+        } catch (IOException ex) {
+            if (ex.getMessage().contains("Could not get file content")) {
+                throw ex;
+            }else{
+                throw new BadRequestException(this, ex.getMessage());
+            }
         }
     }
 
     @Override
     public String processForm(Map<String, String> parameters,
-                              Map<String, FileItem> files) throws BadRequestException,
+            Map<String, FileItem> files) throws BadRequestException,
             NotAuthorizedException {
         throw new BadRequestException(this, "Not implemented");
     }
