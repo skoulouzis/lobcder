@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 import io.milton.http.exceptions.ConflictException;
 import io.milton.http.exceptions.NotAuthorizedException;
 import io.milton.http.webdav.DefaultUserAgentHelper;
+import java.io.IOException;
 
 public class StandardFilter implements Filter {
 
@@ -67,6 +68,12 @@ public class StandardFilter implements Filter {
 		} catch (NotAuthorizedException ex) {
 			log.warn("NotAuthorizedException", ex);
 			manager.getResponseHandler().respondUnauthorised(ex.getResource(), response, request);
+		}catch(IOException ex){
+			if(ex.getMessage().contains("Could not get file content")){
+				manager.getResponseHandler().respondConflict(null, response, request, "Could not get file content. Perhaps no replicas are available");
+			}else{
+				response.sendError(Response.Status.SC_INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR_HTML);
+			}
 		} catch (Throwable e) {
 			// Looks like in some cases we can be left with a connection in an indeterminate state
 			// due to the content length not being equal to the content length header, so
