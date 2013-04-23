@@ -29,6 +29,15 @@ class DeleteSweep implements Runnable {
     public void run() {
         PDRIFactory factory;
         try (Connection connection = datasource.getConnection()) {
+
+
+            //Some times pdris are left in the pdriGrop with ref 1 while there is no refernace from the ldri. 
+            //We'll try to sweep them as well
+//                    ResultSet res4 = s1.executeQuery("update pdrigroup_table set `refCount` = 0 where pdriGroupId not in (select pdriGroupRef from ldata_table where pdriGroupRef != 0)");
+            try (PreparedStatement ps = connection.prepareStatement("update pdrigroup_table set `refCount` = 0 where pdriGroupId not in (select pdriGroupRef from ldata_table where pdriGroupRef != 0)")) {
+                ps.executeUpdate();
+            }
+
             try {
                 connection.setAutoCommit(false);
                 try (Statement s1 = connection.createStatement(java.sql.ResultSet.TYPE_FORWARD_ONLY,
@@ -77,9 +86,8 @@ class DeleteSweep implements Runnable {
                             connection.commit();
                         }
                     }
-                    //Some times pdris are left in the pdriGrop with ref 1 while there is no refernace from the ldri. 
-                    //We'll try to sweep them as well
                 }
+
             } catch (SQLException | IOException e) {
                 DeleteSweep.log.log(Level.SEVERE, null, e);
                 connection.rollback();

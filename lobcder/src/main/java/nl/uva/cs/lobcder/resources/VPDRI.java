@@ -75,6 +75,7 @@ public class VPDRI implements PDRI {
         VRS.getRegistry().addVRSDriverClass(nl.uva.vlet.vfs.cloud.CloudFSFactory.class);
         Global.init();
     }
+    
     private VFSClient vfsClient;
     //    private MyStorageSite storageSite;
     private VRL vrl;
