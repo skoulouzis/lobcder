@@ -34,6 +34,7 @@ class DeleteSweep implements Runnable {
             //Some times pdris are left in the pdriGrop with ref 1 while there is no refernace from the ldri. 
             //We'll try to sweep them as well
 //                    ResultSet res4 = s1.executeQuery("update pdrigroup_table set `refCount` = 0 where pdriGroupId not in (select pdriGroupRef from ldata_table where pdriGroupRef != 0)");
+            //TODO add it to the query below 
             try (PreparedStatement ps = connection.prepareStatement("update pdrigroup_table set `refCount` = 0 where pdriGroupId not in (select pdriGroupRef from ldata_table where pdriGroupRef != 0)")) {
                 ps.executeUpdate();
             }
@@ -42,7 +43,7 @@ class DeleteSweep implements Runnable {
                 connection.setAutoCommit(false);
                 try (Statement s1 = connection.createStatement(java.sql.ResultSet.TYPE_FORWARD_ONLY,
                                 java.sql.ResultSet.CONCUR_UPDATABLE)) {
-                    ResultSet rs1 = s1.executeQuery("SELECT pdriGroupId FROM pdrigroup_table WHERE refCount = 0");
+                    ResultSet rs1 = s1.executeQuery("SELECT pdriGroupId FROM pdrigroup_table WHERE refCount = 0 ");
                     while (rs1.next()) {
                         Long groupId = rs1.getLong(1);
                         try (PreparedStatement ps2 = connection.prepareStatement(

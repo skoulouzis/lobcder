@@ -12,8 +12,6 @@ import io.milton.http.exceptions.*;
 import io.milton.resource.CollectionResource;
 import io.milton.resource.FileResource;
 import io.milton.resource.LockableResource;
-import io.milton.resource.ReplaceableResource;
-import java.io.InputStream;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.auth.AuthI;
 import nl.uva.cs.lobcder.auth.Permissions;
@@ -184,8 +182,7 @@ public class WebDataFileResource extends WebDataResource implements
         try{
             it = getCatalogue().getPdriDescrByGroupId(getLogicalData().getPdriGroupId()).iterator();
             circularStreamBufferTransferer(it, out, 0, null);
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (SQLException | IOException e) {
             throw new BadRequestException(this, e.getMessage());
         }
     }
