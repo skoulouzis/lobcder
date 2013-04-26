@@ -42,7 +42,7 @@ public class JDBCatalogue extends MyDataSource {
 
             Runnable deleteSweep = new DeleteSweep(getDatasource());
             Runnable replicateSweep = new ReplicateSweep(getDatasource());
-            
+
             @Override
             public void run() {
                 deleteSweep.run();
@@ -78,10 +78,14 @@ public class JDBCatalogue extends MyDataSource {
 
     public LogicalData registerLogicalData(LogicalData entry, @Nonnull Connection connection) throws SQLException {
         try (PreparedStatement preparedStatement = connection.prepareStatement(
-                        "INSERT INTO ldata_table(parentRef, ownerId, datatype, createDate, modifiedDate,"
-                        + "ldLength, contentTypesStr, pdriGroupRef, isSupervised, checksum, lastValidationDate,"
-                        + "lockTokenId, lockScope, lockType, lockedByUser, lockDepth, lockTimeout, description, locationPreference, ldName) "
-                        + "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS)) {
+                        "INSERT INTO ldata_table(parentRef, ownerId, datatype, "
+                        + "createDate, modifiedDate, ldLength, "
+                        + "contentTypesStr, pdriGroupRef, isSupervised, "
+                        + "checksum, lastValidationDate, lockTokenId, "
+                        + "lockScope, lockType, lockedByUser, lockDepth, "
+                        + "lockTimeout, description, locationPreference, "
+                        + "ldName, isEncrypted) "
+                        + "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS)) {
             preparedStatement.setLong(1, entry.getParentRef());
             preparedStatement.setString(2, entry.getOwner());
             preparedStatement.setString(3, entry.getType());
@@ -102,6 +106,7 @@ public class JDBCatalogue extends MyDataSource {
             preparedStatement.setString(18, entry.getDescription());
             preparedStatement.setString(19, entry.getDataLocationPreference());
             preparedStatement.setString(20, entry.getName());
+            preparedStatement.setBoolean(21, entry.getEncrypted());
             preparedStatement.executeUpdate();
             ResultSet rs = preparedStatement.getGeneratedKeys();
             rs.next();
@@ -131,15 +136,15 @@ public class JDBCatalogue extends MyDataSource {
 //        try (Statement statement = connection.createStatement(java.sql.ResultSet.TYPE_FORWARD_ONLY, java.sql.ResultSet.CONCUR_UPDATABLE)) {
 //            statement.executeUpdate("DELETE FROM pdri_table WHERE pdri_table.pdriId = " + groupId);
 //        }
-        
+
         try (Statement statement = connection.createStatement(java.sql.ResultSet.TYPE_FORWARD_ONLY, java.sql.ResultSet.CONCUR_UPDATABLE)) {
             statement.executeUpdate("INSERT INTO pdrigroup_table (refCount) VALUES(1)", Statement.RETURN_GENERATED_KEYS);
             ResultSet rs = statement.getGeneratedKeys();
             rs.next();
             Long newGroupId = rs.getLong(1);
-            
+
             try (PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO pdri_table "
-                    + "(fileName, storageSiteRef, pdriGroupRef) VALUES(?, ?, ?)")) {
+                            + "(fileName, storageSiteRef, pdriGroupRef) VALUES(?, ?, ?)")) {
                 preparedStatement.setString(1, pdri.getFileName());
                 preparedStatement.setLong(2, pdri.getStorageSiteId());
                 preparedStatement.setLong(3, newGroupId);
@@ -236,7 +241,7 @@ public class JDBCatalogue extends MyDataSource {
                         "SELECT uid, ownerId, datatype, createDate, modifiedDate, ldLength, "
                         + "contentTypesStr, pdriGroupRef, isSupervised, checksum, lastValidationDate, "
                         + "lockTokenID, lockScope, lockType, lockedByUser, lockDepth, lockTimeout, "
-                        + "description, locationPreference "
+                        + "description, locationPreference, isEncrypted "
                         + "FROM ldata_table WHERE ldata_table.parentRef = ? AND ldata_table.ldName = ?")) {
             preparedStatement.setLong(1, parentRef);
             preparedStatement.setString(2, name);
@@ -264,6 +269,7 @@ public class JDBCatalogue extends MyDataSource {
                 res.setLockTimeout(rs.getLong(17));
                 res.setDescription(rs.getString(18));
                 res.setDataLocationPreference(rs.getString(19));
+                res.setEncrypted(rs.getBoolean(20));
                 return res;
             } else {
                 return null;
@@ -288,7 +294,7 @@ public class JDBCatalogue extends MyDataSource {
                                     "SELECT uid, ownerId, datatype, createDate, modifiedDate, ldLength, "
                                     + "contentTypesStr, pdriGroupRef, isSupervised, checksum, lastValidationDate, "
                                     + "lockTokenID, lockScope, lockType, lockedByUser, lockDepth, lockTimeout, "
-                                    + "description, locationPreference "
+                                    + "description, locationPreference, isEncrypted "
                                     + "FROM ldata_table WHERE ldata_table.parentRef = ? AND ldata_table.ldName = ?")) {
                         preparedStatement1.setLong(1, parent);
                         preparedStatement1.setString(2, p);
@@ -316,6 +322,7 @@ public class JDBCatalogue extends MyDataSource {
                             res.setLockTimeout(rs.getLong(17));
                             res.setDescription(rs.getString(18));
                             res.setDataLocationPreference(rs.getString(19));
+                            res.setEncrypted(rs.getBoolean(20));
                             return res;
                         } else {
                             return null;
@@ -346,7 +353,7 @@ public class JDBCatalogue extends MyDataSource {
         try (PreparedStatement ps = connection.prepareStatement("SELECT parentRef, ownerId, datatype, ldName, "
                         + "createDate, modifiedDate, ldLength, contentTypesStr, pdriGroupRef, "
                         + "isSupervised, checksum, lastValidationDate, lockTokenID, lockScope, "
-                        + "lockType, lockedByUser, lockDepth, lockTimeout, description, locationPreference "
+                        + "lockType, lockedByUser, lockDepth, lockTimeout, description, locationPreference, isEncrypted "
                         + "FROM ldata_table WHERE ldata_table.uid = ?")) {
             ps.setLong(1, UID);
             ResultSet rs = ps.executeQuery();
@@ -373,6 +380,7 @@ public class JDBCatalogue extends MyDataSource {
                 res.setLockTimeout(rs.getLong(18));
                 res.setDescription(rs.getString(19));
                 res.setDataLocationPreference(rs.getString(20));
+                res.setEncrypted(rs.getBoolean(21));
                 return res;
             } else {
                 return null;
@@ -450,7 +458,7 @@ public class JDBCatalogue extends MyDataSource {
                         "SELECT uid, ownerId, datatype, ldName, createDate, modifiedDate, ldLength, "
                         + "contentTypesStr, pdriGroupRef, isSupervised, checksum, lastValidationDate, "
                         + "lockTokenID, lockScope, lockType, lockedByUser, lockDepth, lockTimeout, "
-                        + "description, locationPreference "
+                        + "description, locationPreference, isEncrypted "
                         + "FROM ldata_table WHERE ldata_table.parentRef = ?")) {
             preparedStatement.setLong(1, parentRef);
             ResultSet rs = preparedStatement.executeQuery();
@@ -478,6 +486,7 @@ public class JDBCatalogue extends MyDataSource {
                 element.setLockTimeout(rs.getLong(18));
                 element.setDescription(rs.getString(19));
                 element.setDataLocationPreference(rs.getString(20));
+                element.setEncrypted(rs.getBoolean(21));
                 res.add(element);
             }
             return res;
@@ -616,6 +625,14 @@ public class JDBCatalogue extends MyDataSource {
 
     public void setLogicalDataSupervised(@Nonnull Long uid, @Nonnull Boolean flag, @Nonnull Connection connection) throws SQLException {
         try (PreparedStatement ps = connection.prepareStatement("UPDATE ldata_table SET isSupervised = ? WHERE uid = ?")) {
+            ps.setBoolean(1, flag);
+            ps.setLong(2, uid);
+            ps.executeUpdate();
+        }
+    }
+
+    public void setLogicalDataEncrypted(@Nonnull Long uid, @Nonnull Boolean flag, @Nonnull Connection connection) throws SQLException {
+        try (PreparedStatement ps = connection.prepareStatement("UPDATE ldata_table SET isEncrypted = ? WHERE uid = ?")) {
             ps.setBoolean(1, flag);
             ps.setLong(2, uid);
             ps.executeUpdate();

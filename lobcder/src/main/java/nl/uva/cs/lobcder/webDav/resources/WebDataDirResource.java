@@ -33,7 +33,6 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.logging.Level;
-import nl.uva.cs.lobcder.resources.PDRIFactory;
 
 /**
  *
@@ -152,7 +151,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
         WebDataDirResource.log.log(Level.FINE, "createNew. for {0}\n\t newName:\t{1}\n\t length:\t{2}\n\t contentType:\t{3}", new Object[]{getPath(), newName, length, contentType});
         LogicalData fileLogicalData;
         List<PDRIDescr> pdriDescrList;
-
+        
         try (Connection connection = getCatalogue().getConnection()) {
             try {
 //                Long uid = getCatalogue().getLogicalDataUidByParentRefAndName(getLogicalData().getUid(), newName, connection);

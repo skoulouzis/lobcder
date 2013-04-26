@@ -32,10 +32,13 @@ import java.security.spec.AlgorithmParameterSpec;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.crypto.Cipher;
+import javax.crypto.CipherInputStream;
 import javax.crypto.CipherOutputStream;
+import javax.crypto.KeyGenerator;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
+import nl.uva.cs.lobcder.util.DesEncrypter;
 
 /**
  * A test PDRI to implement the delete get/set data methods with the VRS API
@@ -75,7 +78,6 @@ public class VPDRI implements PDRI {
         VRS.getRegistry().addVRSDriverClass(nl.uva.vlet.vfs.cloud.CloudFSFactory.class);
         Global.init();
     }
-    
     private VFSClient vfsClient;
     //    private MyStorageSite storageSite;
     private VRL vrl;
@@ -255,6 +257,7 @@ public class VPDRI implements PDRI {
 
     private Runnable getAsyncDelete(final VFSClient vfsClient, final VRL vrl) {
         return new Runnable() {
+
             @Override
             public void run() {
                 try {
@@ -268,6 +271,7 @@ public class VPDRI implements PDRI {
 
     private Runnable getAsyncPutData(final VFSClient vfsClient, final InputStream in) {
         return new Runnable() {
+
             @Override
             public void run() {
             }
@@ -373,27 +377,15 @@ public class VPDRI implements PDRI {
                 VDir remoteDir = vfsClient.mkdirs(vrl.getParent(), true);
                 vfsClient.createFile(vrl, true);
                 OutputStream out = vfsClient.getFile(vrl).getOutputStream();
-                encrypt(source.getData(), null);
+
+                
+                DesEncrypter encrypter = new DesEncrypter();
+                encrypter.encrypt(source.getData(), out);
+
             } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | InvalidAlgorithmParameterException | VlException ex) {
                 throw new IOException(ex);
             }
         }
-    }
-
-    private void encrypt(InputStream in, OutputStream out) throws NoSuchAlgorithmException, NoSuchPaddingException, IOException, InvalidKeyException, InvalidAlgorithmParameterException {
-
-        byte[] iv = new byte[]{(byte) 0x6E, 0x11, 0x40, (byte) 0x9C, 0x07, 0x72, 0x6F, 0x5A};
-        AlgorithmParameterSpec paramSpec = new IvParameterSpec(iv);
-        SecretKey key = null;
-        Cipher ecipher = Cipher.getInstance("DES/CBC/PKCS5Padding");
-        ecipher.init(Cipher.ENCRYPT_MODE, key, paramSpec);
-        out = new CipherOutputStream(out, ecipher);
-        byte[] buf = new byte[2 * 1024 * 1024];
-        int numRead = 0;
-        while ((numRead = in.read(buf)) >= 0) {
-            out.write(buf, 0, numRead);
-        }
-        out.close();
     }
 
 //
@@ -422,4 +414,6 @@ public class VPDRI implements PDRI {
             throw new IOException(ex);
         }
     }
+
+   
 }

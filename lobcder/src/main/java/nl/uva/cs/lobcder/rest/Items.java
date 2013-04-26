@@ -79,6 +79,7 @@ public class Items extends CatalogueHelper {
                     logicalData.setLockTimeout(resultSet.getLong(19));
                     logicalData.setDescription(resultSet.getString(20));
                     logicalData.setDataLocationPreference(resultSet.getString(21));
+                    logicalData.setEncrypted(resultSet.getBoolean(22));
                     LogicalDataWrapped ldw = new LogicalDataWrapped();
                     ldw.setLogicalData(logicalData);
                     ldw.setPermissions(p);
@@ -126,7 +127,7 @@ public class Items extends CatalogueHelper {
             try (PreparedStatement ps1 = cn.prepareStatement("SELECT uid, parentRef, ownerId, datatype, ldName, createDate, modifiedDate, ldLength, "
                     + "contentTypesStr, pdriGroupRef, isSupervised, checksum, lastValidationDate, "
                     + "lockTokenID, lockScope, lockType, lockedByUser, lockDepth, lockTimeout, "
-                    + "description, locationPreference "
+                    + "description, locationPreference, isEncrypted "
                     + "FROM ldata_table WHERE (parentRef = ?) "
                     + "AND (? OR (isSupervised = ?)) "
                     + "AND (? OR (createDate BETWEEN FROM_UNIXTIME(?) AND FROM_UNIXTIME(?))) "

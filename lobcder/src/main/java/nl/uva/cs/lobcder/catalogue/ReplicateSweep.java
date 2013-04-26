@@ -21,12 +21,10 @@ import javax.crypto.spec.IvParameterSpec;
 class ReplicateSweep implements Runnable {
 
     private final DataSource datasource;
-    private boolean encrypt = false;
 
     public ReplicateSweep(DataSource datasource) {
         this.datasource = datasource;
     }
-    
     private Collection<MyStorageSite> availableStorage = null;
     private Iterator<MyStorageSite> it = null;
 
@@ -99,7 +97,20 @@ class ReplicateSweep implements Runnable {
                     }
                 }
                 connection.commit();
+                //Get if we should encrypt it 
+                boolean encrypt = false;
                 for (CacheDescr cd : toReplicate) {
+
+                    try (Statement statement = connection.createStatement()) {
+                        String sql = "select isEncrypted from ldata_table where pdriGroupRef = " + cd.pdriGroupRef;
+                        ResultSet rs = statement.executeQuery(sql);
+                        while (rs.next()) {
+                            encrypt = rs.getBoolean(1);
+                        }
+                    }
+
+
+
                     try (PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO pdri_table (fileName, storageSiteRef, pdriGroupRef) VALUES(?, ?, ?)")) {
                         CachePDRI source = new CachePDRI(cd.name);
                         MyStorageSite ss = findBestSite();
@@ -119,7 +130,7 @@ class ReplicateSweep implements Runnable {
                         connection.commit();
                     }
                 }
-            } catch (Exception e) {
+            } catch (SQLException | IOException e) {
                 ReplicateSweep.log.log(Level.SEVERE, null, e);
                 connection.rollback();
             }

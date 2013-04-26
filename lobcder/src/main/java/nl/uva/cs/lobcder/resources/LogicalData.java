@@ -1,18 +1,11 @@
 package nl.uva.cs.lobcder.resources;
 
 import lombok.Data;
-import lombok.NonNull;
-import lombok.SneakyThrows;
-import nl.uva.cs.lobcder.auth.Permissions;
-import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
 import nl.uva.cs.lobcder.util.Constants;
 
-import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
-import java.sql.SQLException;
 import java.util.Arrays;
-import java.util.List;
 
 /**
  * User: dvasunin
@@ -54,6 +47,7 @@ public class LogicalData implements Cloneable {
     private Long lockTimeout = Long.valueOf(0);
     private String description;
     private String dataLocationPreference;
+    private Boolean encrypted = Boolean.FALSE;
 
 //    @XmlElement
 //    public List<String> getContentTypes() {

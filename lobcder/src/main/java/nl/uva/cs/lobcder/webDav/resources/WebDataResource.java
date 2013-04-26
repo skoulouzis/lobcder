@@ -4,7 +4,6 @@
  */
 package nl.uva.cs.lobcder.webDav.resources;
 
-
 import io.milton.common.Path;
 import io.milton.http.Auth;
 import io.milton.http.Request;
@@ -78,7 +77,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
 
     @Override
     public Object authenticate(String user, String password) {
-        WebDataResource.log.log(Level.FINE,"authenticate.\n" + "\t user: {0}\t password: {1}", new Object[]{user, password});
+        WebDataResource.log.log(Level.FINE, "authenticate.\n" + "\t user: {0}\t password: {1}", new Object[]{user, password});
         String token = password;
         MyPrincipal principal = null;
         if (auth2 != null) {
@@ -100,9 +99,8 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
     }
 
     protected Permissions getPermissions() throws SQLException {
-       return getCatalogue().getPermissions(getLogicalData().getUid(), getLogicalData().getOwner());
+        return getCatalogue().getPermissions(getLogicalData().getUid(), getLogicalData().getOwner());
     }
-
 
     @Override
     public boolean authorise(Request request, Request.Method method, Auth auth) {
@@ -140,7 +138,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
                 case GET:
                     return getPrincipal().canRead(getPermissions());
                 case OPTIONS:
-                     return getPrincipal().canRead(getPermissions());
+                    return getPrincipal().canRead(getPermissions());
                 case POST:
                     return getPrincipal().canWrite(getPermissions());
                 case PUT:
@@ -182,7 +180,6 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
                 return null;
         }
     }
-
 
     String getUserlUrlPrefix() {
         return "http://lobcder.net/user/";
@@ -247,6 +244,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
         try {
             // Do the mapping
             Principal p = new DavPrincipals.AbstractDavPrincipal(getPrincipalURL()) {
+
                 @Override
                 public boolean matches(Auth auth, Resource current) {
                     return true;
@@ -274,6 +272,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
             for (String r : resourcePermission.getRead()) {
                 perm = new ArrayList<>();
                 p = new DavPrincipals.AbstractDavPrincipal(getRoleUrlPrefix() + r) {
+
                     @Override
                     public boolean matches(Auth auth, Resource current) {
                         return true;
@@ -289,6 +288,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
             for (String r : resourcePermission.getWrite()) {
                 perm = new ArrayList<>();
                 p = new DavPrincipals.AbstractDavPrincipal(getRoleUrlPrefix() + r) {
+
                     @Override
                     public boolean matches(Auth auth, Resource current) {
                         return true;
@@ -322,7 +322,6 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
             }
         }
     }
-
 
     @Override
     public HrefList getPrincipalCollectionHrefs() {
@@ -374,6 +373,8 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
 
             } else if (qname.equals(Constants.DRI_SUPERVISED_PROP_NAME)) {
                 return String.valueOf(getLogicalData().getSupervised());
+            } else if (qname.equals(Constants.ENCRYPTED_PROP_NAME)) {
+                return String.valueOf(getLogicalData().getEncrypted());
             } else if (qname.equals(Constants.DRI_CHECKSUM_PROP_NAME)) {
                 return String.valueOf(getLogicalData().getChecksum());
             } else if (qname.equals(Constants.DRI_LAST_VALIDATION_DATE_PROP_NAME)) {
@@ -398,7 +399,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
 
     @Override
     public void setProperty(QName qname, Object o) throws PropertySource.PropertySetException, NotAuthorizedException {
-        WebDataResource.log.fine("setProperty for resource " + getPath() + " : " + qname + " = " + o);
+        WebDataResource.log.log(Level.FINE, "setProperty for resource {0} : {1} = {2}", new Object[]{getPath(), qname, o});
         try (Connection connection = getCatalogue().getConnection()) {
             try {
                 if (o != null) {
@@ -407,6 +408,11 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
                         Boolean v = Boolean.valueOf(value);
                         getLogicalData().setSupervised(v);
                         catalogue.setLogicalDataSupervised(getLogicalData().getUid(), v, connection);
+                    }
+                    if (qname.equals(Constants.ENCRYPTED_PROP_NAME)) {
+                        Boolean v = Boolean.valueOf(value);
+                        getLogicalData().setSupervised(v);
+                        catalogue.setLogicalDataEncrypted(getLogicalData().getUid(), v, connection);
                     } else if (qname.equals(Constants.DRI_CHECKSUM_PROP_NAME)) {
                         Long v = Long.valueOf(value);
                         getLogicalData().setChecksum(v);

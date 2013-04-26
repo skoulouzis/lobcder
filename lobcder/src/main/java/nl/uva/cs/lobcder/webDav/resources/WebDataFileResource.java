@@ -32,6 +32,9 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Level;
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
+import nl.uva.cs.lobcder.util.DesEncrypter;
 
 /**
  *
@@ -151,9 +154,14 @@ public class WebDataFileResource extends WebDataResource implements
                 if (reconnect) {
                     pdri.reconnect();
                 }
-                WebDataFileResource.log.fine("sendContent() for " + getPath() + "--------- " + pdri.getFileName());
-                CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((5 * 1024 * 1024), pdri.getData(), out);
-                cBuff.startTransfer((long) -1);
+                WebDataFileResource.log.log(Level.FINE, "sendContent() for {0}--------- {1}", new Object[]{getPath(), pdri.getFileName()});
+                if (!getLogicalData().getEncrypted()) {
+                    CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((5 * 1024 * 1024), pdri.getData(), out);
+                    cBuff.startTransfer((long) -1);
+                } else {
+                    DesEncrypter encrypter = new DesEncrypter();
+                    encrypter.decrypt(pdri.getData(), out);
+                }
             } else {
                 throw new IOException("Could not get file content");
             }
@@ -188,7 +196,7 @@ public class WebDataFileResource extends WebDataResource implements
         } catch (IOException ex) {
             if (ex.getMessage().contains("Could not get file content")) {
                 throw ex;
-            }else{
+            } else {
                 throw new BadRequestException(this, ex.getMessage());
             }
         }

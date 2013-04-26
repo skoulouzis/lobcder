@@ -87,62 +87,6 @@ public class CachePDRI implements PDRI {
         }
     }
 
-    private Runnable getAsyncPutData(final String uri, final InputStream is) {
-
-        return new Runnable() {
-
-            @Override
-            public void run() {
-                OutputStream dest = null;
-                try {
-                    dest = new FileOutputStream(new File(uri));
-                    if ((dest instanceof FileOutputStream) && (is instanceof FileInputStream)) {
-                        try {
-                            FileChannel target = ((FileOutputStream) dest).getChannel();
-                            FileChannel source = ((FileInputStream) is).getChannel();
-                            source.transferTo(0, source.size(), target);
-                            source.close();
-                            target.close();
-
-                            return;
-                        } catch (Exception e) { /*
-                             * failover to byte stream version
-                             */
-
-                        }
-                    }
-                    final ReadableByteChannel inputChannel = Channels.newChannel(is);
-                    final WritableByteChannel outputChannel = Channels.newChannel(dest);
-                    fastCopy(inputChannel, outputChannel);
-                } catch (IOException ex) {
-                    Logger.getLogger(CachePDRI.class.getName()).log(Level.SEVERE, null, ex);
-                } finally {
-                    try {
-                        dest.close();
-                    } catch (IOException ex) {
-                        Logger.getLogger(CachePDRI.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                }
-            }
-
-            private void fastCopy(ReadableByteChannel inputChannel, WritableByteChannel outputChannel) throws IOException {
-                final ByteBuffer buffer = ByteBuffer.allocateDirect(Constants.BUF_SIZE);
-                while (inputChannel.read(buffer) != -1) {
-                    buffer.flip();
-                    outputChannel.write(buffer);
-                    buffer.compact();
-                }
-                buffer.flip();
-
-                while (buffer.hasRemaining()) {
-                    outputChannel.write(buffer);
-                }
-            }
-        };
-
-
-    }
-
     @Override
     public long getLength() {
         return new File(baseLocation + file_name).length();
