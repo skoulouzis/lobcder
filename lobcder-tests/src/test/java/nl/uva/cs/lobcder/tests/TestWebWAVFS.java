@@ -233,185 +233,186 @@ public class TestWebWAVFS {
         return vfsClient;
     }
 
-//    @Test
-//    public void testCreateAndDeleteFile() throws IOException, DavException {
-//        //Make sure it's deleted 
-//        String testFileURI1 = uri.toASCIIString() + TestSettings.TEST_FILE_NAME1;
-//        DeleteMethod del = new DeleteMethod(testFileURI1);
-//        int status = client1.executeMethod(del);
-//
-//        testFileURI1 = uri.toASCIIString() + TestSettings.TEST_FILE_NAME1;
-//        PutMethod put = new PutMethod(testFileURI1);
-//        put.setRequestEntity(new StringRequestEntity(TestSettings.TEST_DATA, "text/plain", "UTF-8"));
-//        status = client1.executeMethod(put);
-//        assertEquals(HttpStatus.SC_CREATED, status);
-//
-//
-//        String testFileURI2 = uri.toASCIIString() + TestSettings.TEST_TXT_FILE_NAME;
-//        put = new PutMethod(testFileURI2);
-//        put.setRequestEntity(new StringRequestEntity(TestSettings.TEST_DATA, "text/plain", "UTF-8"));
-//        status = client1.executeMethod(put);
-//        assertEquals(HttpStatus.SC_CREATED, status);
-//
-//
-//        delete(testFileURI1);
-//        delete(testFileURI2);
-//
-//    }
-//
-//    /**
-//     * Extracts properties from a server response
-//     *
-//     * @param statusResponse
-//     * @return the properties
-//     */
-//    private DavPropertySet getProperties(MultiStatusResponse statusResponse) {
-//        Status[] status = statusResponse.getStatus();
-//
-//        DavPropertySet allProp = new DavPropertySet();
-//        for (int i = 0; i < status.length; i++) {
-//            DavPropertySet pset = statusResponse.getProperties(status[i].getStatusCode());
-//            allProp.addAll(pset);
+    @Test
+    public void testCreateAndDeleteFile() throws IOException, DavException {
+        //Make sure it's deleted 
+        String testFileURI1 = uri.toASCIIString() + TestSettings.TEST_FILE_NAME1;
+        DeleteMethod del = new DeleteMethod(testFileURI1);
+        int status = client1.executeMethod(del);
+
+        testFileURI1 = uri.toASCIIString() + TestSettings.TEST_FILE_NAME1;
+        PutMethod put = new PutMethod(testFileURI1);
+        put.setRequestEntity(new StringRequestEntity(TestSettings.TEST_DATA, "text/plain", "UTF-8"));
+        status = client1.executeMethod(put);
+        assertEquals(HttpStatus.SC_CREATED, status);
+
+
+        String testFileURI2 = uri.toASCIIString() + TestSettings.TEST_TXT_FILE_NAME;
+        put = new PutMethod(testFileURI2);
+        put.setRequestEntity(new StringRequestEntity(TestSettings.TEST_DATA, "text/plain", "UTF-8"));
+        status = client1.executeMethod(put);
+        assertEquals(HttpStatus.SC_CREATED, status);
+
+
+        delete(testFileURI1);
+        delete(testFileURI2);
+
+    }
+
+    /**
+     * Extracts properties from a server response
+     *
+     * @param statusResponse
+     * @return the properties
+     */
+    private DavPropertySet getProperties(MultiStatusResponse statusResponse) {
+        Status[] status = statusResponse.getStatus();
+
+        DavPropertySet allProp = new DavPropertySet();
+        for (int i = 0; i < status.length; i++) {
+            DavPropertySet pset = statusResponse.getProperties(status[i].getStatusCode());
+            allProp.addAll(pset);
+        }
+
+        return allProp;
+    }
+
+    @Test
+    public void testSetGetPropertySet() throws IOException, DavException {
+        String testFileURI1 = this.uri.toASCIIString() + TestSettings.TEST_FILE_NAME1 + ".txt";
+        PutMethod put = new PutMethod(testFileURI1);
+        put.setRequestEntity(new StringRequestEntity(TestSettings.TEST_DATA, "text/plain", "UTF-8"));
+        int status = client1.executeMethod(put);
+        assertEquals(HttpStatus.SC_CREATED, status);
+
+        PropFindMethod propFind = new PropFindMethod(testFileURI1, DavConstants.PROPFIND_ALL_PROP_INCLUDE, DavConstants.DEPTH_0);
+        status = client1.executeMethod(propFind);
+        assertEquals(HttpStatus.SC_MULTI_STATUS, status);
+        MultiStatus multiStatus = propFind.getResponseBodyAsMultiStatus();
+        MultiStatusResponse[] responses = multiStatus.getResponses();
+        assertEquals(HttpStatus.SC_OK, responses[0].getStatus()[0].getStatusCode());
+        DavPropertySet allProp = getProperties(responses[0]);
+
+//        DavPropertyIterator iter = allProp.iterator();
+//        while (iter.hasNext()) {
+//            DavProperty<?> p = iter.nextProperty();
+//            System.out.println("P: " + p.getName() + " " + p.getValue());
 //        }
-//
-//        return allProp;
-//    }
-//
-//    @Test
-//    public void testSetGetPropertySet() throws IOException, DavException {
-//        String testFileURI1 = this.uri.toASCIIString() + TestSettings.TEST_FILE_NAME1 + ".txt";
-//        PutMethod put = new PutMethod(testFileURI1);
-//        put.setRequestEntity(new StringRequestEntity(TestSettings.TEST_DATA, "text/plain", "UTF-8"));
-//        int status = client1.executeMethod(put);
-//        assertEquals(HttpStatus.SC_CREATED, status);
-//
-//        PropFindMethod propFind = new PropFindMethod(testFileURI1, DavConstants.PROPFIND_ALL_PROP_INCLUDE, DavConstants.DEPTH_0);
-//        status = client1.executeMethod(propFind);
-//        assertEquals(HttpStatus.SC_MULTI_STATUS, status);
-//        MultiStatus multiStatus = propFind.getResponseBodyAsMultiStatus();
-//        MultiStatusResponse[] responses = multiStatus.getResponses();
-//        assertEquals(HttpStatus.SC_OK, responses[0].getStatus()[0].getStatusCode());
-//        DavPropertySet allProp = getProperties(responses[0]);
-//
-////        DavPropertyIterator iter = allProp.iterator();
-////        while (iter.hasNext()) {
-////            DavProperty<?> p = iter.nextProperty();
-////            System.out.println("P: " + p.getName() + " " + p.getValue());
-////        }
-//
-//        String isCollStr = (String) allProp.get(DavPropertyName.ISCOLLECTION).getValue();
-//        Boolean isCollection = Boolean.getBoolean(isCollStr);
-//        assertFalse(isCollection);
-//        String lenStr = (String) allProp.get(DavPropertyName.GETCONTENTLENGTH).getValue();
-//        assertEquals(Long.valueOf(lenStr), Long.valueOf(TestSettings.TEST_DATA.length()));
-//        String contentType = (String) allProp.get(DavPropertyName.GETCONTENTTYPE).getValue();
-//        assertEquals("text/plain; charset=UTF-8", contentType);
-//        delete(testFileURI1);
-//    }
-//
-//    @Test
-//    public void testPROPFIND_PUT_PROPFIND_GET_PUT() throws IOException, DavException {
-//        //Make sure it's deleted 
-//        String testFileURI1 = uri.toASCIIString() + TestSettings.TEST_FILE_NAME1 + ".txt";
-//        DeleteMethod del = new DeleteMethod(testFileURI1);
-//        int status = client1.executeMethod(del);
-//
-//        //PROPFIND file is not there 
-//        testFileURI1 = uri.toASCIIString() + TestSettings.TEST_FILE_NAME1 + ".txt";
-//        PropFindMethod propFind = new PropFindMethod(testFileURI1, DavConstants.PROPFIND_ALL_PROP_INCLUDE, DavConstants.DEPTH_0);
-//        status = client1.executeMethod(propFind);
-//        assertEquals(HttpStatus.SC_NOT_FOUND, status);
-//
-//        //PUT create an empty file 
-//        PutMethod put = new PutMethod(testFileURI1);
-//        put.setRequestEntity(new StringRequestEntity("\n", "text/plain", "UTF-8"));
-//        status = client1.executeMethod(put);
-//        assertEquals(HttpStatus.SC_CREATED, status);
-//
-//        //PROPFIND get proerties 
-//        propFind = new PropFindMethod(testFileURI1, DavConstants.PROPFIND_ALL_PROP_INCLUDE, DavConstants.DEPTH_0);
-//        status = client1.executeMethod(propFind);
-//        assertEquals(HttpStatus.SC_MULTI_STATUS, status);
-//
-//
-//        MultiStatus multiStatus = propFind.getResponseBodyAsMultiStatus();
-//        MultiStatusResponse[] responses = multiStatus.getResponses();
-//
-//        DavPropertySet allProp = getProperties(responses[0]);
-////        DavPropertyIterator iter = allProp.iterator();
-////        while (iter.hasNext()) {
-////            DavProperty<?> p = iter.nextProperty();
-////            System.out.println("P: " + p.getName() + " " + p.getValue());
-////        }
-//
-//        String isCollStr = (String) allProp.get(DavPropertyName.ISCOLLECTION).getValue();
-//        Boolean isCollection = Boolean.getBoolean(isCollStr);
-//        assertFalse(isCollection);
-//        String lenStr = (String) allProp.get(DavPropertyName.GETCONTENTLENGTH).getValue();
-//        assertEquals(Long.valueOf(lenStr), Long.valueOf("\n".length()));
-//        String contentType = (String) allProp.get(DavPropertyName.GETCONTENTTYPE).getValue();
-//        assertEquals("text/plain; charset=UTF-8", contentType);
-//
-//
-//        //GET the file 
-//        GetMethod get = new GetMethod(testFileURI1);
-//        status = client1.executeMethod(get);
-//        assertEquals(HttpStatus.SC_OK, status);
-//        assertEquals("\n", get.getResponseBodyAsString());
-//
-//        //PUT
-//        put = new PutMethod(testFileURI1);
-//        String content = get.getResponseBodyAsString() + TestSettings.TEST_DATA;
-//        put.setRequestEntity(new StringRequestEntity(content, "text/plain", "UTF-8"));
-//        status = client1.executeMethod(put);
-//        assertEquals(HttpStatus.SC_CREATED, status);
-//
-//
-//        get = new GetMethod(testFileURI1);
-//        status = client1.executeMethod(get);
-//        assertEquals(HttpStatus.SC_OK, status);
-//        assertEquals(content, get.getResponseBodyAsString());
-//
-//        put = new PutMethod(testFileURI1);
-//        content = get.getResponseBodyAsString() + TestSettings.TEST_DATA;
-//        put.setRequestEntity(new StringRequestEntity(content, "text/plain", "UTF-8"));
-//        status = client1.executeMethod(put);
-//        assertEquals(HttpStatus.SC_CREATED, status);
-//
-//
-//        get = new GetMethod(testFileURI1);
-//        status = client1.executeMethod(get);
-//        assertEquals(HttpStatus.SC_OK, status);
-//        assertEquals(content, get.getResponseBodyAsString());
-//
-//
-//        delete(testFileURI1);
-//    }
-//
-//    @Test
-//    public void testUploadFileOnRootWithoutAdminRole() throws IOException, DavException {
-//        String uname = prop.getProperty(("webdav.test.non.admin.username1"), "nonAdmin");
-//        assertNotNull(uname);
-//        String pass = prop.getProperty(("webdav.test.non.admin.password1"), "secret");
-//        assertNotNull(pass);
-//        HttpClient client = new HttpClient();
-//
-//        assertNotNull(uri.getHost());
-//        assertNotNull(uri.getPort());
-//        assertNotNull(client);
-//
-//        client.getState().setCredentials(
-//                new AuthScope(uri.getHost(), uri.getPort()),
-//                new UsernamePasswordCredentials(uname, pass));
-//
-//
-//
-//        String testFileURI1 = this.uri.toASCIIString() + TestSettings.TEST_FILE_NAME1 + ".txt";
-//        PutMethod put = new PutMethod(testFileURI1);
-//        put.setRequestEntity(new StringRequestEntity(TestSettings.TEST_DATA, "text/plain", "UTF-8"));
-//        int status = client.executeMethod(put);
-//        assertEquals(HttpStatus.SC_UNAUTHORIZED, status);
-//    }
+
+        String isCollStr = (String) allProp.get(DavPropertyName.ISCOLLECTION).getValue();
+        Boolean isCollection = Boolean.getBoolean(isCollStr);
+        assertFalse(isCollection);
+        String lenStr = (String) allProp.get(DavPropertyName.GETCONTENTLENGTH).getValue();
+        assertEquals(Long.valueOf(lenStr), Long.valueOf(TestSettings.TEST_DATA.length()));
+        String contentType = (String) allProp.get(DavPropertyName.GETCONTENTTYPE).getValue();
+        assertEquals("text/plain; charset=UTF-8", contentType);
+        delete(testFileURI1);
+    }
+
+    @Test
+    public void testPROPFIND_PUT_PROPFIND_GET_PUT() throws IOException, DavException {
+        //Make sure it's deleted 
+        String testFileURI1 = uri.toASCIIString() + TestSettings.TEST_FILE_NAME1 + ".txt";
+        DeleteMethod del = new DeleteMethod(testFileURI1);
+        int status = client1.executeMethod(del);
+
+        //PROPFIND file is not there 
+        testFileURI1 = uri.toASCIIString() + TestSettings.TEST_FILE_NAME1 + ".txt";
+        PropFindMethod propFind = new PropFindMethod(testFileURI1, DavConstants.PROPFIND_ALL_PROP_INCLUDE, DavConstants.DEPTH_0);
+        status = client1.executeMethod(propFind);
+        assertEquals(HttpStatus.SC_NOT_FOUND, status);
+
+        //PUT create an empty file 
+        PutMethod put = new PutMethod(testFileURI1);
+        put.setRequestEntity(new StringRequestEntity("\n", "text/plain", "UTF-8"));
+        status = client1.executeMethod(put);
+        assertEquals(HttpStatus.SC_CREATED, status);
+
+        //PROPFIND get proerties 
+        propFind = new PropFindMethod(testFileURI1, DavConstants.PROPFIND_ALL_PROP_INCLUDE, DavConstants.DEPTH_0);
+        status = client1.executeMethod(propFind);
+        assertEquals(HttpStatus.SC_MULTI_STATUS, status);
+
+
+        MultiStatus multiStatus = propFind.getResponseBodyAsMultiStatus();
+        MultiStatusResponse[] responses = multiStatus.getResponses();
+
+        DavPropertySet allProp = getProperties(responses[0]);
+//        DavPropertyIterator iter = allProp.iterator();
+//        while (iter.hasNext()) {
+//            DavProperty<?> p = iter.nextProperty();
+//            System.out.println("P: " + p.getName() + " " + p.getValue());
+//        }
+
+        String isCollStr = (String) allProp.get(DavPropertyName.ISCOLLECTION).getValue();
+        Boolean isCollection = Boolean.getBoolean(isCollStr);
+        assertFalse(isCollection);
+        String lenStr = (String) allProp.get(DavPropertyName.GETCONTENTLENGTH).getValue();
+        assertEquals(Long.valueOf(lenStr), Long.valueOf("\n".length()));
+        String contentType = (String) allProp.get(DavPropertyName.GETCONTENTTYPE).getValue();
+        assertEquals("text/plain; charset=UTF-8", contentType);
+
+
+        //GET the file 
+        GetMethod get = new GetMethod(testFileURI1);
+        status = client1.executeMethod(get);
+        assertEquals(HttpStatus.SC_OK, status);
+        assertEquals("\n", get.getResponseBodyAsString());
+
+        //PUT
+        put = new PutMethod(testFileURI1);
+        String content = get.getResponseBodyAsString() + TestSettings.TEST_DATA;
+        put.setRequestEntity(new StringRequestEntity(content, "text/plain", "UTF-8"));
+        status = client1.executeMethod(put);
+        assertEquals(HttpStatus.SC_CREATED, status);
+
+
+        get = new GetMethod(testFileURI1);
+        status = client1.executeMethod(get);
+        assertEquals(HttpStatus.SC_OK, status);
+        assertEquals(content, get.getResponseBodyAsString());
+
+        put = new PutMethod(testFileURI1);
+        content = get.getResponseBodyAsString() + TestSettings.TEST_DATA;
+        put.setRequestEntity(new StringRequestEntity(content, "text/plain", "UTF-8"));
+        status = client1.executeMethod(put);
+        assertEquals(HttpStatus.SC_CREATED, status);
+
+
+        get = new GetMethod(testFileURI1);
+        status = client1.executeMethod(get);
+        assertEquals(HttpStatus.SC_OK, status);
+        assertEquals(content, get.getResponseBodyAsString());
+
+
+        delete(testFileURI1);
+    }
+
+    @Test
+    public void testUploadFileOnRootWithoutAdminRole() throws IOException, DavException {
+        String uname = prop.getProperty(("webdav.test.non.admin.username1"), "nonAdmin");
+        assertNotNull(uname);
+        String pass = prop.getProperty(("webdav.test.non.admin.password1"), "secret");
+        assertNotNull(pass);
+        HttpClient client = new HttpClient();
+
+        assertNotNull(uri.getHost());
+        assertNotNull(uri.getPort());
+        assertNotNull(client);
+
+        client.getState().setCredentials(
+                new AuthScope(uri.getHost(), uri.getPort()),
+                new UsernamePasswordCredentials(uname, pass));
+
+
+
+        String testFileURI1 = this.uri.toASCIIString() + TestSettings.TEST_FILE_NAME1 + ".txt";
+        PutMethod put = new PutMethod(testFileURI1);
+        put.setRequestEntity(new StringRequestEntity(TestSettings.TEST_DATA, "text/plain", "UTF-8"));
+        int status = client.executeMethod(put);
+        assertEquals(HttpStatus.SC_UNAUTHORIZED, status);
+    }
+    
     @Test
     public void testUpDownloadFileWithSpace() throws IOException, DavException {
 //        String testFileURI1 = uri.toASCIIString() + "file with spaces";
@@ -478,31 +479,31 @@ public class TestWebWAVFS {
         }
     }
 
-//    @Test
-//    public void testMultiThread() throws IOException, DavException {
-//        try {
-//            Thread userThread1 = new UserThread(client1, uri.toASCIIString(), 1);
-//            userThread1.setName("T1");
-//
-//
-//            client2.getState().setCredentials(
-//                    new AuthScope(uri.getHost(), uri.getPort()),
-//                    new UsernamePasswordCredentials(username1, password1));
-//
-//            Thread userThread2 = new UserThread(client2, uri.toASCIIString(), 2);
-//            userThread2.setName("T2");
-//
-//            userThread1.start();
-//            userThread2.start();
-//
-//            userThread1.join();
-//            userThread2.join();
-//        } catch (InterruptedException ex) {
-//            Logger.getLogger(TestWebWAVFS.class.getName()).log(Level.SEVERE, null, ex);
-//        }
-//
-//    }
-//
+    @Test
+    public void testMultiThread() throws IOException, DavException {
+        try {
+            Thread userThread1 = new UserThread(client1, uri.toASCIIString(), 1);
+            userThread1.setName("T1");
+
+
+            client2.getState().setCredentials(
+                    new AuthScope(uri.getHost(), uri.getPort()),
+                    new UsernamePasswordCredentials(username1, password1));
+
+            Thread userThread2 = new UserThread(client2, uri.toASCIIString(), 2);
+            userThread2.setName("T2");
+
+            userThread1.start();
+            userThread2.start();
+
+            userThread1.join();
+            userThread2.join();
+        } catch (InterruptedException ex) {
+            Logger.getLogger(TestWebWAVFS.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+    }
+
     private void delete(String testFileURI1) throws IOException {
         DeleteMethod del = new DeleteMethod(testFileURI1);
         int status = client1.executeMethod(del);
@@ -519,8 +520,8 @@ public class TestWebWAVFS {
         List<LogicalDataWrapped> list = res.accept(MediaType.APPLICATION_XML).
                 get(new GenericType<List<LogicalDataWrapped>>() {
         });
-
-
+        
+        
         assertNotNull(list);
         assertFalse(list.isEmpty());
         LogicalDataWrapped logicalDataWrapped = null;

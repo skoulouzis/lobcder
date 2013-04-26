@@ -4,7 +4,15 @@
  */
 package nl.uva.cs.lobcder.tests;
 
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.GenericType;
+import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.api.client.config.ClientConfig;
+import com.sun.jersey.api.client.config.DefaultClientConfig;
+import com.sun.jersey.api.json.JSONConfiguration;
+import com.sun.jersey.core.util.MultivaluedMapImpl;
 import java.io.*;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -12,8 +20,27 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.Properties;
 import java.util.Random;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+import nl.uva.cs.lobcder.tests.TestREST.LogicalDataWrapped;
+import nl.uva.cs.lobcder.tests.TestREST.PDRI;
+import nl.uva.vlet.Global;
+import nl.uva.vlet.GlobalConfig;
+import nl.uva.vlet.data.StringUtil;
+import nl.uva.vlet.exception.VlException;
+import nl.uva.vlet.util.cog.GridProxy;
+import nl.uva.vlet.vfs.VFSClient;
+import nl.uva.vlet.vfs.VFile;
+import nl.uva.vlet.vrl.VRL;
+import nl.uva.vlet.vrs.ServerInfo;
+import nl.uva.vlet.vrs.VRS;
+import nl.uva.vlet.vrs.VRSContext;
 import org.apache.commons.httpclient.*;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.contrib.ssl.EasySSLProtocolSocketFactory;
@@ -33,6 +60,7 @@ import org.apache.jackrabbit.webdav.xml.Namespace;
 import org.junit.After;
 import static org.junit.Assert.*;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -44,13 +72,46 @@ import org.w3c.dom.Node;
  */
 public class WebDAVTest {
 
-    private String root;
-    private URI uri;
-    private String username, password;
-    private HttpClient client;
+    private static String root;
+    private static URI uri;
+    private static String username, password;
+    private static HttpClient client;
+    private static Client restClient;
+    private static String restURL;
 
-    @Before
-    public void setUp() throws Exception {
+    static {
+        try {
+            InitGlobalVFS();
+        } catch (Exception ex) {
+        }
+    }
+
+    private static void InitGlobalVFS() throws MalformedURLException, VlException, Exception {
+        try {
+            GlobalConfig.setBaseLocation(new URL("http://dummy/url"));
+        } catch (MalformedURLException ex) {
+            Logger.getLogger(TestWebWAVFS.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        // runtime configuration
+        GlobalConfig.setHasUI(false);
+        GlobalConfig.setIsApplet(true);
+        GlobalConfig.setPassiveMode(true);
+        GlobalConfig.setIsService(true);
+        GlobalConfig.setInitURLStreamFactory(false);
+        GlobalConfig.setAllowUserInteraction(false);
+        GlobalConfig.setUserHomeLocation(new URL("file:///" + System.getProperty("user.home")));
+
+        // user configuration 
+//        GlobalConfig.setUsePersistantUserConfiguration(false);
+//        GlobalConfig.setUserHomeLocation(new URL("file:////" + this.tmpVPHuserHome.getAbsolutePath()));
+//        Global.setDebug(true);
+
+        VRS.getRegistry().addVRSDriverClass(nl.uva.vlet.vfs.cloud.CloudFSFactory.class);
+        Global.init();
+    }
+
+    @BeforeClass
+    public static void setUpClass() throws Exception {
 //        String propBasePath = System.getProperty("user.home") + File.separator
 //                + "workspace" + File.separator + "lobcder-tests"
 //                + File.separator + "etc" + File.separator + "test.proprties";
@@ -68,18 +129,18 @@ public class WebDAVTest {
             testURL = testURL + "/";
         }
 
-        this.uri = URI.create(testURL);
-        this.root = this.uri.toASCIIString();
-        if (!this.root.endsWith("/")) {
-            this.root += "/";
+        uri = URI.create(testURL);
+        root = uri.toASCIIString();
+        if (!root.endsWith("/")) {
+            root += "/";
         }
 
-        this.username = prop.getProperty(("webdav.test.username1"), "");
+        username = prop.getProperty(("webdav.test.username1"), "");
         if (username == null) {
             username = "user";
         }
         assertTrue(username != null);
-        this.password = prop.getProperty(("webdav.test.password1"), "");
+        password = prop.getProperty(("webdav.test.password1"), "");
         if (password == null) {
             password = "token0";
         }
@@ -100,10 +161,18 @@ public class WebDAVTest {
 //        authPrefs.add(AuthPolicy.BASIC);
 //        client.getParams().setParameter(AuthPolicy.AUTH_SCHEME_PRIORITY, authPrefs);
 
-        this.client = new HttpClient();
-        this.client.getState().setCredentials(
-                new AuthScope(this.uri.getHost(), this.uri.getPort()),
-                new UsernamePasswordCredentials(this.username, this.password));
+        client = new HttpClient();
+        client.getState().setCredentials(
+                new AuthScope(uri.getHost(), uri.getPort()),
+                new UsernamePasswordCredentials(username, password));
+
+
+
+        ClientConfig clientConfig = new DefaultClientConfig();
+        clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
+        restClient = Client.create(clientConfig);
+        restClient.addFilter(new com.sun.jersey.api.client.filter.HTTPBasicAuthFilter(username, password));
+        restURL = prop.getProperty(("rest.test.url"), "http://localhost:8080/lobcder-2.0-SNAPSHOT/rest/");
 
     }
 
@@ -984,6 +1053,177 @@ public class WebDAVTest {
             int status = client.executeMethod(delete);
             assertTrue("DeleteMethod status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
         }
+    }
+
+    @Test
+    public void testGetSetEncryptedProp() throws DavException, VlException {
+        String testuri1 = this.root + TestSettings.TEST_FILE_NAME1 + ".txt";
+        Boolean v;
+        String cont;
+        VRL vrl;
+        VFile physicalFile;
+        try {
+            PutMethod put = new PutMethod(testuri1);
+            put.setRequestEntity(new StringRequestEntity(TestSettings.TEST_DATA, "text/plain", "UTF-8"));
+            int status = this.client.executeMethod(put);
+            assertEquals(HttpStatus.SC_CREATED, status);
+
+            DavPropertyNameSet encryptedNameSet = new DavPropertyNameSet();
+            DavPropertyName encryptedName = DavPropertyName.create("encrypted", Namespace.getNamespace("custom:"));
+            encryptedNameSet.add(encryptedName);
+            DavPropertySet encryptedSet = new DavPropertySet();
+            DavProperty<Boolean> driProp = new DefaultDavProperty<Boolean>(encryptedName, Boolean.TRUE);
+            encryptedSet.add(driProp);
+            PropPatchMethod proPatch = new PropPatchMethod(testuri1, encryptedSet, encryptedNameSet);
+            status = client.executeMethod(proPatch);
+            assertEquals(HttpStatus.SC_MULTI_STATUS, status);
+            PropFindMethod propFind = new PropFindMethod(testuri1, encryptedNameSet, DavConstants.DEPTH_INFINITY);
+            status = client.executeMethod(propFind);
+            assertEquals(HttpStatus.SC_MULTI_STATUS, status);
+
+
+
+            MultiStatus multiStatus = propFind.getResponseBodyAsMultiStatus();
+            MultiStatusResponse[] responses = multiStatus.getResponses();
+
+            for (MultiStatusResponse r : responses) {
+
+                DavPropertySet allProp = getProperties(r);
+
+                DavPropertyIterator iter = allProp.iterator();
+                while (iter.hasNext()) {
+                    DavProperty<?> p = iter.nextProperty();
+                    assertEquals(p.getName(), encryptedName);
+                    System.out.println("\tName: " + p.getName() + " Values " + p.getValue());
+                    assertNotNull(p.getValue());
+                    boolean val = Boolean.valueOf(p.getValue().toString());
+                    if (new URL(testuri1).getPath().equals(r.getHref())) {
+                        assertTrue(val);
+                    } else {
+                        assertFalse(val);
+                    }
+                }
+            }
+
+
+            //The server says it is, but is it in realety ? 
+            Set<PDRI> pdris = null;
+            boolean done = false;
+            //Wait for replication 
+            while (!done) {
+                try {
+                    Thread.sleep(1500);
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(TestWebWAVFS.class.getName()).log(Level.SEVERE, null, ex);
+                }
+
+                pdris = getPdris(TestSettings.TEST_FILE_NAME1 + ".txt");
+                for (PDRI p : pdris) {
+                    if (p.resourceUrl.startsWith("/") || p.resourceUrl.startsWith("file://")) {
+                        done = false;
+                        break;
+                    } else {
+                        done = true;
+                    }
+                }
+            }
+
+            String endpoint = "";
+            for (PDRI p : pdris) {
+                VFSClient cli = getVFSClient(p.resourceUrl, p.username, p.password);
+                if (p.resourceUrl.startsWith("/")) {
+                    endpoint = "file:///" + p.resourceUrl;
+                } else {
+                    endpoint = p.resourceUrl;
+                }
+                
+                vrl = new VRL(endpoint).append("LOBCDER-REPLICA-vTEST").append(p.name);
+                physicalFile = cli.openFile(vrl);
+                System.out.println(physicalFile.getContentsAsString());
+
+            }
+
+        } catch (IOException ex) {
+            Logger.getLogger(WebDAVTest.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            try {
+                DeleteMethod delete = new DeleteMethod(testuri1);
+                int status = client.executeMethod(delete);
+                assertTrue("DeleteMethod status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
+
+            } catch (IOException ex) {
+                Logger.getLogger(WebDAVTest.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+
+    private VFSClient getVFSClient(String vrl, String username, String password) throws VlException {
+        VFSClient vfsClient = new VFSClient();
+        VRSContext context = vfsClient.getVRSContext();
+        //Bug in sftp: We have to put the username in the url
+        ServerInfo info = context.getServerInfoFor(new VRL(vrl), true);
+        String authScheme = info.getAuthScheme();
+
+        if (StringUtil.equals(authScheme, ServerInfo.GSI_AUTH)) {
+            //Use the username and password to get access to MyProxy 
+            GridProxy proxy = new GridProxy(context);
+            String pr = context.getProxyAsString();
+            context.setGridProxy(proxy);
+        }
+
+        if (StringUtil.equals(authScheme, ServerInfo.PASSWORD_AUTH)
+                || StringUtil.equals(authScheme, ServerInfo.PASSWORD_OR_PASSPHRASE_AUTH)
+                || StringUtil.equals(authScheme, ServerInfo.PASSPHRASE_AUTH)) {
+//            String username = storageSite.getCredential().getStorageSiteUsername();
+            if (username == null) {
+                throw new NullPointerException("Username is null!");
+            }
+            info.setUsername(username);
+//            String password = storageSite.getCredential().getStorageSitePassword();
+            if (password == null) {
+                throw new NullPointerException("password is null!");
+            }
+            info.setPassword(password);
+        }
+
+        info.setAttribute(ServerInfo.ATTR_DEFAULT_YES_NO_ANSWER, true);
+
+//        if(getVrl().getScheme().equals(VRS.SFTP_SCHEME)){
+        //patch for bug with ssh driver 
+        info.setAttribute("sshKnownHostsFile", System.getProperty("user.home") + "/.ssh/known_hosts");
+//        }
+        info.store();
+
+        return vfsClient;
+    }
+
+    private Set<PDRI> getPdris(String testFileURI1) {
+        WebResource webResource = restClient.resource(restURL);
+
+        MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+        params.add("path", testFileURI1);
+
+        WebResource res = webResource.path("items").path("query").queryParams(params);
+        List<LogicalDataWrapped> list = res.accept(MediaType.APPLICATION_XML).
+                get(new GenericType<List<LogicalDataWrapped>>() {
+        });
+
+
+        assertNotNull(list);
+        assertFalse(list.isEmpty());
+        LogicalDataWrapped logicalDataWrapped = null;
+        for (LogicalDataWrapped lwd : list) {
+            if (lwd.logicalData.type.equals("logical.file") && lwd.path.equals(testFileURI1)) {
+                logicalDataWrapped = lwd;
+                break;
+            }
+        }
+
+        assertNotNull(logicalDataWrapped);
+        assertFalse(logicalDataWrapped.logicalData.supervised);
+
+        return logicalDataWrapped.pdriList;
+
     }
 
     @Test
