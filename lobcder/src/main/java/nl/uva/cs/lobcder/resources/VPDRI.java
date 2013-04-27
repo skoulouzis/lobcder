@@ -38,6 +38,8 @@ import javax.crypto.KeyGenerator;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
+import lombok.Getter;
+import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
 import nl.uva.cs.lobcder.util.DesEncrypter;
 
 /**
@@ -89,8 +91,10 @@ public class VPDRI implements PDRI {
     private int reconnectAttemts = 0;
     private final static boolean debug = true;
     private static final org.slf4j.Logger log = LoggerFactory.getLogger(VPDRI.class);
+    private BigInteger keyInt;
+    private boolean encrypt;
 
-    VPDRI(String fileName, Long storageSiteId, String resourceUrl, String username, String password) throws IOException {
+    VPDRI(String fileName, Long storageSiteId, String resourceUrl, String username, String password, boolean encrypt) throws IOException {
         try {
             this.fileName = fileName;
             vrl = new VRL(resourceUrl).appendPath(baseDir).append(URLEncoder.encode(fileName, "UTF-8"));
@@ -100,6 +104,7 @@ public class VPDRI implements PDRI {
             this.storageSiteId = storageSiteId;
             this.username = username;
             this.password = password;
+            this.encrypt = encrypt;
 //            this.resourceUrl = resourceUrl;
             log.debug("fileName: " + fileName + ", storageSiteId: " + storageSiteId + ", username: " + username + ", password: " + password + ", VRL: " + vrl);
             initVFS();
@@ -175,22 +180,22 @@ public class VPDRI implements PDRI {
         debug("putData:");
         VFile tmpFile = null;
         try {
-
-//            upload(in);
+            //            upload(in);
             VDir remoteDir = vfsClient.mkdirs(vrl.getParent(), true);
             vfsClient.createFile(vrl, true);
             out = vfsClient.getFile(vrl).getOutputStream();
+            if (!getEncrypted()) {
+                CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((2 * 1024 * 1024), in, out);
+                cBuff.startTransfer(new Long(-1));
+            } else {
+                DesEncrypter encrypter = new DesEncrypter(this.keyInt);
+                encrypter.decrypt(getData(), out);
 
-//            OperatingSystemMXBean osMBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
-//            int size = (int) (osMBean.getFreePhysicalMemorySize() / 1000);
-//            debug("\tAlocated buff size: "+size);
-            CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((2 * 1024 * 1024), in, out);
-            cBuff.startTransfer(new Long(-1));
-
+            }
             reconnectAttemts = 0;
-//            final ReadableByteChannel inputChannel = Channels.newChannel(in);
-//            final WritableByteChannel outputChannel = Channels.newChannel(out);
-//            fastCopy(inputChannel, outputChannel);
+
+        } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | InvalidAlgorithmParameterException ex) {
+            throw new IOException(ex);
         } catch (VlException ex) {
             if (ex.getMessage() != null) {
                 debug("\tVlException " + ex.getMessage());
@@ -257,7 +262,6 @@ public class VPDRI implements PDRI {
 
     private Runnable getAsyncDelete(final VFSClient vfsClient, final VRL vrl) {
         return new Runnable() {
-
             @Override
             public void run() {
                 try {
@@ -271,7 +275,6 @@ public class VPDRI implements PDRI {
 
     private Runnable getAsyncPutData(final VFSClient vfsClient, final InputStream in) {
         return new Runnable() {
-
             @Override
             public void run() {
             }
@@ -369,23 +372,23 @@ public class VPDRI implements PDRI {
     }
 
     @Override
-    public void replicate(PDRI source, boolean encrypt) throws IOException {
-        if (!encrypt) {
-            putData(source.getData());
-        } else {
-            try {
-                VDir remoteDir = vfsClient.mkdirs(vrl.getParent(), true);
-                vfsClient.createFile(vrl, true);
-                OutputStream out = vfsClient.getFile(vrl).getOutputStream();
+    public void replicate(PDRI source) throws IOException {
+        putData(source.getData());
+    }
 
-                
-                DesEncrypter encrypter = new DesEncrypter();
-                encrypter.encrypt(source.getData(), out);
+//    @Override
+//    public void setKeyInt(BigInteger keyInt) {
+//        this.keyInt = keyInt;
+//    }
+//
+    @Override
+    public BigInteger getKeyInt() {
+        return this.keyInt;
+    }
 
-            } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | InvalidAlgorithmParameterException | VlException ex) {
-                throw new IOException(ex);
-            }
-        }
+    @Override
+    public boolean getEncrypted() {
+        return this.encrypt;
     }
 
 //
@@ -414,6 +417,4 @@ public class VPDRI implements PDRI {
             throw new IOException(ex);
         }
     }
-
-   
 }

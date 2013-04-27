@@ -68,7 +68,7 @@ class DeleteSweep implements Runnable {
                                         String resourceUri = rs3.getString(1);
                                         String username = rs3.getString(2);
                                         String password = rs3.getString(3);
-                                        PDRIDescr pdriDescr = new PDRIDescr(fileName, storageSiteRef, resourceUri, username, password);
+                                        PDRIDescr pdriDescr = new PDRIDescr(fileName, storageSiteRef, resourceUri, username, password, false);
                                         DeleteSweep.log.log(Level.FINE, "PDRI Description: {0}, {1}, {2}, {3}, {4}", new Object[]{fileName, storageSiteRef, resourceUri, username, password});
                                         DeleteSweep.log.log(Level.FINE, "PDRI pdriDescr: {0}", new Object[]{pdriDescr});
                                         factory = PDRIFactory.getFactory();

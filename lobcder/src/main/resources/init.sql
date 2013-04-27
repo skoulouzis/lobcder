@@ -27,7 +27,9 @@ CREATE TABLE pdri_table (
   pdriId SERIAL PRIMARY KEY,
   fileName VARCHAR(255),
   storageSiteRef BIGINT UNSIGNED, FOREIGN KEY(storageSiteRef) REFERENCES storage_site_table(storageSiteId) ON DELETE CASCADE,
-  pdriGroupRef BIGINT UNSIGNED, INDEX(pdriGroupRef), FOREIGN KEY(pdriGroupRef) REFERENCES pdrigroup_table(pdriGroupId) ON DELETE CASCADE
+  pdriGroupRef BIGINT UNSIGNED, INDEX(pdriGroupRef), FOREIGN KEY(pdriGroupRef) REFERENCES pdrigroup_table(pdriGroupId) ON DELETE CASCADE,
+  isEncrypted BOOLEAN NOT NULL DEFAULT FALSE,
+  encryptionKey BIGINT UNSIGNED 
 );
 
 CREATE TABLE ldata_table (
@@ -51,8 +53,7 @@ CREATE TABLE ldata_table (
  lockDepth  VARCHAR(255),
  lockTimeout  BIGINT NOT NULL DEFAULT 0,
  description VARCHAR(1024),
- locationPreference VARCHAR(1024),
- isEncrypted BOOLEAN NOT NULL DEFAULT FALSE 
+ locationPreference VARCHAR(1024)
 );
 
 CREATE TABLE permission_table (
@@ -90,6 +91,14 @@ FOR EACH ROW BEGIN
     END IF;
   END IF;
 END|
+
+DROP TRIGGER IF EXISTS on_pdri_incert |
+CREATE TRIGGER on_pdri_incert
+BEFORE INSERT ON pdri_table
+FOR EACH ROW BEGIN
+  SET NEW.encryptionKey = FLOOR(100000000000000000 + RAND() * 1999999999999999999);
+END|
+
 
 DELIMITER ;
 

@@ -4,11 +4,19 @@
  */
 package nl.uva.cs.lobcder.util;
 
+import java.io.IOException;
+import java.math.BigInteger;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.crypto.KeyGenerator;
+import javax.crypto.NoSuchPaddingException;
 import javax.naming.NamingException;
 import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
 import nl.uva.cs.lobcder.resources.Credential;
@@ -59,39 +67,43 @@ public class RegisterSRMSites {
 //        Global.setDebug(true);
         Global.init();
     }
-    
-    
-    
-      private static void initVFS() throws VlException, MalformedURLException, NamingException, Exception {
+
+    private static void initVFS() throws VlException, MalformedURLException, NamingException, Exception {
         vfsClient = new VFSClient();
         VRSContext context = vfsClient.getVRSContext();
-                BdiiService bdii = context.getBdiiService();
+        BdiiService bdii = context.getBdiiService();
         srms = bdii.getSRMv22SAsforVO("biomed");
 //        
-        debug("srms: "+context.getConfigManager().getBdiiHost());
-        
-        for(StorageArea inf : srms){
-           debug("srms: "+inf.getVOStorageLocation());
-        }        
+        debug("srms: " + context.getConfigManager().getBdiiHost());
+
+        for (StorageArea inf : srms) {
+            debug("srms: " + inf.getVOStorageLocation());
+        }
         JDBCatalogue cat = new JDBCatalogue();
         String resourceURI = "";
         Credential credentials = new Credential();
-        
+
         cat.registerStorageSite(resourceURI, credentials, -1, -1, -1, -1, null);
     }
 
     private static void debug(String msg) {
-        System.err.println(RegisterSRMSites.class.getName()+": "+msg);
+        System.err.println(RegisterSRMSites.class.getName() + ": " + msg);
     }
-    
-    
-    public static void main(String args[]){
-        try {
-            initVFS();
-        } catch (Exception ex) {
-            Logger.getLogger(RegisterSRMSites.class.getName()).log(Level.SEVERE, null, ex);
-        }finally{
-            VRS.exit();
-        }
+
+    public static void main(String args[]) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, InvalidAlgorithmParameterException, IOException {
+//        try {
+//            initVFS();
+//        } catch (Exception ex) {
+//            Logger.getLogger(RegisterSRMSites.class.getName()).log(Level.SEVERE, null, ex);
+//        }finally{
+//            VRS.exit();
+//        }
+
+//        System.out.println(new BigInteger(1, KeyGenerator.getInstance("DES").generateKey().getEncoded()));
+//        Random rnd = new Random();
+//         n = BigInteger("1000000000000000000") + rnd.nextLong(19999999999999999999);
+//        System.out.println(n);
+        BigInteger key = new BigInteger("897498988730366300");
+        DesEncrypter d = new DesEncrypter(key);
     }
 }

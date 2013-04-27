@@ -25,6 +25,7 @@ import nl.uva.vlet.io.CircularStreamBufferTransferer;
 import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Date;
@@ -137,7 +138,7 @@ public class WebDataFileResource extends WebDataResource implements
 
     @Override
     public Long getMaxAgeSeconds(Auth auth) {
-        log.fine("getMaxAgeSeconds() for " + getPath());
+        log.log(Level.FINE, "getMaxAgeSeconds() for {0}", getPath());
         return null;
     }
 
@@ -155,11 +156,11 @@ public class WebDataFileResource extends WebDataResource implements
                     pdri.reconnect();
                 }
                 WebDataFileResource.log.log(Level.FINE, "sendContent() for {0}--------- {1}", new Object[]{getPath(), pdri.getFileName()});
-                if (!getLogicalData().getEncrypted()) {
+                if (!pdri.getEncrypted()) {
                     CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((5 * 1024 * 1024), pdri.getData(), out);
                     cBuff.startTransfer((long) -1);
                 } else {
-                    DesEncrypter encrypter = new DesEncrypter();
+                    DesEncrypter encrypter = new DesEncrypter(pdri.getKeyInt());
                     encrypter.decrypt(pdri.getData(), out);
                 }
             } else {

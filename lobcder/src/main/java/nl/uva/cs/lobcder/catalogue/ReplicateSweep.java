@@ -5,13 +5,17 @@ import nl.uva.cs.lobcder.resources.*;
 
 import javax.sql.DataSource;
 import java.io.IOException;
+import java.math.BigInteger;
+import java.security.NoSuchAlgorithmException;
 import java.security.spec.AlgorithmParameterSpec;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.crypto.spec.IvParameterSpec;
+import nl.uva.cs.lobcder.util.DesEncrypter;
 
 /**
  * User: dvasunin Date: 25.02.13 Time: 17:28 To change this template use File |
@@ -97,34 +101,26 @@ class ReplicateSweep implements Runnable {
                     }
                 }
                 connection.commit();
-                //Get if we should encrypt it 
-                boolean encrypt = false;
                 for (CacheDescr cd : toReplicate) {
-
-                    try (Statement statement = connection.createStatement()) {
-                        String sql = "select isEncrypted from ldata_table where pdriGroupRef = " + cd.pdriGroupRef;
-                        ResultSet rs = statement.executeQuery(sql);
-                        while (rs.next()) {
-                            encrypt = rs.getBoolean(1);
-                        }
-                    }
-
-
-
-                    try (PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO pdri_table (fileName, storageSiteRef, pdriGroupRef) VALUES(?, ?, ?)")) {
+                    try (PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO pdri_table "
+                            + "(fileName, storageSiteRef, pdriGroupRef,isEncrypted) VALUES(?, ?, ?, ?)")) {
                         CachePDRI source = new CachePDRI(cd.name);
                         MyStorageSite ss = findBestSite();
+                        
+                        //We have to somehow decide how to set the encrypt value 
                         PDRIDescr pdriDescr = new PDRIDescr(
                                 cd.name,
                                 ss.getStorageSiteId(),
                                 ss.getResourceURI(),
                                 ss.getCredential().getStorageSiteUsername(),
-                                ss.getCredential().getStorageSitePassword());
+                                ss.getCredential().getStorageSitePassword(),false);
                         PDRI replica = PDRIFactory.getFactory().createInstance(pdriDescr);
-                        replica.replicate(source, encrypt);
+
+                        replica.replicate(source);
                         preparedStatement.setString(1, cd.name);
                         preparedStatement.setLong(2, ss.getStorageSiteId());
                         preparedStatement.setLong(3, cd.pdriGroupRef);
+                        preparedStatement.setBoolean(4, replica.getEncrypted());
                         preparedStatement.executeUpdate();
                         onCacheReplicate(cd, source, connection);
                         connection.commit();

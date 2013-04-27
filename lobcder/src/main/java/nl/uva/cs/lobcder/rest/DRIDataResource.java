@@ -63,33 +63,6 @@ public class DRIDataResource {
         }
     }
 
-    @Path("{uid}/encrypted/{flag}/")
-    @PUT
-    public void setEncrypted(@PathParam("uid") Long uid, @PathParam("flag") Boolean flag) {
-        try (Connection cn = catalogue.getConnection()) {
-            try {
-                LogicalData res = catalogue.getLogicalDataByUid(uid, cn);
-                if (res == null) {
-                    throw new WebApplicationException(Response.Status.NOT_FOUND);
-                }
-                MyPrincipal mp = (MyPrincipal) request.getAttribute("myprincipal");
-                Permissions p = catalogue.getPermissions(uid, res.getOwner(), cn);
-                if (!mp.canWrite(p)) {
-                    throw new WebApplicationException(Response.Status.UNAUTHORIZED);
-                }
-                catalogue.setLogicalDataEncrypted(uid, flag, cn);
-                cn.commit();
-            } catch (SQLException ex) {
-                log.log(Level.SEVERE, null, ex);
-                cn.rollback();
-                throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
-            }
-        } catch (SQLException ex) {
-            log.log(Level.SEVERE, null, ex);
-            throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
-        }
-    }
-
     @Path("{uid}/supervised/")
     @GET
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
@@ -111,26 +84,6 @@ public class DRIDataResource {
         }
     }
 
-    @Path("{uid}/encrypted/")
-    @GET
-    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public JAXBElement<Boolean> getEncrypted(@PathParam("uid") Long uid) {
-        try (Connection cn = catalogue.getConnection()) {
-            LogicalData res = catalogue.getLogicalDataByUid(uid, cn);
-            if (res == null) {
-                throw new WebApplicationException(Response.Status.NOT_FOUND);
-            }
-            MyPrincipal mp = (MyPrincipal) request.getAttribute("myprincipal");
-            Permissions p = catalogue.getPermissions(uid, res.getOwner(), cn);
-            if (!mp.canRead(p)) {
-                throw new WebApplicationException(Response.Status.UNAUTHORIZED);
-            }
-            return new JAXBElement<Boolean>(new QName("encrypted"), Boolean.class, res.getEncrypted());
-        } catch (SQLException ex) {
-            log.log(Level.SEVERE, null, ex);
-            throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
-        }
-    }
 
     @Path("{uid}/checksum/{checksum}/")
     @PUT

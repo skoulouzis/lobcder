@@ -4,7 +4,6 @@
  */
 package nl.uva.cs.lobcder.util;
 
-import javax.crypto.spec.SecretKeySpec;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -22,8 +21,9 @@ import javax.crypto.KeyGenerator;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
-import static org.apache.commons.io.FileUtils.writeStringToFile;
+import javax.crypto.spec.SecretKeySpec;
 import static org.apache.commons.io.FileUtils.readFileToByteArray;
+import static org.apache.commons.io.FileUtils.writeStringToFile;
 
 /**
  *
@@ -36,21 +36,24 @@ public class DesEncrypter {
     byte[] buf = new byte[2 * 1024 * 1024];
     private Key key = null;
 
-    public DesEncrypter() throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, InvalidAlgorithmParameterException, IOException {
+    public DesEncrypter(BigInteger keyInt) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, InvalidAlgorithmParameterException, IOException {
         byte[] iv = new byte[]{(byte) 0x8E, 0x12, 0x39, (byte) 0x9C, 0x07, 0x72, 0x6F, 0x5A};
         AlgorithmParameterSpec paramSpec = new IvParameterSpec(iv);
         ecipher = Cipher.getInstance("DES/CBC/PKCS5Padding");
         dcipher = Cipher.getInstance("DES/CBC/PKCS5Padding");
-        
-        String keyPath = System.getProperty("user.home")+"/.lobcder/key";
-        File keyFile = new File(keyPath);
-        if (keyFile.exists()) {
-            key = loadKey(keyFile);
-        } else {
-            keyFile.getParentFile().mkdirs();
-            key = generateKey();
-            saveKey(key, keyFile);
-        }
+
+//        String keyPath = System.getProperty("user.home")+"/.lobcder/key";
+//        File keyFile = new File(keyPath);
+//        if (keyFile.exists()) {
+//            key = loadKey(keyFile);
+//        } else {
+//            keyFile.getParentFile().mkdirs();
+//            key = generateKey();
+//            saveKey(key, keyFile);
+//        }
+
+        byte[] encoded = keyInt.toByteArray();
+        key = new SecretKeySpec(encoded, "DES");
 
         ecipher.init(Cipher.ENCRYPT_MODE, key, paramSpec);
         dcipher.init(Cipher.DECRYPT_MODE, key, paramSpec);
@@ -75,10 +78,13 @@ public class DesEncrypter {
         out.close();
     }
 
-    private SecretKey generateKey() throws NoSuchAlgorithmException {
+    public static BigInteger generateKey() throws NoSuchAlgorithmException {
 //        KeyGenerator keyGenerator = KeyGenerator.getInstance("DES");
 //        keyGenerator.init(256); //128 default; 192 and 256 also possible
-        return  KeyGenerator.getInstance("DES").generateKey();
+//         byte[] encoded = key.getEncoded();
+//        String data = new BigInteger(1, encoded).toString(16);
+        
+        return new BigInteger(1,KeyGenerator.getInstance("DES").generateKey().getEncoded());
     }
 
     private void saveKey(Key key, File file) throws IOException {

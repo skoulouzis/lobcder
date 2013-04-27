@@ -79,7 +79,6 @@ public class Items extends CatalogueHelper {
                     logicalData.setLockTimeout(resultSet.getLong(19));
                     logicalData.setDescription(resultSet.getString(20));
                     logicalData.setDataLocationPreference(resultSet.getString(21));
-                    logicalData.setEncrypted(resultSet.getBoolean(22));
                     LogicalDataWrapped ldw = new LogicalDataWrapped();
                     ldw.setLogicalData(logicalData);
                     ldw.setPermissions(p);
@@ -124,10 +123,11 @@ public class Items extends CatalogueHelper {
         List<LogicalDataWrapped> logicalDataWrappedList = new ArrayList<>();
         Permissions p = getCatalogue().getPermissions(ld.getUid(), ld.getOwner(), cn);
         if (mp.canRead(p)) {
-            try (PreparedStatement ps1 = cn.prepareStatement("SELECT uid, parentRef, ownerId, datatype, ldName, createDate, modifiedDate, ldLength, "
+            try (PreparedStatement ps1 = cn.prepareStatement("SELECT uid, parentRef, "
+                    + "ownerId, datatype, ldName, createDate, modifiedDate, ldLength, "
                     + "contentTypesStr, pdriGroupRef, isSupervised, checksum, lastValidationDate, "
                     + "lockTokenID, lockScope, lockType, lockedByUser, lockDepth, lockTimeout, "
-                    + "description, locationPreference, isEncrypted "
+                    + "description, locationPreference "
                     + "FROM ldata_table WHERE (parentRef = ?) "
                     + "AND (? OR (isSupervised = ?)) "
                     + "AND (? OR (createDate BETWEEN FROM_UNIXTIME(?) AND FROM_UNIXTIME(?))) "
@@ -137,7 +137,8 @@ public class Items extends CatalogueHelper {
                     + "AND (? OR (modifiedDate >= FROM_UNIXTIME(?))) "
                     + "AND (? OR (modifiedDate <= FROM_UNIXTIME(?))) "
                     + "AND (? OR (ldName LIKE CONCAT('%', ? , '%')))");
-                 PreparedStatement ps2 = cn.prepareStatement("SELECT uid, ownerId, ldName FROM ldata_table WHERE parentRef = ? AND datatype = '" + Constants.LOGICAL_FOLDER + "'")) {
+                 PreparedStatement ps2 = cn.prepareStatement("SELECT uid, ownerId, "
+                         + "ldName FROM ldata_table WHERE parentRef = ? AND datatype = '" + Constants.LOGICAL_FOLDER + "'")) {
                 {
                     if (queryParameters.containsKey("name") && queryParameters.get("name").iterator().hasNext()) {
                         String name = queryParameters.get("name").iterator().next();

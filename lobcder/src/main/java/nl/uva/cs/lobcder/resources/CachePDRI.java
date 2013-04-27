@@ -8,15 +8,16 @@ import nl.uva.cs.lobcder.util.CatalogueHelper;
 import nl.uva.cs.lobcder.util.Constants;
 
 import java.io.*;
+import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.nio.ByteBuffer;
-import java.nio.channels.Channels;
-import java.nio.channels.FileChannel;
-import java.nio.channels.ReadableByteChannel;
-import java.nio.channels.WritableByteChannel;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.crypto.NoSuchPaddingException;
+import nl.uva.cs.lobcder.util.DesEncrypter;
 
 /**
  *
@@ -28,11 +29,13 @@ public class CachePDRI implements PDRI {
     private final static String baseLocation;
 
     static {
-        baseLocation ="/tmp/LOBCDER-REPLICA-vTEST/";
+        baseLocation = "/tmp/LOBCDER-REPLICA-vTEST/";
     }
     final private String file_name;
     final private Long ssid;
     private final File file;
+    private BigInteger key;
+    private boolean encrypt;
 
     public CachePDRI(String file_name) {
         this.ssid = Long.valueOf(Constants.CACHE_STORAGE_SITE_ID);
@@ -55,7 +58,17 @@ public class CachePDRI implements PDRI {
     public void putData(InputStream data) throws IOException {
 //        Runnable asyncPut = getAsyncPutData(baseLocation + file_name, data);
 //        asyncPut.run();
-        setResourceContent(data);
+        if (!getEncrypted()) {
+            setResourceContent(data);
+        } else {
+            try {
+                OutputStream out = new FileOutputStream(file);
+                DesEncrypter encrypter = new DesEncrypter(this.key);
+                encrypter.decrypt(getData(), out);
+            } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | InvalidAlgorithmParameterException ex) {
+                throw new IOException(ex);
+            }
+        }
     }
 
     @Override
@@ -128,12 +141,34 @@ public class CachePDRI implements PDRI {
     }
 
     @Override
-    public void replicate(PDRI source,boolean encrypt) throws IOException {
+    public void replicate(PDRI source) throws IOException {
         putData(source.getData());
     }
 
     @Override
     public String getURI() throws IOException {
         return file.toURI().toString();
+    }
+
+//    @Override
+//    public void setKeyInt(BigInteger keyInt) {
+//       this.key = keyInt;
+//    }
+//
+    @Override
+    public BigInteger getKeyInt() {
+        if(key == null){
+            try {
+                key = DesEncrypter.generateKey();
+            } catch (NoSuchAlgorithmException ex) {
+                Logger.getLogger(CachePDRI.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        return this.key;
+    }
+
+    @Override
+    public boolean getEncrypted() {
+        return this.encrypt;
     }
 }

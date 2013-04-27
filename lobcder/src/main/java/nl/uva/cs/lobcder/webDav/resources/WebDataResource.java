@@ -244,7 +244,6 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
         try {
             // Do the mapping
             Principal p = new DavPrincipals.AbstractDavPrincipal(getPrincipalURL()) {
-
                 @Override
                 public boolean matches(Auth auth, Resource current) {
                     return true;
@@ -272,7 +271,6 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
             for (String r : resourcePermission.getRead()) {
                 perm = new ArrayList<>();
                 p = new DavPrincipals.AbstractDavPrincipal(getRoleUrlPrefix() + r) {
-
                     @Override
                     public boolean matches(Auth auth, Resource current) {
                         return true;
@@ -288,7 +286,6 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
             for (String r : resourcePermission.getWrite()) {
                 perm = new ArrayList<>();
                 p = new DavPrincipals.AbstractDavPrincipal(getRoleUrlPrefix() + r) {
-
                     @Override
                     public boolean matches(Auth auth, Resource current) {
                         return true;
@@ -373,8 +370,6 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
 
             } else if (qname.equals(Constants.DRI_SUPERVISED_PROP_NAME)) {
                 return String.valueOf(getLogicalData().getSupervised());
-            } else if (qname.equals(Constants.ENCRYPTED_PROP_NAME)) {
-                return String.valueOf(getLogicalData().getEncrypted());
             } else if (qname.equals(Constants.DRI_CHECKSUM_PROP_NAME)) {
                 return String.valueOf(getLogicalData().getChecksum());
             } else if (qname.equals(Constants.DRI_LAST_VALIDATION_DATE_PROP_NAME)) {
@@ -408,11 +403,6 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
                         Boolean v = Boolean.valueOf(value);
                         getLogicalData().setSupervised(v);
                         catalogue.setLogicalDataSupervised(getLogicalData().getUid(), v, connection);
-                    }
-                    if (qname.equals(Constants.ENCRYPTED_PROP_NAME)) {
-                        Boolean v = Boolean.valueOf(value);
-                        getLogicalData().setSupervised(v);
-                        catalogue.setLogicalDataEncrypted(getLogicalData().getUid(), v, connection);
                     } else if (qname.equals(Constants.DRI_CHECKSUM_PROP_NAME)) {
                         Long v = Long.valueOf(value);
                         getLogicalData().setChecksum(v);

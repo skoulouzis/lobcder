@@ -6,6 +6,7 @@ package nl.uva.cs.lobcder.resources;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigInteger;
 import java.net.UnknownHostException;
 
 /**
@@ -32,7 +33,13 @@ public interface PDRI {
 
     public Long getChecksum() throws IOException;
 
-    public void replicate(PDRI source,boolean encrypt) throws IOException;
+    public void replicate(PDRI source) throws IOException;
 
     public String getURI() throws IOException;
+
+//    public void setKeyInt(BigInteger keyInt);
+//
+    public BigInteger getKeyInt();
+
+    public boolean getEncrypted();
 }

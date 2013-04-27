@@ -47,7 +47,6 @@ public class LogicalData implements Cloneable {
     private Long lockTimeout = Long.valueOf(0);
     private String description;
     private String dataLocationPreference;
-    private Boolean encrypted = Boolean.FALSE;
 
 //    @XmlElement
 //    public List<String> getContentTypes() {
