@@ -26,7 +26,6 @@ import java.net.URISyntaxException;
 import java.sql.*;
 import java.sql.Date;
 import java.util.*;
-import java.util.logging.Level;
 
 /**
  *
@@ -842,15 +841,12 @@ public class JDBCatalogue extends MyDataSource {
 
     public void updatePdris(List<PDRIDescr> pdrisToUpdate, Connection connection) throws SQLException {
         for (PDRIDescr d : pdrisToUpdate) {
-            try (PreparedStatement ps = connection.prepareStatement("UPDATE pdri_table SET isEncrypted = ? WHERE pdriId = ?")) {
+            try (PreparedStatement ps = connection.prepareStatement("UPDATE pdri_table SET isEncrypted = ? WHERE fileName = ?")) {
                 ps.setBoolean(1, d.getEncrypt());
-                ps.setLong(2, d.getStorageSiteId());
+                ps.setString(2, d.getName());
                 ps.executeUpdate();
             }
         }
-
-
-
     }
 
     public void updateStorageSites(HashMap<String, Boolean> hostEncryptMap, Connection connection) throws SQLException, URISyntaxException {
@@ -860,26 +856,29 @@ public class JDBCatalogue extends MyDataSource {
 
         StringBuilder updateFalse = new StringBuilder();
         updateFalse.append("UPDATE storage_site_table SET encrypt = FALSE WHERE");
+        boolean doUpdateTrue = false;
+        boolean doUpdateFalse = false;
         for (String k : keys) {
             URI uri = new URI(k);
             if (hostEncryptMap.get(k)) {
+                doUpdateTrue = true;
                 updateTrue.append("(resourceUri LIKE ").append("'").append(uri.getScheme()).append("://%").append(uri.getHost()).append("%') ");
                 updateTrue.append(" OR ");
             } else {
+                doUpdateFalse = true;
                 updateFalse.append("(resourceUri LIKE ").append("'").append(uri.getScheme()).append("://%").append(uri.getHost()).append("%') ");
                 updateFalse.append(" OR ");
             }
         }
-        updateTrue.replace(updateTrue.lastIndexOf("OR"), updateTrue.length(), "");
-        updateFalse.replace(updateFalse.lastIndexOf("OR"), updateFalse.length(), "");
-        log.log(Level.FINE, "updateTrue: {0}", updateTrue);
-        log.log(Level.FINE, "updateFalse: {0}", updateFalse);
-        if (updateFalse.length() > 0) {
+        if (doUpdateFalse) {
+            updateFalse.replace(updateFalse.lastIndexOf("OR"), updateFalse.length(), "");
+
             try (PreparedStatement ps = connection.prepareStatement(updateFalse.toString())) {
                 ps.executeUpdate();
             }
         }
-        if (updateTrue.length() > 0) {
+        if (doUpdateTrue) {
+            updateTrue.replace(updateTrue.lastIndexOf("OR"), updateTrue.length(), "");
             try (PreparedStatement ps = connection.prepareStatement(updateTrue.toString())) {
                 ps.executeUpdate();
             }
