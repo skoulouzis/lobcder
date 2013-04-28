@@ -21,9 +21,12 @@ import nl.uva.cs.lobcder.util.MyDataSource;
 import javax.annotation.Nonnull;
 import javax.naming.NamingException;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.sql.*;
 import java.sql.Date;
 import java.util.*;
+import java.util.logging.Level;
 
 /**
  *
@@ -142,8 +145,8 @@ public class JDBCatalogue extends MyDataSource {
             Long newGroupId = rs.getLong(1);
             String sqlQuery;
 //            if (pdri.getKeyInt() != null) {
-                sqlQuery = "INSERT INTO pdri_table "
-                        + "(fileName, storageSiteRef, pdriGroupRef, isEncrypted) VALUES(?, ?, ?, ?)";
+            sqlQuery = "INSERT INTO pdri_table "
+                    + "(fileName, storageSiteRef, pdriGroupRef, isEncrypted) VALUES(?, ?, ?, ?)";
 //            } else {
 //                sqlQuery = "INSERT INTO pdri_table "
 //                        + "(fileName, storageSiteRef, pdriGroupRef, isEncrypted, encriptionKey) VALUES(?, ?, ?, ?, ?)";
@@ -834,8 +837,52 @@ public class JDBCatalogue extends MyDataSource {
             ps.setString(1, locationPreference);
             ps.setLong(2, uid);
             ps.executeUpdate();
+        }
+    }
+
+    public void updatePdris(List<PDRIDescr> pdrisToUpdate, Connection connection) throws SQLException {
+        for (PDRIDescr d : pdrisToUpdate) {
+            try (PreparedStatement ps = connection.prepareStatement("UPDATE pdri_table SET isEncrypted = ? WHERE pdriId = ?")) {
+                ps.setBoolean(1, d.getEncrypt());
+                ps.setLong(2, d.getStorageSiteId());
+                ps.executeUpdate();
+            }
+        }
 
 
+
+    }
+
+    public void updateStorageSites(HashMap<String, Boolean> hostEncryptMap, Connection connection) throws SQLException, URISyntaxException {
+        Set<String> keys = hostEncryptMap.keySet();
+        StringBuilder updateTrue = new StringBuilder();
+        updateTrue.append("UPDATE storage_site_table SET encrypt = TRUE WHERE");
+
+        StringBuilder updateFalse = new StringBuilder();
+        updateFalse.append("UPDATE storage_site_table SET encrypt = FALSE WHERE");
+        for (String k : keys) {
+            URI uri = new URI(k);
+            if (hostEncryptMap.get(k)) {
+                updateTrue.append("(resourceUri LIKE ").append("'").append(uri.getScheme()).append("://%").append(uri.getHost()).append("%') ");
+                updateTrue.append(" OR ");
+            } else {
+                updateFalse.append("(resourceUri LIKE ").append("'").append(uri.getScheme()).append("://%").append(uri.getHost()).append("%') ");
+                updateFalse.append(" OR ");
+            }
+        }
+        updateTrue.replace(updateTrue.lastIndexOf("OR"), updateTrue.length(), "");
+        updateFalse.replace(updateFalse.lastIndexOf("OR"), updateFalse.length(), "");
+        log.log(Level.FINE, "updateTrue: {0}", updateTrue);
+        log.log(Level.FINE, "updateFalse: {0}", updateFalse);
+        if (updateFalse.length() > 0) {
+            try (PreparedStatement ps = connection.prepareStatement(updateFalse.toString())) {
+                ps.executeUpdate();
+            }
+        }
+        if (updateTrue.length() > 0) {
+            try (PreparedStatement ps = connection.prepareStatement(updateTrue.toString())) {
+                ps.executeUpdate();
+            }
         }
     }
 

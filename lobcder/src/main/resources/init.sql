@@ -11,6 +11,8 @@ CREATE TABLE credential_table (
   password VARCHAR(255)
 );
 
+
+
 CREATE TABLE storage_site_table (
   storageSiteId SERIAL PRIMARY KEY,
   resourceUri VARCHAR(1024),
@@ -20,7 +22,8 @@ CREATE TABLE storage_site_table (
   quotaNum BIGINT,
   quotaSize BIGINT,
   isCache BOOLEAN NOT NULL DEFAULT FALSE, INDEX(isCache),
-  extra VARCHAR(512)
+  extra VARCHAR(512),
+  encrypt BOOLEAN NOT NULL DEFAULT FALSE, INDEX(encrypt)
 );
 
 CREATE TABLE pdri_table (
