@@ -384,7 +384,44 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
                 return getLogicalData().getDescription();
             } else if (qname.equals(Constants.DATA_LOC_PREF_NAME)) {
                 return getLogicalData().getDataLocationPreference();
+            } else if (qname.equals(Constants.ENCRYPT_PROP_NAME)) {
+                try (Connection connection = getCatalogue().getConnection()) {
+                    StringBuilder sb = new StringBuilder();
+                    if (getLogicalData().isFolder()) {
+                        List<? extends WebDataResource> children = (List<? extends WebDataResource>) ((WebDataDirResource) (this)).getChildren();
+                        sb.append("[");
+                        for (WebDataResource r : children) {
+                            if (r instanceof WebDataFileResource) {
+                                sb.append("'").append(r.getName()).append("' : [");
+                                Collection<PDRIDescr> pdris = getCatalogue().getPdriDescrByGroupId(r.getLogicalData().getPdriGroupId(), connection);
+                                for (PDRIDescr p : pdris) {
+                                    sb.append("[");
+                                    sb.append(p.getResourceUrl());
+                                    sb.append(p.getEncrypt());
+                                    sb.append("],");
+                                }
+                                sb.replace(sb.lastIndexOf(","), sb.length(), "").append("],");
+                            }
+                        }
+                    } else {
+                        Collection<PDRIDescr> pdris = getCatalogue().getPdriDescrByGroupId(getLogicalData().getPdriGroupId(), connection);
+                        sb.append("[");
+                        for (PDRIDescr p : pdris) {
+                            sb.append("[");
+                            sb.append(p.getResourceUrl());
+                            sb.append(",");
+                            sb.append(p.getEncrypt());
+                            sb.append("]");
+                            sb.append(",");
+                        }
+                    }
+                    sb.replace(sb.lastIndexOf(","), sb.length(), "");
+                    sb.append("]");
+                    connection.commit();
+                    return sb.toString();
+                }
             }
+
             return PropertySource.PropertyMetaData.UNKNOWN;
         } catch (Throwable th) {
             WebDataResource.log.log(Level.SEVERE, "Exception in getProperty() for resource " + getPath(), th);
@@ -419,7 +456,23 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
                         String v = value;
                         getLogicalData().setDataLocationPreference(v);
                         catalogue.setLocationPreference(getLogicalData().getUid(), v, connection);
+                    } else if (qname.equals(Constants.ENCRYPT_PROP_NAME)) {
+                        String v = value;
+                        log.log(Level.FINE, "Value: {0}", v);
+                        String[] parts = v.split("[\\[\\]]");
+                        for (String p : parts) {
+                            log.log(Level.FINE, "Parts: {0}", p);
+                            if (!p.isEmpty()) {
+                                String[] hostEncryptValue = p.split(",");
+                                if (hostEncryptValue.length == 2) {
+                                    String host = hostEncryptValue[0];
+                                    String encrypt = hostEncryptValue[1];
+                                    log.log(Level.FINE, "Host: {0}, encrypt: {1}", new Object[]{host, encrypt});
+                                }
+                            }
+                        }
                     }
+
                     connection.commit();
                 }
             } catch (SQLException | NumberFormatException e) {

@@ -187,7 +187,6 @@ public class WebDataFileResource extends WebDataResource implements
         } catch (InvalidAlgorithmParameterException ex) {
             Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, ex);
         }
-
     }
 
 //    private void circularStreamBufferTransferer(Iterator<PDRIDescr> it, OutputStream out, int tryCount, PDRI pdri) throws IOException {
