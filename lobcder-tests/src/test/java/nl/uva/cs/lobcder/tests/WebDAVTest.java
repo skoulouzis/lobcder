@@ -1069,23 +1069,83 @@ public class WebDAVTest {
             assertEquals(HttpStatus.SC_CREATED, status);
 
             DavPropertyNameSet encryptedNameSet = new DavPropertyNameSet();
-            DavPropertyName encryptedName = DavPropertyName.create("encrypted", Namespace.getNamespace("custom:"));
+            DavPropertyName encryptedName = DavPropertyName.create("encrypt", Namespace.getNamespace("custom:"));
             encryptedNameSet.add(encryptedName);
-            DavPropertySet encryptedSet = new DavPropertySet();
-            DavProperty<Boolean> driProp = new DefaultDavProperty<Boolean>(encryptedName, Boolean.TRUE);
-            encryptedSet.add(driProp);
-            PropPatchMethod proPatch = new PropPatchMethod(testuri1, encryptedSet, encryptedNameSet);
-            status = client.executeMethod(proPatch);
-            assertEquals(HttpStatus.SC_MULTI_STATUS, status);
+
+
+            try {
+                Thread.sleep(15000);
+            } catch (InterruptedException ex) {
+                Logger.getLogger(TestWebWAVFS.class.getName()).log(Level.SEVERE, null, ex);
+            }
+
+
             PropFindMethod propFind = new PropFindMethod(testuri1, encryptedNameSet, DavConstants.DEPTH_INFINITY);
             status = client.executeMethod(propFind);
             assertEquals(HttpStatus.SC_MULTI_STATUS, status);
 
-
-
             MultiStatus multiStatus = propFind.getResponseBodyAsMultiStatus();
             MultiStatusResponse[] responses = multiStatus.getResponses();
 
+
+
+            String oldValue = null;
+            for (MultiStatusResponse r : responses) {
+                DavPropertySet allProp = getProperties(r);
+                DavPropertyIterator iter = allProp.iterator();
+                while (iter.hasNext()) {
+                    DavProperty<?> p = iter.nextProperty();
+                    assertEquals(p.getName(), encryptedName);
+                    System.out.println("\tName: " + p.getName() + " Values " + p.getValue());
+                    assertNotNull(p.getValue());
+                    oldValue = p.getValue().toString();
+                }
+            }
+
+            String[] parts = oldValue.split("[\\[\\]]");
+            String oldHost = null;
+            boolean oldEncrypt = false;
+            for (String p : parts) {
+                if (!p.isEmpty()) {
+                    String[] hostEncryptValue = p.split(",");
+                    if (hostEncryptValue.length == 2) {
+                        String hostStr = hostEncryptValue[0];
+                        URI uri;
+                        try {
+                            uri = new URI(hostStr);
+                            String host = uri.getScheme();
+                            host += "://" + uri.getHost();
+                            oldHost = host;
+                            String encrypt = hostEncryptValue[1];
+                            oldEncrypt = Boolean.valueOf(encrypt);
+                        } catch (URISyntaxException ex) {
+                            //Wrong URI syntax, don't added it 
+                        }
+                    }
+                }
+            }
+
+
+
+            DavPropertySet encryptedSet = new DavPropertySet();
+            //Bit crude but will do for now
+            String propValue = "[[" + oldHost + "," + Boolean.valueOf(!oldEncrypt) + "]]";
+            DavProperty<String> driProp = new DefaultDavProperty<String>(encryptedName, propValue);
+            encryptedSet.add(driProp);
+
+            PropPatchMethod proPatch = new PropPatchMethod(testuri1, encryptedSet, encryptedNameSet);
+            status = client.executeMethod(proPatch);
+            assertEquals(HttpStatus.SC_MULTI_STATUS, status);
+
+
+            propFind = new PropFindMethod(testuri1, encryptedNameSet, DavConstants.DEPTH_INFINITY);
+            status = client.executeMethod(propFind);
+            assertEquals(HttpStatus.SC_MULTI_STATUS, status);
+
+
+            multiStatus = propFind.getResponseBodyAsMultiStatus();
+            responses = multiStatus.getResponses();
+            String newValue = null;
             for (MultiStatusResponse r : responses) {
 
                 DavPropertySet allProp = getProperties(r);
@@ -1094,54 +1154,75 @@ public class WebDAVTest {
                 while (iter.hasNext()) {
                     DavProperty<?> p = iter.nextProperty();
                     assertEquals(p.getName(), encryptedName);
-                    System.out.println("\tName: " + p.getName() + " Values " + p.getValue());
+//                    System.out.println("\tName: " + p.getName() + " Values " + p.getValue());
                     assertNotNull(p.getValue());
-                    boolean val = Boolean.valueOf(p.getValue().toString());
-                    if (new URL(testuri1).getPath().equals(r.getHref())) {
-                        assertTrue(val);
-                    } else {
-                        assertFalse(val);
+                    newValue = p.getValue().toString();
+                }
+            }
+
+            parts = newValue.split("[\\[\\]]");
+            String newHost = null;
+            boolean newEncrypt = false;
+            for (String p : parts) {
+                if (!p.isEmpty()) {
+                    String[] hostEncryptValue = p.split(",");
+                    if (hostEncryptValue.length == 2) {
+                        String hostStr = hostEncryptValue[0];
+                        URI uri;
+                        try {
+                            uri = new URI(hostStr);
+                            String host = uri.getScheme();
+                            host += "://" + uri.getHost();
+                            newHost = host;
+                            String encrypt = hostEncryptValue[1];
+                            newEncrypt = Boolean.valueOf(encrypt);
+                        } catch (URISyntaxException ex) {
+                            //Wrong URI syntax, don't added it 
+                        }
                     }
                 }
             }
-
-
-            //The server says it is, but is it in realety ? 
-            Set<PDRI> pdris = null;
-            boolean done = false;
-            //Wait for replication 
-            while (!done) {
-                try {
-                    Thread.sleep(1500);
-                } catch (InterruptedException ex) {
-                    Logger.getLogger(TestWebWAVFS.class.getName()).log(Level.SEVERE, null, ex);
-                }
-
-                pdris = getPdris(TestSettings.TEST_FILE_NAME1 + ".txt");
-                for (PDRI p : pdris) {
-                    if (p.resourceUrl.startsWith("/") || p.resourceUrl.startsWith("file://")) {
-                        done = false;
-                        break;
-                    } else {
-                        done = true;
-                    }
-                }
-            }
-
-            String endpoint = "";
-            for (PDRI p : pdris) {
-                VFSClient cli = getVFSClient(p.resourceUrl, p.username, p.password);
-                if (p.resourceUrl.startsWith("/")) {
-                    endpoint = "file:///" + p.resourceUrl;
-                } else {
-                    endpoint = p.resourceUrl;
-                }
-                
-                vrl = new VRL(endpoint).append("LOBCDER-REPLICA-vTEST").append(p.name);
-                physicalFile = cli.openFile(vrl);
-                System.out.println(physicalFile.getContentsAsString());
-
-            }
+            
+            assertEquals(newHost, oldHost);
+            assertNotSame(newEncrypt, oldEncrypt);
+//
+//
+//            //The server says it is, but is it in realety ? 
+//            Set<PDRI> pdris = null;
+//            boolean done = false;
+//            //Wait for replication 
+//            while (!done) {
+//                try {
+//                    Thread.sleep(1500);
+//                } catch (InterruptedException ex) {
+//                    Logger.getLogger(TestWebWAVFS.class.getName()).log(Level.SEVERE, null, ex);
+//                }
+//
+//                pdris = getPdris(TestSettings.TEST_FILE_NAME1 + ".txt");
+//                for (PDRI p : pdris) {
+//                    if (p.resourceUrl.startsWith("/") || p.resourceUrl.startsWith("file://")) {
+//                        done = false;
+//                        break;
+//                    } else {
+//                        done = true;
+//                    }
+//                }
+//            }
+//
+//            String endpoint = "";
+//            for (PDRI p : pdris) {
+//                VFSClient cli = getVFSClient(p.resourceUrl, p.username, p.password);
+//                if (p.resourceUrl.startsWith("/")) {
+//                    endpoint = "file:///" + p.resourceUrl;
+//                } else {
+//                    endpoint = p.resourceUrl;
+//                }
+//                
+//                vrl = new VRL(endpoint).append("LOBCDER-REPLICA-vTEST").append(p.name);
+//                physicalFile = cli.openFile(vrl);
+//                System.out.println(physicalFile.getContentsAsString());
+//
+//            }
 
         } catch (IOException ex) {
             Logger.getLogger(WebDAVTest.class.getName()).log(Level.SEVERE, null, ex);

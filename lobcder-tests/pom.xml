@@ -9,9 +9,9 @@
     <name>lobcder-tests</name>
     <url>http://maven.apache.org</url>
     
-    <properties>
+<!--    <properties>
         <skipTests>true</skipTests>
-    </properties>
+    </properties>-->
 
     <dependencies>
         <dependency>

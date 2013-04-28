@@ -316,76 +316,77 @@ public class TestWebWAVFS {
         DeleteMethod del = new DeleteMethod(testFileURI1);
         int status = client1.executeMethod(del);
 
-        //PROPFIND file is not there 
-        testFileURI1 = uri.toASCIIString() + TestSettings.TEST_FILE_NAME1 + ".txt";
-        PropFindMethod propFind = new PropFindMethod(testFileURI1, DavConstants.PROPFIND_ALL_PROP_INCLUDE, DavConstants.DEPTH_0);
-        status = client1.executeMethod(propFind);
-        assertEquals(HttpStatus.SC_NOT_FOUND, status);
+        try {
+            //PROPFIND file is not there 
+            testFileURI1 = uri.toASCIIString() + TestSettings.TEST_FILE_NAME1 + ".txt";
+            PropFindMethod propFind = new PropFindMethod(testFileURI1, DavConstants.PROPFIND_ALL_PROP_INCLUDE, DavConstants.DEPTH_0);
+            status = client1.executeMethod(propFind);
+            assertEquals(HttpStatus.SC_NOT_FOUND, status);
 
-        //PUT create an empty file 
-        PutMethod put = new PutMethod(testFileURI1);
-        put.setRequestEntity(new StringRequestEntity("\n", "text/plain", "UTF-8"));
-        status = client1.executeMethod(put);
-        assertEquals(HttpStatus.SC_CREATED, status);
+            //PUT create an empty file 
+            PutMethod put = new PutMethod(testFileURI1);
+            put.setRequestEntity(new StringRequestEntity("\n", "text/plain", "UTF-8"));
+            status = client1.executeMethod(put);
+            assertEquals(HttpStatus.SC_CREATED, status);
 
-        //PROPFIND get proerties 
-        propFind = new PropFindMethod(testFileURI1, DavConstants.PROPFIND_ALL_PROP_INCLUDE, DavConstants.DEPTH_0);
-        status = client1.executeMethod(propFind);
-        assertEquals(HttpStatus.SC_MULTI_STATUS, status);
+            //PROPFIND get proerties 
+            propFind = new PropFindMethod(testFileURI1, DavConstants.PROPFIND_ALL_PROP_INCLUDE, DavConstants.DEPTH_0);
+            status = client1.executeMethod(propFind);
+            assertEquals(HttpStatus.SC_MULTI_STATUS, status);
 
 
-        MultiStatus multiStatus = propFind.getResponseBodyAsMultiStatus();
-        MultiStatusResponse[] responses = multiStatus.getResponses();
+            MultiStatus multiStatus = propFind.getResponseBodyAsMultiStatus();
+            MultiStatusResponse[] responses = multiStatus.getResponses();
 
-        DavPropertySet allProp = getProperties(responses[0]);
+            DavPropertySet allProp = getProperties(responses[0]);
 //        DavPropertyIterator iter = allProp.iterator();
 //        while (iter.hasNext()) {
 //            DavProperty<?> p = iter.nextProperty();
 //            System.out.println("P: " + p.getName() + " " + p.getValue());
 //        }
 
-        String isCollStr = (String) allProp.get(DavPropertyName.ISCOLLECTION).getValue();
-        Boolean isCollection = Boolean.getBoolean(isCollStr);
-        assertFalse(isCollection);
-        String lenStr = (String) allProp.get(DavPropertyName.GETCONTENTLENGTH).getValue();
-        assertEquals(Long.valueOf(lenStr), Long.valueOf("\n".length()));
-        String contentType = (String) allProp.get(DavPropertyName.GETCONTENTTYPE).getValue();
-        assertEquals("text/plain; charset=UTF-8", contentType);
+            String isCollStr = (String) allProp.get(DavPropertyName.ISCOLLECTION).getValue();
+            Boolean isCollection = Boolean.getBoolean(isCollStr);
+            assertFalse(isCollection);
+            String lenStr = (String) allProp.get(DavPropertyName.GETCONTENTLENGTH).getValue();
+            assertEquals(Long.valueOf(lenStr), Long.valueOf("\n".length()));
+            String contentType = (String) allProp.get(DavPropertyName.GETCONTENTTYPE).getValue();
+            assertEquals("text/plain; charset=UTF-8", contentType);
 
 
-        //GET the file 
-        GetMethod get = new GetMethod(testFileURI1);
-        status = client1.executeMethod(get);
-        assertEquals(HttpStatus.SC_OK, status);
-        assertEquals("\n", get.getResponseBodyAsString());
+            //GET the file 
+            GetMethod get = new GetMethod(testFileURI1);
+            status = client1.executeMethod(get);
+            assertEquals(HttpStatus.SC_OK, status);
+            assertEquals("\n", get.getResponseBodyAsString());
 
-        //PUT
-        put = new PutMethod(testFileURI1);
-        String content = get.getResponseBodyAsString() + TestSettings.TEST_DATA;
-        put.setRequestEntity(new StringRequestEntity(content, "text/plain", "UTF-8"));
-        status = client1.executeMethod(put);
-        assertEquals(HttpStatus.SC_CREATED, status);
-
-
-        get = new GetMethod(testFileURI1);
-        status = client1.executeMethod(get);
-        assertEquals(HttpStatus.SC_OK, status);
-        assertEquals(content, get.getResponseBodyAsString());
-
-        put = new PutMethod(testFileURI1);
-        content = get.getResponseBodyAsString() + TestSettings.TEST_DATA;
-        put.setRequestEntity(new StringRequestEntity(content, "text/plain", "UTF-8"));
-        status = client1.executeMethod(put);
-        assertEquals(HttpStatus.SC_CREATED, status);
+            //PUT
+            put = new PutMethod(testFileURI1);
+            String content = get.getResponseBodyAsString() + TestSettings.TEST_DATA;
+            put.setRequestEntity(new StringRequestEntity(content, "text/plain", "UTF-8"));
+            status = client1.executeMethod(put);
+            assertEquals(HttpStatus.SC_CREATED, status);
 
 
-        get = new GetMethod(testFileURI1);
-        status = client1.executeMethod(get);
-        assertEquals(HttpStatus.SC_OK, status);
-        assertEquals(content, get.getResponseBodyAsString());
+            get = new GetMethod(testFileURI1);
+            status = client1.executeMethod(get);
+            assertEquals(HttpStatus.SC_OK, status);
+            assertEquals(content, get.getResponseBodyAsString());
+
+            put = new PutMethod(testFileURI1);
+            content = get.getResponseBodyAsString() + TestSettings.TEST_DATA;
+            put.setRequestEntity(new StringRequestEntity(content, "text/plain", "UTF-8"));
+            status = client1.executeMethod(put);
+            assertEquals(HttpStatus.SC_CREATED, status);
 
 
-        delete(testFileURI1);
+            get = new GetMethod(testFileURI1);
+            status = client1.executeMethod(get);
+            assertEquals(HttpStatus.SC_OK, status);
+            assertEquals(content, get.getResponseBodyAsString());
+        } finally {
+            delete(testFileURI1);
+        }
     }
 
     @Test
@@ -412,7 +413,7 @@ public class TestWebWAVFS {
         int status = client.executeMethod(put);
         assertEquals(HttpStatus.SC_UNAUTHORIZED, status);
     }
-    
+
     @Test
     public void testUpDownloadFileWithSpace() throws IOException, DavException {
 //        String testFileURI1 = uri.toASCIIString() + "file with spaces";
@@ -442,23 +443,30 @@ public class TestWebWAVFS {
             Set<PDRI> pdris = null;
             boolean done = false;
             //Wait for replication 
-            while (!done) {
+            long sleepTime = 15000;
+//            while (!done) {
                 try {
-                    Thread.sleep(1500);
+                    Thread.sleep(sleepTime);
                 } catch (InterruptedException ex) {
                     Logger.getLogger(TestWebWAVFS.class.getName()).log(Level.SEVERE, null, ex);
                 }
-
                 pdris = getPdris(TestSettings.TEST_FILE_NAME1 + ".txt");
-                for (PDRI p : pdris) {
-                    if (p.resourceUrl.startsWith("/") || p.resourceUrl.startsWith("file://")) {
-                        done = false;
-                        break;
-                    } else {
-                        done = true;
-                    }
-                }
-            }
+//                if(!pdris.equals(oldPdri)){
+//                    done = true;
+//                }
+//                for (PDRI p : pdris) {
+//                    if (p.resourceUrl.startsWith("/") || p.resourceUrl.startsWith("file://")) {
+//                        done = false;
+//                        break;
+//                    } else {
+//                        done = true;
+//                    }
+//                }
+//                sleepTime += 100;
+//                if (sleepTime >= 50000) {
+//                    done = true;
+//                }
+//            }
             //Delete the physical data 
             deletePhysicalData(pdris);
 
@@ -520,8 +528,8 @@ public class TestWebWAVFS {
         List<LogicalDataWrapped> list = res.accept(MediaType.APPLICATION_XML).
                 get(new GenericType<List<LogicalDataWrapped>>() {
         });
-        
-        
+
+
         assertNotNull(list);
         assertFalse(list.isEmpty());
         LogicalDataWrapped logicalDataWrapped = null;
