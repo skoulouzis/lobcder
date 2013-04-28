@@ -140,14 +140,23 @@ public class JDBCatalogue extends MyDataSource {
             ResultSet rs = statement.getGeneratedKeys();
             rs.next();
             Long newGroupId = rs.getLong(1);
-
-            try (PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO pdri_table "
-                            + "(fileName, storageSiteRef, pdriGroupRef, isEncrypted, encryptionKey) VALUES(?, ?, ?, ?, ?)")) {
+            String sqlQuery;
+//            if (pdri.getKeyInt() != null) {
+                sqlQuery = "INSERT INTO pdri_table "
+                        + "(fileName, storageSiteRef, pdriGroupRef, isEncrypted) VALUES(?, ?, ?, ?)";
+//            } else {
+//                sqlQuery = "INSERT INTO pdri_table "
+//                        + "(fileName, storageSiteRef, pdriGroupRef, isEncrypted, encriptionKey) VALUES(?, ?, ?, ?, ?)";
+//            }
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery)) {
                 preparedStatement.setString(1, pdri.getFileName());
                 preparedStatement.setLong(2, pdri.getStorageSiteId());
                 preparedStatement.setLong(3, newGroupId);
                 preparedStatement.setBoolean(4, pdri.getEncrypted());
-                preparedStatement.setLong(5, pdri.getKeyInt().longValue());
+//                if (pdri.getKeyInt() != null) {
+//                    //We have a triger to generate it 
+//                    preparedStatement.setLong(5, pdri.getKeyInt().longValue());
+//                }
                 preparedStatement.executeUpdate();
                 logicalData.setPdriGroupId(newGroupId);
                 return updateLogicalData(logicalData, connection);
@@ -182,7 +191,7 @@ public class JDBCatalogue extends MyDataSource {
     public List<PDRIDescr> getPdriDescrByGroupId(Long groupId, @Nonnull Connection connection) throws SQLException {
         ArrayList<PDRIDescr> res = new ArrayList<PDRIDescr>();
         try (PreparedStatement ps = connection.prepareStatement("SELECT fileName, "
-                        + "storageSiteRef, resourceURI, username, password FROM pdri_table "
+                        + "storageSiteRef, resourceURI, username, password, isEncrypted FROM pdri_table "
                         + "JOIN storage_site_table ON storageSiteRef = storageSiteId "
                         + "JOIN credential_table ON credentialRef = credintialId "
                         + "WHERE pdri_table.pdriGroupRef = ?")) {
@@ -194,7 +203,8 @@ public class JDBCatalogue extends MyDataSource {
                 String resourceURI = rs.getString(3);
                 String uName = rs.getString(4);
                 String passwd = rs.getString(5);
-                res.add(new PDRIDescr(fileName, ssID, resourceURI, uName, passwd, false));
+                boolean encrypt = rs.getBoolean(6);
+                res.add(new PDRIDescr(fileName, ssID, resourceURI, uName, passwd, encrypt));
             }
             return res;
         }

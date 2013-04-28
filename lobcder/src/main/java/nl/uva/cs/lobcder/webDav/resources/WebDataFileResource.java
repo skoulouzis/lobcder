@@ -26,6 +26,9 @@ import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.math.BigInteger;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Date;
@@ -33,9 +36,12 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.crypto.KeyGenerator;
+import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import nl.uva.cs.lobcder.util.DesEncrypter;
+import nl.uva.vlet.exception.VlException;
 
 /**
  *
@@ -142,7 +148,7 @@ public class WebDataFileResource extends WebDataResource implements
         return null;
     }
 
-    private void circularStreamBufferTransferer(Iterator<PDRIDescr> it, OutputStream out, int tryCount, PDRI pdri) throws IOException {
+    private void circularStreamBufferTransferer(Iterator<PDRIDescr> it, OutputStream out, int tryCount, PDRI pdri) throws IOException, NotFoundException {
         try {
             boolean reconnect;
             if (pdri == null && it.hasNext()) {
@@ -164,26 +170,69 @@ public class WebDataFileResource extends WebDataResource implements
                     encrypter.decrypt(pdri.getData(), out);
                 }
             } else {
-                throw new IOException("Could not get file content");
+                throw new NotFoundException("Physical resource not found");
             }
-        } catch (Exception e) {
-            if (pdri == null) {
-                //noinspection ConstantConditions
-                throw (IOException) e;
+        } catch (VlException | IOException ex) {
+            if (++tryCount < Constants.RECONNECT_NTRY) {
+                circularStreamBufferTransferer(it, out, tryCount, pdri);
             } else {
-                if (e.getMessage() != null && e.getMessage().contains("Couldn open location")) {
-                    circularStreamBufferTransferer(it, out, 0, null);
-                } else {
-                    if (++tryCount < Constants.RECONNECT_NTRY) {
-                        circularStreamBufferTransferer(it, out, tryCount, pdri);
-                    } else {
-                        circularStreamBufferTransferer(it, out, 0, null);
-                    }
-                }
+                circularStreamBufferTransferer(it, out, 0, null);
             }
+        } catch (NoSuchAlgorithmException ex) {
+            Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (NoSuchPaddingException ex) {
+            Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (InvalidKeyException ex) {
+            Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (InvalidAlgorithmParameterException ex) {
+            Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, ex);
         }
+
     }
 
+//    private void circularStreamBufferTransferer(Iterator<PDRIDescr> it, OutputStream out, int tryCount, PDRI pdri) throws IOException {
+//        try {
+//            boolean reconnect;
+//            if (pdri == null && it.hasNext()) {
+//                pdri = PDRIFactory.getFactory().createInstance(it.next());
+//                reconnect = false;
+//            } else {
+//                reconnect = true;
+//            }
+//            if (pdri != null) {
+//                if (reconnect) {
+//                    pdri.reconnect();
+//                }
+//                WebDataFileResource.log.log(Level.FINE, "sendContent() for {0}--------- {1}", new Object[]{getPath(), pdri.getFileName()});
+//                if (!pdri.getEncrypted()) {
+//                    CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((5 * 1024 * 1024), pdri.getData(), out);
+//                    cBuff.startTransfer((long) -1);
+//                } else {
+//                    DesEncrypter encrypter = new DesEncrypter(pdri.getKeyInt());
+//                    encrypter.decrypt(pdri.getData(), out);
+//                }
+//            } else {
+//                throw new IOException("Resource not found");
+//            }
+//        } catch (Exception e) {
+//            if (pdri == null) {
+//                //noinspection ConstantConditions
+//                throw (IOException) e;
+//            } else {
+//                if (e.getMessage() != null && e.getMessage().contains("Resource not found")) {
+//                    throw new IOException(e);
+//                } else if (e.getMessage() != null && e.getMessage().contains("Couldn open location")) {
+//                    circularStreamBufferTransferer(it, out, 0, null);
+//                } else {
+//                    if (++tryCount < Constants.RECONNECT_NTRY) {
+//                        circularStreamBufferTransferer(it, out, tryCount, pdri);
+//                    } else {
+//                        circularStreamBufferTransferer(it, out, 0, null);
+//                    }
+//                }
+//            }
+//        }
+//    }
     @Override
     public void sendContent(OutputStream out, Range range,
             Map<String, String> params, String contentType) throws IOException,
@@ -195,8 +244,8 @@ public class WebDataFileResource extends WebDataResource implements
         } catch (SQLException ex) {
             throw new BadRequestException(this, ex.getMessage());
         } catch (IOException ex) {
-            if (ex.getMessage().contains("Could not get file content")) {
-                throw ex;
+            if (ex.getMessage().contains("Resource not found")) {
+                throw new NotFoundException(ex.getMessage());
             } else {
                 throw new BadRequestException(this, ex.getMessage());
             }

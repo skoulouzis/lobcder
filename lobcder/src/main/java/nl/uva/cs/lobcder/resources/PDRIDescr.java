@@ -28,7 +28,7 @@ public class PDRIDescr {
         return storageSiteId;
     }
 
-    boolean getEncrypt() {
+    public boolean getEncrypt() {
         return encrypt;
     }
 }
