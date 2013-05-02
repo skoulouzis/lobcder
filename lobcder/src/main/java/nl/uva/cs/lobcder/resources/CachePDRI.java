@@ -14,7 +14,6 @@ import java.net.UnknownHostException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.security.spec.InvalidKeySpecException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.crypto.NoSuchPaddingException;
@@ -46,7 +45,6 @@ public class CachePDRI implements PDRI {
 
     @Override
     public void delete() throws IOException {
-
         file.delete();
     }
 
@@ -88,7 +86,6 @@ public class CachePDRI implements PDRI {
         try {
             int read;
             byte[] copyBuffer = new byte[2 * 1024 * 1024];
-
             while ((read = is.read(copyBuffer, 0, copyBuffer.length)) != -1) {
                 os.write(copyBuffer, 0, read);
             }

@@ -64,57 +64,86 @@ public class DesEncrypter {
 //            key = new SecretKeySpec(encoded, "DES");
 //            saveKey(key, keyFile);
 //        }
-        
+
         byte[] encoded = keyInt.toByteArray();
         key = new SecretKeySpec(encoded, "DES");
 
         ecipher.init(Cipher.ENCRYPT_MODE, key, paramSpec);
         dcipher.init(Cipher.DECRYPT_MODE, key, paramSpec);
     }
-    
-    
+
     public void encrypt(InputStream in, OutputStream out) throws IOException {
-        OutputStream cipherOut;
+        OutputStream cipherOut = null;
         try {
+            int read;
             cipherOut = new CipherOutputStream(out, ecipher);
-            CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((2 * 1024 * 1024), in, cipherOut);
-            cBuff.startTransfer(new Long(-1));
-        } catch (VlException ex) {
-            throw new IOException(ex);
-        } finally {
-            if (out != null) {
-                try {
-                    out.flush();
-                    out.close();
-                } catch (java.io.IOException ex) {
-                }
+            byte[] copyBuffer = new byte[2 * 1024 * 1024];
+            while ((read = in.read(copyBuffer, 0, copyBuffer.length)) != -1) {
+                cipherOut.write(copyBuffer, 0, read);
             }
-            if (in != null) {
+        } finally {
+            try {
                 in.close();
+            } finally {
+                cipherOut.close();
             }
         }
+
+//        try {
+//            cipherOut = new CipherOutputStream(out, ecipher);
+//            CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((2 * 1024 * 1024), in, cipherOut);
+//            cBuff.startTransfer(new Long(-1));
+//        } catch (VlException ex) {
+//            throw new IOException(ex);
+//        } finally {
+//            if (out != null) {
+//                try {
+//                    out.flush();
+//                    out.close();
+//                } catch (java.io.IOException ex) {
+//                }
+//            }
+//            if (in != null) {
+//                in.close();
+//            }
+//        }
     }
 
     public void decrypt(InputStream in, OutputStream out) throws IOException {
         InputStream cipherIn = null;
+
         try {
+            int read;
             cipherIn = new CipherInputStream(in, dcipher);
-            CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((2 * 1024 * 1024), cipherIn, out);
-            cBuff.startTransfer(new Long(-1));
-        } catch (Exception ex) {
-            throw new IOException(ex);
-        } finally {
-            if (out != null) {
-                try {
-                    out.flush();
-                    out.close();
-                } catch (java.io.IOException ex) {
-                }
+            byte[] copyBuffer = new byte[2 * 1024 * 1024];
+            while ((read = cipherIn.read(copyBuffer, 0, copyBuffer.length)) != -1) {
+                out.write(copyBuffer, 0, read);
             }
-            if (cipherIn != null) {
+        } finally {
+            try {
                 cipherIn.close();
+            } finally {
+                out.close();
             }
         }
+//        try {
+//            cipherIn = new CipherInputStream(in, dcipher);
+//            CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((2 * 1024 * 1024), cipherIn, out);
+//            cBuff.startTransfer(new Long(-1));
+//        } catch (Exception ex) {
+//            throw new IOException(ex);
+//        } finally {
+//            if (out != null) {
+//                try {
+//                    out.flush();
+//                    out.close();
+//                } catch (java.io.IOException ex) {
+//                }
+//            }
+//            if (cipherIn != null) {
+//                cipherIn.close();
+//            }
+//        }
     }
 
     public static BigInteger generateKey() throws NoSuchAlgorithmException {
