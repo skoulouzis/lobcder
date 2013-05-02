@@ -29,6 +29,7 @@ import java.math.BigInteger;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Date;
@@ -179,13 +180,13 @@ public class WebDataFileResource extends WebDataResource implements
                 circularStreamBufferTransferer(it, out, 0, null);
             }
         } catch (NoSuchAlgorithmException ex) {
-            Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, ex);
+            throw new IOException(ex);
         } catch (NoSuchPaddingException ex) {
-            Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, ex);
+            throw new IOException(ex);
         } catch (InvalidKeyException ex) {
-            Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, ex);
+            throw new IOException(ex);
         } catch (InvalidAlgorithmParameterException ex) {
-            Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, ex);
+            throw new IOException(ex);
         }
     }
 

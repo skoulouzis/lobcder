@@ -1,5 +1,6 @@
 package nl.uva.cs.lobcder.resources;
 
+import java.math.BigInteger;
 import lombok.*;
 
 import javax.xml.bind.annotation.XmlRootElement;
@@ -22,6 +23,7 @@ public class PDRIDescr {
     private String username;
     private String password;
     private boolean encrypt;
+    private BigInteger key;
 
     @XmlTransient
     public Long getStorageSiteId() {

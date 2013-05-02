@@ -43,7 +43,7 @@ class ReplicateSweep implements Runnable {
         try (Statement s = connection.createStatement()) {
             ResultSet rs = s.executeQuery("SELECT storageSiteId, resourceURI, "
                     + "currentNum, currentSize, quotaNum, quotaSize, username, "
-                    + "password FROM storage_site_table JOIN credential_table ON "
+                    + "password, encrypt FROM storage_site_table JOIN credential_table ON "
                     + "credentialRef = credintialId WHERE isCache != TRUE");
             ArrayList<MyStorageSite> res = new ArrayList<>();
             while (rs.next()) {
@@ -58,6 +58,7 @@ class ReplicateSweep implements Runnable {
                 ss.setCurrentSize(rs.getLong(4));
                 ss.setQuotaNum(rs.getLong(5));
                 ss.setQuotaSize(rs.getLong(6));
+                ss.setEncrypt(rs.getBoolean(9));
                 res.add(ss);
             }
             return res;
@@ -103,27 +104,29 @@ class ReplicateSweep implements Runnable {
                 connection.commit();
                 for (CacheDescr cd : toReplicate) {
                     try (PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO pdri_table "
-                            + "(fileName, storageSiteRef, pdriGroupRef,isEncrypted) VALUES(?, ?, ?, ?)")) {
+                                    + "(fileName, storageSiteRef, pdriGroupRef,isEncrypted, encryptionKey) VALUES(?, ?, ?, ?, ?)")) {
                         CachePDRI source = new CachePDRI(cd.name);
                         MyStorageSite ss = findBestSite();
-                        
-                        //We have to somehow decide how to set the encrypt value 
+                        //We have to somehow decide how to set the encrypt value
+                        BigInteger pdriKey = DesEncrypter.generateKey();
                         PDRIDescr pdriDescr = new PDRIDescr(
                                 cd.name,
                                 ss.getStorageSiteId(),
                                 ss.getResourceURI(),
                                 ss.getCredential().getStorageSiteUsername(),
-                                ss.getCredential().getStorageSitePassword(),false);
+                                ss.getCredential().getStorageSitePassword(), ss.isEncrypt(), pdriKey);
                         PDRI replica = PDRIFactory.getFactory().createInstance(pdriDescr);
-
                         replica.replicate(source);
                         preparedStatement.setString(1, cd.name);
                         preparedStatement.setLong(2, ss.getStorageSiteId());
                         preparedStatement.setLong(3, cd.pdriGroupRef);
                         preparedStatement.setBoolean(4, replica.getEncrypted());
+                        preparedStatement.setLong(5, pdriKey.longValue());
                         preparedStatement.executeUpdate();
                         onCacheReplicate(cd, source, connection);
                         connection.commit();
+                    } catch (NoSuchAlgorithmException ex) {
+                        Logger.getLogger(ReplicateSweep.class.getName()).log(Level.SEVERE, null, ex);
                     }
                 }
             } catch (SQLException | IOException e) {

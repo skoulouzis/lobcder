@@ -11,10 +11,8 @@ import java.sql.*;
 import java.util.logging.Level;
 
 /**
- * User: dvasunin
- * Date: 25.02.13
- * Time: 16:31
- * To change this template use File | Settings | File Templates.
+ * User: dvasunin Date: 25.02.13 Time: 16:31 To change this template use File |
+ * Settings | File Templates.
  */
 @Log
 class DeleteSweep implements Runnable {
@@ -68,7 +66,8 @@ class DeleteSweep implements Runnable {
                                         String resourceUri = rs3.getString(1);
                                         String username = rs3.getString(2);
                                         String password = rs3.getString(3);
-                                        PDRIDescr pdriDescr = new PDRIDescr(fileName, storageSiteRef, resourceUri, username, password, false);
+                                        //For deleteing we don't care for encryption 
+                                        PDRIDescr pdriDescr = new PDRIDescr(fileName, storageSiteRef, resourceUri, username, password, false, null);
                                         DeleteSweep.log.log(Level.FINE, "PDRI Description: {0}, {1}, {2}, {3}, {4}", new Object[]{fileName, storageSiteRef, resourceUri, username, password});
                                         DeleteSweep.log.log(Level.FINE, "PDRI pdriDescr: {0}", new Object[]{pdriDescr});
                                         factory = PDRIFactory.getFactory();

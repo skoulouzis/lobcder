@@ -21,11 +21,13 @@ import nl.uva.cs.lobcder.util.MyDataSource;
 import javax.annotation.Nonnull;
 import javax.naming.NamingException;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.*;
 import java.sql.Date;
 import java.util.*;
+import nl.uva.cs.lobcder.resources.MyStorageSite;
 
 /**
  *
@@ -57,6 +59,32 @@ public class JDBCatalogue extends MyDataSource {
     public void stopSweep() {
         timer.cancel();
 //        timer.purge();
+    }
+
+    public Collection<MyStorageSite> getStorageSites(Connection connection) throws SQLException {
+        try (Statement s = connection.createStatement()) {
+            ResultSet rs = s.executeQuery("SELECT storageSiteId, resourceURI, "
+                    + "currentNum, currentSize, quotaNum, quotaSize, username, "
+                    + "password, encrypt FROM storage_site_table JOIN credential_table ON "
+                    + "credentialRef = credintialId WHERE isCache != TRUE");
+            ArrayList<MyStorageSite> res = new ArrayList<>();
+            while (rs.next()) {
+                Credential c = new Credential();
+                c.setStorageSiteUsername(rs.getString(7));
+                c.setStorageSitePassword(rs.getString(8));
+                MyStorageSite ss = new MyStorageSite();
+                ss.setStorageSiteId(rs.getLong(1));
+                ss.setCredential(c);
+                ss.setResourceURI(rs.getString(2));
+                ss.setCurrentNum(rs.getLong(3));
+                ss.setCurrentSize(rs.getLong(4));
+                ss.setQuotaNum(rs.getLong(5));
+                ss.setQuotaSize(rs.getLong(6));
+                ss.setEncrypt(rs.getBoolean(7));
+                res.add(ss);
+            }
+            return res;
+        }
     }
 
     public LogicalData registerDirLogicalData(LogicalData entry, @Nonnull Connection connection) throws SQLException {
@@ -193,7 +221,7 @@ public class JDBCatalogue extends MyDataSource {
     public List<PDRIDescr> getPdriDescrByGroupId(Long groupId, @Nonnull Connection connection) throws SQLException {
         ArrayList<PDRIDescr> res = new ArrayList<PDRIDescr>();
         try (PreparedStatement ps = connection.prepareStatement("SELECT fileName, "
-                        + "storageSiteRef, resourceURI, username, password, isEncrypted FROM pdri_table "
+                        + "storageSiteRef, resourceURI, username, password, isEncrypted, encryptionKey FROM pdri_table "
                         + "JOIN storage_site_table ON storageSiteRef = storageSiteId "
                         + "JOIN credential_table ON credentialRef = credintialId "
                         + "WHERE pdri_table.pdriGroupRef = ?")) {
@@ -206,7 +234,8 @@ public class JDBCatalogue extends MyDataSource {
                 String uName = rs.getString(4);
                 String passwd = rs.getString(5);
                 boolean encrypt = rs.getBoolean(6);
-                res.add(new PDRIDescr(fileName, ssID, resourceURI, uName, passwd, encrypt));
+                long key = rs.getLong(7);
+                res.add(new PDRIDescr(fileName, ssID, resourceURI, uName, passwd, encrypt, new BigInteger("7490145796510618321")));
             }
             return res;
         }

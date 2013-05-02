@@ -33,10 +33,9 @@ public class Constants {
     public static final QName DAV_ACL_PROP_NAME = new QName("DAV:", "acl");
     public static final QName DATA_LOC_PREF_NAME = new QName("custom:", "data-location-preference");
     public static final QName ENCRYPT_PROP_NAME = new QName("custom:", "encrypt");
-    public static final QName[] PROP_NAMES = new QName[]{DATA_DIST_PROP_NAME, DRI_SUPERVISED_PROP_NAME, DRI_CHECKSUM_PROP_NAME, DRI_LAST_VALIDATION_DATE_PROP_NAME,DESCRIPTION_PROP_NAME,DATA_LOC_PREF_NAME,ENCRYPT_PROP_NAME};
+    public static final QName AVAIL_STORAGE_SITES_PROP_NAME = new QName("custom:", "avail-storage-sites");
+    public static final QName[] PROP_NAMES = new QName[]{DATA_DIST_PROP_NAME, DRI_SUPERVISED_PROP_NAME, DRI_CHECKSUM_PROP_NAME, DRI_LAST_VALIDATION_DATE_PROP_NAME, DESCRIPTION_PROP_NAME, DATA_LOC_PREF_NAME, ENCRYPT_PROP_NAME, AVAIL_STORAGE_SITES_PROP_NAME};
     public static final int BUF_SIZE = 2097152;
     public static Long LOCK_TIME = new Long(60000);
-
     public static final int RECONNECT_NTRY = 5;
-
 }

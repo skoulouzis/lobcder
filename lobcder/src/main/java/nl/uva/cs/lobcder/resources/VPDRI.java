@@ -29,6 +29,7 @@ import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.AlgorithmParameterSpec;
+import java.security.spec.InvalidKeySpecException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.crypto.Cipher;
@@ -94,7 +95,7 @@ public class VPDRI implements PDRI {
     private BigInteger keyInt;
     private boolean encrypt;
 
-    VPDRI(String fileName, Long storageSiteId, String resourceUrl, String username, String password, boolean encrypt) throws IOException {
+    VPDRI(String fileName, Long storageSiteId, String resourceUrl, String username, String password, boolean encrypt, BigInteger keyInt) throws IOException {
         try {
             this.fileName = fileName;
             vrl = new VRL(resourceUrl).appendPath(baseDir).append(URLEncoder.encode(fileName, "UTF-8"));
@@ -105,6 +106,7 @@ public class VPDRI implements PDRI {
             this.username = username;
             this.password = password;
             this.encrypt = encrypt;
+            this.keyInt = keyInt;
 //            this.resourceUrl = resourceUrl;
             log.debug("fileName: " + fileName + ", storageSiteId: " + storageSiteId + ", username: " + username + ", password: " + password + ", VRL: " + vrl);
             initVFS();
@@ -178,7 +180,7 @@ public class VPDRI implements PDRI {
     public void putData(InputStream in) throws IOException {
         OutputStream out = null;
         debug("putData:");
-        VFile tmpFile = null;
+//        VFile tmpFile = null;
         try {
             //            upload(in);
             VDir remoteDir = vfsClient.mkdirs(vrl.getParent(), true);
@@ -188,9 +190,8 @@ public class VPDRI implements PDRI {
                 CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((2 * 1024 * 1024), in, out);
                 cBuff.startTransfer(new Long(-1));
             } else {
-                DesEncrypter encrypter = new DesEncrypter(this.keyInt);
-                encrypter.decrypt(getData(), out);
-
+                DesEncrypter encrypter = new DesEncrypter(getKeyInt());
+                encrypter.encrypt(in, out);
             }
             reconnectAttemts = 0;
 
@@ -227,13 +228,13 @@ public class VPDRI implements PDRI {
             if (in != null) {
                 in.close();
             }
-            if (tmpFile != null) {
-                try {
-                    tmpFile.delete();
-                } catch (VlException ex) {
-                    throw new IOException(ex);
-                }
-            }
+//            if (tmpFile != null) {
+//                try {
+//                    tmpFile.delete();
+//                } catch (VlException ex) {
+//                    throw new IOException(ex);
+//                }
+//            }
         }
     }
 

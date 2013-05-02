@@ -22,6 +22,7 @@ public class MyStorageSite implements Cloneable {
         clone.setQuotaNum(new Long(quotaNum));
         clone.setQuotaSize(new Long(quotaSize));
         clone.setResourceURI(resourceURI);
+        clone.setEncrypt(encrypt);
         return clone;
     }
 
@@ -33,4 +34,5 @@ public class MyStorageSite implements Cloneable {
     private Long currentNum;
     private String resourceURI;
     private Credential credential;
+    private boolean encrypt;
 }

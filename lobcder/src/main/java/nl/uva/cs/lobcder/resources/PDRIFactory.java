@@ -19,6 +19,6 @@ public class PDRIFactory {
     }
 
     public PDRI createInstance(PDRIDescr descr) throws IOException {
-        return new VPDRI(descr.getName(), descr.getStorageSiteId(), descr.getResourceUrl(), descr.getUsername(), descr.getPassword(), descr.getEncrypt());
+        return new VPDRI(descr.getName(), descr.getStorageSiteId(), descr.getResourceUrl(), descr.getUsername(), descr.getPassword(), descr.getEncrypt(),descr.getKey());
     }
 }

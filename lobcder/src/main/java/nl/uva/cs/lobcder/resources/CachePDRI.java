@@ -14,6 +14,7 @@ import java.net.UnknownHostException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.crypto.NoSuchPaddingException;
@@ -63,7 +64,7 @@ public class CachePDRI implements PDRI {
         } else {
             try {
                 OutputStream out = new FileOutputStream(file);
-                DesEncrypter encrypter = new DesEncrypter(this.key);
+                DesEncrypter encrypter = new DesEncrypter(getKeyInt());
                 encrypter.decrypt(getData(), out);
             } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | InvalidAlgorithmParameterException ex) {
                 throw new IOException(ex);
@@ -157,7 +158,7 @@ public class CachePDRI implements PDRI {
 //
     @Override
     public BigInteger getKeyInt() {
-        if(key == null){
+        if (key == null) {
             try {
                 key = DesEncrypter.generateKey();
             } catch (NoSuchAlgorithmException ex) {

@@ -38,6 +38,7 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import nl.uva.cs.lobcder.resources.MyStorageSite;
 
 /**
  * @author S. Koulouzis
@@ -340,6 +341,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
             if (qname.equals(Constants.DATA_DIST_PROP_NAME)) {
                 try (Connection connection = getCatalogue().getConnection()) {
                     try {
+                        connection.commit();
                         StringBuilder sb = new StringBuilder();
                         if (getLogicalData().isFolder()) {
                             List<? extends WebDataResource> children = (List<? extends WebDataResource>) ((WebDataDirResource) (this)).getChildren();
@@ -364,7 +366,6 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
                         }
                         sb.replace(sb.lastIndexOf(","), sb.length(), "");
                         sb.append("]");
-                        connection.commit();
                         return sb.toString();
                     } catch (NotAuthorizedException | SQLException e) {
                         connection.rollback();
@@ -423,8 +424,21 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
                     connection.commit();
                     return sb.toString();
                 }
-            }
+            } else if (qname.equals(Constants.AVAIL_STORAGE_SITES_PROP_NAME)) {
+                try (Connection connection = getCatalogue().getConnection()) {
+                    connection.commit();
+                    Collection<MyStorageSite> ss = getCatalogue().getStorageSites(connection);
+                     StringBuilder sb = new StringBuilder();
+                     sb.append("[");
+                    for(MyStorageSite s : ss){
+                        sb.append(s.getResourceURI()).append(",");
+                    }
+                    sb.replace(sb.lastIndexOf(","), sb.length(), "");
+                    sb.append("]");
+                    return sb.toString();
+                }
 
+            }
             return PropertySource.PropertyMetaData.UNKNOWN;
         } catch (Throwable th) {
             WebDataResource.log.log(Level.SEVERE, "Exception in getProperty() for resource " + getPath(), th);
@@ -478,7 +492,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
                                         String encrypt = hostEncryptValue[1];
                                         hostEncryptMap.put(host, Boolean.valueOf(encrypt));
                                     } catch (URISyntaxException ex) {
-                                        //Wrong URI syntax, don't added it 
+                                        //Wrong URI syntax, don't add it 
                                     }
                                 }
                             }
