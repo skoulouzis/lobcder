@@ -44,22 +44,21 @@ import nl.uva.vlet.vrs.VRSContext;
 import org.apache.commons.httpclient.*;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.contrib.ssl.EasySSLProtocolSocketFactory;
+import org.apache.commons.httpclient.methods.*;
 import org.apache.commons.httpclient.methods.OptionsMethod;
 import org.apache.commons.httpclient.methods.PutMethod;
-import org.apache.commons.httpclient.methods.*;
 import org.apache.commons.httpclient.protocol.Protocol;
 import org.apache.commons.httpclient.protocol.ProtocolSocketFactory;
 import org.apache.jackrabbit.webdav.*;
 import org.apache.jackrabbit.webdav.bind.BindConstants;
-import org.apache.jackrabbit.webdav.client.methods.DeleteMethod;
 import org.apache.jackrabbit.webdav.client.methods.*;
+import org.apache.jackrabbit.webdav.client.methods.DeleteMethod;
 import org.apache.jackrabbit.webdav.lock.LockInfo;
 import org.apache.jackrabbit.webdav.property.*;
 import org.apache.jackrabbit.webdav.version.DeltaVConstants;
 import org.apache.jackrabbit.webdav.xml.Namespace;
 import org.junit.After;
 import static org.junit.Assert.*;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.w3c.dom.Element;
@@ -182,7 +181,7 @@ public class WebDAVTest {
 
     @Test
     public void testConnect() throws IOException {
-        HttpMethod method = new GetMethod(this.uri.toASCIIString());
+        HttpMethod method = new GetMethod(uri.toASCIIString());
         int status = client.executeMethod(method);
         //Just get something back 
         assertTrue("GetMethod status: " + status, status == HttpStatus.SC_NOT_FOUND || status == HttpStatus.SC_OK);
@@ -191,8 +190,8 @@ public class WebDAVTest {
 //     http://greenbytes.de/tech/webdav/rfc5842.html#rfc.section.8.1
     @Test
     public void testOptions() throws HttpException, IOException {
-        OptionsMethod options = new OptionsMethod(this.uri.toASCIIString());
-        int status = this.client.executeMethod(options);
+        OptionsMethod options = new OptionsMethod(uri.toASCIIString());
+        int status = client.executeMethod(options);
         assertEquals(HttpStatus.SC_OK, status);
 
 //        List allow = Arrays.asList(options.getAllowedMethods());
@@ -234,22 +233,22 @@ public class WebDAVTest {
     @Test
     public void testResourceId() throws HttpException, IOException, DavException, URISyntaxException {
         System.out.println("testResourceId");
-        String testcol = this.root + "testResourceId/";
+        String testcol = root + "testResourceId/";
         String testuri1 = testcol + "bindtest1";
         String testuri2 = testcol + "bindtest2";
         int status;
         try {
             MkColMethod mkcol = new MkColMethod(testcol);
-            status = this.client.executeMethod(mkcol);
+            status = client.executeMethod(mkcol);
             assertEquals(HttpStatus.SC_CREATED, status);
 
             PutMethod put = new PutMethod(testuri1);
             put.setRequestEntity(new StringRequestEntity("testResourceId-foo", "text/plain", "UTF-8"));
-            status = this.client.executeMethod(put);
+            status = client.executeMethod(put);
             assertEquals(HttpStatus.SC_CREATED, status);
 
             GetMethod get = new GetMethod(testuri1);
-            this.client.executeMethod(get);
+            client.executeMethod(get);
             status = get.getStatusCode();
             assertEquals(HttpStatus.SC_OK, status);
             assertEquals("testResourceId-foo", get.getResponseBodyAsString());
@@ -258,16 +257,16 @@ public class WebDAVTest {
             // enabling version control always makes the resource referenceable
             //No version control yet
             //VersionControlMethod versioncontrol = new VersionControlMethod(testuri1);
-            //status = this.client.executeMethod(versioncontrol);
+            //status = client.executeMethod(versioncontrol);
             //assertTrue("VersionControlMethod status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_CREATED);
             //URI resourceId = getResourceId(testuri1);
 
             MoveMethod move = new MoveMethod(testuri1, testuri2, true);
-            status = this.client.executeMethod(move);
+            status = client.executeMethod(move);
             assertEquals(HttpStatus.SC_CREATED, status);
 
             get = new GetMethod(testuri2);
-            this.client.executeMethod(get);
+            client.executeMethod(get);
             status = get.getStatusCode();
             assertEquals(HttpStatus.SC_OK, status);
             assertEquals("testResourceId-foo", get.getResponseBodyAsString());
@@ -277,7 +276,7 @@ public class WebDAVTest {
 //            assertEquals(resourceId, resourceId2);
         } finally {
             DeleteMethod delete = new DeleteMethod(testcol);
-            status = this.client.executeMethod(delete);
+            status = client.executeMethod(delete);
             assertTrue("DeleteMethod status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
         }
     }
@@ -285,7 +284,7 @@ public class WebDAVTest {
     @Test
     public void testSimpleBind() throws Exception {
         System.out.println("testSimpleBind");
-        String testcol = this.root + "testSimpleBind/";
+        String testcol = root + "testSimpleBind/";
         String subcol1 = testcol + "bindtest1/";
         String testres1 = subcol1 + "res1";
         String subcol2 = testcol + "bindtest2/";
@@ -294,63 +293,63 @@ public class WebDAVTest {
         try {
             //Create testSimpleBind/
             MkColMethod mkcol = new MkColMethod(testcol);
-            status = this.client.executeMethod(mkcol);
+            status = client.executeMethod(mkcol);
             assertEquals(HttpStatus.SC_CREATED, status);
 
             //Create testSimpleBind/bindtest1
             mkcol = new MkColMethod(subcol1);
-            status = this.client.executeMethod(mkcol);
+            status = client.executeMethod(mkcol);
             assertEquals(HttpStatus.SC_CREATED, status);
 
             //Create testSimpleBind/bindtest2
             mkcol = new MkColMethod(subcol2);
-            status = this.client.executeMethod(mkcol);
+            status = client.executeMethod(mkcol);
             assertEquals(HttpStatus.SC_CREATED, status);
 
             //create new resource R with path testSimpleBind/bindtest1/res1
             PutMethod put = new PutMethod(testres1);
             put.setRequestEntity(new StringRequestEntity("foo", "text/plain", "UTF-8"));
-            status = this.client.executeMethod(put);
+            status = client.executeMethod(put);
             assertEquals(HttpStatus.SC_CREATED, status);
 
             //create new binding of R with path bindtest2/res2
             //No BindMethod yet
 //            DavMethodBase bind = new BindMethod(subcol2, new BindInfo(testres1, "res2"));
-//            status = this.client.executeMethod(bind);
+//            status = client.executeMethod(bind);
 //            assertEquals(HttpStatus.SC_CREATED, status);
             //check if both bindings report the same DAV:resource-id
 //            assertEquals(this.getResourceId(testres1), this.getResourceId(testres2));
 
 
             GetMethod get = new GetMethod(testres1);
-            status = this.client.executeMethod(get);
+            status = client.executeMethod(get);
             assertEquals(HttpStatus.SC_OK, status);
             assertEquals("foo", get.getResponseBodyAsString());
 
             //Doesn't work cause we don't have bind
 //            get = new GetMethod(testres2);
-//            status = this.client.executeMethod(get);
+//            status = client.executeMethod(get);
 //            assertEquals(HttpStatus.SC_OK, status);
 //            assertEquals("foo", get.getResponseBodyAsString());
 
 //            //modify R using the new path
 //            put = new PutMethod(testres2);
 //            put.setRequestEntity(new StringRequestEntity("bar", "text/plain", "UTF-8"));
-//            status = this.client.executeMethod(put);
+//            status = client.executeMethod(put);
 //            assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
 //
 ////            //compare representations retrieved with both paths
 //            get = new GetMethod(testres1);
-//            status = this.client.executeMethod(get);
+//            status = client.executeMethod(get);
 //            assertEquals(HttpStatus.SC_OK, stagetEntriesChildren();tus);
 //            assertEquals("bar", get.getResponseBodyAsString());
 //            get = new GetMethod(testres2);
-//            status = this.client.executeMethod(get);
+//            status = client.executeMethod(get);
 //            assertEquals(HttpStatus.SC_OK, status);
 //            assertEquals("bar", get.getResponseBodyAsString());
         } finally {
             DeleteMethod delete = new DeleteMethod(testcol);
-            status = this.client.executeMethod(delete);
+            status = client.executeMethod(delete);
             assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
         }
     }
@@ -359,7 +358,7 @@ public class WebDAVTest {
     @Test
     public void testRebind() throws Exception {
         System.out.println("testRebind");
-        String testcol = this.root + "testRebind/";
+        String testcol = root + "testRebind/";
         String subcol1 = testcol + "bindtest1/";
         String testres1 = subcol1 + "res1";
         String subcol2 = testcol + "bindtest2/";
@@ -367,40 +366,40 @@ public class WebDAVTest {
         int status;
         try {
             MkColMethod mkcol = new MkColMethod(testcol);
-            status = this.client.executeMethod(mkcol);
+            status = client.executeMethod(mkcol);
             assertEquals(HttpStatus.SC_CREATED, status);
             mkcol = new MkColMethod(subcol1);
-            status = this.client.executeMethod(mkcol);
+            status = client.executeMethod(mkcol);
             assertEquals(HttpStatus.SC_CREATED, status);
             mkcol = new MkColMethod(subcol2);
-            status = this.client.executeMethod(mkcol);
+            status = client.executeMethod(mkcol);
             assertEquals(HttpStatus.SC_CREATED, status);
 
             //create new resource R with path bindtest1/res1
             PutMethod put = new PutMethod(testres1);
             put.setRequestEntity(new StringRequestEntity("foo", "text/plain", "UTF-8"));
-            status = this.client.executeMethod(put);
+            status = client.executeMethod(put);
             assertEquals(HttpStatus.SC_CREATED, status);
 
 //            // enabling version control always makes the resource referenceable
 //            VersionControlMethod versioncontrol = new VersionControlMethod(testres1);
-//            status = this.client.executeMethod(versioncontrol);
+//            status = client.executeMethod(versioncontrol);
 //            assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_CREATED);
 
 //            URI r1 = this.getResourceId(testres1);
 
             GetMethod get = new GetMethod(testres1);
-            status = this.client.executeMethod(get);
+            status = client.executeMethod(get);
             assertEquals(HttpStatus.SC_OK, status);
             assertEquals("foo", get.getResponseBodyAsString());
 
             //rebind R with path bindtest2/res2
 //            DavMethodBase rebind = new RebindMethod(subcol2, new RebindInfo(testres1, "res2"));
-//            status = this.client.executeMethod(rebind);
+//            status = client.executeMethod(rebind);
 //            assertEquals(HttpStatus.SC_CREATED, status);
 //            URI r2 = this.getResourceId(testres2);
 //            get = new GetMethod(testres2);
-//            status = this.client.executeMethod(get);
+//            status = client.executeMethod(get);
 //            assertEquals(HttpStatus.SC_OK, status);
 //            assertEquals("foo", get.getResponseBodyAsString());
 
@@ -409,11 +408,11 @@ public class WebDAVTest {
 
             //verify that the initial binding is gone
 //            HeadMethod head = new HeadMethod(testres1);
-//            status = this.client.executeMethod(head);
+//            status = client.executeMethod(head);
 //            assertEquals(HttpStatus.SC_NOT_FOUND, status);
         } finally {
             DeleteMethod delete = new DeleteMethod(testcol);
-            status = this.client.executeMethod(delete);
+            status = client.executeMethod(delete);
             assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
         }
     }
@@ -421,7 +420,7 @@ public class WebDAVTest {
     @Test
     public void testBindOverwrite() throws Exception {
         System.out.println("testBindOverwrite");
-        String testcol = this.root + "testSimpleBind/";
+        String testcol = root + "testSimpleBind/";
         String subcol1 = testcol + "bindtest1/";
         String testres1 = subcol1 + "res1";
         String subcol2 = testcol + "bindtest2/";
@@ -429,57 +428,57 @@ public class WebDAVTest {
         int status;
         try {
             MkColMethod mkcol = new MkColMethod(testcol);
-            status = this.client.executeMethod(mkcol);
+            status = client.executeMethod(mkcol);
             assertEquals(HttpStatus.SC_CREATED, status);
             mkcol = new MkColMethod(subcol1);
-            status = this.client.executeMethod(mkcol);
+            status = client.executeMethod(mkcol);
             assertEquals(HttpStatus.SC_CREATED, status);
             mkcol = new MkColMethod(subcol2);
-            status = this.client.executeMethod(mkcol);
+            status = client.executeMethod(mkcol);
             assertEquals(HttpStatus.SC_CREATED, status);
 
             //create new resource R with path bindtest1/res1
             PutMethod put = new PutMethod(testres1);
             put.setRequestEntity(new StringRequestEntity("foo", "text/plain", "UTF-8"));
-            status = this.client.executeMethod(put);
+            status = client.executeMethod(put);
             assertEquals(HttpStatus.SC_CREATED, status);
 
             //create new resource R' with path bindtest2/res2
             put = new PutMethod(testres2);
             put.setRequestEntity(new StringRequestEntity("bar", "text/plain", "UTF-8"));
-            status = this.client.executeMethod(put);
+            status = client.executeMethod(put);
             assertEquals(HttpStatus.SC_CREATED, status);
 
             //try to create new binding of R with path bindtest2/res2 and Overwrite:F
 //            DavMethodBase bind = new BindMethod(subcol2, new BindInfo(testres1, "res2"));
 //            bind.addRequestHeader(new Header("Overwrite", "F"));
-//            status = this.client.executeMethod(bind);
+//            status = client.executeMethod(bind);
 //            assertEquals(412, status);
 
             //verify that bindtest2/res2 still points to R'
 //            GetMethod get = new GetMethod(testres2);
-//            status = this.client.executeMethod(get);
+//            status = client.executeMethod(get);
 //            assertEquals(HttpStatus.SC_OK, status);
 //            assertEquals("bar", get.getResponseBodyAsString());
 
             //create new binding of R with path bindtest2/res2
 //            bind = new BindMethod(subcol2, new BindInfo(testres1, "res2"));
-//            status = this.client.executeMethod(bind);
+//            status = client.executeMethod(bind);
 //            assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
 
             //verify that bindtest2/res2 now points to R
 //            get = new GetMethod(testres2);
-//            status = this.client.executeMethod(get);
+//            status = client.executeMethod(get);
 //            assertEquals(HttpStatus.SC_OK, status);
 //            assertEquals("foo", get.getResponseBodyAsString());
 
             //verify that the initial binding is still there
 //            HeadMethod head = new HeadMethod(testres1);
-//            status = this.client.executeMethod(head);
+//            status = client.executeMethod(head);
 //            assertEquals(HttpStatus.SC_OK, status);
         } finally {
             DeleteMethod delete = new DeleteMethod(testcol);
-            status = this.client.executeMethod(delete);
+            status = client.executeMethod(delete);
             assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
         }
     }
@@ -487,7 +486,7 @@ public class WebDAVTest {
     @Test
     public void testRebindOverwrite() throws Exception {
         System.out.println("testRebindOverwrite");
-        String testcol = this.root + "testSimpleBind/";
+        String testcol = root + "testSimpleBind/";
         String subcol1 = testcol + "bindtest1/";
         String testres1 = subcol1 + "res1";
         String subcol2 = testcol + "bindtest2/";
@@ -495,63 +494,63 @@ public class WebDAVTest {
         int status;
         try {
             MkColMethod mkcol = new MkColMethod(testcol);
-            status = this.client.executeMethod(mkcol);
+            status = client.executeMethod(mkcol);
             assertEquals(HttpStatus.SC_CREATED, status);
             mkcol = new MkColMethod(subcol1);
-            status = this.client.executeMethod(mkcol);
+            status = client.executeMethod(mkcol);
             assertEquals(HttpStatus.SC_CREATED, status);
             mkcol = new MkColMethod(subcol2);
-            status = this.client.executeMethod(mkcol);
+            status = client.executeMethod(mkcol);
             assertEquals(HttpStatus.SC_CREATED, status);
 
             //create new resource R with path testSimpleBind/bindtest1/res1
             PutMethod put = new PutMethod(testres1);
             put.setRequestEntity(new StringRequestEntity("foo", "text/plain", "UTF-8"));
-            status = this.client.executeMethod(put);
+            status = client.executeMethod(put);
             assertEquals(HttpStatus.SC_CREATED, status);
 
 
             // enabling version control always makes the resource referenceable
 //            VersionControlMethod versioncontrol = new VersionControlMethod(testres1);
-//            status = this.client.executeMethod(versioncontrol);
+//            status = client.executeMethod(versioncontrol);
 //            assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_CREATED);
 
             //create new resource R' with path testSimpleBind/bindtest2/res2
             put = new PutMethod(testres2);
             put.setRequestEntity(new StringRequestEntity("bar", "text/plain", "UTF-8"));
-            status = this.client.executeMethod(put);
+            status = client.executeMethod(put);
             assertEquals(HttpStatus.SC_CREATED, status);
 
             //try rebind R with path testSimpleBind/bindtest2/res2 and Overwrite:F
 //            RebindMethod rebind = new RebindMethod(subcol2, new RebindInfo(testres1, "res2"));
 //            rebind.addRequestHeader(new Header("Overwrite", "F"));
-//            status = this.client.executeMethod(rebind);
+//            status = client.executeMethod(rebind);
 //            assertEquals(412, status);
 //
 //            //verify that testSimpleBind/bindtest2/res2 still points to R'
 //            GetMethod get = new GetMethod(testres2);
-//            status = this.client.executeMethod(get);
+//            status = client.executeMethod(get);
 //            assertEquals(HttpStatus.SC_OK, status);
 //            assertEquals("bar", get.getResponseBodyAsString());
 
             //rebind R with path testSimpleBind/bindtest2/res2
 //            rebind = new RebindMethod(subcol2, new RebindInfo(testres1, "res2"));
-//            status = this.client.executeMethod(rebind);
+//            status = client.executeMethod(rebind);
 //            assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
 
             //verify that testSimpleBind/bindtest2/res2 now points to R
 //            get = new GetMethod(testres2);
-//            status = this.client.executeMethod(get);
+//            status = client.executeMethod(get);
 //            assertEquals(HttpStatus.SC_OK, status);
 //            assertEquals("foo", get.getResponseBodyAsString());
 
             //verify that the initial binding is gone
 //            HeadMethod head = new HeadMethod(testres1);
-//            status = this.client.executeMethod(head);
+//            status = client.executeMethod(head);
 //            assertEquals(HttpStatus.SC_NOT_FOUND, status);
         } finally {
             DeleteMethod delete = new DeleteMethod(testcol);
-            status = this.client.executeMethod(delete);
+            status = client.executeMethod(delete);
             assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
         }
     }
@@ -560,7 +559,7 @@ public class WebDAVTest {
     @Test
     public void testParentSet() throws Exception {
         System.out.println("testParentSet");
-        String testcol = this.root + "testParentSet/";
+        String testcol = root + "testParentSet/";
         String subcol1 = testcol + "bindtest1/";
         String testres1 = subcol1 + "res1";
         String subcol2 = testcol + "bindtest2/";
@@ -568,24 +567,24 @@ public class WebDAVTest {
         int status;
         try {
             MkColMethod mkcol = new MkColMethod(testcol);
-            status = this.client.executeMethod(mkcol);
+            status = client.executeMethod(mkcol);
             assertEquals(HttpStatus.SC_CREATED, status);
             mkcol = new MkColMethod(subcol1);
-            status = this.client.executeMethod(mkcol);
+            status = client.executeMethod(mkcol);
             assertEquals(HttpStatus.SC_CREATED, status);
             mkcol = new MkColMethod(subcol2);
-            status = this.client.executeMethod(mkcol);
+            status = client.executeMethod(mkcol);
             assertEquals(HttpStatus.SC_CREATED, status);
 
             //create new resource R with path testSimpleBind/bindtest1/res1
             PutMethod put = new PutMethod(testres1);
             put.setRequestEntity(new StringRequestEntity("foo", "text/plain", "UTF-8"));
-            status = this.client.executeMethod(put);
+            status = client.executeMethod(put);
             assertEquals(HttpStatus.SC_CREATED, status);
 
 //            create new binding of R with path testSimpleBind/bindtest2/res2
 //            DavMethodBase bind = new BindMethod(subcol2, new BindInfo(testres1, "res2"));
-//            status = this.client.executeMethod(bind);
+//            status = client.executeMethod(bind);
 //            assertEquals(HttpStatus.SC_CREATED, status);
             //check if both bindings report the same DAV:resource-id
 //            assertEquals(this.getResourceId(testres1), this.getResourceId(testres2));
@@ -623,7 +622,7 @@ public class WebDAVTest {
 //            assertEquals(segments1, segments2);
         } finally {
             DeleteMethod delete = new DeleteMethod(testcol);
-            status = this.client.executeMethod(delete);
+            status = client.executeMethod(delete);
             assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
         }
     }
@@ -631,7 +630,7 @@ public class WebDAVTest {
     @Test
     public void testBindCollections() throws Exception {
         System.out.println("testBindCollections");
-        String testcol = this.root + "testBindCollections/";
+        String testcol = root + "testBindCollections/";
         String a1 = testcol + "a1/";
         String b1 = a1 + "b1/";
         String c1 = b1 + "c1/";
@@ -643,44 +642,44 @@ public class WebDAVTest {
         int status;
         try {
             MkColMethod mkcol = new MkColMethod(testcol);
-            status = this.client.executeMethod(mkcol);
+            status = client.executeMethod(mkcol);
             assertEquals(HttpStatus.SC_CREATED, status);
             mkcol = new MkColMethod(a1);
-            status = this.client.executeMethod(mkcol);
+            status = client.executeMethod(mkcol);
             assertEquals(HttpStatus.SC_CREATED, status);
             mkcol = new MkColMethod(a2);
-            status = this.client.executeMethod(mkcol);
+            status = client.executeMethod(mkcol);
             assertEquals(HttpStatus.SC_CREATED, status);
 
             //create collection resource C
             mkcol = new MkColMethod(b1);
-            status = this.client.executeMethod(mkcol);
+            status = client.executeMethod(mkcol);
             assertEquals(HttpStatus.SC_CREATED, status);
             mkcol = new MkColMethod(c1);
-            status = this.client.executeMethod(mkcol);
+            status = client.executeMethod(mkcol);
             assertEquals(HttpStatus.SC_CREATED, status);
 
             //create plain resource R
             PutMethod put = new PutMethod(x1);
             put.setRequestEntity(new StringRequestEntity("foo", "text/plain", "UTF-8"));
-            status = this.client.executeMethod(put);
+            status = client.executeMethod(put);
             assertEquals(HttpStatus.SC_CREATED, status);
 //
 //            //create new binding of C with path a2/b2
 //            DavMethodBase bind = new BindMethod(a2, new BindInfo(b1, "b2"));
-//            status = this.client.executeMethod(bind);
+//            status = client.executeMethod(bind);
 //            assertEquals(HttpStatus.SC_CREATED, status);
 //            //check if both bindings report the same DAV:resource-id
 //            assertEquals(this.getResourceId(b1), this.getResourceId(b2));
 //
 //            mkcol = new MkColMethod(c2);
-//            status = this.client.executeMethod(mkcol);
+//            status = client.executeMethod(mkcol);
 //            debug("Cretaing "+c2);
 //            assertEquals(HttpStatus.SC_CREATED, status);
 //
 //            //create new binding of R with path a2/b2/c2/r2
 //            bind = new BindMethod(c2, new BindInfo(x1, "x2"));
-//            status = this.client.executeMethod(bind);
+//            status = client.executeMethod(bind);
 //            assertEquals(HttpStatus.SC_CREATED, status);
 //            //check if both bindings report the same DAV:resource-id
 //            assertEquals(this.getResourceId(x1), this.getResourceId(x2));
@@ -698,7 +697,7 @@ public class WebDAVTest {
 //            assertEquals(2, ((List) ps).size());
         } finally {
             DeleteMethod delete = new DeleteMethod(testcol);
-            status = this.client.executeMethod(delete);
+            status = client.executeMethod(delete);
             assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
         }
     }
@@ -707,7 +706,7 @@ public class WebDAVTest {
     @Test
     public void testUnbind() throws Exception {
         System.out.println("testUnbind");
-        String testcol = this.root + "testUnbind/";
+        String testcol = root + "testUnbind/";
         String subcol1 = testcol + "bindtest1/";
         String testres1 = subcol1 + "res1";
         String subcol2 = testcol + "bindtest2/";
@@ -715,45 +714,45 @@ public class WebDAVTest {
         int status;
         try {
             MkColMethod mkcol = new MkColMethod(testcol);
-            status = this.client.executeMethod(mkcol);
+            status = client.executeMethod(mkcol);
             assertEquals(HttpStatus.SC_CREATED, status);
             mkcol = new MkColMethod(subcol1);
-            status = this.client.executeMethod(mkcol);
+            status = client.executeMethod(mkcol);
             assertEquals(HttpStatus.SC_CREATED, status);
             mkcol = new MkColMethod(subcol2);
-            status = this.client.executeMethod(mkcol);
+            status = client.executeMethod(mkcol);
             assertEquals(HttpStatus.SC_CREATED, status);
 
             //create new resource R with path testSimpleBind/bindtest1/res1
             PutMethod put = new PutMethod(testres1);
             put.setRequestEntity(new StringRequestEntity("foo", "text/plain", "UTF-8"));
-            status = this.client.executeMethod(put);
+            status = client.executeMethod(put);
             assertEquals(HttpStatus.SC_CREATED, status);
 //
 //            //create new binding of R with path testSimpleBind/bindtest2/res2
 //            DavMethodBase bind = new BindMethod(subcol2, new BindInfo(testres1, "res2"));
-//            status = this.client.executeMethod(bind);
+//            status = client.executeMethod(bind);
 //            assertEquals(HttpStatus.SC_CREATED, status);
 //            //check if both bindings report the same DAV:resource-id
 //            assertEquals(this.getResourceId(testres1), this.getResourceId(testres2));
 //
 //            //remove new path
 //            UnbindMethod unbind = new UnbindMethod(subcol2, new UnbindInfo("res2"));
-//            status = this.client.executeMethod(unbind);
+//            status = client.executeMethod(unbind);
 //            assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
 //
 //            //verify that the new binding is gone
 //            HeadMethod head = new HeadMethod(testres2);
-//            status = this.client.executeMethod(head);
+//            status = client.executeMethod(head);
 //            assertEquals(HttpStatus.SC_NOT_FOUND, status);
 //
 //            //verify that the initial binding is still there
 //            head = new HeadMethod(testres1);
-//            status = this.client.executeMethod(head);
+//            status = client.executeMethod(head);
 //            assertEquals(HttpStatus.SC_OK, status);
         } finally {
             DeleteMethod delete = new DeleteMethod(testcol);
-            status = this.client.executeMethod(delete);
+            status = client.executeMethod(delete);
             assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
         }
     }
@@ -761,7 +760,7 @@ public class WebDAVTest {
     @Test
     public void testMove() throws HttpException, IOException, DavException, URISyntaxException {
         System.out.println("testMove");
-        String testcol = this.root + "testResourceId/";
+        String testcol = root + "testResourceId/";
         String testuri = testcol + "movetest";
         String destinationuri = testuri + "2";
         String destinationpath = new URI(destinationuri).getRawPath();
@@ -772,7 +771,7 @@ public class WebDAVTest {
         try {
             //Make sure the testcol is deleted
             DeleteMethod del = new DeleteMethod(testcol);
-            status = this.client.executeMethod(del);
+            status = client.executeMethod(del);
             assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT || status == HttpStatus.SC_NOT_FOUND);
 
 
@@ -785,46 +784,46 @@ public class WebDAVTest {
             //http://www.webdav.org/specs/rfc2518.html#rfc.section.8.7.2
             //In our case (milton API) will create the 
             PutMethod put = new PutMethod(testuri);
-            status = this.client.executeMethod(put);
+            status = client.executeMethod(put);
 //            assertTrue("status: " + status, status == HttpStatus.SC_CONFLICT);
             assertTrue("status: " + status, status == HttpStatus.SC_CREATED);
 
 
             //The collection is created from last step, although it shouldn't
 //            MkColMethod mkCol = new MkColMethod(testcol);
-//            status = this.client.executeMethod(mkCol);
+//            status = client.executeMethod(mkCol);
 //            assertTrue("status: " + status, status == HttpStatus.SC_CREATED);
 
 
 
             put = new PutMethod(testuri);
-            status = this.client.executeMethod(put);
+            status = client.executeMethod(put);
             assertTrue("status: " + status, status == HttpStatus.SC_CREATED);
 
             MoveMethod moveNormal = new MoveMethod(testuri, destinationpath, true);
-            status = this.client.executeMethod(moveNormal);
+            status = client.executeMethod(moveNormal);
             assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_CREATED || status == HttpStatus.SC_NO_CONTENT);
 
             HeadMethod head = new HeadMethod(destinationuri);
-            status = this.client.executeMethod(head);
+            status = client.executeMethod(head);
             //We get back HttpStatus.SC_NO_CONTENT 
             assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
 
             head = new HeadMethod(testuri);
-            status = this.client.executeMethod(head);
+            status = client.executeMethod(head);
             assertTrue("status: " + status, status == HttpStatus.SC_NOT_FOUND);
 
         } finally {
             DeleteMethod delete = new DeleteMethod(testuri);
-            status = this.client.executeMethod(delete);
+            status = client.executeMethod(delete);
             assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT || status == HttpStatus.SC_NOT_FOUND);
 
-            status = this.client.executeMethod(delete);
+            status = client.executeMethod(delete);
             assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT || status == HttpStatus.SC_NOT_FOUND);
 
 
             delete = new DeleteMethod(testcol);
-            status = this.client.executeMethod(delete);
+            status = client.executeMethod(delete);
             assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT || status == HttpStatus.SC_NOT_FOUND);
 
         }
@@ -832,24 +831,24 @@ public class WebDAVTest {
 
     public void testPutIfEtag() throws HttpException, IOException, DavException, URISyntaxException {
         System.out.println("testPutIfEtag");
-        String testcol = this.root + "testResourceId/";
+        String testcol = root + "testResourceId/";
         String testuri = testcol + "iftest";
         int status;
         try {
 
             MkColMethod mkcol = new MkColMethod(testcol);
-            status = this.client.executeMethod(mkcol);
+            status = client.executeMethod(mkcol);
             assertEquals(HttpStatus.SC_CREATED, status);
 
             PutMethod put = new PutMethod(testuri);
             String condition = "<" + testuri + "> ([" + "\"an-etag-this-testcase-invented\"" + "])";
             put.setRequestEntity(new StringRequestEntity("1"));
             put.setRequestHeader("If", condition);
-            status = this.client.executeMethod(put);
+            status = client.executeMethod(put);
             assertEquals("status: " + status, HttpStatus.SC_PRECONDITION_FAILED, status);
         } finally {
             DeleteMethod delete = new DeleteMethod(testuri);
-            status = this.client.executeMethod(delete);
+            status = client.executeMethod(delete);
             assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT || status == HttpStatus.SC_NOT_FOUND);
         }
     }
@@ -857,19 +856,19 @@ public class WebDAVTest {
     @Test
     public void testPutIfLockToken() throws HttpException, IOException, DavException, URISyntaxException {
 
-        String testuri = this.root + "iflocktest";
+        String testuri = root + "iflocktest";
         String locktoken = null;
 
         int status;
         try {
             PutMethod put = new PutMethod(testuri);
             put.setRequestEntity(new StringRequestEntity("1"));
-            status = this.client.executeMethod(put);
+            status = client.executeMethod(put);
             assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_CREATED || status == HttpStatus.SC_NO_CONTENT);
 
             LockMethod lock = new LockMethod(testuri, new LockInfo(
                     org.apache.jackrabbit.webdav.lock.Scope.EXCLUSIVE, org.apache.jackrabbit.webdav.lock.Type.WRITE, "testcase", 10000, true));
-            status = this.client.executeMethod(lock);
+            status = client.executeMethod(lock);
             assertEquals("status", HttpStatus.SC_OK, status);
             locktoken = lock.getLockToken();
             assertNotNull(locktoken);
@@ -877,21 +876,21 @@ public class WebDAVTest {
             // try to overwrite without lock token
             put = new PutMethod(testuri);
             put.setRequestEntity(new StringRequestEntity("2"));
-            status = this.client.executeMethod(put);
+            status = client.executeMethod(put);
             assertEquals("status: " + status, 423, status);
 
             // try to overwrite using bad lock token
             put = new PutMethod(testuri);
             put.setRequestEntity(new StringRequestEntity("2"));
             put.setRequestHeader("If", "(<" + "DAV:foobar" + ">)");
-            status = this.client.executeMethod(put);
+            status = client.executeMethod(put);
             assertEquals("status: " + status, 412, status);
 
             // try to overwrite using correct lock token, using  No-Tag-list format
             put = new PutMethod(testuri);
             put.setRequestEntity(new StringRequestEntity("2"));
             put.setRequestHeader("If", "(<" + locktoken + ">)");
-            status = this.client.executeMethod(put);
+            status = client.executeMethod(put);
             assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_CREATED);
 
             // try to overwrite using correct lock token, using Tagged-list format
@@ -899,7 +898,7 @@ public class WebDAVTest {
             put = new PutMethod(testuri);
             put.setRequestEntity(new StringRequestEntity("3"));
             put.setRequestHeader("If", "<" + testuri + ">" + "(<" + locktoken + ">)");
-            status = this.client.executeMethod(put);
+            status = client.executeMethod(put);
             assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_CREATED);
 
             // try to overwrite using correct lock token, using Tagged-list format
@@ -907,7 +906,7 @@ public class WebDAVTest {
             put = new PutMethod(testuri);
             put.setRequestEntity(new StringRequestEntity("4"));
             put.setRequestHeader("If", "<" + new URI(testuri).getRawPath() + ">" + "(<" + locktoken + ">)");
-            status = this.client.executeMethod(put);
+            status = client.executeMethod(put);
             assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_CREATED);
 
 //            // try to overwrite using correct lock token, using Tagged-list format
@@ -915,23 +914,23 @@ public class WebDAVTest {
 //            put = new PutMethod(testuri);
 //            put.setRequestEntity(new StringRequestEntity("5"));
 //            put.setRequestHeader("If", "</foobar>" + "(<" + locktoken + ">)");
-//            status = this.client.executeMethod(put);
+//            status = client.executeMethod(put);
 //            assertTrue("status: " + status, status == HttpStatus.SC_NOT_FOUND || status == 412);
 
 
             UnLockMethod unlock = new UnLockMethod(testuri, "wrong");
-            status = this.client.executeMethod(unlock);
+            status = client.executeMethod(unlock);
             assertTrue("status: " + status, status == HttpStatus.SC_FAILED_DEPENDENCY || status == HttpStatus.SC_PRECONDITION_FAILED);
 
             unlock = new UnLockMethod(testuri, locktoken);
-            status = this.client.executeMethod(unlock);
+            status = client.executeMethod(unlock);
             assertTrue("status: " + status, status == HttpStatus.SC_NO_CONTENT);
         } finally {
             DeleteMethod delete = new DeleteMethod(testuri);
             if (locktoken != null) {
                 delete.setRequestHeader("If", "(<" + locktoken + ">)");
             }
-            status = this.client.executeMethod(delete);
+            status = client.executeMethod(delete);
             assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT || status == HttpStatus.SC_NOT_FOUND);
         }
     }
@@ -939,17 +938,17 @@ public class WebDAVTest {
     @Test
     public void testPropfindInclude() throws HttpException, IOException, DavException, URISyntaxException {
         System.out.println("testPropfindInclude");
-        String testcol = this.root + "testPropfindInclude/";
+        String testcol = root + "testPropfindInclude/";
         String testuri = testcol + "iftest/ ";
         int status;
         try {
             MkColMethod mkcol = new MkColMethod(testcol);
-            status = this.client.executeMethod(mkcol);
+            status = client.executeMethod(mkcol);
             assertEquals(HttpStatus.SC_CREATED, status);
 
             PutMethod put = new PutMethod(testuri);
             put.setRequestEntity(new StringRequestEntity("1"));
-            status = this.client.executeMethod(put);
+            status = client.executeMethod(put);
             assertEquals("status: " + status, HttpStatus.SC_CREATED, status);
 
             DavPropertyNameSet names = new DavPropertyNameSet();
@@ -970,7 +969,7 @@ public class WebDAVTest {
 //            assertTrue(found.contains(DeltaVConstants.COMMENT) || notfound.contains(DeltaVConstants.COMMENT));
         } finally {
             DeleteMethod delete = new DeleteMethod(testcol);
-            status = this.client.executeMethod(delete);
+            status = client.executeMethod(delete);
             assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT || status == HttpStatus.SC_NOT_FOUND);
         }
     }
@@ -978,7 +977,7 @@ public class WebDAVTest {
     @Test
     public void testGetDataDistribution() throws UnsupportedEncodingException, IOException, DavException {
         System.out.println("testGetDataDistribution");
-        String testcol1 = this.root + "testResourceId/";
+        String testcol1 = root + "testResourceId/";
         String testuri1 = testcol1 + "file1";
         String testuri2 = testcol1 + "file2";
         String testuri3 = testcol1 + "file3";
@@ -996,18 +995,18 @@ public class WebDAVTest {
 
             PutMethod put = new PutMethod(testuri1);
             put.setRequestEntity(new StringRequestEntity("foo", "text/plain", "UTF-8"));
-            status = this.client.executeMethod(put);
+            status = client.executeMethod(put);
             assertEquals(HttpStatus.SC_CREATED, status);
 
             put = new PutMethod(testuri2);
             put.setRequestEntity(new StringRequestEntity("dar", "text/plain", "UTF-8"));
-            status = this.client.executeMethod(put);
+            status = client.executeMethod(put);
             assertEquals(HttpStatus.SC_CREATED, status);
 
 
             put = new PutMethod(testuri3);
             put.setRequestEntity(new StringRequestEntity("foo", "text/plain", "UTF-8"));
-            status = this.client.executeMethod(put);
+            status = client.executeMethod(put);
             assertEquals(HttpStatus.SC_CREATED, status);
 
 
@@ -1017,7 +1016,7 @@ public class WebDAVTest {
 
             put = new PutMethod(testuri4);
             put.setRequestEntity(new StringRequestEntity(TestSettings.TEST_DATA, "text/plain", "UTF-8"));
-            status = this.client.executeMethod(put);
+            status = client.executeMethod(put);
             assertEquals(HttpStatus.SC_CREATED, status);
 
             DavPropertyNameSet d = new DavPropertyNameSet();
@@ -1056,16 +1055,35 @@ public class WebDAVTest {
     }
 
     @Test
-    public void testGetSetEncryptedProp() throws DavException, VlException {
-        String testuri1 = this.root + TestSettings.TEST_FILE_NAME1 + ".txt";
-        Boolean v;
-        String cont;
-        VRL vrl;
-        VFile physicalFile;
+    public void testGetAveilStorageSites() throws DavException, VlException, UnsupportedEncodingException, IOException {
+        String testuri1 = root + TestSettings.TEST_FILE_NAME1 + ".txt";
         try {
             PutMethod put = new PutMethod(testuri1);
             put.setRequestEntity(new StringRequestEntity(TestSettings.TEST_DATA, "text/plain", "UTF-8"));
-            int status = this.client.executeMethod(put);
+            int status = client.executeMethod(put);
+            assertEquals(HttpStatus.SC_CREATED, status);
+            String[] sites = getAvailableStorageSites(testuri1);
+
+            assertNotNull(sites);
+            for (String s : sites) {
+                System.out.println(s);
+            }
+
+
+        } finally {
+            DeleteMethod delete = new DeleteMethod(testuri1);
+            int status = client.executeMethod(delete);
+            assertTrue("DeleteMethod status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
+        }
+    }
+
+    @Test
+    public void testGetSetEncryptedProp() throws DavException, VlException {
+        String testuri1 = root + TestSettings.TEST_FILE_NAME1 + ".txt";
+        try {
+            PutMethod put = new PutMethod(testuri1);
+            put.setRequestEntity(new StringRequestEntity(TestSettings.TEST_DATA, "text/plain", "UTF-8"));
+            int status = client.executeMethod(put);
             assertEquals(HttpStatus.SC_CREATED, status);
 
             DavPropertyNameSet encryptedNameSet = new DavPropertyNameSet();
@@ -1110,11 +1128,11 @@ public class WebDAVTest {
                     String[] hostEncryptValue = p.split(",");
                     if (hostEncryptValue.length == 2) {
                         String hostStr = hostEncryptValue[0];
-                        URI uri;
+                        URI hostURI;
                         try {
-                            uri = new URI(hostStr);
-                            String host = uri.getScheme();
-                            host += "://" + uri.getHost();
+                            hostURI = new URI(hostStr);
+                            String host = hostURI.getScheme();
+                            host += "://" + hostURI.getHost();
                             oldHost = host;
                             String encrypt = hostEncryptValue[1];
                             oldEncrypt = Boolean.valueOf(encrypt);
@@ -1168,11 +1186,11 @@ public class WebDAVTest {
                     String[] hostEncryptValue = p.split(",");
                     if (hostEncryptValue.length == 2) {
                         String hostStr = hostEncryptValue[0];
-                        URI uri;
+                        URI hostURI;
                         try {
-                            uri = new URI(hostStr);
-                            String host = uri.getScheme();
-                            host += "://" + uri.getHost();
+                            hostURI = new URI(hostStr);
+                            String host = hostURI.getScheme();
+                            host += "://" + hostURI.getHost();
                             newHost = host;
                             String encrypt = hostEncryptValue[1];
                             newEncrypt = Boolean.valueOf(encrypt);
@@ -1182,47 +1200,72 @@ public class WebDAVTest {
                     }
                 }
             }
-            
+
             assertEquals(newHost, oldHost);
             assertNotSame(newEncrypt, oldEncrypt);
-//
-//
-//            //The server says it is, but is it in realety ? 
-//            Set<PDRI> pdris = null;
-//            boolean done = false;
-//            //Wait for replication 
-//            while (!done) {
-//                try {
-//                    Thread.sleep(1500);
-//                } catch (InterruptedException ex) {
-//                    Logger.getLogger(TestWebWAVFS.class.getName()).log(Level.SEVERE, null, ex);
-//                }
-//
-//                pdris = getPdris(TestSettings.TEST_FILE_NAME1 + ".txt");
-//                for (PDRI p : pdris) {
-//                    if (p.resourceUrl.startsWith("/") || p.resourceUrl.startsWith("file://")) {
-//                        done = false;
-//                        break;
-//                    } else {
-//                        done = true;
-//                    }
-//                }
-//            }
-//
-//            String endpoint = "";
-//            for (PDRI p : pdris) {
-//                VFSClient cli = getVFSClient(p.resourceUrl, p.username, p.password);
-//                if (p.resourceUrl.startsWith("/")) {
-//                    endpoint = "file:///" + p.resourceUrl;
-//                } else {
-//                    endpoint = p.resourceUrl;
-//                }
-//                
-//                vrl = new VRL(endpoint).append("LOBCDER-REPLICA-vTEST").append(p.name);
-//                physicalFile = cli.openFile(vrl);
-//                System.out.println(physicalFile.getContentsAsString());
-//
-//            }
+
+            String[] sites = getAvailableStorageSites(testuri1);
+
+            DeleteMethod delete = new DeleteMethod(testuri1);
+            status = client.executeMethod(delete);
+            assertTrue("DeleteMethod status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
+
+
+            encryptedSet = new DavPropertySet();
+            StringBuilder sb = new StringBuilder();
+            sb.append("[");
+            for (String s : sites) {
+                sb.append("[").append(s).append(",").append(Boolean.TRUE).append("],");
+            }
+
+            sb.replace(sb.lastIndexOf(","), sb.length(), "");
+            sb.append("]");
+            driProp = new DefaultDavProperty<String>(encryptedName, sb.toString());
+            encryptedSet.add(driProp);
+
+            put = new PutMethod(testuri1);
+            put.setRequestEntity(new StringRequestEntity(TestSettings.TEST_DATA, "text/plain", "UTF-8"));
+            status = client.executeMethod(put);
+            assertEquals(HttpStatus.SC_CREATED, status);
+
+            proPatch = new PropPatchMethod(testuri1, encryptedSet, encryptedNameSet);
+            status = client.executeMethod(proPatch);
+            assertEquals(HttpStatus.SC_MULTI_STATUS, status);
+
+
+            //The server says it is, but is it in realety ? 
+            Set<PDRI> pdris = null;
+            boolean done = false;
+            //Wait for replication 
+            try {
+                Thread.sleep(15000);
+            } catch (InterruptedException ex) {
+                Logger.getLogger(TestWebWAVFS.class.getName()).log(Level.SEVERE, null, ex);
+            }
+
+            pdris = getPdris(TestSettings.TEST_FILE_NAME1 + ".txt");
+
+            String endpoint = "";
+            for (PDRI p : pdris) {
+                VFSClient cli = getVFSClient(p.resourceUrl, p.username, p.password);
+                if (p.resourceUrl.startsWith("/")) {
+                    endpoint = "file:///" + p.resourceUrl;
+                } else {
+                    endpoint = p.resourceUrl;
+                }
+                VRL vrl = new VRL(endpoint).append("LOBCDER-REPLICA-vTEST").append(p.name);
+                VFile physicalFile = cli.openFile(vrl);
+
+                GetMethod get = new GetMethod(testuri1);
+                client.executeMethod(get);
+                status = get.getStatusCode();
+                assertEquals(HttpStatus.SC_OK, status);
+                String unencryptedContents = get.getResponseBodyAsString();
+                String encryptedContents = physicalFile.getContentsAsString();
+                assertFalse(unencryptedContents.equals(encryptedContents));
+                assertEquals(TestSettings.TEST_DATA.length(), unencryptedContents.length());
+                assertTrue(unencryptedContents.equals(TestSettings.TEST_DATA));
+            }
 
         } catch (IOException ex) {
             Logger.getLogger(WebDAVTest.class.getName()).log(Level.SEVERE, null, ex);
@@ -1310,7 +1353,7 @@ public class WebDAVTest {
     @Test
     public void testGetSetDRISupervisedProp() throws UnsupportedEncodingException, IOException, DavException {
         System.out.println("testGetSetDRISupervisedProp");
-        String testcol1 = this.root + "testResourceId/";
+        String testcol1 = root + "testResourceId/";
         String testuri1 = testcol1 + "file1";
         String testuri2 = testcol1 + "file2";
         String testuri3 = testcol1 + "file3";
@@ -1329,18 +1372,18 @@ public class WebDAVTest {
 
             PutMethod put = new PutMethod(testuri1);
             put.setRequestEntity(new StringRequestEntity("foo", "text/plain", "UTF-8"));
-            status = this.client.executeMethod(put);
+            status = client.executeMethod(put);
             assertEquals(HttpStatus.SC_CREATED, status);
 
             put = new PutMethod(testuri2);
             put.setRequestEntity(new StringRequestEntity("dar", "text/plain", "UTF-8"));
-            status = this.client.executeMethod(put);
+            status = client.executeMethod(put);
             assertEquals(HttpStatus.SC_CREATED, status);
 
 
             put = new PutMethod(testuri3);
             put.setRequestEntity(new StringRequestEntity("foo", "text/plain", "UTF-8"));
-            status = this.client.executeMethod(put);
+            status = client.executeMethod(put);
             assertEquals(HttpStatus.SC_CREATED, status);
 
 
@@ -1350,7 +1393,7 @@ public class WebDAVTest {
 
             put = new PutMethod(testuri4);
             put.setRequestEntity(new StringRequestEntity(TestSettings.TEST_DATA, "text/plain", "UTF-8"));
-            status = this.client.executeMethod(put);
+            status = client.executeMethod(put);
             assertEquals(HttpStatus.SC_CREATED, status);
 
             DavPropertyNameSet driSupervisedNameSet = new DavPropertyNameSet();
@@ -1440,7 +1483,7 @@ public class WebDAVTest {
     @Test
     public void testGetSetDRICheckSumProp() throws UnsupportedEncodingException, IOException, DavException {
         System.out.println("testGetSetDRICheckSumProp");
-        String testcol1 = this.root + "testResourceId/";
+        String testcol1 = root + "testResourceId/";
         String testuri1 = testcol1 + "file1";
         String testuri2 = testcol1 + "file2";
         String testuri3 = testcol1 + "file3";
@@ -1458,18 +1501,18 @@ public class WebDAVTest {
 
             PutMethod put = new PutMethod(testuri1);
             put.setRequestEntity(new StringRequestEntity("foo", "text/plain", "UTF-8"));
-            status = this.client.executeMethod(put);
+            status = client.executeMethod(put);
             assertEquals(HttpStatus.SC_CREATED, status);
 
             put = new PutMethod(testuri2);
             put.setRequestEntity(new StringRequestEntity("dar", "text/plain", "UTF-8"));
-            status = this.client.executeMethod(put);
+            status = client.executeMethod(put);
             assertEquals(HttpStatus.SC_CREATED, status);
 
 
             put = new PutMethod(testuri3);
             put.setRequestEntity(new StringRequestEntity("foo", "text/plain", "UTF-8"));
-            status = this.client.executeMethod(put);
+            status = client.executeMethod(put);
             assertEquals(HttpStatus.SC_CREATED, status);
 
 
@@ -1479,7 +1522,7 @@ public class WebDAVTest {
 
             put = new PutMethod(testuri4);
             put.setRequestEntity(new StringRequestEntity(TestSettings.TEST_DATA, "text/plain", "UTF-8"));
-            status = this.client.executeMethod(put);
+            status = client.executeMethod(put);
             assertEquals(HttpStatus.SC_CREATED, status);
 
             DavPropertyNameSet driSupervisedNameSet = new DavPropertyNameSet();
@@ -1549,7 +1592,7 @@ public class WebDAVTest {
     @Test
     public void testGetSetDriLastValidationdateProp() throws UnsupportedEncodingException, IOException, DavException {
         System.out.println("testGetSetDriLastValidationdateProp");
-        String testcol1 = this.root + "testResourceId/";
+        String testcol1 = root + "testResourceId/";
         String testuri1 = testcol1 + "file1";
         String testuri2 = testcol1 + "file2";
         String testuri3 = testcol1 + "file3";
@@ -1567,18 +1610,18 @@ public class WebDAVTest {
 
             PutMethod put = new PutMethod(testuri1);
             put.setRequestEntity(new StringRequestEntity("foo", "text/plain", "UTF-8"));
-            status = this.client.executeMethod(put);
+            status = client.executeMethod(put);
             assertEquals(HttpStatus.SC_CREATED, status);
 
             put = new PutMethod(testuri2);
             put.setRequestEntity(new StringRequestEntity("dar", "text/plain", "UTF-8"));
-            status = this.client.executeMethod(put);
+            status = client.executeMethod(put);
             assertEquals(HttpStatus.SC_CREATED, status);
 
 
             put = new PutMethod(testuri3);
             put.setRequestEntity(new StringRequestEntity("foo", "text/plain", "UTF-8"));
-            status = this.client.executeMethod(put);
+            status = client.executeMethod(put);
             assertEquals(HttpStatus.SC_CREATED, status);
 
 
@@ -1588,7 +1631,7 @@ public class WebDAVTest {
 
             put = new PutMethod(testuri4);
             put.setRequestEntity(new StringRequestEntity(TestSettings.TEST_DATA, "text/plain", "UTF-8"));
-            status = this.client.executeMethod(put);
+            status = client.executeMethod(put);
             assertEquals(HttpStatus.SC_CREATED, status);
 
             DavPropertyNameSet driSupervisedNameSet = new DavPropertyNameSet();
@@ -1659,7 +1702,7 @@ public class WebDAVTest {
     @Test
     public void testGetSetDescription() throws UnsupportedEncodingException, IOException, DavException {
         System.out.println("testGetSetCustomComment");
-        String testcol1 = this.root + "testResourceId/";
+        String testcol1 = root + "testResourceId/";
         String testuri1 = testcol1 + "file1";
         try {
 
@@ -1673,7 +1716,7 @@ public class WebDAVTest {
 
             PutMethod put = new PutMethod(testuri1);
             put.setRequestEntity(new StringRequestEntity("foo", "text/plain", "UTF-8"));
-            status = this.client.executeMethod(put);
+            status = client.executeMethod(put);
             assertEquals(HttpStatus.SC_CREATED, status);
 
             DavPropertyNameSet commentNameSet = new DavPropertyNameSet();
@@ -1744,7 +1787,7 @@ public class WebDAVTest {
     @Test
     public void testGetSetLocationPreference() throws UnsupportedEncodingException, IOException, DavException {
         System.out.println("testGetSetCustomComment");
-        String testcol1 = this.root + "testResourceId/";
+        String testcol1 = root + "testResourceId/";
         String testuri1 = testcol1 + "file1";
         try {
 
@@ -1758,7 +1801,7 @@ public class WebDAVTest {
 
             PutMethod put = new PutMethod(testuri1);
             put.setRequestEntity(new StringRequestEntity("foo", "text/plain", "UTF-8"));
-            status = this.client.executeMethod(put);
+            status = client.executeMethod(put);
             assertEquals(HttpStatus.SC_CREATED, status);
 
             DavPropertyNameSet commentNameSet = new DavPropertyNameSet();
@@ -1836,7 +1879,7 @@ public class WebDAVTest {
             generator.nextBytes(buffer);
             out.write(buffer);
         }
-        String lobcderFilePath = this.root + testUploadFile.getName();
+        String lobcderFilePath = root + testUploadFile.getName();
         try {
 
             PutMethod method = new PutMethod(lobcderFilePath);
@@ -1886,7 +1929,7 @@ public class WebDAVTest {
         DavPropertyNameSet names = new DavPropertyNameSet();
         names.add(BindConstants.RESOURCEID);
         PropFindMethod propfind = new PropFindMethod(uri, names, 0);
-        int status = this.client.executeMethod(propfind);
+        int status = client.executeMethod(propfind);
         assertEquals(207, status);
 
         MultiStatus multistatus = propfind.getResponseBodyAsMultiStatus();
@@ -1911,7 +1954,7 @@ public class WebDAVTest {
         DavPropertyNameSet names = new DavPropertyNameSet();
         names.add(BindConstants.PARENTSET);
         PropFindMethod propfind = new PropFindMethod(uri, names, 0);
-        int status = this.client.executeMethod(propfind);
+        int status = client.executeMethod(propfind);
         assertEquals(207, status);
         MultiStatus multistatus = propfind.getResponseBodyAsMultiStatus();
         MultiStatusResponse[] responses = multistatus.getResponses();
@@ -1945,5 +1988,34 @@ public class WebDAVTest {
 
     private void debug(String msg) {
         System.err.println(this.getClass().getName() + ": " + msg);
+    }
+
+    private String[] getAvailableStorageSites(String testuri1) throws IOException, DavException {
+        DavPropertyNameSet availableStorageSitesNameSet = new DavPropertyNameSet();
+        DavPropertyName availableStorageSitesName = DavPropertyName.create("avail-storage-sites", Namespace.getNamespace("custom:"));
+        availableStorageSitesNameSet.add(availableStorageSitesName);
+
+
+        PropFindMethod propFind = new PropFindMethod(testuri1, availableStorageSitesNameSet, DavConstants.DEPTH_INFINITY);
+        int status = client.executeMethod(propFind);
+        assertEquals(HttpStatus.SC_MULTI_STATUS, status);
+
+        MultiStatus multiStatus = propFind.getResponseBodyAsMultiStatus();
+        MultiStatusResponse[] responses = multiStatus.getResponses();
+
+        String value = null;
+        for (MultiStatusResponse r : responses) {
+            DavPropertySet allProp = getProperties(r);
+            DavPropertyIterator iter = allProp.iterator();
+            while (iter.hasNext()) {
+                DavProperty<?> p = iter.nextProperty();
+                assertEquals(p.getName(), availableStorageSitesName);
+                assertNotNull(p.getValue());
+                value = (String) p.getValue();
+            }
+        }
+        
+        String sites = value.replaceAll("[\\[\\]]", "");
+        return sites.split(",");
     }
 }

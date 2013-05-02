@@ -432,6 +432,30 @@ public class TestWebWAVFS {
     }
 
     @Test
+    public void testPutGet() throws VlException, IOException {
+        String testFileURI1 = uri.toASCIIString() + TestSettings.TEST_FILE_NAME1 + ".txt";
+        try {
+            PutMethod put = new PutMethod(testFileURI1);
+            put.setRequestEntity(new StringRequestEntity(TestSettings.TEST_DATA, "text/plain", "UTF-8"));
+            int status = client1.executeMethod(put);
+            assertEquals(HttpStatus.SC_CREATED, status);
+
+
+            GetMethod get = new GetMethod(testFileURI1);
+            client1.executeMethod(get);
+            status = get.getStatusCode();
+            assertEquals(HttpStatus.SC_OK, status);
+            String content = get.getResponseBodyAsString();
+
+            assertEquals(TestSettings.TEST_DATA.length(), content.length());
+            assertTrue(content.equals(TestSettings.TEST_DATA));
+        
+        }finally {
+            delete(testFileURI1);
+        }
+    }
+
+    @Test
     public void testInconsistency() throws VlException, IOException {
         String testFileURI1 = uri.toASCIIString() + TestSettings.TEST_FILE_NAME1 + ".txt";
         try {
@@ -445,12 +469,12 @@ public class TestWebWAVFS {
             //Wait for replication 
             long sleepTime = 15000;
 //            while (!done) {
-                try {
-                    Thread.sleep(sleepTime);
-                } catch (InterruptedException ex) {
-                    Logger.getLogger(TestWebWAVFS.class.getName()).log(Level.SEVERE, null, ex);
-                }
-                pdris = getPdris(TestSettings.TEST_FILE_NAME1 + ".txt");
+            try {
+                Thread.sleep(sleepTime);
+            } catch (InterruptedException ex) {
+                Logger.getLogger(TestWebWAVFS.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            pdris = getPdris(TestSettings.TEST_FILE_NAME1 + ".txt");
 //                if(!pdris.equals(oldPdri)){
 //                    done = true;
 //                }
