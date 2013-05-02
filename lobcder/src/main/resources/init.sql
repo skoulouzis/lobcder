@@ -108,9 +108,9 @@ DELIMITER ;
 INSERT INTO ldata_table(parentRef, ownerId, datatype, ldName, createDate, modifiedDate) VALUES(1, 'root', 'logical.folder', '', NOW(), NOW());
 SET @rootRef = LAST_INSERT_ID();
 UPDATE ldata_table SET parentRef = @rootRef WHERE uid = @rootRef;
-INSERT INTO permission_table (permType, ldUidRef, roleName) VALUES  ('read', @parentRef, 'other'),
-                                                                    ('read', @parentRef, 'admin'),
-                                                                    ('write', @parentRef, 'admin');
+INSERT INTO permission_table (permType, ldUidRef, roleName) VALUES  ('read', @rootRef, 'other'),
+                                                                    ('read', @rootRef, 'admin'),
+                                                                    ('write', @rootRef, 'admin');
 INSERT INTO  credential_table(username, password) VALUES ('fakeuser', 'fakepass');
 SET @credRef = LAST_INSERT_ID();
 INSERT INTO storage_site_table(resourceUri, credentialRef, currentNum, currentSize, quotaNum, quotaSize, isCache)

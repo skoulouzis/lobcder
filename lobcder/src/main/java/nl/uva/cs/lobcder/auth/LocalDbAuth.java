@@ -46,7 +46,7 @@ public class LocalDbAuth implements AuthI {
                 int id;
                 connection = datasource.getConnection();
                 Statement s = connection.createStatement();
-                HashSet<String> roles = new HashSet<String>();
+                HashSet<String> roles = new HashSet<>();
                 String query = "SELECT id, uname FROM auth_usernames_table WHERE token = '" + token + "'";
                 LocalDbAuth.log.fine(query);
                 ResultSet rs = s.executeQuery(query);
@@ -54,6 +54,7 @@ public class LocalDbAuth implements AuthI {
                     id = rs.getInt(1);
                     uname = rs.getString(2);
                     roles.add("other");
+                    roles.add(uname);
                 } else {
                     return null;
                 }

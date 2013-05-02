@@ -84,6 +84,7 @@ public class AuthRemote implements AuthI {
                 });
                 res = new MyPrincipal(u.username, new HashSet(Arrays.asList(u.role)));
                 res.getRoles().add("other");
+                res.getRoles().add(u.username);
             }
             if (pc != null) {
                 pc.putPrincipal(token, res);
