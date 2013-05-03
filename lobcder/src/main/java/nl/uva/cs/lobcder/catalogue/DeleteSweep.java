@@ -33,9 +33,10 @@ class DeleteSweep implements Runnable {
             //We'll try to sweep them as well
 //                    ResultSet res4 = s1.executeQuery("update pdrigroup_table set `refCount` = 0 where pdriGroupId not in (select pdriGroupRef from ldata_table where pdriGroupRef != 0)");
             //TODO add it to the query below 
-            try (PreparedStatement ps = connection.prepareStatement("update pdrigroup_table set `refCount` = 0 where pdriGroupId not in (select pdriGroupRef from ldata_table where pdriGroupRef != 0)")) {
-                ps.executeUpdate();
-            }
+            //This query interferes with the assimilator
+//            try (PreparedStatement ps = connection.prepareStatement("update pdrigroup_table set `refCount` = 0 where pdriGroupId not in (select pdriGroupRef from ldata_table where pdriGroupRef != 0)")) {
+//                ps.executeUpdate();
+//            }
 
             try {
                 connection.setAutoCommit(false);

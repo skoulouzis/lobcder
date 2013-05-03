@@ -91,7 +91,9 @@ public class VPDRI implements PDRI {
         try {
             this.fileName = fileName;
             this.resourceUrl = resourceUrl;
-            vrl = new VRL(resourceUrl).appendPath(baseDir).append(URLEncoder.encode(fileName, "UTF-8"));
+            String encoded = VRL.encode(fileName);
+            vrl = new VRL(resourceUrl).appendPath(baseDir).append(encoded);
+//            vrl = new VRL(resourceUrl).appendPath(baseDir).append(URLEncoder.encode(fileName, "UTF-8").replace("+", "%20"));
             //Encode:
 //            String strURI = vrl.toURI().toASCIIString();
 //            vrl = new VRL(strURI);
@@ -154,8 +156,11 @@ public class VPDRI implements PDRI {
             //Maybe it's from assimilation. We must remove the baseDir
             if (ex instanceof ResourceNotFoundException) {
                 try {
-                    VRL assimilationVRL = new VRL(resourceUrl).append(URLEncoder.encode(fileName, "UTF-8"));
+                    //                    VRL assimilationVRL = new VRL(resourceUrl).append(URLEncoder.encode(fileName, "UTF-8").replace("+", "%20"));
+                    String encoded = VRL.encode(fileName);
+                    VRL assimilationVRL = new VRL(resourceUrl).append(encoded);
                     vfsClient.openLocation(assimilationVRL).delete();
+
                 } catch (VRLSyntaxException ex1) {
                     Logger.getLogger(VPDRI.class.getName()).log(Level.SEVERE, null, ex1);
                 } catch (VlException ex1) {

@@ -4,8 +4,10 @@
  */
 package nl.uva.cs.lobcder.util;
 
+import com.mysql.jdbc.exceptions.MySQLIntegrityConstraintViolationException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.net.MalformedURLException;
 import java.security.NoSuchAlgorithmException;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -19,8 +21,15 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Nonnull;
+import nl.uva.cs.lobcder.resources.Credential;
 import nl.uva.cs.lobcder.resources.LogicalData;
+import nl.uva.cs.lobcder.resources.MyStorageSite;
 import nl.uva.cs.lobcder.resources.PDRIDescr;
+import nl.uva.vlet.exception.VlException;
+import nl.uva.vlet.vfs.VFSNode;
+import nl.uva.vlet.vfs.VFile;
+import nl.uva.vlet.vrl.VRL;
+import nl.uva.vlet.vrs.VRS;
 
 /**
  *
@@ -29,10 +38,10 @@ import nl.uva.cs.lobcder.resources.PDRIDescr;
 public class Assimilator {
 
     static final String JDBC_DRIVER = "com.mysql.jdbc.Driver";
-    static final String DB_URL = "jdbc:mysql://localhost/DB";
+    static final String DB_URL = "jdbc:mysql://localhost/lobcderDB";
     //  Database credentials
-    static final String USER = "user";
-    static final String PASS = "pass";
+    static final String USER = "lobcder";
+    static final String PASS = "RoomC3156";
     private final Connection conn;
 
     public Assimilator() throws ClassNotFoundException, SQLException {
@@ -43,46 +52,6 @@ public class Assimilator {
         System.out.println("Connecting to database...");
         conn = DriverManager.getConnection(DB_URL, USER, PASS);
         conn.setAutoCommit(false);
-    }
-
-    public static void main(String args[]) {
-        try {
-            Assimilator a = new Assimilator();
-            Connection c = a.getConnection();
-
-            long credentialsID = a.addCredentials(c, "faceuser", "facepass");
-            String ssURI = "file:///tmp";
-
-            long ssID = a.addStorageSite(c, ssURI, credentialsID, -1, -1, -1, -1, false, false);
-
-            long pdriGroupID = a.addPdrigroupTable(c);
-
-            String fileName = "test.out";
-            long pdriID = a.addPDRI(c, fileName, ssID, pdriGroupID, false, DesEncrypter.generateKey());
-
-            long parentRef = 1;
-            String ownerId = "admin";
-            String datatype = Constants.LOGICAL_FILE;
-            long createDate = (System.currentTimeMillis());
-            long modifiedDate = (System.currentTimeMillis());
-            long ldLength = 300;
-            String contentTypesStr = "text/plain";
-            LogicalData entry = new LogicalData();
-            entry.setContentTypesAsString(contentTypesStr);
-            entry.setCreateDate(createDate);
-            entry.setLength(ldLength);
-            entry.setModifiedDate(modifiedDate);
-            entry.setName(fileName);
-            entry.setOwner(ownerId);
-            entry.setParentRef(parentRef);
-            entry.setType(datatype);
-            entry.setPdriGroupId(pdriGroupID);
-            a.addLogicalData(c, entry);
-            c.commit();
-        } catch (NoSuchAlgorithmException | ClassNotFoundException | SQLException ex) {
-            Logger.getLogger(Assimilator.class.getName()).log(Level.SEVERE, null, ex);
-        }
-
     }
 
     private long addCredentials(Connection connection, String username, String password) throws SQLException {
@@ -106,9 +75,7 @@ public class Assimilator {
         return conn;
     }
 
-    private long addStorageSite(Connection connection, String storageSiteURI,
-            long credentialRef, int currentNum, int currentSize, int quotaNum,
-            int quotaSize, boolean isCache, boolean encrypt) throws SQLException {
+    private long addStorageSite(Connection connection, MyStorageSite site, long credentialRef, boolean isCache) throws SQLException {
         long ssID;
 //        try (Connection connection = getConnection()) {
         try (PreparedStatement ps = connection.prepareStatement("INSERT INTO "
@@ -116,22 +83,19 @@ public class Assimilator {
                         + "currentNum, currentSize, quotaNum, quotaSize, "
                         + "isCache, encrypt) "
                         + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS)) {
-            ps.setString(1, storageSiteURI);
+            ps.setString(1, site.getResourceURI());
             ps.setLong(2, credentialRef);
-            ps.setInt(3, currentNum);
-            ps.setInt(4, currentSize);
-            ps.setInt(5, quotaNum);
-            ps.setInt(6, quotaSize);
+            ps.setLong(3, site.getCurrentNum());
+            ps.setLong(4, site.getCurrentSize());
+            ps.setLong(5, site.getQuotaNum());
+            ps.setLong(6, site.getQuotaSize());
             ps.setBoolean(7, isCache);
-            ps.setBoolean(8, encrypt);
+            ps.setBoolean(8, site.isEncrypt());
             ps.executeUpdate();
             ResultSet rs = ps.getGeneratedKeys();
             rs.next();
             ssID = rs.getLong(1);
-//                connection.commit();
-            System.out.println("ssID: " + ssID);
         }
-//        }
         return ssID;
     }
 
@@ -209,7 +173,127 @@ public class Assimilator {
             rs.next();
             entry.setUid(rs.getLong(1));
             return entry;
+        } catch (SQLException ex) {
+            if (ex instanceof MySQLIntegrityConstraintViolationException || ex.getMessage().contains("Duplicate entry")) {
+                System.err.println(entry.getName() + " already exists!");
+            } else {
+                throw ex;
+            }
         }
+        return null;
 //        }
+    }
+
+    private long getStorageSiteID(Connection connection, String ssURI) throws SQLException {
+        long ssID = -1;
+        if (!ssURI.endsWith("/")) {
+            ssURI += "/";
+        }
+        String query = "select storageSiteId from storage_site_table where resourceUri = '" + ssURI + "' and isCache = false";
+        try (PreparedStatement preparedStatement = connection.prepareStatement(
+                        query)) {
+            ResultSet rs = preparedStatement.executeQuery();
+            if (rs.next()) {
+                ssID = rs.getLong(1);
+            }
+        }
+        return ssID;
+    }
+
+    private void assimilate(List<MyStorageSite> sites) throws SQLException, MalformedURLException, VlException, NoSuchAlgorithmException {
+        Connection c = getConnection();
+        StorageSiteClient ssClient;
+        for (MyStorageSite site : sites) {
+            String username = site.getCredential().getStorageSiteUsername();
+            String password = site.getCredential().getStorageSitePassword();
+            String ssURI = site.getResourceURI();
+
+            long ssID = getStorageSiteID(c, ssURI);
+            if (ssID == -1) {
+                long credentialsID = addCredentials(c, username, password);
+                ssID = addStorageSite(c, site, credentialsID, false);
+            }
+
+            ssClient = new StorageSiteClient(username, password, ssURI);
+            VFSNode[] nodes = ssClient.getStorageSiteClient().list(new VRL(ssURI));
+
+            for (VFSNode n : nodes) {
+                if (n.isFile()) {
+                    System.out.println("Adding: " + n.getVRL());
+                    VFile f = (VFile) n;
+                    long pdriGroupID = addPdrigroupTable(c);
+                    String fileName = n.getName();
+                    long pdriID = addPDRI(c, fileName, ssID, pdriGroupID, false, DesEncrypter.generateKey());
+                    LogicalData entry = new LogicalData();
+                    entry.setContentTypesAsString(f.getMimeType());
+                    entry.setCreateDate(f.getModificationTime());
+                    entry.setLength(f.getLength());
+                    entry.setModifiedDate(f.getModificationTime());
+                    entry.setName(fileName);
+                    entry.setOwner("admin");
+                    long parentRef = 1;
+                    entry.setParentRef(parentRef);
+                    entry.setType(Constants.LOGICAL_FILE);
+                    entry.setPdriGroupId(pdriGroupID);
+                    addLogicalData(c, entry);
+                }
+            }
+
+        }
+        c.commit();
+    }
+
+    public static void main(String args[]) {
+        try {
+            List<MyStorageSite> sites = new ArrayList<>();
+
+
+            Credential credential = new Credential();
+            credential.setStorageSiteUsername("fakeuser");
+            credential.setStorageSitePassword("fakepass");
+            
+            
+//            MyStorageSite ss1 = new MyStorageSite();
+//            ss1.setCredential(credential);
+//            ss1.setResourceURI("file:///tmp/");
+//            ss1.setCurrentNum(Long.valueOf("-1"));
+//            ss1.setCurrentSize(Long.valueOf("-1"));
+//            ss1.setEncrypt(false);
+//            ss1.setQuotaNum(Long.valueOf("-1"));
+//            ss1.setQuotaSize(Long.valueOf("-1"));
+//            sites.add(ss1);
+//
+//
+//            MyStorageSite ss2 = new MyStorageSite();
+//            ss2.setCredential(credential);
+//            ss2.setResourceURI("file:///" + System.getProperty("user.home") + "/Downloads");
+//            ss2.setCurrentNum(Long.valueOf("-1"));
+//            ss2.setCurrentSize(Long.valueOf("-1"));
+//            ss2.setEncrypt(false);
+//            ss2.setQuotaNum(Long.valueOf("-1"));
+//            ss2.setQuotaSize(Long.valueOf("-1"));
+//            sites.add(ss2);
+
+
+            MyStorageSite ss3 = new MyStorageSite();
+            ss3.setCredential(credential);
+            ss3.setResourceURI("file:///" + System.getProperty("user.home") + "/Downloads/files");
+            ss3.setCurrentNum(Long.valueOf("-1"));
+            ss3.setCurrentSize(Long.valueOf("-1"));
+            ss3.setEncrypt(false);
+            ss3.setQuotaNum(Long.valueOf("-1"));
+            ss3.setQuotaSize(Long.valueOf("-1"));
+            sites.add(ss3);
+
+            Assimilator a = new Assimilator();
+            a.assimilate(sites);
+
+
+        } catch (ClassNotFoundException | SQLException | MalformedURLException | VlException | NoSuchAlgorithmException ex) {
+            Logger.getLogger(Assimilator.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            VRS.exit();
+        }
+
     }
 }
