@@ -5,8 +5,6 @@
 package nl.uva.cs.lobcder.util;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -16,24 +14,14 @@ import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.AlgorithmParameterSpec;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.KeySpec;
 import java.util.Random;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.crypto.Cipher;
 import javax.crypto.CipherInputStream;
 import javax.crypto.CipherOutputStream;
-import javax.crypto.KeyGenerator;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
-import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.IvParameterSpec;
-import javax.crypto.spec.PBEKeySpec;
-import javax.crypto.spec.PBEParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-import nl.uva.vlet.exception.VlException;
-import nl.uva.vlet.io.CircularStreamBufferTransferer;
 import static org.apache.commons.io.FileUtils.readFileToByteArray;
 import static org.apache.commons.io.FileUtils.writeStringToFile;
 
@@ -156,7 +144,6 @@ public class DesEncrypter {
         //        byte[] encoded = akey.getEncoded();
         //        BigInteger bigIntKey = new BigInteger(1, encoded);
         BigInteger bigIntKey = new BigInteger(63, 0, new Random());
-        bigIntKey = new BigInteger("7490145796510618321");
         return bigIntKey;
     }
 

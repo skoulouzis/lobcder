@@ -235,7 +235,7 @@ public class JDBCatalogue extends MyDataSource {
                 String passwd = rs.getString(5);
                 boolean encrypt = rs.getBoolean(6);
                 long key = rs.getLong(7);
-                res.add(new PDRIDescr(fileName, ssID, resourceURI, uName, passwd, encrypt, new BigInteger("7490145796510618321")));
+                res.add(new PDRIDescr(fileName, ssID, resourceURI, uName, passwd, encrypt, BigInteger.valueOf(key)));
             }
             return res;
         }

@@ -155,13 +155,6 @@ public class CachePDRI implements PDRI {
 //
     @Override
     public BigInteger getKeyInt() {
-        if (key == null) {
-            try {
-                key = DesEncrypter.generateKey();
-            } catch (NoSuchAlgorithmException ex) {
-                Logger.getLogger(CachePDRI.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        }
         return this.key;
     }
 
