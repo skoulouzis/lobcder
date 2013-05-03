@@ -28,20 +28,11 @@ import java.nio.channels.WritableByteChannel;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.security.spec.AlgorithmParameterSpec;
-import java.security.spec.InvalidKeySpecException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.crypto.Cipher;
-import javax.crypto.CipherInputStream;
-import javax.crypto.CipherOutputStream;
-import javax.crypto.KeyGenerator;
 import javax.crypto.NoSuchPaddingException;
-import javax.crypto.SecretKey;
-import javax.crypto.spec.IvParameterSpec;
-import lombok.Getter;
-import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
 import nl.uva.cs.lobcder.util.DesEncrypter;
+import nl.uva.vlet.exception.ResourceNotFoundException;
 
 /**
  * A test PDRI to implement the delete get/set data methods with the VRS API
@@ -94,10 +85,12 @@ public class VPDRI implements PDRI {
     private static final org.slf4j.Logger log = LoggerFactory.getLogger(VPDRI.class);
     private BigInteger keyInt;
     private boolean encrypt;
+    private final String resourceUrl;
 
     VPDRI(String fileName, Long storageSiteId, String resourceUrl, String username, String password, boolean encrypt, BigInteger keyInt) throws IOException {
         try {
             this.fileName = fileName;
+            this.resourceUrl = resourceUrl;
             vrl = new VRL(resourceUrl).appendPath(baseDir).append(URLEncoder.encode(fileName, "UTF-8"));
             //Encode:
 //            String strURI = vrl.toURI().toASCIIString();
@@ -158,7 +151,19 @@ public class VPDRI implements PDRI {
         try {
             vfsClient.openLocation(vrl).delete();
         } catch (VlException ex) {
-            Logger.getLogger(VPDRI.class.getName()).log(Level.SEVERE, null, ex);
+            //Maybe it's from assimilation. We must remove the baseDir
+            if (ex instanceof ResourceNotFoundException) {
+                try {
+                    VRL assimilationVRL = new VRL(resourceUrl).append(URLEncoder.encode(fileName, "UTF-8"));
+                    vfsClient.openLocation(assimilationVRL).delete();
+                } catch (VRLSyntaxException ex1) {
+                    Logger.getLogger(VPDRI.class.getName()).log(Level.SEVERE, null, ex1);
+                } catch (VlException ex1) {
+                    Logger.getLogger(VPDRI.class.getName()).log(Level.SEVERE, null, ex1);
+                }
+            } else {
+                Logger.getLogger(VPDRI.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
         //        //it's void so do it asynchronously
         //        Runnable asyncDel = getAsyncDelete(this.vfsClient, vrl);
@@ -169,9 +174,21 @@ public class VPDRI implements PDRI {
     public InputStream getData() throws IOException {
         InputStream in = null;
         try {
-            in = ((VFile) this.vfsClient.openLocation(vrl)).getInputStream();
+            in = ((VFile) vfsClient.openLocation(vrl)).getInputStream();
         } catch (VlException ex) {
-            throw new IOException(ex);
+            //Maybe it's from assimilation. We must remove the baseDir
+            if (ex instanceof ResourceNotFoundException) {
+                try {
+                    VRL assimilationVRL = new VRL(resourceUrl).append(URLEncoder.encode(fileName, "UTF-8"));
+                    in = ((VFile) vfsClient.openLocation(assimilationVRL)).getInputStream();
+                } catch (VRLSyntaxException ex1) {
+                    throw new IOException(ex1);
+                } catch (VlException ex1) {
+                    throw new IOException(ex1);
+                }
+            } else {
+                throw new IOException(ex);
+            }
         }
         return in;
     }
