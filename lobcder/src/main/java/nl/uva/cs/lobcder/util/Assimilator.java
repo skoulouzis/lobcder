@@ -28,6 +28,7 @@ import nl.uva.cs.lobcder.resources.MyStorageSite;
 import nl.uva.cs.lobcder.resources.PDRIDescr;
 import nl.uva.vlet.exception.VlException;
 import nl.uva.vlet.vfs.VChecksum;
+import nl.uva.vlet.vfs.VDir;
 import nl.uva.vlet.vfs.VFSNode;
 import nl.uva.vlet.vfs.VFile;
 import nl.uva.vlet.vrl.VRL;
@@ -236,43 +237,25 @@ public class Assimilator {
             }
 
             ssClient = new StorageSiteClient(username, password, ssURI);
-            VFSNode[] nodes = ssClient.getStorageSiteClient().list(new VRL(ssURI));
+            VDir dir = ssClient.getStorageSiteClient().openDir(new VRL(ssURI));
+            //build folders first 
+            add(dir, dir.getPath(), c, ssID, false);
 
-            for (VFSNode n : nodes) {
-                if (n.isFile()) {
-                    long parentRef = 1;
-                    String fileName = n.getName();
-                    LogicalData registered = getLogicalDataByParentRefAndName(parentRef, fileName, c);
-                    if (registered == null) {
-                        System.out.println("Adding: " + n.getVRL());
-                        VFile f = (VFile) n;
-                        long pdriGroupID = addPdrigroupTable(c);
-                        LogicalData entry = new LogicalData();
-                        entry.setContentTypesAsString(f.getMimeType());
-                        entry.setCreateDate(f.getModificationTime());
-                        entry.setLength(f.getLength());
-                        entry.setModifiedDate(f.getModificationTime());
-                        entry.setName(fileName);
-                        entry.setOwner("admin");
+            add(dir, dir.getPath(), c, ssID, true);
 
-                        entry.setParentRef(parentRef);
-                        entry.setType(Constants.LOGICAL_FILE);
-                        entry.setPdriGroupId(pdriGroupID);
-//                        if(f instanceof VChecksum){
-//                            String chs = ((VChecksum) f).getChecksum(VChecksum.MD5);
-//                            entry.setChecksum();
-//                        }
-                        long pdriID = addPDRI(c, fileName, ssID, pdriGroupID, false, DesEncrypter.generateKey());
-                        addLogicalData(c, entry);
-                    }
-
-
-
-
-
-                }
-            }
-
+//            VFSNode[] nodes = dir.list();
+//            for (VFSNode n : nodes) {
+//                if (n.isFile()) {
+//                    VFile f = (VFile) n;
+//                    String fileName = n.getName();
+//                    LogicalData registered = getLogicalDataByParentRefAndName(parentRef, fileName, c);
+//                    VRL currentPath = new VRL(f.getPath().replaceFirst(dir.getPath(), ""));
+//                    LogicalData parent = getLogicalDataByPath(Path.path(currentPath.getPath()), c);
+//                    if (registered == null) {
+//                        addFile(c, f, parentRef, parent.getUid());
+//                    }
+//                }
+//            }
         }
         c.commit();
         c.close();
@@ -316,6 +299,112 @@ public class Assimilator {
                 return null;
             }
 
+        }
+    }
+
+    public LogicalData registerDirLogicalData(LogicalData entry, @Nonnull Connection connection) throws SQLException {
+        try (PreparedStatement preparedStatement = connection.prepareStatement(
+                        "INSERT INTO ldata_table(parentRef, ownerId, datatype, ldName, createDate, modifiedDate)"
+                        + " VALUES (?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS)) {
+            preparedStatement.setLong(1, entry.getParentRef());
+            preparedStatement.setString(2, entry.getOwner());
+            preparedStatement.setString(3, Constants.LOGICAL_FOLDER);
+            preparedStatement.setString(4, entry.getName());
+            preparedStatement.setDate(5, new java.sql.Date(entry.getCreateDate()));
+            preparedStatement.setDate(6, new java.sql.Date(entry.getModifiedDate()));
+            preparedStatement.executeUpdate();
+            ResultSet rs = preparedStatement.getGeneratedKeys();
+            rs.next();
+            entry.setUid(rs.getLong(1));
+            return entry;
+        }
+    }
+
+    public void add(VDir dir, String base, Connection connection, long ssid, boolean addFiles) throws MalformedURLException, VlException, SQLException, NoSuchAlgorithmException {
+        VFSNode[] nodes = dir.list();
+        for (VFSNode f : nodes) {
+            VRL currentPath = new VRL(f.getPath().replaceFirst(base, ""));
+            LogicalData register = getLogicalDataByPath(Path.path(currentPath.getPath()), connection);
+            LogicalData parent = getLogicalDataByPath(Path.path(currentPath.getPath()).getParent(), connection);
+            if (f.isDir()) {
+                if (register == null) {
+                    LogicalData entry = new LogicalData();
+                    entry.setCreateDate(f.getModificationTime());
+                    entry.setModifiedDate(f.getModificationTime());
+                    entry.setName(f.getName());
+                    entry.setOwner("admin");
+                    entry.setParentRef(parent.getUid());
+                    register = registerDirLogicalData(entry, connection);
+                }
+                add((VDir) f, base, connection, ssid, addFiles);
+            } else if (addFiles) {
+                if (register == null) {
+                    addFile(connection, (VFile) f, parent.getUid(), ssid);
+                }
+            }
+        }
+    }
+
+    public LogicalData getLogicalDataByPath(Path logicalResourceName, @Nonnull Connection connection) throws SQLException {
+        try (PreparedStatement preparedStatement = connection.prepareStatement(
+                        "SELECT uid FROM ldata_table WHERE ldata_table.parentRef = ? AND ldata_table.ldName = ?")) {
+            long parent = 1;
+            String parts[] = logicalResourceName.getParts();
+            if (parts.length == 0) {
+                parts = new String[]{""};
+            }
+            for (int i = 0; i != parts.length; ++i) {
+                String p = parts[i];
+                if (i == (parts.length - 1)) {
+                    try (PreparedStatement preparedStatement1 = connection.prepareStatement(
+                                    "SELECT uid, ownerId, datatype, createDate, modifiedDate, ldLength, "
+                                    + "contentTypesStr, pdriGroupRef, isSupervised, checksum, lastValidationDate, "
+                                    + "lockTokenID, lockScope, lockType, lockedByUser, lockDepth, lockTimeout, "
+                                    + "description, locationPreference "
+                                    + "FROM ldata_table WHERE ldata_table.parentRef = ? AND ldata_table.ldName = ?")) {
+                        preparedStatement1.setLong(1, parent);
+                        preparedStatement1.setString(2, p);
+                        ResultSet rs = preparedStatement1.executeQuery();
+                        if (rs.next()) {
+                            LogicalData res = new LogicalData();
+                            res.setUid(rs.getLong(1));
+                            res.setParentRef(parent);
+                            res.setOwner(rs.getString(2));
+                            res.setType(rs.getString(3));
+                            res.setName(p);
+                            res.setCreateDate(rs.getTimestamp(4).getTime());
+                            res.setModifiedDate(rs.getTimestamp(5).getTime());
+                            res.setLength(rs.getLong(6));
+                            res.setContentTypesAsString(rs.getString(7));
+                            res.setPdriGroupId(rs.getLong(8));
+                            res.setSupervised(rs.getBoolean(9));
+                            res.setChecksum(rs.getLong(10));
+                            res.setLastValidationDate(rs.getLong(11));
+                            res.setLockTokenID(rs.getString(12));
+                            res.setLockScope(rs.getString(13));
+                            res.setLockType(rs.getString(14));
+                            res.setLockedByUser(rs.getString(15));
+                            res.setLockDepth(rs.getString(16));
+                            res.setLockTimeout(rs.getLong(17));
+                            res.setDescription(rs.getString(18));
+                            res.setDataLocationPreference(rs.getString(19));
+                            return res;
+                        } else {
+                            return null;
+                        }
+                    }
+                } else {
+                    preparedStatement.setLong(1, parent);
+                    preparedStatement.setString(2, p);
+                    ResultSet rs = preparedStatement.executeQuery();
+                    if (rs.next()) {
+                        parent = rs.getLong(1);
+                    } else {
+                        return null;
+                    }
+                }
+            }
+            return null;
         }
     }
 
@@ -371,5 +460,26 @@ public class Assimilator {
             VRS.exit();
         }
 
+    }
+
+    private void addFile(Connection connection, VFile f, Long parentRef, long ssID) throws SQLException, VlException, NoSuchAlgorithmException {
+        long pdriGroupID = addPdrigroupTable(connection);
+        LogicalData entry = new LogicalData();
+        entry.setContentTypesAsString(f.getMimeType());
+        entry.setCreateDate(f.getModificationTime());
+        entry.setLength(f.getLength());
+        entry.setModifiedDate(f.getModificationTime());
+        entry.setName(f.getName());
+        entry.setOwner("admin");
+
+        entry.setParentRef(parentRef);
+        entry.setType(Constants.LOGICAL_FILE);
+        entry.setPdriGroupId(pdriGroupID);
+//                        if(f instanceof VChecksum){
+//                            String chs = ((VChecksum) f).getChecksum(VChecksum.MD5);
+//                            entry.setChecksum();
+//                        }
+        long pdriID = addPDRI(connection, f.getName(), ssID, pdriGroupID, false, DesEncrypter.generateKey());
+        addLogicalData(connection, entry);
     }
 }
