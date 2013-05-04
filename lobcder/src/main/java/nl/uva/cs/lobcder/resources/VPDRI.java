@@ -154,8 +154,8 @@ public class VPDRI implements PDRI {
             if (ex instanceof ResourceNotFoundException) {
                 try {
                     //                    VRL assimilationVRL = new VRL(resourceUrl).append(URLEncoder.encode(fileName, "UTF-8").replace("+", "%20"));
-                    String encoded = VRL.encode(fileName);
-                    VRL assimilationVRL = new VRL(resourceUrl).append(encoded);
+//                    String encoded = VRL.encode(fileName);
+                    VRL assimilationVRL = new VRL(resourceUrl).append(fileName);
                     vfsClient.openLocation(assimilationVRL).delete();
 
                 } catch (VRLSyntaxException ex1) {

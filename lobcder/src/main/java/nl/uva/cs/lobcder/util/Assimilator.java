@@ -5,6 +5,7 @@
 package nl.uva.cs.lobcder.util;
 
 import com.mysql.jdbc.exceptions.MySQLIntegrityConstraintViolationException;
+import io.milton.common.Path;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.MalformedURLException;
@@ -26,6 +27,7 @@ import nl.uva.cs.lobcder.resources.LogicalData;
 import nl.uva.cs.lobcder.resources.MyStorageSite;
 import nl.uva.cs.lobcder.resources.PDRIDescr;
 import nl.uva.vlet.exception.VlException;
+import nl.uva.vlet.vfs.VChecksum;
 import nl.uva.vlet.vfs.VFSNode;
 import nl.uva.vlet.vfs.VFile;
 import nl.uva.vlet.vrl.VRL;
@@ -77,13 +79,19 @@ public class Assimilator {
 
     private long addStorageSite(Connection connection, MyStorageSite site, long credentialRef, boolean isCache) throws SQLException {
         long ssID;
+        String uri;
+        if (!site.getResourceURI().endsWith("/")) {
+            uri = site.getResourceURI() + "/";
+        } else {
+            uri = site.getResourceURI();
+        }
 //        try (Connection connection = getConnection()) {
         try (PreparedStatement ps = connection.prepareStatement("INSERT INTO "
                         + "storage_site_table (resourceUri, credentialRef, "
                         + "currentNum, currentSize, quotaNum, quotaSize, "
                         + "isCache, encrypt) "
                         + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS)) {
-            ps.setString(1, site.getResourceURI());
+            ps.setString(1, uri);
             ps.setLong(2, credentialRef);
             ps.setLong(3, site.getCurrentNum());
             ps.setLong(4, site.getCurrentSize());
@@ -186,10 +194,8 @@ public class Assimilator {
 
     private long getStorageSiteID(Connection connection, String ssURI) throws SQLException {
         long ssID = -1;
-        if (!ssURI.endsWith("/")) {
-            ssURI += "/";
-        }
-        String query = "select storageSiteId from storage_site_table where resourceUri = '" + ssURI + "' and isCache = false";
+        String query = "select storageSiteId from storage_site_table where resourceUri = '"
+                + ssURI + "' and isCache = false";
         try (PreparedStatement preparedStatement = connection.prepareStatement(
                         query)) {
             ResultSet rs = preparedStatement.executeQuery();
@@ -197,10 +203,25 @@ public class Assimilator {
                 ssID = rs.getLong(1);
             }
         }
+        if (ssID == -1) {
+            if (!ssURI.endsWith("/")) {
+                ssURI += "/";
+                query = "select storageSiteId from storage_site_table where resourceUri = '"
+                        + ssURI + "' and isCache = false";
+                try (PreparedStatement preparedStatement = connection.prepareStatement(
+                                query)) {
+                    ResultSet rs = preparedStatement.executeQuery();
+                    if (rs.next()) {
+                        ssID = rs.getLong(1);
+                    }
+                }
+            }
+        }
         return ssID;
     }
 
-    private void assimilate(List<MyStorageSite> sites) throws SQLException, MalformedURLException, VlException, NoSuchAlgorithmException {
+    private void assimilate(List<MyStorageSite> sites) throws SQLException,
+            MalformedURLException, VlException, NoSuchAlgorithmException {
         Connection c = getConnection();
         StorageSiteClient ssClient;
         for (MyStorageSite site : sites) {
@@ -219,28 +240,83 @@ public class Assimilator {
 
             for (VFSNode n : nodes) {
                 if (n.isFile()) {
-                    System.out.println("Adding: " + n.getVRL());
-                    VFile f = (VFile) n;
-                    long pdriGroupID = addPdrigroupTable(c);
-                    String fileName = n.getName();
-                    long pdriID = addPDRI(c, fileName, ssID, pdriGroupID, false, DesEncrypter.generateKey());
-                    LogicalData entry = new LogicalData();
-                    entry.setContentTypesAsString(f.getMimeType());
-                    entry.setCreateDate(f.getModificationTime());
-                    entry.setLength(f.getLength());
-                    entry.setModifiedDate(f.getModificationTime());
-                    entry.setName(fileName);
-                    entry.setOwner("admin");
                     long parentRef = 1;
-                    entry.setParentRef(parentRef);
-                    entry.setType(Constants.LOGICAL_FILE);
-                    entry.setPdriGroupId(pdriGroupID);
-                    addLogicalData(c, entry);
+                    String fileName = n.getName();
+                    LogicalData registered = getLogicalDataByParentRefAndName(parentRef, fileName, c);
+                    if (registered == null) {
+                        System.out.println("Adding: " + n.getVRL());
+                        VFile f = (VFile) n;
+                        long pdriGroupID = addPdrigroupTable(c);
+                        LogicalData entry = new LogicalData();
+                        entry.setContentTypesAsString(f.getMimeType());
+                        entry.setCreateDate(f.getModificationTime());
+                        entry.setLength(f.getLength());
+                        entry.setModifiedDate(f.getModificationTime());
+                        entry.setName(fileName);
+                        entry.setOwner("admin");
+
+                        entry.setParentRef(parentRef);
+                        entry.setType(Constants.LOGICAL_FILE);
+                        entry.setPdriGroupId(pdriGroupID);
+//                        if(f instanceof VChecksum){
+//                            String chs = ((VChecksum) f).getChecksum(VChecksum.MD5);
+//                            entry.setChecksum();
+//                        }
+                        long pdriID = addPDRI(c, fileName, ssID, pdriGroupID, false, DesEncrypter.generateKey());
+                        addLogicalData(c, entry);
+                    }
+
+
+
+
+
                 }
             }
 
         }
         c.commit();
+        c.close();
+    }
+
+    public LogicalData getLogicalDataByParentRefAndName(Long parentRef, String name, @Nonnull Connection connection) throws SQLException {
+        try (PreparedStatement preparedStatement = connection.prepareStatement(
+                        "SELECT uid, ownerId, datatype, createDate, modifiedDate, ldLength, "
+                        + "contentTypesStr, pdriGroupRef, isSupervised, checksum, lastValidationDate, "
+                        + "lockTokenID, lockScope, lockType, lockedByUser, lockDepth, lockTimeout, "
+                        + "description, locationPreference "
+                        + "FROM ldata_table WHERE ldata_table.parentRef = ? AND ldata_table.ldName = ?")) {
+            preparedStatement.setLong(1, parentRef);
+            preparedStatement.setString(2, name);
+            ResultSet rs = preparedStatement.executeQuery();
+            if (rs.next()) {
+                LogicalData res = new LogicalData();
+                res.setUid(rs.getLong(1));
+                res.setParentRef(parentRef);
+                res.setOwner(rs.getString(2));
+                res.setType(rs.getString(3));
+                res.setName(name);
+                res.setCreateDate(rs.getTimestamp(4).getTime());
+                res.setModifiedDate(rs.getTimestamp(5).getTime());
+                res.setLength(rs.getLong(6));
+                res.setContentTypesAsString(rs.getString(7));
+                res.setPdriGroupId(rs.getLong(8));
+                res.setSupervised(rs.getBoolean(9));
+                res.setChecksum(rs.getLong(10));
+                res.setLastValidationDate(rs.getLong(11));
+                res.setLockTokenID(rs.getString(12));
+                res.setLockScope(rs.getString(13));
+                res.setLockType(rs.getString(14));
+                res.setLockedByUser(rs.getString(15));
+                res.setLockDepth(rs.getString(16));
+                res.setLockTimeout(rs.getLong(17));
+                res.setDescription(rs.getString(18));
+                res.setDataLocationPreference(rs.getString(19));
+                return res;
+            } else {
+                return null;
+            }
+
+        }
     }
 
     public static void main(String args[]) {
@@ -251,8 +327,8 @@ public class Assimilator {
             Credential credential = new Credential();
             credential.setStorageSiteUsername("fakeuser");
             credential.setStorageSitePassword("fakepass");
-            
-            
+
+
 //            MyStorageSite ss1 = new MyStorageSite();
 //            ss1.setCredential(credential);
 //            ss1.setResourceURI("file:///tmp/");

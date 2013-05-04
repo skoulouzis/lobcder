@@ -318,7 +318,6 @@ public class JDBCatalogue extends MyDataSource {
             }
 
         }
-
     }
 
     public LogicalData getLogicalDataByPath(Path logicalResourceName, @Nonnull Connection connection) throws SQLException {
