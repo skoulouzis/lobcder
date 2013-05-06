@@ -119,7 +119,10 @@ public class Items extends CatalogueHelper {
         boolean addFlag = true;
         String rootPath = (queryParameters.containsKey("path") && queryParameters.get("path").iterator().hasNext()) ?
                 queryParameters.get("path").iterator().next() : "/";
-        LogicalData ld = getCatalogue().getLogicalDataByPath(io.milton.common.Path.path(rootPath), cn);
+        if(!rootPath.equals("/") && rootPath.endsWith("/")) {
+            rootPath = rootPath.substring(0, rootPath.length() - 1);
+        }
+                LogicalData ld = getCatalogue().getLogicalDataByPath(io.milton.common.Path.path(rootPath), cn);
         List<LogicalDataWrapped> logicalDataWrappedList = new ArrayList<>();
         Permissions p = getCatalogue().getPermissions(ld.getUid(), ld.getOwner(), cn);
         if (mp.canRead(p)) {
