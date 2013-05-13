@@ -1,6 +1,6 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
-   "http://www.w3.org/TR/html4/loose.dtd">
+    "http://www.w3.org/TR/html4/loose.dtd">
 
 <html>
     <head>
@@ -15,9 +15,7 @@
         <h2>
             Welcome to the Large OBject Cloud Data storagE fedeRation (LOBCDER) service.
         </h2>
-        
-         LOBCDER is a storage federation service that aims to ensure reliable, managed access to distributed scientific data stored in various storage frameworks and providers.
-         
-         
+        LOBCDER is a storage federation service that aims to ensure reliable, managed access to distributed scientific data stored in various storage frameworks and providers.
     </body>
+    
 </html>
