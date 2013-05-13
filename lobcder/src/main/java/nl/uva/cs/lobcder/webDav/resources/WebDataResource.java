@@ -17,8 +17,10 @@ import io.milton.resource.AccessControlledResource;
 import io.milton.resource.MultiNamespaceCustomPropertyResource;
 import io.milton.resource.PropFindableResource;
 import io.milton.resource.Resource;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.security.NoSuchAlgorithmException;
 import lombok.Getter;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.auth.AuthI;
@@ -39,6 +41,8 @@ import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import nl.uva.cs.lobcder.resources.MyStorageSite;
+import nl.uva.cs.lobcder.resources.PDRIFactory;
+import nl.uva.cs.lobcder.util.DesEncrypter;
 
 /**
  * @author S. Koulouzis
@@ -248,6 +252,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
         try {
             // Do the mapping
             Principal p = new DavPrincipals.AbstractDavPrincipal(getPrincipalURL()) {
+
                 @Override
                 public boolean matches(Auth auth, Resource current) {
                     return true;
@@ -275,6 +280,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
             for (String r : resourcePermission.getRead()) {
                 perm = new ArrayList<>();
                 p = new DavPrincipals.AbstractDavPrincipal(getRoleUrlPrefix() + r) {
+
                     @Override
                     public boolean matches(Auth auth, Resource current) {
                         return true;
@@ -290,6 +296,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
             for (String r : resourcePermission.getWrite()) {
                 perm = new ArrayList<>();
                 p = new DavPrincipals.AbstractDavPrincipal(getRoleUrlPrefix() + r) {
+
                     @Override
                     public boolean matches(Auth auth, Resource current) {
                         return true;
@@ -331,8 +338,21 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
         return list;
     }
 
-    protected PDRI createPDRI(long fileLength, String fileName) {
-        return new CachePDRI(UUID.randomUUID().toString() + "-" + fileName);
+    protected PDRI createPDRI(long fileLength, String fileName, Connection connection) throws SQLException, NoSuchAlgorithmException, IOException {
+        Collection<MyStorageSite> cacheSS = getCatalogue().getCacheStorageSites(connection);
+        if (cacheSS == null || cacheSS.isEmpty()) {
+            return new CachePDRI(UUID.randomUUID().toString() + "-" + fileName);
+        } else {
+            MyStorageSite ss = cacheSS.iterator().next();
+            PDRIDescr pdriDescr = new PDRIDescr(
+                    UUID.randomUUID().toString() + "-" + fileName,
+                    ss.getStorageSiteId(),
+                    ss.getResourceURI(),
+                    ss.getCredential().getStorageSiteUsername(),
+                    ss.getCredential().getStorageSitePassword(), ss.isEncrypt(), DesEncrypter.generateKey());
+
+            return PDRIFactory.getFactory().createInstance(pdriDescr);
+        }
     }
 
     @Override
@@ -428,9 +448,9 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
                 try (Connection connection = getCatalogue().getConnection()) {
                     connection.commit();
                     Collection<MyStorageSite> ss = getCatalogue().getStorageSites(connection);
-                     StringBuilder sb = new StringBuilder();
-                     sb.append("[");
-                    for(MyStorageSite s : ss){
+                    StringBuilder sb = new StringBuilder();
+                    sb.append("[");
+                    for (MyStorageSite s : ss) {
                         sb.append(s.getResourceURI()).append(",");
                     }
                     sb.replace(sb.lastIndexOf(","), sb.length(), "");

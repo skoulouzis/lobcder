@@ -158,7 +158,7 @@ public class WebDataFileResource extends WebDataResource implements
                 }
                 WebDataFileResource.log.log(Level.FINE, "sendContent() for {0}--------- {1}", new Object[]{getPath(), pdri.getFileName()});
                 if (!pdri.getEncrypted()) {
-                    CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((5 * 1024 * 1024), pdri.getData(), out);
+                    CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((Constants.BUF_SIZE), pdri.getData(), out);
                     cBuff.startTransfer((long) -1);
                 } else {
                     DesEncrypter encrypter = new DesEncrypter(pdri.getKeyInt());
@@ -199,7 +199,7 @@ public class WebDataFileResource extends WebDataResource implements
 //                }
 //                WebDataFileResource.log.log(Level.FINE, "sendContent() for {0}--------- {1}", new Object[]{getPath(), pdri.getFileName()});
 //                if (!pdri.getEncrypted()) {
-//                    CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((5 * 1024 * 1024), pdri.getData(), out);
+//                    CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((Constants.BUF_SIZE), pdri.getData(), out);
 //                    cBuff.startTransfer((long) -1);
 //                } else {
 //                    DesEncrypter encrypter = new DesEncrypter(pdri.getKeyInt());
@@ -227,6 +227,7 @@ public class WebDataFileResource extends WebDataResource implements
 //            }
 //        }
 //    }
+    
     @Override
     public void sendContent(OutputStream out, Range range,
             Map<String, String> params, String contentType) throws IOException,

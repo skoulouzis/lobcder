@@ -43,6 +43,7 @@ public class JDBCatalogue extends MyDataSource {
 
     public void startSweep() {
         TimerTask gcTask = new TimerTask() {
+
             Runnable deleteSweep = new DeleteSweep(getDatasource());
             Runnable replicateSweep = new ReplicateSweep(getDatasource());
 
@@ -67,6 +68,32 @@ public class JDBCatalogue extends MyDataSource {
                     + "currentNum, currentSize, quotaNum, quotaSize, username, "
                     + "password, encrypt FROM storage_site_table JOIN credential_table ON "
                     + "credentialRef = credintialId WHERE isCache != TRUE");
+            ArrayList<MyStorageSite> res = new ArrayList<>();
+            while (rs.next()) {
+                Credential c = new Credential();
+                c.setStorageSiteUsername(rs.getString(7));
+                c.setStorageSitePassword(rs.getString(8));
+                MyStorageSite ss = new MyStorageSite();
+                ss.setStorageSiteId(rs.getLong(1));
+                ss.setCredential(c);
+                ss.setResourceURI(rs.getString(2));
+                ss.setCurrentNum(rs.getLong(3));
+                ss.setCurrentSize(rs.getLong(4));
+                ss.setQuotaNum(rs.getLong(5));
+                ss.setQuotaSize(rs.getLong(6));
+                ss.setEncrypt(rs.getBoolean(7));
+                res.add(ss);
+            }
+            return res;
+        }
+    }
+
+    public Collection<MyStorageSite> getCacheStorageSites(Connection connection) throws SQLException {
+        try (Statement s = connection.createStatement()) {
+            ResultSet rs = s.executeQuery("SELECT storageSiteId, resourceURI, "
+                    + "currentNum, currentSize, quotaNum, quotaSize, username, "
+                    + "password, encrypt FROM storage_site_table JOIN credential_table ON "
+                    + "credentialRef = credintialId WHERE isCache = TRUE");
             ArrayList<MyStorageSite> res = new ArrayList<>();
             while (rs.next()) {
                 Credential c = new Credential();
@@ -734,119 +761,119 @@ public class JDBCatalogue extends MyDataSource {
     }
 
     /*
-     public LinkedList<LogicalData> queryLogicalData(MultivaluedMap<String, String> queryParameters, Connection connection) throws CatalogueException {
-     Statement s = null;
-     boolean connectionIsProvided = (connection == null) ? false : true;
-     boolean connectionAutocommit = false;
-     try {
-     if (connection == null) {
-     connection = getConnection();
-     connection.setAutoCommit(false);
-     } else {
-     connectionAutocommit = connection.getAutoCommit();
-     connection.setAutoCommit(false);
-     }
-     s = connection.createStatement();
-     boolean where = false;
-     StringBuilder query = new StringBuilder("SELECT uid, ownerId, datatype, "
-     + "ld_name, parent, createDate, modifiedDate, ld_length, "
-     + "contentTypesStr, pdriGroupId, isSupervised, checksum, "
-     + "lastValidationDate, lockTokenID, lockScope, "
-     + "lockType, lockedByUser, lockDepth, lockTimeout, description "
-     + "FROM ldata_table");
-     if (queryParameters.containsKey("path") && queryParameters.get("path").iterator().hasNext()) {
-     String path = queryParameters.get("path").iterator().next();
-     if (!path.equals("/")) {
-     query.append(where ? " AND" : " WHERE").append(" parent LIKE '").append(path).append("%'");
-     where = true;
-     }
-     queryParameters.remove("path");
-     }
-     if (queryParameters.containsKey("mStartDate") && queryParameters.get("mStartDate").iterator().hasNext()
-     && queryParameters.containsKey("mEndDate") && queryParameters.get("mEndDate").iterator().hasNext()) {
-     String mStartDate = Long.valueOf(queryParameters.get("mStartDate").iterator().next()).toString();
-     String mEndDate = Long.valueOf(queryParameters.get("mEndDate").iterator().next()).toString();
-     query.append(where ? " AND" : " WHERE").append(" modifiedDate BETWEEN FROM_UNIXTIME(").append(mStartDate).append(") AND FROM_UNIXTIME(").append(mEndDate).append(")");
-     where = true;
-     queryParameters.remove("mStartDate");
-     queryParameters.remove("mEndDate");
-     } else if (queryParameters.containsKey("mStartDate") && queryParameters.get("mStartDate").iterator().hasNext()) {
-     String mStartDate = Long.valueOf(queryParameters.get("mStartDate").iterator().next()).toString();
-     query.append(where ? " AND" : " WHERE").append(" modifiedDate >= UNIXTIME(").append(mStartDate).append(")");
-     where = true;
-     queryParameters.remove("mStartDate");
-     } else if (queryParameters.containsKey("mEndDate") && queryParameters.get("mEndDate").iterator().hasNext()) {
-     String mEndDate = Long.valueOf(queryParameters.get("mEndDate").iterator().next()).toString();
-     query.append(where ? " AND" : " WHERE").append(" modifiedDate <= UNIXTIME(").append(mEndDate).append(")");
-     where = true;
-     queryParameters.remove("mEndDate");
-     }
-     if (queryParameters.containsKey("isSupervised") && queryParameters.get("isSupervised").iterator().hasNext()) {
-     String isSupervised = Boolean.valueOf(queryParameters.get("isSupervised").iterator().next()).toString();
-     query.append(where ? " AND" : " WHERE").append(" isSupervised = ").append(isSupervised);
-     where = true;
-     queryParameters.remove("isSupervised");
-     }
-     JDBCatalogue.log.fine("queryLogicalData() SQL: " + query.toString());
-     ResultSet rs = s.executeQuery(query.toString());
-     LinkedList<LogicalData> ld_list = new LinkedList<LogicalData>();
-     while (rs.next()) {
-     LogicalData element = new LogicalData(this);
-     element.setUID(rs.getLong(1));
-     element.setOwner(rs.getString(2));
-     element.setType(rs.getString(3));
-     element.setName(rs.getString(4));
-     element.setParent(rs.getString(5));
-     element.setCreateDate(rs.getTimestamp(6).getTime());
-     element.setModifiedDate(rs.getTimestamp(7).getTime());
-     element.setLength(rs.getLong(8));
-     element.setContentTypesAsString(rs.getString(9));
-     element.setPdriGroupId(rs.getLong(10));
-     element.setSupervised(rs.getBoolean(11));
-     element.setChecksum(rs.getLong(12));
-     element.setLastValidationDate(rs.getLong(13));
-     //                element.setLockTokenID(rs.getString(14));
-     //                element.setLockScope(rs.getString(15));
-     //                element.setLockType(rs.getString(16));
-     //                element.setLockedByUser(rs.getString(17));
-     //                element.setLockDepth(rs.getString(18));
-     //                element.setLockTimeout(rs.getLong(19));
-     element.setDescription(rs.getString(14));
-     ld_list.add(element);
-     }
-     s.close();
-     return ld_list;
-     } catch (Exception e) {
-     try {
-     if (s != null && !s.isClosed()) {
-     s.close();
-     s = null;
-     }
-     if (!connectionIsProvided && !connection.isClosed()) {
-     connection.rollback();
-     connection.close();
-     }
-     } catch (SQLException ex) {
-     Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
-     }
-     throw new CatalogueException(e.getMessage());
-     } finally {
-     try {
-     if (s != null && !s.isClosed()) {
-     s.close();
-     }
-     if (!connectionIsProvided && !connection.isClosed()) {
-     connection.commit();
-     connection.close();
-     }
-     if (connectionIsProvided && !connection.isClosed()) {
-     connection.setAutoCommit(connectionAutocommit);
-     }
-     } catch (SQLException ex) {
-     Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
-     }
-     }
-     }
+    public LinkedList<LogicalData> queryLogicalData(MultivaluedMap<String, String> queryParameters, Connection connection) throws CatalogueException {
+    Statement s = null;
+    boolean connectionIsProvided = (connection == null) ? false : true;
+    boolean connectionAutocommit = false;
+    try {
+    if (connection == null) {
+    connection = getConnection();
+    connection.setAutoCommit(false);
+    } else {
+    connectionAutocommit = connection.getAutoCommit();
+    connection.setAutoCommit(false);
+    }
+    s = connection.createStatement();
+    boolean where = false;
+    StringBuilder query = new StringBuilder("SELECT uid, ownerId, datatype, "
+    + "ld_name, parent, createDate, modifiedDate, ld_length, "
+    + "contentTypesStr, pdriGroupId, isSupervised, checksum, "
+    + "lastValidationDate, lockTokenID, lockScope, "
+    + "lockType, lockedByUser, lockDepth, lockTimeout, description "
+    + "FROM ldata_table");
+    if (queryParameters.containsKey("path") && queryParameters.get("path").iterator().hasNext()) {
+    String path = queryParameters.get("path").iterator().next();
+    if (!path.equals("/")) {
+    query.append(where ? " AND" : " WHERE").append(" parent LIKE '").append(path).append("%'");
+    where = true;
+    }
+    queryParameters.remove("path");
+    }
+    if (queryParameters.containsKey("mStartDate") && queryParameters.get("mStartDate").iterator().hasNext()
+    && queryParameters.containsKey("mEndDate") && queryParameters.get("mEndDate").iterator().hasNext()) {
+    String mStartDate = Long.valueOf(queryParameters.get("mStartDate").iterator().next()).toString();
+    String mEndDate = Long.valueOf(queryParameters.get("mEndDate").iterator().next()).toString();
+    query.append(where ? " AND" : " WHERE").append(" modifiedDate BETWEEN FROM_UNIXTIME(").append(mStartDate).append(") AND FROM_UNIXTIME(").append(mEndDate).append(")");
+    where = true;
+    queryParameters.remove("mStartDate");
+    queryParameters.remove("mEndDate");
+    } else if (queryParameters.containsKey("mStartDate") && queryParameters.get("mStartDate").iterator().hasNext()) {
+    String mStartDate = Long.valueOf(queryParameters.get("mStartDate").iterator().next()).toString();
+    query.append(where ? " AND" : " WHERE").append(" modifiedDate >= UNIXTIME(").append(mStartDate).append(")");
+    where = true;
+    queryParameters.remove("mStartDate");
+    } else if (queryParameters.containsKey("mEndDate") && queryParameters.get("mEndDate").iterator().hasNext()) {
+    String mEndDate = Long.valueOf(queryParameters.get("mEndDate").iterator().next()).toString();
+    query.append(where ? " AND" : " WHERE").append(" modifiedDate <= UNIXTIME(").append(mEndDate).append(")");
+    where = true;
+    queryParameters.remove("mEndDate");
+    }
+    if (queryParameters.containsKey("isSupervised") && queryParameters.get("isSupervised").iterator().hasNext()) {
+    String isSupervised = Boolean.valueOf(queryParameters.get("isSupervised").iterator().next()).toString();
+    query.append(where ? " AND" : " WHERE").append(" isSupervised = ").append(isSupervised);
+    where = true;
+    queryParameters.remove("isSupervised");
+    }
+    JDBCatalogue.log.fine("queryLogicalData() SQL: " + query.toString());
+    ResultSet rs = s.executeQuery(query.toString());
+    LinkedList<LogicalData> ld_list = new LinkedList<LogicalData>();
+    while (rs.next()) {
+    LogicalData element = new LogicalData(this);
+    element.setUID(rs.getLong(1));
+    element.setOwner(rs.getString(2));
+    element.setType(rs.getString(3));
+    element.setName(rs.getString(4));
+    element.setParent(rs.getString(5));
+    element.setCreateDate(rs.getTimestamp(6).getTime());
+    element.setModifiedDate(rs.getTimestamp(7).getTime());
+    element.setLength(rs.getLong(8));
+    element.setContentTypesAsString(rs.getString(9));
+    element.setPdriGroupId(rs.getLong(10));
+    element.setSupervised(rs.getBoolean(11));
+    element.setChecksum(rs.getLong(12));
+    element.setLastValidationDate(rs.getLong(13));
+    //                element.setLockTokenID(rs.getString(14));
+    //                element.setLockScope(rs.getString(15));
+    //                element.setLockType(rs.getString(16));
+    //                element.setLockedByUser(rs.getString(17));
+    //                element.setLockDepth(rs.getString(18));
+    //                element.setLockTimeout(rs.getLong(19));
+    element.setDescription(rs.getString(14));
+    ld_list.add(element);
+    }
+    s.close();
+    return ld_list;
+    } catch (Exception e) {
+    try {
+    if (s != null && !s.isClosed()) {
+    s.close();
+    s = null;
+    }
+    if (!connectionIsProvided && !connection.isClosed()) {
+    connection.rollback();
+    connection.close();
+    }
+    } catch (SQLException ex) {
+    Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+    }
+    throw new CatalogueException(e.getMessage());
+    } finally {
+    try {
+    if (s != null && !s.isClosed()) {
+    s.close();
+    }
+    if (!connectionIsProvided && !connection.isClosed()) {
+    connection.commit();
+    connection.close();
+    }
+    if (connectionIsProvided && !connection.isClosed()) {
+    connection.setAutoCommit(connectionAutocommit);
+    }
+    } catch (SQLException ex) {
+    Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+    }
+    }
+    }
      */
     public void setDescription(Long uid, String description, Connection connection) throws SQLException {
         try (PreparedStatement ps = connection.prepareStatement("UPDATE ldata_table SET description = ? WHERE uid = ?")) {

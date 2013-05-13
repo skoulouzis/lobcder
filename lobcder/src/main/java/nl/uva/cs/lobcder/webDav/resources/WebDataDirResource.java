@@ -15,6 +15,7 @@ import io.milton.resource.CollectionResource;
 import io.milton.resource.DeletableCollectionResource;
 import io.milton.resource.FolderResource;
 import io.milton.resource.Resource;
+import java.security.NoSuchAlgorithmException;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.auth.AuthI;
 import nl.uva.cs.lobcder.auth.Permissions;
@@ -122,7 +123,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
             return null;
         }
     }
-    
+
     @Override
     public List<? extends Resource> getChildren() throws NotAuthorizedException {
         WebDataDirResource.log.fine("getChildren() for " + getPath());
@@ -151,7 +152,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
         WebDataDirResource.log.log(Level.FINE, "createNew. for {0}\n\t newName:\t{1}\n\t length:\t{2}\n\t contentType:\t{3}", new Object[]{getPath(), newName, length, contentType});
         LogicalData fileLogicalData;
         List<PDRIDescr> pdriDescrList;
-        
+
         try (Connection connection = getCatalogue().getConnection()) {
             try {
 //                Long uid = getCatalogue().getLogicalDataUidByParentRefAndName(getLogicalData().getUid(), newName, connection);
@@ -166,20 +167,11 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                     fileLogicalData.setLength(length);
                     fileLogicalData.setModifiedDate(System.currentTimeMillis());
                     fileLogicalData.addContentType(contentType);
-//                    getCatalogue().updateLogicalData(fileLogicalData, connection);
-                    
+
                     //Create new
-                    PDRI newPdri = createPDRI(fileLogicalData.getLength(), newName);
+                    PDRI newPdri = createPDRI(fileLogicalData.getLength(), newName, connection);
                     newPdri.putData(inputStream);
-                    
-//                    //Clean up old replicas 
-//                    pdriDescrList = getCatalogue().getPdriDescrByGroupId(fileLogicalData.getPdriGroupId(), connection);
-//                    for (PDRIDescr pdriDescr : pdriDescrList) {
-//                        PDRI pdri = PDRIFactory.getFactory().createInstance(pdriDescr);
-//                        pdri.delete();
-////                        getCatalogue().
-//                    }
-                    
+
                     fileLogicalData = getCatalogue().updateLogicalDataAndPdri(fileLogicalData, newPdri, connection);
                     connection.commit();
                     return new WebDataFileResource(fileLogicalData, Path.path(getPath(), newName), getCatalogue(), auth1, auth2);
@@ -194,7 +186,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                     fileLogicalData.setCreateDate(System.currentTimeMillis());
                     fileLogicalData.setModifiedDate(System.currentTimeMillis());
                     fileLogicalData.addContentType(contentType);
-                    PDRI pdri = createPDRI(length, newName);
+                    PDRI pdri = createPDRI(length, newName, connection);
                     pdri.putData(inputStream);
                     //fileLogicalData.setChecksum(pdri.getChecksum());
                     fileLogicalData = getCatalogue().associateLogicalDataAndPdri(fileLogicalData, pdri, connection);
@@ -202,14 +194,19 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                     connection.commit();
                     return new WebDataFileResource(fileLogicalData, Path.path(getPath(), newName), getCatalogue(), auth1, auth2);
                 }
+            } catch (NoSuchAlgorithmException ex) {
+                WebDataDirResource.log.log(Level.SEVERE, null, ex);
+                throw new InternalError(ex.getMessage());
             } catch (SQLException e) {
                 WebDataDirResource.log.log(Level.SEVERE, null, e);
                 connection.rollback();
                 throw new BadRequestException(this, e.getMessage());
+//                throw new InternalError(e.getMessage());
             }
         } catch (SQLException e1) {
             WebDataDirResource.log.log(Level.SEVERE, null, e1);
             throw new BadRequestException(this, e1.getMessage());
+//            throw new InternalError(e1.getMessage());
         }
     }
 

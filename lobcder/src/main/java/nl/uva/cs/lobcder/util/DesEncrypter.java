@@ -65,7 +65,7 @@ public class DesEncrypter {
         try {
             int read;
             cipherOut = new CipherOutputStream(out, ecipher);
-            byte[] copyBuffer = new byte[2 * 1024 * 1024];
+            byte[] copyBuffer = new byte[Constants.BUF_SIZE];
             while ((read = in.read(copyBuffer, 0, copyBuffer.length)) != -1) {
                 cipherOut.write(copyBuffer, 0, read);
             }
@@ -79,7 +79,7 @@ public class DesEncrypter {
 
 //        try {
 //            cipherOut = new CipherOutputStream(out, ecipher);
-//            CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((2 * 1024 * 1024), in, cipherOut);
+//            CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((Constants.BUF_SIZE), in, cipherOut);
 //            cBuff.startTransfer(new Long(-1));
 //        } catch (VlException ex) {
 //            throw new IOException(ex);
@@ -103,7 +103,7 @@ public class DesEncrypter {
         try {
             int read;
             cipherIn = new CipherInputStream(in, dcipher);
-            byte[] copyBuffer = new byte[2 * 1024 * 1024];
+            byte[] copyBuffer = new byte[Constants.BUF_SIZE];
             while ((read = cipherIn.read(copyBuffer, 0, copyBuffer.length)) != -1) {
                 out.write(copyBuffer, 0, read);
             }
@@ -116,7 +116,7 @@ public class DesEncrypter {
         }
 //        try {
 //            cipherIn = new CipherInputStream(in, dcipher);
-//            CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((2 * 1024 * 1024), cipherIn, out);
+//            CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((Constants.BUF_SIZE), cipherIn, out);
 //            cBuff.startTransfer(new Long(-1));
 //        } catch (Exception ex) {
 //            throw new IOException(ex);

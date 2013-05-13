@@ -14,10 +14,9 @@ import java.net.UnknownHostException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.crypto.NoSuchPaddingException;
 import nl.uva.cs.lobcder.util.DesEncrypter;
+import nl.uva.vlet.exception.VlException;
 
 /**
  *
@@ -31,6 +30,7 @@ public class CachePDRI implements PDRI {
     static {
         baseLocation = "/tmp/LOBCDER-REPLICA-vTEST/";
     }
+    
     final private String file_name;
     final private Long ssid;
     private final File file;
@@ -54,11 +54,15 @@ public class CachePDRI implements PDRI {
     }
 
     @Override
-    public void putData(InputStream data) throws IOException {
+    public void putData(InputStream data) throws IOException, FileNotFoundException {
 //        Runnable asyncPut = getAsyncPutData(baseLocation + file_name, data);
 //        asyncPut.run();
         if (!getEncrypted()) {
-            setResourceContent(data);
+            try {
+                setResourceContent(data);
+            } catch (VlException ex) {
+                throw new IOException(ex);
+            }
         } else {
             try {
                 OutputStream out = new FileOutputStream(file);
@@ -80,12 +84,11 @@ public class CachePDRI implements PDRI {
         return file_name;
     }
 
-    private void setResourceContent(InputStream is) throws FileNotFoundException, IOException {
-//        OutputStream os = new BufferedOutputStream(new FileOutputStream(file), Constants.BUF_SIZE);
+    private void setResourceContent(InputStream is) throws FileNotFoundException, IOException, VlException {
         OutputStream os = new FileOutputStream(file);
         try {
             int read;
-            byte[] copyBuffer = new byte[2 * 1024 * 1024];
+            byte[] copyBuffer = new byte[Constants.BUF_SIZE];
             while ((read = is.read(copyBuffer, 0, copyBuffer.length)) != -1) {
                 os.write(copyBuffer, 0, read);
             }
@@ -96,6 +99,22 @@ public class CachePDRI implements PDRI {
                 os.close();
             }
         }
+//        try {
+//            CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((Constants.BUF_SIZE), is, os);
+//            cBuff.startTransfer(new Long(-1));
+//        } finally {
+//            if (os != null) {
+//                try {
+//                    os.flush();
+//                    os.close();
+//                } catch (java.io.IOException ex) {
+//                }
+//            }
+//            if (is != null) {
+//                is.close();
+//            }
+//        }
+
     }
 
     @Override
@@ -114,7 +133,7 @@ public class CachePDRI implements PDRI {
 //        try {
 //            MessageDigest md = MessageDigest.getInstance("MD5");
 //
-//            byte[] dataBytes = new byte[1024];
+//            byte[] dataBytes = new byte[BUF_SIZE];
 //
 //            int nread = 0;
 //            while ((nread = new FileInputStream(new File(baseLocation + file_name)).read(dataBytes)) != -1) {

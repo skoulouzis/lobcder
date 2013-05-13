@@ -17,7 +17,6 @@ import nl.uva.vlet.vrs.ServerInfo;
 import nl.uva.vlet.vrs.VRS;
 import nl.uva.vlet.vrs.VRSContext;
 import org.slf4j.LoggerFactory;
-
 import java.io.*;
 import java.math.BigInteger;
 import java.net.*;
@@ -31,6 +30,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.crypto.NoSuchPaddingException;
+import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.cs.lobcder.util.DesEncrypter;
 import nl.uva.vlet.exception.ResourceNotFoundException;
 
@@ -72,6 +72,7 @@ public class VPDRI implements PDRI {
         VRS.getRegistry().addVRSDriverClass(nl.uva.vlet.vfs.cloud.CloudFSFactory.class);
         Global.init();
     }
+    
     private VFSClient vfsClient;
     //    private MyStorageSite storageSite;
     private VRL vrl;
@@ -207,8 +208,14 @@ public class VPDRI implements PDRI {
             vfsClient.createFile(vrl, true);
             out = vfsClient.getFile(vrl).getOutputStream();
             if (!getEncrypted()) {
-                CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((2 * 1024 * 1024), in, out);
-                cBuff.startTransfer(new Long(-1));
+//                CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((Constants.BUF_SIZE), in, out);
+//                cBuff.startTransfer(new Long(-1));
+                int read;
+                byte[] copyBuffer = new byte[Constants.BUF_SIZE];
+                while ((read = in.read(copyBuffer, 0, copyBuffer.length)) != -1) {
+                    out.write(copyBuffer, 0, read);
+                }
+
             } else {
                 DesEncrypter encrypter = new DesEncrypter(getKeyInt());
                 encrypter.encrypt(in, out);
@@ -283,6 +290,7 @@ public class VPDRI implements PDRI {
 
     private Runnable getAsyncDelete(final VFSClient vfsClient, final VRL vrl) {
         return new Runnable() {
+
             @Override
             public void run() {
                 try {
@@ -296,6 +304,7 @@ public class VPDRI implements PDRI {
 
     private Runnable getAsyncPutData(final VFSClient vfsClient, final InputStream in) {
         return new Runnable() {
+
             @Override
             public void run() {
             }
@@ -307,7 +316,7 @@ public class VPDRI implements PDRI {
 //        OperatingSystemMXBean osMBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
 //        int size = (int) (osMBean.getFreePhysicalMemorySize() / 2000);
 //        debug("\talloocated size: "+size);
-        final ByteBuffer buffer = ByteBuffer.allocateDirect(1024 * 10);
+        final ByteBuffer buffer = ByteBuffer.allocateDirect(Constants.BUF_SIZE);
         int len;
         try {
             while ((len = src.read(buffer)) != -1) {
@@ -381,7 +390,7 @@ public class VPDRI implements PDRI {
         VRL tmpFileVRL = tmpVRL.append(fileName);
         VFile tmpFile = vfsClient.createFile(tmpFileVRL, true);
         OutputStream out = tmpFile.getOutputStream();
-        CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((1 * 1024 * 1024), in, out);
+        CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((Constants.BUF_SIZE), in, out);
         cBuff.startTransfer(new Long(-1));
         VFSTransfer trans = vfsClient.asyncCopy(tmpFile, remoteDir);
         int time = 100;
