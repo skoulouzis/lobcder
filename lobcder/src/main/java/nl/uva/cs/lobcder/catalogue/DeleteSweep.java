@@ -68,7 +68,7 @@ class DeleteSweep implements Runnable {
                                         String username = rs3.getString(2);
                                         String password = rs3.getString(3);
                                         //For deleteing we don't care for encryption 
-                                        PDRIDescr pdriDescr = new PDRIDescr(fileName, storageSiteRef, resourceUri, username, password, false, null);
+                                        PDRIDescr pdriDescr = new PDRIDescr(fileName, storageSiteRef, resourceUri, username, password, false, null, null, null);
                                         DeleteSweep.log.log(Level.FINE, "PDRI Description: {0}, {1}, {2}, {3}, {4}", new Object[]{fileName, storageSiteRef, resourceUri, username, password});
                                         DeleteSweep.log.log(Level.FINE, "PDRI pdriDescr: {0}", new Object[]{pdriDescr});
                                         factory = PDRIFactory.getFactory();

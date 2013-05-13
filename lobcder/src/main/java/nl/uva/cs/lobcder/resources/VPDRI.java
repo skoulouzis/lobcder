@@ -208,13 +208,13 @@ public class VPDRI implements PDRI {
             vfsClient.createFile(vrl, true);
             out = vfsClient.getFile(vrl).getOutputStream();
             if (!getEncrypted()) {
-//                CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((Constants.BUF_SIZE), in, out);
-//                cBuff.startTransfer(new Long(-1));
-                int read;
-                byte[] copyBuffer = new byte[Constants.BUF_SIZE];
-                while ((read = in.read(copyBuffer, 0, copyBuffer.length)) != -1) {
-                    out.write(copyBuffer, 0, read);
-                }
+                CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((Constants.BUF_SIZE), in, out);
+                cBuff.startTransfer(new Long(-1));
+//                int read;
+//                byte[] copyBuffer = new byte[Constants.BUF_SIZE];
+//                while ((read = in.read(copyBuffer, 0, copyBuffer.length)) != -1) {
+//                    out.write(copyBuffer, 0, read);
+//                }
 
             } else {
                 DesEncrypter encrypter = new DesEncrypter(getKeyInt());

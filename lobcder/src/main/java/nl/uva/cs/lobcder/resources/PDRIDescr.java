@@ -24,6 +24,8 @@ public class PDRIDescr {
     private String password;
     private boolean encrypt;
     private BigInteger key;
+    private Long pdriGroupRef;
+    private Long id;
 
     @XmlTransient
     public Long getStorageSiteId() {

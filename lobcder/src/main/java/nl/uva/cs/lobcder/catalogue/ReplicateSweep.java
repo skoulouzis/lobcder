@@ -80,46 +80,91 @@ class ReplicateSweep implements Runnable {
         }
     }
 
+    private void onCacheReplicate(PDRIDescr cd, PDRI cpdri, Connection connection) throws SQLException, IOException {
+        try (PreparedStatement ps = connection.prepareStatement("DELETE FROM pdri_table WHERE pdriId = ?")) {
+            cpdri.delete();
+            ps.setLong(1, cd.getId());
+            ps.executeUpdate();
+        }
+    }
+
     @Override
     public void run() {
+        String name;
+        long ssID;
+        String resourceURL;
+        String username;
+        String password;
+        boolean encrypt;
+        BigInteger key;
+        long keyLong;
+        PDRI source;
+        long pdriGroupRef;
+        long pdriId;
         try (Connection connection = datasource.getConnection()) {
             try {
                 connection.setAutoCommit(false);
                 availableStorage = getStorageSites(connection);
-                ArrayList<CacheDescr> toReplicate = new ArrayList<>();
+                ArrayList<PDRIDescr> toReplicate = new ArrayList<>();
                 try (Statement statement = connection.createStatement()) {
-                    String sql = "SELECT pdriId, fileName, pdri_table.pdriGroupRef FROM pdri_table JOIN ("
-                            + "SELECT  pdriGroupRef, count(pdri_table.storageSiteRef) AS refcnt FROM pdri_table GROUP BY pdriGroupRef)  AS t ON pdri_table.pdriGroupRef = t.pdriGroupRef "
-                            + "JOIN storage_site_table ON pdri_table.storageSiteRef = storage_site_table.storageSiteId  "
+
+//                    String sql = "SELECT pdriId, fileName, pdri_table.pdriGroupRef FROM pdri_table JOIN ("
+//                            + "SELECT  pdriGroupRef, count(pdri_table.storageSiteRef) AS refcnt FROM pdri_table GROUP BY pdriGroupRef)  AS t ON pdri_table.pdriGroupRef = t.pdriGroupRef "
+//                            + "JOIN storage_site_table ON pdri_table.storageSiteRef = storage_site_table.storageSiteId  "
+//                            + "WHERE refcnt = 1 AND isCache LIMIT 100";
+//                    ResultSet rs = statement.executeQuery(sql);
+//                    while (rs.next()) {
+//                        CacheDescr cd = new CacheDescr();
+//                        cd.pdriId = rs.getLong(1);
+//                        cd.name = rs.getString(2);
+//                        cd.pdriGroupRef = rs.getLong(3);
+//                        toReplicate.add(cd);
+//                    }
+
+                    String sql = "SELECT fileName, storageSiteId, storage_site_table.resourceUri, username, password, encrypt, encryptionKey, pdri_table.pdriGroupRef, "
+                            + "pdri_table.pdriId "
+                            + "FROM pdri_table JOIN (SELECT  pdriGroupRef, count(pdri_table.storageSiteRef) AS refcnt "
+                            + "FROM pdri_table GROUP BY pdriGroupRef)  AS t ON pdri_table.pdriGroupRef = t.pdriGroupRef "
+                            + "JOIN storage_site_table ON pdri_table.storageSiteRef = storage_site_table.storageSiteId "
+                            + "JOIN credential_table on credential_table.credintialId = storage_site_table.credentialRef "
                             + "WHERE refcnt = 1 AND isCache LIMIT 100";
                     ResultSet rs = statement.executeQuery(sql);
                     while (rs.next()) {
-                        CacheDescr cd = new CacheDescr();
-                        cd.pdriId = rs.getLong(1);
-                        cd.name = rs.getString(2);
-                        cd.pdriGroupRef = rs.getLong(3);
+                        name = rs.getString(1);
+                        ssID = rs.getLong(2);
+                        resourceURL = rs.getString(3);
+                        username = rs.getString(4);
+                        password = rs.getString(5);
+                        encrypt = rs.getBoolean(6);
+                        keyLong = rs.getLong(7);
+                        key = BigInteger.valueOf(keyLong);
+                        pdriGroupRef = rs.getLong(8);
+                        pdriId = rs.getLong(9);
+                        PDRIDescr cd = new PDRIDescr(name, ssID, resourceURL, username, password, encrypt, key, pdriGroupRef, pdriId );
                         toReplicate.add(cd);
                     }
+
                 }
                 connection.commit();
-                for (CacheDescr cd : toReplicate) {
+                for (PDRIDescr cd : toReplicate) {
                     try (PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO pdri_table "
                                     + "(fileName, storageSiteRef, pdriGroupRef,isEncrypted, encryptionKey) VALUES(?, ?, ?, ?, ?)")) {
-                        CachePDRI source = new CachePDRI(cd.name);
+                        source = new PDRIFactory().createInstance(cd);
                         MyStorageSite ss = findBestSite();
                         //We have to somehow decide how to set the encrypt value
                         BigInteger pdriKey = DesEncrypter.generateKey();
                         PDRIDescr pdriDescr = new PDRIDescr(
-                                cd.name,
+                                cd.getName(),
                                 ss.getStorageSiteId(),
                                 ss.getResourceURI(),
                                 ss.getCredential().getStorageSiteUsername(),
-                                ss.getCredential().getStorageSitePassword(), ss.isEncrypt(), pdriKey);
+                                ss.getCredential().getStorageSitePassword(), ss.isEncrypt(), pdriKey, cd.getPdriGroupRef(), null);
+
                         PDRI replica = PDRIFactory.getFactory().createInstance(pdriDescr);
                         replica.replicate(source);
-                        preparedStatement.setString(1, cd.name);
+                        preparedStatement.setString(1, cd.getName());
                         preparedStatement.setLong(2, ss.getStorageSiteId());
-                        preparedStatement.setLong(3, cd.pdriGroupRef);
+                        preparedStatement.setLong(3, cd.getPdriGroupRef());
                         preparedStatement.setBoolean(4, replica.getEncrypted());
                         preparedStatement.setLong(5, pdriKey.longValue());
                         preparedStatement.executeUpdate();

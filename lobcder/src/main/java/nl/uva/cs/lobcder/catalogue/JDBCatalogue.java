@@ -247,11 +247,14 @@ public class JDBCatalogue extends MyDataSource {
 
     public List<PDRIDescr> getPdriDescrByGroupId(Long groupId, @Nonnull Connection connection) throws SQLException {
         ArrayList<PDRIDescr> res = new ArrayList<PDRIDescr>();
-        try (PreparedStatement ps = connection.prepareStatement("SELECT fileName, "
-                        + "storageSiteRef, resourceURI, username, password, isEncrypted, encryptionKey FROM pdri_table "
-                        + "JOIN storage_site_table ON storageSiteRef = storageSiteId "
-                        + "JOIN credential_table ON credentialRef = credintialId "
-                        + "WHERE pdri_table.pdriGroupRef = ?")) {
+        long pdriGroupRef;
+        long pdriId;
+        try (PreparedStatement ps = connection.prepareStatement("SELECT fileName, storageSiteRef, storage_site_table.resourceUri, "
+                + "username, password, isEncrypted, encryptionKey, pdri_table.pdriId  "
+                + "FROM pdri_table "
+                + "JOIN storage_site_table ON storageSiteRef = storageSiteId "
+                + "JOIN credential_table ON credentialRef = credintialId "
+                + "WHERE pdri_table.pdriGroupRef = ? ")) {  
             ps.setLong(1, groupId);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -262,7 +265,8 @@ public class JDBCatalogue extends MyDataSource {
                 String passwd = rs.getString(5);
                 boolean encrypt = rs.getBoolean(6);
                 long key = rs.getLong(7);
-                res.add(new PDRIDescr(fileName, ssID, resourceURI, uName, passwd, encrypt, BigInteger.valueOf(key)));
+                pdriId = rs.getLong(8);
+                res.add(new PDRIDescr(fileName, ssID, resourceURI, uName, passwd, encrypt, BigInteger.valueOf(key), Long.valueOf(groupId), Long.valueOf(pdriId)));
             }
             return res;
         }
