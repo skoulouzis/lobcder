@@ -143,6 +143,7 @@ public class VPDRI implements PDRI {
         //patch for bug with ssh driver 
         info.setAttribute("sshKnownHostsFile", System.getProperty("user.home") + "/.ssh/known_hosts");
 //        }
+        info.setAttribute("chunk.upload", true);
         info.store();
     }
 
