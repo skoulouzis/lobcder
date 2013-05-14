@@ -216,7 +216,6 @@ public class VPDRI implements PDRI {
 //                while ((read = in.read(copyBuffer, 0, copyBuffer.length)) != -1) {
 //                    out.write(copyBuffer, 0, read);
 //                }
-
             } else {
                 DesEncrypter encrypter = new DesEncrypter(getKeyInt());
                 encrypter.encrypt(in, out);
