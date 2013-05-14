@@ -89,7 +89,7 @@ public class VPDRI implements PDRI {
     private final String resourceUrl;
     private boolean doChunked;
 
-    VPDRI(String fileName, Long storageSiteId, String resourceUrl, String username, String password, boolean encrypt, BigInteger keyInt) throws IOException {
+    VPDRI(String fileName, Long storageSiteId, String resourceUrl, String username, String password, boolean encrypt, BigInteger keyInt, boolean doChunkUpload) throws IOException {
         try {
             this.fileName = fileName;
             this.resourceUrl = resourceUrl;
@@ -101,6 +101,7 @@ public class VPDRI implements PDRI {
             this.password = password;
             this.encrypt = encrypt;
             this.keyInt = keyInt;
+            this.doChunked = doChunkUpload;
 //            this.resourceUrl = resourceUrl;
             log.debug("fileName: " + fileName + ", storageSiteId: " + storageSiteId + ", username: " + username + ", password: " + password + ", VRL: " + vrl);
             initVFS();
@@ -456,9 +457,5 @@ public class VPDRI implements PDRI {
         } catch (VRLSyntaxException ex) {
             throw new IOException(ex);
         }
-    }
-
-    void setDoChunkUpload(boolean doChunked) {
-        this.doChunked = doChunked;
     }
 }

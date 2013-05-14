@@ -350,7 +350,6 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
                     ss.getResourceURI(),
                     ss.getCredential().getStorageSiteUsername(),
                     ss.getCredential().getStorageSitePassword(), ss.isEncrypt(), DesEncrypter.generateKey(), null, null);
-
             return PDRIFactory.getFactory().createInstance(pdriDescr, true);
         }
     }
