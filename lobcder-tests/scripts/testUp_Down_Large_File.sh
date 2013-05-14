@@ -2,10 +2,10 @@
 
 function initVariables {
         BASE_DIR=$HOME/workspace/lobcder-tests
-        HOST_NAME="elab.lab.uvalight.net" #"149.156.10.138" 
-        SERVER_PATH="/tomcatWebDAV" #"/tomcatWebDAV" #
+        HOST_NAME="localhost" # "elab.lab.uvalight.net" #"149.156.10.138" 
+        SERVER_PATH="/lobcder-2.0-SNAPSHOT/dav" #"/tomcatWebDAV" #
         
-        PORT="8083"
+        PORT="8081"
         URL="http://$HOST_NAME:$PORT/$SERVER_PATH"
         
         TEST_FILE_NAME=testLargeUpload
@@ -262,12 +262,12 @@ SLEEP=3
 echo "sleeping for ....$SLEEP"
 sleep $SLEEP
 
-DIRECTION=down
-initVariables
-initMeasurePathAndFile
-initMeasureFileAndCadaverScript
-start
-formatOutputAndCleanUp
+# DIRECTION=down
+# initVariables
+# initMeasurePathAndFile
+# initMeasureFileAndCadaverScript
+# start
+# formatOutputAndCleanUp
 
 
 rm $TEST_FILE_PATH

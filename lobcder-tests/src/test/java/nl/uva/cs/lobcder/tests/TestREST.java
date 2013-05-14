@@ -174,7 +174,7 @@ public class TestREST {
             }
             assertNotNull(logicalDataWrapped);
             for (Permissions p : logicalDataWrapped.permissions) {
-                assertEquals(p.owner, username);
+                assertEquals(username,p.owner);
                 assertTrue(p.read.contains("admin"));
 //                for (String s : p.read) {
 //                    System.err.println("Read:" + s);

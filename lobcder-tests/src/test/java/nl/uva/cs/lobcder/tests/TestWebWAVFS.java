@@ -501,7 +501,7 @@ public class TestWebWAVFS {
             //Status code (409) indicating that the request could not be 
             //completed due to a conflict with the current state of the resource. 
             //Meaning at this time we have no physical data 
-            assertEquals(HttpStatus.SC_CONFLICT, status);
+            assertEquals( status, HttpStatus.SC_CONFLICT);
 
 
         } catch (IOException ex) {
