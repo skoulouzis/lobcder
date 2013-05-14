@@ -152,7 +152,9 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
         WebDataDirResource.log.log(Level.FINE, "createNew. for {0}\n\t newName:\t{1}\n\t length:\t{2}\n\t contentType:\t{3}", new Object[]{getPath(), newName, length, contentType});
         LogicalData fileLogicalData;
         List<PDRIDescr> pdriDescrList;
-
+        WebDataFileResource resource;
+        PDRI pdri;
+        double start = System.currentTimeMillis();
         try (Connection connection = getCatalogue().getConnection()) {
             try {
 //                Long uid = getCatalogue().getLogicalDataUidByParentRefAndName(getLogicalData().getUid(), newName, connection);
@@ -169,12 +171,13 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                     fileLogicalData.addContentType(contentType);
 
                     //Create new
-                    PDRI newPdri = createPDRI(fileLogicalData.getLength(), newName, connection);
-                    newPdri.putData(inputStream);
+                    pdri = createPDRI(fileLogicalData.getLength(), newName, connection);
+                    pdri.putData(inputStream);
 
-                    fileLogicalData = getCatalogue().updateLogicalDataAndPdri(fileLogicalData, newPdri, connection);
+                    fileLogicalData = getCatalogue().updateLogicalDataAndPdri(fileLogicalData, pdri, connection);
                     connection.commit();
-                    return new WebDataFileResource(fileLogicalData, Path.path(getPath(), newName), getCatalogue(), auth1, auth2);
+                    resource = new WebDataFileResource(fileLogicalData, Path.path(getPath(), newName), getCatalogue(), auth1, auth2);
+//                    return new WebDataFileResource(fileLogicalData, Path.path(getPath(), newName), getCatalogue(), auth1, auth2);
                 } else { // Resource does not exists, create a new one
                     // new need write prmissions for current collection
                     fileLogicalData = new LogicalData();
@@ -186,13 +189,14 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                     fileLogicalData.setCreateDate(System.currentTimeMillis());
                     fileLogicalData.setModifiedDate(System.currentTimeMillis());
                     fileLogicalData.addContentType(contentType);
-                    PDRI pdri = createPDRI(length, newName, connection);
+                    pdri = createPDRI(length, newName, connection);
                     pdri.putData(inputStream);
                     //fileLogicalData.setChecksum(pdri.getChecksum());
                     fileLogicalData = getCatalogue().associateLogicalDataAndPdri(fileLogicalData, pdri, connection);
                     getCatalogue().setPermissions(fileLogicalData.getUid(), new Permissions(getPrincipal()), connection);
                     connection.commit();
-                    return new WebDataFileResource(fileLogicalData, Path.path(getPath(), newName), getCatalogue(), auth1, auth2);
+                    resource = new WebDataFileResource(fileLogicalData, Path.path(getPath(), newName), getCatalogue(), auth1, auth2);
+//                    return new WebDataFileResource(fileLogicalData, Path.path(getPath(), newName), getCatalogue(), auth1, auth2);
                 }
             } catch (NoSuchAlgorithmException ex) {
                 WebDataDirResource.log.log(Level.SEVERE, null, ex);
@@ -208,6 +212,10 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
             throw new BadRequestException(this, e1.getMessage());
 //            throw new InternalError(e1.getMessage());
         }
+        double elapsed = System.currentTimeMillis() - start;
+        double speed = pdri.getLength() / elapsed;
+        WebDataDirResource.log.log(Level.FINE, "Source: "+fromAddress+" Destination: "+pdri.getHost() +" Upload Speed: {0} bytes/sec", speed);
+        return resource;
     }
 
     @Override

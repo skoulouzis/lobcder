@@ -1,20 +1,17 @@
 package nl.uva.cs.lobcder.catalogue;
 
-import lombok.extern.java.Log;
-import nl.uva.cs.lobcder.resources.*;
-
-import javax.sql.DataSource;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.security.NoSuchAlgorithmException;
-import java.security.spec.AlgorithmParameterSpec;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.crypto.spec.IvParameterSpec;
+import javax.sql.DataSource;
+import lombok.extern.java.Log;
+import nl.uva.cs.lobcder.resources.*;
 import nl.uva.cs.lobcder.util.DesEncrypter;
 
 /**
@@ -151,7 +148,7 @@ class ReplicateSweep implements Runnable {
                                     + "(fileName, storageSiteRef, pdriGroupRef,isEncrypted, encryptionKey) VALUES(?, ?, ?, ?, ?)")) {
                         source = new PDRIFactory().createInstance(cd, false);
                         MyStorageSite ss = findBestSite();
-                        //We have to somehow decide how to set the encrypt value
+                        
                         BigInteger pdriKey = DesEncrypter.generateKey();
                         PDRIDescr pdriDescr = new PDRIDescr(
                                 cd.getName(),

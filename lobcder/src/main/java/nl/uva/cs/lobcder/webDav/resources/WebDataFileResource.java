@@ -143,7 +143,7 @@ public class WebDataFileResource extends WebDataResource implements
         return null;
     }
 
-    private void circularStreamBufferTransferer(Iterator<PDRIDescr> it, OutputStream out, int tryCount, PDRI pdri) throws IOException, NotFoundException {
+    private PDRI circularStreamBufferTransferer(Iterator<PDRIDescr> it, OutputStream out, int tryCount, PDRI pdri) throws IOException, NotFoundException {
         try {
             boolean reconnect;
             if (pdri == null && it.hasNext()) {
@@ -182,6 +182,7 @@ public class WebDataFileResource extends WebDataResource implements
         } catch (InvalidAlgorithmParameterException ex) {
             throw new IOException(ex);
         }
+        return pdri;
     }
 
 //    private void circularStreamBufferTransferer(Iterator<PDRIDescr> it, OutputStream out, int tryCount, PDRI pdri) throws IOException {
@@ -227,15 +228,16 @@ public class WebDataFileResource extends WebDataResource implements
 //            }
 //        }
 //    }
-    
     @Override
     public void sendContent(OutputStream out, Range range,
             Map<String, String> params, String contentType) throws IOException,
             NotAuthorizedException, BadRequestException, NotFoundException {
+        double start = System.currentTimeMillis();
+        PDRI pdri;
         Iterator<PDRIDescr> it;
         try {
             it = getCatalogue().getPdriDescrByGroupId(getLogicalData().getPdriGroupId()).iterator();
-            circularStreamBufferTransferer(it, out, 0, null);
+            pdri = circularStreamBufferTransferer(it, out, 0, null);
         } catch (SQLException ex) {
             throw new BadRequestException(this, ex.getMessage());
         } catch (IOException ex) {
@@ -245,6 +247,9 @@ public class WebDataFileResource extends WebDataResource implements
                 throw new BadRequestException(this, ex.getMessage());
             }
         }
+        double elapsed = System.currentTimeMillis() - start;
+        double speed = pdri.getLength() / elapsed;
+        WebDataFileResource.log.log(Level.FINE, "Source: " + pdri.getHost() + " Destination: " + fromAddress + " Download Speed: {0} bytes/sec", speed);
     }
 
     @Override

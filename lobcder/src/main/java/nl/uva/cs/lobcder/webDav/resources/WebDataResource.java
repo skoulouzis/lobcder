@@ -59,6 +59,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
     protected final AuthI auth1;
     protected final AuthI auth2;
     private static final ThreadLocal<MyPrincipal> principalHolder = new ThreadLocal<>();
+    protected String fromAddress;
 
     public WebDataResource(@Nonnull LogicalData logicalData, Path path, @Nonnull JDBCatalogue catalogue, @Nonnull AuthI auth1, AuthI auth2) {
         this.auth1 = auth1;
@@ -112,6 +113,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
 
     @Override
     public boolean authorise(Request request, Request.Method method, Auth auth) {
+        fromAddress = request.getFromAddress();
         try {
             if (auth == null) {
                 return false;
