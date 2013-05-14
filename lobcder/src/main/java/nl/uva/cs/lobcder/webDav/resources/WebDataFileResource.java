@@ -147,7 +147,7 @@ public class WebDataFileResource extends WebDataResource implements
         try {
             boolean reconnect;
             if (pdri == null && it.hasNext()) {
-                pdri = PDRIFactory.getFactory().createInstance(it.next());
+                pdri = PDRIFactory.getFactory().createInstance(it.next(), false);
                 reconnect = false;
             } else {
                 reconnect = true;

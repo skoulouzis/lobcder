@@ -149,7 +149,7 @@ class ReplicateSweep implements Runnable {
                 for (PDRIDescr cd : toReplicate) {
                     try (PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO pdri_table "
                                     + "(fileName, storageSiteRef, pdriGroupRef,isEncrypted, encryptionKey) VALUES(?, ?, ?, ?, ?)")) {
-                        source = new PDRIFactory().createInstance(cd);
+                        source = new PDRIFactory().createInstance(cd, false);
                         MyStorageSite ss = findBestSite();
                         //We have to somehow decide how to set the encrypt value
                         BigInteger pdriKey = DesEncrypter.generateKey();
@@ -160,7 +160,7 @@ class ReplicateSweep implements Runnable {
                                 ss.getCredential().getStorageSiteUsername(),
                                 ss.getCredential().getStorageSitePassword(), ss.isEncrypt(), pdriKey, cd.getPdriGroupRef(), null);
 
-                        PDRI replica = PDRIFactory.getFactory().createInstance(pdriDescr);
+                        PDRI replica = PDRIFactory.getFactory().createInstance(pdriDescr, false);
                         replica.replicate(source);
                         preparedStatement.setString(1, cd.getName());
                         preparedStatement.setLong(2, ss.getStorageSiteId());

@@ -6,7 +6,6 @@ package nl.uva.cs.lobcder.util;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLEncoder;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import nl.uva.cs.lobcder.resources.VPDRI;
@@ -102,6 +101,7 @@ public class StorageSiteClient {
         //patch for bug with ssh driver 
         info.setAttribute("sshKnownHostsFile", System.getProperty("user.home") + "/.ssh/known_hosts");
 //        }
+        info.setAttribute("chunk.upload", true);
         info.store();
     }
 

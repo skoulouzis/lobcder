@@ -18,7 +18,11 @@ public class PDRIFactory {
         return factory;
     }
 
-    public PDRI createInstance(PDRIDescr descr) throws IOException {
-        return new VPDRI(descr.getName(), descr.getStorageSiteId(), descr.getResourceUrl(), descr.getUsername(), descr.getPassword(), descr.getEncrypt(),descr.getKey());
+    public PDRI createInstance(PDRIDescr descr, boolean isCahce) throws IOException {
+        VPDRI vdri = new VPDRI(descr.getName(), descr.getStorageSiteId(), descr.getResourceUrl(), descr.getUsername(), descr.getPassword(), descr.getEncrypt(),descr.getKey());
+        if(isCahce && descr.getResourceUrl().contains("swift")){
+             vdri.setDoChunkUpload(true);
+        }
+        return vdri;
     }
 }

@@ -324,7 +324,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
         for (Map.Entry<Principal, List<Priviledge>> me : map.entrySet()) {
             Principal principal = me.getKey();
             for (Priviledge priviledge : me.getValue()) {
-                WebDataResource.log.fine("Set priveledges " + priviledge + " for " + principal);
+                WebDataResource.log.log(Level.FINE, "Set priveledges {0} for {1}", new Object[]{priviledge, principal});
                 //String id = principal.getIdenitifer().getValue();
                 //id = id.substring(id.lastIndexOf("/") + 1);
             }
@@ -351,7 +351,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
                     ss.getCredential().getStorageSiteUsername(),
                     ss.getCredential().getStorageSitePassword(), ss.isEncrypt(), DesEncrypter.generateKey(), null, null);
 
-            return PDRIFactory.getFactory().createInstance(pdriDescr);
+            return PDRIFactory.getFactory().createInstance(pdriDescr, true);
         }
     }
 

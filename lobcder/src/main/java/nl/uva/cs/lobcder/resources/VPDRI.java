@@ -32,6 +32,7 @@ import java.util.logging.Logger;
 import javax.crypto.NoSuchPaddingException;
 import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.cs.lobcder.util.DesEncrypter;
+import nl.uva.vlet.data.VAttribute;
 import nl.uva.vlet.exception.ResourceNotFoundException;
 
 /**
@@ -72,7 +73,6 @@ public class VPDRI implements PDRI {
         VRS.getRegistry().addVRSDriverClass(nl.uva.vlet.vfs.cloud.CloudFSFactory.class);
         Global.init();
     }
-    
     private VFSClient vfsClient;
     //    private MyStorageSite storageSite;
     private VRL vrl;
@@ -87,6 +87,7 @@ public class VPDRI implements PDRI {
     private BigInteger keyInt;
     private boolean encrypt;
     private final String resourceUrl;
+    private boolean doChunked;
 
     VPDRI(String fileName, Long storageSiteId, String resourceUrl, String username, String password, boolean encrypt, BigInteger keyInt) throws IOException {
         try {
@@ -143,7 +144,8 @@ public class VPDRI implements PDRI {
         //patch for bug with ssh driver 
         info.setAttribute("sshKnownHostsFile", System.getProperty("user.home") + "/.ssh/known_hosts");
 //        }
-        info.setAttribute("chunk.upload", true);
+        context.setProperty("chunk.upload", doChunked);
+//        info.setAttribute(new VAttribute("chunk.upload", true));
         info.store();
     }
 
@@ -168,6 +170,7 @@ public class VPDRI implements PDRI {
             } else {
                 Logger.getLogger(VPDRI.class.getName()).log(Level.SEVERE, null, ex);
             }
+        } finally {
         }
         //        //it's void so do it asynchronously
         //        Runnable asyncDel = getAsyncDelete(this.vfsClient, vrl);
@@ -194,6 +197,7 @@ public class VPDRI implements PDRI {
             } else {
                 throw new IOException(ex);
             }
+        } finally {
         }
         return in;
     }
@@ -205,7 +209,8 @@ public class VPDRI implements PDRI {
 //        VFile tmpFile = null;
         try {
             //            upload(in);
-            VDir remoteDir = vfsClient.mkdirs(vrl.getParent(), true);
+            VRL parentVrl = vrl.getParent();
+            VDir remoteDir = vfsClient.mkdirs(parentVrl, true);
             vfsClient.createFile(vrl, true);
             out = vfsClient.getFile(vrl).getOutputStream();
             if (!getEncrypted()) {
@@ -348,6 +353,7 @@ public class VPDRI implements PDRI {
             return vfsClient.getFile(vrl).getLength();
         } catch (VlException ex) {
             throw new IOException(ex);
+        } finally {
         }
     }
 
@@ -355,7 +361,7 @@ public class VPDRI implements PDRI {
     public void reconnect() throws IOException {
         reconnectAttemts++;
         vfsClient.close();
-        vfsClient.dispose();
+//        vfsClient.dispose();
         try {
             initVFS();
         } catch (VlException | MalformedURLException ex1) {
@@ -373,6 +379,7 @@ public class VPDRI implements PDRI {
             }
         } catch (VlException ex) {
             throw new IOException(ex);
+        } finally {
         }
         return null;
     }
@@ -385,19 +392,22 @@ public class VPDRI implements PDRI {
     }
 
     private void upload(InputStream in) throws VlException, InterruptedException {
-        VDir remoteDir = vfsClient.mkdirs(vrl.getParent(), true);
-        VRL tmpVRL = new VRL("file:///" + System.getProperty("java.io.tmpdir"));
-        VRL tmpFileVRL = tmpVRL.append(fileName);
-        VFile tmpFile = vfsClient.createFile(tmpFileVRL, true);
-        OutputStream out = tmpFile.getOutputStream();
-        CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((Constants.BUF_SIZE), in, out);
-        cBuff.startTransfer(new Long(-1));
-        VFSTransfer trans = vfsClient.asyncCopy(tmpFile, remoteDir);
-        int time = 100;
-        while (!trans.isDone()) {
-            debug("trans.getProgress(): " + trans.getProgress());
-            Thread.sleep(time);
-            time = time * 2;
+        try {
+            VDir remoteDir = vfsClient.mkdirs(vrl.getParent(), true);
+            VRL tmpVRL = new VRL("file:///" + System.getProperty("java.io.tmpdir"));
+            VRL tmpFileVRL = tmpVRL.append(fileName);
+            VFile tmpFile = vfsClient.createFile(tmpFileVRL, true);
+            OutputStream out = tmpFile.getOutputStream();
+            CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((Constants.BUF_SIZE), in, out);
+            cBuff.startTransfer(new Long(-1));
+            VFSTransfer trans = vfsClient.asyncCopy(tmpFile, remoteDir);
+            int time = 100;
+            while (!trans.isDone()) {
+                debug("trans.getProgress(): " + trans.getProgress());
+                Thread.sleep(time);
+                time = time * 2;
+            }
+        } finally {
         }
     }
 
@@ -446,5 +456,9 @@ public class VPDRI implements PDRI {
         } catch (VRLSyntaxException ex) {
             throw new IOException(ex);
         }
+    }
+
+    void setDoChunkUpload(boolean doChunked) {
+        this.doChunked = doChunked;
     }
 }

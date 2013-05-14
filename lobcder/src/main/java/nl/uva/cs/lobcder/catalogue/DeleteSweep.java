@@ -73,7 +73,7 @@ class DeleteSweep implements Runnable {
                                         DeleteSweep.log.log(Level.FINE, "PDRI pdriDescr: {0}", new Object[]{pdriDescr});
                                         factory = PDRIFactory.getFactory();
                                         DeleteSweep.log.log(Level.FINE, "PDRIFactory: {0}", factory);
-                                        PDRI pdri = factory.createInstance(pdriDescr);
+                                        PDRI pdri = factory.createInstance(pdriDescr, false);
                                         DeleteSweep.log.log(Level.FINE, "pdri: {0}", pdri);
                                         DeleteSweep.log.log(Level.FINE, "PDRI Instance file name: {0}", new Object[]{pdri.getFileName()});
                                         pdri.delete();
@@ -88,7 +88,6 @@ class DeleteSweep implements Runnable {
                         }
                     }
                 }
-
             } catch (SQLException | IOException e) {
                 DeleteSweep.log.log(Level.SEVERE, null, e);
                 connection.rollback();

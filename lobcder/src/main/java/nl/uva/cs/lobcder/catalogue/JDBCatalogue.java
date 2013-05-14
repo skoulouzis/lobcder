@@ -43,10 +43,9 @@ public class JDBCatalogue extends MyDataSource {
 
     public void startSweep() {
         TimerTask gcTask = new TimerTask() {
-
             Runnable deleteSweep = new DeleteSweep(getDatasource());
             Runnable replicateSweep = new ReplicateSweep(getDatasource());
-
+            
             @Override
             public void run() {
                 deleteSweep.run();
@@ -59,7 +58,6 @@ public class JDBCatalogue extends MyDataSource {
 
     public void stopSweep() {
         timer.cancel();
-//        timer.purge();
     }
 
     public Collection<MyStorageSite> getStorageSites(Connection connection) throws SQLException {
