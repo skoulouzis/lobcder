@@ -160,6 +160,11 @@ public class WebDataFileResource extends WebDataResource implements
                 if (!pdri.getEncrypted()) {
                     CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((Constants.BUF_SIZE), pdri.getData(), out);
                     cBuff.startTransfer((long) -1);
+//                    int read;
+//                    byte[] copyBuffer = new byte[Constants.BUF_SIZE];
+//                    while ((read = pdri.getData().read(copyBuffer, 0, copyBuffer.length)) != -1) {
+//                        out.write(copyBuffer, 0, read);
+//                    }
                 } else {
                     DesEncrypter encrypter = new DesEncrypter(pdri.getKeyInt());
                     encrypter.decrypt(pdri.getData(), out);

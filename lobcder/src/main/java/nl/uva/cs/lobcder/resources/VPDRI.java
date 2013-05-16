@@ -200,6 +200,7 @@ public class VPDRI implements PDRI {
                 throw new IOException(ex);
             }
         } finally {
+//            reconnect();
         }
         return in;
     }
@@ -361,7 +362,8 @@ public class VPDRI implements PDRI {
     public void reconnect() throws IOException {
         reconnectAttemts++;
         vfsClient.close();
-//        vfsClient.dispose();
+        vfsClient.dispose();
+//        VRS.exit();
         try {
             initVFS();
         } catch (VlException | MalformedURLException ex1) {
@@ -417,7 +419,7 @@ public class VPDRI implements PDRI {
         double elapsed = System.currentTimeMillis() - start;
         double speed = source.getLength() / elapsed;
 //        log.debug("Replication Speed: "+speed+" bytes/sec");
-        VPDRI.log.log(Level.FINE, "Source: "+source.getHost()+" Destination: "+getHost()+" Replication Speed: {0} bytes/sec", speed);
+        VPDRI.log.log(Level.FINE, "Source: " + source.getHost() + " Destination: " + getHost() + " Replication Speed: {0} bytes/sec", speed);
     }
 
 //    @Override
