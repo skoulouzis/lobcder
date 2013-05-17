@@ -44,7 +44,9 @@ import nl.uva.vlet.io.CircularStreamBufferTransferer;
  */
 @Log
 public class WebDataFileResource extends WebDataResource implements
-        FileResource, LockableResource {//, ReplaceableResource {
+        FileResource, LockableResource {
+    private int sleepTime = 5;
+//, ReplaceableResource {
 
     public WebDataFileResource(@Nonnull LogicalData logicalData, Path path, @Nonnull JDBCatalogue catalogue, @Nonnull AuthI auth1, AuthI auth2) {
         super(logicalData, path, catalogue, auth1, auth2);
@@ -143,7 +145,7 @@ public class WebDataFileResource extends WebDataResource implements
         return null;
     }
 
-    private PDRI circularStreamBufferTransferer(Iterator<PDRIDescr> it, OutputStream out, int tryCount, PDRI pdri) throws IOException, NotFoundException {
+    private PDRI transferer(Iterator<PDRIDescr> it, OutputStream out, int tryCount, PDRI pdri, boolean doCircularStreamBufferTransferer) throws IOException, NotFoundException {
         try {
             boolean reconnect;
             if (pdri == null && it.hasNext()) {
@@ -158,35 +160,54 @@ public class WebDataFileResource extends WebDataResource implements
                 }
                 WebDataFileResource.log.log(Level.FINE, "sendContent() for {0}--------- {1}", new Object[]{getPath(), pdri.getFileName()});
                 if (!pdri.getEncrypted()) {
-                    CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((Constants.BUF_SIZE), pdri.getData(), out);
-                    cBuff.startTransfer((long) -1);
-//                    int read;
-//                    byte[] copyBuffer = new byte[Constants.BUF_SIZE];
-//                    while ((read = pdri.getData().read(copyBuffer, 0, copyBuffer.length)) != -1) {
-//                        out.write(copyBuffer, 0, read);
-//                    }
+                    if (doCircularStreamBufferTransferer) {
+                        CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((Constants.BUF_SIZE), pdri.getData(), out);
+                        cBuff.startTransfer((long) -1);
+                    } else {
+                        int read;
+                        byte[] copyBuffer = new byte[100 * 1024];
+                        while ((read = pdri.getData().read(copyBuffer, 0, copyBuffer.length)) != -1) {
+                            out.write(copyBuffer, 0, read);
+                        }
+                    }
                 } else {
                     DesEncrypter encrypter = new DesEncrypter(pdri.getKeyInt());
                     encrypter.decrypt(pdri.getData(), out);
                 }
             } else {
+                sleepTime = 5;
                 throw new NotFoundException("Physical resource not found");
             }
         } catch (VlException | IOException ex) {
-            if (++tryCount < Constants.RECONNECT_NTRY) {
-                circularStreamBufferTransferer(it, out, tryCount, pdri);
-            } else {
-                circularStreamBufferTransferer(it, out, 0, null);
+            try {
+                sleepTime = sleepTime + 20;
+                Thread.sleep(sleepTime);
+    //            log.log(Level.SEVERE, null, ex);
+                if (ex instanceof nl.uva.vlet.exception.VlInterruptedException && ++tryCount < Constants.RECONNECT_NTRY) {
+                    transferer(it, out, tryCount, pdri, false);
+                } else if (++tryCount < Constants.RECONNECT_NTRY) {
+                    transferer(it, out, tryCount, pdri, true);
+                } else {
+                    transferer(it, out, 0, null, true);
+                }
+            } catch (InterruptedException ex1) {
+                sleepTime = 5;
+                throw new IOException(ex);
             }
         } catch (NoSuchAlgorithmException ex) {
+            sleepTime = 5;
             throw new IOException(ex);
         } catch (NoSuchPaddingException ex) {
+            sleepTime = 5;
             throw new IOException(ex);
         } catch (InvalidKeyException ex) {
+            sleepTime = 5;
             throw new IOException(ex);
         } catch (InvalidAlgorithmParameterException ex) {
+            sleepTime = 5;
             throw new IOException(ex);
         }
+        sleepTime = 5;
         return pdri;
     }
 
@@ -242,7 +263,7 @@ public class WebDataFileResource extends WebDataResource implements
         Iterator<PDRIDescr> it;
         try {
             it = getCatalogue().getPdriDescrByGroupId(getLogicalData().getPdriGroupId()).iterator();
-            pdri = circularStreamBufferTransferer(it, out, 0, null);
+            pdri = transferer(it, out, 0, null, true);
         } catch (SQLException ex) {
             throw new BadRequestException(this, ex.getMessage());
         } catch (IOException ex) {

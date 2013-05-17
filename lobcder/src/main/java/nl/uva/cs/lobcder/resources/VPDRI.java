@@ -89,6 +89,7 @@ public class VPDRI implements PDRI {
     private boolean encrypt;
     private final String resourceUrl;
     private boolean doChunked;
+    private int sleeTime = 20;
 
     VPDRI(String fileName, Long storageSiteId, String resourceUrl, String username, String password, boolean encrypt, BigInteger keyInt, boolean doChunkUpload) throws IOException {
         try {
@@ -182,10 +183,15 @@ public class VPDRI implements PDRI {
     @Override
     public InputStream getData() throws IOException {
         InputStream in = null;
+        VFile file;
         try {
-            in = ((VFile) vfsClient.openLocation(vrl)).getInputStream();
-        } catch (VlException ex) {
-            //Maybe it's from assimilation. We must remove the baseDir
+            if (vfsClient == null) {
+                reconnect();
+            }
+            file = (VFile) vfsClient.openLocation(vrl);
+            in = file.getInputStream();
+//            in = ((VFile) vfsClient.openLocation(vrl)).getInputStream();
+        } catch (Exception ex) {
             if (ex instanceof ResourceNotFoundException) {
                 try {
 //                    VRL assimilationVRL = new VRL(resourceUrl).append(URLEncoder.encode(fileName, "UTF-8"));
@@ -194,7 +200,27 @@ public class VPDRI implements PDRI {
                 } catch (VRLSyntaxException ex1) {
                     throw new IOException(ex1);
                 } catch (VlException ex1) {
-                    throw new IOException(ex1);
+                    if (reconnectAttemts < Constants.RECONNECT_NTRY) {
+                        try {
+                            sleeTime = sleeTime + 20;
+                            Thread.sleep(sleeTime);
+                            reconnect();
+                            getData();
+                        } catch (InterruptedException ex2) {
+                            throw new IOException(ex1);
+                        }
+                    } else {
+                        throw new IOException(ex1);
+                    }
+                }
+            } else if (reconnectAttemts < Constants.RECONNECT_NTRY) {
+                try {
+                    sleeTime = sleeTime + 20;
+                    Thread.sleep(sleeTime);
+                    reconnect();
+                    getData();
+                } catch (InterruptedException ex1) {
+                    throw new IOException(ex);
                 }
             } else {
                 throw new IOException(ex);
@@ -298,6 +324,7 @@ public class VPDRI implements PDRI {
 
     private Runnable getAsyncDelete(final VFSClient vfsClient, final VRL vrl) {
         return new Runnable() {
+
             @Override
             public void run() {
                 try {
@@ -311,6 +338,7 @@ public class VPDRI implements PDRI {
 
     private Runnable getAsyncPutData(final VFSClient vfsClient, final InputStream in) {
         return new Runnable() {
+
             @Override
             public void run() {
             }
