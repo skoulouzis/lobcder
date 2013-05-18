@@ -324,7 +324,6 @@ public class VPDRI implements PDRI {
 
     private Runnable getAsyncDelete(final VFSClient vfsClient, final VRL vrl) {
         return new Runnable() {
-
             @Override
             public void run() {
                 try {
@@ -338,7 +337,6 @@ public class VPDRI implements PDRI {
 
     private Runnable getAsyncPutData(final VFSClient vfsClient, final InputStream in) {
         return new Runnable() {
-
             @Override
             public void run() {
             }
@@ -379,11 +377,20 @@ public class VPDRI implements PDRI {
     @Override
     public long getLength() throws IOException {
         try {
+            if(vfsClient == null){
+                reconnect();
+            }
             return vfsClient.getFile(vrl).getLength();
-        } catch (VlException ex) {
-            throw new IOException(ex);
+        } catch (Exception ex) {
+            if (reconnectAttemts < Constants.RECONNECT_NTRY) {
+                reconnect();
+                getLength();
+            } else {
+                throw new IOException(ex);
+            }
         } finally {
         }
+        return 0;
     }
 
     @Override
