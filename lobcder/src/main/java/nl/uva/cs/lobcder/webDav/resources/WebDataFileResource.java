@@ -45,6 +45,7 @@ import nl.uva.vlet.io.CircularStreamBufferTransferer;
 @Log
 public class WebDataFileResource extends WebDataResource implements
         FileResource, LockableResource {
+
     private int sleepTime = 5;
 //, ReplaceableResource {
 
@@ -182,7 +183,7 @@ public class WebDataFileResource extends WebDataResource implements
             try {
                 sleepTime = sleepTime + 20;
                 Thread.sleep(sleepTime);
-    //            log.log(Level.SEVERE, null, ex);
+                //            log.log(Level.SEVERE, null, ex);
                 if (ex instanceof nl.uva.vlet.exception.VlInterruptedException && ++tryCount < Constants.RECONNECT_NTRY) {
                     transferer(it, out, tryCount, pdri, false);
                 } else if (++tryCount < Constants.RECONNECT_NTRY) {
@@ -274,8 +275,8 @@ public class WebDataFileResource extends WebDataResource implements
             }
         }
         double elapsed = System.currentTimeMillis() - start;
-        double speed = pdri.getLength() / elapsed;
-        WebDataFileResource.log.log(Level.FINE, "Source: " + pdri.getHost() + " Destination: " + fromAddress + " Download Speed: {0} bytes/sec", speed);
+        double speed = ((pdri.getLength() * 8.0) * 1000.0) / (elapsed * 1000.0);
+        WebDataFileResource.log.log(Level.FINE, "Source: " + pdri.getHost() + " Destination: " + fromAddress + " Tx Speed: {0} Kbites/sec Tx_Size: "+((pdri.getLength() * 8.0) / 1000.0)+" Kbites", speed);
     }
 
     @Override

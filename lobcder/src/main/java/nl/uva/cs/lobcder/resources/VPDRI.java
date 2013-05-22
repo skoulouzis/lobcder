@@ -93,7 +93,7 @@ public class VPDRI implements PDRI {
     private final String resourceUrl;
     private boolean doChunked;
     private int sleeTime = 20;
-    private static final Map<String,GridProxy>  proxyCache = new HashMap<>();
+    private static final Map<String, GridProxy> proxyCache = new HashMap<>();
 
     VPDRI(String fileName, Long storageSiteId, String resourceUrl, String username, String password, boolean encrypt, BigInteger keyInt, boolean doChunkUpload) throws IOException {
         try {
@@ -461,9 +461,9 @@ public class VPDRI implements PDRI {
         double start = System.currentTimeMillis();
         putData(source.getData());
         double elapsed = System.currentTimeMillis() - start;
-        double speed = source.getLength() / elapsed;
+        double speed = ((source.getLength() * 8.0) * 1000.0) / (elapsed * 1000.0);
 //        log.debug("Replication Speed: "+speed+" bytes/sec");
-        VPDRI.log.log(Level.FINE, "Source: " + source.getHost() + " Destination: " + getHost() + " Replication Speed: {0} bytes/sec", speed);
+        VPDRI.log.log(Level.FINE, "Source: " + source.getHost() + " Destination: " + getHost() + " Replication_Speed: {0} Kbites/sec Repl_Size: " + (source.getLength() * 8.0) + " Kbites", speed);
     }
 
 //    @Override
