@@ -35,7 +35,7 @@ import nl.uva.vlet.vrs.VRS;
  * @author S. Koulouzis
  */
 public class Assimilator {
-
+    
     static final String JDBC_DRIVER = "com.mysql.jdbc.Driver";
     static final String DB_URL = "jdbc:mysql://localhost/lobcderDB";
     //  Database credentials

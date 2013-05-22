@@ -4,9 +4,31 @@
  */
 package nl.uva.cs.lobcder.resources;
 
+import java.io.*;
+import java.math.BigInteger;
+import java.net.InetAddress;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.UnknownHostException;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.channels.ReadableByteChannel;
+import java.nio.channels.WritableByteChannel;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.crypto.NoSuchPaddingException;
+import lombok.extern.java.Log;
+import nl.uva.cs.lobcder.util.Constants;
+import nl.uva.cs.lobcder.util.DesEncrypter;
 import nl.uva.vlet.Global;
 import nl.uva.vlet.GlobalConfig;
 import nl.uva.vlet.data.StringUtil;
+import nl.uva.vlet.exception.ResourceNotFoundException;
 import nl.uva.vlet.exception.VRLSyntaxException;
 import nl.uva.vlet.exception.VlException;
 import nl.uva.vlet.io.CircularStreamBufferTransferer;
@@ -16,25 +38,6 @@ import nl.uva.vlet.vrl.VRL;
 import nl.uva.vlet.vrs.ServerInfo;
 import nl.uva.vlet.vrs.VRS;
 import nl.uva.vlet.vrs.VRSContext;
-import org.slf4j.LoggerFactory;
-import java.io.*;
-import java.math.BigInteger;
-import java.net.*;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
-import java.nio.channels.ReadableByteChannel;
-import java.nio.channels.WritableByteChannel;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.crypto.NoSuchPaddingException;
-import lombok.extern.java.Log;
-import nl.uva.cs.lobcder.util.Constants;
-import nl.uva.cs.lobcder.util.DesEncrypter;
-import nl.uva.vlet.data.VAttribute;
-import nl.uva.vlet.exception.ResourceNotFoundException;
 
 /**
  * A test PDRI to implement the delete get/set data methods with the VRS API
@@ -90,6 +93,7 @@ public class VPDRI implements PDRI {
     private final String resourceUrl;
     private boolean doChunked;
     private int sleeTime = 20;
+    private static final Map<String,GridProxy>  proxyCache = new HashMap<>();
 
     VPDRI(String fileName, Long storageSiteId, String resourceUrl, String username, String password, boolean encrypt, BigInteger keyInt, boolean doChunkUpload) throws IOException {
         try {
@@ -105,7 +109,7 @@ public class VPDRI implements PDRI {
             this.keyInt = keyInt;
             this.doChunked = doChunkUpload;
 //            this.resourceUrl = resourceUrl;
-            VPDRI.log.log(Level.FINE, "fileName: " + fileName + ", storageSiteId: " + storageSiteId + ", username: " + username + ", password: " + password + ", VRL: " + vrl);
+            VPDRI.log.log(Level.FINE, "fileName: {0}, storageSiteId: {1}, username: {2}, password: {3}, VRL: {4}", new Object[]{fileName, storageSiteId, username, password, vrl});
             initVFS();
         } catch (VlException | MalformedURLException ex) {
             throw new IOException(ex);
@@ -120,10 +124,13 @@ public class VPDRI implements PDRI {
         String authScheme = info.getAuthScheme();
 
         if (StringUtil.equals(authScheme, ServerInfo.GSI_AUTH)) {
-            //Use the username and password to get access to MyProxy 
-            GridProxy proxy = new GridProxy(context);
-            String pr = context.getProxyAsString();
-            context.setGridProxy(proxy);
+            GridProxy gridProxy = proxyCache.get(password);
+            if (gridProxy == null) {
+                gridProxy = context.getGridProxy();
+                boolean result = gridProxy.createWithPassword(password);
+                context.setGridProxy(gridProxy);
+                proxyCache.put(password, gridProxy);
+            }
         }
 
         if (StringUtil.equals(authScheme, ServerInfo.PASSWORD_AUTH)
@@ -256,14 +263,14 @@ public class VPDRI implements PDRI {
             }
             reconnectAttemts = 0;
 
-        } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | InvalidAlgorithmParameterException ex) {
+        } catch (nl.uva.vlet.exception.VlAuthenticationException | NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | InvalidAlgorithmParameterException ex) {
             throw new IOException(ex);
         } catch (VlException ex) {
             if (ex.getMessage() != null) {
-                VPDRI.log.log(Level.FINE, "\tVlException " + ex.getMessage());
+                VPDRI.log.log(Level.FINE, "\tVlException {0}", ex.getMessage());
             }
             if (reconnectAttemts <= 2) {
-                VPDRI.log.log(Level.FINE, "\treconnectAttemts " + reconnectAttemts);
+                VPDRI.log.log(Level.FINE, "\treconnectAttemts {0}", reconnectAttemts);
                 reconnect();
                 putData(in);
             } else {
@@ -324,6 +331,7 @@ public class VPDRI implements PDRI {
 
     private Runnable getAsyncDelete(final VFSClient vfsClient, final VRL vrl) {
         return new Runnable() {
+
             @Override
             public void run() {
                 try {
@@ -337,6 +345,7 @@ public class VPDRI implements PDRI {
 
     private Runnable getAsyncPutData(final VFSClient vfsClient, final InputStream in) {
         return new Runnable() {
+
             @Override
             public void run() {
             }
@@ -377,7 +386,7 @@ public class VPDRI implements PDRI {
     @Override
     public long getLength() throws IOException {
         try {
-            if(vfsClient == null){
+            if (vfsClient == null) {
                 reconnect();
             }
             return vfsClient.getFile(vrl).getLength();
