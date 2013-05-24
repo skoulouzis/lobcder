@@ -10,7 +10,7 @@
     <url>http://maven.apache.org</url>
     
     <properties>
-        <skipTests>true</skipTests>
+        <skipTests>false</skipTests>
     </properties>
 
     <dependencies>

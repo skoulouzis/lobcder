@@ -66,7 +66,7 @@ public class GetTask implements Runnable {
     private final String vrl;
     private final String username;
     private final String password;
-    int sleeTime = 20;
+    int sleeTime = 5;
 
     public GetTask(String vrl, String username, String password) throws VlException {
         cl = getVFSClient(vrl, username, password);
@@ -113,19 +113,22 @@ public class GetTask implements Runnable {
 
     @Override
     public void run() {
+        double start = System.currentTimeMillis();
         FileOutputStream out = null;
+        File f = null;
         try {
-            File f = new File("/tmp/deleteme" + this.hashCode());
+            f = new File("/tmp/deleteme" + this.hashCode());
 //                f.deleteOnExit();
             out = new FileOutputStream(f);
-            CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((1024 * 1024 * 5), cl.getFile(vrl).getInputStream(), out);
+            CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((512 *1024), cl.getFile(vrl).getInputStream(), out);
             cBuff.startTransfer((long) -1);
-        } catch (FileNotFoundException ex) {
-            Logger.getLogger(GetTask.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (VlException ex) {
+            double elapsed = System.currentTimeMillis() - start;
+            System.err.println("Speed: " + (f.length() / elapsed));
+            sleeTime = 5;
+        } catch (Exception ex) {
             try {
                 //            
-                if (reconnectAttemts < 5) {
+                if (reconnectAttemts < 10) {
                     sleeTime = sleeTime + 20;
                     System.err.println("Reconnecting: " + reconnectAttemts + " sleep: " + sleeTime);
                     Thread.sleep(sleeTime);
@@ -147,7 +150,6 @@ public class GetTask implements Runnable {
                 Logger.getLogger(TestDrivers.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-        sleeTime = 20;
     }
 
     private void reconnect() throws VlException {
