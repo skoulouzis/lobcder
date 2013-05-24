@@ -214,7 +214,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
         }
         double elapsed = System.currentTimeMillis() - start;
         double speed = ((pdri.getLength() * 8.0) * 1000.0) / (elapsed * 1000.0);
-        WebDataDirResource.log.log(Level.FINE, "Source: " + fromAddress + " Destination: " + pdri.getHost() + " Rx_Speed: {0} Kbites/sec Rx_Size: "+(pdri.getLength() * 8)+" Kbites", speed);
+        WebDataDirResource.log.log(Level.FINE, "Source: " + fromAddress + " Destination: " + pdri.getHost() + " Rx_Speed: {0} Kbites/sec Rx_Size: "+(pdri.getLength())+" bytes", speed);
         return resource;
     }
 

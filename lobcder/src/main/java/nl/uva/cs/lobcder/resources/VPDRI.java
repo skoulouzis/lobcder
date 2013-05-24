@@ -92,7 +92,7 @@ public class VPDRI implements PDRI {
     private boolean encrypt;
     private final String resourceUrl;
     private boolean doChunked;
-    private int sleeTime = 20;
+    private int sleeTime = 5;
     private static final Map<String, GridProxy> proxyCache = new HashMap<>();
 
     VPDRI(String fileName, Long storageSiteId, String resourceUrl, String username, String password, boolean encrypt, BigInteger keyInt, boolean doChunkUpload) throws IOException {
@@ -204,12 +204,13 @@ public class VPDRI implements PDRI {
 //                    VRL assimilationVRL = new VRL(resourceUrl).append(URLEncoder.encode(fileName, "UTF-8"));
                     VRL assimilationVRL = new VRL(resourceUrl).append(fileName);
                     in = ((VFile) vfsClient.openLocation(assimilationVRL)).getInputStream();
+                    sleeTime = 5;
                 } catch (VRLSyntaxException ex1) {
                     throw new IOException(ex1);
                 } catch (VlException ex1) {
                     if (reconnectAttemts < Constants.RECONNECT_NTRY) {
                         try {
-                            sleeTime = sleeTime + 20;
+                            sleeTime = sleeTime + 5;
                             Thread.sleep(sleeTime);
                             reconnect();
                             getData();
@@ -222,7 +223,7 @@ public class VPDRI implements PDRI {
                 }
             } else if (reconnectAttemts < Constants.RECONNECT_NTRY) {
                 try {
-                    sleeTime = sleeTime + 20;
+                    sleeTime = sleeTime + 5;
                     Thread.sleep(sleeTime);
                     reconnect();
                     getData();
@@ -462,8 +463,7 @@ public class VPDRI implements PDRI {
         putData(source.getData());
         double elapsed = System.currentTimeMillis() - start;
         double speed = ((source.getLength() * 8.0) * 1000.0) / (elapsed * 1000.0);
-//        log.debug("Replication Speed: "+speed+" bytes/sec");
-        VPDRI.log.log(Level.FINE, "Source: " + source.getHost() + " Destination: " + getHost() + " Replication_Speed: {0} Kbites/sec Repl_Size: " + (source.getLength() * 8.0) + " Kbites", speed);
+        VPDRI.log.log(Level.FINE, "Source: " + source.getHost() + " Destination: " + getHost() + " Replication_Speed: {0} Kbites/sec Repl_Size: " + (source.getLength()) + " bytes", speed);
     }
 
 //    @Override
