@@ -951,15 +951,15 @@ public class JDBCatalogue extends MyDataSource {
     }
 
     private void getPathforLogicalData(PathInfo pi, List<PathInfo> pil, PreparedStatement ps) throws SQLException {
-        ps.setLong(1, pi.getParentRef());
-        try (ResultSet rs = ps.executeQuery()) {
-            if (rs.next()) {
-                pi = new PathInfo(rs.getString(1), rs.getLong(2));
-                pil.add(pi);
-            }
-        }
+        pil.add(pi);
         if (pi != null && pi.getParentRef() != 1) {
-            getPathforLogicalData(pi, pil, ps);
+            ps.setLong(1, pi.getParentRef());
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    pi = new PathInfo(rs.getString(1), rs.getLong(2));
+                    getPathforLogicalData(pi, pil, ps);
+                }
+            }
         }
     }
 
@@ -975,10 +975,11 @@ public class JDBCatalogue extends MyDataSource {
             PathInfo pi = new PathInfo(ld.getName(), ld.getParentRef());
             List<PathInfo> pil = new ArrayList<>();
             getPathforLogicalData(pi, pil, ps);
-            String res = "/";
+            String res = "";
             Collections.reverse(pil);
             for (PathInfo pi1 : pil) {
-                res += pi1.getName();
+                System.err.println("'" + pi1.getName() + "'");
+                res = res + "/" + pi1.getName();
             }
             return res;
         }
