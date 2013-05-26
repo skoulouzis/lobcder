@@ -53,7 +53,7 @@ public class JDBCatalogue extends MyDataSource {
             }
         };
         timer = new Timer(true);
-        timer.schedule(gcTask, 10000, 10000); //once in 10 sec
+        timer.schedule(gcTask, 2000, 2000); //once in 10 sec
     }
 
     public void stopSweep() {

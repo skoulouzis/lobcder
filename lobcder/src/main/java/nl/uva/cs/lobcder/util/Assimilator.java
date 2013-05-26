@@ -410,8 +410,8 @@ public class Assimilator {
 
 
             Credential credential = new Credential();
-            credential.setStorageSiteUsername("fakeuser");
-            credential.setStorageSitePassword("fakepass");
+            credential.setStorageSiteUsername("biomed");
+            credential.setStorageSitePassword("pass@Amstel");
 
 
 //            MyStorageSite ss1 = new MyStorageSite();
@@ -438,7 +438,8 @@ public class Assimilator {
 
             MyStorageSite ss3 = new MyStorageSite();
             ss3.setCredential(credential);
-            ss3.setResourceURI("file:///" + System.getProperty("user.home") + "/Downloads/files");
+//            ss3.setResourceURI("file:///" + System.getProperty("user.home") + "/Downloads/files");
+             ss3.setResourceURI("srm://tbn18.nikhef.nl:8446/dpm/nikhef.nl/home/biomed/lobcder");
             ss3.setCurrentNum(Long.valueOf("-1"));
             ss3.setCurrentSize(Long.valueOf("-1"));
             ss3.setEncrypt(false);
@@ -455,7 +456,6 @@ public class Assimilator {
         } finally {
             VRS.exit();
         }
-
     }
 
     private void addFile(Connection connection, VFile f, Long parentRef, long ssID) throws SQLException, VlException, NoSuchAlgorithmException {

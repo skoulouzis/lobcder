@@ -6,6 +6,8 @@ package nl.uva.cs.lobcder.util;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import nl.uva.cs.lobcder.resources.VPDRI;
@@ -58,6 +60,7 @@ public class StorageSiteClient {
     private final String username;
     private final String password;
     private final VRL vrl;
+    private static final Map<String, GridProxy> proxyCache = new HashMap<>();
 
     public StorageSiteClient(String username, String password, String resourceUrl) throws VlException, MalformedURLException {
         this.username = username;
@@ -74,10 +77,27 @@ public class StorageSiteClient {
         String authScheme = info.getAuthScheme();
 
         if (StringUtil.equals(authScheme, ServerInfo.GSI_AUTH)) {
-            //Use the username and password to get access to MyProxy 
-            GridProxy proxy = new GridProxy(context);
-            String pr = context.getProxyAsString();
-            context.setGridProxy(proxy);
+            GridProxy gridProxy = proxyCache.get(password);
+            if (gridProxy == null) {
+                String ps = context.getProxyAsString();
+//                gridProxy = context.getGridProxy();
+//                System.out.println(gridProxy.getCredentialVOInfo());
+//                System.out.println(gridProxy.getCredentialVOName());
+//                System.out.println(gridProxy.getDefaultProxyFilename());
+//                System.out.println(gridProxy.getVOName());
+
+                gridProxy = GridProxy.loadFrom(context, "/tmp/x509up_u1000");
+
+                gridProxy = GridProxy.loadFrom("/tmp/x509up_u1000");
+
+                System.out.println(gridProxy.getCredentialVOInfo());
+                System.out.println(gridProxy.getCredentialVOName());
+                System.out.println(gridProxy.getDefaultProxyFilename());
+                System.out.println(gridProxy.getVOName());
+
+                context.setGridProxy(gridProxy);
+                proxyCache.put(password, gridProxy);
+            }
         }
 
         if (StringUtil.equals(authScheme, ServerInfo.PASSWORD_AUTH)
@@ -101,7 +121,8 @@ public class StorageSiteClient {
         //patch for bug with ssh driver 
         info.setAttribute("sshKnownHostsFile", System.getProperty("user.home") + "/.ssh/known_hosts");
 //        }
-        info.setAttribute("chunk.upload", true);
+        context.setProperty("chunk.upload", false);
+//        info.setAttribute(new VAttribute("chunk.upload", true));
         info.store();
     }
 
