@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-1.40.10 (TeX Live 2009/Debian) (format=latex 2012.5.2)  18 APR 2013 13:42
+This is pdfTeX, Version 3.1415926-1.40.10 (TeX Live 2009/Debian) (format=pdflatex 2012.5.2)  22 MAY 2013 12:34
 entering extended mode
  %&-line parsing enabled.
 **Config_Instructions.tex
@@ -275,117 +275,117 @@ File: listings.cfg 2007/02/22 1.4 listings configuration
 ))
 Package: listings 2007/02/22 1.4 (Carsten Heinz)
 
-pdfTeX warning (\pdfinfo): not allowed in DVI mode (\pdfoutput <= 0); ignoring 
-it
 (./Config_Instructions.aux)
 \openout1 = `Config_Instructions.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 20.
-LaTeX Font Info:    ... okay on input line 20.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 20.
-LaTeX Font Info:    ... okay on input line 20.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 20.
-LaTeX Font Info:    ... okay on input line 20.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 20.
-LaTeX Font Info:    ... okay on input line 20.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 20.
-LaTeX Font Info:    ... okay on input line 20.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 20.
-LaTeX Font Info:    ... okay on input line 20.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 21.
+LaTeX Font Info:    ... okay on input line 21.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 21.
+LaTeX Font Info:    ... okay on input line 21.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 21.
+LaTeX Font Info:    ... okay on input line 21.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 21.
+LaTeX Font Info:    ... okay on input line 21.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 21.
+LaTeX Font Info:    ... okay on input line 21.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 21.
+LaTeX Font Info:    ... okay on input line 21.
 \c@lstlisting=\count95
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <12> on input line 21.
+(Font)              <12> on input line 22.
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <8> on input line 21.
+(Font)              <8> on input line 22.
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <6> on input line 21.
+(Font)              <6> on input line 22.
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <7> on input line 31.
+(Font)              <7> on input line 32.
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <5> on input line 31.
-LaTeX Font Info:    Try loading font information for OML+cmr on input line 32.
+(Font)              <5> on input line 32.
+LaTeX Font Info:    Try loading font information for OML+cmr on input line 33.
  (/usr/share/texmf-texlive/tex/latex/base/omlcmr.fd
 File: omlcmr.fd 1999/05/25 v2.5h Standard LaTeX font definitions
 )
 LaTeX Font Info:    Font shape `OML/cmr/m/n' in size <10> not available
-(Font)              Font shape `OML/cmm/m/it' tried instead on input line 32.
-LaTeX Font Info:    Try loading font information for OMS+cmr on input line 38.
+(Font)              Font shape `OML/cmm/m/it' tried instead on input line 33.
+LaTeX Font Info:    Try loading font information for OMS+cmr on input line 42.
 (/usr/share/texmf-texlive/tex/latex/base/omscmr.fd
 File: omscmr.fd 1999/05/25 v2.5h Standard LaTeX font definitions
 )
 LaTeX Font Info:    Font shape `OMS/cmr/m/n' in size <10> not available
-(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 38.
+(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 42.
 
-Overfull \hbox (159.00513pt too wide) in paragraph at lines 38--39
-[][][][][][][][][][][][][][][][][][][][][][][][][][] 
- []
-
-
-Overfull \hbox (93.00446pt too wide) in paragraph at lines 39--40
-[][][][][][][][][][][][][][][][][][][][][][][] 
- []
-
-
-Overfull \hbox (99.00452pt too wide) in paragraph at lines 50--51
-[][][][][][][][][][][][] 
- []
-
-
-Overfull \hbox (33.00385pt too wide) in paragraph at lines 60--61
-[][][][][][][][][][][][][] 
- []
-
-[1
-
-]
-Overfull \hbox (51.00403pt too wide) in paragraph at lines 74--75
+Overfull \hbox (21.00372pt too wide) in paragraph at lines 42--43
 [][][][][][][][][][][][][][][][][][][][] 
  []
 
 
-Overfull \hbox (39.0039pt too wide) in paragraph at lines 83--84
+Overfull \hbox (3.00354pt too wide) in paragraph at lines 58--59
+[][][][][][][][][][][][] 
+ []
+
+[1
+
+{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}]
+Overfull \hbox (33.00385pt too wide) in paragraph at lines 68--69
 [][][][][][][][][][][][][] 
  []
 
 
-Overfull \hbox (7.563pt too wide) in paragraph at lines 88--88
+Overfull \hbox (51.00403pt too wide) in paragraph at lines 83--84
+[][][][][][][][][][][][][][][][][][][][] 
+ []
+
+
+Overfull \hbox (39.0039pt too wide) in paragraph at lines 92--93
+[][][][][][][][][][][][][] 
+ []
+
+
+Overfull \hbox (7.563pt too wide) in paragraph at lines 106--106
 []\OT1/cmr/bx/n/14.4 User Au-tho-riza-tion / Au-then-ti-ca-tion and Roles 
  []
 
 
-Overfull \hbox (33.00385pt too wide) in paragraph at lines 93--94
+Overfull \hbox (33.00385pt too wide) in paragraph at lines 111--112
 [][][][][][][][][][][][][][][][][] 
  []
 
-
-Overfull \hbox (99.00452pt too wide) in paragraph at lines 107--108
+[2]
+Overfull \hbox (99.00452pt too wide) in paragraph at lines 126--127
 [][][][][][][][][][][][][][][][][][][] 
  []
 
 
-Overfull \hbox (27.00378pt too wide) in paragraph at lines 114--115
+Overfull \hbox (27.00378pt too wide) in paragraph at lines 134--135
 [][][][][][][][][][][][][][][][][][] 
  []
 
 
-Overfull \hbox (51.00403pt too wide) in paragraph at lines 122--123
+Overfull \hbox (51.00403pt too wide) in paragraph at lines 142--143
 [][][][][][][][][][][][][][][][][][] 
- []
-
-[2]
-Overfull \hbox (133.07501pt too wide) in paragraph at lines 131--132
-\OT1/cmr/m/n/10 Build the project and run it. To spec-ify an ap-pli-ca-tion ser
-ver see http://wiki.netbeans.org/AddExternalTomcat 
  []
 
 [3] (./Config_Instructions.aux) ) 
 Here is how much of TeX's memory you used:
- 2096 strings out of 493849
- 26225 string characters out of 1152847
- 94176 words of memory out of 3000000
- 5411 multiletter control sequences out of 15000+50000
- 7587 words of font info for 27 fonts, out of 3000000 for 9000
+ 2100 strings out of 493848
+ 26273 string characters out of 1152824
+ 93177 words of memory out of 3000000
+ 5413 multiletter control sequences out of 15000+50000
+ 7755 words of font info for 28 fonts, out of 3000000 for 9000
  714 hyphenation exceptions out of 8191
- 26i,6n,32p,203b,1214s stack positions out of 5000i,500n,10000p,200000b,50000s
+ 26i,8n,32p,175b,1524s stack positions out of 5000i,500n,10000p,200000b,50000s
+</usr/share/texmf-texlive/fonts/type1/public/a
+msfonts/cm/cmbx12.pfb></usr/share/texmf-texlive/fonts/type1/public/amsfonts/cm/
+cmmi10.pfb></usr/share/texmf-texlive/fonts/type1/public/amsfonts/cm/cmr10.pfb><
+/usr/share/texmf-texlive/fonts/type1/public/amsfonts/cm/cmr12.pfb></usr/share/t
+exmf-texlive/fonts/type1/public/amsfonts/cm/cmr17.pfb></usr/share/texmf-texlive
+/fonts/type1/public/amsfonts/cm/cmr6.pfb></usr/share/texmf-texlive/fonts/type1/
+public/amsfonts/cm/cmr7.pfb></usr/share/texmf-texlive/fonts/type1/public/amsfon
+ts/cm/cmr8.pfb></usr/share/texmf-texlive/fonts/type1/public/amsfonts/cm/cmsy10.
+pfb></usr/share/texmf-texlive/fonts/type1/public/amsfonts/cm/cmtt10.pfb>
+Output written on Config_Instructions.pdf (3 pages, 125280 bytes).
+PDF statistics:
+ 52 PDF objects out of 1000 (max. 8388607)
+ 0 named destinations out of 1000 (max. 500000)
+ 1 words of extra memory for PDF output out of 10000 (max. 10000000)
 
-Output written on Config_Instructions.dvi (3 pages, 10228 bytes).

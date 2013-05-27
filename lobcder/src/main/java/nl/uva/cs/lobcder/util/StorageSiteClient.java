@@ -62,14 +62,14 @@ public class StorageSiteClient {
     private final VRL vrl;
     private static final Map<String, GridProxy> proxyCache = new HashMap<>();
 
-    public StorageSiteClient(String username, String password, String resourceUrl) throws VlException, MalformedURLException {
+    public StorageSiteClient(String username, String password, String resourceUrl) throws VlException, MalformedURLException, Exception {
         this.username = username;
         this.password = password;
         this.vrl = new VRL(resourceUrl);
         initVFS();
     }
 
-    private void initVFS() throws VlException, MalformedURLException {
+    private void initVFS() throws VlException, MalformedURLException, Exception {
         this.vfsClient = new VFSClient();
         VRSContext context = this.vfsClient.getVRSContext();
         //Bug in sftp: We have to put the username in the url
@@ -77,27 +77,35 @@ public class StorageSiteClient {
         String authScheme = info.getAuthScheme();
 
         if (StringUtil.equals(authScheme, ServerInfo.GSI_AUTH)) {
-            GridProxy gridProxy = proxyCache.get(password);
-            if (gridProxy == null) {
-                String ps = context.getProxyAsString();
-//                gridProxy = context.getGridProxy();
-//                System.out.println(gridProxy.getCredentialVOInfo());
-//                System.out.println(gridProxy.getCredentialVOName());
-//                System.out.println(gridProxy.getDefaultProxyFilename());
-//                System.out.println(gridProxy.getVOName());
 
-                gridProxy = GridProxy.loadFrom(context, "/tmp/x509up_u1000");
+            String proxyFile = "/tmp/myProxy";
+            System.out.println("Will create grid proxy at:" + proxyFile);
 
-                gridProxy = GridProxy.loadFrom("/tmp/x509up_u1000");
-
-                System.out.println(gridProxy.getCredentialVOInfo());
-                System.out.println(gridProxy.getCredentialVOName());
-                System.out.println(gridProxy.getDefaultProxyFilename());
-                System.out.println(gridProxy.getVOName());
-
-                context.setGridProxy(gridProxy);
-                proxyCache.put(password, gridProxy);
+            context.setProperty("grid.proxy.location", proxyFile);
+            // Default to $HOME/.globus
+            context.setProperty("grid.certificate.location", Global.getUserHome() + "/.globus");
+            String vo = username;
+            context.setProperty("grid.proxy.voName", vo);
+            
+            GridProxy gridProxy = context.getGridProxy();
+            
+            if (gridProxy.isValid() == false) {
+                gridProxy.setEnableVOMS(true);
+                gridProxy.setDefaultVOName(vo);
+                // throw new Exception("Invalid Grid Proxy, please create first");
+//                String pwd = askPassphrase("Please enter passphrase.");
+                System.out.println("--- Creating proxy ---");
+                gridProxy.createWithPassword("pass@Amstel");
+                if (gridProxy.isValid() == false) {
+                    throw new Exception("Created Proxy is not Valid!");
+                }
             }
+
+            System.out.println("--- Valid Grid Proxy ---");
+            System.out.println(" - proxy filename =" + gridProxy.getProxyFilename());
+            System.out.println(" - proxy timeleft =" + gridProxy.getTimeLeftString());
+            System.out.println(" - proxy VOMS enabled =" + gridProxy.getEnableVOMS());
+            System.out.println(" - proxy VO =" + gridProxy.getVOName());
         }
 
         if (StringUtil.equals(authScheme, ServerInfo.PASSWORD_AUTH)

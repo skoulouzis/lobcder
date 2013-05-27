@@ -35,7 +35,7 @@ import nl.uva.vlet.vrs.VRS;
  * @author S. Koulouzis
  */
 public class Assimilator {
-    
+
     static final String JDBC_DRIVER = "com.mysql.jdbc.Driver";
     static final String DB_URL = "jdbc:mysql://localhost/lobcderDB";
     //  Database credentials
@@ -407,13 +407,11 @@ public class Assimilator {
     public static void main(String args[]) {
         try {
             List<MyStorageSite> sites = new ArrayList<>();
-
-
+            
             Credential credential = new Credential();
             credential.setStorageSiteUsername("biomed");
             credential.setStorageSitePassword("pass@Amstel");
-
-
+            
 //            MyStorageSite ss1 = new MyStorageSite();
 //            ss1.setCredential(credential);
 //            ss1.setResourceURI("file:///tmp/");
@@ -439,7 +437,7 @@ public class Assimilator {
             MyStorageSite ss3 = new MyStorageSite();
             ss3.setCredential(credential);
 //            ss3.setResourceURI("file:///" + System.getProperty("user.home") + "/Downloads/files");
-             ss3.setResourceURI("srm://tbn18.nikhef.nl:8446/dpm/nikhef.nl/home/biomed/lobcder");
+            ss3.setResourceURI("srm://tbn18.nikhef.nl:8446/dpm/nikhef.nl/home/biomed/lobcder");
             ss3.setCurrentNum(Long.valueOf("-1"));
             ss3.setCurrentSize(Long.valueOf("-1"));
             ss3.setEncrypt(false);

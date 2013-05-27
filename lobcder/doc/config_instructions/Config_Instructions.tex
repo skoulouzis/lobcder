@@ -4,7 +4,7 @@
 \usepackage[utf8]{inputenc}
 \usepackage{listings}
 
-\title{LOBCDER configuration instuctions}
+\title{LOBCDER configuration instructions}
 \author{S. Koulouzis}
 \date{}
 
@@ -17,15 +17,16 @@
   /Keywords ()
 }
 
+
 \begin{document}
 \maketitle
 This is are some basic instruction on how to configure and deploy LOBCDER 
 
 \section{Create and configure the logical file system}
-LOBCDER uses mysql to store and query the logical file system.
+LOBCDER uses MySQL to store and query the logical file system.
 
 \subsection{Create and configure MySQL DB}
-Connect to the local database server as user root. You will be prompted for a password.
+Connect to the local database server as root.
 
 \begin{lstlisting}
 $mysql -h localhost  -u root -p
@@ -33,21 +34,28 @@ $mysql> create database mydb;
 \end{lstlisting}
 
 
-Now we create the user 'username' and give him super permissions on the new database. SUPER is required for enabling the delete and replicate triggers (for mysql version 5.0.95). 
+Now we create the user 'username' and give him super permissions on the new database. SUPER is required for 
+enabling the delete and replicate triggers\footnote{When LOBCDER is asked to delete a file it simply removes it 
+from it's logical file system, and schedules a deletion of the physical files which will run at a later time 
+asynchronously. The same applies for replication} (for mysql version 5.0.95). 
 \begin{lstlisting}
-$mysql>grant ALL PRIVILEGES on mydb.* to username@localhost identified by 'password';
-$mysql>GRANT SUPER ON *.* to username@localhost IDENTIFIED by 'password';
+$mysql>GRANT ALL PRIVILEGES on mydb.* to username@localhost \ 
+			IDENTIFIED by 'password';
+$mysql>GRANT SUPER ON *.* to username@localhost \
+			IDENTIFIED by 'password';
 \end{lstlisting}
 
 
 \subsection{Initialize the logical file system and the triggers}
-You may want to edit the init.sql file to include the proper backends. These will be used by lobcder to hold the physical data.
-
-in the init.sql add or edit this line: 
+You may want to edit the init.sql file to include the proper backends\footnote{Backends are the storage systems 
+(cloud, grid, FTP) LOBCDER is using for holding the physical files.}. 
+These will be used by lobcder to hold the physical data. At the moment we have tested sftp and swift so if we want 
+to add a swift cloud storage we add in \texttt{storage\_site\_table} swift://localhost:8080/path. This is in the 
+init.sql file: 
 
 \begin{lstlisting}
-INSERT INTO  credential_table(username, password) 
-			  VALUES ('backend_username', 'backend_password');
+INSERT INTO  credential_table(username, password) \
+	  VALUES ('backend_username', 'backend_password');
 SET @credID = LAST_INSERT_ID();
 
 INSERT INTO 
@@ -61,7 +69,8 @@ INSERT INTO
 			     @credID, -1, -1, -1, -1);
 \end{lstlisting}
 
-Run the init.sql script as 'username' (Before running the script you may want to read Section \ref{sec:auth} to configure authentication and authorization): 
+Run the init.sql script as 'username' (Before running the script you may want to read Section \ref{sec:auth} to 
+configure authentication and authorization): 
 
 \begin{lstlisting}
 mysql --user=username --password=password mydb < init.sql
@@ -107,7 +116,8 @@ INSERT INTO permission_table (perm_type, ld_uid_ref, role_name)
 	('write', @rootID, 'admin');
 \end{lstlisting}
 
-To enable authorization and authentication based on the biotown accounts, in the context.xml file edit or add this line to include the ticket validation service:
+To enable authorization and authentication based on the biotown accounts, in the context.xml file edit or add this 
+line to include the ticket validation service:
 
 \begin{lstlisting}
 <Resource auth="Container" 
@@ -117,7 +127,8 @@ To enable authorization and authentication based on the biotown accounts, in the
     type="nl.uva.cs.lobcder.auth.AuthRemote"/>  
 \end{lstlisting}
 
-To also enable authorization and authentication based on local accounts, i.e. account created and kept on the local DB, log-in the DB: 
+To also enable authorization and authentication based on local accounts, i.e. account created and kept on the local 
+DB, log-in the DB: 
 \begin{lstlisting}
 $mysql -h localhost  -u root -p
 $mysql>INSERT INTO lobcder.auth_usernames_table (token, uname) 
@@ -132,12 +143,11 @@ $mysql>INSERT INTO lobcder.auth_roles_tables (role_name, uname_id)
     VALUES ('role1', ID_NUM);
 \end{lstlisting}
 
-\section{Deploy LOBCDER}
-
-LOBCDER is tested on apache-tomcat-6.0.33 but you can deploy the war file on any application server such as glassfish etc. 
-
-\subsection{Using NetBeans}
-Build the project and run it. To specify an application server see http://wiki.netbeans.org/AddExternalTomcat
+% \section{Deploy LOBCDER}
+% 
+% LOBCDER is tested on apache-tomcat-6.0.33 but you can deploy the war file on any application server such as glassfish etc. 
+% 
+% \subsection{Using NetBeans}
+% Build the project and run it. To specify an application server see http://wiki.netbeans.org/AddExternalTomcat
 
 \end{document}
-
