@@ -218,7 +218,7 @@ public class Assimilator {
     }
 
     private void assimilate(List<MyStorageSite> sites) throws SQLException,
-            MalformedURLException, VlException, NoSuchAlgorithmException {
+            MalformedURLException, VlException, NoSuchAlgorithmException, Exception {
         Connection c = getConnection();
         StorageSiteClient ssClient;
         for (MyStorageSite site : sites) {
@@ -404,7 +404,7 @@ public class Assimilator {
         }
     }
 
-    public static void main(String args[]) {
+    public static void main(String args[]) throws SQLException, MalformedURLException, VlException, NoSuchAlgorithmException, Exception {
         try {
             List<MyStorageSite> sites = new ArrayList<>();
             
