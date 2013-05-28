@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Context antiJARLocking="true" path="/lobcder-2.0-SNAPSHOT">
+<Context antiJARLocking="true" path="/lobcder">
   <Resource auth="Container" factory="org.apache.naming.factory.BeanFactory" 
                                 name="bean/PrincipalCache" 
                                 timeout="600000" 
@@ -13,7 +13,7 @@
                                 removeAbandoned="true" 
                                 removeAbandonedTimeout="30" 
                                 type="javax.sql.DataSource"
-                                url="jdbc:mysql://localhost:3306/lobcderDB" 
+                                url="jdbc:mysql://localhost:3306/lobcderDB2" 
                                 username="lobcder"/>
   <Resource auth="Container" factory="org.apache.naming.factory.BeanFactory" 
                                 name="bean/JDBCatalog"  

@@ -34,6 +34,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.logging.Level;
+import nl.uva.cs.lobcder.util.SpeedLogger;
 
 /**
  *
@@ -214,7 +215,9 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
         }
         double elapsed = System.currentTimeMillis() - start;
         double speed = ((pdri.getLength() * 8.0) * 1000.0) / (elapsed * 1000.0);
-        WebDataDirResource.log.log(Level.FINE, "Source: " + fromAddress + " Destination: " + pdri.getHost() + " Rx_Speed: {0} Kbites/sec Rx_Size: "+(pdri.getLength())+" bytes", speed);
+        String msg = "Source: " + fromAddress + " Destination: " + pdri.getHost() + " Rx_Speed: " + speed + " Kbites/sec Rx_Size: " + (pdri.getLength()) + " bytes";
+        WebDataDirResource.log.log(Level.FINE, msg);
+        SpeedLogger.logSpeed(msg);
         return resource;
     }
 

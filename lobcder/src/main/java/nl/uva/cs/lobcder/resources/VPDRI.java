@@ -25,6 +25,7 @@ import javax.crypto.NoSuchPaddingException;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.cs.lobcder.util.DesEncrypter;
+import nl.uva.cs.lobcder.util.SpeedLogger;
 import nl.uva.vlet.Global;
 import nl.uva.vlet.GlobalConfig;
 import nl.uva.vlet.data.StringUtil;
@@ -125,34 +126,34 @@ public class VPDRI implements PDRI {
         String authScheme = info.getAuthScheme();
 
         if (StringUtil.equals(authScheme, ServerInfo.GSI_AUTH)) {
-            String proxyFile = "/tmp/myProxy";
-            System.out.println("Will create grid proxy at:" + proxyFile);
-
-            context.setProperty("grid.proxy.location", proxyFile);
-            // Default to $HOME/.globus
-            context.setProperty("grid.certificate.location", Global.getUserHome() + "/.globus");
-            String vo = username;
-//            context.setProperty("grid.proxy.voName", vo);
-
-            GridProxy gridProxy = context.getGridProxy();
-
-            if (gridProxy.isValid() == false) {
-                gridProxy.setEnableVOMS(false);
-//                gridProxy.setDefaultVOName(vo);
-                // throw new Exception("Invalid Grid Proxy, please create first");
-//                String pwd = askPassphrase("Please enter passphrase.");
-                System.out.println("--- Creating proxy ---");
-                gridProxy.createWithPassword(password);
-                if (gridProxy.isValid() == false) {
-                    throw new VlException("Created Proxy is not Valid!");
-                }
-            }
-
-            System.out.println("--- Valid Grid Proxy ---");
-            System.out.println(" - proxy filename =" + gridProxy.getProxyFilename());
-            System.out.println(" - proxy timeleft =" + gridProxy.getTimeLeftString());
-            System.out.println(" - proxy VOMS enabled =" + gridProxy.getEnableVOMS());
-            System.out.println(" - proxy VO =" + gridProxy.getVOName());
+//            String proxyFile = "/tmp/myProxy";
+//            System.out.println("Will create grid proxy at:" + proxyFile);
+//
+//            context.setProperty("grid.proxy.location", proxyFile);
+//            // Default to $HOME/.globus
+//            context.setProperty("grid.certificate.location", Global.getUserHome() + "/.globus");
+//            String vo = username;
+////            context.setProperty("grid.proxy.voName", vo);
+//
+//            GridProxy gridProxy = context.getGridProxy();
+//
+//            if (gridProxy.isValid() == false) {
+//                gridProxy.setEnableVOMS(false);
+////                gridProxy.setDefaultVOName(vo);
+//                // throw new Exception("Invalid Grid Proxy, please create first");
+////                String pwd = askPassphrase("Please enter passphrase.");
+//                System.out.println("--- Creating proxy ---");
+//                gridProxy.createWithPassword(password);
+//                if (gridProxy.isValid() == false) {
+//                    throw new VlException("Created Proxy is not Valid!");
+//                }
+//            }
+//
+//            System.out.println("--- Valid Grid Proxy ---");
+//            System.out.println(" - proxy filename =" + gridProxy.getProxyFilename());
+//            System.out.println(" - proxy timeleft =" + gridProxy.getTimeLeftString());
+//            System.out.println(" - proxy VOMS enabled =" + gridProxy.getEnableVOMS());
+//            System.out.println(" - proxy VO =" + gridProxy.getVOName());
         }
 
         if (StringUtil.equals(authScheme, ServerInfo.PASSWORD_AUTH)
@@ -354,7 +355,6 @@ public class VPDRI implements PDRI {
 
     private Runnable getAsyncDelete(final VFSClient vfsClient, final VRL vrl) {
         return new Runnable() {
-
             @Override
             public void run() {
                 try {
@@ -368,7 +368,6 @@ public class VPDRI implements PDRI {
 
     private Runnable getAsyncPutData(final VFSClient vfsClient, final InputStream in) {
         return new Runnable() {
-
             @Override
             public void run() {
             }
@@ -484,8 +483,10 @@ public class VPDRI implements PDRI {
 //            putData(source.getData());
             double elapsed = System.currentTimeMillis() - start;
             double speed = ((source.getLength() * 8.0) * 1000.0) / (elapsed * 1000.0);
-            VPDRI.log.log(Level.FINE, "Source: " + source.getHost() + " Destination: " + getHost() + " Replication_Speed: {0} Kbites/sec Repl_Size: " + (getLength()) + " bytes", speed);
-            getAsyncDelete(vfsClient, vrl).run();
+            String msg = "Source: " + source.getHost() + " Destination: " + getHost() + " Replication_Speed: " + speed + " Kbites/sec Repl_Size: " + (getLength()) + " bytes";
+            VPDRI.log.log(Level.FINE, msg);
+            SpeedLogger.logSpeed(msg);
+//            getAsyncDelete(vfsClient, vrl).run();
         } catch (VlException ex) {
             Logger.getLogger(VPDRI.class.getName()).log(Level.SEVERE, null, ex);
         }

@@ -408,15 +408,15 @@ public class Assimilator {
             credential.setStorageSiteUsername("biomed");
             credential.setStorageSitePassword("pass@Amstel");
             
-//            MyStorageSite ss1 = new MyStorageSite();
-//            ss1.setCredential(credential);
-//            ss1.setResourceURI("file:///tmp/");
-//            ss1.setCurrentNum(Long.valueOf("-1"));
-//            ss1.setCurrentSize(Long.valueOf("-1"));
-//            ss1.setEncrypt(false);
-//            ss1.setQuotaNum(Long.valueOf("-1"));
-//            ss1.setQuotaSize(Long.valueOf("-1"));
-//            sites.add(ss1);
+            MyStorageSite ss1 = new MyStorageSite();
+            ss1.setCredential(credential);
+            ss1.setResourceURI("file:////home/alogo/Downloads/files/");
+            ss1.setCurrentNum(Long.valueOf("-1"));
+            ss1.setCurrentSize(Long.valueOf("-1"));
+            ss1.setEncrypt(false);
+            ss1.setQuotaNum(Long.valueOf("-1"));
+            ss1.setQuotaSize(Long.valueOf("-1"));
+            sites.add(ss1);
 //
 //
 //            MyStorageSite ss2 = new MyStorageSite();
@@ -430,16 +430,16 @@ public class Assimilator {
 //            sites.add(ss2);
 
 
-            MyStorageSite ss3 = new MyStorageSite();
-            ss3.setCredential(credential);
-//            ss3.setResourceURI("file:///" + System.getProperty("user.home") + "/Downloads/files");
-            ss3.setResourceURI("srm://tbn18.nikhef.nl:8446/dpm/nikhef.nl/home/biomed/lobcder");
-            ss3.setCurrentNum(Long.valueOf("-1"));
-            ss3.setCurrentSize(Long.valueOf("-1"));
-            ss3.setEncrypt(false);
-            ss3.setQuotaNum(Long.valueOf("-1"));
-            ss3.setQuotaSize(Long.valueOf("-1"));
-            sites.add(ss3);
+//            MyStorageSite ss3 = new MyStorageSite();
+//            ss3.setCredential(credential);
+////            ss3.setResourceURI("file:///" + System.getProperty("user.home") + "/Downloads/files");
+//            ss3.setResourceURI("srm://tbn18.nikhef.nl:8446/dpm/nikhef.nl/home/biomed/lobcder");
+//            ss3.setCurrentNum(Long.valueOf("-1"));
+//            ss3.setCurrentSize(Long.valueOf("-1"));
+//            ss3.setEncrypt(false);
+//            ss3.setQuotaNum(Long.valueOf("-1"));
+//            ss3.setQuotaSize(Long.valueOf("-1"));
+//            sites.add(ss3);
 
             Assimilator a = new Assimilator();
             a.assimilate(sites);
