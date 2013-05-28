@@ -31,7 +31,7 @@ public class LogicalData implements Cloneable {
     @XmlTransient
     private Long pdriGroupId = Long.valueOf(0);
     private Boolean supervised = Boolean.FALSE;
-    private Long checksum = Long.valueOf(0);
+    private String checksum = "";
     private Long lastValidationDate = Long.valueOf(0);
     @XmlTransient
     private String lockTokenID;

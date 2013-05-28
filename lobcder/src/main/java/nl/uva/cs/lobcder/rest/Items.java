@@ -69,7 +69,7 @@ public class Items extends CatalogueHelper {
                     logicalData.setContentTypesAsString(resultSet.getString(9));
                     logicalData.setPdriGroupId(resultSet.getLong(10));
                     logicalData.setSupervised(resultSet.getBoolean(11));
-                    logicalData.setChecksum(resultSet.getLong(12));
+                    logicalData.setChecksum(resultSet.getString(12));
                     logicalData.setLastValidationDate(resultSet.getLong(13));
                     logicalData.setLockTokenID(resultSet.getString(14));
                     logicalData.setLockScope(resultSet.getString(15));

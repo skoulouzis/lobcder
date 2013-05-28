@@ -149,7 +149,7 @@ public class JDBCatalogue extends MyDataSource {
             preparedStatement.setString(7, entry.getContentTypesAsString());
             preparedStatement.setLong(8, entry.getPdriGroupId());
             preparedStatement.setBoolean(9, entry.getSupervised());
-            preparedStatement.setLong(10, entry.getChecksum());
+            preparedStatement.setString(10, entry.getChecksum());
             preparedStatement.setLong(11, entry.getLastValidationDate());
             preparedStatement.setString(12, entry.getLockTokenID());
             preparedStatement.setString(13, entry.getLockScope());
@@ -331,7 +331,7 @@ public class JDBCatalogue extends MyDataSource {
                 res.setContentTypesAsString(rs.getString(7));
                 res.setPdriGroupId(rs.getLong(8));
                 res.setSupervised(rs.getBoolean(9));
-                res.setChecksum(rs.getLong(10));
+                res.setChecksum(rs.getString(10));
                 res.setLastValidationDate(rs.getLong(11));
                 res.setLockTokenID(rs.getString(12));
                 res.setLockScope(rs.getString(13));
@@ -382,7 +382,7 @@ public class JDBCatalogue extends MyDataSource {
                             res.setContentTypesAsString(rs.getString(7));
                             res.setPdriGroupId(rs.getLong(8));
                             res.setSupervised(rs.getBoolean(9));
-                            res.setChecksum(rs.getLong(10));
+                            res.setChecksum(rs.getString(10));
                             res.setLastValidationDate(rs.getLong(11));
                             res.setLockTokenID(rs.getString(12));
                             res.setLockScope(rs.getString(13));
@@ -439,7 +439,7 @@ public class JDBCatalogue extends MyDataSource {
                 res.setContentTypesAsString(rs.getString(8));
                 res.setPdriGroupId(rs.getLong(9));
                 res.setSupervised(rs.getBoolean(10));
-                res.setChecksum(rs.getLong(11));
+                res.setChecksum(rs.getString(11));
                 res.setLastValidationDate(rs.getLong(12));
                 res.setLockTokenID(rs.getString(13));
                 res.setLockScope(rs.getString(14));
@@ -544,7 +544,7 @@ public class JDBCatalogue extends MyDataSource {
                 element.setContentTypesAsString(rs.getString(8));
                 element.setPdriGroupId(rs.getLong(9));
                 element.setSupervised(rs.getBoolean(10));
-                element.setChecksum(rs.getLong(11));
+                element.setChecksum(rs.getString(11));
                 element.setLastValidationDate(rs.getLong(12));
                 element.setLockTokenID(rs.getString(13));
                 element.setLockScope(rs.getString(14));
@@ -706,9 +706,9 @@ public class JDBCatalogue extends MyDataSource {
         }
     }
 
-    public void setFileChecksum(@Nonnull Long uid, @Nonnull Long checksum, @Nonnull Connection connection) throws SQLException {
+    public void setFileChecksum(@Nonnull Long uid, @Nonnull String checksum, @Nonnull Connection connection) throws SQLException {
         try (PreparedStatement ps = connection.prepareStatement("UPDATE ldata_table SET checksum = ? WHERE uid = ?")) {
-            ps.setLong(1, checksum);
+            ps.setString(1, checksum);
             ps.setLong(2, uid);
             ps.executeUpdate();
         }

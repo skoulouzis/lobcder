@@ -4,22 +4,8 @@
  */
 package nl.uva.cs.lobcder.util;
 
-import com.mysql.jdbc.exceptions.MySQLIntegrityConstraintViolationException;
+//import com.mysql.jdbc.exceptions.MySQLIntegrityConstraintViolationException;
 import io.milton.common.Path;
-import java.math.BigInteger;
-import java.net.MalformedURLException;
-import java.security.NoSuchAlgorithmException;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.annotation.Nonnull;
 import nl.uva.cs.lobcder.resources.Credential;
 import nl.uva.cs.lobcder.resources.LogicalData;
 import nl.uva.cs.lobcder.resources.MyStorageSite;
@@ -29,6 +15,16 @@ import nl.uva.vlet.vfs.VFSNode;
 import nl.uva.vlet.vfs.VFile;
 import nl.uva.vlet.vrl.VRL;
 import nl.uva.vlet.vrs.VRS;
+
+import javax.annotation.Nonnull;
+import java.math.BigInteger;
+import java.net.MalformedURLException;
+import java.security.NoSuchAlgorithmException;
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -162,7 +158,7 @@ public class Assimilator {
             preparedStatement.setString(7, entry.getContentTypesAsString());
             preparedStatement.setLong(8, entry.getPdriGroupId());
             preparedStatement.setBoolean(9, entry.getSupervised());
-            preparedStatement.setLong(10, entry.getChecksum());
+            preparedStatement.setString(10, entry.getChecksum());
             preparedStatement.setLong(11, entry.getLastValidationDate());
             preparedStatement.setString(12, entry.getLockTokenID());
             preparedStatement.setString(13, entry.getLockScope());
@@ -179,7 +175,7 @@ public class Assimilator {
             entry.setUid(rs.getLong(1));
             return entry;
         } catch (SQLException ex) {
-            if (ex instanceof MySQLIntegrityConstraintViolationException || ex.getMessage().contains("Duplicate entry")) {
+            if (ex.getMessage().contains("Duplicate entry")) {
                 System.err.println(entry.getName() + " already exists!");
             } else {
                 throw ex;
@@ -280,7 +276,7 @@ public class Assimilator {
                 res.setContentTypesAsString(rs.getString(7));
                 res.setPdriGroupId(rs.getLong(8));
                 res.setSupervised(rs.getBoolean(9));
-                res.setChecksum(rs.getLong(10));
+                res.setChecksum(rs.getString(10));
                 res.setLastValidationDate(rs.getLong(11));
                 res.setLockTokenID(rs.getString(12));
                 res.setLockScope(rs.getString(13));
@@ -374,7 +370,7 @@ public class Assimilator {
                             res.setContentTypesAsString(rs.getString(7));
                             res.setPdriGroupId(rs.getLong(8));
                             res.setSupervised(rs.getBoolean(9));
-                            res.setChecksum(rs.getLong(10));
+                            res.setChecksum(rs.getString(10));
                             res.setLastValidationDate(rs.getLong(11));
                             res.setLockTokenID(rs.getString(12));
                             res.setLockScope(rs.getString(13));

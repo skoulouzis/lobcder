@@ -87,7 +87,7 @@ public class DRIDataResource {
 
     @Path("{uid}/checksum/{checksum}/")
     @PUT
-    public void setChecksum(@PathParam("uid") Long uid, @PathParam("checksum") Long checksum) {
+    public void setChecksum(@PathParam("uid") Long uid, @PathParam("checksum") String checksum) {
         try (Connection cn = catalogue.getConnection()) {
             try {
                 LogicalData res = catalogue.getLogicalDataByUid(uid, cn);
@@ -115,7 +115,7 @@ public class DRIDataResource {
     @Path("{uid}/checksum/")
     @GET
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public JAXBElement<Long> getChecksum(@PathParam("uid") Long uid) {
+    public JAXBElement<String> getChecksum(@PathParam("uid") Long uid) {
         try (Connection cn = catalogue.getConnection()) {
             LogicalData res = catalogue.getLogicalDataByUid(uid, cn);
             if (res == null) {
@@ -126,7 +126,7 @@ public class DRIDataResource {
             if (!mp.canRead(p)) {
                 throw new WebApplicationException(Response.Status.UNAUTHORIZED);
             }
-            return new JAXBElement<Long>(new QName("checksum"), Long.class, res.getChecksum());
+            return new JAXBElement<String>(new QName("checksum"), String.class, res.getChecksum());
         } catch (SQLException ex) {
             log.log(Level.SEVERE, null, ex);
             throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);

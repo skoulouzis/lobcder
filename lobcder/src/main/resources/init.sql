@@ -47,7 +47,7 @@ CREATE TABLE ldata_table (
  contentTypesStr VARCHAR(5240),
  pdriGroupRef BIGINT UNSIGNED NOT NULL DEFAULT 0, INDEX(pdriGroupRef),
  isSupervised BOOLEAN NOT NULL DEFAULT FALSE, INDEX(isSupervised), 
- checksum BIGINT,
+ checksum VARCHAR(512),
  lastValidationDate BIGINT NOT NULL DEFAULT 0,
  lockTokenId  VARCHAR(255),
  lockScope  VARCHAR(255),

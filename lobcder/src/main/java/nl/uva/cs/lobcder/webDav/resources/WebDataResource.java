@@ -17,32 +17,27 @@ import io.milton.resource.AccessControlledResource;
 import io.milton.resource.MultiNamespaceCustomPropertyResource;
 import io.milton.resource.PropFindableResource;
 import io.milton.resource.Resource;
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.security.NoSuchAlgorithmException;
 import lombok.Getter;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.auth.AuthI;
 import nl.uva.cs.lobcder.auth.MyPrincipal;
 import nl.uva.cs.lobcder.auth.Permissions;
 import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
-import nl.uva.cs.lobcder.resources.CachePDRI;
-import nl.uva.cs.lobcder.resources.LogicalData;
-import nl.uva.cs.lobcder.resources.PDRI;
-import nl.uva.cs.lobcder.resources.PDRIDescr;
+import nl.uva.cs.lobcder.resources.*;
 import nl.uva.cs.lobcder.util.Constants;
+import nl.uva.cs.lobcder.util.DesEncrypter;
 
 import javax.annotation.Nonnull;
 import javax.xml.namespace.QName;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.security.NoSuchAlgorithmException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import nl.uva.cs.lobcder.resources.MyStorageSite;
-import nl.uva.cs.lobcder.resources.PDRIFactory;
-import nl.uva.cs.lobcder.util.DesEncrypter;
 
 /**
  * @author S. Koulouzis
@@ -479,9 +474,8 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
                         getLogicalData().setSupervised(v);
                         catalogue.setLogicalDataSupervised(getLogicalData().getUid(), v, connection);
                     } else if (qname.equals(Constants.DRI_CHECKSUM_PROP_NAME)) {
-                        Long v = Long.valueOf(value);
-                        getLogicalData().setChecksum(v);
-                        catalogue.setFileChecksum(getLogicalData().getUid(), v, connection);
+                        getLogicalData().setChecksum(value);
+                        catalogue.setFileChecksum(getLogicalData().getUid(), value, connection);
                     } else if (qname.equals(Constants.DRI_LAST_VALIDATION_DATE_PROP_NAME)) {
                         Long v = Long.valueOf(value);
                         getLogicalData().setLastValidationDate(v);
