@@ -249,7 +249,6 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
         try {
             // Do the mapping
             Principal p = new DavPrincipals.AbstractDavPrincipal(getPrincipalURL()) {
-
                 @Override
                 public boolean matches(Auth auth, Resource current) {
                     return true;
@@ -277,7 +276,6 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
             for (String r : resourcePermission.getRead()) {
                 perm = new ArrayList<>();
                 p = new DavPrincipals.AbstractDavPrincipal(getRoleUrlPrefix() + r) {
-
                     @Override
                     public boolean matches(Auth auth, Resource current) {
                         return true;
@@ -293,7 +291,6 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
             for (String r : resourcePermission.getWrite()) {
                 perm = new ArrayList<>();
                 p = new DavPrincipals.AbstractDavPrincipal(getRoleUrlPrefix() + r) {
-
                     @Override
                     public boolean matches(Auth auth, Resource current) {
                         return true;
@@ -380,7 +377,9 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
                                 sb.append(",");
                             }
                         }
-                        sb.replace(sb.lastIndexOf(","), sb.length(), "");
+                        if (sb.toString().contains(",")) {
+                            sb.replace(sb.lastIndexOf(","), sb.length(), "");
+                        }
                         sb.append("]");
                         return sb.toString();
                     } catch (NotAuthorizedException | SQLException e) {
@@ -435,7 +434,9 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
                             sb.append(",");
                         }
                     }
-                    sb.replace(sb.lastIndexOf(","), sb.length(), "");
+                    if (sb.toString().contains(",")) {
+                        sb.replace(sb.lastIndexOf(","), sb.length(), "");
+                    }
                     sb.append("]");
                     connection.commit();
                     return sb.toString();
