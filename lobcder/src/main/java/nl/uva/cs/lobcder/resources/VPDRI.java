@@ -188,7 +188,7 @@ public class VPDRI implements PDRI {
             vfsClient.openLocation(vrl).delete();
         } catch (VlException ex) {
             //Maybe it's from assimilation. We must remove the baseDir
-            if (ex instanceof ResourceNotFoundException) {
+            if (ex instanceof ResourceNotFoundException || ex.getMessage().contains("Couldn open location. Get NULL object for location")) {
                 try {
                     //                    VRL assimilationVRL = new VRL(resourceUrl).append(URLEncoder.encode(fileName, "UTF-8").replace("+", "%20"));
 //                    String encoded = VRL.encode(fileName);
@@ -222,7 +222,7 @@ public class VPDRI implements PDRI {
             in = file.getInputStream();
 //            in = ((VFile) vfsClient.openLocation(vrl)).getInputStream();
         } catch (Exception ex) {
-            if (ex instanceof ResourceNotFoundException) {
+            if (ex instanceof ResourceNotFoundException || ex.getMessage().contains("Couldn open location. Get NULL object for location:")) {
                 try {
 //                    VRL assimilationVRL = new VRL(resourceUrl).append(URLEncoder.encode(fileName, "UTF-8"));
                     VRL assimilationVRL = new VRL(resourceUrl).append(fileName);

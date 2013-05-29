@@ -19,6 +19,7 @@ import nl.uva.vlet.util.cog.GridProxy;
 import nl.uva.vlet.vfs.VFSClient;
 import nl.uva.vlet.vrl.VRL;
 import nl.uva.vlet.vrs.ServerInfo;
+import nl.uva.vlet.vrs.VRS;
 import nl.uva.vlet.vrs.VRSContext;
 
 /**
@@ -54,6 +55,7 @@ public class StorageSiteClient {
 //        GlobalConfig.setUsePersistantUserConfiguration(false);
 //        GlobalConfig.setUserHomeLocation(new URL("file:////" + this.tmpVPHuserHome.getAbsolutePath()));
 //        Global.setDebug(true);
+        VRS.getRegistry().addVRSDriverClass(nl.uva.vlet.vfs.cloud.CloudFSFactory.class);
         Global.init();
     }
     private VFSClient vfsClient;
@@ -86,9 +88,9 @@ public class StorageSiteClient {
             context.setProperty("grid.certificate.location", Global.getUserHome() + "/.globus");
             String vo = username;
             context.setProperty("grid.proxy.voName", vo);
-            
+
             GridProxy gridProxy = context.getGridProxy();
-            
+
             if (gridProxy.isValid() == false) {
                 gridProxy.setEnableVOMS(true);
                 gridProxy.setDefaultVOName(vo);

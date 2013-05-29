@@ -33,7 +33,7 @@ import java.util.logging.Logger;
 public class Assimilator {
 
     static final String JDBC_DRIVER = "com.mysql.jdbc.Driver";
-    static final String DB_URL = "jdbc:mysql://localhost/lobcderDB";
+    static final String DB_URL = "jdbc:mysql://localhost/lobcderDB2";
     //  Database credentials
     static final String USER = "lobcder";
     static final String PASS = "RoomC3156";
@@ -61,6 +61,7 @@ public class Assimilator {
             rs.next();
             id = rs.getLong(1);
             System.out.println("ID: " + id);
+            connection.commit();
         }
 //        }
         return id;
@@ -96,6 +97,8 @@ public class Assimilator {
             ResultSet rs = ps.getGeneratedKeys();
             rs.next();
             ssID = rs.getLong(1);
+            
+            connection.commit();
         }
         return ssID;
     }
@@ -233,21 +236,28 @@ public class Assimilator {
             //build folders first 
             add(dir, dir.getPath(), c, ssID, false);
 
-            add(dir, dir.getPath(), c, ssID, true);
+            VFSNode[] nodes = dir.list();
+            for (VFSNode n : nodes) {
+                if (n.isFile()) {
+                    VFile f = (VFile) n;
+                    String fileName = n.getName();
+                    VRL currentPath = new VRL(f.getPath().replaceFirst(dir.getPath(), ""));
+                    LogicalData parent = getLogicalDataByPath(Path.path(currentPath.getPath()), c);
+                    Long parentRef;
 
-//            VFSNode[] nodes = dir.list();
-//            for (VFSNode n : nodes) {
-//                if (n.isFile()) {
-//                    VFile f = (VFile) n;
-//                    String fileName = n.getName();
-//                    LogicalData registered = getLogicalDataByParentRefAndName(parentRef, fileName, c);
-//                    VRL currentPath = new VRL(f.getPath().replaceFirst(dir.getPath(), ""));
-//                    LogicalData parent = getLogicalDataByPath(Path.path(currentPath.getPath()), c);
-//                    if (registered == null) {
-//                        addFile(c, f, parentRef, parent.getUid());
-//                    }
-//                }
-//            }
+                    if (parent != null) {
+                        parentRef = parent.getUid();
+                    } else {
+                        parentRef = new Long(1);
+                    }
+
+                    LogicalData registered = getLogicalDataByParentRefAndName(parentRef, fileName, c);
+                    System.err.println(currentPath);
+                    if (registered == null) {
+                        addFile(c, f, parentRef, ssID);
+                    }
+                }
+            }
         }
         c.commit();
         c.close();
@@ -331,6 +341,7 @@ public class Assimilator {
                 add((VDir) f, base, connection, ssid, addFiles);
             } else if (addFiles) {
                 if (register == null) {
+                    System.err.println(f.getVRL());
                     addFile(connection, (VFile) f, parent.getUid(), ssid);
                 }
             }
@@ -403,14 +414,14 @@ public class Assimilator {
     public static void main(String args[]) throws SQLException, MalformedURLException, VlException, NoSuchAlgorithmException, Exception {
         try {
             List<MyStorageSite> sites = new ArrayList<>();
-            
+
             Credential credential = new Credential();
-            credential.setStorageSiteUsername("biomed");
-            credential.setStorageSitePassword("pass@Amstel");
-            
+            credential.setStorageSiteUsername("vphdemo:vphdemo");
+            credential.setStorageSitePassword("LibiDibi7");
+
             MyStorageSite ss1 = new MyStorageSite();
             ss1.setCredential(credential);
-            ss1.setResourceURI("file:////home/alogo/Downloads/files/");
+            ss1.setResourceURI("swift://149.156.10.131:8443/auth/v1.0/LOBCDER-REPLICA-v2.0/");
             ss1.setCurrentNum(Long.valueOf("-1"));
             ss1.setCurrentSize(Long.valueOf("-1"));
             ss1.setEncrypt(false);
@@ -449,6 +460,7 @@ public class Assimilator {
             Logger.getLogger(Assimilator.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
             VRS.exit();
+            System.exit(0);
         }
     }
 
