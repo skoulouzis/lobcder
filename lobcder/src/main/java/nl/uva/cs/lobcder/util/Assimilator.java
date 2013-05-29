@@ -19,6 +19,7 @@ import nl.uva.vlet.vrs.VRS;
 import javax.annotation.Nonnull;
 import java.math.BigInteger;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.security.NoSuchAlgorithmException;
 import java.sql.*;
 import java.util.ArrayList;
@@ -97,7 +98,7 @@ public class Assimilator {
             ResultSet rs = ps.getGeneratedKeys();
             rs.next();
             ssID = rs.getLong(1);
-            
+
             connection.commit();
         }
         return ssID;
@@ -230,7 +231,19 @@ public class Assimilator {
                 long credentialsID = addCredentials(c, username, password);
                 ssID = addStorageSite(c, site, credentialsID, false);
             }
+            URI importedURI = new URI(site.getResourceURI());
+            String importedFolderName = "ImportedFrom-" + importedURI.getScheme() + "-" + importedURI.getHost();
 
+            //Add imported folder
+            LogicalData imported = getLogicalDataByPath(Path.path(importedFolderName), c);
+            Long importedUid;
+            if (imported == null) {
+                importedUid = addRegisteredFolder(importedFolderName, c);
+            } else {
+                importedUid = imported.getUid();
+            }
+
+//
             ssClient = new StorageSiteClient(username, password, ssURI);
             VDir dir = ssClient.getStorageSiteClient().openDir(new VRL(ssURI));
             //build folders first 
@@ -248,9 +261,9 @@ public class Assimilator {
                     if (parent != null) {
                         parentRef = parent.getUid();
                     } else {
-                        parentRef = new Long(1);
+                        parentRef = importedUid;
                     }
-
+                    
                     LogicalData registered = getLogicalDataByParentRefAndName(parentRef, fileName, c);
                     System.err.println(currentPath);
                     if (registered == null) {
@@ -328,6 +341,13 @@ public class Assimilator {
             VRL currentPath = new VRL(f.getPath().replaceFirst(base, ""));
             LogicalData register = getLogicalDataByPath(Path.path(currentPath.getPath()), connection);
             LogicalData parent = getLogicalDataByPath(Path.path(currentPath.getPath()).getParent(), connection);
+            Long parentRef = new Long(1);
+            if (parent == null) {
+                parentRef = new Long(1);
+            } else {
+                parentRef = parent.getUid();
+            }
+
             if (f.isDir()) {
                 if (register == null) {
                     LogicalData entry = new LogicalData();
@@ -335,14 +355,15 @@ public class Assimilator {
                     entry.setModifiedDate(f.getModificationTime());
                     entry.setName(f.getName());
                     entry.setOwner("admin");
-                    entry.setParentRef(parent.getUid());
+                    entry.setParentRef(parentRef);
+
                     register = registerDirLogicalData(entry, connection);
                 }
                 add((VDir) f, base, connection, ssid, addFiles);
             } else if (addFiles) {
                 if (register == null) {
                     System.err.println(f.getVRL());
-                    addFile(connection, (VFile) f, parent.getUid(), ssid);
+                    addFile(connection, (VFile) f, parentRef, ssid);
                 }
             }
         }
@@ -421,7 +442,7 @@ public class Assimilator {
 
             MyStorageSite ss1 = new MyStorageSite();
             ss1.setCredential(credential);
-            ss1.setResourceURI("swift://149.156.10.131:8443/auth/v1.0/LOBCDER-REPLICA-v2.0/");
+            ss1.setResourceURI("swift://149.156.10.131:8443/auth/v1.0/uploadContainer/");
             ss1.setCurrentNum(Long.valueOf("-1"));
             ss1.setCurrentSize(Long.valueOf("-1"));
             ss1.setEncrypt(false);
@@ -456,7 +477,8 @@ public class Assimilator {
             a.assimilate(sites);
 
 
-        } catch (ClassNotFoundException | SQLException | MalformedURLException | VlException | NoSuchAlgorithmException ex) {
+        } catch (Exception ex) {
+            ex.printStackTrace();
             Logger.getLogger(Assimilator.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
             VRS.exit();
@@ -483,5 +505,16 @@ public class Assimilator {
 //                        }
         long pdriID = addPDRI(connection, f.getName(), ssID, pdriGroupID, false, DesEncrypter.generateKey());
         addLogicalData(connection, entry);
+    }
+
+    private Long addRegisteredFolder(String importedFolderName, Connection connection) throws SQLException {
+        LogicalData entry = new LogicalData();
+        entry.setCreateDate(System.currentTimeMillis());
+        entry.setModifiedDate(System.currentTimeMillis());
+        entry.setName(importedFolderName);
+        entry.setOwner("admin");
+        entry.setParentRef(new Long(1));
+        LogicalData register = registerDirLogicalData(entry, connection);
+        return register.getUid();
     }
 }
