@@ -490,51 +490,49 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
                         getLogicalData().setDataLocationPreference(v);
                         catalogue.setLocationPreference(getLogicalData().getUid(), v, connection);
                     } else if (qname.equals(Constants.ENCRYPT_PROP_NAME)) {
-                        String v = value;
-                        HashMap<String, Boolean> hostEncryptMap = new HashMap<>();
-                        log.log(Level.FINE, "Value: {0}", v);
-                        String[] parts = v.split("[\\[\\]]");
-                        for (String p : parts) {
-                            log.log(Level.FINE, "Parts: {0}", p);
-                            if (!p.isEmpty()) {
-                                String[] hostEncryptValue = p.split(",");
-                                if (hostEncryptValue.length == 2) {
-                                    String hostStr = hostEncryptValue[0];
-                                    URI uri;
-                                    try {
-                                        uri = new URI(hostStr);
-                                        String host = uri.getScheme();
-                                        host += "://" + uri.getHost();
-                                        String encrypt = hostEncryptValue[1];
-                                        hostEncryptMap.put(host, Boolean.valueOf(encrypt));
-                                    } catch (URISyntaxException ex) {
-                                        //Wrong URI syntax, don't add it 
-                                    }
-                                }
-                            }
-                        }
-                        List<PDRIDescr> pdris = getCatalogue().getPdriDescrByGroupId(getLogicalData().getPdriGroupId(), connection);
-                        List<PDRIDescr> pdrisToUpdate = new ArrayList<PDRIDescr>();
-                        for (PDRIDescr p : pdris) {
-                            URI uri = new URI(p.getResourceUrl());
-                            String host = uri.getScheme();
-                            host += "://" + uri.getHost();
-                            if (hostEncryptMap.containsKey(host)) {
-                                p.setEncrypt(hostEncryptMap.get(host));
-                                pdrisToUpdate.add(p);
-                            }
-                        }
-                        if (!hostEncryptMap.isEmpty()) {
-                            getCatalogue().updateStorageSites(hostEncryptMap, connection);
-                        }
-                        if (!pdrisToUpdate.isEmpty()) {
-                            getCatalogue().updatePdris(pdrisToUpdate, connection);
-                        }
+//                        String v = value;
+//                        HashMap<String, Boolean> hostEncryptMap = new HashMap<>();
+//                        log.log(Level.FINE, "Value: {0}", v);
+//                        String[] parts = v.split("[\\[\\]]");
+//                        for (String p : parts) {
+//                            log.log(Level.FINE, "Parts: {0}", p);
+//                            if (!p.isEmpty()) {
+//                                String[] hostEncryptValue = p.split(",");
+//                                if (hostEncryptValue.length == 2) {
+//                                    String hostStr = hostEncryptValue[0];
+//                                    URI uri;
+//                                    try {
+//                                        uri = new URI(hostStr);
+//                                        String host = uri.getScheme();
+//                                        host += "://" + uri.getHost();
+//                                        String encrypt = hostEncryptValue[1];
+//                                        hostEncryptMap.put(host, Boolean.valueOf(encrypt));
+//                                    } catch (URISyntaxException ex) {
+//                                        //Wrong URI syntax, don't add it 
+//                                    }
+//                                }
+//                            }
+//                        }
+//                        List<PDRIDescr> pdris = getCatalogue().getPdriDescrByGroupId(getLogicalData().getPdriGroupId(), connection);
+//                        List<PDRIDescr> pdrisToUpdate = new ArrayList<PDRIDescr>();
+//                        for (PDRIDescr p : pdris) {
+//                            URI uri = new URI(p.getResourceUrl());
+//                            String host = uri.getScheme();
+//                            host += "://" + uri.getHost();
+//                            if (hostEncryptMap.containsKey(host)) {
+//                                p.setEncrypt(hostEncryptMap.get(host));
+//                                pdrisToUpdate.add(p);
+//                            }
+//                        }
+//                        if (!hostEncryptMap.isEmpty()) {
+//                            getCatalogue().updateStorageSites(hostEncryptMap, connection);
+//                        }
+//                        if (!pdrisToUpdate.isEmpty()) {
+//                            getCatalogue().updatePdris(pdrisToUpdate, connection);
+//                        }
                     }
                     connection.commit();
                 }
-            } catch (URISyntaxException ex) {
-                Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
             } catch (SQLException | NumberFormatException e) {
                 connection.rollback();
                 throw new PropertySource.PropertySetException(Response.Status.SC_INTERNAL_SERVER_ERROR, e.getMessage());
