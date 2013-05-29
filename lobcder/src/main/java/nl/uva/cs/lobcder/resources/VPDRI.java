@@ -320,13 +320,6 @@ public class VPDRI implements PDRI {
             if (in != null) {
                 in.close();
             }
-//            if (tmpFile != null) {
-//                try {
-//                    tmpFile.delete();
-//                } catch (VlException ex) {
-//                    throw new IOException(ex);
-//                }
-//            }
         }
     }
 
@@ -486,7 +479,6 @@ public class VPDRI implements PDRI {
             String msg = "Source: " + source.getHost() + " Destination: " + getHost() + " Replication_Speed: " + speed + " Kbites/sec Repl_Size: " + (getLength()) + " bytes";
             VPDRI.log.log(Level.FINE, msg);
             SpeedLogger.logSpeed(msg);
-//            getAsyncDelete(vfsClient, vrl).run();
         } catch (VlException ex) {
             Logger.getLogger(VPDRI.class.getName()).log(Level.SEVERE, null, ex);
         }
