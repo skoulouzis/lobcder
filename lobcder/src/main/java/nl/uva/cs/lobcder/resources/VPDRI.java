@@ -126,34 +126,34 @@ public class VPDRI implements PDRI {
         String authScheme = info.getAuthScheme();
 
         if (StringUtil.equals(authScheme, ServerInfo.GSI_AUTH)) {
-//            String proxyFile = "/tmp/myProxy";
-//            System.out.println("Will create grid proxy at:" + proxyFile);
-//
-//            context.setProperty("grid.proxy.location", proxyFile);
-//            // Default to $HOME/.globus
-//            context.setProperty("grid.certificate.location", Global.getUserHome() + "/.globus");
-//            String vo = username;
-////            context.setProperty("grid.proxy.voName", vo);
-//
-//            GridProxy gridProxy = context.getGridProxy();
-//
-//            if (gridProxy.isValid() == false) {
-//                gridProxy.setEnableVOMS(false);
-////                gridProxy.setDefaultVOName(vo);
-//                // throw new Exception("Invalid Grid Proxy, please create first");
-////                String pwd = askPassphrase("Please enter passphrase.");
-//                System.out.println("--- Creating proxy ---");
-//                gridProxy.createWithPassword(password);
-//                if (gridProxy.isValid() == false) {
-//                    throw new VlException("Created Proxy is not Valid!");
-//                }
-//            }
-//
-//            System.out.println("--- Valid Grid Proxy ---");
-//            System.out.println(" - proxy filename =" + gridProxy.getProxyFilename());
-//            System.out.println(" - proxy timeleft =" + gridProxy.getTimeLeftString());
-//            System.out.println(" - proxy VOMS enabled =" + gridProxy.getEnableVOMS());
-//            System.out.println(" - proxy VO =" + gridProxy.getVOName());
+            String proxyFile = "/tmp/myProxy";
+            System.out.println("Will create grid proxy at:" + proxyFile);
+
+            context.setProperty("grid.proxy.location", proxyFile);
+            // Default to $HOME/.globus
+            context.setProperty("grid.certificate.location", Global.getUserHome() + "/.globus");
+            String vo = username;
+//            context.setProperty("grid.proxy.voName", vo);
+
+            GridProxy gridProxy = context.getGridProxy();
+
+            if (gridProxy.isValid() == false) {
+                gridProxy.setEnableVOMS(false);
+//                gridProxy.setDefaultVOName(vo);
+                // throw new Exception("Invalid Grid Proxy, please create first");
+//                String pwd = askPassphrase("Please enter passphrase.");
+                System.out.println("--- Creating proxy ---");
+                gridProxy.createWithPassword(password);
+                if (gridProxy.isValid() == false) {
+                    throw new VlException("Created Proxy is not Valid!");
+                }
+            }
+
+            System.out.println("--- Valid Grid Proxy ---");
+            System.out.println(" - proxy filename =" + gridProxy.getProxyFilename());
+            System.out.println(" - proxy timeleft =" + gridProxy.getTimeLeftString());
+            System.out.println(" - proxy VOMS enabled =" + gridProxy.getEnableVOMS());
+            System.out.println(" - proxy VO =" + gridProxy.getVOName());
         }
 
         if (StringUtil.equals(authScheme, ServerInfo.PASSWORD_AUTH)

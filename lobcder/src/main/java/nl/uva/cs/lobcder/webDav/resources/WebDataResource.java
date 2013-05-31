@@ -81,7 +81,8 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
 
     @Override
     public Object authenticate(String user, String password) {
-        WebDataResource.log.log(Level.FINE, "authenticate.\n" + "\t user: {0}\t password: {1}", new Object[]{user, password});
+        String msg = "from:" + fromAddress + "user: " + user + " password: " + password;
+        WebDataResource.log.log(Level.FINE, msg);
         String token = password;
         MyPrincipal principal = null;
         if (auth2 != null) {

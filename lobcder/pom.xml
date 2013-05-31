@@ -96,6 +96,13 @@
         </dependency>        
         
         
+        <dependency>
+            <groupId>com.claymoresystems</groupId>
+            <artifactId>puretls</artifactId>
+            <version>0.9b4</version>
+            <type>pom</type>
+        </dependency>
+        
         
         <dependency>
             <groupId>nl.uva.vlet</groupId>
