@@ -126,32 +126,31 @@ public class VPDRI implements PDRI {
         String authScheme = info.getAuthScheme();
 
         if (StringUtil.equals(authScheme, ServerInfo.GSI_AUTH)) {
-            String proxyFile = "/tmp/myProxy";
-            System.out.println("Will create grid proxy at:" + proxyFile);
+            GridProxy gridProxy = proxyCache.get(password);
+            if (gridProxy == null) {
+                String proxyFile = "/tmp/myProxy";
 
-            context.setProperty("grid.proxy.location", proxyFile);
-            // Default to $HOME/.globus
-            context.setProperty("grid.certificate.location", Global.getUserHome() + "/.globus");
-            String vo = username;
-//            context.setProperty("grid.proxy.voName", vo);
-            GridProxy gridProxy = context.getGridProxy();
+                context.setProperty("grid.proxy.location", proxyFile);
+                // Default to $HOME/.globus
+                context.setProperty("grid.certificate.location", Global.getUserHome() + "/.globus");
+                String vo = username;
+                context.setProperty("grid.proxy.voName", vo);
+                gridProxy = context.getGridProxy();
 
-            if (gridProxy.isValid() == false) {
-                gridProxy.setEnableVOMS(false);
-//                gridProxy.setDefaultVOName(vo);
-                // throw new Exception("Invalid Grid Proxy, please create first");
-//                String pwd = askPassphrase("Please enter passphrase.");
-                System.out.println("--- Creating proxy ---");
-                gridProxy.createWithPassword(password);
                 if (gridProxy.isValid() == false) {
-                    throw new VlException("Created Proxy is not Valid!");
+                    gridProxy.setEnableVOMS(false);
+//                gridProxy.setDefaultVOName(vo);
+                    // throw new Exception("Invalid Grid Proxy, please create first");
+//                String pwd = askPassphrase("Please enter passphrase.");
+                    gridProxy.createWithPassword(password);
+                    if (gridProxy.isValid() == false) {
+                        throw new VlException("Created Proxy is not Valid!");
+                    }
+                    proxyCache.put(password, gridProxy);
                 }
             }
-            System.out.println("--- Valid Grid Proxy ---");
-            System.out.println(" - proxy filename =" + gridProxy.getProxyFilename());
-            System.out.println(" - proxy timeleft =" + gridProxy.getTimeLeftString());
-            System.out.println(" - proxy VOMS enabled =" + gridProxy.getEnableVOMS());
-            System.out.println(" - proxy VO =" + gridProxy.getVOName());
+
+
         }
 
         if (StringUtil.equals(authScheme, ServerInfo.PASSWORD_AUTH)
@@ -346,6 +345,7 @@ public class VPDRI implements PDRI {
 
     private Runnable getAsyncDelete(final VFSClient vfsClient, final VRL vrl) {
         return new Runnable() {
+
             @Override
             public void run() {
                 try {
@@ -359,6 +359,7 @@ public class VPDRI implements PDRI {
 
     private Runnable getAsyncPutData(final VFSClient vfsClient, final InputStream in) {
         return new Runnable() {
+
             @Override
             public void run() {
             }
