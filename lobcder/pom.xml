@@ -99,17 +99,42 @@
         <dependency>
             <groupId>com.claymoresystems</groupId>
             <artifactId>puretls</artifactId>
-            <version>0.9b4</version>
-            <type>pom</type>
+            <version>0.1</version>
         </dependency>
         
         
+        <dependency>
+            <groupId>cryptix</groupId>
+            <artifactId>cryptix-asn1</artifactId>
+            <version>1.0</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.cryptix</groupId>
+            <artifactId>cryptix32</artifactId>
+            <version>3.2.0</version>
+        </dependency>
+                
         <dependency>
             <groupId>nl.uva.vlet</groupId>
             <artifactId>vlet-grid.globus</artifactId>
             <version>1.5.0-dev-1</version>
             <scope>runtime</scope>
         </dependency>  
+        
+        
+        <dependency>
+            <groupId>org.globus</groupId>
+            <artifactId>cog-jglobus</artifactId>
+            <version>1.4</version>
+        </dependency>
+        
+        
+        <dependency>
+            <groupId>bouncycastle</groupId>
+            <artifactId>jce-jdk13</artifactId>
+            <version>131</version>
+        </dependency>
         
         
         <dependency>

@@ -134,7 +134,6 @@ public class VPDRI implements PDRI {
             context.setProperty("grid.certificate.location", Global.getUserHome() + "/.globus");
             String vo = username;
 //            context.setProperty("grid.proxy.voName", vo);
-
             GridProxy gridProxy = context.getGridProxy();
 
             if (gridProxy.isValid() == false) {
@@ -148,7 +147,6 @@ public class VPDRI implements PDRI {
                     throw new VlException("Created Proxy is not Valid!");
                 }
             }
-
             System.out.println("--- Valid Grid Proxy ---");
             System.out.println(" - proxy filename =" + gridProxy.getProxyFilename());
             System.out.println(" - proxy timeleft =" + gridProxy.getTimeLeftString());

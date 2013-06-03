@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Context antiJARLocking="true" path="/lobcder">
-  <Resource auth="Container" factory="org.apache.naming.factory.BeanFactory" 
+    <Resource auth="Container" factory="org.apache.naming.factory.BeanFactory" 
                                 name="bean/PrincipalCache" 
                                 timeout="600000" 
                                 type="nl.uva.cs.lobcder.auth.PrincipalCache"/>
-  <Resource auth="Container" driverClassName="com.mysql.jdbc.Driver"
+                                
+    <Resource auth="Container" driverClassName="com.mysql.jdbc.Driver"
                                 maxActive="100" 
                                 maxIdle="30" 
                                 maxWait="10000" 
@@ -15,7 +16,8 @@
                                 type="javax.sql.DataSource"
                                 url="jdbc:mysql://localhost:3306/lobcderDB2" 
                                 username="lobcder"/>
-  <Resource auth="Container" factory="org.apache.naming.factory.BeanFactory" 
+                                
+    <Resource auth="Container" factory="org.apache.naming.factory.BeanFactory" 
                                 name="bean/JDBCatalog"  
                                 type="nl.uva.cs.lobcder.catalogue.JDBCatalogue" />
  
@@ -23,7 +25,7 @@
   <Resource auth="Container" factory="org.apache.naming.factory.BeanFactory" name="bean/auth"  type="nl.uva.cs.lobcder.auth.LocalDbAuthh" />
   -->
 
-  <Resource auth="Container" factory="org.apache.naming.factory.BeanFactory" 
+    <Resource auth="Container" factory="org.apache.naming.factory.BeanFactory" 
                                 name="bean/auth" 
                                 serviceURL="https://masterinterface.vph-share.eu/validatetkt/?ticket=" 
                                 type="nl.uva.cs.lobcder.auth.AuthRemote"/>  
