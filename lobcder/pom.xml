@@ -87,34 +87,38 @@
             <scope>runtime</scope>
         </dependency>       
         
-                   
-        <dependency>
-            <groupId>org.globus</groupId>
-            <artifactId>cog-url</artifactId>
-            <version>1.4</version>
-            <scope>runtime</scope>
-        </dependency>        
-        
         
         <dependency>
             <groupId>com.claymoresystems</groupId>
             <artifactId>puretls</artifactId>
             <version>0.1</version>
+            <scope>runtime</scope>
         </dependency>
         
-        
+
         <dependency>
             <groupId>cryptix</groupId>
             <artifactId>cryptix-asn1</artifactId>
             <version>1.0</version>
-        </dependency>
-        
-        <dependency>
-            <groupId>org.cryptix</groupId>
-            <artifactId>cryptix32</artifactId>
-            <version>3.2.0</version>
+            <scope>runtime</scope>
         </dependency>
                 
+        <dependency>
+            <groupId>cryptix</groupId>
+            <artifactId>cryptix32</artifactId>
+            <version>3.2.0</version>
+            <scope>runtime</scope>
+        </dependency>
+                
+                
+        <dependency>
+            <groupId>cryptix</groupId>
+            <artifactId>cryptix</artifactId>
+            <version>1.0</version>
+            <scope>runtime</scope>
+        </dependency>
+
+
         <dependency>
             <groupId>nl.uva.vlet</groupId>
             <artifactId>vlet-grid.globus</artifactId>
