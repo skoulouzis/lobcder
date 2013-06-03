@@ -138,10 +138,8 @@ public class VPDRI implements PDRI {
                 gridProxy = context.getGridProxy();
 
                 if (gridProxy.isValid() == false) {
-                    gridProxy.setEnableVOMS(false);
-//                gridProxy.setDefaultVOName(vo);
-                    // throw new Exception("Invalid Grid Proxy, please create first");
-//                String pwd = askPassphrase("Please enter passphrase.");
+                    gridProxy.setEnableVOMS(true);
+                    gridProxy.setDefaultVOName(vo);
                     gridProxy.createWithPassword(password);
                     if (gridProxy.isValid() == false) {
                         throw new VlException("Created Proxy is not Valid!");
@@ -478,6 +476,10 @@ public class VPDRI implements PDRI {
             String msg = "Source: " + source.getHost() + " Destination: " + getHost() + " Replication_Speed: " + speed + " Kbites/sec Repl_Size: " + (getLength()) + " bytes";
             VPDRI.log.log(Level.FINE, msg);
             SpeedLogger.logSpeed(msg);
+                        
+            
+            getAsyncDelete(vfsClient, vrl).run();
+            
         } catch (VlException ex) {
             Logger.getLogger(VPDRI.class.getName()).log(Level.SEVERE, null, ex);
         }

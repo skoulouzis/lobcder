@@ -143,12 +143,11 @@
         
         <dependency>
             <groupId>org.bouncycastle</groupId>
-            <artifactId>bcprov-jdk16</artifactId>
-            <version>1.44</version>
-            <scope>runtime</scope>
+            <artifactId>bcprov-jdk15</artifactId>
+            <version>1.43</version>
         </dependency>
-        
-        
+            
+                
         <dependency>
             <groupId>nl.uva.vlet</groupId>
             <artifactId>vlet-vfs.srm</artifactId>
@@ -162,6 +161,7 @@
             <version>1.5.0-dev-1</version>
             <scope>runtime</scope>
         </dependency>
+        
         <dependency>
             <groupId>com.sun.jersey</groupId>
             <artifactId>jersey-client</artifactId>
