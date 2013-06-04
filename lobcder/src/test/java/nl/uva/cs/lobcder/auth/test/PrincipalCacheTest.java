@@ -51,7 +51,7 @@ public class PrincipalCacheTest {
 
     public MyPrincipal getPrincipal(String uname) {
         String[] roles = {"role1", "role2", "role3", "role4"};
-        MyPrincipal mp = new MyPrincipal(uname, new HashSet(Arrays.asList(roles)));
+        MyPrincipal mp = new MyPrincipal(uname, new HashSet<String>(Arrays.asList(roles)));
         return mp;
     }
 }

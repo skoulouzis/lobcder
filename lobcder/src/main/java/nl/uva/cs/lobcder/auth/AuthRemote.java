@@ -6,20 +6,20 @@ package nl.uva.cs.lobcder.auth;
 
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.GenericType;
-import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.json.JSONConfiguration;
 import com.sun.jersey.client.urlconnection.HTTPSProperties;
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
+
+import javax.naming.InitialContext;
+import javax.net.ssl.*;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.naming.InitialContext;
-import javax.net.ssl.*;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
 /**
  *
@@ -74,7 +74,7 @@ public class AuthRemote implements AuthI {
             }
             if (res == null) {
                 ClientConfig clientConfig = new DefaultClientConfig();
-              //  ClientConfig config = new DefaultClientConfig();
+                //  ClientConfig config = new DefaultClientConfig();
                 SSLContext ctx = getSslContext();
                 clientConfig.getProperties().put(HTTPSProperties.PROPERTY_HTTPS_PROPERTIES, new HTTPSProperties(getHostnameVerifier(), ctx));
 
@@ -83,6 +83,8 @@ public class AuthRemote implements AuthI {
                 User u = client.resource(getServiceURL() + token).get(new GenericType<User>() {
                 });
                 res = new MyPrincipal(u.username, new HashSet(Arrays.asList(u.role)));
+                res.getRoles().add("other");
+                res.getRoles().add(u.username);
             }
             if (pc != null) {
                 pc.putPrincipal(token, res);
@@ -94,6 +96,7 @@ public class AuthRemote implements AuthI {
 
     private HostnameVerifier getHostnameVerifier() {
         HostnameVerifier hv = new HostnameVerifier() {
+
             @Override
             public boolean verify(String string, SSLSession ssls) {
                 return true;
@@ -105,6 +108,7 @@ public class AuthRemote implements AuthI {
     private SSLContext getSslContext() throws Exception {
         final SSLContext sslContext = SSLContext.getInstance("SSL");
         sslContext.init(null, new TrustManager[]{new X509TrustManager() {
+
                 @Override
                 public X509Certificate[] getAcceptedIssuers() {
                     return new X509Certificate[0];

@@ -32,7 +32,7 @@ public class MMTypeTools {
 
         FitnessAndQuality lastOne = weightedMatches.get(weightedMatches.size() - 1);
 //        debug("Get back: " + lastOne.quality + " , " + lastOne.mimeType);
-        
+
         if (lastOne.quality != 0) {
             return lastOne.mimeType;
         }
@@ -143,7 +143,6 @@ public class MMTypeTools {
         results.subType = types[1].trim();
         return results;
     }
-    
 
     /**
      * Structure for holding a fitness/quality combo

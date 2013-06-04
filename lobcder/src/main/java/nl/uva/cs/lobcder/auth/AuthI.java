@@ -11,5 +11,4 @@ package nl.uva.cs.lobcder.auth;
 public interface AuthI {
 
     MyPrincipal checkToken(String token);
-    
 }

@@ -1,7 +1,7 @@
-DROP TABLE IF EXISTS permission_table, ldata_table, pdri_table, pdrigroup_table, role_to_ss_table, storage_site_table, credential_table;
+DROP TABLE IF EXISTS permission_table, ldata_table, pdri_table, pdrigroup_table, storage_site_table, credential_table;
 
 CREATE TABLE pdrigroup_table (
-  groupId SERIAL PRIMARY KEY,
+  pdriGroupId SERIAL PRIMARY KEY,
   refCount INT, INDEX(refCount)
 );
 
@@ -11,67 +11,141 @@ CREATE TABLE credential_table (
   password VARCHAR(255)
 );
 
+
+
 CREATE TABLE storage_site_table (
   storageSiteId SERIAL PRIMARY KEY,
-  resourceURI VARCHAR(1024),
+  resourceUri VARCHAR(1024),
   credentialRef BIGINT UNSIGNED, FOREIGN KEY(credentialRef) REFERENCES credential_table(credintialId) ON DELETE CASCADE,
   currentNum BIGINT,
   currentSize BIGINT,
   quotaNum BIGINT,
-  quotaSize BIGINT
+  quotaSize BIGINT,
+  isCache BOOLEAN NOT NULL DEFAULT FALSE, INDEX(isCache),
+  extra VARCHAR(512),
+  encrypt BOOLEAN NOT NULL DEFAULT FALSE, INDEX(encrypt)
 );
 
 CREATE TABLE pdri_table (
   pdriId SERIAL PRIMARY KEY,
-  url VARCHAR(1024),
-  storageSiteId BIGINT UNSIGNED,
-  pdriGroupId BIGINT UNSIGNED, INDEX(pdriGroupId)
+  fileName VARCHAR(255),
+  storageSiteRef BIGINT UNSIGNED, FOREIGN KEY(storageSiteRef) REFERENCES storage_site_table(storageSiteId) ON DELETE CASCADE,
+  pdriGroupRef BIGINT UNSIGNED, INDEX(pdriGroupRef), FOREIGN KEY(pdriGroupRef) REFERENCES pdrigroup_table(pdriGroupId) ON DELETE CASCADE,
+  isEncrypted BOOLEAN NOT NULL DEFAULT FALSE,
+  encryptionKey BIGINT UNSIGNED 
 );
 
 CREATE TABLE ldata_table (
  uid SERIAL PRIMARY KEY,
+ parentRef BIGINT UNSIGNED, INDEX(parentRef),
  ownerId VARCHAR(255), INDEX(ownerId),
- datatype ENUM('logical.file', 'logical.folder', 'logical.data'), INDEX(datatype),
- ld_name VARCHAR(255), INDEX(ld_name),
- parent VARCHAR(5240), INDEX(parent),
+ datatype ENUM('logical.file', 'logical.folder'), INDEX(datatype),
+ ldName VARCHAR(255), INDEX(ldName), UNIQUE KEY(parentRef, ldName),
  createDate DATETIME NOT NULL,
  modifiedDate DATETIME NOT NULL,
- ld_length BIGINT,
+ ldLength BIGINT,
  contentTypesStr VARCHAR(5240),
- pdriGroupId BIGINT UNSIGNED,
+ pdriGroupRef BIGINT UNSIGNED NOT NULL DEFAULT 0, INDEX(pdriGroupRef),
  isSupervised BOOLEAN NOT NULL DEFAULT FALSE, INDEX(isSupervised), 
- checksum BIGINT NOT NULL DEFAULT 0,
+ checksum VARCHAR(512),
  lastValidationDate BIGINT NOT NULL DEFAULT 0,
- lockTokenID  VARCHAR(255),
+ lockTokenId  VARCHAR(255),
  lockScope  VARCHAR(255),
  lockType  VARCHAR(255),
  lockedByUser  VARCHAR(255),
  lockDepth  VARCHAR(255),
  lockTimeout  BIGINT NOT NULL DEFAULT 0,
- description VARCHAR(255),
- locationPreference VARCHAR(255)
+ description VARCHAR(1024),
+ locationPreference VARCHAR(1024)
 );
 
 CREATE TABLE permission_table (
  id SERIAL PRIMARY KEY,
- perm_type ENUM('read', 'write'), index(perm_type),
- ld_uid_ref BIGINT UNSIGNED, FOREIGN KEY(ld_uid_ref) REFERENCES ldata_table(uid) ON DELETE CASCADE, INDEX(ld_uid_ref),
- role_name VARCHAR(255)
+ permType ENUM('read', 'write'), INDEX(permType),
+ ldUidRef BIGINT UNSIGNED, FOREIGN KEY(ldUidRef) REFERENCES ldata_table(uid) ON DELETE CASCADE, INDEX(ldUidRef),
+ roleName VARCHAR(255)
 );
 
 DELIMITER |
+
 DROP TRIGGER IF EXISTS on_ldata_delete |
 CREATE TRIGGER on_ldata_delete
 BEFORE DELETE ON ldata_table 
 FOR EACH ROW BEGIN
   IF OLD.datatype = 'logical.file' THEN
-    IF OLD.pdriGroupId != 0 THEN
-        UPDATE pdrigroup_table SET refCount=refCount-1 WHERE groupId = OLD.pdriGroupId;
+    IF OLD.pdriGroupRef != 0 THEN
+        UPDATE pdrigroup_table SET refCount=refCount-1 WHERE pdriGroupId = OLD.pdriGroupRef;
     END IF;
   END IF;
 END|
 
+DROP TRIGGER IF EXISTS on_ldata_update |
+CREATE TRIGGER on_ldata_update
+BEFORE UPDATE ON ldata_table
+FOR EACH ROW BEGIN
+  IF NEW.datatype = 'logical.file' THEN
+    IF NEW.pdriGroupRef != OLD.pdriGroupRef THEN
+      IF OLD.pdriGroupRef != 0 THEN
+        UPDATE pdrigroup_table SET refCount=refCount-1 WHERE pdriGroupId = OLD.pdriGroupRef;
+      END IF;
+      IF NEW.pdriGroupRef != 0 THEN
+        UPDATE pdrigroup_table SET refCount=refCount+1 WHERE pdriGroupId = NEW.pdriGroupRef;
+      END IF;
+    END IF;
+  END IF;
+END|
+
+-- DROP TRIGGER IF EXISTS on_pdri_incert |
+-- CREATE TRIGGER on_pdri_incert
+-- BEFORE INSERT ON pdri_table
+-- FOR EACH ROW BEGIN
+--   SET NEW.encryptionKey = FLOOR(100000000000000000 + RAND() * 1999999999999999999);
+-- END|
+
+
 DELIMITER ;
+
+INSERT INTO ldata_table(parentRef, ownerId, datatype, ldName, createDate, modifiedDate) VALUES(1, 'root', 'logical.folder', '', NOW(), NOW());
+SET @rootRef = LAST_INSERT_ID();
+UPDATE ldata_table SET parentRef = @rootRef WHERE uid = @rootRef;
+INSERT INTO permission_table (permType, ldUidRef, roleName) VALUES  ('read', @rootRef, 'other'),
+                                                                    ('read', @rootRef, 'admin'),
+                                                                    ('write', @rootRef, 'admin');
+INSERT INTO  credential_table(username, password) VALUES ('fakeuser', 'fakepass');
+SET @credRef = LAST_INSERT_ID();
+INSERT INTO storage_site_table(resourceUri, credentialRef, currentNum, currentSize, quotaNum, quotaSize, isCache)
+            VALUES('file:///tmp/', @credRef, -1, -1, -1, -1, TRUE);
+SET @ssRef = LAST_INSERT_ID();
+INSERT INTO  credential_table(username, password) VALUES ('dvasunin', 'my-secretpwd');
+SET @credRef = LAST_INSERT_ID();
+INSERT INTO storage_site_table(resourceUri, credentialRef, currentNum, currentSize, quotaNum, quotaSize)
+            VALUES('sftp://dvasunin@elab.lab.uvalight.net/home/dvasunin/tmp/lobcder/', @credRef, -1, -1, -1, -1);
+SET @ssRef = LAST_INSERT_ID();
+
+# Here we createtables for built-in user IDs/roles
+DROP TABLE IF EXISTS auth_roles_tables, auth_usernames_table;
+CREATE TABLE auth_usernames_table (
+    id SERIAL PRIMARY KEY,
+    token VARCHAR(1024), INDEX(token),
+    uname VARCHAR(255), INDEX(uname)
+);
+CREATE TABLE auth_roles_tables (
+    id SERIAL PRIMARY KEY,
+    roleName VARCHAR(255), INDEX(roleName),
+    unameRef BIGINT UNSIGNED, FOREIGN KEY(unameRef) REFERENCES auth_usernames_table(id) ON DELETE CASCADE
+);
+INSERT INTO auth_usernames_table(token, uname) VALUES ('secret0', 'token0');
+SET @authUserNamesRef = LAST_INSERT_ID();
+INSERT INTO auth_roles_tables(roleName, unameRef) VALUES  ('admin',     @authUserNamesRef),
+                                                          ('other',     @authUserNamesRef),
+                                                          ('megarole',  @authUserNamesRef);
+INSERT INTO auth_usernames_table(token, uname) VALUES ('secret1', 'token1');
+SET @authUserNamesRef = LAST_INSERT_ID();
+INSERT INTO auth_roles_tables(roleName, unameRef) VALUES  ('other',     @authUserNamesRef);
+INSERT INTO auth_usernames_table(token, uname) VALUES ('secret2', 'token2');
+SET @authUserNamesRef = LAST_INSERT_ID();
+INSERT INTO auth_roles_tables(roleName, unameRef) VALUES  ('admin',     @authUserNamesRef);
+
 
 DROP FUNCTION IF EXISTS SPLIT_STR;
 CREATE FUNCTION SPLIT_STR(
@@ -84,10 +158,10 @@ RETURN REPLACE(SUBSTRING(SUBSTRING_INDEX(x, delim, pos),
        LENGTH(SUBSTRING_INDEX(x, delim, pos -1)) + 1),
        delim, '');
 
-DELIMITER $$
+DELIMITER |
 
-DROP PROCEDURE IF EXISTS copyFolderContentProc $$
-CREATE PROCEDURE copyFolderContentProc(IN newOwner VARCHAR(255), IN newOwnerRoles VARCHAR(10240), IN rdPerm VARCHAR(10240), IN wrPerm VARCHAR(10240), IN oldParent VARCHAR(10240), IN newParent VARCHAR(10240))
+DROP PROCEDURE IF EXISTS copyFolderContentProc |
+CREATE PROCEDURE copyFolderContentProc(IN newOwner VARCHAR(255), IN newOwnerRoles VARCHAR(10240), IN rdPerm VARCHAR(10240), IN wrPerm VARCHAR(10240), IN oldParentRef BIGINT UNSIGNED, IN newParentRef BIGINT UNSIGNED)
 MAIN_BLOCK: BEGIN
   DECLARE a INT Default 0;  
   DECLARE str VARCHAR(255);
@@ -97,15 +171,15 @@ MAIN_BLOCK: BEGIN
   DECLARE SubStrLen INT DEFAULT 0;
   DECLARE curuid BIGINT default 0; 
   DECLARE done INT DEFAULT FALSE;
-  DECLARE role_name1 VARCHAR(255);
+  DECLARE roleName1 VARCHAR(255);
   DECLARE uid1, uidNew BIGINT UNSIGNED;
   DECLARE ownerId1 VARCHAR(255);
-  DECLARE ld_name1 VARCHAR(255);
-  DECLARE ld_length1 BIGINT;
+  DECLARE ldName1 VARCHAR(255);
+  DECLARE ldLength1 BIGINT;
   DECLARE contentTypesStr1 VARCHAR(10240);
-  DECLARE pdriGroupId1 BIGINT UNSIGNED;
-  DECLARE permissionToReadCursor CURSOR FOR SELECT role_name FROM permission_table WHERE ld_uid_ref = uid1 AND perm_type = 'read';
-  DECLARE folderCursor CURSOR FOR SELECT uid,ownerId,ld_name,ld_length,contentTypesStr,pdriGroupId FROM ldata_table WHERE ldata_table.parent = oldParent AND ldata_table.datatype = 'logical.file';
+  DECLARE pdriGroupRef1 BIGINT UNSIGNED;
+  DECLARE permissionToReadCursor CURSOR FOR SELECT roleName FROM permission_table WHERE ldUidRef = uid1 AND permType = 'read';
+  DECLARE folderCursor CURSOR FOR SELECT uid,ownerId,ldName,ldLength,contentTypesStr,pdriGroupRef FROM ldata_table WHERE ldata_table.parentRef = oldParentRef AND ldata_table.datatype = 'logical.file';
   DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
   
   IF rdPerm IS NULL THEN
@@ -118,303 +192,148 @@ MAIN_BLOCK: BEGIN
   OPEN folderCursor;
 loop_read_folder:
   LOOP
-    FETCH folderCursor INTO uid1, ownerId1, ld_name1, ld_length1, contentTypesStr1, pdriGroupId1;  
+    FETCH folderCursor INTO uid1, ownerId1, ldName1, ldLength1, contentTypesStr1, pdriGroupRef1;
     IF done THEN
       LEAVE loop_read_folder;
     END IF;
     IF ownerId1 = newOwner OR FIND_IN_SET('admin', newOwnerRoles) THEN
-        INSERT INTO ldata_table(ownerId, datatype, ld_name, parent, createDate, modifiedDate, ld_length, contentTypesStr, pdriGroupId) VALUES (newOwner, 'logical.file', ld_name1, newParent, NOW(), NOW(), ld_length1, contentTypesStr1, pdriGroupId1);
+        INSERT INTO ldata_table(parentRef, ownerId, datatype, ldName, createDate, modifiedDate, ldLength, contentTypesStr, pdriGroupRef) VALUES (newParentRef, newOwner, 'logical.file', ldName1, NOW(), NOW(), ldLength1, contentTypesStr1, pdriGroupRef1);
         SET uidNew = LAST_INSERT_ID();
-        UPDATE pdrigroup_table SET refCount=refCount+1 WHERE groupId = pdriGroupId1;
+        UPDATE pdrigroup_table SET refCount=refCount+1 WHERE pdriGroupId = pdriGroupRef1;
         SET a = 0;
        insert_read_permission_loop:
         LOOP
           SET a=a+1;
-          SET str=SPLIT_STR(rdPerm,",",a);
+          SET str=SPLIT_STR(rdPerm, ',', a);
           IF str='' THEN
             LEAVE insert_read_permission_loop;
           END IF;
-          INSERT INTO permission_table(perm_type, ld_uid_ref, role_name) VALUES ('read', uidNew, str);
+          INSERT INTO permission_table(permType, ldUidRef, roleName) VALUES ('read', uidNew, str);
         END LOOP insert_read_permission_loop;
         SET a = 0;
        insert_wr_permission_loop:
         LOOP
           SET a=a+1;
-          SET str=SPLIT_STR(wrPerm,",",a);
+          SET str=SPLIT_STR(wrPerm, ',', a);
           IF str='' THEN
             LEAVE insert_wr_permission_loop;
           END IF;
-          INSERT INTO permission_table(perm_type, ld_uid_ref, role_name) VALUES ('write', uidNew, str);
+          INSERT INTO permission_table(permType, ldUidRef, roleName) VALUES ('write', uidNew, str);
         END LOOP insert_wr_permission_loop;     
     ELSE
         OPEN permissionToReadCursor;
        loop_permission_read:
         LOOP
-            FETCH permissionToReadCursor INTO role_name1;
+            FETCH permissionToReadCursor INTO roleName1;
             IF done THEN
                 SET done = FALSE;
                 CLOSE permissionToReadCursor;
                 LEAVE loop_permission_read; 
             END IF;
-            IF FIND_IN_SET(role_name1, newOwnerRoles) THEN
-                INSERT INTO ldata_table(ownerId, datatype, ld_name, parent, createDate, modifiedDate, ld_length, contentTypesStr, pdriGroupId) VALUES (newOwner, 'logical.file', ld_name1, newParent, NOW(), NOW(), ld_length1, contentTypesStr1, pdriGroupId1);
+            IF FIND_IN_SET(roleName1, newOwnerRoles) THEN
+                INSERT INTO ldata_table(parentRef, ownerId, datatype, ldName, createDate, modifiedDate, ldLength, contentTypesStr, pdriGroupRef) VALUES (newParentRef, newOwner, 'logical.file', ldName1, NOW(), NOW(), ldLength1, contentTypesStr1, pdriGroupRef1);
                 SET uidNew = LAST_INSERT_ID();
-                UPDATE pdrigroup_table SET refCount=refCount+1 WHERE groupId = pdriGroupId1;
+                UPDATE pdrigroup_table SET refCount=refCount+1 WHERE pdriGroupId = pdriGroupRef1;
                 SET a = 0;
-            insert_read_permission_loop1:
+               insert_read_permission_loop1:
                 LOOP
                     SET a=a+1;
-                    SET str=SPLIT_STR(rdPerm,",",a);
+                    SET str=SPLIT_STR(rdPerm, ',', a);
                     IF str='' THEN
                         LEAVE insert_read_permission_loop1;
                     END IF;
-                    INSERT INTO permission_table(perm_type, ld_uid_ref, role_name) VALUES ('read', uidNew, str);
+                    INSERT INTO permission_table(permType, ldUidRef, roleName) VALUES ('read', uidNew, str);
                 END LOOP insert_read_permission_loop1;
                 SET a = 0;
-            insert_wr_permission_loop1:
+               insert_wr_permission_loop1:
                 LOOP
                     SET a=a+1;
-                    SET str=SPLIT_STR(wrPerm,",",a);
+                    SET str=SPLIT_STR(wrPerm, ',', a);
                     IF str='' THEN
                         LEAVE insert_wr_permission_loop1;
                     END IF;
-                    INSERT INTO permission_table(perm_type, ld_uid_ref, role_name) VALUES ('write', uidNew, str);
-                END LOOP insert_wr_permission_loop1;                    
+                    INSERT INTO permission_table(permType, ldUidRef, roleName) VALUES ('write', uidNew, str);
+                END LOOP insert_wr_permission_loop1;
+                CLOSE permissionToReadCursor;
+                LEAVE loop_permission_read;
             END IF;
         END LOOP loop_permission_read;
     END IF;
   END LOOP loop_read_folder;
-END
-$$
+END|
 
-DELIMITER ;
-
-
-CREATE TABLE role_to_ss_table (
- id SERIAL PRIMARY KEY,
- role_name VARCHAR(255), index(role_name),
- ss_id BIGINT unsigned, FOREIGN KEY(ss_id) REFERENCES storage_site_table(storageSiteId) ON DELETE CASCADE
-);
-
-INSERT INTO ldata_table(ownerId, datatype, ld_name, parent, createDate, modifiedDate) VALUES('root', 'logical.folder', '', '', NOW(), NOW());
-SET @rootID = LAST_INSERT_ID();
-
-INSERT INTO permission_table (perm_type, ld_uid_ref, role_name) VALUES  ('read', @rootID, 'other'),
-                                                                        ('read', @rootID, 'admin'),
-                                                                        ('write', @rootID, 'admin');
-
-INSERT INTO  credential_table(username, password) VALUES ('user', 'pass');
-SET @credID = LAST_INSERT_ID();
-INSERT INTO storage_site_table(resourceURI, credentialRef, currentNum, currentSize, quotaNum, quotaSize)
-            VALUES('file:///tmp/', @credID, -1, -1, -1, -1);
-SET @ssId = LAST_INSERT_ID();
-
-INSERT INTO  credential_table(username, password) VALUES ('vphdemo:vphdemo', 'LibiDibi7');
-SET @credID = LAST_INSERT_ID();
-INSERT INTO storage_site_table(resourceURI, credentialRef, currentNum, currentSize, quotaNum, quotaSize)
-            VALUES('swift://149.156.10.131:8443/auth/v1.0/', @credID, -1, -1, -1, -1);
-
-
-SET @ssId = LAST_INSERT_ID();
-INSERT INTO role_to_ss_table(role_name, ss_id) values   ('admin', @ssId),
-                                                        ('other', @ssId);
-# Here we createtables for built-in user IDs/roles
-CREATE TABLE IF NOT EXISTS auth_usernames_table (
-    id SERIAL PRIMARY KEY,
-    token VARCHAR(1024), index(token),
-    uname VARCHAR(255), index(uname)
-);
-
-CREATE TABLE IF NOT EXISTS auth_roles_tables (
-    id SERIAL PRIMARY KEY,
-    role_name VARCHAR(255), index(role_name),
-    uname_id BIGINT unsigned, FOREIGN KEY(uname_id) REFERENCES auth_usernames_table(id) ON DELETE CASCADE
-);
-
-DELIMITER $$
-
-DROP PROCEDURE IF EXISTS updateDriFlagProc $$
-CREATE PROCEDURE updateDriFlagProc(IN mowner VARCHAR(255), IN mroles VARCHAR(10240), IN flag BOOLEAN, IN mparent VARCHAR(10240))
+DROP PROCEDURE IF EXISTS updatePermissionsDirProc |
+CREATE PROCEDURE updatePermissionsDirProc(IN mowner VARCHAR(255), IN mroles VARCHAR(10240), IN newowner VARCHAR(255),
+                                          IN rroles VARCHAR(10240), IN wroles VARCHAR(10240), IN mparent BIGINT)
 MAIN_BLOCK: BEGIN
-    DECLARE a INT Default 0; 
-    DECLARE isadmin INT Default 0;
-    DECLARE str VARCHAR(255);
-    DECLARE parent1 VARCHAR(10240);
-    DECLARE name1 VARCHAR(255);
+  DECLARE a INT DEFAULT 0;
+  DECLARE isadmin INT DEFAULT 0;
+  DECLARE str VARCHAR(255);
 
-    DROP TABLE IF EXISTS myroles;
-    CREATE temporary table myroles(
-      mrole VARCHAR(255)
-    );
+  DROP TABLE IF EXISTS myroles;
+  CREATE TEMPORARY TABLE myroles (
+    mrole VARCHAR(255)
+  );
 
-    SET a=0;
-    insert_myroles_loop: 
+  DROP TABLE IF EXISTS myuid;
+  CREATE TEMPORARY TABLE myuid (
+    muid BIGINT UNSIGNED
+  );
+
+  SET a = 0;
+   insert_myroles_loop:
     LOOP
-        SET a=a+1;
-        SET str=SPLIT_STR(mroles,",",a);
-        IF str='' THEN
-            LEAVE insert_myroles_loop;
-        END IF;
-        INSERT INTO myroles(mrole) VALUES (str);
+      SET a = a + 1;
+      SET str = SPLIT_STR(mroles, ",", a);
+      IF str = '' THEN
+        LEAVE insert_myroles_loop;
+      END IF;
+      INSERT INTO myroles (mrole) VALUES (str);
     END LOOP insert_myroles_loop;
     SET isadmin = FIND_IN_SET('admin', mroles);
-    SET name1 = SUBSTRING_INDEX(TRIM(TRAILING '/' FROM mparent), '/', -1);
-    SET parent1 = TRIM(TRAILING '/' FROM REVERSE(SUBSTR(REVERSE(TRIM(TRAILING '/' FROM mparent)), INSTR(REVERSE(TRIM(TRAILING '/' FROM mparent)), '/'))));
 
-    UPDATE ldata_table SET isSupervised = flag
-    WHERE ldata_table.parent = parent1 AND ldata_table.ld_name = name1 AND (ldata_table.ownerId = mowner OR isadmin != 0 OR 
-        EXISTS(
-            SELECT 1 FROM permission_table JOIN myroles ON permission_table.role_name = myroles.mrole 
-            WHERE permission_table.perm_type = 'write' AND permission_table.ld_uid_ref = ldata_table.uid
-        )
-    );
-
-    UPDATE ldata_table SET isSupervised = flag
-    WHERE ldata_table.parent LIKE CONCAT(mparent, '%') AND (ldata_table.ownerId = mowner OR isadmin != 0 OR 
-        EXISTS(
-            SELECT 1 FROM permission_table JOIN myroles ON permission_table.role_name = myroles.mrole 
-            WHERE permission_table.perm_type = 'write' AND permission_table.ld_uid_ref = ldata_table.uid
-        )
-    );
-END
-
-$$
-
-DELIMITER ;
-
-
-DELIMITER $$
-
-DROP PROCEDURE IF EXISTS updatePermissionsProc $$
-CREATE PROCEDURE updatePermissionsProc(IN mowner VARCHAR(255), IN mroles VARCHAR(10240), IN newowner VARCHAR(255), IN rroles VARCHAR(10240), IN wroles VARCHAR(10240),  IN mparent VARCHAR(10240))
-MAIN_BLOCK: BEGIN
-    DECLARE a INT Default 0; 
-    DECLARE isadmin INT Default 0;
-    DECLARE str VARCHAR(255);
-    DECLARE parent1 VARCHAR(10240);
-    DECLARE name1 VARCHAR(255);
-
-    DROP TABLE IF EXISTS myroles;
-    CREATE temporary table myroles(
-      mrole VARCHAR(255)
-    );
-
-    SET a=0;
-    insert_myroles_loop: 
-    LOOP
-        SET a=a+1;
-        SET str=SPLIT_STR(mroles,",",a);
-        IF str='' THEN
-            LEAVE insert_myroles_loop;
-        END IF;
-        INSERT INTO myroles(mrole) VALUES (str);
-    END LOOP insert_myroles_loop;
-    SET isadmin = FIND_IN_SET('admin', mroles);
-    SET name1 = SUBSTRING_INDEX(TRIM(TRAILING '/' FROM mparent), '/', -1);
-    SET parent1 = TRIM(TRAILING '/' FROM REVERSE(SUBSTR(REVERSE(TRIM(TRAILING '/' FROM mparent)), INSTR(REVERSE(TRIM(TRAILING '/' FROM mparent)), '/'))));
-
-    UPDATE ldata_table SET isSupervised = flag
-    WHERE ldata_table.parent = parent1 AND ldata_table.ld_name = name1 AND (ldata_table.ownerId = mowner OR isadmin != 0 OR 
-        EXISTS(
-            SELECT 1 FROM permission_table JOIN myroles ON permission_table.role_name = myroles.mrole 
-            WHERE permission_table.perm_type = 'write' AND permission_table.ld_uid_ref = ldata_table.uid
-        )
-    );
-
-    UPDATE ldata_table SET isSupervised = flag
-    WHERE ldata_table.parent LIKE CONCAT(mparent, '%') AND (ldata_table.ownerId = mowner OR isadmin != 0 OR 
-        EXISTS(
-            SELECT 1 FROM permission_table JOIN myroles ON permission_table.role_name = myroles.mrole 
-            WHERE permission_table.perm_type = 'write' AND permission_table.ld_uid_ref = ldata_table.uid
-        )
-    );
-END
-
-$$
-
-DELIMITER ;
-
-DELIMITER $$
-
-DROP PROCEDURE IF EXISTS updatePermissionsProc $$
-CREATE PROCEDURE updatePermissionsProc(IN mowner VARCHAR(255), IN mroles VARCHAR(10240), IN newowner VARCHAR(255), IN rroles VARCHAR(10240), IN wroles VARCHAR(10240),  IN mparent VARCHAR(10240))
-MAIN_BLOCK: BEGIN
-    DECLARE a INT Default 0; 
-    DECLARE isadmin INT Default 0;
-    DECLARE str VARCHAR(255);
-    DECLARE parent1 VARCHAR(10240);
-    DECLARE name1 VARCHAR(255);
-
-    DROP TABLE IF EXISTS myroles;
-    CREATE temporary table myroles(
-      mrole VARCHAR(255)
-    );
-
-    DROP TABLE IF EXISTS myuid;
-    CREATE temporary table myuid(
-      muid BIGINT UNSIGNED
-    );
-
-    SET a=0;
-    insert_myroles_loop: 
-    LOOP
-        SET a=a+1;
-        SET str=SPLIT_STR(mroles,",",a);
-        IF str='' THEN
-            LEAVE insert_myroles_loop;
-        END IF;
-        INSERT INTO myroles(mrole) VALUES (str);
-    END LOOP insert_myroles_loop;
-    SET isadmin = FIND_IN_SET('admin', mroles);
-    SET name1 = SUBSTRING_INDEX(TRIM(TRAILING '/' FROM mparent), '/', -1);
-    SET parent1 = TRIM(TRAILING '/' FROM REVERSE(SUBSTR(REVERSE(TRIM(TRAILING '/' FROM mparent)), INSTR(REVERSE(TRIM(TRAILING '/' FROM mparent)), '/'))));
-
-    INSERT INTO myuid(muid) 
+    INSERT INTO myuid(muid)
     SELECT uid FROM ldata_table
-    WHERE ldata_table.parent = parent1 AND ldata_table.ld_name = name1 AND (ldata_table.ownerId = mowner OR isadmin != 0 OR 
+    WHERE parentRef = mparent AND (ownerId = mowner OR isadmin != 0 OR
         EXISTS(
-            SELECT 1 FROM permission_table JOIN myroles ON permission_table.role_name = myroles.mrole 
-            WHERE permission_table.perm_type = 'write' AND permission_table.ld_uid_ref = ldata_table.uid
+           SELECT 1 FROM permission_table JOIN myroles ON permission_table.roleName = myroles.mrole
+           WHERE permission_table.permType = 'write' AND permission_table.ldUidRef = ldata_table.uid
         )
     );
 
-    INSERT INTO myuid(muid) 
-    SELECT uid FROM ldata_table
-    WHERE ldata_table.parent LIKE CONCAT(mparent, '%') AND (ldata_table.ownerId = mowner OR isadmin != 0 OR 
-        EXISTS(
-            SELECT 1 FROM permission_table JOIN myroles ON permission_table.role_name = myroles.mrole 
-            WHERE permission_table.perm_type = 'write' AND permission_table.ld_uid_ref = ldata_table.uid
-        )
-    );
-    DELETE FROM permission_table WHERE permission_table.ld_uid_ref IN (SELECT muid FROM myuid);
-    SET a=0;
-    insert_rroles_loop: 
+    DELETE FROM permission_table
+    WHERE ldUidRef IN (SELECT muid FROM myuid);
+    SET a = 0;
+   insert_rroles_loop:
     LOOP
-        SET a=a+1;
-        SET str=SPLIT_STR(rroles,",",a);
-        IF str='' THEN
-            LEAVE insert_rroles_loop;
-        END IF;
-        INSERT INTO permission_table(perm_type, ld_uid_ref, role_name) 
-        SELECT 'read', muid, str FROM myuid;
+    SET a = a + 1;
+    SET str = SPLIT_STR(rroles, ",", a);
+    IF str = ''
+    THEN
+      LEAVE insert_rroles_loop;
+    END IF;
+    INSERT INTO permission_table (permType, ldUidRef, roleName)
+    SELECT 'read', muid, str FROM myuid;
     END LOOP insert_rroles_loop;
 
-    SET a=0;
-    insert_wroles_loop: 
+    SET a = 0;
+   insert_wroles_loop:
     LOOP
-        SET a=a+1;
-        SET str=SPLIT_STR(wroles,",",a);
-        IF str='' THEN
-            LEAVE insert_wroles_loop;
-        END IF;
-        INSERT INTO permission_table(perm_type, ld_uid_ref, role_name) 
-        SELECT 'write', muid, str FROM myuid;
+    SET a = a + 1;
+    SET str = SPLIT_STR(wroles, ",", a);
+    IF str = ''
+    THEN
+      LEAVE insert_wroles_loop;
+    END IF;
+    INSERT INTO permission_table (permType, ldUidRef, roleName)
+    SELECT 'write', muid, str FROM myuid;
     END LOOP insert_wroles_loop;
 
-    UPDATE ldata_table SET ownerId=newowner WHERE uid IN (SELECT muid FROM myuid);
+    UPDATE ldata_table SET ownerId = newowner
+    WHERE uid IN (SELECT muid FROM myuid);
 
 END
 
-$$
+|
 
 DELIMITER ;

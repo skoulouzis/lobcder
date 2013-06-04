@@ -102,17 +102,17 @@
 //            LogicalData testLogicalFile = new LogicalData(testFilePath, Constants.LOGICAL_FILE);
 //            webDAVFile = createFileResource(catalogue, testLogicalFile);
 //            webDAVFile.copyTo(collectionResource, webDAVFile.getName());
-//            assertNotNull(catalogue.getResourceEntryByLDRI(webDAVFile.getPath()));
+//            assertNotNull(catalogue.getLogicalDataByPath(webDAVFile.getPath()));
 //
 //
-//            ILogicalData folderLData = catalogue.getResourceEntryByLDRI(testCollPath);
+//            ILogicalData folderLData = catalogue.getLogicalDataByPath(testCollPath);
 //            assertEquals(testLogicalFolder.getType(), folderLData.getType());
 //            Collection<String> children = folderLData.getChildren();
 //            assertNotNull(children);
 //
 //            boolean foundIt = false;
 //            for (String p : children) {
-//                chLData = catalogue.getResourceEntryByLDRI(Path.path(p));
+//                chLData = catalogue.getLogicalDataByPath(Path.path(p));
 //                System.out.println("LData:              " + chLData.getLDRI().getName() + "         " + chLData.getUID());
 //                System.out.println("webDAVFile:         " + webDAVFile.getName() + "            " + webDAVFile.getUniqueId());
 //                System.out.println("testLogicalFolder:    " + testLogicalFolder.getLDRI().getName() + "         " + testLogicalFolder.getUID());
@@ -142,19 +142,19 @@
 //            try {
 //
 //
-//                load = catalogue.getResourceEntryByLDRI(testLogicalFolder.getLDRI());
+//                load = catalogue.getLogicalDataByPath(testLogicalFolder.getLDRI());
 //                assertNotNull(load);
 //
 //                collectionResource.delete();
 //
-//                load = catalogue.getResourceEntryByLDRI(testLogicalFolder.getLDRI());
+//                load = catalogue.getLogicalDataByPath(testLogicalFolder.getLDRI());
 //                assertNull(load);
 //
-//                load = catalogue.getResourceEntryByLDRI(Path.path(testLogicalFolder.getLDRI(), testFile));
+//                load = catalogue.getLogicalDataByPath(Path.path(testLogicalFolder.getLDRI(), testFile));
 //                assertNull(load);
 //
 //                webDAVFile.delete();
-//                assertNull(catalogue.getResourceEntryByLDRI(webDAVFile.getPath()));
+//                assertNull(catalogue.getLogicalDataByPath(webDAVFile.getPath()));
 //
 //
 //            } catch (CatalogueException ex) {
@@ -183,7 +183,7 @@
 //            WebDataFileResource instance = createFileResource(catalogue, testLogicalFile);
 //            instance.delete();
 //
-//            ILogicalData result = catalogue.getResourceEntryByLDRI(testLogicalFile.getLDRI());
+//            ILogicalData result = catalogue.getLogicalDataByPath(testLogicalFile.getLDRI());
 //            assertNull(result);
 //
 //        } catch (NotAuthorizedException ex) {
@@ -214,7 +214,7 @@
 //            testLogicalFolder.setStorageSites(sites);
 //            catalogue.registerResourceEntry(testLogicalFolder);
 //
-//            ILogicalData loaded = catalogue.getResourceEntryByLDRI(testLogicalFolder.getLDRI());
+//            ILogicalData loaded = catalogue.getLogicalDataByPath(testLogicalFolder.getLDRI());
 //            coll = createDirResource(catalogue, loaded);
 //
 //            instance = (WebDataFileResource) coll.createNew(ConstantsAndSettings.TEST_FILE_NAME_1, bais, new Long(ConstantsAndSettings.TEST_DATA.getBytes().length), "text/plain");
@@ -231,10 +231,10 @@
 //                instance.delete();
 //                coll.delete();
 //
-//                load = catalogue.getResourceEntryByLDRI(instance.getPath());
+//                load = catalogue.getLogicalDataByPath(instance.getPath());
 //                assertNull(load);
 //
-//                load = catalogue.getResourceEntryByLDRI(coll.getPath());
+//                load = catalogue.getLogicalDataByPath(coll.getPath());
 //                assertNull(load);
 //
 //            } catch (CatalogueException ex) {
@@ -288,7 +288,7 @@
 //        } finally {
 //            try {
 //                instance.delete();
-//                load = catalogue.getResourceEntryByLDRI(instance.getPath());
+//                load = catalogue.getLogicalDataByPath(instance.getPath());
 //                assertNull(load);
 //
 //
@@ -339,7 +339,7 @@
 //            testLogicalFile.setStorageSites(sites);
 //            catalogue.registerResourceEntry(testLogicalFile);
 //            //If we don't reload the logical file, metadata and storage sites are set to null
-////            ILogicalData loadedLFile = catalogue.getResourceEntryByLDRI(ConstantsAndSettings.TEST_FILE_PATH_1);
+////            ILogicalData loadedLFile = catalogue.getLogicalDataByPath(ConstantsAndSettings.TEST_FILE_PATH_1);
 //
 //            out = new ByteArrayOutputStream();
 //            instance = createFileResource(catalogue, testLogicalFile);
@@ -356,7 +356,7 @@
 //
 //        } finally {
 //            instance.delete();
-//            ILogicalData load = catalogue.getResourceEntryByLDRI(instance.getPath());
+//            ILogicalData load = catalogue.getLogicalDataByPath(instance.getPath());
 //            assertNull(load);
 //        }
 //    }
@@ -384,13 +384,13 @@
 //            instance.moveTo(rDest, "newFileName");
 //
 //
-//            ILogicalData loadedLFolder = catalogue.getResourceEntryByLDRI(testLogicalFolder.getLDRI());
+//            ILogicalData loadedLFolder = catalogue.getLogicalDataByPath(testLogicalFolder.getLDRI());
 //            assertNotNull(loadedLFolder);
 //            assertNotNull(loadedLFolder.getChild(Path.path(rDest.getPath(), "newFileName")));
 //
-//            ILogicalData loadedLFile = catalogue.getResourceEntryByLDRI(Path.path(rDest.getPath(), "newFileName"));
+//            ILogicalData loadedLFile = catalogue.getLogicalDataByPath(Path.path(rDest.getPath(), "newFileName"));
 //            assertNotNull(loadedLFile);
-//            assertNull(catalogue.getResourceEntryByLDRI(testLogicalFile.getLDRI()));
+//            assertNull(catalogue.getLogicalDataByPath(testLogicalFile.getLDRI()));
 //
 //
 //            rDest = createDirResource(catalogue, loadedLFolder);
@@ -471,7 +471,7 @@
 //
 //        } finally {
 //            instance.delete();
-//            ILogicalData load = catalogue.getResourceEntryByLDRI(instance.getPath());
+//            ILogicalData load = catalogue.getLogicalDataByPath(instance.getPath());
 //            assertNull(load);
 //        }
 //    }
@@ -497,7 +497,7 @@
 //        } finally {
 //            try {
 //                instance.delete();
-//                ILogicalData load = catalogue.getResourceEntryByLDRI(instance.getPath());
+//                ILogicalData load = catalogue.getLogicalDataByPath(instance.getPath());
 //                assertNull(load);
 //            } catch (CatalogueException ex) {
 //                Logger.getLogger(WebDataFileResourceTest.class.getName()).log(Level.SEVERE, null, ex);
@@ -530,7 +530,7 @@
 //        } finally {
 //            try {
 //                instance.delete();
-//                ILogicalData load = catalogue.getResourceEntryByLDRI(instance.getPath());
+//                ILogicalData load = catalogue.getLogicalDataByPath(instance.getPath());
 //                assertNull(load);
 //            } catch (CatalogueException ex) {
 //                Logger.getLogger(WebDataFileResourceTest.class.getName()).log(Level.SEVERE, null, ex);

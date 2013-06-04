@@ -1,58 +1,61 @@
 package nl.uva.cs.lobcder.webDav.resources;
 
-import com.bradmcevoy.common.Path;
-import com.bradmcevoy.http.Resource;
-import com.bradmcevoy.http.ResourceFactory;
+import io.milton.common.Path;
+import io.milton.http.ResourceFactory;
+import io.milton.resource.Resource;
+import lombok.Setter;
+import lombok.extern.java.Log;
+import nl.uva.cs.lobcder.auth.AuthI;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
 import nl.uva.cs.lobcder.resources.LogicalData;
 import nl.uva.cs.lobcder.util.Constants;
-import org.slf4j.LoggerFactory;
 
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.logging.Level;
+
+@Log
 public class WebDataResourceFactory implements ResourceFactory {
 
+    @Setter
     private JDBCatalogue catalogue;
-    private static final boolean debug = true;
-    private static final org.slf4j.Logger log = LoggerFactory.getLogger(WebDataResourceFactory.class);
-
-    public WebDataResourceFactory(JDBCatalogue catalogue) throws Exception {
-        this.catalogue = catalogue;
-    }
+    @Setter
+    private AuthI auth1;
+    @Setter
+    private AuthI auth2;
 
     @Override
     public Resource getResource(String host, String strPath) {
 
+        //Gets the root path. If instead we called :'ldri = Path.path(strPath);' we get back '/lobcder-1.0-SNAPSHOT'
         Path ldri = Path.path(strPath).getStripFirst().getStripFirst();
-        try {
-            //Gets the root path. If instead we called :'ldri = Path.path(strPath);' we get back '/lobcder-1.0-SNAPSHOT'
-            debug("getResource:  strPath: " + strPath + " path: " + Path.path(strPath) + " ldri: " + ldri);
-            debug("getResource:  host: " + host + " path: " + ldri);
+//        if (strPath.equals("/")) {
+//            ldri = Path.root;
+//        } else {
+//            ldri = Path.path(strPath);
+//        }
 
-            LogicalData entry = catalogue.getResourceEntryByLDRI(ldri, null);
+        try (Connection cn = catalogue.getConnection()) {
+            WebDataResourceFactory.log.log(Level.FINE, "getResource:  strPath: {0} path: {1} ldri: {2}" + "\n" + "\tgetResource:  host: {3} path: {4}", new Object[]{strPath, Path.path(strPath), ldri, host, ldri});
+
+            LogicalData entry = catalogue.getLogicalDataByPath(ldri, cn);
             if (entry == null) {
                 return null;
             }
 
             if (entry.getType().equals(Constants.LOGICAL_FOLDER)) {
-                return new WebDataDirResource(catalogue, entry);
+                return new WebDataDirResource(entry, ldri, catalogue, auth1, auth2);
             }
             if (entry.getType().equals(Constants.LOGICAL_FILE)) {
-                return new WebDataFileResource(catalogue, entry);
+                return new WebDataFileResource(entry, ldri, catalogue, auth1, auth2);
             }
-            return new WebDataResource(catalogue, entry);
-        } catch (Exception ex) {
+            return null;
+        } catch (SQLException ex) {
+            WebDataResourceFactory.log.log(Level.SEVERE, null, 1);
             Logger.getLogger(WebDataResourceFactory.class.getName()).log(Level.SEVERE, null, ex);
             throw new RuntimeException(ex);
         }
-//        return null;
-    }
-
-    private void debug(String msg) {
-//        if (debug) {
-//            System.err.println(this.getClass().getSimpleName() + ": " + msg);
-////        log.debug(msg);
-//        }
-        log.debug(msg);
     }
 }

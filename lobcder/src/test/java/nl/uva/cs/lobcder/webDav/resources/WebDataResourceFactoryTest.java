@@ -216,7 +216,7 @@
 //            assertFalse(foundIt);
 //
 ////        RDMSDLCatalog cat = new RDMSDLCatalog(new File(nl.uva.cs.lobcder.util.Constants.LOBCDER_CONF_DIR + "/datanucleus.properties"));
-//            entry = cat.getResourceEntryByLDRI(file.getPath());
+//            entry = cat.getLogicalDataByPath(file.getPath());
 //            assertNull(entry);
 //
 //            //At this point the collection should exist
@@ -258,7 +258,7 @@
 //                //        result = (WebDataDirResource) getResource(instance, host, ConstantsAndSettings.CONTEXT_PATH + ConstantsAndSettings.TEST_FOLDER_NAME_1);
 //                //        assertNull(result);
 //                cat = new RDMSDLCatalog(new File(nl.uva.cs.lobcder.util.Constants.LOBCDER_CONF_DIR + "/datanucleus.properties"));
-//                entry = cat.getResourceEntryByLDRI(result.getPath());
+//                entry = cat.getLogicalDataByPath(result.getPath());
 //                assertNull(entry);
 //            } catch (Exception ex) {
 //                Logger.getLogger(WebDataResourceFactoryTest.class.getName()).log(Level.SEVERE, null, ex);
@@ -371,16 +371,16 @@
 //            file = (WebDataFileResource) dir.createNew(ConstantsAndSettings.TEST_FILE_NAME_1, bais, new Long(ConstantsAndSettings.TEST_DATA.getBytes().length), "text/plain");
 //            checkChildren(dir, file);
 //            //Check if catalogue has the child entry
-//            ILogicalData childEntry = cat.getResourceEntryByLDRI(file.getPath());
+//            ILogicalData childEntry = cat.getLogicalDataByPath(file.getPath());
 //            assertEquals(childEntry.getLDRI().toString(), file.getPath().toString());
 //            assertEquals(childEntry.getUID(), file.getUniqueId());
 //
 //            //Check if the collection has the child
-//            ILogicalData collectionEntry = cat.getResourceEntryByLDRI(dir.getPath());
+//            ILogicalData collectionEntry = cat.getLogicalDataByPath(dir.getPath());
 //            Path childPath = collectionEntry.getChild(file.getPath());
 //            assertNotNull(childPath);
 //            assertEquals(childPath.toString(), file.getPath().toString());
-//            collectionEntry = cat.getResourceEntryByLDRI(file.getPath().getParent());
+//            collectionEntry = cat.getLogicalDataByPath(file.getPath().getParent());
 //            childPath = collectionEntry.getChild(file.getPath());
 //            assertNotNull(childPath);
 //            assertEquals(childPath.toString(), file.getPath().toString());
@@ -399,7 +399,7 @@
 //            //Check if catalogue has the child entry with the new name 
 //            //if we don't have new catalog we get back the old child entry
 //            cat = new RDMSDLCatalog(new File(nl.uva.cs.lobcder.util.Constants.LOBCDER_CONF_DIR + "/datanucleus.properties"));
-//            childEntry = cat.getResourceEntryByLDRI(file.getPath());
+//            childEntry = cat.getLogicalDataByPath(file.getPath());
 //
 //            assertEquals(childEntry.getLDRI().toString(), file.getPath().toString());
 //            assertEquals(childEntry.getUID(), file.getUniqueId());
@@ -407,11 +407,11 @@
 //            dir.delete();
 //
 //            //The child and the file should be gone 
-//            ILogicalData lDir = cat.getResourceEntryByLDRI(Path.path(ConstantsAndSettings.TEST_FOLDER_NAME_1));
+//            ILogicalData lDir = cat.getLogicalDataByPath(Path.path(ConstantsAndSettings.TEST_FOLDER_NAME_1));
 //            assertNull(lDir);
-//            ILogicalData lf1 = cat.getResourceEntryByLDRI(Path.path(ConstantsAndSettings.TEST_FILE_NAME_1));
+//            ILogicalData lf1 = cat.getLogicalDataByPath(Path.path(ConstantsAndSettings.TEST_FILE_NAME_1));
 //            assertNull(lf1);
-//            ILogicalData lf2 = cat.getResourceEntryByLDRI(Path.path(ConstantsAndSettings.TEST_FILE_NAME_2));
+//            ILogicalData lf2 = cat.getLogicalDataByPath(Path.path(ConstantsAndSettings.TEST_FILE_NAME_2));
 //            assertNull(lf2);
 //
 //
@@ -547,10 +547,10 @@
 //
 //        //sub1, sub2, sub3, sub4 should not be there
 //        RDMSDLCatalog cat = new RDMSDLCatalog(new File(nl.uva.cs.lobcder.util.Constants.LOBCDER_CONF_DIR + "/datanucleus.properties"));
-//        assertNull(cat.getResourceEntryByLDRI(sub1.getPath()));
-//        assertNull(cat.getResourceEntryByLDRI(sub2.getPath()));
-//        assertNull(cat.getResourceEntryByLDRI(sub3.getPath()));
-//        assertNull(cat.getResourceEntryByLDRI(sub4.getPath()));
+//        assertNull(cat.getLogicalDataByPath(sub1.getPath()));
+//        assertNull(cat.getLogicalDataByPath(sub2.getPath()));
+//        assertNull(cat.getLogicalDataByPath(sub3.getPath()));
+//        assertNull(cat.getLogicalDataByPath(sub4.getPath()));
 //
 //        dir.delete();
 //    }

@@ -13,5 +13,4 @@ class DuplicateResourceException extends CatalogueException {
     public DuplicateResourceException(String msg) {
         super(msg);
     }
-    
 }

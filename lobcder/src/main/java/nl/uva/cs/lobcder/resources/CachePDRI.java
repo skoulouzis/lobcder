@@ -4,19 +4,19 @@
  */
 package nl.uva.cs.lobcder.resources;
 
-import java.io.*;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.nio.ByteBuffer;
-import java.nio.channels.Channels;
-import java.nio.channels.FileChannel;
-import java.nio.channels.ReadableByteChannel;
-import java.nio.channels.WritableByteChannel;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import nl.uva.cs.lobcder.catalogue.CatalogueException;
 import nl.uva.cs.lobcder.util.CatalogueHelper;
 import nl.uva.cs.lobcder.util.Constants;
+
+import java.io.*;
+import java.math.BigInteger;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import javax.crypto.NoSuchPaddingException;
+import nl.uva.cs.lobcder.util.DesEncrypter;
+import nl.uva.vlet.exception.VlException;
 
 /**
  *
@@ -28,20 +28,13 @@ public class CachePDRI implements PDRI {
     private final static String baseLocation;
 
     static {
-        String bl = null;
-        try {
-            bl = ch.getCatalogue().getStorageSitesById(Constants.CACHE_STORAGE_SITE_ID, null).getResourceURI().replaceFirst("^file://[aA-zZ.]*/", "/");
-        } catch (CatalogueException ex) {
-            Logger.getLogger(CachePDRI.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        if (!bl.endsWith("/")) {
-            bl += "/";
-        }
-        baseLocation = bl + "LOBCDER-REPLICA-vTEST/";
+        baseLocation = "/tmp/LOBCDER-REPLICA-vTEST/";
     }
     final private String file_name;
     final private Long ssid;
     private final File file;
+    private BigInteger key;
+    private boolean encrypt;
 
     public CachePDRI(String file_name) {
         this.ssid = Long.valueOf(Constants.CACHE_STORAGE_SITE_ID);
@@ -51,7 +44,6 @@ public class CachePDRI implements PDRI {
 
     @Override
     public void delete() throws IOException {
-        
         file.delete();
     }
 
@@ -61,10 +53,24 @@ public class CachePDRI implements PDRI {
     }
 
     @Override
-    public void putData(InputStream data) throws IOException {
+    public void putData(InputStream data) throws IOException, FileNotFoundException {
 //        Runnable asyncPut = getAsyncPutData(baseLocation + file_name, data);
 //        asyncPut.run();
-        setResourceContent(data);
+        if (!getEncrypted()) {
+            try {
+                setResourceContent(data);
+            } catch (VlException ex) {
+                throw new IOException(ex);
+            }
+        } else {
+            try {
+                OutputStream out = new FileOutputStream(file);
+                DesEncrypter encrypter = new DesEncrypter(getKeyInt());
+                encrypter.decrypt(getData(), out);
+            } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | InvalidAlgorithmParameterException ex) {
+                throw new IOException(ex);
+            }
+        }
     }
 
     @Override
@@ -77,13 +83,11 @@ public class CachePDRI implements PDRI {
         return file_name;
     }
 
-    private void setResourceContent(InputStream is) throws FileNotFoundException, IOException {
-//        OutputStream os = new BufferedOutputStream(new FileOutputStream(file), Constants.BUF_SIZE);
+    private void setResourceContent(InputStream is) throws FileNotFoundException, IOException, VlException {
         OutputStream os = new FileOutputStream(file);
         try {
             int read;
-            byte[] copyBuffer = new byte[2 * 1024 * 1024];
-
+            byte[] copyBuffer = new byte[Constants.BUF_SIZE];
             while ((read = is.read(copyBuffer, 0, copyBuffer.length)) != -1) {
                 os.write(copyBuffer, 0, read);
             }
@@ -94,61 +98,21 @@ public class CachePDRI implements PDRI {
                 os.close();
             }
         }
-    }
-
-    private Runnable getAsyncPutData(final String uri, final InputStream is) {
-
-        return new Runnable() {
-
-            @Override
-            public void run() {
-                OutputStream dest = null;
-                try {
-                    dest = new FileOutputStream(new File(uri));
-                    if ((dest instanceof FileOutputStream) && (is instanceof FileInputStream)) {
-                        try {
-                            FileChannel target = ((FileOutputStream) dest).getChannel();
-                            FileChannel source = ((FileInputStream) is).getChannel();
-                            source.transferTo(0, source.size(), target);
-                            source.close();
-                            target.close();
-
-                            return;
-                        } catch (Exception e) { /*
-                             * failover to byte stream version
-                             */
-
-                        }
-                    }
-                    final ReadableByteChannel inputChannel = Channels.newChannel(is);
-                    final WritableByteChannel outputChannel = Channels.newChannel(dest);
-                    fastCopy(inputChannel, outputChannel);
-                } catch (IOException ex) {
-                    Logger.getLogger(CachePDRI.class.getName()).log(Level.SEVERE, null, ex);
-                } finally {
-                    try {
-                        dest.close();
-                    } catch (IOException ex) {
-                        Logger.getLogger(CachePDRI.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                }
-            }
-
-            private void fastCopy(ReadableByteChannel inputChannel, WritableByteChannel outputChannel) throws IOException {
-                final ByteBuffer buffer = ByteBuffer.allocateDirect(Constants.BUF_SIZE);
-                while (inputChannel.read(buffer) != -1) {
-                    buffer.flip();
-                    outputChannel.write(buffer);
-                    buffer.compact();
-                }
-                buffer.flip();
-
-                while (buffer.hasRemaining()) {
-                    outputChannel.write(buffer);
-                }
-            }
-        };
-
+//        try {
+//            CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((Constants.BUF_SIZE), is, os);
+//            cBuff.startTransfer(new Long(-1));
+//        } finally {
+//            if (os != null) {
+//                try {
+//                    os.flush();
+//                    os.close();
+//                } catch (java.io.IOException ex) {
+//                }
+//            }
+//            if (is != null) {
+//                is.close();
+//            }
+//        }
 
     }
 
@@ -168,7 +132,7 @@ public class CachePDRI implements PDRI {
 //        try {
 //            MessageDigest md = MessageDigest.getInstance("MD5");
 //
-//            byte[] dataBytes = new byte[1024];
+//            byte[] dataBytes = new byte[BUF_SIZE];
 //
 //            int nread = 0;
 //            while ((nread = new FileInputStream(new File(baseLocation + file_name)).read(dataBytes)) != -1) {
@@ -200,5 +164,20 @@ public class CachePDRI implements PDRI {
     @Override
     public String getURI() throws IOException {
         return file.toURI().toString();
+    }
+
+//    @Override
+//    public void setKeyInt(BigInteger keyInt) {
+//       this.key = keyInt;
+//    }
+//
+    @Override
+    public BigInteger getKeyInt() {
+        return this.key;
+    }
+
+    @Override
+    public boolean getEncrypted() {
+        return this.encrypt;
     }
 }
