@@ -12,6 +12,7 @@ import lombok.Data;
  */
 @Data
 public class MyStorageSite implements Cloneable {
+
     @Override
     public Object clone() {
         MyStorageSite clone = new MyStorageSite();
@@ -25,8 +26,6 @@ public class MyStorageSite implements Cloneable {
         clone.setEncrypt(encrypt);
         return clone;
     }
-
-    
     private Long storageSiteId;
     private Long quotaSize;
     private Long quotaNum;

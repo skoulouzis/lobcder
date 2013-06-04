@@ -30,14 +30,11 @@ import nl.uva.cs.lobcder.util.DesEncrypter;
 import javax.annotation.Nonnull;
 import javax.xml.namespace.QName;
 import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.security.NoSuchAlgorithmException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * @author S. Koulouzis
@@ -81,8 +78,6 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
 
     @Override
     public Object authenticate(String user, String password) {
-        String msg = "from:" + fromAddress + "user: " + user + " password: " + password;
-        WebDataResource.log.log(Level.FINE, msg);
         String token = password;
         MyPrincipal principal = null;
         if (auth2 != null) {
@@ -96,6 +91,8 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
             WebDataResource.log.log(Level.FINE, "getUserId: {0}", principal.getUserId());
             WebDataResource.log.log(Level.FINE, "getRolesStr: {0}", principal.getRolesStr());
         }
+        String msg = "From: " + fromAddress + " user: " + principal.getUserId() + " password: " + password;
+        WebDataResource.log.log(Level.INFO, msg);
         return principal;
     }
 
@@ -110,6 +107,8 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
     @Override
     public boolean authorise(Request request, Request.Method method, Auth auth) {
         fromAddress = request.getFromAddress();
+        String msg = "From: " + fromAddress + " User: " + getPrincipal().getUserId() + " Method: " + method;
+        WebDataResource.log.log(Level.INFO, msg);
         try {
             if (auth == null) {
                 return false;
@@ -250,6 +249,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
         try {
             // Do the mapping
             Principal p = new DavPrincipals.AbstractDavPrincipal(getPrincipalURL()) {
+
                 @Override
                 public boolean matches(Auth auth, Resource current) {
                     return true;
@@ -277,6 +277,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
             for (String r : resourcePermission.getRead()) {
                 perm = new ArrayList<>();
                 p = new DavPrincipals.AbstractDavPrincipal(getRoleUrlPrefix() + r) {
+
                     @Override
                     public boolean matches(Auth auth, Resource current) {
                         return true;
@@ -292,6 +293,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
             for (String r : resourcePermission.getWrite()) {
                 perm = new ArrayList<>();
                 p = new DavPrincipals.AbstractDavPrincipal(getRoleUrlPrefix() + r) {
+
                     @Override
                     public boolean matches(Auth auth, Resource current) {
                         return true;

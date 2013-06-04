@@ -30,7 +30,6 @@ public class CachePDRI implements PDRI {
     static {
         baseLocation = "/tmp/LOBCDER-REPLICA-vTEST/";
     }
-    
     final private String file_name;
     final private Long ssid;
     private final File file;

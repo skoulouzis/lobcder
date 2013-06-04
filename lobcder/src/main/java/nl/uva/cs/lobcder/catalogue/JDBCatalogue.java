@@ -43,9 +43,10 @@ public class JDBCatalogue extends MyDataSource {
 
     public void startSweep() {
         TimerTask gcTask = new TimerTask() {
+
             Runnable deleteSweep = new DeleteSweep(getDatasource());
             Runnable replicateSweep = new ReplicateSweep(getDatasource());
-            
+
             @Override
             public void run() {
                 deleteSweep.run();
@@ -248,11 +249,11 @@ public class JDBCatalogue extends MyDataSource {
         long pdriGroupRef;
         long pdriId;
         try (PreparedStatement ps = connection.prepareStatement("SELECT fileName, storageSiteRef, storage_site_table.resourceUri, "
-                + "username, password, isEncrypted, encryptionKey, pdri_table.pdriId  "
-                + "FROM pdri_table "
-                + "JOIN storage_site_table ON storageSiteRef = storageSiteId "
-                + "JOIN credential_table ON credentialRef = credintialId "
-                + "WHERE pdri_table.pdriGroupRef = ? ")) {  
+                        + "username, password, isEncrypted, encryptionKey, pdri_table.pdriId  "
+                        + "FROM pdri_table "
+                        + "JOIN storage_site_table ON storageSiteRef = storageSiteId "
+                        + "JOIN credential_table ON credentialRef = credintialId "
+                        + "WHERE pdri_table.pdriGroupRef = ? ")) {
             ps.setLong(1, groupId);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {

@@ -15,31 +15,31 @@ import java.util.concurrent.atomic.AtomicLong;
 public class PDRIGroup {
 
     private Long groupId;
-    private String pdriIds="";
-    protected Integer refCount=0;
-    
+    private String pdriIds = "";
+    protected Integer refCount = 0;
+
     static public class Accessor {
+
         public static Integer getRefCount(PDRIGroup pdriGroup) {
-            synchronized(pdriGroup){
+            synchronized (pdriGroup) {
                 return pdriGroup.refCount;
             }
         }
-        public static void setRefCount(PDRIGroup pdriGroup, Integer value){
-            synchronized(pdriGroup){
+
+        public static void setRefCount(PDRIGroup pdriGroup, Integer value) {
+            synchronized (pdriGroup) {
                 pdriGroup.refCount = value;
             }
         }
     }
-    
     private static AtomicLong count = new AtomicLong();
     private Set<Long> decodedPdriIds = null;
-    
-    public PDRIGroup(){
+
+    public PDRIGroup() {
         groupId = count.incrementAndGet();
     }
-    
-    
-    public Long getGroupId(){
+
+    public Long getGroupId() {
         return groupId;
     }
 
@@ -67,13 +67,13 @@ public class PDRIGroup {
         this.pdriIds = sb.toString();
         decodedPdriIds = pdriIds;
     }
-    
-    public void addPdriRef(Long pdriId){
-        if(pdriIds.isEmpty()){
-            pdriIds = pdriId.toString();            
+
+    public void addPdriRef(Long pdriId) {
+        if (pdriIds.isEmpty()) {
+            pdriIds = pdriId.toString();
         } else {
             pdriIds += "," + pdriId;
         }
-        decodedPdriIds = null;        
+        decodedPdriIds = null;
     }
 }

@@ -84,7 +84,6 @@ public class DRIDataResource {
         }
     }
 
-
     @Path("{uid}/checksum/{checksum}/")
     @PUT
     public void setChecksum(@PathParam("uid") Long uid, @PathParam("checksum") String checksum) {

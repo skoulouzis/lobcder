@@ -16,7 +16,7 @@ public class SpeedLogger {
 
     public static void logSpeed(String speed) {
         try {
-            PrintWriter out = new PrintWriter((new FileWriter(System.getProperty("user.home")+"/speedLog", true)));
+            PrintWriter out = new PrintWriter((new FileWriter(System.getProperty("user.home") + "/speedLog", true)));
             out.println(speed);
             out.close();
         } catch (IOException e) {

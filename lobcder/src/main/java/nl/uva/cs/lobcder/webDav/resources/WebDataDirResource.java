@@ -53,6 +53,8 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
         try {
             switch (method) {
                 case MKCOL:
+                    String msg = "From: " + fromAddress + " User: " + getPrincipal().getUserId() + " Method: " + method;
+                    WebDataDirResource.log.log(Level.INFO, msg);
                     return getPrincipal().canWrite(getPermissions());
                 default:
                     return super.authorise(request, method, auth);
@@ -216,7 +218,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
         double elapsed = System.currentTimeMillis() - start;
         double speed = ((pdri.getLength() * 8.0) * 1000.0) / (elapsed * 1000.0);
         String msg = "Source: " + fromAddress + " Destination: " + pdri.getHost() + " Rx_Speed: " + speed + " Kbites/sec Rx_Size: " + (pdri.getLength()) + " bytes";
-        WebDataDirResource.log.log(Level.FINE, msg);
+        WebDataDirResource.log.log(Level.INFO, msg);
         SpeedLogger.logSpeed(msg);
         return resource;
     }

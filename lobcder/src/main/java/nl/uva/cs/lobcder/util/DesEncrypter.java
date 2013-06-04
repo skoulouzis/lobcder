@@ -103,7 +103,7 @@ public class DesEncrypter {
         try {
             int read;
             cipherIn = new CipherInputStream(in, dcipher);
-            byte[] copyBuffer = new byte[200*1024];
+            byte[] copyBuffer = new byte[200 * 1024];
             while ((read = cipherIn.read(copyBuffer, 0, copyBuffer.length)) != -1) {
                 out.write(copyBuffer, 0, read);
             }

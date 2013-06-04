@@ -13,7 +13,8 @@ import java.io.Serializable;
  * @author S. Koulouzis
  */
 @Data
-public class Credential implements Serializable{
+public class Credential implements Serializable {
+
     private String storageSiteUsername;
     private String storageSitePassword;
     private GridProxy gridProxy;

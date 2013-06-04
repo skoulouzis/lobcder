@@ -1,6 +1,5 @@
 package nl.uva.cs.lobcder.frontend;
 
-import io.milton.config.HttpManagerBuilder;
 import io.milton.servlet.DefaultMiltonConfigurator;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.auth.AuthRemote;
@@ -21,23 +20,22 @@ public class MyMiltonConfigurator extends DefaultMiltonConfigurator {
     private WebDataResourceFactory webDataResourceFactory;
 
 //    public MyMiltonConfigurator() {
-            //        super();
-            //        try {
-            //            // Attempt to use Enterprise edition build if available
-            //            Class builderClass = Class.forName("nl.uva.cs.webdav.HttpManagerBuilderExt");
-            //            builder = (HttpManagerBuilder) builderClass.newInstance();
-            //            log.log(Level.INFO, "Using enterprise builder: {0}", builder.getClass());
-            //        } catch (InstantiationException | IllegalAccessException | ClassNotFoundException ex) {
-            //            log.info("Couldnt instantiate enterprise builder, DAV level 2 and beyond features will not be available");
-            //            builder = new HttpManagerBuilder();
-            //        }
+    //        super();
+    //        try {
+    //            // Attempt to use Enterprise edition build if available
+    //            Class builderClass = Class.forName("nl.uva.cs.webdav.HttpManagerBuilderExt");
+    //            builder = (HttpManagerBuilder) builderClass.newInstance();
+    //            log.log(Level.INFO, "Using enterprise builder: {0}", builder.getClass());
+    //        } catch (InstantiationException | IllegalAccessException | ClassNotFoundException ex) {
+    //            log.info("Couldnt instantiate enterprise builder, DAV level 2 and beyond features will not be available");
+    //            builder = new HttpManagerBuilder();
+    //        }
 //            Class handlerHelper = Class.forName("io.milton.http.HandlerHelper");
 //            if (handlerHelper != null) {
 //                throw new RuntimeException("HandlerHelper is not an instance of io.milton.http.HandlerHelper");
 //            }
 //            builder = new HttpManagerBuilderExt();
 //    }
-
     @Override
     protected void build() {
         builder.setEnableCompression(false);
@@ -62,9 +60,9 @@ public class MyMiltonConfigurator extends DefaultMiltonConfigurator {
             MyMiltonConfigurator.log.log(Level.SEVERE, null, e);
         }
     }
-    
+
     @Override
-    public void shutdown(){
+    public void shutdown() {
         super.shutdown();
         catalogue.stopSweep();
     }

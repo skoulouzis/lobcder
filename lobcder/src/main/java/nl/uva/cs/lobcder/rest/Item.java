@@ -51,7 +51,7 @@ public class Item extends CatalogueHelper {
             res.setLogicalData(resLD);
             res.setPermissions(p);
             res.setPath(getCatalogue().getPathforLogicalData(resLD));
-            if(!resLD.isFolder() && mp.isAdmin()){
+            if (!resLD.isFolder() && mp.isAdmin()) {
                 res.setPdriList(getCatalogue().getPdriDescrByGroupId(resLD.getPdriGroupId(), cn));
             }
             return res;
@@ -83,7 +83,6 @@ public class Item extends CatalogueHelper {
 //            throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
 //        }
 //    }
-
     @Path("dri/")
     public DRIDataResource getDRI() {
         return new DRIDataResource(getCatalogue(), request);

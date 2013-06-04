@@ -55,8 +55,11 @@ public class WebDataFileResource extends WebDataResource implements
 
     @Override
     public boolean authorise(Request request, Request.Method method, Auth auth) {
+
         switch (method) {
             case MKCOL:
+                String msg = "From: " + fromAddress + " User: " + getPrincipal().getUserId() + " Method: " + method;
+                WebDataFileResource.log.log(Level.INFO, msg);
                 return false;
             default:
                 return super.authorise(request, method, auth);
@@ -277,7 +280,7 @@ public class WebDataFileResource extends WebDataResource implements
         double elapsed = System.currentTimeMillis() - start;
         double speed = ((pdri.getLength() * 8.0) * 1000.0) / (elapsed * 1000.0);
         String msg = "Source: " + pdri.getHost() + " Destination: " + fromAddress + " Tx Speed: " + speed + " Kbites/sec Tx_Size: " + pdri.getLength() + " bytes";
-        WebDataFileResource.log.log(Level.FINE, msg);
+        WebDataFileResource.log.log(Level.INFO, msg);
     }
 
     @Override

@@ -27,7 +27,6 @@ import java.util.logging.Level;
  *
  * @author dvasunin
  */
-
 @Log
 public class DRItemsResource {
 
@@ -55,8 +54,9 @@ public class DRItemsResource {
         ResultSet rs = ps2.executeQuery();
         while (rs.next()) {
             Long _uid = rs.getLong(1);
-            if(_uid != 1)
+            if (_uid != 1) {
                 uidArrayList.add(_uid);
+            }
         }
         for (Long uid1 : uidArrayList) {
             setDirSupervised(uid1, flag, ps1, ps2);
@@ -71,7 +71,7 @@ public class DRItemsResource {
             if (mp.isAdmin()) {
                 try {
                     LogicalData logicalData;
-                    if(path == null || path.isEmpty()){
+                    if (path == null || path.isEmpty()) {
                         logicalData = catalogue.getLogicalDataByUid(1L, cn);
                     } else {
                         logicalData = catalogue.getLogicalDataByPath(io.milton.common.Path.path(path), cn);
@@ -79,7 +79,7 @@ public class DRItemsResource {
                     catalogue.setLogicalDataSupervised(logicalData.getUid(), param, cn);
                     if (logicalData.isFolder()) {
                         try (PreparedStatement ps1 = cn.prepareStatement("UPDATE ldata_table SET isSupervised=? WHERE parentRef = ?");
-                             PreparedStatement ps2 = cn.prepareStatement("SELECT uid FROM ldata_table WHERE parentRef = ? AND datatype = '" + Constants.LOGICAL_FOLDER + "'")) {
+                                PreparedStatement ps2 = cn.prepareStatement("SELECT uid FROM ldata_table WHERE parentRef = ? AND datatype = '" + Constants.LOGICAL_FOLDER + "'")) {
                             setDirSupervised(logicalData.getUid(), param, ps1, ps2);
                         }
                     }

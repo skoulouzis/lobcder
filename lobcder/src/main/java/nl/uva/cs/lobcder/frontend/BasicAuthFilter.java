@@ -17,9 +17,8 @@ import java.util.logging.Level;
 /**
  * A very simple Servlet Filter for HTTP Basic Auth.
  * 
-* @author Timo B. Huebel (me@tbh.name) (initial creation)
+ * @author Timo B. Huebel (me@tbh.name) (initial creation)
  */
-
 @Log
 public class BasicAuthFilter implements Filter {
 
@@ -58,11 +57,11 @@ public class BasicAuthFilter implements Filter {
                     }
                     principal = authT.checkToken(token);
                 }
-                if(principal != null) {
+                if (principal != null) {
                     httpRequest.setAttribute("myprincipal", principal);
                     chain.doFilter(httpRequest, httpResponse);
                     return;
-                }                
+                }
             }
         }
 

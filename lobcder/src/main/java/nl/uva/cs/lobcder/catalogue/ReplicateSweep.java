@@ -137,7 +137,7 @@ class ReplicateSweep implements Runnable {
                         key = BigInteger.valueOf(keyLong);
                         pdriGroupRef = rs.getLong(8);
                         pdriId = rs.getLong(9);
-                        PDRIDescr cd = new PDRIDescr(name, ssID, resourceURL, username, password, encrypt, key, pdriGroupRef, pdriId );
+                        PDRIDescr cd = new PDRIDescr(name, ssID, resourceURL, username, password, encrypt, key, pdriGroupRef, pdriId);
                         toReplicate.add(cd);
                     }
 
@@ -148,7 +148,7 @@ class ReplicateSweep implements Runnable {
                                     + "(fileName, storageSiteRef, pdriGroupRef,isEncrypted, encryptionKey) VALUES(?, ?, ?, ?, ?)")) {
                         source = new PDRIFactory().createInstance(cd, false);
                         MyStorageSite ss = findBestSite();
-                        
+
                         BigInteger pdriKey = DesEncrypter.generateKey();
                         PDRIDescr pdriDescr = new PDRIDescr(
                                 cd.getName(),

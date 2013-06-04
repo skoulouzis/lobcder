@@ -474,12 +474,12 @@ public class VPDRI implements PDRI {
             double elapsed = System.currentTimeMillis() - start;
             double speed = ((source.getLength() * 8.0) * 1000.0) / (elapsed * 1000.0);
             String msg = "Source: " + source.getHost() + " Destination: " + getHost() + " Replication_Speed: " + speed + " Kbites/sec Repl_Size: " + (getLength()) + " bytes";
-            VPDRI.log.log(Level.FINE, msg);
+            VPDRI.log.log(Level.INFO, msg);
             SpeedLogger.logSpeed(msg);
-                        
-            
+
+
             getAsyncDelete(vfsClient, vrl).run();
-            
+
         } catch (VlException ex) {
             Logger.getLogger(VPDRI.class.getName()).log(Level.SEVERE, null, ex);
         }

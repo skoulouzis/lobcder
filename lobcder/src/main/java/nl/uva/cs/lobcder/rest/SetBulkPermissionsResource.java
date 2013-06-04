@@ -64,7 +64,7 @@ public class SetBulkPermissionsResource {
         Permissions p = catalogue.getPermissions(ld.getUid(), ld.getOwner(), connection);
         if (ld.isFolder() && principal.canRead(p)) {
             try (CallableStatement cs = connection.prepareCall("{CALL updatePermissionsDirProc(?, ?, ?, ?, ?, ?)}");
-                 PreparedStatement ps = connection.prepareStatement("SELECT uid, ownerId, ldName FROM ldata_table WHERE parentRef = ? AND datatype = '" + Constants.LOGICAL_FOLDER + "'")) {
+                    PreparedStatement ps = connection.prepareStatement("SELECT uid, ownerId, ldName FROM ldata_table WHERE parentRef = ? AND datatype = '" + Constants.LOGICAL_FOLDER + "'")) {
                 cs.setString(1, principal.getUserId());
                 cs.setString(2, principal.getRolesStr());
                 cs.setString(3, perm.getOwner());
@@ -82,7 +82,7 @@ public class SetBulkPermissionsResource {
     @PUT
     @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public void setPermissions(@QueryParam("path") String path, JAXBElement<Permissions> jbPermissions) {
-        try (Connection connection = catalogue.getConnection()){
+        try (Connection connection = catalogue.getConnection()) {
             try {
                 Permissions permissions = jbPermissions.getValue();
                 MyPrincipal mp = (MyPrincipal) request.getAttribute("myprincipal");

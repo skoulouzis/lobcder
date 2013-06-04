@@ -262,8 +262,8 @@ public class Assimilator {
                         parentRef = parent.getUid();
                     } else {
                         parentRef = importedUid;
-                    } 
-                    
+                    }
+
                     LogicalData registered = getLogicalDataByParentRefAndName(parentRef, fileName, c);
                     System.err.println(currentPath);
                     if (registered == null) {

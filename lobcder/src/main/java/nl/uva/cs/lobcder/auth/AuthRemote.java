@@ -74,7 +74,7 @@ public class AuthRemote implements AuthI {
             }
             if (res == null) {
                 ClientConfig clientConfig = new DefaultClientConfig();
-              //  ClientConfig config = new DefaultClientConfig();
+                //  ClientConfig config = new DefaultClientConfig();
                 SSLContext ctx = getSslContext();
                 clientConfig.getProperties().put(HTTPSProperties.PROPERTY_HTTPS_PROPERTIES, new HTTPSProperties(getHostnameVerifier(), ctx));
 
@@ -96,6 +96,7 @@ public class AuthRemote implements AuthI {
 
     private HostnameVerifier getHostnameVerifier() {
         HostnameVerifier hv = new HostnameVerifier() {
+
             @Override
             public boolean verify(String string, SSLSession ssls) {
                 return true;
@@ -107,6 +108,7 @@ public class AuthRemote implements AuthI {
     private SSLContext getSslContext() throws Exception {
         final SSLContext sslContext = SSLContext.getInstance("SSL");
         sslContext.init(null, new TrustManager[]{new X509TrustManager() {
+
                 @Override
                 public X509Certificate[] getAcceptedIssuers() {
                     return new X509Certificate[0];

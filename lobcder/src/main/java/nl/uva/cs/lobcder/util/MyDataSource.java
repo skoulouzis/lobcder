@@ -16,6 +16,7 @@ import java.sql.SQLException;
  * To change this template use File | Settings | File Templates.
  */
 public class MyDataSource {
+
     @Getter
     private DataSource datasource;
 

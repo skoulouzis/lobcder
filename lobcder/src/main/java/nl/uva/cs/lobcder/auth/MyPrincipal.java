@@ -49,7 +49,7 @@ public class MyPrincipal {
         if (p.getOwner().equals(userId)) {
             return true;
         }
-        if (isAdmin()){
+        if (isAdmin()) {
             return true;
         }
         Set<String> r1 = new HashSet<String>(roles);
@@ -61,7 +61,7 @@ public class MyPrincipal {
         if (p.getOwner().equals(userId)) {
             return true;
         }
-        if (isAdmin()){
+        if (isAdmin()) {
             return true;
         }
         Set<String> r1 = new HashSet<String>(roles);

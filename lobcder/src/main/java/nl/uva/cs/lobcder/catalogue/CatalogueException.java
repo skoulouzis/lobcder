@@ -8,11 +8,9 @@ package nl.uva.cs.lobcder.catalogue;
  *
  * @author S Koulouzis
  */
-public class CatalogueException extends Exception{
+public class CatalogueException extends Exception {
 
     public CatalogueException(String msg) {
         super(msg);
     }
-    
-    
 }

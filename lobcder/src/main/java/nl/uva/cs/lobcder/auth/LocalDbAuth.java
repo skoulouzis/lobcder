@@ -27,10 +27,10 @@ public class LocalDbAuth implements AuthI {
     private PrincipalCacheI pc = null;
 
     public LocalDbAuth() throws NamingException {
-            javax.naming.Context ctx = new InitialContext();
-            javax.naming.Context envContext = (javax.naming.Context) ctx.lookup("java:/comp/env");
-            pc = (PrincipalCacheI) envContext.lookup("bean/PrincipalCache");
-            datasource = (DataSource) envContext.lookup("jdbc/lobcder");
+        javax.naming.Context ctx = new InitialContext();
+        javax.naming.Context envContext = (javax.naming.Context) ctx.lookup("java:/comp/env");
+        pc = (PrincipalCacheI) envContext.lookup("bean/PrincipalCache");
+        datasource = (DataSource) envContext.lookup("jdbc/lobcder");
     }
 
     @Override

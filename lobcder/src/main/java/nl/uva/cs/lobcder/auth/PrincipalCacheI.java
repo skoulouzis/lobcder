@@ -13,5 +13,4 @@ public interface PrincipalCacheI {
     MyPrincipal getPrincipal(String token);
 
     void putPrincipal(String token, MyPrincipal principal);
-    
 }

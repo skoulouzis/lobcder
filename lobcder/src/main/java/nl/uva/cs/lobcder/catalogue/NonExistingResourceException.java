@@ -13,5 +13,4 @@ class NonExistingResourceException extends CatalogueException {
     public NonExistingResourceException(String msg) {
         super(msg);
     }
-    
 }
