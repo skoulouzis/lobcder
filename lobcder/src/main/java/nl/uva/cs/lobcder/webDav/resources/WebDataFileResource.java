@@ -279,7 +279,7 @@ public class WebDataFileResource extends WebDataResource implements
         }
         double elapsed = System.currentTimeMillis() - start;
         double speed = ((pdri.getLength() * 8.0) * 1000.0) / (elapsed * 1000.0);
-        String msg = "Source: " + pdri.getHost() + " Destination: " + fromAddress + " Tx Speed: " + speed + " Kbites/sec Tx_Size: " + pdri.getLength() + " bytes";
+        String msg = "Source: " + pdri.getHost() + " Destination: " + fromAddress + " Tx_Speed: " + speed + " Kbites/sec Tx_Size: " + pdri.getLength() + " bytes";
         WebDataFileResource.log.log(Level.INFO, msg);
     }
 
