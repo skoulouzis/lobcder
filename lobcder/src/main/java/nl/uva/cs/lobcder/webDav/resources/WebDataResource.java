@@ -336,11 +336,11 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
     }
 
     protected PDRI createPDRI(long fileLength, String fileName, Connection connection) throws SQLException, NoSuchAlgorithmException, IOException {
-        Collection<MyStorageSite> cacheSS = getCatalogue().getCacheStorageSites(connection);
+        Collection<StorageSite> cacheSS = getCatalogue().getCacheStorageSites(connection);
         if (cacheSS == null || cacheSS.isEmpty()) {
             return new CachePDRI(UUID.randomUUID().toString() + "-" + fileName);
         } else {
-            MyStorageSite ss = cacheSS.iterator().next();
+            StorageSite ss = cacheSS.iterator().next();
             PDRIDescr pdriDescr = new PDRIDescr(
                     UUID.randomUUID().toString() + "-" + fileName,
                     ss.getStorageSiteId(),
@@ -447,10 +447,10 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
             } else if (qname.equals(Constants.AVAIL_STORAGE_SITES_PROP_NAME)) {
                 try (Connection connection = getCatalogue().getConnection()) {
                     connection.commit();
-                    Collection<MyStorageSite> ss = getCatalogue().getStorageSites(connection);
+                    Collection<StorageSite> ss = getCatalogue().getStorageSites(connection);
                     StringBuilder sb = new StringBuilder();
                     sb.append("[");
-                    for (MyStorageSite s : ss) {
+                    for (StorageSite s : ss) {
                         sb.append(s.getResourceURI()).append(",");
                     }
                     sb.replace(sb.lastIndexOf(","), sb.length(), "");

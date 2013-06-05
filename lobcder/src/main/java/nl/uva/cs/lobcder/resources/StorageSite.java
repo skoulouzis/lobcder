@@ -11,11 +11,11 @@ import lombok.Data;
  * @author S. Koulouzis
  */
 @Data
-public class MyStorageSite implements Cloneable {
+public class StorageSite implements Cloneable {
 
     @Override
     public Object clone() {
-        MyStorageSite clone = new MyStorageSite();
+        StorageSite clone = new StorageSite();
         clone.setStorageSiteId(storageSiteId);
         clone.setCredential(credential);
         clone.setCurrentNum(new Long(currentNum));

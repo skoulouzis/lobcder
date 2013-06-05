@@ -27,7 +27,7 @@ import java.net.URISyntaxException;
 import java.sql.*;
 import java.sql.Date;
 import java.util.*;
-import nl.uva.cs.lobcder.resources.MyStorageSite;
+import nl.uva.cs.lobcder.resources.StorageSite;
 
 /**
  *
@@ -61,18 +61,18 @@ public class JDBCatalogue extends MyDataSource {
         timer.cancel();
     }
 
-    public Collection<MyStorageSite> getStorageSites(Connection connection) throws SQLException {
+    public Collection<StorageSite> getStorageSites(Connection connection) throws SQLException {
         try (Statement s = connection.createStatement()) {
             ResultSet rs = s.executeQuery("SELECT storageSiteId, resourceURI, "
                     + "currentNum, currentSize, quotaNum, quotaSize, username, "
                     + "password, encrypt FROM storage_site_table JOIN credential_table ON "
                     + "credentialRef = credintialId WHERE isCache != TRUE");
-            ArrayList<MyStorageSite> res = new ArrayList<>();
+            ArrayList<StorageSite> res = new ArrayList<>();
             while (rs.next()) {
                 Credential c = new Credential();
                 c.setStorageSiteUsername(rs.getString(7));
                 c.setStorageSitePassword(rs.getString(8));
-                MyStorageSite ss = new MyStorageSite();
+                StorageSite ss = new StorageSite();
                 ss.setStorageSiteId(rs.getLong(1));
                 ss.setCredential(c);
                 ss.setResourceURI(rs.getString(2));
@@ -87,18 +87,18 @@ public class JDBCatalogue extends MyDataSource {
         }
     }
 
-    public Collection<MyStorageSite> getCacheStorageSites(Connection connection) throws SQLException {
+    public Collection<StorageSite> getCacheStorageSites(Connection connection) throws SQLException {
         try (Statement s = connection.createStatement()) {
             ResultSet rs = s.executeQuery("SELECT storageSiteId, resourceURI, "
                     + "currentNum, currentSize, quotaNum, quotaSize, username, "
                     + "password, encrypt FROM storage_site_table JOIN credential_table ON "
                     + "credentialRef = credintialId WHERE isCache = TRUE");
-            ArrayList<MyStorageSite> res = new ArrayList<>();
+            ArrayList<StorageSite> res = new ArrayList<>();
             while (rs.next()) {
                 Credential c = new Credential();
                 c.setStorageSiteUsername(rs.getString(7));
                 c.setStorageSitePassword(rs.getString(8));
-                MyStorageSite ss = new MyStorageSite();
+                StorageSite ss = new StorageSite();
                 ss.setStorageSiteId(rs.getLong(1));
                 ss.setCredential(c);
                 ss.setResourceURI(rs.getString(2));

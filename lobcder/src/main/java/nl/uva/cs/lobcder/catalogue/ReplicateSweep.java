@@ -26,28 +26,28 @@ class ReplicateSweep implements Runnable {
     public ReplicateSweep(DataSource datasource) {
         this.datasource = datasource;
     }
-    private Collection<MyStorageSite> availableStorage = null;
-    private Iterator<MyStorageSite> it = null;
+    private Collection<StorageSite> availableStorage = null;
+    private Iterator<StorageSite> it = null;
 
-    private MyStorageSite findBestSite() {
+    private StorageSite findBestSite() {
         if (it == null || !it.hasNext()) {
             it = availableStorage.iterator();
         }
         return it.next();
     }
 
-    private Collection<MyStorageSite> getStorageSites(Connection connection) throws SQLException {
+    private Collection<StorageSite> getStorageSites(Connection connection) throws SQLException {
         try (Statement s = connection.createStatement()) {
             ResultSet rs = s.executeQuery("SELECT storageSiteId, resourceURI, "
                     + "currentNum, currentSize, quotaNum, quotaSize, username, "
                     + "password, encrypt FROM storage_site_table JOIN credential_table ON "
                     + "credentialRef = credintialId WHERE isCache != TRUE");
-            ArrayList<MyStorageSite> res = new ArrayList<>();
+            ArrayList<StorageSite> res = new ArrayList<>();
             while (rs.next()) {
                 Credential c = new Credential();
                 c.setStorageSiteUsername(rs.getString(7));
                 c.setStorageSitePassword(rs.getString(8));
-                MyStorageSite ss = new MyStorageSite();
+                StorageSite ss = new StorageSite();
                 ss.setStorageSiteId(rs.getLong(1));
                 ss.setCredential(c);
                 ss.setResourceURI(rs.getString(2));
@@ -147,7 +147,7 @@ class ReplicateSweep implements Runnable {
                     try (PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO pdri_table "
                                     + "(fileName, storageSiteRef, pdriGroupRef,isEncrypted, encryptionKey) VALUES(?, ?, ?, ?, ?)")) {
                         source = new PDRIFactory().createInstance(cd, false);
-                        MyStorageSite ss = findBestSite();
+                        StorageSite ss = findBestSite();
 
                         BigInteger pdriKey = DesEncrypter.generateKey();
                         PDRIDescr pdriDescr = new PDRIDescr(

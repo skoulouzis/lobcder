@@ -8,7 +8,7 @@ package nl.uva.cs.lobcder.util;
 import io.milton.common.Path;
 import nl.uva.cs.lobcder.resources.Credential;
 import nl.uva.cs.lobcder.resources.LogicalData;
-import nl.uva.cs.lobcder.resources.MyStorageSite;
+import nl.uva.cs.lobcder.resources.StorageSite;
 import nl.uva.vlet.exception.VlException;
 import nl.uva.vlet.vfs.VDir;
 import nl.uva.vlet.vfs.VFSNode;
@@ -72,7 +72,7 @@ public class Assimilator {
         return conn;
     }
 
-    private long addStorageSite(Connection connection, MyStorageSite site, long credentialRef, boolean isCache) throws SQLException {
+    private long addStorageSite(Connection connection, StorageSite site, long credentialRef, boolean isCache) throws SQLException {
         long ssID;
         String uri;
         if (!site.getResourceURI().endsWith("/")) {
@@ -217,11 +217,11 @@ public class Assimilator {
         return ssID;
     }
 
-    private void assimilate(List<MyStorageSite> sites) throws SQLException,
+    private void assimilate(List<StorageSite> sites) throws SQLException,
             MalformedURLException, VlException, NoSuchAlgorithmException, Exception {
         Connection c = getConnection();
         StorageSiteClient ssClient;
-        for (MyStorageSite site : sites) {
+        for (StorageSite site : sites) {
             String username = site.getCredential().getStorageSiteUsername();
             String password = site.getCredential().getStorageSitePassword();
             String ssURI = site.getResourceURI();
@@ -434,13 +434,13 @@ public class Assimilator {
 
     public static void main(String args[]) throws SQLException, MalformedURLException, VlException, NoSuchAlgorithmException, Exception {
         try {
-            List<MyStorageSite> sites = new ArrayList<>();
+            List<StorageSite> sites = new ArrayList<>();
 
             Credential credential = new Credential();
             credential.setStorageSiteUsername("vphdemo:vphdemo");
             credential.setStorageSitePassword("LibiDibi7");
 
-            MyStorageSite ss1 = new MyStorageSite();
+            StorageSite ss1 = new StorageSite();
             ss1.setCredential(credential);
             ss1.setResourceURI("swift://149.156.10.131:8443/auth/v1.0/uploadContainer/");
             ss1.setCurrentNum(Long.valueOf("-1"));
@@ -451,7 +451,7 @@ public class Assimilator {
             sites.add(ss1);
 //
 //
-//            MyStorageSite ss2 = new MyStorageSite();
+//            StorageSite ss2 = new StorageSite();
 //            ss2.setCredential(credential);
 //            ss2.setResourceURI("file:///" + System.getProperty("user.home") + "/Downloads");
 //            ss2.setCurrentNum(Long.valueOf("-1"));
@@ -462,7 +462,7 @@ public class Assimilator {
 //            sites.add(ss2);
 
 
-//            MyStorageSite ss3 = new MyStorageSite();
+//            StorageSite ss3 = new StorageSite();
 //            ss3.setCredential(credential);
 ////            ss3.setResourceURI("file:///" + System.getProperty("user.home") + "/Downloads/files");
 //            ss3.setResourceURI("srm://tbn18.nikhef.nl:8446/dpm/nikhef.nl/home/biomed/lobcder");
