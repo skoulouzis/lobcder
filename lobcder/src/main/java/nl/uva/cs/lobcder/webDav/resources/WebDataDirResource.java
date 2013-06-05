@@ -30,10 +30,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import nl.uva.cs.lobcder.util.SpeedLogger;
 
 /**
@@ -217,7 +220,12 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
         }
         double elapsed = System.currentTimeMillis() - start;
         double speed = ((pdri.getLength() * 8.0) * 1000.0) / (elapsed * 1000.0);
-        String msg = "Source: " + fromAddress + " Destination: " + pdri.getHost() + " Rx_Speed: " + speed + " Kbites/sec Rx_Size: " + (pdri.getLength()) + " bytes";
+        String msg = null;
+        try {
+            msg = "Source: " + fromAddress + " Destination: " + new URI(pdri.getURI()).getScheme() + "://" + pdri.getHost() + " Rx_Speed: " + speed + " Kbites/sec Rx_Size: " + (pdri.getLength()) + " bytes";
+        } catch (URISyntaxException ex) {
+            Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, ex);
+        }
         WebDataDirResource.log.log(Level.INFO, msg);
         SpeedLogger.logSpeed(msg);
         return resource;
