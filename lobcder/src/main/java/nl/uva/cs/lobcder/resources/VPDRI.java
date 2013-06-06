@@ -118,9 +118,9 @@ public class VPDRI implements PDRI {
         }
     }
 
-    private void initVFS() throws VlException, MalformedURLException {
+    private void initVFS() throws VlException, MalformedURLException, IOException {
         this.vfsClient = new VFSClient();
-        VRSContext context = this.vfsClient.getVRSContext();
+        VRSContext context = this.getVfsClient().getVRSContext();
         //Bug in sftp: We have to put the username in the url
         ServerInfo info = context.getServerInfoFor(vrl, true);
         String authScheme = info.getAuthScheme();
@@ -180,7 +180,7 @@ public class VPDRI implements PDRI {
     @Override
     public void delete() throws IOException {
         try {
-            vfsClient.openLocation(vrl).delete();
+            getVfsClient().openLocation(vrl).delete();
         } catch (VlException ex) {
             //Maybe it's from assimilation. We must remove the baseDir
             if (ex instanceof ResourceNotFoundException || ex.getMessage().contains("Couldn open location. Get NULL object for location")) {
@@ -188,11 +188,9 @@ public class VPDRI implements PDRI {
                     //                    VRL assimilationVRL = new VRL(resourceUrl).append(URLEncoder.encode(fileName, "UTF-8").replace("+", "%20"));
 //                    String encoded = VRL.encode(fileName);
                     VRL assimilationVRL = new VRL(resourceUrl).append(fileName);
-                    vfsClient.openLocation(assimilationVRL).delete();
+                    getVfsClient().openLocation(assimilationVRL).delete();
 
-                } catch (VRLSyntaxException ex1) {
-                    Logger.getLogger(VPDRI.class.getName()).log(Level.SEVERE, null, ex1);
-                } catch (VlException ex1) {
+                } catch (Exception ex1) {
                     Logger.getLogger(VPDRI.class.getName()).log(Level.SEVERE, null, ex1);
                 }
             } else {
@@ -210,18 +208,14 @@ public class VPDRI implements PDRI {
         InputStream in = null;
         VFile file;
         try {
-            if (vfsClient == null) {
-                reconnect();
-            }
-            file = (VFile) vfsClient.openLocation(vrl);
+            file = (VFile) getVfsClient().openLocation(vrl);
             in = file.getInputStream();
-//            in = ((VFile) vfsClient.openLocation(vrl)).getInputStream();
         } catch (Exception ex) {
             if (ex instanceof ResourceNotFoundException || ex.getMessage().contains("Couldn open location. Get NULL object for location:")) {
                 try {
 //                    VRL assimilationVRL = new VRL(resourceUrl).append(URLEncoder.encode(fileName, "UTF-8"));
                     VRL assimilationVRL = new VRL(resourceUrl).append(fileName);
-                    in = ((VFile) vfsClient.openLocation(assimilationVRL)).getInputStream();
+                    in = ((VFile) getVfsClient().openLocation(assimilationVRL)).getInputStream();
                     sleeTime = 5;
                 } catch (VRLSyntaxException ex1) {
                     throw new IOException(ex1);
@@ -265,9 +259,9 @@ public class VPDRI implements PDRI {
         try {
             //            upload(in);
             VRL parentVrl = vrl.getParent();
-            VDir remoteDir = vfsClient.mkdirs(parentVrl, true);
-            vfsClient.createFile(vrl, true);
-            out = vfsClient.getFile(vrl).getOutputStream();
+            VDir remoteDir = getVfsClient().mkdirs(parentVrl, true);
+            getVfsClient().createFile(vrl, true);
+            out = getVfsClient().getFile(vrl).getOutputStream();
             if (!getEncrypted()) {
                 CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((Constants.BUF_SIZE), in, out);
                 cBuff.startTransfer(new Long(-1));
@@ -396,10 +390,7 @@ public class VPDRI implements PDRI {
     @Override
     public long getLength() throws IOException {
         try {
-            if (vfsClient == null) {
-                reconnect();
-            }
-            return vfsClient.getFile(vrl).getLength();
+            return getVfsClient().getFile(vrl).getLength();
         } catch (Exception ex) {
             if (reconnectAttemts < Constants.RECONNECT_NTRY) {
                 reconnect();
@@ -415,8 +406,8 @@ public class VPDRI implements PDRI {
     @Override
     public void reconnect() throws IOException {
         reconnectAttemts++;
-        vfsClient.close();
-        vfsClient.dispose();
+        getVfsClient().close();
+        getVfsClient().dispose();
 //        VRS.exit();
         try {
             initVFS();
@@ -428,7 +419,7 @@ public class VPDRI implements PDRI {
     @Override
     public Long getChecksum() throws IOException {
         try {
-            VFile physicalFile = vfsClient.getFile(vrl);
+            VFile physicalFile = getVfsClient().getFile(vrl);
             if (physicalFile instanceof VChecksum) {
                 BigInteger bi = new BigInteger(((VChecksum) physicalFile).getChecksum("MD5"), 16);
                 return bi.longValue();
@@ -447,8 +438,11 @@ public class VPDRI implements PDRI {
 //        }
 //    }
     private void upload(PDRI source) throws VlException, IOException {
-        CloudFile thisFile = (CloudFile) vfsClient.createFile(vrl, true);
-        VFile sourceFile = vfsClient.openFile(new VRL(source.getURI()));
+        if(getVfsClient() == null){
+            reconnect();
+        }
+        CloudFile thisFile = (CloudFile) getVfsClient().createFile(vrl, true);
+        VFile sourceFile = getVfsClient().openFile(new VRL(source.getURI()));
         thisFile.uploadFrom(sourceFile);
     }
 
@@ -458,15 +452,17 @@ public class VPDRI implements PDRI {
             VRL sourceVRL = new VRL(source.getURI());
             String sourceScheme = sourceVRL.getScheme();
             String desteScheme = vrl.getScheme();
-            VPDRI.log.log(Level.FINE, "Start replicating {0} to {1}", new Object[]{source.getURI(), getURI()});
+            VPDRI.log.log(Level.INFO, "Start replicating {0} to {1}", new Object[]{source.getURI(), getURI()});
             double start = System.currentTimeMillis();
+            if(!vfsClient.existsDir(vrl.getParent())){
+                 VDir remoteDir = vfsClient.mkdirs(vrl.getParent(), true);
+            }
             if (desteScheme.equals("swift") && sourceScheme.equals("file")) {
                 upload(source);
             } else {
-                VDir remoteDir = vfsClient.mkdirs(vrl.getParent(), true);
-                VFile destFile = vfsClient.createFile(vrl, true);
-                VFile sourceFile = vfsClient.openFile(sourceVRL);
-                vfsClient.copy(sourceFile, destFile);
+                VFile destFile = getVfsClient().createFile(vrl, true);
+                VFile sourceFile = getVfsClient().openFile(sourceVRL);
+                getVfsClient().copy(sourceFile, destFile);
             }
 //            putData(source.getData());
             double elapsed = System.currentTimeMillis() - start;
@@ -477,7 +473,7 @@ public class VPDRI implements PDRI {
             SpeedLogger.logSpeed(msg);
 
 
-            getAsyncDelete(vfsClient, vrl).run();
+            getAsyncDelete(getVfsClient(), vrl).run();
 
         } catch (VlException ex) {
             Logger.getLogger(VPDRI.class.getName()).log(Level.SEVERE, null, ex);
@@ -524,5 +520,15 @@ public class VPDRI implements PDRI {
         } catch (VRLSyntaxException ex) {
             throw new IOException(ex);
         }
+    }
+
+    /**
+     * @return the vfsClient
+     */
+    private VFSClient getVfsClient() throws IOException {
+        if(vfsClient == null){
+            reconnect();
+        }
+        return vfsClient;
     }
 }

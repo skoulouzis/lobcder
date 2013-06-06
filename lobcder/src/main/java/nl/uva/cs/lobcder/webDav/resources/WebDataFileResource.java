@@ -132,7 +132,7 @@ public class WebDataFileResource extends WebDataResource implements
 
     @Override
     public Long getContentLength() {
-        log.fine("getContentLength()" + " for " + getPath());
+        log.log(Level.FINE,"getContentLength()" + " for {0}", getPath());
         return getLogicalData().getLength();
     }
 
