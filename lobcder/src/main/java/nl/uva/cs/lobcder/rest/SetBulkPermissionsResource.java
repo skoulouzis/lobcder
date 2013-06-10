@@ -54,6 +54,7 @@ public class SetBulkPermissionsResource {
         }
         cs.setLong(6, uid);
         cs.execute();
+        cn.commit();
         for (Long _uid : folders) {
             setPermissions(_uid, principal, cs, ps, cn);
         }
