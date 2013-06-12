@@ -87,7 +87,7 @@ public class SetBulkPermissionsResource {
             try {
                 Permissions permissions = jbPermissions.getValue();
                 MyPrincipal mp = (MyPrincipal) request.getAttribute("myprincipal");
-                setPermissions(path, permissions, mp, connection);
+                setPermissionsJava(path, permissions, mp, connection);
                 connection.commit();
             } catch (SQLException ex) {
                 log.log(Level.SEVERE, null, ex);
@@ -99,4 +99,42 @@ public class SetBulkPermissionsResource {
             throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
+
+    private void setPermissionsJava(String rootPath, Permissions perm, MyPrincipal principal, @Nonnull Connection connection) throws SQLException {
+        LogicalData ld = catalogue.getLogicalDataByPath(io.milton.common.Path.path(rootPath), connection);
+        Permissions p = catalogue.getPermissions(ld.getUid(), ld.getOwner(), connection);
+        if(ld.isFolder() && principal.canRead(p)) {
+            try(PreparedStatement ps = connection.prepareStatement("SELECT uid, ownerId, datatype FROM ldata_table WHERE parentRef = ?")){
+                setPermissionsJava(ld.getUid(), principal, ps, perm, connection);
+            }
+        }
+        if (principal.canWrite(p)) {
+            catalogue.updateOwner(ld.getUid(), perm.getOwner(), connection);
+            catalogue.setPermissions(ld.getUid(), perm, connection);
+        }
+    }
+
+    private void setPermissionsJava(Long uid, MyPrincipal principal, PreparedStatement ps, Permissions perm, Connection cn) throws SQLException {
+        ps.setLong(1, uid);
+        ArrayList<Long> updatePermIds = new ArrayList<>();
+        try(ResultSet resultSet = ps.executeQuery()){
+            while (resultSet.next()) {
+                Long entry_uid = resultSet.getLong(1);
+                String entry_owner = resultSet.getString(2);
+                String entry_datatype = resultSet.getString(3);
+                Permissions entry_p = catalogue.getPermissions(entry_uid, entry_owner, cn);
+                if(entry_datatype.equals(Constants.LOGICAL_FOLDER) && principal.canRead(entry_p)){
+                    setPermissionsJava(entry_uid, principal, ps, perm, cn);
+                }
+                if(principal.canWrite(entry_p)){
+                    updatePermIds.add(entry_uid);
+                }
+            }
+        }
+        for(Long e_uid : updatePermIds){
+            catalogue.updateOwner(e_uid, perm.getOwner(), cn);
+            catalogue.setPermissions(e_uid, perm, cn);
+        }
+    }
+
 }
