@@ -454,9 +454,9 @@ public class VPDRI implements PDRI {
             String desteScheme = vrl.getScheme();
             VPDRI.log.log(Level.INFO, "Start replicating {0} to {1}", new Object[]{source.getURI(), getURI()});
             double start = System.currentTimeMillis();
-//            if(!vfsClient.existsDir(vrl.getParent())){
-//                 VDir remoteDir = vfsClient.mkdirs(vrl.getParent(), true);
-//            }
+            if(!vfsClient.existsDir(vrl.getParent())){
+                 VDir remoteDir = vfsClient.mkdirs(vrl.getParent(), true);
+            }
             if (desteScheme.equals("swift") && sourceScheme.equals("file")) {
                 upload(source);
             } else {
