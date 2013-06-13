@@ -40,7 +40,8 @@ import java.util.logging.Level;
  * @author S. Koulouzis
  */
 @Log
-public class WebDataResource implements PropFindableResource, Resource, AccessControlledResource, MultiNamespaceCustomPropertyResource {
+public class WebDataResource implements PropFindableResource, Resource, 
+AccessControlledResource, MultiNamespaceCustomPropertyResource {
 
     @Getter
     private final LogicalData logicalData;
@@ -525,7 +526,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
 //                            if (hostEncryptMap.containsKey(host)) {
 //                                p.setEncrypt(hostEncryptMap.get(host));
 //                                pdrisToUpdate.add(p);
-//                            }
+//                            }}
 //                        }
 //                        if (!hostEncryptMap.isEmpty()) {
 //                            getCatalogue().updateStorageSites(hostEncryptMap, connection);
