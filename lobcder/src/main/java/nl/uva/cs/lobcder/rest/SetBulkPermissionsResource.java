@@ -22,6 +22,7 @@ import javax.ws.rs.core.Response;
 import javax.xml.bind.JAXBElement;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.Stack;
 import java.util.logging.Level;
 
 /**
@@ -80,8 +81,8 @@ public class SetBulkPermissionsResource {
         }
     }
 
-    @PUT
-    @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    //@PUT
+    //@Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public void setPermissions(@QueryParam("path") String path, JAXBElement<Permissions> jbPermissions) {
         try (Connection connection = catalogue.getConnection()) {
             try {
@@ -137,4 +138,55 @@ public class SetBulkPermissionsResource {
         }
     }
 
+    @PUT
+    @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public void setPermissions2(@QueryParam("path") String path, JAXBElement<Permissions> jbPermissions) {
+        try (Connection connection = catalogue.getConnection()) {
+            try {
+                Permissions permissions = jbPermissions.getValue();
+                MyPrincipal principal = (MyPrincipal) request.getAttribute("myprincipal");
+                LogicalData ld = catalogue.getLogicalDataByPath(io.milton.common.Path.path(path), connection);
+                Stack<Long> folders = new Stack<>();
+                ArrayList<Long> elements = new ArrayList<>();
+                Permissions p = catalogue.getPermissions(ld.getUid(), ld.getOwner(), connection);
+                if(ld.isFolder() && principal.canRead(p)) {
+                    folders.add(ld.getUid());
+                }
+                if(principal.canWrite(p)){
+                    elements.add(ld.getUid());
+                }
+                try(PreparedStatement ps = connection.prepareStatement("SELECT uid, ownerId, datatype FROM ldata_table WHERE parentRef = ?")){
+                    while(!folders.isEmpty()){
+                        Long curUid = folders.pop();
+                        ps.setLong(1, curUid);
+                        try(ResultSet resultSet = ps.executeQuery()){
+                            while(resultSet.next()) {
+                                Long entry_uid = resultSet.getLong(1);
+                                String entry_owner = resultSet.getString(2);
+                                String entry_datatype = resultSet.getString(3);
+                                Permissions entry_p = catalogue.getPermissions(entry_uid, entry_owner, connection);
+                                if(entry_datatype.equals(Constants.LOGICAL_FOLDER) && principal.canRead(entry_p)){
+                                    folders.push(entry_uid);
+                                }
+                                if(principal.canWrite(entry_p)){
+                                    elements.add(entry_uid);
+                                }
+                            }
+                        }
+                    }
+                }
+                for(Long uid : elements) {
+                    catalogue.setPermissions(uid, permissions, connection);
+                }
+                connection.commit();
+            } catch (SQLException ex) {
+                log.log(Level.SEVERE, null, ex);
+                connection.rollback();
+                throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
+            }
+        } catch (SQLException ex) {
+            log.log(Level.SEVERE, null, ex);
+            throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
+        }
+    }
 }
