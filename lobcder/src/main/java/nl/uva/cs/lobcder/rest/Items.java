@@ -125,6 +125,10 @@ public class Items extends CatalogueHelper {
         }
         LogicalData ld = getCatalogue().getLogicalDataByPath(io.milton.common.Path.path(rootPath), cn);
         List<LogicalDataWrapped> logicalDataWrappedList = new ArrayList<>();
+        if(ld == null) {
+            return logicalDataWrappedList;
+        }
+
         Permissions p = getCatalogue().getPermissions(ld.getUid(), ld.getOwner(), cn);
         if (mp.canRead(p)) {
             try (PreparedStatement ps1 = cn.prepareStatement("SELECT uid, parentRef, "
@@ -272,7 +276,7 @@ public class Items extends CatalogueHelper {
             MyPrincipal mp = (MyPrincipal) request.getAttribute("myprincipal");
             List<LogicalDataWrapped> res = queryLogicalData(mp, cn);
             return res;
-        } catch (Exception ex) {
+        } catch (SQLException ex) {
             log.log(Level.SEVERE, null, ex);
             throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
         }
