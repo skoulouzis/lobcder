@@ -13,10 +13,7 @@ import nl.uva.cs.lobcder.util.Constants;
 
 import javax.annotation.Nonnull;
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.PUT;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.xml.bind.JAXBElement;
@@ -148,12 +145,16 @@ public class SetBulkPermissionsResource {
                 LogicalData ld = catalogue.getLogicalDataByPath(io.milton.common.Path.path(path), connection);
                 Stack<Long> folders = new Stack<>();
                 ArrayList<Long> elements = new ArrayList<>();
+                ArrayList<Long> changeOwner = new ArrayList<>();
                 Permissions p = catalogue.getPermissions(ld.getUid(), ld.getOwner(), connection);
                 if(ld.isFolder() && principal.canRead(p)) {
                     folders.add(ld.getUid());
                 }
                 if(principal.canWrite(p)){
                     elements.add(ld.getUid());
+                    if(!ld.getOwner().equals(permissions.getOwner())){
+                        changeOwner.add(ld.getUid());
+                    }
                 }
                 try(PreparedStatement ps = connection.prepareStatement("SELECT uid, ownerId, datatype FROM ldata_table WHERE parentRef = ?")){
                     while(!folders.isEmpty()){
@@ -170,13 +171,54 @@ public class SetBulkPermissionsResource {
                                 }
                                 if(principal.canWrite(entry_p)){
                                     elements.add(entry_uid);
+                                    if(!entry_owner.equals(permissions.getOwner())) {
+                                        changeOwner.add(entry_uid);
+                                    }
                                 }
                             }
                         }
                     }
                 }
-                for(Long uid : elements) {
-                    catalogue.setPermissions(uid, permissions, connection);
+                final int batchSize = 100;
+                int count = 0;
+                try(PreparedStatement psDel = connection.prepareStatement("DELETE FROM permission_table WHERE permission_table.ldUidRef = ?");
+                    PreparedStatement psIns = connection.prepareStatement("INSERT INTO permission_table (permType, ldUidRef, roleName) VALUES (?, ?, ?)")) {
+                    for(Long uid : elements) {
+                        psDel.setLong(1, uid);
+                        psDel.addBatch();
+                        for (String cr : permissions.getRead()) {
+                            psIns.setString(1, "read");
+                            psIns.setLong(2, uid);
+                            psIns.setString(3, cr);
+                            psIns.addBatch();
+                        }
+                        for (String cw : permissions.getWrite()) {
+                            psIns.setString(1, "write");
+                            psIns.setLong(2, uid);
+                            psIns.setString(3, cw);
+                            psIns.addBatch();
+                        }
+                        count++;
+                        if (count % batchSize == 0) {
+                            psDel.executeBatch();
+                            psIns.executeBatch();
+                        }
+                    }
+                    psDel.executeBatch();
+                    psIns.executeBatch();
+                }
+                try (PreparedStatement ps = connection.prepareStatement("UPDATE ldata_table SET ownerId = ? WHERE uid = ?")) {
+                    count = 0;
+                    ps.setString(1, permissions.getOwner());
+                    for(Long uid : changeOwner) {
+                        ps.setLong(2, uid);
+                        ps.addBatch();
+                        count++;
+                        if (count % batchSize == 0) {
+                            ps.executeBatch();
+                        }
+                    }
+                    ps.executeBatch();
                 }
                 connection.commit();
             } catch (SQLException ex) {
