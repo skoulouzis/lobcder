@@ -3,13 +3,13 @@ DROP TABLE IF EXISTS permission_table, ldata_table, pdri_table, pdrigroup_table,
 CREATE TABLE pdrigroup_table (
   pdriGroupId SERIAL PRIMARY KEY,
   refCount INT, INDEX(refCount)
-);
+) ENGINE=InnoDB;
 
 CREATE TABLE credential_table (
   credintialId SERIAL PRIMARY KEY,
   username VARCHAR(255),
   password VARCHAR(255)
-);
+) ENGINE=InnoDB;
 
 
 
@@ -24,7 +24,7 @@ CREATE TABLE storage_site_table (
   isCache BOOLEAN NOT NULL DEFAULT FALSE, INDEX(isCache),
   extra VARCHAR(512),
   encrypt BOOLEAN NOT NULL DEFAULT FALSE, INDEX(encrypt)
-);
+) ENGINE=InnoDB;
 
 CREATE TABLE pdri_table (
   pdriId SERIAL PRIMARY KEY,
@@ -33,7 +33,7 @@ CREATE TABLE pdri_table (
   pdriGroupRef BIGINT UNSIGNED, INDEX(pdriGroupRef), FOREIGN KEY(pdriGroupRef) REFERENCES pdrigroup_table(pdriGroupId) ON DELETE CASCADE,
   isEncrypted BOOLEAN NOT NULL DEFAULT FALSE,
   encryptionKey BIGINT UNSIGNED 
-);
+) ENGINE=InnoDB;
 
 CREATE TABLE ldata_table (
  uid SERIAL PRIMARY KEY,
@@ -57,14 +57,14 @@ CREATE TABLE ldata_table (
  lockTimeout  BIGINT NOT NULL DEFAULT 0,
  description VARCHAR(1024),
  locationPreference VARCHAR(1024)
-);
+) ENGINE=InnoDB;
 
 CREATE TABLE permission_table (
  id SERIAL PRIMARY KEY,
  permType ENUM('read', 'write'), INDEX(permType),
  ldUidRef BIGINT UNSIGNED, FOREIGN KEY(ldUidRef) REFERENCES ldata_table(uid) ON DELETE CASCADE, INDEX(ldUidRef),
  roleName VARCHAR(255)
-);
+) ENGINE=InnoDB;
 
 DELIMITER |
 
