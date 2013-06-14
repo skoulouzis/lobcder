@@ -6,14 +6,21 @@ package nl.uva.cs.lobcder.webDav.resources;
 
 import io.milton.common.Path;
 import io.milton.http.Auth;
+import io.milton.http.LockInfo;
+import io.milton.http.LockResult;
+import io.milton.http.LockTimeout;
+import io.milton.http.LockToken;
 import io.milton.http.Request;
 import io.milton.http.Response;
+import io.milton.http.exceptions.LockedException;
 import io.milton.http.exceptions.NotAuthorizedException;
+import io.milton.http.exceptions.PreConditionFailedException;
 import io.milton.http.values.HrefList;
 import io.milton.principal.DavPrincipals;
 import io.milton.principal.Principal;
 import io.milton.property.PropertySource;
 import io.milton.resource.AccessControlledResource;
+import io.milton.resource.LockableResource;
 import io.milton.resource.MultiNamespaceCustomPropertyResource;
 import io.milton.resource.PropFindableResource;
 import io.milton.resource.Resource;
@@ -40,8 +47,8 @@ import java.util.logging.Level;
  * @author S. Koulouzis
  */
 @Log
-public class WebDataResource implements PropFindableResource, Resource, 
-AccessControlledResource, MultiNamespaceCustomPropertyResource {
+public class WebDataResource implements PropFindableResource, Resource,
+        AccessControlledResource, MultiNamespaceCustomPropertyResource, LockableResource {
 
     @Getter
     private final LogicalData logicalData;
@@ -250,7 +257,6 @@ AccessControlledResource, MultiNamespaceCustomPropertyResource {
         try {
             // Do the mapping
             Principal p = new DavPrincipals.AbstractDavPrincipal(getPrincipalURL()) {
-
                 @Override
                 public boolean matches(Auth auth, Resource current) {
                     return true;
@@ -278,7 +284,6 @@ AccessControlledResource, MultiNamespaceCustomPropertyResource {
             for (String r : resourcePermission.getRead()) {
                 perm = new ArrayList<>();
                 p = new DavPrincipals.AbstractDavPrincipal(getRoleUrlPrefix() + r) {
-
                     @Override
                     public boolean matches(Auth auth, Resource current) {
                         return true;
@@ -294,7 +299,6 @@ AccessControlledResource, MultiNamespaceCustomPropertyResource {
             for (String r : resourcePermission.getWrite()) {
                 perm = new ArrayList<>();
                 p = new DavPrincipals.AbstractDavPrincipal(getRoleUrlPrefix() + r) {
-
                     @Override
                     public boolean matches(Auth auth, Resource current) {
                         return true;
@@ -562,5 +566,113 @@ AccessControlledResource, MultiNamespaceCustomPropertyResource {
     @Override
     public List<QName> getAllPropertyNames() {
         return Arrays.asList(Constants.PROP_NAMES);
+    }
+
+    @Override
+    public LockResult lock(LockTimeout timeout, LockInfo lockInfo) throws NotAuthorizedException, PreConditionFailedException, LockedException {
+        if (getCurrentLock() != null) {
+            throw new LockedException(this);
+        }
+        LockToken lockToken = new LockToken(UUID.randomUUID().toString(), lockInfo, timeout);
+        try (Connection connection = getCatalogue().getConnection()) {
+            try {
+                getLogicalData().setLockTokenID(lockToken.tokenId);
+                getCatalogue().setLockTokenID(getLogicalData().getUid(), getLogicalData().getLockTokenID(), connection);
+                getLogicalData().setLockScope(lockToken.info.scope.toString());
+                getCatalogue().setLockScope(getLogicalData().getUid(), getLogicalData().getLockScope(), connection);
+                getLogicalData().setLockType(lockToken.info.type.toString());
+                getCatalogue().setLockType(getLogicalData().getUid(), getLogicalData().getLockType(), connection);
+                getLogicalData().setLockedByUser(lockToken.info.lockedByUser);
+                getCatalogue().setLockByUser(getLogicalData().getUid(), getLogicalData().getLockedByUser(), connection);
+                getLogicalData().setLockDepth(lockToken.info.depth.toString());
+                getCatalogue().setLockDepth(getLogicalData().getUid(), getLogicalData().getLockDepth(), connection);
+                getLogicalData().setLockTimeout(lockToken.timeout.getSeconds());
+                getCatalogue().setLockTimeout(getLogicalData().getUid(), getLogicalData().getLockTimeout(), connection);
+                connection.commit();
+                return LockResult.success(lockToken);
+            } catch (Exception ex) {
+                log.log(Level.SEVERE, null, ex);
+                connection.rollback();
+                throw new PreConditionFailedException(this);
+            }
+        } catch (SQLException e) {
+            log.log(Level.SEVERE, null, e);
+            throw new PreConditionFailedException(this);
+        }
+
+    }
+
+    @Override
+    public LockResult refreshLock(String token) throws NotAuthorizedException, PreConditionFailedException {
+        try (Connection connection = getCatalogue().getConnection()) {
+            try {
+                if (getLogicalData().getLockTokenID() == null) {
+                    throw new RuntimeException("not locked");
+                } else {
+                    if (!getLogicalData().getLockTokenID().equals(token)) {
+                        throw new RuntimeException("invalid lock id");
+                    }
+                }
+                getLogicalData().setLockTimeout(System.currentTimeMillis() + Constants.LOCK_TIME);
+                getCatalogue().setLockTimeout(getLogicalData().getUid(), getLogicalData().getLockTimeout(), connection);
+                LockInfo lockInfo = new LockInfo(LockInfo.LockScope.valueOf(getLogicalData().getLockScope()),
+                        LockInfo.LockType.valueOf(getLogicalData().getLockType()), getLogicalData().getLockedByUser(),
+                        LockInfo.LockDepth.valueOf(getLogicalData().getLockDepth()));
+                LockTimeout lockTimeOut = new LockTimeout(getLogicalData().getLockTimeout());
+                LockToken lockToken = new LockToken(token, lockInfo, lockTimeOut);
+                connection.commit();
+                return LockResult.success(lockToken);
+            } catch (Exception ex) {
+                log.log(Level.SEVERE, null, ex);
+                connection.rollback();
+                throw new PreConditionFailedException(this);
+            }
+        } catch (SQLException e) {
+            log.log(Level.SEVERE, null, e);
+            throw new PreConditionFailedException(this);
+        }
+    }
+
+    @Override
+    public void unlock(String token) throws NotAuthorizedException, PreConditionFailedException {
+        try (Connection connection = getCatalogue().getConnection()) {
+            try {
+                if (getLogicalData().getLockTokenID() == null) {
+                    return;
+                } else {
+                    if (!getLogicalData().getLockTokenID().equals(token)) {
+                        throw new PreConditionFailedException(this);
+                    }
+                }
+                getCatalogue().setLockTokenID(getLogicalData().getUid(), null, connection);
+                connection.commit();
+                getLogicalData().setLockTokenID(null);
+                getLogicalData().setLockScope(null);
+                getLogicalData().setLockType(null);
+                getLogicalData().setLockedByUser(null);
+                getLogicalData().setLockDepth(null);
+                getLogicalData().setLockTimeout(null);
+            } catch (Exception ex) {
+                log.log(Level.SEVERE, null, ex);
+                connection.rollback();
+                throw new PreConditionFailedException(this);
+            }
+        } catch (SQLException e) {
+            log.log(Level.SEVERE, null, e);
+            throw new PreConditionFailedException(this);
+        }
+    }
+
+    @Override
+    public LockToken getCurrentLock() {
+        if (getLogicalData().getLockTokenID() == null) {
+            return null;
+        } else {
+            LockInfo lockInfo = new LockInfo(LockInfo.LockScope.valueOf(getLogicalData().getLockScope()),
+                    LockInfo.LockType.valueOf(getLogicalData().getLockType()),
+                    getLogicalData().getLockedByUser(), LockInfo.LockDepth.valueOf(getLogicalData().getLockDepth()));
+            LockTimeout lockTimeOut = new LockTimeout(getLogicalData().getLockTimeout());
+            return new LockToken(getLogicalData().getLockTokenID(), lockInfo, lockTimeOut);
+        }
     }
 }

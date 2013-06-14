@@ -6,15 +6,24 @@ package nl.uva.cs.lobcder.webDav.resources;
 
 import io.milton.common.Path;
 import io.milton.http.Auth;
+import io.milton.http.LockInfo;
+import io.milton.http.LockResult;
+import io.milton.http.LockTimeout;
+import io.milton.http.LockToken;
 import io.milton.http.Range;
 import io.milton.http.Request;
 import io.milton.http.exceptions.BadRequestException;
 import io.milton.http.exceptions.ConflictException;
+import io.milton.http.exceptions.LockedException;
 import io.milton.http.exceptions.NotAuthorizedException;
+import io.milton.http.exceptions.PreConditionFailedException;
 import io.milton.resource.CollectionResource;
 import io.milton.resource.DeletableCollectionResource;
 import io.milton.resource.FolderResource;
+import io.milton.resource.LockingCollectionResource;
 import io.milton.resource.Resource;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.security.NoSuchAlgorithmException;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.auth.AuthI;
@@ -44,7 +53,8 @@ import nl.uva.cs.lobcder.util.SpeedLogger;
  * @author S. Koulouzis
  */
 @Log
-public class WebDataDirResource extends WebDataResource implements FolderResource, CollectionResource, DeletableCollectionResource {
+public class WebDataDirResource extends WebDataResource implements FolderResource,
+        CollectionResource, DeletableCollectionResource, LockingCollectionResource {
 
     public WebDataDirResource(@Nonnull LogicalData logicalData, Path path, @Nonnull JDBCatalogue catalogue, @Nonnull AuthI auth1, AuthI auth2) {
         super(logicalData, path, catalogue, auth1, auth2);
@@ -358,5 +368,39 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
     @Override
     public boolean isLockedOutRecursive(Request rqst) {
         return false;
+    }
+
+    @Override
+    public LockToken createAndLock(String name, LockTimeout lt, LockInfo li) throws NotAuthorizedException {
+        try (Connection connection = getCatalogue().getConnection()) {
+//            InputStream bais = new ByteArrayInputStream(new byte[]{1});
+//            WebDataFileResource lockedFile = (WebDataFileResource) createNew(name, bais, Long.valueOf(0), "application/octet-stream");
+
+            LogicalData fileLogicalData = new LogicalData();
+            fileLogicalData.setName(name);
+            fileLogicalData.setParentRef(getLogicalData().getUid());
+            fileLogicalData.setType(Constants.LOGICAL_FILE);
+            fileLogicalData.setOwner(getPrincipal().getUserId());
+            fileLogicalData.setLength(Long.valueOf(0));
+            fileLogicalData.setCreateDate(System.currentTimeMillis());
+            fileLogicalData.setModifiedDate(System.currentTimeMillis());
+            fileLogicalData.addContentType("application/octet-stream");
+//            pdri = createPDRI(length, newName, connection);
+//            pdri.putData(inputStream);
+            //fileLogicalData.setChecksum(pdri.getChecksum());
+//            fileLogicalData = getCatalogue().associateLogicalDataAndPdri(fileLogicalData, pdri, connection);
+            getCatalogue().setPermissions(fileLogicalData.getUid(), new Permissions(getPrincipal()), connection);
+            connection.commit();
+            WebDataFileResource lockedFile = new WebDataFileResource(fileLogicalData, Path.path(getPath(), name), getCatalogue(), auth1, auth2);
+
+            LockResult res = lockedFile.lock(lt, li);
+            return res.getLockToken();
+        } catch (SQLException ex) {
+        } catch (PreConditionFailedException ex) {
+            Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (LockedException ex) {
+            Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return null;
     }
 }

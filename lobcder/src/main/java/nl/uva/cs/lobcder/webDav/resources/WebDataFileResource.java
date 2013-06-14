@@ -44,7 +44,7 @@ import nl.uva.vlet.io.CircularStreamBufferTransferer;
  */
 @Log
 public class WebDataFileResource extends WebDataResource implements
-        FileResource, LockableResource {
+        FileResource {
 
     private int sleepTime = 5;
 //, ReplaceableResource {
@@ -302,111 +302,5 @@ public class WebDataFileResource extends WebDataResource implements
         return new Date(getLogicalData().getCreateDate());
     }
 
-    @Override
-    public LockResult lock(LockTimeout timeout, LockInfo lockInfo) throws NotAuthorizedException, PreConditionFailedException, LockedException {
-        if (getCurrentLock() != null) {
-            throw new LockedException(this);
-        }
-        LockToken lockToken = new LockToken(UUID.randomUUID().toString(), lockInfo, timeout);
-        try (Connection connection = getCatalogue().getConnection()) {
-            try {
-                getLogicalData().setLockTokenID(lockToken.tokenId);
-                getCatalogue().setLockTokenID(getLogicalData().getUid(), getLogicalData().getLockTokenID(), connection);
-                getLogicalData().setLockScope(lockToken.info.scope.toString());
-                getCatalogue().setLockScope(getLogicalData().getUid(), getLogicalData().getLockScope(), connection);
-                getLogicalData().setLockType(lockToken.info.type.toString());
-                getCatalogue().setLockType(getLogicalData().getUid(), getLogicalData().getLockType(), connection);
-                getLogicalData().setLockedByUser(lockToken.info.lockedByUser);
-                getCatalogue().setLockByUser(getLogicalData().getUid(), getLogicalData().getLockedByUser(), connection);
-                getLogicalData().setLockDepth(lockToken.info.depth.toString());
-                getCatalogue().setLockDepth(getLogicalData().getUid(), getLogicalData().getLockDepth(), connection);
-                getLogicalData().setLockTimeout(lockToken.timeout.getSeconds());
-                getCatalogue().setLockTimeout(getLogicalData().getUid(), getLogicalData().getLockTimeout(), connection);
-                connection.commit();
-                return LockResult.success(lockToken);
-            } catch (Exception ex) {
-                log.log(Level.SEVERE, null, ex);
-                connection.rollback();
-                throw new PreConditionFailedException(this);
-            }
-        } catch (SQLException e) {
-            log.log(Level.SEVERE, null, e);
-            throw new PreConditionFailedException(this);
-        }
-
-    }
-
-    @Override
-    public LockResult refreshLock(String token) throws NotAuthorizedException, PreConditionFailedException {
-        try (Connection connection = getCatalogue().getConnection()) {
-            try {
-                if (getLogicalData().getLockTokenID() == null) {
-                    throw new RuntimeException("not locked");
-                } else {
-                    if (!getLogicalData().getLockTokenID().equals(token)) {
-                        throw new RuntimeException("invalid lock id");
-                    }
-                }
-                getLogicalData().setLockTimeout(System.currentTimeMillis() + Constants.LOCK_TIME);
-                getCatalogue().setLockTimeout(getLogicalData().getUid(), getLogicalData().getLockTimeout(), connection);
-                LockInfo lockInfo = new LockInfo(LockInfo.LockScope.valueOf(getLogicalData().getLockScope()),
-                        LockInfo.LockType.valueOf(getLogicalData().getLockType()), getLogicalData().getLockedByUser(),
-                        LockInfo.LockDepth.valueOf(getLogicalData().getLockDepth()));
-                LockTimeout lockTimeOut = new LockTimeout(getLogicalData().getLockTimeout());
-                LockToken lockToken = new LockToken(token, lockInfo, lockTimeOut);
-                connection.commit();
-                return LockResult.success(lockToken);
-            } catch (Exception ex) {
-                log.log(Level.SEVERE, null, ex);
-                connection.rollback();
-                throw new PreConditionFailedException(this);
-            }
-        } catch (SQLException e) {
-            log.log(Level.SEVERE, null, e);
-            throw new PreConditionFailedException(this);
-        }
-    }
-
-    @Override
-    public void unlock(String token) throws NotAuthorizedException, PreConditionFailedException {
-        try (Connection connection = getCatalogue().getConnection()) {
-            try {
-                if (getLogicalData().getLockTokenID() == null) {
-                    return;
-                } else {
-                    if (!getLogicalData().getLockTokenID().equals(token)) {
-                        throw new PreConditionFailedException(this);
-                    }
-                }
-                getCatalogue().setLockTokenID(getLogicalData().getUid(), null, connection);
-                connection.commit();
-                getLogicalData().setLockTokenID(null);
-                getLogicalData().setLockScope(null);
-                getLogicalData().setLockType(null);
-                getLogicalData().setLockedByUser(null);
-                getLogicalData().setLockDepth(null);
-                getLogicalData().setLockTimeout(null);
-            } catch (Exception ex) {
-                log.log(Level.SEVERE, null, ex);
-                connection.rollback();
-                throw new PreConditionFailedException(this);
-            }
-        } catch (SQLException e) {
-            log.log(Level.SEVERE, null, e);
-            throw new PreConditionFailedException(this);
-        }
-    }
-
-    @Override
-    public LockToken getCurrentLock() {
-        if (getLogicalData().getLockTokenID() == null) {
-            return null;
-        } else {
-            LockInfo lockInfo = new LockInfo(LockInfo.LockScope.valueOf(getLogicalData().getLockScope()),
-                    LockInfo.LockType.valueOf(getLogicalData().getLockType()),
-                    getLogicalData().getLockedByUser(), LockInfo.LockDepth.valueOf(getLogicalData().getLockDepth()));
-            LockTimeout lockTimeOut = new LockTimeout(getLogicalData().getLockTimeout());
-            return new LockToken(getLogicalData().getLockTokenID(), lockInfo, lockTimeOut);
-        }
-    }
+  
 }
