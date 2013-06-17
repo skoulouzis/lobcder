@@ -125,7 +125,7 @@ public class TestREST {
     private void createCollection() throws IOException {
         MkColMethod mkcol = new MkColMethod(testcol);
         int status = this.client.executeMethod(mkcol);
-        assertEquals(status, HttpStatus.SC_CREATED);
+        assertEquals(status, HttpStatus.SC_CREATED );
 
 
         PutMethod put = new PutMethod(this.root + testResourceId + "/file1");
