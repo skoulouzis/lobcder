@@ -222,7 +222,7 @@ public class TestREST {
         try {
             createCollection();
             WebResource webResource = restClient.resource(restURL);
-
+            
             MultivaluedMap<String, String> params = new MultivaluedMapImpl();
             params.add("path", "/testResourceId");
 

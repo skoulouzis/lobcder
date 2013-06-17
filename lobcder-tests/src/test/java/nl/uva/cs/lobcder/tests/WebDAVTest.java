@@ -179,14 +179,13 @@ public class WebDAVTest {
     public void tearDown() throws Exception {
     }
 
-    @Test
-    public void testConnect() throws IOException {
-        HttpMethod method = new GetMethod(uri.toASCIIString());
-        int status = client.executeMethod(method);
-        //Just get something back 
-        assertTrue("GetMethod status: " + status, status == HttpStatus.SC_NOT_FOUND || status == HttpStatus.SC_OK);
-    }
-
+//    @Test
+//    public void testConnect() throws IOException {
+//        HttpMethod method = new GetMethod(uri.toASCIIString());
+//        int status = client.executeMethod(method);
+//        //Just get something back 
+//        assertTrue("GetMethod status: " + status, status == HttpStatus.SC_NOT_FOUND || status == HttpStatus.SC_OK);
+//    }
 //     http://greenbytes.de/tech/webdav/rfc5842.html#rfc.section.8.1
     @Test
     public void testOptions() throws HttpException, IOException {
@@ -227,8 +226,10 @@ public class WebDAVTest {
         assertTrue("Allow header should include OPTIONS method", allow.contains("OPTIONS"));
         assertTrue("Allow header should include MOVE method", allow.contains("MOVE"));
         assertTrue("Allow header should include PUT method", allow.contains("PUT"));
-    }
+        assertTrue("Allow header should include PUT method", allow.contains("UNLOCK"));
+        assertTrue("Allow header should include PUT method", allow.contains("LOCK"));
 
+    }
     //     create test resource, make it referenceable, check resource id, move resource, check again
     @Test
     public void testResourceId() throws HttpException, IOException, DavException, URISyntaxException {
