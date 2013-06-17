@@ -12,6 +12,7 @@ import io.milton.http.LockTimeout;
 import io.milton.http.LockToken;
 import io.milton.http.Request;
 import io.milton.http.Response;
+import io.milton.http.exceptions.BadRequestException;
 import io.milton.http.exceptions.LockedException;
 import io.milton.http.exceptions.NotAuthorizedException;
 import io.milton.http.exceptions.PreConditionFailedException;
@@ -114,13 +115,14 @@ public class WebDataResource implements PropFindableResource, Resource,
 
     @Override
     public boolean authorise(Request request, Request.Method method, Auth auth) {
-        fromAddress = request.getFromAddress();
-        String msg = "From: " + fromAddress + " User: " + getPrincipal().getUserId() + " Method: " + method;
-        WebDataResource.log.log(Level.INFO, msg);
+
         try {
             if (auth == null) {
                 return false;
             }
+            fromAddress = request.getFromAddress();
+            String msg = "From: " + fromAddress + " User: " + getPrincipal().getUserId() + " Method: " + method;
+            WebDataResource.log.log(Level.INFO, msg);
             LogicalData parentLD;
             Permissions p;
             switch (method) {
@@ -180,18 +182,6 @@ public class WebDataResource implements PropFindableResource, Resource,
     @Override
     public Date getModifiedDate() {
         return new Date(getLogicalData().getModifiedDate());
-    }
-
-    @Override
-    public String checkRedirect(Request request) {
-        WebDataResource.log.fine("checkRedirect.");
-        switch (request.getMethod()) {
-            case GET:
-                //Replica selection algorithm
-                return null;
-            default:
-                return null;
-        }
     }
 
     String getUserlUrlPrefix() {
@@ -674,5 +664,10 @@ public class WebDataResource implements PropFindableResource, Resource,
             LockTimeout lockTimeOut = new LockTimeout(getLogicalData().getLockTimeout());
             return new LockToken(getLogicalData().getLockTokenID(), lockInfo, lockTimeOut);
         }
+    }
+
+    @Override
+    public String checkRedirect(Request rqst) throws NotAuthorizedException, BadRequestException {
+        return null;
     }
 }

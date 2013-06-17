@@ -10,7 +10,6 @@ import io.milton.http.*;
 import io.milton.http.exceptions.*;
 import io.milton.resource.CollectionResource;
 import io.milton.resource.FileResource;
-import io.milton.resource.LockableResource;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.security.InvalidAlgorithmParameterException;
@@ -21,7 +20,6 @@ import java.sql.SQLException;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.UUID;
 import java.util.logging.Level;
 import javax.annotation.Nonnull;
 import javax.crypto.NoSuchPaddingException;
@@ -132,7 +130,7 @@ public class WebDataFileResource extends WebDataResource implements
 
     @Override
     public Long getContentLength() {
-        log.log(Level.FINE,"getContentLength()" + " for {0}", getPath());
+        log.log(Level.FINE, "getContentLength()" + " for {0}", getPath());
         return getLogicalData().getLength();
     }
 
@@ -291,16 +289,20 @@ public class WebDataFileResource extends WebDataResource implements
     }
 
     @Override
-    public String checkRedirect(Request request) {
-        WebDataFileResource.log.fine("checkRedirect() for " + getPath());
-        return null;
-    }
-
-    @Override
     public Date getCreateDate() {
         WebDataFileResource.log.fine("getCreateDate() for " + getPath());
         return new Date(getLogicalData().getCreateDate());
     }
 
-  
+    @Override
+    public String checkRedirect(Request request) {
+        WebDataFileResource.log.log(Level.FINE, "checkRedirect for {0}", getPath());
+        switch (request.getMethod()) {
+            case GET:
+                //Replica selection algorithm
+                return null;//"https://localhost:8443/lobcder-worker/" + getPath();
+            default:
+                return null;
+        }
+    }
 }
