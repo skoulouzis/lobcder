@@ -4,6 +4,7 @@
  */
 package nl.uva.cs.lobcder.resources;
 
+import io.milton.http.Range;
 import nl.uva.cs.lobcder.util.CatalogueHelper;
 import nl.uva.cs.lobcder.util.Constants;
 
@@ -179,5 +180,10 @@ public class CachePDRI implements PDRI {
     @Override
     public boolean getEncrypted() {
         return this.encrypt;
+    }
+
+    @Override
+    public void copyRange(Range range, OutputStream out) {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 }

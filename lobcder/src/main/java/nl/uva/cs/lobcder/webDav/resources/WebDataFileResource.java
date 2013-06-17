@@ -213,6 +213,60 @@ public class WebDataFileResource extends WebDataResource implements
         return pdri;
     }
 
+    private PDRI transfererRange(Iterator<PDRIDescr> it, OutputStream out, int tryCount, PDRI pdri, Range range) throws IOException, NotFoundException {
+        try {
+            boolean reconnect;
+            if (pdri == null && it.hasNext()) {
+                pdri = PDRIFactory.getFactory().createInstance(it.next(), false);
+                reconnect = false;
+            } else {
+                reconnect = true;
+            }
+            if (pdri != null) {
+                if (reconnect) {
+                    pdri.reconnect();
+                }
+                WebDataFileResource.log.log(Level.FINE, "sendContent() for {0}--------- {1}", new Object[]{getPath(), pdri.getFileName()});
+                if (!pdri.getEncrypted()) {
+                    pdri.copyRange(range, out);
+                } else {
+                    DesEncrypter encrypter = new DesEncrypter(pdri.getKeyInt());
+                    encrypter.decrypt(pdri.getData(), out);
+                }
+            } else {
+                sleepTime = 5;
+                throw new NotFoundException("Physical resource not found");
+            }
+        } catch (IOException ex) {
+            try {
+                sleepTime = sleepTime + 20;
+                Thread.sleep(sleepTime);
+                if (++tryCount < Constants.RECONNECT_NTRY) {
+                    transfererRange(it, out, tryCount, pdri, range);
+                } else {
+                    transfererRange(it, out, 0, null, range);
+                }
+            } catch (InterruptedException ex1) {
+                sleepTime = 5;
+                throw new IOException(ex);
+            }
+        } catch (NoSuchAlgorithmException ex) {
+            sleepTime = 5;
+            throw new IOException(ex);
+        } catch (NoSuchPaddingException ex) {
+            sleepTime = 5;
+            throw new IOException(ex);
+        } catch (InvalidKeyException ex) {
+            sleepTime = 5;
+            throw new IOException(ex);
+        } catch (InvalidAlgorithmParameterException ex) {
+            sleepTime = 5;
+            throw new IOException(ex);
+        }
+        sleepTime = 5;
+        return pdri;
+    }
+
 //    private void circularStreamBufferTransferer(Iterator<PDRIDescr> it, OutputStream out, int tryCount, PDRI pdri) throws IOException {
 //        try {
 //            boolean reconnect;
@@ -265,7 +319,12 @@ public class WebDataFileResource extends WebDataResource implements
         Iterator<PDRIDescr> it;
         try {
             it = getCatalogue().getPdriDescrByGroupId(getLogicalData().getPdriGroupId()).iterator();
-            pdri = transferer(it, out, 0, null, true);
+            if (range != null) {
+                WebDataFileResource.log.log(Level.FINE, "Start: {0} end: {1} range: {2}", new Object[]{range.getStart(), range.getFinish(), range.getRange()});
+                pdri = transfererRange(it, out, 0, null, range);
+            } else {
+                pdri = transferer(it, out, 0, null, true);
+            }
         } catch (SQLException ex) {
             throw new BadRequestException(this, ex.getMessage());
         } catch (IOException ex) {
