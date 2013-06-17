@@ -247,6 +247,7 @@ public class WebDataResource implements PropFindableResource, Resource,
         try {
             // Do the mapping
             Principal p = new DavPrincipals.AbstractDavPrincipal(getPrincipalURL()) {
+
                 @Override
                 public boolean matches(Auth auth, Resource current) {
                     return true;
@@ -274,6 +275,7 @@ public class WebDataResource implements PropFindableResource, Resource,
             for (String r : resourcePermission.getRead()) {
                 perm = new ArrayList<>();
                 p = new DavPrincipals.AbstractDavPrincipal(getRoleUrlPrefix() + r) {
+
                     @Override
                     public boolean matches(Auth auth, Resource current) {
                         return true;
@@ -289,6 +291,7 @@ public class WebDataResource implements PropFindableResource, Resource,
             for (String r : resourcePermission.getWrite()) {
                 perm = new ArrayList<>();
                 p = new DavPrincipals.AbstractDavPrincipal(getRoleUrlPrefix() + r) {
+
                     @Override
                     public boolean matches(Auth auth, Resource current) {
                         return true;
@@ -563,10 +566,13 @@ public class WebDataResource implements PropFindableResource, Resource,
         if (getCurrentLock() != null) {
             throw new LockedException(this);
         }
+        
         LockToken lockToken = new LockToken(UUID.randomUUID().toString(), lockInfo, timeout);
+        Long lockTimeout;
         try (Connection connection = getCatalogue().getConnection()) {
             try {
                 getLogicalData().setLockTokenID(lockToken.tokenId);
+
                 getCatalogue().setLockTokenID(getLogicalData().getUid(), getLogicalData().getLockTokenID(), connection);
                 getLogicalData().setLockScope(lockToken.info.scope.toString());
                 getCatalogue().setLockScope(getLogicalData().getUid(), getLogicalData().getLockScope(), connection);
@@ -576,8 +582,13 @@ public class WebDataResource implements PropFindableResource, Resource,
                 getCatalogue().setLockByUser(getLogicalData().getUid(), getLogicalData().getLockedByUser(), connection);
                 getLogicalData().setLockDepth(lockToken.info.depth.toString());
                 getCatalogue().setLockDepth(getLogicalData().getUid(), getLogicalData().getLockDepth(), connection);
-                getLogicalData().setLockTimeout(lockToken.timeout.getSeconds());
-                getCatalogue().setLockTimeout(getLogicalData().getUid(), getLogicalData().getLockTimeout(), connection);
+                lockTimeout = lockToken.timeout.getSeconds();
+                if(lockTimeout == null){
+                    lockTimeout = Long.MAX_VALUE;
+                }
+                getLogicalData().setLockTimeout(lockTimeout);
+
+                getCatalogue().setLockTimeout(getLogicalData().getUid(), lockTimeout, connection);
                 connection.commit();
                 return LockResult.success(lockToken);
             } catch (Exception ex) {

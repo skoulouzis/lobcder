@@ -449,6 +449,7 @@ public class VPDRI implements PDRI {
     @Override
     public void replicate(PDRI source) throws IOException {
         try {
+
             VRL sourceVRL = new VRL(source.getURI());
             String sourceScheme = sourceVRL.getScheme();
             String desteScheme = vrl.getScheme();
