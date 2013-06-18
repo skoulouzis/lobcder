@@ -332,7 +332,7 @@ public class WebDataFileResource extends WebDataResource implements
             len = getContentLength();
         }
         double speed = ((len * 8.0) * 1000.0) / (elapsed * 1000.0);
-        String msg = "Source: " + pdri.getHost() + " Destination: " + fromAddress + " Tx_Speed: " + speed + " Kbites/sec Tx_Size: " + pdri.getLength() + " bytes";
+        String msg = "Source: " + pdri.getHost() + " Destination: " + fromAddress + " Tx_Speed: " + speed + " Kbites/sec Tx_Size: " + getContentLength() + " bytes";
         WebDataFileResource.log.log(Level.INFO, msg);
     }
 
@@ -355,7 +355,7 @@ public class WebDataFileResource extends WebDataResource implements
         switch (request.getMethod()) {
             case GET:
                 //Replica selection algorithm
-                return null;//"https://localhost:8443/lobcder-worker/" + getPath();
+                return "https://masterinterface.vph-share.eu/";//"https://localhost:8443/lobcder-worker/" + getPath();
             default:
                 return null;
         }

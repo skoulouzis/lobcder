@@ -226,10 +226,10 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
 //            throw new InternalError(e1.getMessage());
         }
         double elapsed = System.currentTimeMillis() - start;
-        double speed = ((pdri.getLength() * 8.0) * 1000.0) / (elapsed * 1000.0);
+        double speed = ((resource.getContentLength() * 8.0) * 1000.0) / (elapsed * 1000.0);
         String msg = null;
         try {
-            msg = "Source: " + fromAddress + " Destination: " + new URI(pdri.getURI()).getScheme() + "://" + pdri.getHost() + " Rx_Speed: " + speed + " Kbites/sec Rx_Size: " + (pdri.getLength()) + " bytes";
+            msg = "Source: " + fromAddress + " Destination: " + new URI(pdri.getURI()).getScheme() + "://" + pdri.getHost() + " Rx_Speed: " + speed + " Kbites/sec Rx_Size: " + (resource.getContentLength()) + " bytes";
         } catch (URISyntaxException ex) {
             Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, ex);
         }
