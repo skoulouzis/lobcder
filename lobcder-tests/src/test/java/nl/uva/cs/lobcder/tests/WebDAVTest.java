@@ -19,6 +19,7 @@ import java.net.URL;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Properties;
@@ -63,6 +64,12 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
+
+import org.apache.commons.httpclient.methods.multipart.FilePart;
+import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
+import org.apache.commons.httpclient.methods.multipart.Part;
+import org.apache.commons.httpclient.methods.multipart.StringPart;
+import org.apache.commons.httpclient.protocol.Protocol;
 
 /**
  *
@@ -1906,7 +1913,7 @@ public class WebDAVTest {
 //        }
 //    }
     @Test
-    public void testGetRange() {
+    public void testGetSigleRange() {
         String testcol1 = root + "testCollection/";
         String testuri1 = testcol1 + "file1";
         try {
@@ -1936,9 +1943,6 @@ public class WebDAVTest {
             assertEquals(part, response);
 
 
-
-
-
             start = 9;
             end = 19;
             len = end - start + 1;
@@ -1953,9 +1957,6 @@ public class WebDAVTest {
             part = TestSettings.TEST_DATA.substring(start, end + 1);
             System.err.println("part: " + part);
             assertEquals(part, response);
-
-
-
 
             start = TestSettings.TEST_DATA.length() / 2;
             end = TestSettings.TEST_DATA.length() - 3;
@@ -1991,28 +1992,7 @@ public class WebDAVTest {
         }
     }
 
-//    public void test_single_range() throws IOException {
-//        GetMethod get = new GetMethod(rootUrl);
-//        get.setRequestHeader(new Header("Range", "bytes 0-9"));
-//        int status = httpClient.executeMethod(get);
-//        assertEquals("Expect 206/PARTIAL CONTENT", 206, status);
-//        assertEquals(10, get.getResponseContentLength());
-//        assertEquals("The quick ", get.getResponseBodyAsString());
-//
-//        get = new GetMethod(rootUrl);
-//        get.setRequestHeader(new Header("Range", "bytes -10"));
-//        status = httpClient.executeMethod(get);
-//        assertEquals("Expect 206/PARTIAL CONTENT", 206, status);
-//        assertEquals(10, get.getResponseContentLength());
-//        assertEquals("corpus sic", get.getResponseBodyAsString());
-//
-//        get = new GetMethod(rootUrl);
-//        get.setRequestHeader(new Header("Range", "bytes 16-38"));
-//        status = httpClient.executeMethod(get);
-//        assertEquals("Expect 206/PARTIAL CONTENT", 206, status);
-//        assertEquals(23, get.getResponseContentLength());
-//        assertEquals("fox jumps over the lazy", get.getResponseBodyAsString());
-//    }
+
     private String checkChecksum(InputStream is) throws NoSuchAlgorithmException, FileNotFoundException, IOException {
         MessageDigest md = MessageDigest.getInstance("MD5");
 
@@ -2159,28 +2139,6 @@ public class WebDAVTest {
 //        assertEquals("Expect 416 for end < start", 416, status);
 //    }
 //
-//    public void test_single_range() throws IOException {
-//        GetMethod get = new GetMethod(rootUrl);
-//        get.setRequestHeader(new Header("Range", "bytes 0-9"));
-//        int status = httpClient.executeMethod(get);
-//        assertEquals("Expect 206/PARTIAL CONTENT", 206, status);
-//        assertEquals(10, get.getResponseContentLength());
-//        assertEquals("The quick ", get.getResponseBodyAsString());
-//
-//        get = new GetMethod(rootUrl);
-//        get.setRequestHeader(new Header("Range", "bytes -10"));
-//        status = httpClient.executeMethod(get);
-//        assertEquals("Expect 206/PARTIAL CONTENT", 206, status);
-//        assertEquals(10, get.getResponseContentLength());
-//        assertEquals("corpus sic", get.getResponseBodyAsString());
-//
-//        get = new GetMethod(rootUrl);
-//        get.setRequestHeader(new Header("Range", "bytes 16-38"));
-//        status = httpClient.executeMethod(get);
-//        assertEquals("Expect 206/PARTIAL CONTENT", 206, status);
-//        assertEquals(23, get.getResponseContentLength());
-//        assertEquals("fox jumps over the lazy", get.getResponseBodyAsString());
-//    }
 //
 //    public void test_multiple_ranges() throws IOException {
 //        GetMethod get = new GetMethod(rootUrl);

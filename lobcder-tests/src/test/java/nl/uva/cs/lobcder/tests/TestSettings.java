@@ -28,6 +28,7 @@ public class TestSettings {
             + "own sheer folly in eating the cattle of the Sun-god "
             + "Hyperion; so the god prevented them from ever reaching "
             + "home.";
+    public static final String TEST_DATA_1KByte = "Persephone's nightmare  Where once herbs were grown in the fields with leaves and flowers full of fragrance Now there’re plants making concrete and steel and birds fall dead in melting furnace  Sleep away Persephone inside earth’s embrace never, never come up to our world again  The place where priests stood in devotion before the ritual of mysteries begins now, passing tourists throw their litters and they rush to see the new refinery  Sleep away Persephone inside earth’s embrace never, never come up to our world again  Once the sea was blue and crystal clear and flocks and herds carefree grazed in the fields now dusty tracks carry workers to the shipyards spreading noise and pollution all around  Sleep away Persephone Inside earth’s embrace Never, never come up to our world again Persephone's nightmare  Where once herbs were grown in the fields with leaves and flowers full of fragrance Now there’re plants making concrete and steel and birds fall dead in melting furnace  Sleep away Persephone inside earth’s";
     public static final String TEST_TXT_FILE_NAME = "testTxtFileName.txt";
     public static final String BACKEND_ENDPOINT = "backend.endpoint";
     public static final String BACKEND_USERNAME = "backend.username";
