@@ -355,7 +355,7 @@ public class WebDataFileResource extends WebDataResource implements
         switch (request.getMethod()) {
             case GET:
                 //Replica selection algorithm
-                return "https://masterinterface.vph-share.eu/";//"https://localhost:8443/lobcder-worker/" + getPath();
+                return null;//"https://localhost:8443/lobcder-worker/" + getPath();
             default:
                 return null;
         }
