@@ -202,20 +202,22 @@ public class VPDRI implements PDRI {
     }
 
     @Override
-    public void copyRange(Range range, OutputStream out) throws IOException {
+    public void copyRange(Range range, OutputStream out, boolean decrypt) throws IOException {
         VFile file;
         try {
             file = (VFile) getVfsClient().openLocation(vrl);
-            doCopy(file, range, out);
+            doCopy(file, range, out, decrypt);
         } catch (Exception ex) {
             if (ex instanceof ResourceNotFoundException || ex.getMessage().contains("Couldn open location. Get NULL object for location:")) {
                 try {
 //                    VRL assimilationVRL = new VRL(resourceUrl).append(URLEncoder.encode(fileName, "UTF-8"));
                     VRL assimilationVRL = new VRL(resourceUrl).append(fileName);
                     file = (VFile) getVfsClient().openLocation(assimilationVRL);
-                    doCopy(file, range, out);
+                    doCopy(file, range, out, decrypt);
 
                     sleeTime = 5;
+                } catch (InvalidAlgorithmParameterException | NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException ex1) {
+                    throw new IOException(ex1);
                 } catch (VRLSyntaxException ex1) {
                     throw new IOException(ex1);
                 } catch (VlException ex1) {
@@ -237,7 +239,7 @@ public class VPDRI implements PDRI {
                     sleeTime = sleeTime + 5;
                     Thread.sleep(sleeTime);
                     reconnect();
-                    copyRange(range, out);
+                    copyRange(range, out, decrypt);
                 } catch (InterruptedException ex1) {
                     throw new IOException(ex);
                 }
@@ -248,32 +250,67 @@ public class VPDRI implements PDRI {
         }
     }
 
-    private void doCopy(VFile file, Range range, OutputStream out) throws VlException, IOException {
-        int read;
-        long len = -1;
-        if (file instanceof VRandomReadable) {
-            VRandomReadable ra = (VRandomReadable) file;
-            len = range.getFinish() - range.getStart() + 1;
-            Long start = range.getStart();
-            byte[] buff;
-            if (len <= Constants.BUF_SIZE) {
-                buff = new byte[(int) len];
-            } else {
-                buff = new byte[Constants.BUF_SIZE];
-            }
-            int totalBytesRead = 0;
-            while (totalBytesRead < len) {
-                read = ra.readBytes(start, buff, 0, buff.length);
-                totalBytesRead += read;
-                start += buff.length;
-                out.write(buff, 0, read);
-            }
+    private void doCopy(VFile file, Range range, OutputStream out, boolean decript) throws VlException, IOException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException {
+
+        long len = range.getFinish() - range.getStart() + 1;
+        InputStream in = null;
+        int buffSize;
+        Long start = range.getStart();
+        if (len <= Constants.BUF_SIZE) {
+            buffSize = (int) len;
         } else {
-            if (range.getStart() == 0) {
+            buffSize = Constants.BUF_SIZE;
+        }
+
+        int read;
+        try {
+            if (file instanceof VRandomReadable) {
+                VRandomReadable ra = (VRandomReadable) file;
                 len = range.getFinish() - range.getStart() + 1;
+                byte[] buff = new byte[buffSize];
+                int totalBytesRead = 0;
+                while (totalBytesRead < len) {
+                    read = ra.readBytes(start, buff, 0, buff.length);
+                    totalBytesRead += read;
+                    start += buff.length;
+                    out.write(buff, 0, read);
+                }
+            } else {
+                in = getData();
+                if (start > 0) {
+                    long skiped = in.skip(start);
+                    if (skiped != start) {
+                        long n = start;
+                        int buflen = (int) Math.min(Constants.BUF_SIZE, n);
+                        byte data[] = new byte[buflen];
+                        while (n > 0) {
+                            int r = in.read(data, 0, (int) Math.min((long) buflen, n));
+                            if (r < 0) {
+                                break;
+                            }
+                            n -= r;
+                        }
+                    }
+                }
+//                int totalBytesRead = 0;
+//                byte[] buff = new byte[buffSize];
+//                while (totalBytesRead < len) {
+//                    read = in.read(buff, 0, buff.length);
+//                    totalBytesRead += read;
+//                    start += buff.length;
+//                    out.write(buff, 0, read);
+//                }
+                if (decript) {
+                    DesEncrypter encrypter = new DesEncrypter(getKeyInt());
+
+                }
+                CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer(buffSize, in, out);
+                cBuff.startTransfer(len);
             }
-            CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((Constants.BUF_SIZE), getData(), out);
-            cBuff.startTransfer(len);
+        } finally {
+            if (in != null) {
+                in.close();
+            }
         }
     }
 
@@ -291,22 +328,6 @@ public class VPDRI implements PDRI {
 //                    VRL assimilationVRL = new VRL(resourceUrl).append(URLEncoder.encode(fileName, "UTF-8"));
                     VRL assimilationVRL = new VRL(resourceUrl).append(fileName);
                     in = ((VFile) getVfsClient().openLocation(assimilationVRL)).getInputStream();
-
-                    if (((VFile) getVfsClient().openLocation(assimilationVRL)) instanceof VRandomReadable) {
-                        VRandomReadable ra = (VRandomReadable) getVfsClient().openLocation(assimilationVRL);
-                        int start = 100;
-                        int end = 500;
-                        int len = end - start + 1;
-                        byte[] buff = new byte[2];
-                        int totalBytesRead = 0;
-                        while (totalBytesRead < len) {
-                            read = ra.readBytes(start, buff, 0, buff.length);
-                            totalBytesRead += read;
-                            start += buff.length;
-                        }
-
-                    }
-
                     sleeTime = 5;
                 } catch (VRLSyntaxException ex1) {
                     throw new IOException(ex1);
@@ -361,6 +382,7 @@ public class VPDRI implements PDRI {
 //                while ((read = in.read(copyBuffer, 0, copyBuffer.length)) != -1) {
 //                    out.write(copyBuffer, 0, read);
 //                }
+
             } else {
                 DesEncrypter encrypter = new DesEncrypter(getKeyInt());
                 encrypter.encrypt(in, out);

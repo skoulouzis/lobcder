@@ -227,12 +227,14 @@ public class WebDataFileResource extends WebDataResource implements
                     pdri.reconnect();
                 }
                 WebDataFileResource.log.log(Level.FINE, "sendContent() for {0}--------- {1}", new Object[]{getPath(), pdri.getFileName()});
-                if (!pdri.getEncrypted()) {
-                    pdri.copyRange(range, out);
-                } else {
-                    DesEncrypter encrypter = new DesEncrypter(pdri.getKeyInt());
-                    encrypter.decrypt(pdri.getData(), out);
-                }
+                pdri.copyRange(range, out, pdri.getEncrypted());
+//                if (!) {
+//                    
+//                } else {
+//                    
+//                    DesEncrypter encrypter = new DesEncrypter(pdri.getKeyInt());
+//                    encrypter.decrypt(pdri.getData(), out);
+//                }
             } else {
                 sleepTime = 5;
                 throw new NotFoundException("Physical resource not found");
@@ -248,20 +250,8 @@ public class WebDataFileResource extends WebDataResource implements
                 }
             } catch (InterruptedException ex1) {
                 sleepTime = 5;
-                throw new IOException(ex);
+                throw new IOException(ex1);
             }
-        } catch (NoSuchAlgorithmException ex) {
-            sleepTime = 5;
-            throw new IOException(ex);
-        } catch (NoSuchPaddingException ex) {
-            sleepTime = 5;
-            throw new IOException(ex);
-        } catch (InvalidKeyException ex) {
-            sleepTime = 5;
-            throw new IOException(ex);
-        } catch (InvalidAlgorithmParameterException ex) {
-            sleepTime = 5;
-            throw new IOException(ex);
         }
         sleepTime = 5;
         return pdri;
@@ -335,7 +325,13 @@ public class WebDataFileResource extends WebDataResource implements
             }
         }
         double elapsed = System.currentTimeMillis() - start;
-        double speed = ((pdri.getLength() * 8.0) * 1000.0) / (elapsed * 1000.0);
+        long len;
+        if (range != null) {
+            len = range.getFinish() - range.getStart() + 1;
+        } else {
+            len = getContentLength();
+        }
+        double speed = ((len * 8.0) * 1000.0) / (elapsed * 1000.0);
         String msg = "Source: " + pdri.getHost() + " Destination: " + fromAddress + " Tx_Speed: " + speed + " Kbites/sec Tx_Size: " + pdri.getLength() + " bytes";
         WebDataFileResource.log.log(Level.INFO, msg);
     }

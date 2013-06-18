@@ -97,9 +97,12 @@ public class DesEncrypter {
 //        }
     }
 
+    public InputStream wrapInputStream(InputStream in) {
+        return new CipherInputStream(in, dcipher);
+    }
+
     public void decrypt(InputStream in, OutputStream out) throws IOException {
         InputStream cipherIn = null;
-
         try {
             int read;
             cipherIn = new CipherInputStream(in, dcipher);
