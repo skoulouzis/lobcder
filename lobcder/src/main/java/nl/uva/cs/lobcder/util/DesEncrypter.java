@@ -15,9 +15,11 @@ import java.security.Key;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.AlgorithmParameterSpec;
 import java.util.Random;
+import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.CipherInputStream;
 import javax.crypto.CipherOutputStream;
+import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
@@ -58,6 +60,11 @@ public class DesEncrypter {
 
         ecipher.init(Cipher.ENCRYPT_MODE, key, paramSpec);
         dcipher.init(Cipher.DECRYPT_MODE, key, paramSpec);
+    }
+
+    public byte[] encrypt(byte[] data) throws IllegalBlockSizeException, BadPaddingException {
+        byte[] encVal = ecipher.doFinal(data);
+        return encVal;
     }
 
     public void encrypt(InputStream in, OutputStream out) throws IOException {
@@ -101,12 +108,17 @@ public class DesEncrypter {
         return new CipherInputStream(in, dcipher);
     }
 
+    public byte[] decrypt(byte[] data) throws IllegalBlockSizeException, BadPaddingException {
+        byte[] encVal = dcipher.doFinal(data);
+        return encVal;
+    }
+
     public void decrypt(InputStream in, OutputStream out) throws IOException {
         InputStream cipherIn = null;
         try {
             int read;
             cipherIn = new CipherInputStream(in, dcipher);
-            byte[] copyBuffer = new byte[200 * 1024];
+            byte[] copyBuffer = new byte[Constants.BUF_SIZE];
             while ((read = cipherIn.read(copyBuffer, 0, copyBuffer.length)) != -1) {
                 out.write(copyBuffer, 0, read);
             }

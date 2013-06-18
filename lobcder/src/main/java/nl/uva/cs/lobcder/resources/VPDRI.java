@@ -18,6 +18,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.util.Constants;
@@ -216,7 +218,7 @@ public class VPDRI implements PDRI {
                     doCopy(file, range, out, decrypt);
 
                     sleeTime = 5;
-                } catch (InvalidAlgorithmParameterException | NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException ex1) {
+                } catch (InvalidAlgorithmParameterException | NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | IllegalBlockSizeException | BadPaddingException ex1) {
                     throw new IOException(ex1);
                 } catch (VRLSyntaxException ex1) {
                     throw new IOException(ex1);
@@ -250,7 +252,7 @@ public class VPDRI implements PDRI {
         }
     }
 
-    private void doCopy(VFile file, Range range, OutputStream out, boolean decript) throws VlException, IOException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException {
+    private void doCopy(VFile file, Range range, OutputStream out, boolean decript) throws VlException, IOException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
 
         long len = range.getFinish() - range.getStart() + 1;
         InputStream in = null;
@@ -260,6 +262,10 @@ public class VPDRI implements PDRI {
             buffSize = (int) len;
         } else {
             buffSize = Constants.BUF_SIZE;
+        }
+        DesEncrypter en = null;
+        if (decript) {
+            en = new DesEncrypter(getKeyInt());
         }
 
         int read;
@@ -273,10 +279,18 @@ public class VPDRI implements PDRI {
                     read = ra.readBytes(start, buff, 0, buff.length);
                     totalBytesRead += read;
                     start += buff.length;
+                    if (decript) {
+                        byte[] tmp = en.decrypt(buff);
+                        buff = tmp;
+                    }
                     out.write(buff, 0, read);
                 }
             } else {
                 in = getData();
+                if (decript) {
+                    InputStream tmp = en.wrapInputStream(in);
+                    in = tmp;
+                }
                 if (start > 0) {
                     long skiped = in.skip(start);
                     if (skiped != start) {
@@ -300,10 +314,6 @@ public class VPDRI implements PDRI {
 //                    start += buff.length;
 //                    out.write(buff, 0, read);
 //                }
-                if (decript) {
-                    DesEncrypter encrypter = new DesEncrypter(getKeyInt());
-
-                }
                 CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer(buffSize, in, out);
                 cBuff.startTransfer(len);
             }
