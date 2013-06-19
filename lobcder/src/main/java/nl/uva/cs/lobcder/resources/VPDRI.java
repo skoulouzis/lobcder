@@ -5,6 +5,7 @@
 package nl.uva.cs.lobcder.resources;
 
 import io.milton.http.Range;
+import io.milton.http.exceptions.BadRequestException;
 import java.io.*;
 import java.math.BigInteger;
 import java.net.InetAddress;
@@ -292,19 +293,20 @@ public class VPDRI implements PDRI {
                     in = tmp;
                 }
                 if (start > 0) {
-                    long skiped = in.skip(start);
-                    if (skiped != start) {
-                        long n = start;
-                        int buflen = (int) Math.min(Constants.BUF_SIZE, n);
-                        byte data[] = new byte[buflen];
-                        while (n > 0) {
-                            int r = in.read(data, 0, (int) Math.min((long) buflen, n));
-                            if (r < 0) {
-                                break;
-                            }
-                            n -= r;
-                        }
-                    }
+                    throw new IllegalBlockSizeException("Backend at "+vrl.getScheme()+"://"+vrl.getHostname() +" does not support random reads");
+//                    long skiped = in.skip(start);
+//                    if (skiped != start) {
+//                        long n = start;
+//                        int buflen = (int) Math.min(Constants.BUF_SIZE, n);
+//                        byte data[] = new byte[buflen];
+//                        while (n > 0) {
+//                            int r = in.read(data, 0, (int) Math.min((long) buflen, n));
+//                            if (r < 0) {
+//                                break;
+//                            }
+//                            n -= r;
+//                        }
+//                    }
                 }
 //                int totalBytesRead = 0;
 //                byte[] buff = new byte[buffSize];
@@ -341,7 +343,7 @@ public class VPDRI implements PDRI {
                     sleeTime = 5;
                 } catch (VRLSyntaxException ex1) {
                     throw new IOException(ex1);
-                } catch (VlException ex1) {
+                } catch (VlException | java.lang.IllegalStateException ex1) {
                     if (reconnectAttemts < Constants.RECONNECT_NTRY) {
                         try {
                             sleeTime = sleeTime + 5;

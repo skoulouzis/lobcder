@@ -300,6 +300,7 @@ public class WebDataFileResource extends WebDataResource implements
 //            }
 //        }
 //    }
+    
     @Override
     public void sendContent(OutputStream out, Range range,
             Map<String, String> params, String contentType) throws IOException,
