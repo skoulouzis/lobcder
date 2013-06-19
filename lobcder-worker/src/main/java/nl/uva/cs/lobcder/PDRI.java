@@ -4,8 +4,10 @@
  */
 package nl.uva.cs.lobcder;
 
+import io.milton.http.Range;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.math.BigInteger;
 import java.net.UnknownHostException;
 
@@ -42,4 +44,6 @@ public interface PDRI {
     public BigInteger getKeyInt();
 
     public boolean getEncrypted();
+
+    public void copyRange(Range range, OutputStream out,boolean decrypt) throws IOException;
 }

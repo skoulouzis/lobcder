@@ -108,8 +108,7 @@ public class WorkerServlet extends HttpServlet {
         String filePath = request.getPathInfo();
         if (filePath.length() > 1) {
             PDRI pdri = getPDRI(filePath);
-
-//        response.setContentType("video/x-flv");
+            
             OutputStream out = response.getOutputStream();
             try (InputStream pdriIs = null) {
                 if (!pdri.getEncrypted()) {
@@ -171,10 +170,12 @@ public class WorkerServlet extends HttpServlet {
             if (ld != null) {
                 Set<PDRIDesc> pdris = ld.pdriList;
                 if (pdris != null && !pdris.isEmpty()) {
+//                    for(PDRIDesc p: pdris){
+//                        if(this.geth)
+//                    }
                     pdriDesc = pdris.iterator().next();
                 }
             }
-
         }
         return new VPDRI(pdriDesc.name, pdriDesc.id, pdriDesc.resourceUrl, pdriDesc.username, pdriDesc.password, pdriDesc.encrypt, BigInteger.ZERO, false);
     }
