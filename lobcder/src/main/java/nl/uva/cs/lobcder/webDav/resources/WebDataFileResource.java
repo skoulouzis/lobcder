@@ -167,7 +167,7 @@ public class WebDataFileResource extends WebDataResource implements
                         cBuff.startTransfer((long) -1);
                     } else {
                         int read;
-                        byte[] copyBuffer = new byte[100 * 1024];
+                        byte[] copyBuffer = new byte[Constants.BUF_SIZE];
                         while ((read = pdri.getData().read(copyBuffer, 0, copyBuffer.length)) != -1) {
                             out.write(copyBuffer, 0, read);
                         }
@@ -180,11 +180,11 @@ public class WebDataFileResource extends WebDataResource implements
                 sleepTime = 5;
                 throw new NotFoundException("Physical resource not found");
             }
-        } catch (VlException | IOException ex) {
+        } catch (VlException | IOException | java.lang.IllegalStateException ex) {
             try {
                 sleepTime = sleepTime + 20;
                 Thread.sleep(sleepTime);
-                //            log.log(Level.SEVERE, null, ex);
+
                 if (ex instanceof nl.uva.vlet.exception.VlInterruptedException && ++tryCount < Constants.RECONNECT_NTRY) {
                     transferer(it, out, tryCount, pdri, false);
                 } else if (++tryCount < Constants.RECONNECT_NTRY) {
@@ -239,7 +239,7 @@ public class WebDataFileResource extends WebDataResource implements
                 sleepTime = 5;
                 throw new NotFoundException("Physical resource not found");
             }
-        } catch (IOException ex) {
+        } catch (IOException | java.lang.IllegalStateException ex) {
             try {
                 sleepTime = sleepTime + 20;
                 Thread.sleep(sleepTime);

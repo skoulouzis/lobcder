@@ -29,6 +29,5 @@ public class MyFilter extends MiltonFilter {
         int contentLen = ((HttpServletRequest) req).getContentLength();
         String contentType = ((HttpServletRequest) req).getContentType();
         log.log(Level.INFO, "Req_Source: {0} Method: {1} Content_Len: {2} Content_Type: {3} Elapsed_Time: {4} sec", new Object[]{from, method, contentLen, contentType, elapsed / 1000.0});
-        //        method = req.getmeth
     }
 }
