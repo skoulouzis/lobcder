@@ -293,7 +293,7 @@ public class VPDRI implements PDRI {
                     in = tmp;
                 }
                 if (start > 0) {
-                    throw new IllegalBlockSizeException("Backend at "+vrl.getScheme()+"://"+vrl.getHostname() +" does not support random reads");
+                    throw new IOException("Backend at "+vrl.getScheme()+"://"+vrl.getHostname() +"does not support random reads");
 //                    long skiped = in.skip(start);
 //                    if (skiped != start) {
 //                        long n = start;
@@ -343,7 +343,7 @@ public class VPDRI implements PDRI {
                     sleeTime = 5;
                 } catch (VRLSyntaxException ex1) {
                     throw new IOException(ex1);
-                } catch (VlException | java.lang.IllegalStateException ex1) {
+                } catch (VlException ex1) {
                     if (reconnectAttemts < Constants.RECONNECT_NTRY) {
                         try {
                             sleeTime = sleeTime + 5;
