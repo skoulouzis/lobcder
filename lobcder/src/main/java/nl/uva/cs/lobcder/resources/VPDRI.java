@@ -237,7 +237,7 @@ public class VPDRI implements PDRI {
                         throw new IOException(ex1);
                     }
                 }
-            } else if (reconnectAttemts < Constants.RECONNECT_NTRY) {
+            } else if (reconnectAttemts < Constants.RECONNECT_NTRY && !ex.getMessage().contentEquals("does not support random reads")) {
                 try {
                     sleeTime = sleeTime + 5;
                     Thread.sleep(sleeTime);

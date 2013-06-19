@@ -48,6 +48,7 @@ public class WebDataFileResource extends WebDataResource implements
     private int sleepTime = 5;
 //, ReplaceableResource {
     private ArrayList<String> workers;
+    private boolean doRedirect=false;
 
     public WebDataFileResource(@Nonnull LogicalData logicalData, Path path, @Nonnull JDBCatalogue catalogue, @Nonnull AuthI auth1, AuthI auth2) {
         super(logicalData, path, catalogue, auth1, auth2);
@@ -304,7 +305,6 @@ public class WebDataFileResource extends WebDataResource implements
 //            }
 //        }
 //    }
-    
     @Override
     public void sendContent(OutputStream out, Range range,
             Map<String, String> params, String contentType) throws IOException,
@@ -360,7 +360,7 @@ public class WebDataFileResource extends WebDataResource implements
         switch (request.getMethod()) {
             case GET:
                 //Replica selection algorithm
-                
+
                 return getBestWorker();
             default:
                 return null;
@@ -368,8 +368,12 @@ public class WebDataFileResource extends WebDataResource implements
     }
 
     private String getBestWorker() {
-        for(String s : workers){
-            return s + getPath();
+        if (doRedirect) {
+            for (String s : workers) {
+                return s + getPath();
+            }
+        } else {
+            return null;
         }
         return null;
     }
