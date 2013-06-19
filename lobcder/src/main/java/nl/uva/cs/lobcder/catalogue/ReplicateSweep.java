@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.security.NoSuchAlgorithmException;
 import java.sql.*;
+import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -22,6 +23,7 @@ import nl.uva.cs.lobcder.util.DesEncrypter;
 class ReplicateSweep implements Runnable {
 
     private final DataSource datasource;
+    private boolean aggressiveReplicate = true;
 
     public ReplicateSweep(DataSource datasource) {
         this.datasource = datasource;
@@ -34,6 +36,20 @@ class ReplicateSweep implements Runnable {
             it = availableStorage.iterator();
         }
         return it.next();
+    }
+
+    private Collection<StorageSite> findBestSites() {
+        if (aggressiveReplicate) {
+            return availableStorage;
+        } else {
+            ArrayList<StorageSite> sites = new ArrayList<StorageSite>();
+            if (it == null || !it.hasNext()) {
+                it = availableStorage.iterator();
+            }
+            sites.add(it.next());
+            return sites;
+            //             
+        }
     }
 
     private Collection<StorageSite> getStorageSites(Connection connection) throws SQLException {
@@ -147,26 +163,30 @@ class ReplicateSweep implements Runnable {
                     try (PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO pdri_table "
                                     + "(fileName, storageSiteRef, pdriGroupRef,isEncrypted, encryptionKey) VALUES(?, ?, ?, ?, ?)")) {
                         source = new PDRIFactory().createInstance(cd, false);
-                        StorageSite ss = findBestSite();
+//                        StorageSite ss = findBestSite();
+                        Collection<StorageSite> ss = findBestSites();
+                        for (StorageSite s : ss) {
+                            BigInteger pdriKey = DesEncrypter.generateKey();
+                            PDRIDescr pdriDescr = new PDRIDescr(
+                                    cd.getName(),
+                                    s.getStorageSiteId(),
+                                    s.getResourceURI(),
+                                    s.getCredential().getStorageSiteUsername(),
+                                    s.getCredential().getStorageSitePassword(), s.isEncrypt(), pdriKey, cd.getPdriGroupRef(), null);
 
-                        BigInteger pdriKey = DesEncrypter.generateKey();
-                        PDRIDescr pdriDescr = new PDRIDescr(
-                                cd.getName(),
-                                ss.getStorageSiteId(),
-                                ss.getResourceURI(),
-                                ss.getCredential().getStorageSiteUsername(),
-                                ss.getCredential().getStorageSitePassword(), ss.isEncrypt(), pdriKey, cd.getPdriGroupRef(), null);
-
-                        PDRI replica = PDRIFactory.getFactory().createInstance(pdriDescr, false);
-                        replica.replicate(source);
-                        preparedStatement.setString(1, cd.getName());
-                        preparedStatement.setLong(2, ss.getStorageSiteId());
-                        preparedStatement.setLong(3, cd.getPdriGroupRef());
-                        preparedStatement.setBoolean(4, replica.getEncrypted());
-                        preparedStatement.setLong(5, pdriKey.longValue());
-                        preparedStatement.executeUpdate();
+                            PDRI replica = PDRIFactory.getFactory().createInstance(pdriDescr, false);
+                            replica.replicate(source);
+                            preparedStatement.setString(1, cd.getName());
+                            preparedStatement.setLong(2, s.getStorageSiteId());
+                            preparedStatement.setLong(3, cd.getPdriGroupRef());
+                            preparedStatement.setBoolean(4, replica.getEncrypted());
+                            preparedStatement.setLong(5, pdriKey.longValue());
+                            preparedStatement.executeUpdate();
+                        }
                         onCacheReplicate(cd, source, connection);
                         connection.commit();
+
+
                     } catch (NoSuchAlgorithmException ex) {
                         Logger.getLogger(ReplicateSweep.class.getName()).log(Level.SEVERE, null, ex);
                     }
