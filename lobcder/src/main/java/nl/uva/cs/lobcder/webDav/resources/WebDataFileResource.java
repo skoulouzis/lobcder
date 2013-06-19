@@ -17,6 +17,7 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.Map;
@@ -46,9 +47,12 @@ public class WebDataFileResource extends WebDataResource implements
 
     private int sleepTime = 5;
 //, ReplaceableResource {
+    private ArrayList<String> workers;
 
     public WebDataFileResource(@Nonnull LogicalData logicalData, Path path, @Nonnull JDBCatalogue catalogue, @Nonnull AuthI auth1, AuthI auth2) {
         super(logicalData, path, catalogue, auth1, auth2);
+        workers = new ArrayList<>();
+        workers.add("http://localhost:8080/lobcder-worker/");
     }
 
     @Override
@@ -356,9 +360,17 @@ public class WebDataFileResource extends WebDataResource implements
         switch (request.getMethod()) {
             case GET:
                 //Replica selection algorithm
-                return null;//"https://localhost:8443/lobcder-worker/" + getPath();
+                
+                return getBestWorker();
             default:
                 return null;
         }
+    }
+
+    private String getBestWorker() {
+        for(String s : workers){
+            return s + getPath();
+        }
+        return null;
     }
 }
