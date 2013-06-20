@@ -12,11 +12,14 @@ import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
+import io.milton.http.Range;
+import java.awt.font.NumericShaper;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.math.BigInteger;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
@@ -30,8 +33,12 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.xml.bind.annotation.XmlRootElement;
 import lombok.extern.java.Log;
+import nl.uva.cs.lobcder.resources.PDRI;
+import nl.uva.cs.lobcder.resources.VPDRI;
+import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.vlet.exception.VlException;
 import nl.uva.vlet.io.CircularStreamBufferTransferer;
+import org.apache.commons.httpclient.HttpStatus;
 
 /**
  *
@@ -104,23 +111,25 @@ public class WorkerServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-
         String filePath = request.getPathInfo();
         if (filePath.length() > 1) {
-            PDRI pdri = getPDRI(filePath);
-            
             OutputStream out = response.getOutputStream();
-            try (InputStream pdriIs = null) {
-                if (!pdri.getEncrypted()) {
-                    CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((Constants.BUF_SIZE), pdri.getData(), out);
-                    cBuff.startTransfer(new Long(-1));
-                }
-            } catch (VlException ex) {
-                Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, ex);
-            } finally {
-                out.flush();
-                out.close();
+            PDRI pdri = getPDRI(filePath);
+            String rangeStr = request.getHeader(Constants.RANGE_HEADER_NAME);
+            if (rangeStr != null) {
+                //                String[] startEnd = range[1].split("-");
+                //                int start = Integer.valueOf(startEnd[0]);
+                //                int end = Integer.valueOf(startEnd[1]);
+                Range range = Range.parse(rangeStr.split("=")[1]);
+                pdri.copyRange(range, out);
+                
+                response.setStatus(HttpStatus.SC_PARTIAL_CONTENT);
+
+            } else {
+                trasfer(pdri, out);
             }
+
+
         }
 
     }
@@ -178,6 +187,20 @@ public class WorkerServlet extends HttpServlet {
             }
         }
         return new VPDRI(pdriDesc.name, pdriDesc.id, pdriDesc.resourceUrl, pdriDesc.username, pdriDesc.password, pdriDesc.encrypt, BigInteger.ZERO, false);
+    }
+
+    private void trasfer(PDRI pdri, OutputStream out) throws IOException {
+        try {
+            if (!pdri.getEncrypted()) {
+                CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((Constants.BUF_SIZE), pdri.getData(), out);
+                cBuff.startTransfer(new Long(-1));
+            }
+        } catch (VlException ex) {
+            Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            out.flush();
+            out.close();
+        }
     }
 
     @XmlRootElement

@@ -20,7 +20,6 @@ class Util {
     public static Properties getTestProperties(InputStream in)
             throws IOException {
         Properties properties = new Properties();
-//        File f = new File(propPath);
         properties.load(in);
 
         return properties;
