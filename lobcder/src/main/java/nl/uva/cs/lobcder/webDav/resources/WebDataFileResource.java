@@ -10,7 +10,12 @@ import io.milton.http.*;
 import io.milton.http.exceptions.*;
 import io.milton.resource.CollectionResource;
 import io.milton.resource.FileResource;
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
@@ -22,6 +27,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.annotation.Nonnull;
 import javax.crypto.NoSuchPaddingException;
 import lombok.extern.java.Log;
@@ -49,11 +55,30 @@ public class WebDataFileResource extends WebDataResource implements
 //, ReplaceableResource {
     private ArrayList<String> workers;
     private boolean doRedirect = true;
+    private int workerIndex = 0;
 
     public WebDataFileResource(@Nonnull LogicalData logicalData, Path path, @Nonnull JDBCatalogue catalogue, @Nonnull AuthI auth1, AuthI auth2) {
         super(logicalData, path, catalogue, auth1, auth2);
-        workers = new ArrayList<>();
-        workers.add("http://localhost:8080/lobcder-worker/");
+        BufferedReader br = null;
+        try {
+            ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+            InputStream in = classLoader.getResourceAsStream("/auth.properties");
+            br = new BufferedReader(new InputStreamReader(in));
+            String line;
+            workers = new ArrayList<>();
+            while ((line = br.readLine()) != null) {
+                workers.add(line);
+            }
+            br.close();
+        } catch (IOException ex) {
+            Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            try {
+                br.close();
+            } catch (IOException ex) {
+                Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
     }
 
     @Override
@@ -369,12 +394,15 @@ public class WebDataFileResource extends WebDataResource implements
 
     private String getBestWorker() {
         if (doRedirect) {
-            for (String s : workers) {
-                return s + getPath();
+            String w = workers.get(workerIndex) + getPath();
+            if (workerIndex >= workers.size()) {
+                workerIndex = 0;
+            } else {
+                workerIndex++;
             }
+            return w;
         } else {
             return null;
         }
-        return null;
     }
 }
