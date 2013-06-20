@@ -33,9 +33,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.xml.bind.annotation.XmlRootElement;
 import lombok.extern.java.Log;
-import nl.uva.cs.lobcder.resources.PDRI;
-import nl.uva.cs.lobcder.resources.VPDRI;
-import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.vlet.exception.VlException;
 import nl.uva.vlet.io.CircularStreamBufferTransferer;
 import org.apache.commons.httpclient.HttpStatus;
@@ -71,7 +68,7 @@ public class WorkerServlet extends HttpServlet {
         restClient = Client.create(clientConfig);
         restClient.addFilter(new com.sun.jersey.api.client.filter.HTTPBasicAuthFilter(username, password));
 
-        weightPDRIMap = new HashMap<>();
+        weightPDRIMap = new HashMap<String, Long>();
     }
 
     /**
