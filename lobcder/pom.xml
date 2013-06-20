@@ -295,5 +295,19 @@
             </plugin>-->
         </plugins>
     </reporting>
+    
+    
+    <distributionManagement>
+        <repository>
+            <id>elab.lab.uvalight.net</id>
+            <name>elab.lab.uvalight.net-releases</name>
+            <url>https://elab.lab.uvalight.net:8444/artifactory/ext-snapshot-local</url>
+        </repository>
+        <snapshotRepository>
+            <id>elab.lab.uvalight.net</id>
+            <name>elab.lab.uvalight.net-snapshots</name>
+            <url>https://elab.lab.uvalight.net:8444/artifactory/ext-snapshot-local</url>
+        </snapshotRepository>
+    </distributionManagement>
 
 </project>

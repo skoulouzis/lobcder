@@ -48,7 +48,7 @@ public class WebDataFileResource extends WebDataResource implements
     private int sleepTime = 5;
 //, ReplaceableResource {
     private ArrayList<String> workers;
-    private boolean doRedirect=false;
+    private boolean doRedirect = true;
 
     public WebDataFileResource(@Nonnull LogicalData logicalData, Path path, @Nonnull JDBCatalogue catalogue, @Nonnull AuthI auth1, AuthI auth2) {
         super(logicalData, path, catalogue, auth1, auth2);
@@ -232,7 +232,7 @@ public class WebDataFileResource extends WebDataResource implements
                     pdri.reconnect();
                 }
                 WebDataFileResource.log.log(Level.FINE, "sendContent() for {0}--------- {1}", new Object[]{getPath(), pdri.getFileName()});
-                pdri.copyRange(range, out, pdri.getEncrypted());
+                pdri.copyRange(range, out);
 //                if (!) {
 //                    
 //                } else {

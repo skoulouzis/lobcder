@@ -183,7 +183,7 @@ public class CachePDRI implements PDRI {
     }
 
     @Override
-    public void copyRange(Range range, OutputStream out, boolean decrypt) {
+    public void copyRange(Range range, OutputStream out) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 }

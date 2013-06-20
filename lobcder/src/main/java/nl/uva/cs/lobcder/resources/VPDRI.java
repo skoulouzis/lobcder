@@ -98,7 +98,7 @@ public class VPDRI implements PDRI {
     private int sleeTime = 5;
     private static final Map<String, GridProxy> proxyCache = new HashMap<>();
 
-    VPDRI(String fileName, Long storageSiteId, String resourceUrl, String username, String password, boolean encrypt, BigInteger keyInt, boolean doChunkUpload) throws IOException {
+    public VPDRI(String fileName, Long storageSiteId, String resourceUrl, String username, String password, boolean encrypt, BigInteger keyInt, boolean doChunkUpload) throws IOException {
         try {
             this.fileName = fileName;
             this.resourceUrl = resourceUrl;
@@ -205,18 +205,18 @@ public class VPDRI implements PDRI {
     }
 
     @Override
-    public void copyRange(Range range, OutputStream out, boolean decrypt) throws IOException {
+    public void copyRange(Range range, OutputStream out) throws IOException {
         VFile file;
         try {
             file = (VFile) getVfsClient().openLocation(vrl);
-            doCopy(file, range, out, decrypt);
+            doCopy(file, range, out, getEncrypted());
         } catch (Exception ex) {
             if (ex instanceof ResourceNotFoundException || ex.getMessage().contains("Couldn open location. Get NULL object for location:")) {
                 try {
 //                    VRL assimilationVRL = new VRL(resourceUrl).append(URLEncoder.encode(fileName, "UTF-8"));
                     VRL assimilationVRL = new VRL(resourceUrl).append(fileName);
                     file = (VFile) getVfsClient().openLocation(assimilationVRL);
-                    doCopy(file, range, out, decrypt);
+                    doCopy(file, range, out, getEncrypted());
 
                     sleeTime = 5;
                 } catch (InvalidAlgorithmParameterException | NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | IllegalBlockSizeException | BadPaddingException ex1) {
@@ -242,7 +242,7 @@ public class VPDRI implements PDRI {
                     sleeTime = sleeTime + 5;
                     Thread.sleep(sleeTime);
                     reconnect();
-                    copyRange(range, out, decrypt);
+                    copyRange(range, out);
                 } catch (InterruptedException ex1) {
                     throw new IOException(ex);
                 }
@@ -293,7 +293,7 @@ public class VPDRI implements PDRI {
                     in = tmp;
                 }
                 if (start > 0) {
-                    throw new IOException("Backend at "+vrl.getScheme()+"://"+vrl.getHostname() +"does not support random reads");
+                    throw new IOException("Backend at " + vrl.getScheme() + "://" + vrl.getHostname() + "does not support random reads");
 //                    long skiped = in.skip(start);
 //                    if (skiped != start) {
 //                        long n = start;
