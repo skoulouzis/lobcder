@@ -248,6 +248,7 @@
                 <artifactId>maven-war-plugin</artifactId>
                 <configuration>
                     <failOnMissingWebXml>true</failOnMissingWebXml>
+                    <attachClasses>true</attachClasses>
                 </configuration>
                 <!--If the version is not set to 2.1.1 we get the error: 'com.thoughtworks.xstream.converters.ConversionException: Cannot construct org.apache.maven.plugin.war.util.WebappStructure as it does not have a no-args constructor'-->
                 <version>2.3</version>
