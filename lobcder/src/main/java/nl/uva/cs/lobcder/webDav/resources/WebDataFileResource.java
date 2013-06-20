@@ -62,7 +62,7 @@ public class WebDataFileResource extends WebDataResource implements
         BufferedReader br = null;
         try {
             ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-            InputStream in = classLoader.getResourceAsStream("/auth.properties");
+            InputStream in = classLoader.getResourceAsStream("/workers");
             br = new BufferedReader(new InputStreamReader(in));
             String line;
             workers = new ArrayList<>();
