@@ -107,7 +107,6 @@ public class WorkerServlet extends HttpServlet {
             long speed = size / elapsedSec;
             this.weightPDRIMap.put(pdri.getURI(), speed);
         }
-
     }
 
     /**
