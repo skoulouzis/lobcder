@@ -4,24 +4,24 @@
  */
 package nl.uva.cs.lobcder;
 
-import com.sun.jersey.api.json.JSONConfiguration;
-
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.GenericType;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
+import com.sun.jersey.api.json.JSONConfiguration;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 import io.milton.http.Range;
-import java.awt.font.NumericShaper;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.math.BigInteger;
-import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
+import java.util.Random;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -51,6 +51,8 @@ public class WorkerServlet extends HttpServlet {
     private String restURL;
     private final String username;
     private final String password;
+    private Map<String, Long> weightPDRIMap;
+    private long size;
 
     public WorkerServlet() throws FileNotFoundException, IOException {
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
@@ -68,37 +70,10 @@ public class WorkerServlet extends HttpServlet {
         clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
         restClient = Client.create(clientConfig);
         restClient.addFilter(new com.sun.jersey.api.client.filter.HTTPBasicAuthFilter(username, password));
+
+        weightPDRIMap = new HashMap<>();
     }
 
-//    /**
-//     * Processes requests for both HTTP
-//     * <code>GET</code> and
-//     * <code>POST</code> methods.
-//     *
-//     * @param request servlet request
-//     * @param response servlet response
-//     * @throws ServletException if a servlet-specific error occurs
-//     * @throws IOException if an I/O error occurs
-//     */
-//    protected void processRequest(HttpServletRequest request, HttpServletResponse response)
-//            throws ServletException, IOException {
-//        response.setContentType("text/html;charset=UTF-8");
-//        PrintWriter out = response.getWriter();
-//        try {
-//            /* TODO output your page here. You may use following sample code. */
-//            out.println("<html>");
-//            out.println("<head>");
-//            out.println("<title>Servlet WorkerServlet</title>");
-//            out.println("</head>");
-//            out.println("<body>");
-//            out.println("<h1>Servlet WorkerServlet at " + request.getContextPath() + "</h1>");
-//            out.println("</body>");
-//            out.println("</html>");
-//        } finally {
-//            out.close();
-//        }
-//    }
-    // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
     /**
      * Handles the HTTP
      * <code>GET</code> method.
@@ -113,23 +88,24 @@ public class WorkerServlet extends HttpServlet {
             throws ServletException, IOException {
         String filePath = request.getPathInfo();
         if (filePath.length() > 1) {
+            long start = System.currentTimeMillis();
             OutputStream out = response.getOutputStream();
             PDRI pdri = getPDRI(filePath);
             String rangeStr = request.getHeader(Constants.RANGE_HEADER_NAME);
             if (rangeStr != null) {
-                //                String[] startEnd = range[1].split("-");
-                //                int start = Integer.valueOf(startEnd[0]);
-                //                int end = Integer.valueOf(startEnd[1]);
                 Range range = Range.parse(rangeStr.split("=")[1]);
                 pdri.copyRange(range, out);
-                
                 response.setStatus(HttpStatus.SC_PARTIAL_CONTENT);
-
             } else {
                 trasfer(pdri, out);
             }
-
-
+            long elapsed = System.currentTimeMillis() - start;
+            long elapsedSec = elapsed / 1000;
+            if (elapsedSec <= 0) {
+                elapsedSec = 1;
+            }
+            long speed = size / elapsedSec;
+            this.weightPDRIMap.put(pdri.getURI(), speed);
         }
 
     }
@@ -156,8 +132,8 @@ public class WorkerServlet extends HttpServlet {
      */
     @Override
     public String getServletInfo() {
-        return "Short description";
-    }// </editor-fold>
+        return "LOBCDER worker";
+    }
 
     private PDRI getPDRI(String filePath) throws IOException {
         WebResource webResource = restClient.resource(restURL);
@@ -167,9 +143,6 @@ public class WorkerServlet extends HttpServlet {
 
         WebResource res = webResource.path("items").path("query").queryParams(params);
 
-        System.err.println("Query: " + res.getURI());
-
-
         List<LogicalDataWrapped> list = res.accept(MediaType.APPLICATION_XML).
                 get(new GenericType<List<LogicalDataWrapped>>() {
         });
@@ -178,11 +151,9 @@ public class WorkerServlet extends HttpServlet {
         for (LogicalDataWrapped ld : list) {
             if (ld != null) {
                 Set<PDRIDesc> pdris = ld.pdriList;
+                size = ld.logicalData.length;
                 if (pdris != null && !pdris.isEmpty()) {
-//                    for(PDRIDesc p: pdris){
-//                        if(this.geth)
-//                    }
-                    pdriDesc = pdris.iterator().next();
+                    pdriDesc = selectBestPDRI(pdris);
                 }
             }
         }
@@ -201,6 +172,34 @@ public class WorkerServlet extends HttpServlet {
             out.flush();
             out.close();
         }
+    }
+
+    private PDRIDesc selectBestPDRI(Set<PDRIDesc> pdris) {
+        if (weightPDRIMap.isEmpty()) {
+            for (PDRIDesc p : pdris) {
+                weightPDRIMap.put(p.resourceUrl, Long.valueOf(10));
+            }
+        }
+        long totalSum = 0;
+        for (PDRIDesc p : pdris) {
+            Long speed = weightPDRIMap.get(p.resourceUrl);
+            Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "Speed: : {0}", speed);
+            totalSum += speed;
+
+        }
+        int itemIndex = new Random().nextInt((int) totalSum);
+
+        long sum = 0;
+        int i = 0;
+        while (sum < itemIndex) {
+            i++;
+            String url = pdris.iterator().next().resourceUrl;
+            sum = sum + weightPDRIMap.get(url);
+        }
+        PDRIDesc[] array = pdris.toArray(new PDRIDesc[pdris.size()]);
+        int index = i - 1;
+        Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, " SELECT: " + array[index].resourceUrl);
+        return array[index];
     }
 
     @XmlRootElement
