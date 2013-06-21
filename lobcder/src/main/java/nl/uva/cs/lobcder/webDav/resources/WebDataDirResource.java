@@ -22,12 +22,24 @@ import io.milton.resource.DeletableCollectionResource;
 import io.milton.resource.FolderResource;
 import io.milton.resource.LockingCollectionResource;
 import io.milton.resource.Resource;
+import lombok.extern.java.Log;
+import nl.uva.cs.lobcder.auth.AuthI;
+import nl.uva.cs.lobcder.auth.Permissions;
+import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
+import nl.uva.cs.lobcder.resources.LogicalData;
+import nl.uva.cs.lobcder.resources.PDRI;
+import nl.uva.cs.lobcder.resources.PDRIDescr;
+import nl.uva.cs.lobcder.util.Constants;
+import nl.uva.cs.lobcder.util.SpeedLogger;
+
+import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchAlgorithmException;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -60,6 +72,9 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
 
     @Override
     public boolean authorise(Request request, Request.Method method, Auth auth) {
+        if (auth == null) {
+            return false;
+        }
         try {
             switch (method) {
                 case MKCOL:

@@ -10,6 +10,7 @@ import io.milton.http.*;
 import io.milton.http.exceptions.*;
 import io.milton.resource.CollectionResource;
 import io.milton.resource.FileResource;
+import io.milton.resource.LockableResource;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -42,6 +43,21 @@ import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.cs.lobcder.util.DesEncrypter;
 import nl.uva.vlet.exception.VlException;
 import nl.uva.vlet.io.CircularStreamBufferTransferer;
+
+import javax.annotation.Nonnull;
+import javax.crypto.NoSuchPaddingException;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.UUID;
+import java.util.logging.Level;
 
 /**
  *
@@ -84,7 +100,9 @@ public class WebDataFileResource extends WebDataResource implements
 
     @Override
     public boolean authorise(Request request, Request.Method method, Auth auth) {
-
+        if (auth == null) {
+            return false;
+        }
         switch (method) {
             case MKCOL:
                 String msg = "From: " + fromAddress + " User: " + getPrincipal().getUserId() + " Method: " + method;

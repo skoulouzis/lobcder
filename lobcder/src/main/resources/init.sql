@@ -56,7 +56,8 @@ CREATE TABLE ldata_table (
  lockDepth  VARCHAR(255),
  lockTimeout  BIGINT NOT NULL DEFAULT 0,
  description VARCHAR(1024),
- locationPreference VARCHAR(1024)
+ locationPreference VARCHAR(1024),
+ status enum('unavailable', 'corrupted', 'OK')
 ) ENGINE=InnoDB;
 
 CREATE TABLE permission_table (

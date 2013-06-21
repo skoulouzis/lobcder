@@ -28,12 +28,13 @@ public class WebDataResourceFactory implements ResourceFactory {
     public Resource getResource(String host, String strPath) {
 
         //Gets the root path. If instead we called :'ldri = Path.path(strPath);' we get back '/lobcder-1.0-SNAPSHOT'
-        Path ldri = Path.path(strPath).getStripFirst().getStripFirst();
-//        if (strPath.equals("/")) {
-//            ldri = Path.root;
-//        } else {
-//            ldri = Path.path(strPath);
-//        }
+        Path ldri = Path.path(strPath).getStripFirst();
+        //Path ldri;
+        //if (strPath.equals("/")) {
+        //    ldri = Path.root;
+        //} else {
+        //    ldri = Path.path(strPath);
+        //}
 
         try (Connection cn = catalogue.getConnection()) {
             WebDataResourceFactory.log.log(Level.FINE, "getResource:  strPath: {0} path: {1} ldri: {2}" + "\n" + "\tgetResource:  host: {3} path: {4}", new Object[]{strPath, Path.path(strPath), ldri, host, ldri});

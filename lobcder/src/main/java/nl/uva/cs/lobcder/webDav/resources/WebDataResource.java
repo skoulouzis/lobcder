@@ -394,6 +394,8 @@ public class WebDataResource implements PropFindableResource, Resource,
                 return String.valueOf(getLogicalData().getChecksum());
             } else if (qname.equals(Constants.DRI_LAST_VALIDATION_DATE_PROP_NAME)) {
                 return String.valueOf(getLogicalData().getLastValidationDate());
+            } else if(qname.equals(Constants.DRI_STATUS_PROP_NANE)) {
+                return getLogicalData().getStatus();
             } else if (qname.equals(Constants.DAV_CURRENT_USER_PRIVILAGE_SET_PROP_NAME)) {
                 //List<Priviledge> list = getPriviledges(null);
                 return "";
@@ -482,6 +484,9 @@ public class WebDataResource implements PropFindableResource, Resource,
                         Long v = Long.valueOf(value);
                         getLogicalData().setLastValidationDate(v);
                         catalogue.setLastValidationDate(getLogicalData().getUid(), v, connection);
+                    } else if (qname.equals(Constants.DRI_STATUS_PROP_NANE)) {
+                        getLogicalData().setStatus(value);
+                        catalogue.setDriStatus(getLogicalData().getUid(), value, connection);
                     } else if (qname.equals(Constants.DESCRIPTION_PROP_NAME)) {
                         String v = value;
                         getLogicalData().setDescription(v);

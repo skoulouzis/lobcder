@@ -365,7 +365,7 @@ public class JDBCatalogue extends MyDataSource {
                                     "SELECT uid, ownerId, datatype, createDate, modifiedDate, ldLength, "
                                     + "contentTypesStr, pdriGroupRef, isSupervised, checksum, lastValidationDate, "
                                     + "lockTokenID, lockScope, lockType, lockedByUser, lockDepth, lockTimeout, "
-                                    + "description, locationPreference "
+                                    + "description, locationPreference, status "
                                     + "FROM ldata_table WHERE ldata_table.parentRef = ? AND ldata_table.ldName = ?")) {
                         preparedStatement1.setLong(1, parent);
                         preparedStatement1.setString(2, p);
@@ -393,6 +393,7 @@ public class JDBCatalogue extends MyDataSource {
                             res.setLockTimeout(rs.getLong(17));
                             res.setDescription(rs.getString(18));
                             res.setDataLocationPreference(rs.getString(19));
+                            res.setStatus(rs.getString(20));
                             return res;
                         } else {
                             return null;
@@ -423,7 +424,7 @@ public class JDBCatalogue extends MyDataSource {
         try (PreparedStatement ps = connection.prepareStatement("SELECT parentRef, ownerId, datatype, ldName, "
                         + "createDate, modifiedDate, ldLength, contentTypesStr, pdriGroupRef, "
                         + "isSupervised, checksum, lastValidationDate, lockTokenID, lockScope, "
-                        + "lockType, lockedByUser, lockDepth, lockTimeout, description, locationPreference "
+                        + "lockType, lockedByUser, lockDepth, lockTimeout, description, locationPreference, status "
                         + "FROM ldata_table WHERE ldata_table.uid = ?")) {
             ps.setLong(1, UID);
             ResultSet rs = ps.executeQuery();
@@ -450,6 +451,7 @@ public class JDBCatalogue extends MyDataSource {
                 res.setLockTimeout(rs.getLong(18));
                 res.setDescription(rs.getString(19));
                 res.setDataLocationPreference(rs.getString(20));
+                res.setStatus(rs.getString(21));
                 return res;
             } else {
                 return null;
@@ -710,6 +712,14 @@ public class JDBCatalogue extends MyDataSource {
     public void setFileChecksum(@Nonnull Long uid, @Nonnull String checksum, @Nonnull Connection connection) throws SQLException {
         try (PreparedStatement ps = connection.prepareStatement("UPDATE ldata_table SET checksum = ? WHERE uid = ?")) {
             ps.setString(1, checksum);
+            ps.setLong(2, uid);
+            ps.executeUpdate();
+        }
+    }
+
+    public void setDriStatus(@Nonnull Long uid, @Nonnull String status, @Nonnull Connection connection) throws SQLException {
+        try (PreparedStatement ps = connection.prepareStatement("UPDATE ldata_table SET status = ? WHERE uid = ?")) {
+            ps.setString(1, status);
             ps.setLong(2, uid);
             ps.executeUpdate();
         }
