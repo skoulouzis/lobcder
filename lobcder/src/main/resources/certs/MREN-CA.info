@@ -1,0 +1,9 @@
+# @(#)$Id: 3232b9bc.info,v 1.3 2008/07/28 13:08:32 pmacvsdg Exp $
+alias = MREN-CA
+url = http://mren-ca.ac.me/
+ca_url = http://www.mren-ca.ac.me/ca/ca.crt
+crl_url = http://www.mren-ca.ac.me/ca/crl-v2.crl
+email = mren-ca@ac.me
+status = accredited:classic
+version = 1.53
+sha1fp.0 = 6F:D0:0E:A3:93:F9:EF:9E:68:F7:F4:29:60:D0:95:AD:A9:48:41:BE

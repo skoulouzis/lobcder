@@ -1,0 +1,10 @@
+# @<#>$Id: 9b95bbf2.info,v 1.2 2008/07/28 11:17:21 pmacvsdg Exp $
+#
+alias = NCSA-mics
+url = http://security.ncsa.uiuc.edu/CA/
+ca_url =  http://ca.ncsa.uiuc.edu/9b95bbf2.0
+crl_url = http://ca.ncsa.uiuc.edu/9b95bbf2.r0
+email = security@ncsa.uiuc.edu
+status =  accredited:mics
+sha1fp.0 = CA:94:22:C3:C8:F2:33:67:02:44:98:0A:FE:6C:38:04:33:E2:CC:C4
+version = 1.53

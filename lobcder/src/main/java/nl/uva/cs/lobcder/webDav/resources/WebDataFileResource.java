@@ -10,27 +10,11 @@ import io.milton.http.*;
 import io.milton.http.exceptions.*;
 import io.milton.resource.CollectionResource;
 import io.milton.resource.FileResource;
-import io.milton.resource.LockableResource;
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.annotation.Nonnull;
-import javax.crypto.NoSuchPaddingException;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.auth.AuthI;
 import nl.uva.cs.lobcder.auth.Permissions;
@@ -56,7 +40,6 @@ import java.sql.SQLException;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.UUID;
 import java.util.logging.Level;
 
 /**
@@ -399,19 +382,37 @@ public class WebDataFileResource extends WebDataResource implements
 
     @Override
     public String checkRedirect(Request request) {
-        WebDataFileResource.log.log(Level.FINE, "checkRedirect for {0}", getPath());
-        switch (request.getMethod()) {
-            case GET:
-                //Replica selection algorithm
-
-                return getBestWorker();
-            default:
-                return null;
+        try {
+            WebDataFileResource.log.log(Level.FINE, "checkRedirect for {0}", getPath());
+            switch (request.getMethod()) {
+                case GET:
+                    //Replica selection algorithm
+                    return getBestWorker();
+                default:
+                    return null;
+            }
+        } catch (IOException ex) {
+            Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, ex);
         }
+        return null;
     }
 
-    private String getBestWorker() {
+    private String getBestWorker() throws IOException {
         if (doRedirect) {
+            ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+            InputStream in = classLoader.getResourceAsStream("/workers");
+            try (BufferedReader br = new BufferedReader(new InputStreamReader(in))) {
+                String line;
+                if (workers == null) {
+                    workers = new ArrayList<>();
+                }
+                while ((line = br.readLine()) != null) {
+                    if (!workers.contains(line)) {
+                        workers.add(line);
+                    }
+                }
+            }
+            
             String w = workers.get(workerIndex) + getPath();
             if (workerIndex >= workers.size()) {
                 workerIndex = 0;

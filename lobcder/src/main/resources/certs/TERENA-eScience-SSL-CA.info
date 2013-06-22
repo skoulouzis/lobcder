@@ -1,0 +1,12 @@
+# @(#)$Id: 20ce830e.info,v 1.1 2010/09/24 13:29:21 pmacvsdg Exp $
+# /C=NL/O=TERENA/CN=TERENA eScience SSL CA
+alias = TERENA-eScience-SSL-CA
+requires = UTN-USERFirst-Hardware
+ca_url = https://www.terena.org/activities/tcs/repository/TERENA_eScience_SSL_CA.der
+crl_url = http://crl.tcs.terena.org/TERENAeScienceSSLCA.crl
+policy_url = https://www.terena.org/activities/tcs/repository/cps-server.pdf
+url = https://www.terena.org/activities/tcs/repository/
+email = tcs-pma@terena.org
+status = accredited:classic
+version = 1.53
+sha1fp.0 = 93:BF:A8:70:C2:17:83:F9:16:6C:34:1D:FB:7E:01:86:F6:A0:31:3D
