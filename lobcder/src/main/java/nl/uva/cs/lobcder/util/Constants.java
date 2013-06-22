@@ -41,4 +41,5 @@ public class Constants {
     public static final int RECONNECT_NTRY = 20;
     public static final String RANGE_HEADER_NAME = "range";
     public static final String CERT_LOCATION=System.getProperty("user.home") + "/.globus/certificates/";
+    public static final String  PROXY_FILE="/tmp/myProxy";
 }
