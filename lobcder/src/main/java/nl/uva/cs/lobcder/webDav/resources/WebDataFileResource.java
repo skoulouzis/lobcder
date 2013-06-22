@@ -83,7 +83,6 @@ public class WebDataFileResource extends WebDataResource implements
             String line;
             workers = new ArrayList<>();
             while ((line = br.readLine()) != null) {
-                log.log(Level.FINE, "Adding worker: " + line);
                 workers.add(line);
             }
             br.close();
@@ -414,12 +413,11 @@ public class WebDataFileResource extends WebDataResource implements
     private String getBestWorker() {
         if (doRedirect) {
             String w = workers.get(workerIndex) + getPath();
-            if (workerIndex > workers.size() ) {
+            if (workerIndex >= workers.size()) {
                 workerIndex = 0;
             } else {
                 workerIndex++;
             }
-            WebDataFileResource.log.log(Level.FINE, "Redirect  to " + w + " next worker is " + workers.get(workerIndex));
             return w;
         } else {
             return null;
