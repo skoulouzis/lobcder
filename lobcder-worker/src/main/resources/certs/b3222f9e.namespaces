@@ -1,0 +1,12 @@
+##############################################################################
+#NAMESPACES-VERSION: 1.0
+#
+# @(#)b3222f9e.namespaces
+# CA alias    : JUnet-CA
+#    subord_of: 
+#    subjectDN: /C=JO/O=JUNet/CN=JUNet CA
+#    hash     : b3222f9e
+#
+TO Issuer "/C=JO/O=JUNet/CN=JUNet CA" \
+  PERMIT Subject "/C=JO/O=JOGrid/.*"
+

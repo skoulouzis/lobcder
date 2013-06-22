@@ -27,6 +27,7 @@ public class Constants {
     public static final QName DATA_DIST_PROP_NAME = new QName("custom:", "data-distribution");
     public static final QName DRI_SUPERVISED_PROP_NAME = new QName("custom:", "dri-supervised");
     public static final QName DRI_CHECKSUM_PROP_NAME = new QName("custom:", "dri-checksum-MD5");
+    public static final QName DRI_STATUS_PROP_NANE = new QName("custom:" , "dri-status");
     public static final QName DRI_LAST_VALIDATION_DATE_PROP_NAME = new QName("custom:", "dri-last-validation-date-ms");
     public static final QName DESCRIPTION_PROP_NAME = new QName("custom:", "description");
     public static final QName DAV_CURRENT_USER_PRIVILAGE_SET_PROP_NAME = new QName("current-user-privilege-set");
@@ -34,9 +35,11 @@ public class Constants {
     public static final QName DATA_LOC_PREF_NAME = new QName("custom:", "data-location-preference");
     public static final QName ENCRYPT_PROP_NAME = new QName("custom:", "encrypt");
     public static final QName AVAIL_STORAGE_SITES_PROP_NAME = new QName("custom:", "avail-storage-sites");
-    public static final QName[] PROP_NAMES = new QName[]{DATA_DIST_PROP_NAME, DRI_SUPERVISED_PROP_NAME, DRI_CHECKSUM_PROP_NAME, DRI_LAST_VALIDATION_DATE_PROP_NAME, DESCRIPTION_PROP_NAME, DATA_LOC_PREF_NAME, ENCRYPT_PROP_NAME, AVAIL_STORAGE_SITES_PROP_NAME};
+    public static final QName[] PROP_NAMES = new QName[]{DATA_DIST_PROP_NAME, DRI_SUPERVISED_PROP_NAME, DRI_CHECKSUM_PROP_NAME, DRI_LAST_VALIDATION_DATE_PROP_NAME, DRI_STATUS_PROP_NANE, DESCRIPTION_PROP_NAME, DATA_LOC_PREF_NAME, ENCRYPT_PROP_NAME, AVAIL_STORAGE_SITES_PROP_NAME};
     public static final int BUF_SIZE = 512 * 1024;
     public static Long LOCK_TIME = new Long(60000);
     public static final int RECONNECT_NTRY = 20;
     public static final String RANGE_HEADER_NAME = "range";
+    public static final String CERT_LOCATION=System.getProperty("user.home") + "/.globus/certificates/";
+      public static final String  PROXY_FILE="/tmp/myProxy";
 }

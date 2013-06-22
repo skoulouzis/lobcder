@@ -10,6 +10,7 @@ import java.io.*;
 import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.security.InvalidAlgorithmParameterException;
@@ -63,12 +64,15 @@ public class VPDRI implements PDRI {
         }
         // runtime configuration
         GlobalConfig.setHasUI(false);
-        GlobalConfig.setIsApplet(true);
+//        GlobalConfig.setIsApplet(true);
         GlobalConfig.setPassiveMode(true);
-        GlobalConfig.setIsService(true);
+//        GlobalConfig.setIsService(true);
         GlobalConfig.setInitURLStreamFactory(false);
         GlobalConfig.setAllowUserInteraction(false);
         GlobalConfig.setUserHomeLocation(new URL("file:///" + System.getProperty("user.home")));
+
+//        GlobalConfig.setUsePersistantUserConfiguration(false);
+        GlobalConfig.setCACertificateLocations(Constants.CERT_LOCATION);
 
         // user configuration 
 //        GlobalConfig.setUsePersistantUserConfiguration(false);
@@ -95,7 +99,9 @@ public class VPDRI implements PDRI {
     private int sleeTime = 5;
     private static final Map<String, GridProxy> proxyCache = new HashMap<String, GridProxy>();
 
-    public VPDRI(String fileName, Long storageSiteId, String resourceUrl, String username, String password, boolean encrypt, BigInteger keyInt, boolean doChunkUpload) throws IOException {
+    public VPDRI(String fileName, Long storageSiteId, String resourceUrl,
+            String username, String password, boolean encrypt, BigInteger keyInt,
+            boolean doChunkUpload) throws IOException {
         try {
             this.fileName = fileName;
             this.resourceUrl = resourceUrl;
@@ -111,14 +117,12 @@ public class VPDRI implements PDRI {
 //            this.resourceUrl = resourceUrl;
             Logger.getLogger(VPDRI.class.getName()).log(Level.FINE, "fileName: {0}, storageSiteId: {1}, username: {2}, password: {3}, VRL: {4}", new Object[]{fileName, storageSiteId, username, password, vrl});
             initVFS();
-        } catch (MalformedURLException ex) {
-            throw new IOException(ex);
-        } catch (VlException ex) {
+        } catch (Exception ex) {
             throw new IOException(ex);
         }
     }
 
-    private void initVFS() throws VlException, MalformedURLException, IOException {
+    private void initVFS() throws VlException, MalformedURLException, IOException, FileNotFoundException, URISyntaxException {
         this.vfsClient = new VFSClient();
         VRSContext context = this.getVfsClient().getVRSContext();
         //Bug in sftp: We have to put the username in the url
@@ -126,17 +130,18 @@ public class VPDRI implements PDRI {
         String authScheme = info.getAuthScheme();
 
         if (StringUtil.equals(authScheme, ServerInfo.GSI_AUTH)) {
+            copyVomsAndCerts();
             GridProxy gridProxy = proxyCache.get(password);
             if (gridProxy == null) {
-                String proxyFile = "/tmp/myProxy";
-
-                context.setProperty("grid.proxy.location", proxyFile);
+                
+                context.setProperty("grid.proxy.location", Constants.PROXY_FILE);
                 // Default to $HOME/.globus
                 context.setProperty("grid.certificate.location", Global.getUserHome() + "/.globus");
                 String vo = username;
                 context.setProperty("grid.proxy.voName", vo);
+                context.setProperty("grid.proxy.lifetime", "200");
+//                gridProxy = GridProxy.loadFrom(context, proxyFile);
                 gridProxy = context.getGridProxy();
-
                 if (gridProxy.isValid() == false) {
                     gridProxy.setEnableVOMS(true);
                     gridProxy.setDefaultVOName(vo);
@@ -144,6 +149,7 @@ public class VPDRI implements PDRI {
                     if (gridProxy.isValid() == false) {
                         throw new VlException("Created Proxy is not Valid!");
                     }
+                    gridProxy.saveProxyTo(Constants.PROXY_FILE);
                     proxyCache.put(password, gridProxy);
                 }
             }
@@ -218,7 +224,8 @@ public class VPDRI implements PDRI {
                     doCopy(file, range, out, getEncrypted());
 
                     sleeTime = 5;
-
+                } catch (VRLSyntaxException ex1) {
+                    throw new IOException(ex1);
                 } catch (InvalidAlgorithmParameterException ex1) {
                     throw new IOException(ex1);
                 } catch (NoSuchAlgorithmException ex1) {
@@ -230,8 +237,6 @@ public class VPDRI implements PDRI {
                 } catch (IllegalBlockSizeException ex1) {
                     throw new IOException(ex1);
                 } catch (BadPaddingException ex1) {
-                    throw new IOException(ex1);
-                } catch (VRLSyntaxException ex1) {
                     throw new IOException(ex1);
                 } catch (VlException ex1) {
                     if (reconnectAttemts < Constants.RECONNECT_NTRY) {
@@ -410,13 +415,16 @@ public class VPDRI implements PDRI {
                 encrypter.encrypt(in, out);
             }
             reconnectAttemts = 0;
+
+        } catch (InvalidAlgorithmParameterException ex) {
+            throw new IOException(ex);
+        } catch (nl.uva.vlet.exception.VlAuthenticationException ex) {
+            throw new IOException(ex);
         } catch (NoSuchAlgorithmException ex) {
             throw new IOException(ex);
         } catch (NoSuchPaddingException ex) {
             throw new IOException(ex);
         } catch (InvalidKeyException ex) {
-            throw new IOException(ex);
-        } catch (InvalidAlgorithmParameterException ex) {
             throw new IOException(ex);
         } catch (VlException ex) {
             if (ex.getMessage() != null) {
@@ -499,9 +507,7 @@ public class VPDRI implements PDRI {
 //        VRS.exit();
         try {
             initVFS();
-        } catch (MalformedURLException ex1) {
-            throw new IOException(ex1);
-        } catch (VlException ex1) {
+        } catch (Exception ex1) {
             throw new IOException(ex1);
         }
     }
@@ -561,8 +567,6 @@ public class VPDRI implements PDRI {
 
             String msg = "Source: " + source.getHost() + " Destination: " + vrl.getScheme() + "://" + getHost() + " Replication_Speed: " + speed + " Kbites/sec Repl_Size: " + (getLength()) + " bytes";
             Logger.getLogger(VPDRI.class.getName()).log(Level.INFO, msg);
-//            getAsyncDelete(getVfsClient(), vrl).run();
-
         } catch (VlException ex) {
             Logger.getLogger(VPDRI.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -618,5 +622,32 @@ public class VPDRI implements PDRI {
             reconnect();
         }
         return vfsClient;
+    }
+
+    private void copyVomsAndCerts() throws FileNotFoundException, VlException, URISyntaxException {
+        File f = new File(System.getProperty("user.home") + "/.globus/vomsdir");
+        File vomsFile = new File(f.getAbsoluteFile() + "/voms.xml");
+        if (!vomsFile.exists()) {
+            f.mkdirs();
+            ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+            InputStream in = classLoader.getResourceAsStream("/voms.xml");
+            FileOutputStream out = new FileOutputStream(vomsFile);
+            CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((Constants.BUF_SIZE), in, out);
+            cBuff.startTransfer(new Long(-1));
+        }
+        f = new File(Constants.CERT_LOCATION);
+        if (!f.exists() || f.list().length == 0) {
+            f.mkdirs();
+            ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+            URL res = classLoader.getResource("/certs/");
+            File sourceCerts = new File(res.toURI());
+            File[] certs = sourceCerts.listFiles();
+            for (File src : certs) {
+                FileInputStream in = new FileInputStream(src);
+                FileOutputStream out = new FileOutputStream(f.getAbsoluteFile() + "/" + src.getName());
+                CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((Constants.BUF_SIZE), in, out);
+                cBuff.startTransfer(new Long(-1));
+            }
+        }
     }
 }

@@ -12,11 +12,14 @@ import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.json.JSONConfiguration;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 import io.milton.http.Range;
+import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.math.BigInteger;
+import java.net.URI;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,7 +38,13 @@ import javax.xml.bind.annotation.XmlRootElement;
 import lombok.extern.java.Log;
 import nl.uva.vlet.exception.VlException;
 import nl.uva.vlet.io.CircularStreamBufferTransferer;
+import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpStatus;
+import org.apache.commons.httpclient.UsernamePasswordCredentials;
+import org.apache.commons.httpclient.auth.AuthScope;
+import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.httpclient.protocol.Protocol;
+import org.apache.commons.httpclient.protocol.ProtocolSocketFactory;
 
 /**
  *
@@ -50,6 +59,8 @@ public class WorkerServlet extends HttpServlet {
     private final String password;
     private Map<String, Long> weightPDRIMap;
     private long size;
+    private HttpClient client;
+    private final String davURL;
 
     public WorkerServlet() throws FileNotFoundException, IOException {
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
@@ -59,6 +70,7 @@ public class WorkerServlet extends HttpServlet {
         Properties prop = Util.getTestProperties(in);
 
         restURL = prop.getProperty(("rest.url"), "http://localhost:8080/lobcder/rest/");
+        davURL = prop.getProperty(("rest.url"), "http://localhost:8080/lobcder/dav/");
         username = prop.getProperty(("rest.username"), "user");
         password = prop.getProperty(("rest.password"), "pass");
 
@@ -153,6 +165,14 @@ public class WorkerServlet extends HttpServlet {
                 }
             }
         }
+        //Hach to get proxy cert
+        if (pdriDesc.resourceUrl.startsWith("lfc")
+                || pdriDesc.resourceUrl.startsWith("srm")
+                || pdriDesc.resourceUrl.startsWith("gftp")) {
+
+            getProxyCert();
+
+        }
         return new VPDRI(pdriDesc.name, pdriDesc.id, pdriDesc.resourceUrl, pdriDesc.username, pdriDesc.password, pdriDesc.encrypt, BigInteger.ZERO, false);
     }
 
@@ -194,8 +214,32 @@ public class WorkerServlet extends HttpServlet {
         }
         PDRIDesc[] array = pdris.toArray(new PDRIDesc[pdris.size()]);
         int index = i - 1;
-        Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, " SELECT: " + array[index].resourceUrl);
+        Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, " SELECT: {0}", array[index].resourceUrl);
         return array[index];
+    }
+
+    private void getProxyCert() throws IOException {
+        if (client == null) {
+            URI uri = URI.create(davURL);
+            client = new HttpClient();
+            client.getState().setCredentials(
+                    new AuthScope(uri.getHost(), uri.getPort()),
+                    new UsernamePasswordCredentials(username, password));
+        }
+        String testuri1 = null;
+        GetMethod get = new GetMethod(testuri1);
+        client.executeMethod(get);
+        InputStream in = get.getResponseBodyAsStream();
+        OutputStream fos = new FileOutputStream(Constants.PROXY_FILE);
+        int read;
+        byte[] copyBuffer = new byte[Constants.BUF_SIZE];
+        while ((read = in.read(copyBuffer, 0, copyBuffer.length)) != -1) {
+            fos.write(copyBuffer, 0, read);
+        }
+
+        fos.flush();
+        fos.close();
+        in.close();
     }
 
     @XmlRootElement

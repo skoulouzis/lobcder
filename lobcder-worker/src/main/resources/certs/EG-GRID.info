@@ -1,0 +1,13 @@
+#
+# @(#)$Id: 4a96b1ea.info,v 1.1 2012/09/11 18:16:44 pmacvsdg Exp $
+# Information for EG-Grid CA
+#   
+alias = EG-GRID
+ca_url = https://cert.eun.eg/pki/pub/cacert/cacert.pem
+crl_url = http://cert.eun.eg/pki/pub/crl/cacrl.crl
+policy_url = http://www.grid.eun.eg/cpcps.html
+email = ca@grid.eun.eg
+status = accredited:classic
+url = http://www.grid.eun.eg
+version = 1.53
+sha1fp.0 = DC:3F:76:64:1D:A2:48:B0:27:38:E2:C5:17:45:05:9A:16:1A:B6:4C
