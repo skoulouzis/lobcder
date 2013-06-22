@@ -40,4 +40,5 @@ public class Constants {
     public static Long LOCK_TIME = new Long(60000);
     public static final int RECONNECT_NTRY = 20;
     public static final String RANGE_HEADER_NAME = "range";
+    public static final String CERT_LOCATION=System.getProperty("user.home") + "/.globus/certificates/";
 }
