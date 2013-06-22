@@ -143,6 +143,7 @@ public class VPDRI implements PDRI {
                 context.setProperty("grid.certificate.location", Global.getUserHome() + "/.globus");
                 String vo = username;
                 context.setProperty("grid.proxy.voName", vo);
+                context.setProperty("grid.proxy.lifetime", "200");
 //                gridProxy = GridProxy.loadFrom(context, proxyFile);
                 gridProxy = context.getGridProxy();
                 if (gridProxy.isValid() == false) {
