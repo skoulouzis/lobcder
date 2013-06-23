@@ -39,6 +39,7 @@ import nl.uva.vlet.vrs.ServerInfo;
 import nl.uva.vlet.vrs.VRS;
 import nl.uva.vlet.vrs.VRSContext;
 import nl.uva.vlet.vrs.io.VRandomReadable;
+import org.apache.commons.codec.binary.Base64;
 
 /**
  * A test PDRI to implement the delete get/set data methods with the VRS API
@@ -64,7 +65,7 @@ public class VPDRI implements PDRI {
         }
         // runtime configuration
         GlobalConfig.setHasUI(false);
-//        GlobalConfig.setIsApplet(true);
+        GlobalConfig.setIsApplet(true);
         GlobalConfig.setPassiveMode(true);
 //        GlobalConfig.setIsService(true);
         GlobalConfig.setInitURLStreamFactory(false);
@@ -97,7 +98,7 @@ public class VPDRI implements PDRI {
     private final String resourceUrl;
     private boolean doChunked;
     private int sleeTime = 5;
-    private static final Map<String, GridProxy> proxyCache = new HashMap<String, GridProxy>();
+//    private static final Map<String, GridProxy> proxyCache = new HashMap<String, GridProxy>();
 
     public VPDRI(String fileName, Long storageSiteId, String resourceUrl,
             String username, String password, boolean encrypt, BigInteger keyInt,
@@ -131,30 +132,14 @@ public class VPDRI implements PDRI {
 
         if (StringUtil.equals(authScheme, ServerInfo.GSI_AUTH)) {
             copyVomsAndCerts();
-            GridProxy gridProxy = proxyCache.get(password);
-            if (gridProxy == null) {
-                
-                context.setProperty("grid.proxy.location", Constants.PROXY_FILE);
-                // Default to $HOME/.globus
-                context.setProperty("grid.certificate.location", Global.getUserHome() + "/.globus");
-                String vo = username;
-                context.setProperty("grid.proxy.voName", vo);
-                context.setProperty("grid.proxy.lifetime", "200");
-//                gridProxy = GridProxy.loadFrom(context, proxyFile);
-                gridProxy = context.getGridProxy();
-                if (gridProxy.isValid() == false) {
-                    gridProxy.setEnableVOMS(true);
-                    gridProxy.setDefaultVOName(vo);
-                    gridProxy.createWithPassword(password);
-                    if (gridProxy.isValid() == false) {
-                        throw new VlException("Created Proxy is not Valid!");
-                    }
-                    gridProxy.saveProxyTo(Constants.PROXY_FILE);
-                    proxyCache.put(password, gridProxy);
-                }
+            GridProxy gridProxy = new GridProxy(context);
+            byte[] decodedBytes = Base64.decodeBase64(password);
+            String proxy = new String(decodedBytes);
+            gridProxy.createFromString(GridProxy.GLOBUS_CREDENTIAL_TYPE, proxy);
+            if (gridProxy.isValid() == false) {
+                throw new VlException("Created Proxy is not Valid!");
             }
-
-
+            context.setGridProxy(gridProxy);
         }
 
         if (StringUtil.equals(authScheme, ServerInfo.PASSWORD_AUTH)

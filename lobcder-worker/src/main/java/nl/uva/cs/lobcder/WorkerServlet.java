@@ -38,6 +38,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import lombok.extern.java.Log;
 import nl.uva.vlet.exception.VlException;
 import nl.uva.vlet.io.CircularStreamBufferTransferer;
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
@@ -45,6 +46,7 @@ import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.protocol.Protocol;
 import org.apache.commons.httpclient.protocol.ProtocolSocketFactory;
+import org.apache.commons.io.FileUtils;
 
 /**
  *
@@ -165,14 +167,6 @@ public class WorkerServlet extends HttpServlet {
                 }
             }
         }
-        //Hach to get proxy cert
-        if (pdriDesc.resourceUrl.startsWith("lfc")
-                || pdriDesc.resourceUrl.startsWith("srm")
-                || pdriDesc.resourceUrl.startsWith("gftp")) {
-
-            getProxyCert();
-
-        }
         return new VPDRI(pdriDesc.name, pdriDesc.id, pdriDesc.resourceUrl, pdriDesc.username, pdriDesc.password, pdriDesc.encrypt, BigInteger.ZERO, false);
     }
 
@@ -216,30 +210,6 @@ public class WorkerServlet extends HttpServlet {
         int index = i - 1;
         Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, " SELECT: {0}", array[index].resourceUrl);
         return array[index];
-    }
-
-    private void getProxyCert() throws IOException {
-        if (client == null) {
-            URI uri = URI.create(davURL);
-            client = new HttpClient();
-            client.getState().setCredentials(
-                    new AuthScope(uri.getHost(), uri.getPort()),
-                    new UsernamePasswordCredentials(username, password));
-        }
-        String testuri1 = null;
-        GetMethod get = new GetMethod(testuri1);
-        client.executeMethod(get);
-        InputStream in = get.getResponseBodyAsStream();
-        OutputStream fos = new FileOutputStream(Constants.PROXY_FILE);
-        int read;
-        byte[] copyBuffer = new byte[Constants.BUF_SIZE];
-        while ((read = in.read(copyBuffer, 0, copyBuffer.length)) != -1) {
-            fos.write(copyBuffer, 0, read);
-        }
-
-        fos.flush();
-        fos.close();
-        in.close();
     }
 
     @XmlRootElement
