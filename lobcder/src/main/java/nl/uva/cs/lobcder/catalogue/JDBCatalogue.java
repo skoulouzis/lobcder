@@ -5,6 +5,9 @@
 package nl.uva.cs.lobcder.catalogue;
 
 import io.milton.common.Path;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.SneakyThrows;
@@ -21,13 +24,18 @@ import nl.uva.cs.lobcder.util.MyDataSource;
 import javax.annotation.Nonnull;
 import javax.naming.NamingException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.math.BigInteger;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.*;
 import java.sql.Date;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import nl.uva.cs.lobcder.resources.StorageSite;
+import org.apache.commons.codec.binary.Base64;
 
 /**
  *
@@ -43,7 +51,6 @@ public class JDBCatalogue extends MyDataSource {
 
     public void startSweep() {
         TimerTask gcTask = new TimerTask() {
-
             Runnable deleteSweep = new DeleteSweep(getDatasource());
             Runnable replicateSweep = new ReplicateSweep(getDatasource());
 
@@ -265,6 +272,17 @@ public class JDBCatalogue extends MyDataSource {
                 boolean encrypt = rs.getBoolean(6);
                 long key = rs.getLong(7);
                 pdriId = rs.getLong(8);
+                if (resourceURI.startsWith("lfc") || resourceURI.startsWith("srm")
+                        || resourceURI.startsWith("gftp")) {
+                    try {
+                        
+                        passwd = getProxyAsBase64String();
+                    } catch (FileNotFoundException ex) {
+                        Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+                    } catch (IOException ex) {
+                        Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
                 res.add(new PDRIDescr(fileName, ssID, resourceURI, uName, passwd, encrypt, BigInteger.valueOf(key), Long.valueOf(groupId), Long.valueOf(pdriId)));
             }
             return res;
@@ -774,119 +792,119 @@ public class JDBCatalogue extends MyDataSource {
     }
 
     /*
-    public LinkedList<LogicalData> queryLogicalData(MultivaluedMap<String, String> queryParameters, Connection connection) throws CatalogueException {
-    Statement s = null;
-    boolean connectionIsProvided = (connection == null) ? false : true;
-    boolean connectionAutocommit = false;
-    try {
-    if (connection == null) {
-    connection = getConnection();
-    connection.setAutoCommit(false);
-    } else {
-    connectionAutocommit = connection.getAutoCommit();
-    connection.setAutoCommit(false);
-    }
-    s = connection.createStatement();
-    boolean where = false;
-    StringBuilder query = new StringBuilder("SELECT uid, ownerId, datatype, "
-    + "ld_name, parent, createDate, modifiedDate, ld_length, "
-    + "contentTypesStr, pdriGroupId, isSupervised, checksum, "
-    + "lastValidationDate, lockTokenID, lockScope, "
-    + "lockType, lockedByUser, lockDepth, lockTimeout, description "
-    + "FROM ldata_table");
-    if (queryParameters.containsKey("path") && queryParameters.get("path").iterator().hasNext()) {
-    String path = queryParameters.get("path").iterator().next();
-    if (!path.equals("/")) {
-    query.append(where ? " AND" : " WHERE").append(" parent LIKE '").append(path).append("%'");
-    where = true;
-    }
-    queryParameters.remove("path");
-    }
-    if (queryParameters.containsKey("mStartDate") && queryParameters.get("mStartDate").iterator().hasNext()
-    && queryParameters.containsKey("mEndDate") && queryParameters.get("mEndDate").iterator().hasNext()) {
-    String mStartDate = Long.valueOf(queryParameters.get("mStartDate").iterator().next()).toString();
-    String mEndDate = Long.valueOf(queryParameters.get("mEndDate").iterator().next()).toString();
-    query.append(where ? " AND" : " WHERE").append(" modifiedDate BETWEEN FROM_UNIXTIME(").append(mStartDate).append(") AND FROM_UNIXTIME(").append(mEndDate).append(")");
-    where = true;
-    queryParameters.remove("mStartDate");
-    queryParameters.remove("mEndDate");
-    } else if (queryParameters.containsKey("mStartDate") && queryParameters.get("mStartDate").iterator().hasNext()) {
-    String mStartDate = Long.valueOf(queryParameters.get("mStartDate").iterator().next()).toString();
-    query.append(where ? " AND" : " WHERE").append(" modifiedDate >= UNIXTIME(").append(mStartDate).append(")");
-    where = true;
-    queryParameters.remove("mStartDate");
-    } else if (queryParameters.containsKey("mEndDate") && queryParameters.get("mEndDate").iterator().hasNext()) {
-    String mEndDate = Long.valueOf(queryParameters.get("mEndDate").iterator().next()).toString();
-    query.append(where ? " AND" : " WHERE").append(" modifiedDate <= UNIXTIME(").append(mEndDate).append(")");
-    where = true;
-    queryParameters.remove("mEndDate");
-    }
-    if (queryParameters.containsKey("isSupervised") && queryParameters.get("isSupervised").iterator().hasNext()) {
-    String isSupervised = Boolean.valueOf(queryParameters.get("isSupervised").iterator().next()).toString();
-    query.append(where ? " AND" : " WHERE").append(" isSupervised = ").append(isSupervised);
-    where = true;
-    queryParameters.remove("isSupervised");
-    }
-    JDBCatalogue.log.fine("queryLogicalData() SQL: " + query.toString());
-    ResultSet rs = s.executeQuery(query.toString());
-    LinkedList<LogicalData> ld_list = new LinkedList<LogicalData>();
-    while (rs.next()) {
-    LogicalData element = new LogicalData(this);
-    element.setUID(rs.getLong(1));
-    element.setOwner(rs.getString(2));
-    element.setType(rs.getString(3));
-    element.setName(rs.getString(4));
-    element.setParent(rs.getString(5));
-    element.setCreateDate(rs.getTimestamp(6).getTime());
-    element.setModifiedDate(rs.getTimestamp(7).getTime());
-    element.setLength(rs.getLong(8));
-    element.setContentTypesAsString(rs.getString(9));
-    element.setPdriGroupId(rs.getLong(10));
-    element.setSupervised(rs.getBoolean(11));
-    element.setChecksum(rs.getLong(12));
-    element.setLastValidationDate(rs.getLong(13));
-    //                element.setLockTokenID(rs.getString(14));
-    //                element.setLockScope(rs.getString(15));
-    //                element.setLockType(rs.getString(16));
-    //                element.setLockedByUser(rs.getString(17));
-    //                element.setLockDepth(rs.getString(18));
-    //                element.setLockTimeout(rs.getLong(19));
-    element.setDescription(rs.getString(14));
-    ld_list.add(element);
-    }
-    s.close();
-    return ld_list;
-    } catch (Exception e) {
-    try {
-    if (s != null && !s.isClosed()) {
-    s.close();
-    s = null;
-    }
-    if (!connectionIsProvided && !connection.isClosed()) {
-    connection.rollback();
-    connection.close();
-    }
-    } catch (SQLException ex) {
-    Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
-    }
-    throw new CatalogueException(e.getMessage());
-    } finally {
-    try {
-    if (s != null && !s.isClosed()) {
-    s.close();
-    }
-    if (!connectionIsProvided && !connection.isClosed()) {
-    connection.commit();
-    connection.close();
-    }
-    if (connectionIsProvided && !connection.isClosed()) {
-    connection.setAutoCommit(connectionAutocommit);
-    }
-    } catch (SQLException ex) {
-    Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
-    }
-    }
-    }
+     public LinkedList<LogicalData> queryLogicalData(MultivaluedMap<String, String> queryParameters, Connection connection) throws CatalogueException {
+     Statement s = null;
+     boolean connectionIsProvided = (connection == null) ? false : true;
+     boolean connectionAutocommit = false;
+     try {
+     if (connection == null) {
+     connection = getConnection();
+     connection.setAutoCommit(false);
+     } else {
+     connectionAutocommit = connection.getAutoCommit();
+     connection.setAutoCommit(false);
+     }
+     s = connection.createStatement();
+     boolean where = false;
+     StringBuilder query = new StringBuilder("SELECT uid, ownerId, datatype, "
+     + "ld_name, parent, createDate, modifiedDate, ld_length, "
+     + "contentTypesStr, pdriGroupId, isSupervised, checksum, "
+     + "lastValidationDate, lockTokenID, lockScope, "
+     + "lockType, lockedByUser, lockDepth, lockTimeout, description "
+     + "FROM ldata_table");
+     if (queryParameters.containsKey("path") && queryParameters.get("path").iterator().hasNext()) {
+     String path = queryParameters.get("path").iterator().next();
+     if (!path.equals("/")) {
+     query.append(where ? " AND" : " WHERE").append(" parent LIKE '").append(path).append("%'");
+     where = true;
+     }
+     queryParameters.remove("path");
+     }
+     if (queryParameters.containsKey("mStartDate") && queryParameters.get("mStartDate").iterator().hasNext()
+     && queryParameters.containsKey("mEndDate") && queryParameters.get("mEndDate").iterator().hasNext()) {
+     String mStartDate = Long.valueOf(queryParameters.get("mStartDate").iterator().next()).toString();
+     String mEndDate = Long.valueOf(queryParameters.get("mEndDate").iterator().next()).toString();
+     query.append(where ? " AND" : " WHERE").append(" modifiedDate BETWEEN FROM_UNIXTIME(").append(mStartDate).append(") AND FROM_UNIXTIME(").append(mEndDate).append(")");
+     where = true;
+     queryParameters.remove("mStartDate");
+     queryParameters.remove("mEndDate");
+     } else if (queryParameters.containsKey("mStartDate") && queryParameters.get("mStartDate").iterator().hasNext()) {
+     String mStartDate = Long.valueOf(queryParameters.get("mStartDate").iterator().next()).toString();
+     query.append(where ? " AND" : " WHERE").append(" modifiedDate >= UNIXTIME(").append(mStartDate).append(")");
+     where = true;
+     queryParameters.remove("mStartDate");
+     } else if (queryParameters.containsKey("mEndDate") && queryParameters.get("mEndDate").iterator().hasNext()) {
+     String mEndDate = Long.valueOf(queryParameters.get("mEndDate").iterator().next()).toString();
+     query.append(where ? " AND" : " WHERE").append(" modifiedDate <= UNIXTIME(").append(mEndDate).append(")");
+     where = true;
+     queryParameters.remove("mEndDate");
+     }
+     if (queryParameters.containsKey("isSupervised") && queryParameters.get("isSupervised").iterator().hasNext()) {
+     String isSupervised = Boolean.valueOf(queryParameters.get("isSupervised").iterator().next()).toString();
+     query.append(where ? " AND" : " WHERE").append(" isSupervised = ").append(isSupervised);
+     where = true;
+     queryParameters.remove("isSupervised");
+     }
+     JDBCatalogue.log.fine("queryLogicalData() SQL: " + query.toString());
+     ResultSet rs = s.executeQuery(query.toString());
+     LinkedList<LogicalData> ld_list = new LinkedList<LogicalData>();
+     while (rs.next()) {
+     LogicalData element = new LogicalData(this);
+     element.setUID(rs.getLong(1));
+     element.setOwner(rs.getString(2));
+     element.setType(rs.getString(3));
+     element.setName(rs.getString(4));
+     element.setParent(rs.getString(5));
+     element.setCreateDate(rs.getTimestamp(6).getTime());
+     element.setModifiedDate(rs.getTimestamp(7).getTime());
+     element.setLength(rs.getLong(8));
+     element.setContentTypesAsString(rs.getString(9));
+     element.setPdriGroupId(rs.getLong(10));
+     element.setSupervised(rs.getBoolean(11));
+     element.setChecksum(rs.getLong(12));
+     element.setLastValidationDate(rs.getLong(13));
+     //                element.setLockTokenID(rs.getString(14));
+     //                element.setLockScope(rs.getString(15));
+     //                element.setLockType(rs.getString(16));
+     //                element.setLockedByUser(rs.getString(17));
+     //                element.setLockDepth(rs.getString(18));
+     //                element.setLockTimeout(rs.getLong(19));
+     element.setDescription(rs.getString(14));
+     ld_list.add(element);
+     }
+     s.close();
+     return ld_list;
+     } catch (Exception e) {
+     try {
+     if (s != null && !s.isClosed()) {
+     s.close();
+     s = null;
+     }
+     if (!connectionIsProvided && !connection.isClosed()) {
+     connection.rollback();
+     connection.close();
+     }
+     } catch (SQLException ex) {
+     Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+     }
+     throw new CatalogueException(e.getMessage());
+     } finally {
+     try {
+     if (s != null && !s.isClosed()) {
+     s.close();
+     }
+     if (!connectionIsProvided && !connection.isClosed()) {
+     connection.commit();
+     connection.close();
+     }
+     if (connectionIsProvided && !connection.isClosed()) {
+     connection.setAutoCommit(connectionAutocommit);
+     }
+     } catch (SQLException ex) {
+     Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+     }
+     }
+     }
      */
     public void setDescription(Long uid, String description, Connection connection) throws SQLException {
         try (PreparedStatement ps = connection.prepareStatement("UPDATE ldata_table SET description = ? WHERE uid = ?")) {
@@ -951,6 +969,17 @@ public class JDBCatalogue extends MyDataSource {
                 ps.executeUpdate();
             }
         }
+    }
+
+    private String getProxyAsBase64String() throws FileNotFoundException, IOException {
+        InputStream fis = new FileInputStream(Constants.PROXY_FILE);
+        StringBuilder sb = new StringBuilder();
+        int read;
+        byte[] copyBuffer = new byte[Constants.BUF_SIZE];
+        while ((read = fis.read(copyBuffer, 0, copyBuffer.length)) != -1) {
+            sb.append(new String(Base64.encodeBase64(copyBuffer)));
+        }
+        return sb.toString();
     }
 
     @Data

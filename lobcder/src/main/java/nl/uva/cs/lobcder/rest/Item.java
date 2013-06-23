@@ -4,11 +4,9 @@
  */
 package nl.uva.cs.lobcder.rest;
 
-import lombok.extern.java.Log;
-import nl.uva.cs.lobcder.auth.MyPrincipal;
-import nl.uva.cs.lobcder.auth.Permissions;
-import nl.uva.cs.lobcder.resources.LogicalData;
-import nl.uva.cs.lobcder.util.CatalogueHelper;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.logging.Level;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
@@ -16,9 +14,11 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.logging.Level;
+import lombok.extern.java.Log;
+import nl.uva.cs.lobcder.auth.MyPrincipal;
+import nl.uva.cs.lobcder.auth.Permissions;
+import nl.uva.cs.lobcder.resources.LogicalData;
+import nl.uva.cs.lobcder.util.CatalogueHelper;
 
 /**
  *

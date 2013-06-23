@@ -259,7 +259,7 @@ public class VPDRI implements PDRI {
     }
 
     private void doCopy(VFile file, Range range, OutputStream out, boolean decript) throws VlException, IOException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
-
+        
         long len = range.getFinish() - range.getStart() + 1;
         InputStream in = null;
         int buffSize;
