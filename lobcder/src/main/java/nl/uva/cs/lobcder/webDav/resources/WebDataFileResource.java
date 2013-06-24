@@ -53,7 +53,7 @@ public class WebDataFileResource extends WebDataResource implements
     private int sleepTime = 5;
 //, ReplaceableResource {
     private ArrayList<String> workers;
-    private boolean doRedirect = true;
+    private boolean doRedirect = false;
     private int workerIndex = 0;
 
     public WebDataFileResource(@Nonnull LogicalData logicalData, Path path, @Nonnull JDBCatalogue catalogue, @Nonnull AuthI auth1, AuthI auth2) {
