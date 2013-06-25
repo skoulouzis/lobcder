@@ -99,9 +99,9 @@ public class WebDataResource implements PropFindableResource, Resource,
             principalHolder.set(principal);
             WebDataResource.log.log(Level.FINE, "getUserId: {0}", principal.getUserId());
             WebDataResource.log.log(Level.FINE, "getRolesStr: {0}", principal.getRolesStr());
+            String msg = "From: " + fromAddress + " user: " + principal.getUserId() + " password: " + password;
+            WebDataResource.log.log(Level.INFO, msg);
         }
-        String msg = "From: " + fromAddress + " user: " + principal.getUserId() + " password: " + password;
-        WebDataResource.log.log(Level.INFO, msg);
         return principal;
     }
 
@@ -247,7 +247,6 @@ public class WebDataResource implements PropFindableResource, Resource,
         try {
             // Do the mapping
             Principal p = new DavPrincipals.AbstractDavPrincipal(getPrincipalURL()) {
-
                 @Override
                 public boolean matches(Auth auth, Resource current) {
                     return true;
@@ -275,7 +274,6 @@ public class WebDataResource implements PropFindableResource, Resource,
             for (String r : resourcePermission.getRead()) {
                 perm = new ArrayList<>();
                 p = new DavPrincipals.AbstractDavPrincipal(getRoleUrlPrefix() + r) {
-
                     @Override
                     public boolean matches(Auth auth, Resource current) {
                         return true;
@@ -291,7 +289,6 @@ public class WebDataResource implements PropFindableResource, Resource,
             for (String r : resourcePermission.getWrite()) {
                 perm = new ArrayList<>();
                 p = new DavPrincipals.AbstractDavPrincipal(getRoleUrlPrefix() + r) {
-
                     @Override
                     public boolean matches(Auth auth, Resource current) {
                         return true;
@@ -394,7 +391,7 @@ public class WebDataResource implements PropFindableResource, Resource,
                 return String.valueOf(getLogicalData().getChecksum());
             } else if (qname.equals(Constants.DRI_LAST_VALIDATION_DATE_PROP_NAME)) {
                 return String.valueOf(getLogicalData().getLastValidationDate());
-            } else if(qname.equals(Constants.DRI_STATUS_PROP_NANE)) {
+            } else if (qname.equals(Constants.DRI_STATUS_PROP_NANE)) {
                 return getLogicalData().getStatus();
             } else if (qname.equals(Constants.DAV_CURRENT_USER_PRIVILAGE_SET_PROP_NAME)) {
                 //List<Priviledge> list = getPriviledges(null);
@@ -571,7 +568,7 @@ public class WebDataResource implements PropFindableResource, Resource,
         if (getCurrentLock() != null) {
             throw new LockedException(this);
         }
-        
+
         LockToken lockToken = new LockToken(UUID.randomUUID().toString(), lockInfo, timeout);
         Long lockTimeout;
         try (Connection connection = getCatalogue().getConnection()) {
@@ -588,7 +585,7 @@ public class WebDataResource implements PropFindableResource, Resource,
                 getLogicalData().setLockDepth(lockToken.info.depth.toString());
                 getCatalogue().setLockDepth(getLogicalData().getUid(), getLogicalData().getLockDepth(), connection);
                 lockTimeout = lockToken.timeout.getSeconds();
-                if(lockTimeout == null){
+                if (lockTimeout == null) {
                     lockTimeout = Long.MAX_VALUE;
                 }
                 getLogicalData().setLockTimeout(lockTimeout);
