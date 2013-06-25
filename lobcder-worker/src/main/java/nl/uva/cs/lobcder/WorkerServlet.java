@@ -157,7 +157,7 @@ public class WorkerServlet extends HttpServlet {
                 }
             }
         }
-        return new VPDRI(pdriDesc.name, pdriDesc.id, pdriDesc.resourceUrl, pdriDesc.username, pdriDesc.password, pdriDesc.encrypt, BigInteger.ZERO, false);
+        return new WorkerVPDRI(pdriDesc.name, pdriDesc.id, pdriDesc.resourceUrl, pdriDesc.username, pdriDesc.password, pdriDesc.encrypt, BigInteger.ZERO, false);
     }
 
     private void trasfer(PDRI pdri, OutputStream out) throws IOException {
