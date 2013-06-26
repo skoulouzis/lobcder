@@ -271,18 +271,24 @@ public class WebDataFileResource extends WebDataResource implements
                 throw new NotFoundException("Physical resource not found");
             }
         } catch (IOException | java.lang.IllegalStateException ex) {
-            try {
-                sleepTime = sleepTime + 20;
-                Thread.sleep(sleepTime);
-                if (++tryCount < Constants.RECONNECT_NTRY) {
-                    transfererRange(it, out, tryCount, pdri, range);
-                } else {
-                    transfererRange(it, out, 0, null, range);
+            if (!ex.getMessage().contains("does not support random reads")) {
+                try {
+                    sleepTime = sleepTime + 20;
+                    Thread.sleep(sleepTime);
+                    if (++tryCount < Constants.RECONNECT_NTRY) {
+                        transfererRange(it, out, tryCount, pdri, range);
+                    } else {
+                        transfererRange(it, out, 0, null, range);
+                    }
+                } catch (InterruptedException ex1) {
+                    sleepTime = 5;
+                    throw new IOException(ex1);
                 }
-            } catch (InterruptedException ex1) {
+            } else {
                 sleepTime = 5;
-                throw new IOException(ex1);
+                throw new IOException(ex);
             }
+
         }
         sleepTime = 5;
         return pdri;
@@ -412,7 +418,7 @@ public class WebDataFileResource extends WebDataResource implements
                     }
                 }
             }
-            
+
             String w = workers.get(workerIndex) + getPath();
             if (workerIndex >= workers.size()) {
                 workerIndex = 0;
