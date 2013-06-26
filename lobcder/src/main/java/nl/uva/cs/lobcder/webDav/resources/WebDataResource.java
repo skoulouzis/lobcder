@@ -349,6 +349,7 @@ public class WebDataResource implements PropFindableResource, Resource,
     @Override
     public Object getProperty(QName qname) {
         try {
+            log.log(Level.FINE, "qname: {0}", qname);
             if (qname.equals(Constants.DATA_DIST_PROP_NAME)) {
                 try (Connection connection = getCatalogue().getConnection()) {
                     try {

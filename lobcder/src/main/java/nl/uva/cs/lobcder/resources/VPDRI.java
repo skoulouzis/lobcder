@@ -242,7 +242,7 @@ public class VPDRI implements PDRI {
                         throw new IOException(ex1);
                     }
                 }
-            } else if (reconnectAttemts < Constants.RECONNECT_NTRY && !ex.getMessage().contentEquals("does not support random reads")) {
+            } else if (reconnectAttemts < Constants.RECONNECT_NTRY && !ex.getMessage().contains("does not support random reads")) {
                 try {
                     sleeTime = sleeTime + 5;
                     Thread.sleep(sleeTime);
@@ -259,7 +259,7 @@ public class VPDRI implements PDRI {
     }
 
     private void doCopy(VFile file, Range range, OutputStream out, boolean decript) throws VlException, IOException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
-        
+
         long len = range.getFinish() - range.getStart() + 1;
         InputStream in = null;
         int buffSize;
@@ -292,11 +292,6 @@ public class VPDRI implements PDRI {
                     out.write(buff, 0, read);
                 }
             } else {
-                in = getData();
-                if (decript) {
-                    InputStream tmp = en.wrapInputStream(in);
-                    in = tmp;
-                }
                 if (start > 0) {
                     throw new IOException("Backend at " + vrl.getScheme() + "://" + vrl.getHostname() + "does not support random reads");
 //                    long skiped = in.skip(start);
@@ -321,6 +316,11 @@ public class VPDRI implements PDRI {
 //                    start += buff.length;
 //                    out.write(buff, 0, read);
 //                }
+                in = getData();
+                if (decript) {
+                    InputStream tmp = en.wrapInputStream(in);
+                    in = tmp;
+                }
                 CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer(buffSize, in, out);
                 cBuff.startTransfer(len);
             }
