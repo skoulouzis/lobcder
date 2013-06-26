@@ -140,6 +140,7 @@ class ReplicateSweep implements Runnable {
                             + "FROM pdri_table GROUP BY pdriGroupRef)  AS t ON pdri_table.pdriGroupRef = t.pdriGroupRef "
                             + "JOIN storage_site_table ON pdri_table.storageSiteRef = storage_site_table.storageSiteId "
                             + "JOIN credential_table on credential_table.credintialId = storage_site_table.credentialRef "
+                            +" JOIN ldata_table on (ldata_table.pdriGroupRef =  pdri_table.pdriGroupRef AND ldata_table.lockTokenId is NULL)"
                             + "WHERE refcnt = 1 AND isCache LIMIT 100";
                     ResultSet rs = statement.executeQuery(sql);
                     while (rs.next()) {
@@ -160,6 +161,7 @@ class ReplicateSweep implements Runnable {
                 }
                 connection.commit();
                 for (PDRIDescr cd : toReplicate) {
+                    log.log(Level.FINE,"to replicate: "+cd.getResourceUrl());
                     try (PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO pdri_table "
                                     + "(fileName, storageSiteRef, pdriGroupRef,isEncrypted, encryptionKey) VALUES(?, ?, ?, ?, ?)")) {
                         source = new PDRIFactory().createInstance(cd, false);

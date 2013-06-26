@@ -40,6 +40,7 @@ import java.sql.SQLException;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 
 /**
@@ -377,12 +378,22 @@ public class WebDataFileResource extends WebDataResource implements
     public String processForm(Map<String, String> parameters,
             Map<String, FileItem> files) throws BadRequestException,
             NotAuthorizedException {
+        Set<String> keys = parameters.keySet();
+        for (String s : keys) {
+            WebDataFileResource.log.log(Level.INFO, s + " : " + parameters.get(s));
+        }
+        
+        keys = files.keySet();
+        for (String s : keys) {
+            WebDataFileResource.log.log(Level.INFO, s + " : " + files.get(s).getFieldName());
+        }
+
         throw new BadRequestException(this, "Not implemented");
     }
 
     @Override
     public Date getCreateDate() {
-        WebDataFileResource.log.fine("getCreateDate() for " + getPath());
+        WebDataFileResource.log.log(Level.FINE, "getCreateDate() for {0}", getPath());
         return new Date(getLogicalData().getCreateDate());
     }
 

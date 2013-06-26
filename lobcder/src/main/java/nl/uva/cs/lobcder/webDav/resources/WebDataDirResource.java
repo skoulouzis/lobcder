@@ -22,6 +22,7 @@ import io.milton.resource.DeletableCollectionResource;
 import io.milton.resource.FolderResource;
 import io.milton.resource.LockingCollectionResource;
 import io.milton.resource.Resource;
+import java.io.ByteArrayInputStream;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.auth.AuthI;
 import nl.uva.cs.lobcder.auth.Permissions;
@@ -373,7 +374,8 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
 
     @Override
     public Date getCreateDate() {
-        WebDataDirResource.log.fine("getCreateDate() for " + getPath());
+        Date date = new Date(getLogicalData().getCreateDate());
+        WebDataDirResource.log.log(Level.FINE, "getCreateDate() for {0} date: " + date, getPath());
         return new Date(getLogicalData().getCreateDate());
     }
 
@@ -382,35 +384,37 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
         return false;
     }
 
+    /**
+     * This means to just lock the name Not to create the resource.
+     *
+     * @param name
+     * @param lt
+     * @param li
+     * @return
+     * @throws NotAuthorizedException
+     */
     @Override
     public LockToken createAndLock(String name, LockTimeout lt, LockInfo li) throws NotAuthorizedException {
         try (Connection connection = getCatalogue().getConnection()) {
-//            InputStream bais = new ByteArrayInputStream(new byte[]{1});
-//            WebDataFileResource lockedFile = (WebDataFileResource) createNew(name, bais, Long.valueOf(0), "application/octet-stream");
-
-            LogicalData fileLogicalData = new LogicalData();
-            fileLogicalData.setName(name);
-            fileLogicalData.setParentRef(getLogicalData().getUid());
-            fileLogicalData.setType(Constants.LOGICAL_FILE);
-            fileLogicalData.setOwner(getPrincipal().getUserId());
-            fileLogicalData.setLength(Long.valueOf(0));
-            fileLogicalData.setCreateDate(System.currentTimeMillis());
-            fileLogicalData.setModifiedDate(System.currentTimeMillis());
-            fileLogicalData.addContentType("application/octet-stream");
-//            pdri = createPDRI(length, newName, connection);
-//            pdri.putData(inputStream);
-            //fileLogicalData.setChecksum(pdri.getChecksum());
-//            fileLogicalData = getCatalogue().associateLogicalDataAndPdri(fileLogicalData, pdri, connection);
-            getCatalogue().setPermissions(fileLogicalData.getUid(), new Permissions(getPrincipal()), connection);
-            connection.commit();
+            Path newPath = Path.path(getPath(), name);
+            //If the resource exists 
+            LogicalData fileLogicalData = getCatalogue().getLogicalDataByPath(newPath, connection);
+            if (fileLogicalData != null) {
+                throw new PreConditionFailedException(new WebDataFileResource(fileLogicalData, Path.path(getPath(), name), getCatalogue(), auth1, auth2));
+            } else {
+                fileLogicalData = new LogicalData();
+                fileLogicalData.setName(name);
+                fileLogicalData.setParentRef(getLogicalData().getUid());
+                fileLogicalData.setType(Constants.LOGICAL_FILE);
+                fileLogicalData.setOwner(getPrincipal().getUserId());
+                fileLogicalData.setCreateDate(System.currentTimeMillis());
+                fileLogicalData.setModifiedDate(System.currentTimeMillis());
+            }
             WebDataFileResource lockedFile = new WebDataFileResource(fileLogicalData, Path.path(getPath(), name), getCatalogue(), auth1, auth2);
-
             LockResult res = lockedFile.lock(lt, li);
             return res.getLockToken();
-        } catch (SQLException ex) {
-        } catch (PreConditionFailedException ex) {
-            Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (LockedException ex) {
+
+        } catch (SQLException | PreConditionFailedException | LockedException ex) {
             Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, ex);
         }
         return null;

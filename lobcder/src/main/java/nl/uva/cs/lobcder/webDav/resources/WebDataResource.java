@@ -587,7 +587,7 @@ public class WebDataResource implements PropFindableResource, Resource,
                 getCatalogue().setLockDepth(getLogicalData().getUid(), getLogicalData().getLockDepth(), connection);
                 lockTimeout = lockToken.timeout.getSeconds();
                 if (lockTimeout == null) {
-                    lockTimeout = Long.MAX_VALUE;
+                    lockTimeout = Long.valueOf(12000);
                 }
                 getLogicalData().setLockTimeout(lockTimeout);
 
