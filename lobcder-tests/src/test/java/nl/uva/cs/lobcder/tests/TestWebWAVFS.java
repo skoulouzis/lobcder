@@ -201,10 +201,29 @@ public class TestWebWAVFS {
         String authScheme = info.getAuthScheme();
 
         if (StringUtil.equals(authScheme, ServerInfo.GSI_AUTH)) {
-            //Use the username and password to get access to MyProxy 
-            GridProxy proxy = new GridProxy(context);
-            String pr = context.getProxyAsString();
-            context.setGridProxy(proxy);
+//            copyVomsAndCerts();
+            GridProxy gridProxy = null;
+            if (gridProxy == null) {
+//                context.setProperty("grid.proxy.location", Constants.PROXY_FILE);
+                // Default to $HOME/.globus
+                context.setProperty("grid.certificate.location", Global.getUserHome() + "/.globus");
+                String vo = username;
+                context.setProperty("grid.proxy.voName", vo);
+                context.setProperty("grid.proxy.lifetime", "200");
+//                gridProxy = GridProxy.loadFrom(context, proxyFile);
+                gridProxy = context.getGridProxy();
+                if (gridProxy.isValid() == false) {
+                    gridProxy.setEnableVOMS(true);
+                    gridProxy.setDefaultVOName(vo);
+                    gridProxy.createWithPassword(password);
+                    if (gridProxy.isValid() == false) {
+                        throw new VlException("Created Proxy is not Valid!");
+                    }
+//                    gridProxy.saveProxyTo(Constants.PROXY_FILE);
+                }
+            }
+
+
         }
 
         if (StringUtil.equals(authScheme, ServerInfo.PASSWORD_AUTH)
@@ -228,6 +247,8 @@ public class TestWebWAVFS {
         //patch for bug with ssh driver 
         info.setAttribute("sshKnownHostsFile", System.getProperty("user.home") + "/.ssh/known_hosts");
 //        }
+//        context.setProperty("chunk.upload", doChunked);
+//        info.setAttribute(new VAttribute("chunk.upload", true));
         info.store();
 
         return vfsClient;
@@ -449,8 +470,8 @@ public class TestWebWAVFS {
 
             assertEquals(TestSettings.TEST_DATA.length(), content.length());
             assertTrue(content.equals(TestSettings.TEST_DATA));
-        
-        }finally {
+
+        } finally {
             delete(testFileURI1);
         }
     }
@@ -501,7 +522,7 @@ public class TestWebWAVFS {
             //Status code (409) indicating that the request could not be 
             //completed due to a conflict with the current state of the resource. 
             //Meaning at this time we have no physical data 
-            assertEquals( status, HttpStatus.SC_CONFLICT);
+            assertEquals(status, HttpStatus.SC_CONFLICT);
 
 
         } catch (IOException ex) {
@@ -580,7 +601,9 @@ public class TestWebWAVFS {
             } else {
                 endpoint = p.resourceUrl;
             }
-            cli.openLocation(new VRL(endpoint).append("LOBCDER-REPLICA-vTEST").append(p.name)).delete();
+            VRL vrl = new VRL(endpoint).append("LOBCDER-REPLICA-vTEST").append(p.name);
+            System.err.println("Deleting: " + vrl);
+            cli.openLocation(vrl).delete();
         }
     }
 

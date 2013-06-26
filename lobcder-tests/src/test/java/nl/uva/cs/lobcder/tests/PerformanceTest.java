@@ -61,10 +61,11 @@ public class PerformanceTest {
     private static HttpClient client;
     private static String lobcdrTestPath;
     private static VFSClient vfsClient;
-    public static final int[] FILE_SIZE_IN_KB = {6400};//{100,400,1600,3200};
-    public static final int STEP_SIZE_DATASET = 4;
-    public static final int MIN_SIZE_DATASET = 10;//3;//640;
-    public static final int MAX_SIZE_DATASET = 100;
+    public static final int[] FILE_SIZE_IN_KB = {10};//{100,400,1600,3200};
+    public static final int STEP_SIZE_DATASET = 1;
+    public static final int MIN_SIZE_DATASET = 1;//3;//640;
+    public static final int MAX_SIZE_DATASET = 1;
+    public static final int sizeInMB = 10;
     public static String measuresPath = "measures";
     private static String hostMeasuresPath;
     private static File downloadDir;
@@ -95,7 +96,7 @@ public class PerformanceTest {
     public static void tearDownClass() throws Exception {
 //        testDriverRemoteDir.delete();
         DeleteMethod del = new DeleteMethod(lobcdrTestPath);
-        debug("Deleteing: "+lobcdrTestPath);
+        debug("Deleteing: " + lobcdrTestPath);
         int status = client.executeMethod(del);
         assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
 
@@ -154,7 +155,7 @@ public class PerformanceTest {
             lobcderRoot += "/";
         }
 
-        lobcdrTestPath = uri.toString() + "/deleteMe";
+        lobcdrTestPath = uri.toString() + "deleteMe";
 
         hostMeasuresPath = measuresPath + File.separator + uri.getHost() + File.separator + uri.getPath();
         File measureDir = new File(hostMeasuresPath);
@@ -195,7 +196,7 @@ public class PerformanceTest {
         info.setAttribute(ServerInfo.ATTR_DEFAULT_YES_NO_ANSWER, true);
         info.store();
 
-        localTempDir = vfsClient.createDir(new VRL("file:/mnt/raid/home/skoulouz/tmp/"), true);
+        localTempDir = vfsClient.createDir(new VRL("file:///" + System.getProperty("user.home") + "/tmp"), true);
     }
 
     private static void initLobcderTestDir() throws IOException {
@@ -216,7 +217,7 @@ public class PerformanceTest {
         if (testDatasetDownload) {
             benchmarkDownload();
         }
-        int sizeInMB = 40;
+
         if (testLargeUpload) {
             uploadOneLargeFile(sizeInMB);
         }
@@ -232,7 +233,6 @@ public class PerformanceTest {
         double sum = 0;
         double start_time = 0;
         double lobcderUpSpeed;
-
         lobcderFilePath = lobcdrTestPath + localFile.getName();
         GetMethod get = new GetMethod(lobcderFilePath);
 
@@ -392,6 +392,9 @@ public class PerformanceTest {
         MultiStatus multiStatus = propFind.getResponseBodyAsMultiStatus();
         MultiStatusResponse[] responses = multiStatus.getResponses();
         DavPropertySet allProp = getProperties(responses[0]);
+        for (DavPropertyName n : allProp.getPropertyNames()) {
+            debug("DavPropertyName: " + n + " : " + allProp.get(n).getValue());
+        }
         String lenStr = (String) allProp.get(DavPropertyName.GETCONTENTLENGTH).getValue();
 
         double sizeUploaded = Double.valueOf(lenStr);//localFile.getLength();
@@ -480,7 +483,7 @@ public class PerformanceTest {
 
         GetMethod method = new GetMethod(lobcderFilePath);
         long start_time = 0;
-        File f = new File("/tmp/testDir/tmpFile");
+        File f = new File("/tmp/tmpFile");
         f.deleteOnExit();
         FileOutputStream fout = new FileOutputStream(f);
         byte[] data = new byte[128 * 1024];
@@ -516,6 +519,4 @@ public class PerformanceTest {
         writer.close();
 
     }
-
-    
 }

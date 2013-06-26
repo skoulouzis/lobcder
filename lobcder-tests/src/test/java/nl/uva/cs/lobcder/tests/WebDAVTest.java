@@ -1946,37 +1946,37 @@ public class WebDAVTest {
             assertEquals(part, response);
 
 
-            start = 9;
-            end = 19;
-            len = end - start + 1;
-            get = new GetMethod(testuri1);
-            get.setRequestHeader(new Header("Range", "bytes=" + start + "-" + end));
-            client.executeMethod(get);
-            status = get.getStatusCode();
-            assertEquals(HttpStatus.SC_PARTIAL_CONTENT, status);
-            assertEquals(len, get.getResponseContentLength());
-            response = get.getResponseBodyAsString();
-            System.err.println("response: " + response);
-            part = TestSettings.TEST_DATA.substring(start, end + 1);
-            System.err.println("part: " + part);
-            assertEquals(part, response);
-
-            start = TestSettings.TEST_DATA.length() / 2;
-            end = TestSettings.TEST_DATA.length() - 3;
-            len = end - start + 1;
-            get = new GetMethod(testuri1);
-            get.setRequestHeader(new Header("Range", "bytes=" + start + "-" + end));
-            client.executeMethod(get);
-            status = get.getStatusCode();
-            assertEquals(HttpStatus.SC_PARTIAL_CONTENT, status);
-            assertEquals(len, get.getResponseContentLength());
-
-            response = get.getResponseBodyAsString();
-            System.err.println("response: " + response);
-
-            part = TestSettings.TEST_DATA.substring(start, end + 1);
-            System.err.println("part: " + part);
-            assertEquals(part, response);
+//            start = 9;
+//            end = 19;
+//            len = end - start + 1;
+//            get = new GetMethod(testuri1);
+//            get.setRequestHeader(new Header("Range", "bytes=" + start + "-" + end));
+//            client.executeMethod(get);
+//            status = get.getStatusCode();
+//            assertEquals(HttpStatus.SC_PARTIAL_CONTENT, status);
+//            assertEquals(len, get.getResponseContentLength());
+//            response = get.getResponseBodyAsString();
+//            System.err.println("response: " + response);
+//            part = TestSettings.TEST_DATA.substring(start, end + 1);
+//            System.err.println("part: " + part);
+//            assertEquals(part, response);
+//
+//            start = TestSettings.TEST_DATA.length() / 2;
+//            end = TestSettings.TEST_DATA.length() - 3;
+//            len = end - start + 1;
+//            get = new GetMethod(testuri1);
+//            get.setRequestHeader(new Header("Range", "bytes=" + start + "-" + end));
+//            client.executeMethod(get);
+//            status = get.getStatusCode();
+//            assertEquals(HttpStatus.SC_PARTIAL_CONTENT, status);
+//            assertEquals(len, get.getResponseContentLength());
+//
+//            response = get.getResponseBodyAsString();
+//            System.err.println("response: " + response);
+//
+//            part = TestSettings.TEST_DATA.substring(start, end + 1);
+//            System.err.println("part: " + part);
+//            assertEquals(part, response);
 
 
 
