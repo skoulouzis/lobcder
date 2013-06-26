@@ -15,6 +15,7 @@
  */
 package io.milton.http.webdav;
 
+import io.milton.common.Path;
 import io.milton.common.Utils;
 import io.milton.http.Handler;
 import io.milton.http.HandlerHelper;
@@ -40,6 +41,7 @@ import io.milton.http.exceptions.NotAuthorizedException;
 import io.milton.http.exceptions.NotFoundException;
 import io.milton.http.exceptions.PreConditionFailedException;
 import io.milton.resource.LockableResource;
+import io.milton.resource.LockingCollectionResource;
 import io.milton.resource.Resource;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -53,7 +55,8 @@ import org.xml.sax.helpers.XMLReaderFactory;
 
 /**
  *
- * code based on sources in : http://svn.ettrema.com/svn/milton/tags/milton-1.7.2-SNAPSHOT/milton-api/
+ * code based on sources in :
+ * http://svn.ettrema.com/svn/milton/tags/milton-1.7.2-SNAPSHOT/milton-api/
  */
 class LockHandler implements Handler {
 
@@ -162,9 +165,8 @@ class LockHandler implements Handler {
 			// Find a resource if it exists
 			if (r != null) {
 				processExistingResource(httpManager, request, response, r);
-
 			} else {
-//            processNonExistingResource( manager, request, response, host, url );
+				processNonExistingResource(httpManager, request, response, host, url);
 			}
 		} catch (IOException ex) {
 			throw new BadRequestException(r);
@@ -269,5 +271,61 @@ class LockHandler implements Handler {
 	@Override
 	public boolean isCompatible(Resource res) {
 		return res instanceof LockableResource;
+	}
+
+	private void processNonExistingResource(HttpManager manager, Request request, Response response, String host, String url) throws NotAuthorizedException, BadRequestException {
+		String name;
+
+		Path parentPath = Path.path(url);
+		name = parentPath.getName();
+		parentPath = parentPath.getParent();
+		url = parentPath.toString();
+
+		Resource r = manager.getResourceFactory().getResource(host, url);
+		if (r != null) {
+			if (!handlerHelper.checkAuthorisation(manager, r, request)) {
+				responseHandler.respondUnauthorised(r, response, request);
+				return;
+			} else {
+				processCreateAndLock(manager, request, response, r, name);
+			}
+		} else {
+//			log.debug("couldnt find parent to execute lock-null, returning not found");
+			//respondNotFound(response,request);
+			response.setStatus(Status.SC_CONFLICT);
+
+		}
+	}
+
+	private void processCreateAndLock(HttpManager manager, Request request, Response response, Resource parentResource, String name) throws NotAuthorizedException {
+		if (parentResource instanceof LockingCollectionResource) {
+			LockingCollectionResource lockingParent = (LockingCollectionResource) parentResource;
+			LockTimeout timeout = LockTimeout.parseTimeout(request);
+			response.setContentTypeHeader(Response.XML);
+
+			LockInfo lockInfo;
+			try {
+				lockInfo = parseLockInfo(request);
+			} catch (SAXException ex) {
+				throw new RuntimeException("Exception reading request body", ex);
+			} catch (IOException ex) {
+				throw new RuntimeException("Exception reading request body", ex);
+			}
+
+			// TODO: this should be refactored to return a LockResult as for existing entities
+
+//            log.debug( "Creating lock on unmapped resource: " + name );
+			LockToken tok = lockingParent.createAndLock(name, timeout, lockInfo);
+			if (tok == null) {
+				throw new RuntimeException("createAndLock returned null, from resource of type: " + lockingParent.getClass().getCanonicalName());
+			}
+			response.setStatus(Status.SC_CREATED);
+			response.setLockTokenHeader("<opaquelocktoken:" + tok.tokenId + ">");  // spec says to set response header. See 8.10.1
+			respondWithToken(tok, request, response);
+
+		} else {
+//            log.debug( "parent does not support lock-null, respondong method not allowed" );
+			responseHandler.respondMethodNotImplemented(parentResource, response, request);
+		}
 	}
 }
