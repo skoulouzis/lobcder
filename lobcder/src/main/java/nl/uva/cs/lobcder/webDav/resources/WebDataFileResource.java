@@ -54,7 +54,7 @@ public class WebDataFileResource extends WebDataResource implements
     private int sleepTime = 5;
 //, ReplaceableResource {
     private ArrayList<String> workers;
-    private boolean doRedirect = false;
+    private boolean doRedirect = true;
     private int workerIndex = 0;
 
     public WebDataFileResource(@Nonnull LogicalData logicalData, Path path, @Nonnull JDBCatalogue catalogue, @Nonnull AuthI auth1, AuthI auth2) {
@@ -390,13 +390,7 @@ public class WebDataFileResource extends WebDataResource implements
 
         throw new BadRequestException(this, "Not implemented");
     }
-
-    @Override
-    public Date getCreateDate() {
-        WebDataFileResource.log.log(Level.FINE, "getCreateDate() for {0}", getPath());
-        return new Date(getLogicalData().getCreateDate());
-    }
-
+    
     @Override
     public String checkRedirect(Request request) {
         try {
