@@ -31,13 +31,13 @@ import org.apache.commons.codec.binary.Base64;
  */
 public class GridHelper {
 
-//    static {
-//        try {
-//            GridHelper.InitGlobalVFS();
-//        } catch (Exception ex) {
-//            Logger.getLogger(GridHelper.class.getName()).log(Level.SEVERE, null, ex);
-//        }
-//    }
+    static {
+        try {
+            GridHelper.InitGlobalVFS();
+        } catch (Exception ex) {
+            Logger.getLogger(GridHelper.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
     public static void InitGlobalVFS() throws Exception {
         if (!GlobalConfig.isGlobalInitialized()) {
             copyVomsAndCerts();
@@ -59,7 +59,7 @@ public class GridHelper {
             GlobalConfig.setSystemProperty("grid.proxy.lifetime", "100");
 //        GlobalConfig.setUsePersistantUserConfiguration(false);
             GlobalConfig.setCACertificateLocations(Constants.CERT_LOCATION);
-
+            
             // user configuration 
 //        GlobalConfig.setUsePersistantUserConfiguration(false);
 //        GlobalConfig.setUserHomeLocation(new URL("file:////" + this.tmpVPHuserHome.getAbsolutePath()));
