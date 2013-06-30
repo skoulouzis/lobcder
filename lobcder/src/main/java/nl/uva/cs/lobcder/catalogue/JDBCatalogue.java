@@ -272,17 +272,16 @@ public class JDBCatalogue extends MyDataSource {
                 boolean encrypt = rs.getBoolean(6);
                 long key = rs.getLong(7);
                 pdriId = rs.getLong(8);
-                if (resourceURI.startsWith("lfc") || resourceURI.startsWith("srm")
-                        || resourceURI.startsWith("gftp")) {
-                    try {
-                        
-                        passwd = getProxyAsBase64String();
-                    } catch (FileNotFoundException ex) {
-                        Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
-                    } catch (IOException ex) {
-                        Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                }
+//                if (resourceURI.startsWith("lfc") || resourceURI.startsWith("srm")
+//                        || resourceURI.startsWith("gftp")) {
+//                    try {
+//                        passwd = getProxyAsBase64String();
+//                    } catch (FileNotFoundException ex) {
+//                        Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+//                    } catch (IOException ex) {
+//                        Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+//                    }
+//                }
                 res.add(new PDRIDescr(fileName, ssID, resourceURI, uName, passwd, encrypt, BigInteger.valueOf(key), Long.valueOf(groupId), Long.valueOf(pdriId)));
             }
             return res;
@@ -969,17 +968,6 @@ public class JDBCatalogue extends MyDataSource {
                 ps.executeUpdate();
             }
         }
-    }
-
-    private String getProxyAsBase64String() throws FileNotFoundException, IOException {
-        InputStream fis = new FileInputStream(Constants.PROXY_FILE);
-        StringBuilder sb = new StringBuilder();
-        int read;
-        byte[] copyBuffer = new byte[Constants.BUF_SIZE];
-        while ((read = fis.read(copyBuffer, 0, copyBuffer.length)) != -1) {
-            sb.append(new String(Base64.encodeBase64(copyBuffer)));
-        }
-        return sb.toString();
     }
 
     @Data

@@ -52,7 +52,6 @@ public class WebDataFileResource extends WebDataResource implements
         FileResource {
 
     private int sleepTime = 5;
-//, ReplaceableResource {
     private ArrayList<String> workers;
     private boolean doRedirect = true;
     private int workerIndex = 0;
@@ -180,6 +179,7 @@ public class WebDataFileResource extends WebDataResource implements
     }
 
     private PDRI transferer(Iterator<PDRIDescr> it, OutputStream out, int tryCount, PDRI pdri, boolean doCircularStreamBufferTransferer) throws IOException, NotFoundException {
+        InputStream in;
         try {
             boolean reconnect;
             if (pdri == null && it.hasNext()) {
@@ -192,31 +192,35 @@ public class WebDataFileResource extends WebDataResource implements
                 if (reconnect) {
                     pdri.reconnect();
                 }
+                in = pdri.getData();
                 WebDataFileResource.log.log(Level.FINE, "sendContent() for {0}--------- {1}", new Object[]{getPath(), pdri.getFileName()});
                 if (!pdri.getEncrypted()) {
                     if (doCircularStreamBufferTransferer) {
-                        CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((Constants.BUF_SIZE), pdri.getData(), out);
+                        CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((Constants.BUF_SIZE), in, out);
                         cBuff.startTransfer((long) -1);
                     } else {
                         int read;
                         byte[] copyBuffer = new byte[Constants.BUF_SIZE];
-                        while ((read = pdri.getData().read(copyBuffer, 0, copyBuffer.length)) != -1) {
+                        while ((read = in.read(copyBuffer, 0, copyBuffer.length)) != -1) {
                             out.write(copyBuffer, 0, read);
                         }
                     }
                 } else {
                     DesEncrypter encrypter = new DesEncrypter(pdri.getKeyInt());
-                    encrypter.decrypt(pdri.getData(), out);
+                    encrypter.decrypt(in, out);
                 }
             } else {
                 sleepTime = 5;
                 throw new NotFoundException("Physical resource not found");
             }
-        } catch (VlException | IOException | java.lang.IllegalStateException ex) {
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            if(ex instanceof NotFoundException){
+                throw (NotFoundException)ex;
+            }
             try {
                 sleepTime = sleepTime + 20;
                 Thread.sleep(sleepTime);
-
                 if (ex instanceof nl.uva.vlet.exception.VlInterruptedException && ++tryCount < Constants.RECONNECT_NTRY) {
                     transferer(it, out, tryCount, pdri, false);
                 } else if (++tryCount < Constants.RECONNECT_NTRY) {
@@ -228,18 +232,6 @@ public class WebDataFileResource extends WebDataResource implements
                 sleepTime = 5;
                 throw new IOException(ex);
             }
-        } catch (NoSuchAlgorithmException ex) {
-            sleepTime = 5;
-            throw new IOException(ex);
-        } catch (NoSuchPaddingException ex) {
-            sleepTime = 5;
-            throw new IOException(ex);
-        } catch (InvalidKeyException ex) {
-            sleepTime = 5;
-            throw new IOException(ex);
-        } catch (InvalidAlgorithmParameterException ex) {
-            sleepTime = 5;
-            throw new IOException(ex);
         }
         sleepTime = 5;
         return pdri;
@@ -295,49 +287,6 @@ public class WebDataFileResource extends WebDataResource implements
         return pdri;
     }
 
-//    private void circularStreamBufferTransferer(Iterator<PDRIDescr> it, OutputStream out, int tryCount, PDRI pdri) throws IOException {
-//        try {
-//            boolean reconnect;
-//            if (pdri == null && it.hasNext()) {
-//                pdri = PDRIFactory.getFactory().createInstance(it.next());
-//                reconnect = false;
-//            } else {
-//                reconnect = true;
-//            }
-//            if (pdri != null) {
-//                if (reconnect) {
-//                    pdri.reconnect();
-//                }
-//                WebDataFileResource.log.log(Level.FINE, "sendContent() for {0}--------- {1}", new Object[]{getPath(), pdri.getFileName()});
-//                if (!pdri.getEncrypted()) {
-//                    CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((Constants.BUF_SIZE), pdri.getData(), out);
-//                    cBuff.startTransfer((long) -1);
-//                } else {
-//                    DesEncrypter encrypter = new DesEncrypter(pdri.getKeyInt());
-//                    encrypter.decrypt(pdri.getData(), out);
-//                }
-//            } else {
-//                throw new IOException("Resource not found");
-//            }
-//        } catch (Exception e) {
-//            if (pdri == null) {
-//                //noinspection ConstantConditions
-//                throw (IOException) e;
-//            } else {
-//                if (e.getMessage() != null && e.getMessage().contains("Resource not found")) {
-//                    throw new IOException(e);
-//                } else if (e.getMessage() != null && e.getMessage().contains("Couldn open location")) {
-//                    circularStreamBufferTransferer(it, out, 0, null);
-//                } else {
-//                    if (++tryCount < Constants.RECONNECT_NTRY) {
-//                        circularStreamBufferTransferer(it, out, tryCount, pdri);
-//                    } else {
-//                        circularStreamBufferTransferer(it, out, 0, null);
-//                    }
-//                }
-//            }
-//        }
-//    }
     @Override
     public void sendContent(OutputStream out, Range range,
             Map<String, String> params, String contentType) throws IOException,
@@ -390,7 +339,13 @@ public class WebDataFileResource extends WebDataResource implements
 
         throw new BadRequestException(this, "Not implemented");
     }
-    
+
+    @Override
+    public Date getCreateDate() {
+        WebDataFileResource.log.log(Level.FINE, "getCreateDate() for {0}", getPath());
+        return new Date(getLogicalData().getCreateDate());
+    }
+
     @Override
     public String checkRedirect(Request request) {
         try {

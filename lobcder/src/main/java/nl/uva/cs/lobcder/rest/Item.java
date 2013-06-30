@@ -4,8 +4,13 @@
  */
 package nl.uva.cs.lobcder.rest;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.logging.Level;
 
 import javax.servlet.http.HttpServletRequest;
@@ -18,7 +23,10 @@ import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.auth.MyPrincipal;
 import nl.uva.cs.lobcder.auth.Permissions;
 import nl.uva.cs.lobcder.resources.LogicalData;
+import nl.uva.cs.lobcder.resources.PDRIDescr;
 import nl.uva.cs.lobcder.util.CatalogueHelper;
+import nl.uva.cs.lobcder.util.GridHelper;
+import nl.uva.vlet.exception.VlException;
 
 /**
  *
@@ -36,7 +44,7 @@ public class Item extends CatalogueHelper {
     @Path("query/{uid}")
     @GET
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public LogicalDataWrapped getLogicalData(@PathParam("uid") Long uid) {
+    public LogicalDataWrapped getLogicalData(@PathParam("uid") Long uid) throws FileNotFoundException, IOException, VlException, URISyntaxException, MalformedURLException, Exception {
         try (Connection cn = getCatalogue().getConnection()) {
             LogicalData resLD = getCatalogue().getLogicalDataByUid(uid, cn);
             if (resLD == null) {
@@ -52,7 +60,18 @@ public class Item extends CatalogueHelper {
             res.setPermissions(p);
             res.setPath(getCatalogue().getPathforLogicalData(resLD));
             if (!resLD.isFolder() && mp.isAdmin()) {
-                res.setPdriList(getCatalogue().getPdriDescrByGroupId(resLD.getPdriGroupId(), cn));
+                List<PDRIDescr> pdriDescr = getCatalogue().getPdriDescrByGroupId(resLD.getPdriGroupId(), cn);
+                for (PDRIDescr pdri : pdriDescr) {
+                    if (pdri.getResourceUrl().startsWith("lfc")
+                            || pdri.getResourceUrl().startsWith("srm")
+                            || pdri.getResourceUrl().startsWith("gftp")) {
+                        pdriDescr.remove(pdri);
+                        GridHelper.initGridProxy(pdri.getUsername(), pdri.getPassword(), null, false);
+                        pdri.setPassword(GridHelper.getProxyAsBase64String());
+                        pdriDescr.add(pdri);
+                    }
+                }
+                res.setPdriList(pdriDescr);
             }
             return res;
         } catch (SQLException ex) {

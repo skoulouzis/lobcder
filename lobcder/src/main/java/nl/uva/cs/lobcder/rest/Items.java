@@ -4,6 +4,10 @@
  */
 package nl.uva.cs.lobcder.rest;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.java.Log;
@@ -29,6 +33,9 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
+import nl.uva.cs.lobcder.resources.PDRIDescr;
+import nl.uva.cs.lobcder.util.GridHelper;
+import nl.uva.vlet.exception.VlException;
 
 /**
  * @author dvasunin
@@ -47,7 +54,7 @@ public class Items extends CatalogueHelper {
     public Items() throws NamingException {
     }
 
-    private void queryLogicalData(Long parentUid, List<LogicalDataWrapped> ldwl, PreparedStatement ps1, PreparedStatement ps2, String path, MyPrincipal mp, Connection cn) throws SQLException {
+    private void queryLogicalData(Long parentUid, List<LogicalDataWrapped> ldwl, PreparedStatement ps1, PreparedStatement ps2, String path, MyPrincipal mp, Connection cn) throws SQLException, FileNotFoundException, VlException, URISyntaxException, IOException, MalformedURLException, Exception {
         ps1.setLong(1, parentUid);
         try (ResultSet resultSet = ps1.executeQuery()) {
             while (resultSet.next()) {
@@ -87,7 +94,18 @@ public class Items extends CatalogueHelper {
                     ldw.setPath(mypath);
                     ldwl.add(ldw);
                     if (!logicalData.isFolder() && mp.isAdmin()) {
-                        ldw.setPdriList(getCatalogue().getPdriDescrByGroupId(logicalData.getPdriGroupId(), cn));
+                        List<PDRIDescr> pdriDescr = getCatalogue().getPdriDescrByGroupId(logicalData.getPdriGroupId(), cn);
+                        for (PDRIDescr pdri : pdriDescr) {
+                            if (pdri.getResourceUrl().startsWith("lfc")
+                                    || pdri.getResourceUrl().startsWith("srm")
+                                    || pdri.getResourceUrl().startsWith("gftp")) {
+                                pdriDescr.remove(pdri);
+                                GridHelper.initGridProxy(pdri.getUsername(), pdri.getPassword(), null, false);
+                                pdri.setPassword(GridHelper.getProxyAsBase64String());
+                                pdriDescr.add(pdri);
+                            }
+                        }
+                        ldw.setPdriList(pdriDescr);
                     }
                 }
             }
@@ -116,7 +134,7 @@ public class Items extends CatalogueHelper {
         }
     }
 
-    private List<LogicalDataWrapped> queryLogicalData(@Nonnull MyPrincipal mp, @Nonnull Connection cn) throws SQLException {
+    private List<LogicalDataWrapped> queryLogicalData(@Nonnull MyPrincipal mp, @Nonnull Connection cn) throws SQLException, FileNotFoundException, VlException, URISyntaxException, IOException, MalformedURLException, Exception {
         MultivaluedMap<String, String> queryParameters = info.getQueryParameters();
         boolean addFlag = true;
         String rootPath = (queryParameters.containsKey("path") && queryParameters.get("path").iterator().hasNext())
@@ -126,7 +144,7 @@ public class Items extends CatalogueHelper {
         }
         LogicalData ld = getCatalogue().getLogicalDataByPath(io.milton.common.Path.path(rootPath), cn);
         List<LogicalDataWrapped> logicalDataWrappedList = new ArrayList<>();
-        if(ld == null) {
+        if (ld == null) {
             return logicalDataWrappedList;
         }
 
@@ -258,7 +276,18 @@ public class Items extends CatalogueHelper {
                         ldw.setPath(rootPath);
                         ldw.setPermissions(p);
                         if (mp.isAdmin()) {
-                            ldw.setPdriList(getCatalogue().getPdriDescrByGroupId(ld.getPdriGroupId(), cn));
+                            List<PDRIDescr> pdriDescr = getCatalogue().getPdriDescrByGroupId(ld.getPdriGroupId(), cn);
+                            for (PDRIDescr pdri : pdriDescr) {
+                                if (pdri.getResourceUrl().startsWith("lfc")
+                                        || pdri.getResourceUrl().startsWith("srm")
+                                        || pdri.getResourceUrl().startsWith("gftp")) {
+                                    pdriDescr.remove(pdri);
+                                    GridHelper.initGridProxy(pdri.getUsername(), pdri.getPassword(), null, false);
+                                    pdri.setPassword(GridHelper.getProxyAsBase64String());
+                                    pdriDescr.add(pdri);
+                                }
+                            }
+                            ldw.setPdriList(pdriDescr);
                         }
                         logicalDataWrappedList.add(ldw);
                     }
@@ -272,7 +301,7 @@ public class Items extends CatalogueHelper {
     @Path("query/")
     @GET
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public List<LogicalDataWrapped> getXml() {
+    public List<LogicalDataWrapped> getXml() throws FileNotFoundException, VlException, URISyntaxException, IOException, MalformedURLException, Exception {
         try (Connection cn = getCatalogue().getConnection()) {
             MyPrincipal mp = (MyPrincipal) request.getAttribute("myprincipal");
             List<LogicalDataWrapped> res = queryLogicalData(mp, cn);

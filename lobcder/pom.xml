@@ -149,7 +149,7 @@
         </dependency>
         
         
-        <dependency>
+<!--        <dependency>
             <groupId>bouncycastle</groupId>
             <artifactId>jce-jdk13</artifactId>
             <version>131</version>
@@ -160,7 +160,7 @@
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcprov-jdk15</artifactId>
             <version>1.43</version>
-        </dependency>
+        </dependency>-->
             
                 
         <dependency>
