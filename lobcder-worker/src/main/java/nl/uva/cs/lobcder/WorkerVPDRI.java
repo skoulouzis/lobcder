@@ -8,37 +8,27 @@ import io.milton.http.Range;
 import java.io.*;
 import java.math.BigInteger;
 import java.net.InetAddress;
-import java.net.MalformedURLException;
-import java.net.URISyntaxException;
-import java.net.URL;
 import java.net.UnknownHostException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import lombok.extern.java.Log;
-import nl.uva.vlet.Global;
-import nl.uva.vlet.GlobalConfig;
 import nl.uva.vlet.data.StringUtil;
 import nl.uva.vlet.exception.ResourceNotFoundException;
 import nl.uva.vlet.exception.VRLSyntaxException;
 import nl.uva.vlet.exception.VlException;
 import nl.uva.vlet.io.CircularStreamBufferTransferer;
-import nl.uva.vlet.util.cog.GridProxy;
 import nl.uva.vlet.vfs.*;
 import nl.uva.vlet.vfs.cloud.CloudFile;
 import nl.uva.vlet.vrl.VRL;
 import nl.uva.vlet.vrs.ServerInfo;
-import nl.uva.vlet.vrs.VRS;
 import nl.uva.vlet.vrs.VRSContext;
 import nl.uva.vlet.vrs.io.VRandomReadable;
-import org.apache.commons.codec.binary.Base64;
 
 /**
  * A test PDRI to implement the delete get/set data methods with the VRS API
@@ -50,40 +40,12 @@ public class WorkerVPDRI implements PDRI {
 
     static {
         try {
-            InitGlobalVFS();
+            WorkerGridHelper.InitGlobalVFS();
         } catch (Exception ex) {
             Logger.getLogger(WorkerVPDRI.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-
-    private static void InitGlobalVFS() throws MalformedURLException, VlException, Exception {
-        try {
-            GlobalConfig.setBaseLocation(new URL("http://dummy/url"));
-        } catch (MalformedURLException ex) {
-            Logger.getLogger(WorkerVPDRI.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        // runtime configuration
-        GlobalConfig.setHasUI(false);
-        GlobalConfig.setIsApplet(true);
-        GlobalConfig.setPassiveMode(true);
-//        GlobalConfig.setIsService(true);
-        GlobalConfig.setInitURLStreamFactory(false);
-        GlobalConfig.setAllowUserInteraction(false);
-        GlobalConfig.setUserHomeLocation(new URL("file:///" + System.getProperty("user.home")));
-
-//        GlobalConfig.setUsePersistantUserConfiguration(false);
-        GlobalConfig.setCACertificateLocations(Constants.CERT_LOCATION);
-
-        // user configuration 
-//        GlobalConfig.setUsePersistantUserConfiguration(false);
-//        GlobalConfig.setUserHomeLocation(new URL("file:////" + this.tmpVPHuserHome.getAbsolutePath()));
-//        Global.setDebug(true);
-
-        VRS.getRegistry().addVRSDriverClass(nl.uva.vlet.vfs.cloud.CloudFSFactory.class);
-        Global.init();
-    }
     private VFSClient vfsClient;
-    //    private MyStorageSite storageSite;
     private VRL vrl;
     private final String username;
     private final String password;
@@ -97,9 +59,8 @@ public class WorkerVPDRI implements PDRI {
     private final String resourceUrl;
     private boolean doChunked;
     private int sleeTime = 5;
-    private Map<String, VFile> cache;
-    private final VFile[] cacheFiles;
-    private int cacheIndex = 0;
+//    private static final Map<String, GridProxy> proxyCache = new HashMap<>();
+    private boolean destroyCert;
 
     public WorkerVPDRI(String fileName, Long storageSiteId, String resourceUrl,
             String username, String password, boolean encrypt, BigInteger keyInt,
@@ -119,17 +80,13 @@ public class WorkerVPDRI implements PDRI {
 //            this.resourceUrl = resourceUrl;
             Logger.getLogger(WorkerVPDRI.class.getName()).log(Level.FINE, "fileName: {0}, storageSiteId: {1}, username: {2}, password: {3}, VRL: {4}", new Object[]{fileName, storageSiteId, username, password, vrl});
             initVFS();
-            cache = new HashMap<String, VFile>(1);
-            cacheFiles = new VFile[cache.size()];
-            for (int i = 0; i < cache.size(); i++) {
-                cacheFiles[i] = vfsClient.newFile("file:///" + System.getProperty("java.io.tmpdir") + "/workerCcacheFile" + i);
-            }
         } catch (Exception ex) {
             throw new IOException(ex);
         }
     }
 
-    private void initVFS() throws VlException, MalformedURLException, IOException, FileNotFoundException, URISyntaxException {
+    private void initVFS() throws Exception {
+//        WorkerGridHelper.InitGlobalVFS();
         this.vfsClient = new VFSClient();
         VRSContext context = this.getVfsClient().getVRSContext();
         //Bug in sftp: We have to put the username in the url
@@ -137,17 +94,9 @@ public class WorkerVPDRI implements PDRI {
         String authScheme = info.getAuthScheme();
 
         if (StringUtil.equals(authScheme, ServerInfo.GSI_AUTH)) {
-            copyVomsAndCerts();
-            GridProxy gridProxy = new GridProxy(context);
-            byte[] decodedBytes = Base64.decodeBase64(password);
-            String proxy = new String(decodedBytes);
-            gridProxy.createFromString(GridProxy.GLOBUS_CREDENTIAL_TYPE, proxy);
-            if (gridProxy.isValid() == false) {
-                throw new VlException("Created Proxy is not Valid!");
-            }
-            context.setGridProxy(gridProxy);
+            WorkerGridHelper.initGridProxy(username, password, context, destroyCert);
         }
-
+        
         if (StringUtil.equals(authScheme, ServerInfo.PASSWORD_AUTH)
                 || StringUtil.equals(authScheme, ServerInfo.PASSWORD_OR_PASSPHRASE_AUTH)
                 || StringUtil.equals(authScheme, ServerInfo.PASSPHRASE_AUTH)) {
@@ -182,7 +131,7 @@ public class WorkerVPDRI implements PDRI {
             //Maybe it's from assimilation. We must remove the baseDir
             if (ex instanceof ResourceNotFoundException || ex.getMessage().contains("Couldn open location. Get NULL object for location")) {
                 try {
-                    //                    VRL assimilationVRL = new VRL(resourceUrl).append(URLEncoder.encode(fileName, "UTF-8").replace("+", "%20"));
+                    //VRL assimilationVRL = new VRL(resourceUrl).append(URLEncoder.encode(fileName, "UTF-8").replace("+", "%20"));
 //                    String encoded = VRL.encode(fileName);
                     VRL assimilationVRL = new VRL(resourceUrl).append(fileName);
                     getVfsClient().openLocation(assimilationVRL).delete();
@@ -215,21 +164,8 @@ public class WorkerVPDRI implements PDRI {
                     doCopy(file, range, out, getEncrypted());
 
                     sleeTime = 5;
-                } catch (VRLSyntaxException ex1) {
-                    throw new IOException(ex1);
-                } catch (InvalidAlgorithmParameterException ex1) {
-                    throw new IOException(ex1);
-                } catch (NoSuchAlgorithmException ex1) {
-                    throw new IOException(ex1);
-                } catch (NoSuchPaddingException ex1) {
-                    throw new IOException(ex1);
-                } catch (InvalidKeyException ex1) {
-                    throw new IOException(ex1);
-                } catch (IllegalBlockSizeException ex1) {
-                    throw new IOException(ex1);
-                } catch (BadPaddingException ex1) {
-                    throw new IOException(ex1);
-                } catch (VlException ex1) {
+
+                } catch (Exception ex1) {
                     if (reconnectAttemts < Constants.RECONNECT_NTRY) {
                         try {
                             sleeTime = sleeTime + 5;
@@ -243,7 +179,7 @@ public class WorkerVPDRI implements PDRI {
                         throw new IOException(ex1);
                     }
                 }
-            } else if (reconnectAttemts < Constants.RECONNECT_NTRY && !ex.getMessage().contentEquals("does not support random reads")) {
+            } else if (reconnectAttemts < Constants.RECONNECT_NTRY && !ex.getMessage().contains("does not support random reads")) {
                 try {
                     sleeTime = sleeTime + 5;
                     Thread.sleep(sleeTime);
@@ -293,50 +229,34 @@ public class WorkerVPDRI implements PDRI {
                     out.write(buff, 0, read);
                 }
             } else {
+                if (start > 0) {
+                    throw new IOException("Backend at " + vrl.getScheme() + "://" + vrl.getHostname() + "does not support random reads");
+//                    long skiped = in.skip(start);
+//                    if (skiped != start) {
+//                        long n = start;
+//                        int buflen = (int) Math.min(Constants.BUF_SIZE, n);
+//                        byte data[] = new byte[buflen];
+//                        while (n > 0) {
+//                            int r = in.read(data, 0, (int) Math.min((long) buflen, n));
+//                            if (r < 0) {
+//                                break;
+//                            }
+//                            n -= r;
+//                        }
+//                    }
+                }
+//                int totalBytesRead = 0;
+//                byte[] buff = new byte[buffSize];
+//                while (totalBytesRead < len) {
+//                    read = in.read(buff, 0, buff.length);
+//                    totalBytesRead += read;
+//                    start += buff.length;
+//                    out.write(buff, 0, read);
+//                }
                 in = getData();
                 if (decript) {
                     InputStream tmp = en.wrapInputStream(in);
                     in = tmp;
-                }
-                if (start > 0) {
-                    VFile cacheFile = cache.get(getURI());
-                    if (cacheFile == null) {
-                        cacheFile = cacheFiles[cacheIndex++];
-                        OutputStream cacheOut = cacheFile.getOutputStream();
-                        byte[] copyBuffer = new byte[Constants.BUF_SIZE];
-                        int totalBytesRead = 0;
-                        int buffLen = 0;
-                        int buffOffset = 0;
-                        while ((read = in.read(copyBuffer, 0, copyBuffer.length)) != -1) {
-                            totalBytesRead += read;
-                            sendRange(totalBytesRead, range, copyBuffer, out);
-//                            boolean copy = false;
-//                            if (totalBytesRead >= start && (totalBytesRead - start) <= copyBuffer.length) {
-//                                buffOffset = (int) (totalBytesRead - start);
-//                                copy = true;
-//                            } else if (totalBytesRead >= start && (totalBytesRead - start) > copyBuffer.length) {
-//                                copy = true;
-//                                buffOffset = 0;
-//                            }
-//
-//                            if (totalBytesRead <= range.getFinish() && (range.getFinish() - totalBytesRead) > copyBuffer.length) {
-//                                copy = true;
-//                                buffLen = copyBuffer.length - buffOffset;
-//                            } else if (totalBytesRead > range.getFinish() && (totalBytesRead - range.getFinish()) <= copyBuffer.length) {
-//                                copy = true;
-//                                buffLen = (int) (totalBytesRead - range.getFinish());
-//                            }
-//                            if (copy) {
-//                                out.write(copyBuffer, buffOffset, buffLen);
-//                            }
-//                            cacheOut.write(copyBuffer, 0, read);
-                        }
-                        cacheOut.flush();
-                        cacheOut.close();
-                        cache.put(getURI(), cacheFile);
-                    }
-
-//                    throw new IOException("Backend at " + vrl.getScheme() + "://" + vrl.getHostname() + "does not support random reads");
                 }
                 CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer(buffSize, in, out);
                 cBuff.startTransfer(len);
@@ -357,42 +277,47 @@ public class WorkerVPDRI implements PDRI {
             file = (VFile) getVfsClient().openLocation(vrl);
             in = file.getInputStream();
         } catch (Exception ex) {
-            if (ex instanceof ResourceNotFoundException || ex.getMessage().contains("Couldn open location. Get NULL object for location:")) {
-                try {
-//                    VRL assimilationVRL = new VRL(resourceUrl).append(URLEncoder.encode(fileName, "UTF-8"));
-                    VRL assimilationVRL = new VRL(resourceUrl).append(fileName);
-                    in = ((VFile) getVfsClient().openLocation(assimilationVRL)).getInputStream();
-                    sleeTime = 5;
-                } catch (VRLSyntaxException ex1) {
-                    throw new IOException(ex1);
-                } catch (VlException ex1) {
-                    if (reconnectAttemts < Constants.RECONNECT_NTRY) {
-                        try {
-                            sleeTime = sleeTime + 5;
-                            Thread.sleep(sleeTime);
-                            reconnect();
-                            getData();
-                        } catch (InterruptedException ex2) {
-                            throw new IOException(ex1);
-                        }
-                    } else {
-                        throw new IOException(ex1);
-                    }
-                }
-            } else if (reconnectAttemts < Constants.RECONNECT_NTRY) {
-                try {
-                    sleeTime = sleeTime + 5;
-                    Thread.sleep(sleeTime);
-                    reconnect();
-                    getData();
-                } catch (InterruptedException ex1) {
-                    throw new IOException(ex);
-                }
-            } else {
-                throw new IOException(ex);
-            }
-        } finally {
-//            reconnect();
+            throw new IOException(ex);
+//            if (ex instanceof ResourceNotFoundException
+//                    || ex.getMessage().contains("Couldn open location. Get NULL object for location:") || 
+//                    ex instanceof nl.uva.vlet.exception.ResourceNotFoundException) {
+//                try {
+////                    VRL assimilationVRL = new VRL(resourceUrl).append(URLEncoder.encode(fileName, "UTF-8"));
+//                    VRL assimilationVRL = new VRL(resourceUrl).append(fileName);
+//                    in = ((VFile) getVfsClient().openLocation(assimilationVRL)).getInputStream();
+//                    sleeTime = 5;
+//                } catch (VRLSyntaxException ex1) {
+//                    throw new IOException(ex1);
+//                } catch (VlException ex1) {
+//                    if (reconnectAttemts < Constants.RECONNECT_NTRY) {
+//                        try {
+//                            sleeTime = sleeTime + 5;
+//                            Thread.sleep(sleeTime);
+//                            reconnect();
+//                            getData();
+//                        } catch (InterruptedException ex2) {
+//                            throw new IOException(ex1);
+//                        }
+//                    } else {
+//                        throw new IOException(ex1);
+//                    }
+//                }
+//            } else if (reconnectAttemts < Constants.RECONNECT_NTRY) {
+//                if (ex instanceof org.globus.common.ChainedIOException) {
+//                    destroyCert = true;
+//                }
+//                try {
+//                    reconnect();
+//                    sleeTime = sleeTime + 5;
+//                    Thread.sleep(sleeTime);
+//                    getData();
+//                } catch (InterruptedException ex1) {
+//                    throw new IOException(ex);
+//                }
+//            } else {
+//                ex.printStackTrace();
+//                throw new IOException(ex);
+//            }
         }
         return in;
     }
@@ -423,27 +348,18 @@ public class WorkerVPDRI implements PDRI {
             }
             reconnectAttemts = 0;
 
-        } catch (InvalidAlgorithmParameterException ex) {
+        } catch (Exception ex) {
             throw new IOException(ex);
-        } catch (nl.uva.vlet.exception.VlAuthenticationException ex) {
-            throw new IOException(ex);
-        } catch (NoSuchAlgorithmException ex) {
-            throw new IOException(ex);
-        } catch (NoSuchPaddingException ex) {
-            throw new IOException(ex);
-        } catch (InvalidKeyException ex) {
-            throw new IOException(ex);
-        } catch (VlException ex) {
-            if (ex.getMessage() != null) {
-                Logger.getLogger(WorkerVPDRI.class.getName()).log(Level.FINE, "\tVlException {0}", ex.getMessage());
-            }
-            if (reconnectAttemts <= 2) {
-                Logger.getLogger(WorkerVPDRI.class.getName()).log(Level.FINE, "\treconnectAttemts {0}", reconnectAttemts);
-                reconnect();
-                putData(in);
-            } else {
-                throw new IOException(ex);
-            }
+//            if (ex.getMessage() != null) {
+//                Logger.getLogger(WorkerVPDRI.class.getName()).log(Level.FINE, "\tVlException {0}", ex.getMessage());
+//            }
+//            if (reconnectAttemts <= 2) {
+//                Logger.getLogger(WorkerVPDRI.class.getName()).log(Level.FINE, "\treconnectAttemts {0}", reconnectAttemts);
+//                reconnect();
+//                putData(in);
+//            } else {
+//                throw new IOException(ex);
+//            }
 //            if (ex instanceof ResourceNotFoundException || ex.getMessage().contains("not found") || ex.getMessage().contains("Couldn open location") || ex.getMessage().contains("not found in container")) {
 //                try {
 //                    vfsClient.mkdirs(vrl.getParent(), true);
@@ -511,7 +427,6 @@ public class WorkerVPDRI implements PDRI {
         reconnectAttemts++;
         getVfsClient().close();
         getVfsClient().dispose();
-//        VRS.exit();
         try {
             initVFS();
         } catch (Exception ex1) {
@@ -579,11 +494,6 @@ public class WorkerVPDRI implements PDRI {
         }
     }
 
-//    @Override
-//    public void setKeyInt(BigInteger keyInt) {
-//        this.keyInt = keyInt;
-//    }
-//
     @Override
     public BigInteger getKeyInt() {
         return this.keyInt;
@@ -594,24 +504,6 @@ public class WorkerVPDRI implements PDRI {
         return this.encrypt;
     }
 
-//
-//    @Override
-//    public void replicate(PDRI source) throws IOException {
-//        try {
-//            VRL sourceVRL = new VRL(source.getURI());
-////            VRL destVRL = this.vrl.getParent();
-//            log.debug("replicate from "+sourceVRL+" to "+vrl);
-//            VFile sourceFile = this.vfsClient.openFile(sourceVRL);
-//            VFile destFile = this.vfsClient.createFile(vrl, true);
-//            if (destFile instanceof CloudFile) {
-//                ((CloudFile) destFile).uploadFrom(sourceFile);
-//            } else {
-//                putData(source.getData());
-//            }
-//        } catch (VlException ex) {
-//            throw new IOException(ex);
-//        }
-//    }
     @Override
     public String getURI() throws IOException {
         try {
@@ -629,55 +521,5 @@ public class WorkerVPDRI implements PDRI {
             reconnect();
         }
         return vfsClient;
-    }
-
-    private void copyVomsAndCerts() throws FileNotFoundException, VlException, URISyntaxException {
-        File f = new File(System.getProperty("user.home") + "/.globus/vomsdir");
-        File vomsFile = new File(f.getAbsoluteFile() + "/voms.xml");
-        if (!vomsFile.exists()) {
-            f.mkdirs();
-            ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-            InputStream in = classLoader.getResourceAsStream("/voms.xml");
-            FileOutputStream out = new FileOutputStream(vomsFile);
-            CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((Constants.BUF_SIZE), in, out);
-            cBuff.startTransfer(new Long(-1));
-        }
-        f = new File(Constants.CERT_LOCATION);
-        if (!f.exists() || f.list().length == 0) {
-            f.mkdirs();
-            ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-            URL res = classLoader.getResource("/certs/");
-            File sourceCerts = new File(res.toURI());
-            File[] certs = sourceCerts.listFiles();
-            for (File src : certs) {
-                FileInputStream in = new FileInputStream(src);
-                FileOutputStream out = new FileOutputStream(f.getAbsoluteFile() + "/" + src.getName());
-                CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((Constants.BUF_SIZE), in, out);
-                cBuff.startTransfer(new Long(-1));
-            }
-        }
-    }
-
-    private void sendRange(int totalBytesRead, Range range, byte[] copyBuffer, OutputStream out) throws IOException {
-        boolean copy = false;
-        int buffOffset = 0;
-        int buffLen = 0;
-        if (totalBytesRead >= range.getStart() && (totalBytesRead - range.getStart()) <= copyBuffer.length) {
-            buffOffset = (int) (totalBytesRead - range.getStart());
-            copy = true;
-        } else if (totalBytesRead >= range.getStart() && (totalBytesRead - range.getStart()) > copyBuffer.length) {
-            copy = true;
-            buffOffset = 0;
-        }
-        if (totalBytesRead <= range.getFinish() && (range.getFinish() - totalBytesRead) > copyBuffer.length) {
-            copy = true;
-            buffLen = copyBuffer.length - buffOffset;
-        } else if (totalBytesRead > range.getFinish() && (totalBytesRead - range.getFinish()) <= copyBuffer.length) {
-            copy = true;
-            buffLen = (int) (totalBytesRead - range.getFinish());
-        }
-        if (copy) {
-            out.write(copyBuffer, buffOffset, buffLen);
-        }
     }
 }
