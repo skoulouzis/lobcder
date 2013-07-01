@@ -169,7 +169,6 @@ public class WorkerVPDRI implements PDRI {
                     if (reconnectAttemts < Constants.RECONNECT_NTRY) {
                         try {
                             sleepTime = sleepTime + 2;
-                            Logger.getLogger(WorkerVPDRI.class.getName()).log(Level.FINE, "Sleeping for " + sleepTime + " reconnectAttemts: " + reconnectAttemts);
                             Thread.sleep(sleepTime);
                             reconnect();
                             getData();
@@ -183,7 +182,6 @@ public class WorkerVPDRI implements PDRI {
             } else if (reconnectAttemts < Constants.RECONNECT_NTRY && !ex.getMessage().contains("does not support random reads")) {
                 try {
                     sleepTime = sleepTime + 2;
-                    Logger.getLogger(WorkerVPDRI.class.getName()).log(Level.FINE, "Sleeping for " + sleepTime + " reconnectAttemts: " + reconnectAttemts);
                     Thread.sleep(sleepTime);
                     reconnect();
                     copyRange(range, out);
@@ -292,8 +290,6 @@ public class WorkerVPDRI implements PDRI {
                     if (reconnectAttemts < Constants.RECONNECT_NTRY) {
                         try {
                             sleepTime = sleepTime + 2;
-                            Logger.getLogger(WorkerVPDRI.class.getName()).log(Level.FINE, "Sleeping for " + sleepTime + " reconnectAttemts: " + reconnectAttemts);
-                            Logger.getLogger(WorkerVPDRI.class.getName()).log(Level.FINE, "Exception:  " + ex.getMessage() + " " + ex.getClass().getName());
                             Thread.sleep(sleepTime);
                             reconnect();
                             getData();
@@ -305,8 +301,6 @@ public class WorkerVPDRI implements PDRI {
             } else if (reconnectAttemts < Constants.RECONNECT_NTRY) {
                 try {
                     sleepTime = sleepTime + 2;
-                    Logger.getLogger(WorkerVPDRI.class.getName()).log(Level.FINE, "Sleeping for " + sleepTime + " reconnectAttemts: " + reconnectAttemts);
-                    Logger.getLogger(WorkerVPDRI.class.getName()).log(Level.FINE, "Exception:  " + ex.getMessage() + " " + ex.getClass().getName());
                     Thread.sleep(sleepTime);
                     reconnect();
                     in = getData();
