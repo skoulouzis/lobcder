@@ -58,7 +58,7 @@ public class WorkerVPDRI implements PDRI {
     private boolean encrypt;
     private final String resourceUrl;
     private boolean doChunked;
-    private int sleeTime = 5;
+    private int sleepTime = 2;
 //    private static final Map<String, GridProxy> proxyCache = new HashMap<>();
     private boolean destroyCert;
 
@@ -96,7 +96,7 @@ public class WorkerVPDRI implements PDRI {
         if (StringUtil.equals(authScheme, ServerInfo.GSI_AUTH)) {
             WorkerGridHelper.initGridProxy(username, password, context, destroyCert);
         }
-        
+
         if (StringUtil.equals(authScheme, ServerInfo.PASSWORD_AUTH)
                 || StringUtil.equals(authScheme, ServerInfo.PASSWORD_OR_PASSPHRASE_AUTH)
                 || StringUtil.equals(authScheme, ServerInfo.PASSPHRASE_AUTH)) {
@@ -163,13 +163,14 @@ public class WorkerVPDRI implements PDRI {
                     file = (VFile) getVfsClient().openLocation(assimilationVRL);
                     doCopy(file, range, out, getEncrypted());
 
-                    sleeTime = 5;
+                    sleepTime = 2;
 
                 } catch (Exception ex1) {
                     if (reconnectAttemts < Constants.RECONNECT_NTRY) {
                         try {
-                            sleeTime = sleeTime + 5;
-                            Thread.sleep(sleeTime);
+                            sleepTime = sleepTime + 2;
+                            Logger.getLogger(WorkerVPDRI.class.getName()).log(Level.FINE, "Sleeping for " + sleepTime + " reconnectAttemts: " + reconnectAttemts);
+                            Thread.sleep(sleepTime);
                             reconnect();
                             getData();
                         } catch (InterruptedException ex2) {
@@ -181,8 +182,9 @@ public class WorkerVPDRI implements PDRI {
                 }
             } else if (reconnectAttemts < Constants.RECONNECT_NTRY && !ex.getMessage().contains("does not support random reads")) {
                 try {
-                    sleeTime = sleeTime + 5;
-                    Thread.sleep(sleeTime);
+                    sleepTime = sleepTime + 2;
+                    Logger.getLogger(WorkerVPDRI.class.getName()).log(Level.FINE, "Sleeping for " + sleepTime + " reconnectAttemts: " + reconnectAttemts);
+                    Thread.sleep(sleepTime);
                     reconnect();
                     copyRange(range, out);
                 } catch (InterruptedException ex1) {
@@ -272,52 +274,48 @@ public class WorkerVPDRI implements PDRI {
     public InputStream getData() throws IOException {
         InputStream in = null;
         VFile file;
-        int read;
         try {
             file = (VFile) getVfsClient().openLocation(vrl);
             in = file.getInputStream();
         } catch (Exception ex) {
-            throw new IOException(ex);
-//            if (ex instanceof ResourceNotFoundException
-//                    || ex.getMessage().contains("Couldn open location. Get NULL object for location:") || 
-//                    ex instanceof nl.uva.vlet.exception.ResourceNotFoundException) {
-//                try {
-////                    VRL assimilationVRL = new VRL(resourceUrl).append(URLEncoder.encode(fileName, "UTF-8"));
-//                    VRL assimilationVRL = new VRL(resourceUrl).append(fileName);
-//                    in = ((VFile) getVfsClient().openLocation(assimilationVRL)).getInputStream();
-//                    sleeTime = 5;
-//                } catch (VRLSyntaxException ex1) {
-//                    throw new IOException(ex1);
-//                } catch (VlException ex1) {
-//                    if (reconnectAttemts < Constants.RECONNECT_NTRY) {
-//                        try {
-//                            sleeTime = sleeTime + 5;
-//                            Thread.sleep(sleeTime);
-//                            reconnect();
-//                            getData();
-//                        } catch (InterruptedException ex2) {
-//                            throw new IOException(ex1);
-//                        }
-//                    } else {
-//                        throw new IOException(ex1);
-//                    }
-//                }
-//            } else if (reconnectAttemts < Constants.RECONNECT_NTRY) {
-//                if (ex instanceof org.globus.common.ChainedIOException) {
-//                    destroyCert = true;
-//                }
-//                try {
-//                    reconnect();
-//                    sleeTime = sleeTime + 5;
-//                    Thread.sleep(sleeTime);
-//                    getData();
-//                } catch (InterruptedException ex1) {
-//                    throw new IOException(ex);
-//                }
-//            } else {
-//                ex.printStackTrace();
-//                throw new IOException(ex);
-//            }
+            if (ex instanceof ResourceNotFoundException
+                    || ex.getMessage().contains("Couldn open location. Get NULL object for location:")
+                    || ex instanceof nl.uva.vlet.exception.ResourceNotFoundException) {
+                try {
+//                    VRL assimilationVRL = new VRL(resourceUrl).append(URLEncoder.encode(fileName, "UTF-8"));
+                    VRL assimilationVRL = new VRL(resourceUrl).append(fileName);
+                    in = ((VFile) getVfsClient().openLocation(assimilationVRL)).getInputStream();
+                    sleepTime = 2;
+                } catch (VRLSyntaxException ex1) {
+                    throw new IOException(ex1);
+                } catch (VlException ex1) {
+                    if (reconnectAttemts < Constants.RECONNECT_NTRY) {
+                        try {
+                            sleepTime = sleepTime + 2;
+                            Logger.getLogger(WorkerVPDRI.class.getName()).log(Level.FINE, "Sleeping for " + sleepTime + " reconnectAttemts: " + reconnectAttemts);
+                            Logger.getLogger(WorkerVPDRI.class.getName()).log(Level.FINE, "Exception:  " + ex.getMessage() + " " + ex.getClass().getName());
+                            Thread.sleep(sleepTime);
+                            reconnect();
+                            getData();
+                        } catch (InterruptedException ex2) {
+                            throw new IOException(ex2);
+                        }
+                    }
+                }
+            } else if (reconnectAttemts < Constants.RECONNECT_NTRY) {
+                try {
+                    sleepTime = sleepTime + 2;
+                    Logger.getLogger(WorkerVPDRI.class.getName()).log(Level.FINE, "Sleeping for " + sleepTime + " reconnectAttemts: " + reconnectAttemts);
+                    Logger.getLogger(WorkerVPDRI.class.getName()).log(Level.FINE, "Exception:  " + ex.getMessage() + " " + ex.getClass().getName());
+                    Thread.sleep(sleepTime);
+                    reconnect();
+                    in = getData();
+                } catch (InterruptedException ex1) {
+                    throw new IOException(ex);
+                }
+            } else {
+                throw new IOException(ex);
+            }
         }
         return in;
     }
@@ -425,8 +423,11 @@ public class WorkerVPDRI implements PDRI {
     @Override
     public void reconnect() throws IOException {
         reconnectAttemts++;
-        getVfsClient().close();
-        getVfsClient().dispose();
+        if (vfsClient != null) {
+            getVfsClient().close();
+            getVfsClient().dispose();
+        }
+
         try {
             initVFS();
         } catch (Exception ex1) {
@@ -449,12 +450,6 @@ public class WorkerVPDRI implements PDRI {
         return null;
     }
 
-//    private void debug(String msg) {
-//        if (debug) {
-////            System.err.println(this.getClass().getName() + ": " + msg);
-//            log.debug(msg);
-//        }
-//    }
     private void upload(PDRI source) throws VlException, IOException {
         if (getVfsClient() == null) {
             reconnect();

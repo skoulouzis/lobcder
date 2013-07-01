@@ -60,7 +60,7 @@ public class WorkerGridHelper {
             // user configuration 
 //        GlobalConfig.setUsePersistantUserConfiguration(false);
 //        GlobalConfig.setUserHomeLocation(new URL("file:////" + this.tmpVPHuserHome.getAbsolutePath()));
-            Global.setDebug(true);
+//            Global.setDebug(true);
             if (VRS.getRegistry().getVRSFactoryClass(nl.uva.vlet.vfs.cloud.CloudFSFactory.class.getName()) == null) {
                 VRS.getRegistry().addVRSDriverClass(nl.uva.vlet.vfs.cloud.CloudFSFactory.class);
             }
