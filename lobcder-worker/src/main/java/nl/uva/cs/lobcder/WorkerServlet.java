@@ -355,7 +355,7 @@ public class WorkerServlet extends HttpServlet {
         public int uid;
     }
 
-    @XmlRootElement
+    @XmlRootElement 
     public static class Permissions {
 
         public String owner;
