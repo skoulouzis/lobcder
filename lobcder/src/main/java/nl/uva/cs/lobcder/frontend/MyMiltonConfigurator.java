@@ -1,6 +1,8 @@
 package nl.uva.cs.lobcder.frontend;
 
 import io.milton.servlet.DefaultMiltonConfigurator;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.auth.AuthRemote;
 import nl.uva.cs.lobcder.auth.LocalDbAuth;
@@ -10,6 +12,8 @@ import nl.uva.cs.lobcder.webDav.resources.WebDataResourceFactory;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import java.util.logging.Level;
+import nl.uva.cs.lobcder.auth.AuthI;
+import nl.uva.cs.lobcder.auth.AuthWorker;
 
 @Log
 public class MyMiltonConfigurator extends DefaultMiltonConfigurator {
@@ -18,6 +22,7 @@ public class MyMiltonConfigurator extends DefaultMiltonConfigurator {
     private AuthRemote authRemote;
     private LocalDbAuth localDbAuth;
     private WebDataResourceFactory webDataResourceFactory;
+    private AuthWorker workerAuth;
 
 //    public MyMiltonConfigurator() {
     //        super();
@@ -52,10 +57,21 @@ public class MyMiltonConfigurator extends DefaultMiltonConfigurator {
             catalogue.startSweep();
             authRemote = (AuthRemote) envContext.lookup("bean/auth");
             localDbAuth = new LocalDbAuth();
+
+
+//            workerAuth = (AuthWorker) envContext.lookup("bean/authWorker");
+            workerAuth = new AuthWorker();
+
             webDataResourceFactory = (WebDataResourceFactory) builder.getMainResourceFactory();
             webDataResourceFactory.setCatalogue(catalogue);
-            webDataResourceFactory.setAuth1(authRemote);
-            webDataResourceFactory.setAuth2(localDbAuth);
+            List<AuthI> authList =new ArrayList<>();
+            authList.add(authRemote);
+            authList.add(localDbAuth);
+            authList.add(workerAuth);
+            webDataResourceFactory.setAuthList(authList);
+///            webDataResourceFactory.setAuth1(authRemote);
+//            webDataResourceFactory.setAuth2(localDbAuth);
+//            webDataResourceFactory.setAuth3(workerAuth);
         } catch (Exception e) {
             MyMiltonConfigurator.log.log(Level.SEVERE, null, e);
         }

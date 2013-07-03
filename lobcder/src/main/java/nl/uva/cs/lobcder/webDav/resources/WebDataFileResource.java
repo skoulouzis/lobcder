@@ -25,23 +25,22 @@ import nl.uva.cs.lobcder.resources.PDRIDescr;
 import nl.uva.cs.lobcder.resources.PDRIFactory;
 import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.cs.lobcder.util.DesEncrypter;
-import nl.uva.vlet.exception.VlException;
 import nl.uva.vlet.io.CircularStreamBufferTransferer;
 
 import javax.annotation.Nonnull;
-import javax.crypto.NoSuchPaddingException;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.logging.Level;
+import nl.uva.cs.lobcder.auth.AuthWorker;
+import org.apache.commons.codec.binary.Base64;
 
 /**
  *
@@ -56,26 +55,28 @@ public class WebDataFileResource extends WebDataResource implements
     private boolean doRedirect = true;
     private int workerIndex = 0;
 
-    public WebDataFileResource(@Nonnull LogicalData logicalData, Path path, @Nonnull JDBCatalogue catalogue, @Nonnull AuthI auth1, AuthI auth2) {
-        super(logicalData, path, catalogue, auth1, auth2);
-        BufferedReader br = null;
-        try {
-            ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-            InputStream in = classLoader.getResourceAsStream("/workers");
-            br = new BufferedReader(new InputStreamReader(in));
-            String line;
-            workers = new ArrayList<>();
-            while ((line = br.readLine()) != null) {
-                workers.add(line);
-            }
-            br.close();
-        } catch (IOException ex) {
-            Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, ex);
-        } finally {
+    public WebDataFileResource(@Nonnull LogicalData logicalData, Path path, @Nonnull JDBCatalogue catalogue, @Nonnull List<AuthI> authList) {
+        super(logicalData, path, catalogue, authList);
+        if (doRedirect) {
+            BufferedReader br = null;
             try {
+                ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+                InputStream in = classLoader.getResourceAsStream("/workers");
+                br = new BufferedReader(new InputStreamReader(in));
+                String line;
+                workers = new ArrayList<>();
+                while ((line = br.readLine()) != null) {
+                    workers.add(line);
+                }
                 br.close();
             } catch (IOException ex) {
                 Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, ex);
+            } finally {
+                try {
+                    br.close();
+                } catch (IOException ex) {
+                    Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, ex);
+                }
             }
         }
     }
@@ -215,8 +216,8 @@ public class WebDataFileResource extends WebDataResource implements
             }
         } catch (Exception ex) {
             ex.printStackTrace();
-            if(ex instanceof NotFoundException){
-                throw (NotFoundException)ex;
+            if (ex instanceof NotFoundException) {
+                throw (NotFoundException) ex;
             }
             try {
                 sleepTime = sleepTime + 20;
@@ -331,7 +332,7 @@ public class WebDataFileResource extends WebDataResource implements
         for (String s : keys) {
             WebDataFileResource.log.log(Level.INFO, s + " : " + parameters.get(s));
         }
-        
+
         keys = files.keySet();
         for (String s : keys) {
             WebDataFileResource.log.log(Level.INFO, s + " : " + files.get(s).getFieldName());
@@ -352,8 +353,31 @@ public class WebDataFileResource extends WebDataResource implements
             WebDataFileResource.log.log(Level.FINE, "checkRedirect for {0}", getPath());
             switch (request.getMethod()) {
                 case GET:
-                    //Replica selection algorithm
-                    return getBestWorker();
+                    String redirect = null;
+                    if (doRedirect) {
+                        Auth auth = request.getAuthorization();
+                        if (auth == null) {
+                            return null;
+                        }
+                        final String autheader = request.getHeaders().get("authorization");
+                        if (autheader != null) {
+                            final int index = autheader.indexOf(' ');
+                            if (index > 0) {
+                                final String credentials = new String(Base64.decodeBase64(autheader.substring(index).getBytes()), "UTF8");
+                                final String uname = credentials.substring(0, credentials.indexOf(":"));
+                                final String token = credentials.substring(credentials.indexOf(":") + 1);
+                                if (authenticate(uname, token) == null) {
+                                    return null;
+                                }
+                                if (!authorise(request, Request.Method.GET, auth)) {
+                                    return null;
+                                }
+                            }
+                        }
+                        //Replica selection algorithm
+                        redirect = getBestWorker();
+                    }
+                    return redirect;
                 default:
                     return null;
             }
@@ -379,13 +403,16 @@ public class WebDataFileResource extends WebDataResource implements
                 }
             }
 
-            String w = workers.get(workerIndex) + getPath();
+            String worker = workers.get(workerIndex);
+            String w = worker + getPath();
             if (workerIndex >= workers.size()) {
                 workerIndex = 0;
             } else {
                 workerIndex++;
             }
-            return w;
+            String token = UUID.randomUUID().toString();
+            AuthWorker.setTicket(worker, token);
+            return w + "/" + token;
         } else {
             return null;
         }

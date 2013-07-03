@@ -57,14 +57,14 @@ public class WebDataResource implements PropFindableResource, Resource,
     private final JDBCatalogue catalogue;
     @Getter
     private final Path path;
-    protected final AuthI auth1;
-    protected final AuthI auth2;
+    protected final List<AuthI> authList;
+//    protected final AuthI auth2;
     private static final ThreadLocal<MyPrincipal> principalHolder = new ThreadLocal<>();
     protected String fromAddress;
 
-    public WebDataResource(@Nonnull LogicalData logicalData, Path path, @Nonnull JDBCatalogue catalogue, @Nonnull AuthI auth1, AuthI auth2) {
-        this.auth1 = auth1;
-        this.auth2 = auth2;
+    public WebDataResource(@Nonnull LogicalData logicalData, Path path, @Nonnull JDBCatalogue catalogue, @Nonnull List<AuthI> authList) {
+        this.authList = authList;
+//        this.auth2 = auth2;
         this.logicalData = logicalData;
         this.catalogue = catalogue;
         this.path = path;
@@ -89,12 +89,20 @@ public class WebDataResource implements PropFindableResource, Resource,
     public Object authenticate(String user, String password) {
         String token = password;
         MyPrincipal principal = null;
-        if (auth2 != null) {
-            principal = auth2.checkToken(token);
+        
+        for(AuthI a : authList){
+            principal = a.checkToken(token);
+            if(principal !=null){
+                break;
+            }
         }
-        if (principal == null) {
-            principal = auth1.checkToken(token);
-        }
+        
+//        if (auth2 != null) {
+//            principal = auth2.checkToken(token);
+//        }
+//        if (principal == null) {
+//            principal = auth1.checkToken(token);
+//        }
         if (principal != null) {
             principalHolder.set(principal);
             WebDataResource.log.log(Level.FINE, "getUserId: {0}", principal.getUserId());

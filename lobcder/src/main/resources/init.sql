@@ -112,6 +112,7 @@ UPDATE ldata_table SET parentRef = @rootRef WHERE uid = @rootRef;
 INSERT INTO permission_table (permType, ldUidRef, roleName) VALUES  ('read', @rootRef, 'other'),
                                                                     ('read', @rootRef, 'admin'),
                                                                     ('write', @rootRef, 'admin');
+
 INSERT INTO  credential_table(username, password) VALUES ('fakeuser', 'fakepass');
 SET @credRef = LAST_INSERT_ID();
 INSERT INTO storage_site_table(resourceUri, credentialRef, currentNum, currentSize, quotaNum, quotaSize, isCache)

@@ -12,6 +12,7 @@ import nl.uva.cs.lobcder.util.Constants;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.logging.Level;
 
 @Log
@@ -20,15 +21,18 @@ public class WebDataResourceFactory implements ResourceFactory {
     @Setter
     private JDBCatalogue catalogue;
     @Setter
-    private AuthI auth1;
-    @Setter
-    private AuthI auth2;
+    private List<AuthI> authList;
+//    @Setter
+//    private AuthI auth2;
+//    @Setter
+//    @Setter
+//    private AuthI auth3;
 
     @Override
     public Resource getResource(String host, String strPath) {
 
         //Gets the root path. If instead we called :'ldri = Path.path(strPath);' we get back '/lobcder-1.0-SNAPSHOT'
-        if(strPath.equals("/login.html")){
+        if (strPath.equals("/login.html")) {
             return null;
         }
         Path ldri = Path.path(strPath).getStripFirst().getStripFirst();
@@ -48,10 +52,10 @@ public class WebDataResourceFactory implements ResourceFactory {
             }
 
             if (entry.getType().equals(Constants.LOGICAL_FOLDER)) {
-                return new WebDataDirResource(entry, ldri, catalogue, auth1, auth2);
+                return new WebDataDirResource(entry, ldri, catalogue, authList);
             }
             if (entry.getType().equals(Constants.LOGICAL_FILE)) {
-                return new WebDataFileResource(entry, ldri, catalogue, auth1, auth2);
+                return new WebDataFileResource(entry, ldri, catalogue, authList);
             }
             return null;
         } catch (SQLException ex) {

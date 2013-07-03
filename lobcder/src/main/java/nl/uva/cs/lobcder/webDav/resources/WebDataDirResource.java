@@ -22,25 +22,12 @@ import io.milton.resource.DeletableCollectionResource;
 import io.milton.resource.FolderResource;
 import io.milton.resource.LockingCollectionResource;
 import io.milton.resource.Resource;
-import java.io.ByteArrayInputStream;
-import lombok.extern.java.Log;
-import nl.uva.cs.lobcder.auth.AuthI;
-import nl.uva.cs.lobcder.auth.Permissions;
-import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
-import nl.uva.cs.lobcder.resources.LogicalData;
-import nl.uva.cs.lobcder.resources.PDRI;
-import nl.uva.cs.lobcder.resources.PDRIDescr;
-import nl.uva.cs.lobcder.util.Constants;
-import nl.uva.cs.lobcder.util.SpeedLogger;
-
-import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchAlgorithmException;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -66,8 +53,8 @@ import nl.uva.cs.lobcder.util.SpeedLogger;
 public class WebDataDirResource extends WebDataResource implements FolderResource,
         CollectionResource, DeletableCollectionResource, LockingCollectionResource {
 
-    public WebDataDirResource(@Nonnull LogicalData logicalData, Path path, @Nonnull JDBCatalogue catalogue, @Nonnull AuthI auth1, AuthI auth2) {
-        super(logicalData, path, catalogue, auth1, auth2);
+    public WebDataDirResource(@Nonnull LogicalData logicalData, Path path, @Nonnull JDBCatalogue catalogue, @Nonnull List<AuthI> authList) {
+        super(logicalData, path, catalogue, authList);
         WebDataDirResource.log.fine("Init. WebDataDirResource:  " + getPath());
     }
 
@@ -108,7 +95,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                     newFolderEntry.setCreateDate(System.currentTimeMillis());
                     newFolderEntry.setModifiedDate(System.currentTimeMillis());
                     newFolderEntry.setOwner(getPrincipal().getUserId());
-                    WebDataDirResource res = new WebDataDirResource(newFolderEntry, newCollectionPath, getCatalogue(), auth1, auth2);
+                    WebDataDirResource res = new WebDataDirResource(newFolderEntry, newCollectionPath, getCatalogue(), authList);
                     getCatalogue().setPermissions(
                             getCatalogue().registerDirLogicalData(newFolderEntry, connection).getUid(),
                             new Permissions(getPrincipal()), connection);
@@ -135,9 +122,9 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                 connection.commit();
                 if (childLD != null) {
                     if (childLD.getType().equals(Constants.LOGICAL_FOLDER)) {
-                        return new WebDataDirResource(childLD, Path.path(getPath(), childName), getCatalogue(), auth1, auth2);
+                        return new WebDataDirResource(childLD, Path.path(getPath(), childName), getCatalogue(), authList);
                     } else {
-                        return new WebDataFileResource(childLD, Path.path(getPath(), childName), getCatalogue(), auth1, auth2);
+                        return new WebDataFileResource(childLD, Path.path(getPath(), childName), getCatalogue(), authList);
                     }
                 } else {
                     return null;
@@ -162,9 +149,9 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
             if (childrenLD != null) {
                 for (LogicalData childLD : childrenLD) {
                     if (childLD.getType().equals(Constants.LOGICAL_FOLDER)) {
-                        children.add(new WebDataDirResource(childLD, Path.path(getPath(), childLD.getName()), getCatalogue(), auth1, auth2));
+                        children.add(new WebDataDirResource(childLD, Path.path(getPath(), childLD.getName()), getCatalogue(), authList));
                     } else {
-                        children.add(new WebDataFileResource(childLD, Path.path(getPath(), childLD.getName()), getCatalogue(), auth1, auth2));
+                        children.add(new WebDataFileResource(childLD, Path.path(getPath(), childLD.getName()), getCatalogue(), authList));
                     }
                 }
             }
@@ -205,8 +192,8 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
 
                     fileLogicalData = getCatalogue().updateLogicalDataAndPdri(fileLogicalData, pdri, connection);
                     connection.commit();
-                    resource = new WebDataFileResource(fileLogicalData, Path.path(getPath(), newName), getCatalogue(), auth1, auth2);
-//                    return new WebDataFileResource(fileLogicalData, Path.path(getPath(), newName), getCatalogue(), auth1, auth2);
+                    resource = new WebDataFileResource(fileLogicalData, Path.path(getPath(), newName), getCatalogue(), authList);
+//                    return new WebDataFileResource(fileLogicalData, Path.path(getPath(), newName), getCatalogue(), authList);
                 } else { // Resource does not exists, create a new one
                     // new need write prmissions for current collection
                     fileLogicalData = new LogicalData();
@@ -224,8 +211,8 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                     fileLogicalData = getCatalogue().associateLogicalDataAndPdri(fileLogicalData, pdri, connection);
                     getCatalogue().setPermissions(fileLogicalData.getUid(), new Permissions(getPrincipal()), connection);
                     connection.commit();
-                    resource = new WebDataFileResource(fileLogicalData, Path.path(getPath(), newName), getCatalogue(), auth1, auth2);
-//                    return new WebDataFileResource(fileLogicalData, Path.path(getPath(), newName), getCatalogue(), auth1, auth2);
+                    resource = new WebDataFileResource(fileLogicalData, Path.path(getPath(), newName), getCatalogue(), authList);
+//                    return new WebDataFileResource(fileLogicalData, Path.path(getPath(), newName), getCatalogue(), authList);
                 }
             } catch (NoSuchAlgorithmException ex) {
                 WebDataDirResource.log.log(Level.SEVERE, null, ex);
@@ -400,7 +387,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
             //If the resource exists 
             LogicalData fileLogicalData = getCatalogue().getLogicalDataByPath(newPath, connection);
             if (fileLogicalData != null) {
-                throw new PreConditionFailedException(new WebDataFileResource(fileLogicalData, Path.path(getPath(), name), getCatalogue(), auth1, auth2));
+                throw new PreConditionFailedException(new WebDataFileResource(fileLogicalData, Path.path(getPath(), name), getCatalogue(), authList));
             } else {
                 fileLogicalData = new LogicalData();
                 fileLogicalData.setName(name);
@@ -410,7 +397,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                 fileLogicalData.setCreateDate(System.currentTimeMillis());
                 fileLogicalData.setModifiedDate(System.currentTimeMillis());
             }
-            WebDataFileResource lockedFile = new WebDataFileResource(fileLogicalData, Path.path(getPath(), name), getCatalogue(), auth1, auth2);
+            WebDataFileResource lockedFile = new WebDataFileResource(fileLogicalData, Path.path(getPath(), name), getCatalogue(), authList);
             LockResult res = lockedFile.lock(lt, li);
             return res.getLockToken();
 
