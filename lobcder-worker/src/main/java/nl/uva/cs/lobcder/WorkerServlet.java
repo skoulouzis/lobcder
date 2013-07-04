@@ -129,13 +129,15 @@ public class WorkerServlet extends HttpServlet {
                     Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "Average speed for  : {0} : " + averagre, pdri.getHost());
                 }
                 numOfTries = 0;
-                sleepTime = 2;    
+                sleepTime = 2;
             } catch (Exception ex) {
                 //Maybe we can look for another pdri
-                if (ex.getMessage() != null && ex.getMessage().contains("Resource not found")
-                        || ex.getMessage().contains("Could not stat remote")) {
-                    response.setStatus(HttpStatus.SC_CONFLICT);
-                    return;
+                if (ex.getMessage() != null) {
+                    if (ex.getMessage().contains("Resource not found")
+                            || ex.getMessage().contains("Could not stat remote")) {
+                        response.setStatus(HttpStatus.SC_CONFLICT);
+                        return;
+                    }
                 }
                 if (ex.getMessage() != null && ex.getMessage().contains("returned a response status of 401 Unauthorized")) {
                     response.setStatus(HttpStatus.SC_UNAUTHORIZED);
@@ -189,7 +191,8 @@ public class WorkerServlet extends HttpServlet {
         PDRIDesc pdriDesc = null;//new PDRIDesc();
         try {
             Client restClient = Client.create(clientConfig);
-            restClient.addFilter(new com.sun.jersey.api.client.filter.HTTPBasicAuthFilter("worker", token));
+
+            restClient.addFilter(new com.sun.jersey.api.client.filter.HTTPBasicAuthFilter("worker-" + InetAddress.getLocalHost().getHostName(), token));
 
             WebResource webResource = restClient.resource(restURL);
             MultivaluedMap<String, String> params = new MultivaluedMapImpl();
