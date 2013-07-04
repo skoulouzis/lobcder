@@ -27,6 +27,7 @@
             <version>3.1</version>
             <scope>test</scope>
         </dependency>
+        
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>jackrabbit-webdav</artifactId>

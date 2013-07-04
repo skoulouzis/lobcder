@@ -42,6 +42,7 @@ import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.contrib.ssl.EasySSLProtocolSocketFactory;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.StringRequestEntity;
+import org.apache.commons.httpclient.params.HttpClientParams;
 import org.apache.commons.httpclient.protocol.Protocol;
 import org.apache.commons.httpclient.protocol.ProtocolSocketFactory;
 import org.apache.jackrabbit.webdav.*;
@@ -152,6 +153,9 @@ public class TestWebWAVFS {
 
 
         client1 = new HttpClient();
+        HttpClientParams params = new HttpClientParams();
+        params.setParameter("http.protocol.handle-redirects",false);
+        client1.setParams(params);
 
         assertNotNull(uri.getHost());
         assertNotNull(uri.getPort());
@@ -518,11 +522,12 @@ public class TestWebWAVFS {
 
             GetMethod get = new GetMethod(testFileURI1);
             status = client1.executeMethod(get);
+            String cont = get.getResponseBodyAsString();
             //There is no offical status to get from this but  confilct seems apropriate:
             //Status code (409) indicating that the request could not be 
             //completed due to a conflict with the current state of the resource. 
             //Meaning at this time we have no physical data 
-            assertEquals(status, HttpStatus.SC_CONFLICT);
+            assertEquals(HttpStatus.SC_CONFLICT, status);
 
 
         } catch (IOException ex) {
