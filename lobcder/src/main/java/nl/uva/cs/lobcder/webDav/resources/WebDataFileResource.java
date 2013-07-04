@@ -44,6 +44,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.logging.Level;
 import nl.uva.cs.lobcder.auth.AuthWorker;
+import nl.uva.cs.lobcder.util.WorkerHelper;
 import org.apache.commons.codec.binary.Base64;
 
 /**
@@ -55,33 +56,14 @@ public class WebDataFileResource extends WebDataResource implements
         FileResource {
 
     private int sleepTime = 5;
-    private ArrayList<String> workers;
+    private List<String> workers;
     private boolean doRedirect = true;
     private int workerIndex = 0;
 
     public WebDataFileResource(@Nonnull LogicalData logicalData, Path path, @Nonnull JDBCatalogue catalogue, @Nonnull List<AuthI> authList) {
         super(logicalData, path, catalogue, authList);
         if (doRedirect) {
-            BufferedReader br = null;
-            try {
-                ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-                InputStream in = classLoader.getResourceAsStream("/workers");
-                br = new BufferedReader(new InputStreamReader(in));
-                String line;
-                workers = new ArrayList<>();
-                while ((line = br.readLine()) != null) {
-                    workers.add(line);
-                }
-                br.close();
-            } catch (IOException ex) {
-                Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, ex);
-            } finally {
-                try {
-                    br.close();
-                } catch (IOException ex) {
-                    Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            }
+            workers = WorkerHelper.getWorkers();
         }
     }
 
@@ -402,7 +384,7 @@ public class WebDataFileResource extends WebDataResource implements
                 workerIndex++;
             }
             String token = UUID.randomUUID().toString();
-            log.log(Level.FINE,"Adding: "+token+" : "+worker);
+            log.log(Level.FINE, "Adding: " + token + " : " + worker);
             AuthWorker.setTicket(worker, token);
             return w + "/" + token;
         } else {
@@ -411,16 +393,18 @@ public class WebDataFileResource extends WebDataResource implements
     }
 
     private boolean isInCache() throws SQLException {
-        Collection<PDRIDescr> pdris = getCatalogue().getPdriDescrByGroupId(getLogicalData().getPdriGroupId(), getCatalogue().getConnection());
-        for (PDRIDescr p : pdris) {
-            try {
-                if (new URI(p.getResourceUrl()).getScheme().equals("file")) {
-                    return true;
-                }
-            } catch (URISyntaxException ex) {
-                Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        }
+//        Collection<PDRIDescr> pdris = getCatalogue().getPdriDescrByGroupId(getLogicalData().getPdriGroupId(), getCatalogue().getConnection());
+//        for (PDRIDescr p : pdris) {
+//            try {
+//                if (new URI(p.getResourceUrl()).getScheme().equals("file")) {
+//                    return true;
+//                }
+//            } catch (URISyntaxException ex) {
+//                Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, ex);
+//            }finally{
+//                getCatalogue().getConnection().close();
+//            }
+//        }
         return false;
     }
 

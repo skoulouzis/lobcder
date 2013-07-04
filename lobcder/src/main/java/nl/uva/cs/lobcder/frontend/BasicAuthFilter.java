@@ -10,6 +10,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.auth.AuthI;
+import nl.uva.cs.lobcder.auth.AuthWorker;
 import nl.uva.cs.lobcder.auth.MyPrincipal;
 import org.apache.commons.codec.binary.Base64;
 
@@ -23,6 +24,11 @@ public class BasicAuthFilter implements Filter {
 
     private String _realm;
     private List<AuthI> authList;
+    private final AuthWorker authWorker;
+
+    public BasicAuthFilter() {
+        authWorker = new AuthWorker();
+    }
 
     @Override
     public void destroy() {
@@ -47,12 +53,19 @@ public class BasicAuthFilter implements Filter {
                 final String token = credentials.substring(credentials.indexOf(":") + 1);
 
                 MyPrincipal principal = null;
-                for (AuthI a : authList) {
-                    principal = a.checkToken(token);
-                    if (principal != null) {
-                        break;
+
+                //Take some load off the DB 
+                if (uname.startsWith("worker-")) {
+                    principal = authWorker.checkToken(token);
+                } else {
+                    for (AuthI a : authList) {
+                        principal = a.checkToken(token);
+                        if (principal != null) {
+                            break;
+                        }
                     }
                 }
+
 
 
 //                //Try the local db 
