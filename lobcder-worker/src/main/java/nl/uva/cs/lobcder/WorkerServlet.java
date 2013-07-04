@@ -53,34 +53,27 @@ public class WorkerServlet extends HttpServlet {
 
 //    private Client restClient;
     private String restURL;
-    private final String username;
-    private final String password;
     private Map<String, Long> weightPDRIMap;
     private long size;
-//    private HttpClient client;
-    private final String davURL;
     private int numOfTries = 0;
     private long numOfGets;
     private long sleepTime = 2;
     private String token;
     private final DefaultClientConfig clientConfig;
-    
+
     public WorkerServlet() throws FileNotFoundException, IOException {
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         InputStream in = classLoader.getResourceAsStream("/auth.properties");
 
 //        String propBasePath = File.separator + "test.proprties";
         Properties prop = Util.getTestProperties(in);
-        
+
         restURL = prop.getProperty(("rest.url"), "http://localhost:8080/lobcder/rest/");
-        davURL = prop.getProperty(("rest.url"), "http://localhost:8080/lobcder/dav/");
-        username = prop.getProperty(("rest.username"), "user");
-        password = prop.getProperty(("rest.password"), "pass");
-        
-        
+
+
         clientConfig = new DefaultClientConfig();
         clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
-        
+
         weightPDRIMap = new HashMap<String, Long>();
     }
 
@@ -104,10 +97,11 @@ public class WorkerServlet extends HttpServlet {
             try {
                 numOfGets++;
                 long start = System.currentTimeMillis();
-                
+
                 PDRI pdri = getPDRI(path);
                 if (pdri == null) {
                     response.setStatus(HttpStatus.SC_INTERNAL_SERVER_ERROR);
+                    return;
                 } else {
                     OutputStream out = response.getOutputStream();
                     String rangeStr = request.getHeader(Constants.RANGE_HEADER_NAME);
@@ -115,6 +109,7 @@ public class WorkerServlet extends HttpServlet {
                         Range range = Range.parse(rangeStr.split("=")[1]);
                         pdri.copyRange(range, out);
                         response.setStatus(HttpStatus.SC_PARTIAL_CONTENT);
+                        return;
                     } else {
                         trasfer(pdri, out, false);
                     }
@@ -123,7 +118,7 @@ public class WorkerServlet extends HttpServlet {
                     if (elapsedSec <= 0) {
                         elapsedSec = 1;
                     }
-                    
+
                     long speed = size / elapsedSec;
                     Long oldSpeed = weightPDRIMap.get(pdri.getHost());
                     if (oldSpeed == null) {
@@ -134,8 +129,14 @@ public class WorkerServlet extends HttpServlet {
                     Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "Average speed for  : {0} : " + averagre, pdri.getHost());
                 }
                 numOfTries = 0;
-                sleepTime = 2;
+                sleepTime = 2;    
             } catch (Exception ex) {
+                //Maybe we can look for another pdri
+                if (ex.getMessage() != null && ex.getMessage().contains("Resource not found")
+                        || ex.getMessage().contains("Could not stat remote")) {
+                    response.setStatus(HttpStatus.SC_CONFLICT);
+                    return;
+                }
                 if (ex.getMessage() != null && ex.getMessage().contains("returned a response status of 401 Unauthorized")) {
                     response.setStatus(HttpStatus.SC_UNAUTHORIZED);
                     return;
@@ -183,22 +184,22 @@ public class WorkerServlet extends HttpServlet {
     public String getServletInfo() {
         return "LOBCDER worker";
     }
-    
+
     private PDRI getPDRI(String filePath) throws IOException, URISyntaxException {
         PDRIDesc pdriDesc = null;//new PDRIDesc();
         try {
             Client restClient = Client.create(clientConfig);
-            restClient.addFilter(new com.sun.jersey.api.client.filter.HTTPBasicAuthFilter(username, token));
+            restClient.addFilter(new com.sun.jersey.api.client.filter.HTTPBasicAuthFilter("worker", token));
 
             WebResource webResource = restClient.resource(restURL);
             MultivaluedMap<String, String> params = new MultivaluedMapImpl();
             params.add("path", filePath);
             WebResource res = webResource.path("items").path("query").queryParams(params);
-            
+
             List<LogicalDataWrapped> list = res.accept(MediaType.APPLICATION_XML).
                     get(new GenericType<List<LogicalDataWrapped>>() {
             });
-            
+
             int count = 0;
             for (LogicalDataWrapped ld : list) {
                 if (ld != null) {
@@ -235,7 +236,7 @@ public class WorkerServlet extends HttpServlet {
         sleepTime = 2;
         return new WorkerVPDRI(pdriDesc.name, pdriDesc.id, pdriDesc.resourceUrl, pdriDesc.username, pdriDesc.password, pdriDesc.encrypt, BigInteger.ZERO, false);
     }
-    
+
     private void trasfer(PDRI pdri, OutputStream out, boolean withCircularStream) throws IOException {
         InputStream in = null;
         try {
@@ -260,6 +261,10 @@ public class WorkerServlet extends HttpServlet {
             numOfTries = 0;
             sleepTime = 2;
         } catch (Exception ex) {
+            if (ex.getMessage() != null && ex.getMessage().contains("Resource not found")
+                    || ex.getMessage().contains("Could not stat remote")) {
+                throw new IOException(ex.getMessage());
+            }
             withCircularStream = false;
 //            if (ex instanceof nl.uva.vlet.exception.VlException) {
 //                withCircularStream = false;
@@ -278,10 +283,10 @@ public class WorkerServlet extends HttpServlet {
             }
         } finally {
             try {
-                if (out != null) {
-                    out.flush();
-                    out.close();
-                }
+//                if (out != null) {
+//                    out.flush();
+//                    out.close();
+//                }
                 if (in != null) {
                     in.close();
                 }
@@ -290,7 +295,7 @@ public class WorkerServlet extends HttpServlet {
             }
         }
     }
-    
+
     private PDRIDesc selectBestPDRI(Set<PDRIDesc> pdris) throws URISyntaxException, UnknownHostException {
         if (weightPDRIMap.isEmpty() || weightPDRIMap.size() < pdris.size()) {
             //Just return one at random;
@@ -298,7 +303,7 @@ public class WorkerServlet extends HttpServlet {
             PDRIDesc[] array = pdris.toArray(new PDRIDesc[pdris.size()]);
             return array[index];
         }
-        
+
         long sumOfSpeed = 0;
         for (PDRIDesc p : pdris) {
             URI uri = new URI(p.resourceUrl);
@@ -312,14 +317,11 @@ public class WorkerServlet extends HttpServlet {
                 host = uri.getHost();
             }
             Long speed = weightPDRIMap.get(host);
-//            if(speed == null){
-//                speed = Long.valueOf(100);
-//            }
             Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "Speed: : {0}", speed);
             sumOfSpeed += speed;
         }
         int itemIndex = new Random().nextInt((int) sumOfSpeed);
-        
+
         for (PDRIDesc p : pdris) {
             Long speed = weightPDRIMap.get(new URI(p.resourceUrl).getHost());
             if (itemIndex < speed) {
@@ -347,10 +349,10 @@ public class WorkerServlet extends HttpServlet {
 
         return null;
     }
-    
+
     @XmlRootElement
     public static class PDRIDesc {
-        
+
         public boolean encrypt;
         public long id;
         public String name;
@@ -358,19 +360,19 @@ public class WorkerServlet extends HttpServlet {
         public String resourceUrl;
         public String username;
     }
-    
+
     @XmlRootElement
     public static class LogicalDataWrapped {
-        
+
         public LogicalData logicalData;
         public String path;
         public Set<PDRIDesc> pdriList;
         public Set<Permissions> permissions;
     }
-    
+
     @XmlRootElement
     public static class LogicalData {
-        
+
         public int checksum;
         public String contentTypesAsString;
         public long createDate;
@@ -386,10 +388,10 @@ public class WorkerServlet extends HttpServlet {
         public String type;
         public int uid;
     }
-    
+
     @XmlRootElement
     public static class Permissions {
-        
+
         public String owner;
         public Set<String> read;
         public Set<String> write;

@@ -287,6 +287,12 @@ public class WorkerVPDRI implements PDRI {
                 } catch (VRLSyntaxException ex1) {
                     throw new IOException(ex1);
                 } catch (VlException ex1) {
+                    if (ex instanceof ResourceNotFoundException
+                    || ex.getMessage().contains("Couldn open location. Get NULL object for location:")
+                    || ex instanceof nl.uva.vlet.exception.ResourceNotFoundException 
+                            ||ex1.getMessage() != null && ex1.getMessage().contains("Resource not found")) {
+                        throw new IOException(ex.getMessage());
+                    }
                     if (reconnectAttemts < Constants.RECONNECT_NTRY) {
                         try {
                             sleepTime = sleepTime + 2;
@@ -362,13 +368,13 @@ public class WorkerVPDRI implements PDRI {
 //                }
 //            }
         } finally {
-            if (out != null) {
-                try {
-                    out.flush();
-                    out.close();
-                } catch (java.io.IOException ex) {
-                }
-            }
+//            if (out != null) {
+//                try {
+//                    out.flush();
+//                    out.close();
+//                } catch (java.io.IOException ex) {
+//                }
+//            }
             if (in != null) {
                 in.close();
             }
