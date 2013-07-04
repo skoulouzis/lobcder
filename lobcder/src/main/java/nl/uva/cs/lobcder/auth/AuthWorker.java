@@ -29,7 +29,6 @@ public class AuthWorker implements AuthI {
             roles.add("admin");
             principal = new MyPrincipal(workerID, roles);
             temporarryTokens.remove(token);
-            log.log(Level.FINE, "principal: " + principal.getRolesStr() + ", " + principal.getUserId());
         }
         return principal;
     }
