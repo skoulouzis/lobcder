@@ -30,8 +30,12 @@ import nl.uva.vlet.io.CircularStreamBufferTransferer;
 import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -354,26 +358,13 @@ public class WebDataFileResource extends WebDataResource implements
             switch (request.getMethod()) {
                 case GET:
                     String redirect = null;
+
                     if (doRedirect) {
-                        Auth auth = request.getAuthorization();
-                        if (auth == null) {
+
+                        if (!canRedirect(request)) {
                             return null;
                         }
-                        final String autheader = request.getHeaders().get("authorization");
-                        if (autheader != null) {
-                            final int index = autheader.indexOf(' ');
-                            if (index > 0) {
-                                final String credentials = new String(Base64.decodeBase64(autheader.substring(index).getBytes()), "UTF8");
-                                final String uname = credentials.substring(0, credentials.indexOf(":"));
-                                final String token = credentials.substring(credentials.indexOf(":") + 1);
-                                if (authenticate(uname, token) == null) {
-                                    return null;
-                                }
-                                if (!authorise(request, Request.Method.GET, auth)) {
-                                    return null;
-                                }
-                            }
-                        }
+
                         //Replica selection algorithm
                         redirect = getBestWorker();
                     }
@@ -381,7 +372,7 @@ public class WebDataFileResource extends WebDataResource implements
                 default:
                     return null;
             }
-        } catch (IOException ex) {
+        } catch (SQLException | IOException ex) {
             Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, ex);
         }
         return null;
@@ -416,5 +407,45 @@ public class WebDataFileResource extends WebDataResource implements
         } else {
             return null;
         }
+    }
+
+    private boolean isInCache() throws SQLException {
+        Collection<PDRIDescr> pdris = getCatalogue().getPdriDescrByGroupId(getLogicalData().getPdriGroupId(), getCatalogue().getConnection());
+        for (PDRIDescr p : pdris) {
+            try {
+                if (new URI(p.getResourceUrl()).getScheme().equals("file")) {
+                    return true;
+                }
+            } catch (URISyntaxException ex) {
+                Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        return false;
+    }
+
+    private boolean canRedirect(Request request) throws SQLException, UnsupportedEncodingException {
+        if (isInCache()) {
+            return false;
+        }
+        Auth auth = request.getAuthorization();
+        if (auth == null) {
+            return false;
+        }
+        final String autheader = request.getHeaders().get("authorization");
+        if (autheader != null) {
+            final int index = autheader.indexOf(' ');
+            if (index > 0) {
+                final String credentials = new String(Base64.decodeBase64(autheader.substring(index).getBytes()), "UTF8");
+                final String uname = credentials.substring(0, credentials.indexOf(":"));
+                final String token = credentials.substring(credentials.indexOf(":") + 1);
+                if (authenticate(uname, token) == null) {
+                    return false;
+                }
+                if (!authorise(request, Request.Method.GET, auth)) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 }
