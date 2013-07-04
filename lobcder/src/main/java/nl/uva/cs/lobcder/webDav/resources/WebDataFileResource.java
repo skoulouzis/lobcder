@@ -57,7 +57,7 @@ public class WebDataFileResource extends WebDataResource implements
 
     private int sleepTime = 5;
     private List<String> workers;
-    private boolean doRedirect = true;
+    private boolean doRedirect = false;
     private int workerIndex = 0;
 
     public WebDataFileResource(@Nonnull LogicalData logicalData, Path path, @Nonnull JDBCatalogue catalogue, @Nonnull List<AuthI> authList) {
@@ -201,7 +201,6 @@ public class WebDataFileResource extends WebDataResource implements
                 throw new NotFoundException("Physical resource not found");
             }
         } catch (Exception ex) {
-            ex.printStackTrace();
             if (ex instanceof NotFoundException) {
                 throw (NotFoundException) ex;
             }
@@ -211,13 +210,13 @@ public class WebDataFileResource extends WebDataResource implements
                 if (ex instanceof nl.uva.vlet.exception.VlInterruptedException && ++tryCount < Constants.RECONNECT_NTRY) {
                     transferer(it, out, tryCount, pdri, false);
                 } else if (++tryCount < Constants.RECONNECT_NTRY) {
-                    transferer(it, out, tryCount, pdri, true);
+                    transferer(it, out, tryCount, pdri, false);
                 } else {
                     transferer(it, out, 0, null, true);
                 }
             } catch (InterruptedException ex1) {
                 sleepTime = 5;
-                throw new IOException(ex);
+                throw new IOException(ex1);
             }
         }
         sleepTime = 5;
@@ -287,7 +286,7 @@ public class WebDataFileResource extends WebDataResource implements
                 WebDataFileResource.log.log(Level.FINE, "Start: {0} end: {1} range: {2}", new Object[]{range.getStart(), range.getFinish(), range.getRange()});
                 pdri = transfererRange(it, out, 0, null, range);
             } else {
-                pdri = transferer(it, out, 0, null, true);
+                pdri = transferer(it, out, 0, null, false);
             }
         } catch (SQLException ex) {
             throw new BadRequestException(this, ex.getMessage());

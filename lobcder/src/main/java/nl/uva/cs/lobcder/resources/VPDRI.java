@@ -201,7 +201,7 @@ public class VPDRI implements PDRI {
                             sleeTime = sleeTime + 5;
                             Thread.sleep(sleeTime);
                             reconnect();
-                            getData();
+                            copyRange(range, out);
                         } catch (InterruptedException ex2) {
                             throw new IOException(ex1);
                         }
@@ -322,7 +322,7 @@ public class VPDRI implements PDRI {
                             sleeTime = sleeTime + 5;
                             Thread.sleep(sleeTime);
                             reconnect();
-                            getData();
+                            return getData();
                         } catch (InterruptedException ex2) {
                             throw new IOException(ex1);
                         }
@@ -338,12 +338,11 @@ public class VPDRI implements PDRI {
                     reconnect();
                     sleeTime = sleeTime + 5;
                     Thread.sleep(sleeTime);
-                    getData();
+                    return getData();
                 } catch (InterruptedException ex1) {
                     throw new IOException(ex);
                 }
             } else {
-                ex.printStackTrace();
                 throw new IOException(ex);
             }
         } finally {

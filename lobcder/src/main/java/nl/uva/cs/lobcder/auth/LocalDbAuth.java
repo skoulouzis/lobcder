@@ -71,6 +71,7 @@ public class LocalDbAuth implements AuthI {
             }
             return res;
         } catch (Exception ex) {
+            LocalDbAuth.log.log(Level.SEVERE, null, ex);
             return null;
         } finally {
             try {
