@@ -135,15 +135,18 @@ public class WorkerServlet extends HttpServlet {
                 if (ex.getMessage() != null) {
                     if (ex.getMessage().contains("Resource not found")
                             || ex.getMessage().contains("Could not stat remote")) {
+                        Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, ex);
                         response.setStatus(HttpStatus.SC_CONFLICT);
                         return;
                     }
                 }
-                if (ex.getMessage() != null && ex.getMessage().contains("returned a response status of 401 Unauthorized")) {
-                    response.setStatus(HttpStatus.SC_UNAUTHORIZED);
-                    return;
-//                    throw new IOException(ex);
-                }
+//                if (ex.getMessage() != null && ex.getMessage().contains("returned a response status of 401 Unauthorized")) {
+//                    Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, ex);
+//                    response.setStatus(HttpStatus.SC_UNAUTHORIZED);
+////                    response.sendRedirect("http://localhost:8080/lobcder/dav/"+path);
+//                    return;
+////                    throw new IOException(ex);
+//                }
                 if (numOfTries < Constants.RECONNECT_NTRY) {
                     try {
                         numOfTries++;
@@ -189,8 +192,9 @@ public class WorkerServlet extends HttpServlet {
 
     private PDRI getPDRI(String filePath) throws IOException, URISyntaxException {
         PDRIDesc pdriDesc = null;//new PDRIDesc();
+        Client restClient = null;
         try {
-            Client restClient = Client.create(clientConfig);
+            restClient = Client.create(clientConfig);
 
             restClient.addFilter(new com.sun.jersey.api.client.filter.HTTPBasicAuthFilter("worker-" + InetAddress.getLocalHost().getHostName(), token));
 
@@ -198,6 +202,9 @@ public class WorkerServlet extends HttpServlet {
             MultivaluedMap<String, String> params = new MultivaluedMapImpl();
             params.add("path", filePath);
             WebResource res = webResource.path("items").path("query").queryParams(params);
+
+
+            Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "Asking master. Token: {0}", token);
 
             List<LogicalDataWrapped> list = res.accept(MediaType.APPLICATION_XML).
                     get(new GenericType<List<LogicalDataWrapped>>() {
@@ -233,6 +240,10 @@ public class WorkerServlet extends HttpServlet {
                 } catch (InterruptedException ex1) {
                     throw new IOException(ex1);
                 }
+            }
+        } finally {
+            if (restClient != null) {
+                restClient.destroy();
             }
         }
         numOfTries = 0;
@@ -275,7 +286,7 @@ public class WorkerServlet extends HttpServlet {
             if (numOfTries < Constants.RECONNECT_NTRY) {
                 try {
                     numOfTries++;
-                    sleepTime = sleepTime * 2;
+                    sleepTime = sleepTime + 2;
                     Thread.sleep(sleepTime);
                     trasfer(pdri, out, withCircularStream);
                 } catch (InterruptedException ex1) {

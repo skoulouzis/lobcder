@@ -171,7 +171,7 @@ public class WorkerVPDRI implements PDRI {
                             sleepTime = sleepTime + 2;
                             Thread.sleep(sleepTime);
                             reconnect();
-                            getData();
+                            copyRange(range, out);
                         } catch (InterruptedException ex2) {
                             throw new IOException(ex1);
                         }
@@ -288,9 +288,9 @@ public class WorkerVPDRI implements PDRI {
                     throw new IOException(ex1);
                 } catch (VlException ex1) {
                     if (ex instanceof ResourceNotFoundException
-                    || ex.getMessage().contains("Couldn open location. Get NULL object for location:")
-                    || ex instanceof nl.uva.vlet.exception.ResourceNotFoundException 
-                            ||ex1.getMessage() != null && ex1.getMessage().contains("Resource not found")) {
+                            || ex.getMessage().contains("Couldn open location. Get NULL object for location:")
+                            || ex instanceof nl.uva.vlet.exception.ResourceNotFoundException
+                            || ex1.getMessage() != null && ex1.getMessage().contains("Resource not found")) {
                         throw new IOException(ex.getMessage());
                     }
                     if (reconnectAttemts < Constants.RECONNECT_NTRY) {
@@ -298,7 +298,7 @@ public class WorkerVPDRI implements PDRI {
                             sleepTime = sleepTime + 2;
                             Thread.sleep(sleepTime);
                             reconnect();
-                            getData();
+                            return getData();
                         } catch (InterruptedException ex2) {
                             throw new IOException(ex2);
                         }
@@ -309,7 +309,7 @@ public class WorkerVPDRI implements PDRI {
                     sleepTime = sleepTime + 2;
                     Thread.sleep(sleepTime);
                     reconnect();
-                    in = getData();
+                    return getData();
                 } catch (InterruptedException ex1) {
                     throw new IOException(ex);
                 }
