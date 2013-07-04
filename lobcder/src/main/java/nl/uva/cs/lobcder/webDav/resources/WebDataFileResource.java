@@ -402,6 +402,7 @@ public class WebDataFileResource extends WebDataResource implements
                 workerIndex++;
             }
             String token = UUID.randomUUID().toString();
+            log.log(Level.FINE,"Adding: "+token+" : "+worker);
             AuthWorker.setTicket(worker, token);
             return w + "/" + token;
         } else {
