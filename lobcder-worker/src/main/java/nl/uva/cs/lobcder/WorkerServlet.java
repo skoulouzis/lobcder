@@ -135,18 +135,19 @@ public class WorkerServlet extends HttpServlet {
                 if (ex.getMessage() != null) {
                     if (ex.getMessage().contains("Resource not found")
                             || ex.getMessage().contains("Could not stat remote")) {
-                        Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, ex);
                         response.setStatus(HttpStatus.SC_CONFLICT);
                         return;
                     }
+                    if (ex.getMessage().contains("returned a response status of 404 Not Found")) {
+                        response.setStatus(HttpStatus.SC_NOT_FOUND);
+                        return;
+                    }
+                    if (ex.getMessage().contains("returned a response status of 401 Unauthorized")) {
+                        response.setStatus(HttpStatus.SC_UNAUTHORIZED);
+                        return;
+//                    throw new IOException(ex);
+                    }
                 }
-//                if (ex.getMessage() != null && ex.getMessage().contains("returned a response status of 401 Unauthorized")) {
-//                    Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, ex);
-//                    response.setStatus(HttpStatus.SC_UNAUTHORIZED);
-////                    response.sendRedirect("http://localhost:8080/lobcder/dav/"+path);
-//                    return;
-////                    throw new IOException(ex);
-//                }
                 if (numOfTries < Constants.RECONNECT_NTRY) {
                     try {
                         numOfTries++;
@@ -228,7 +229,8 @@ public class WorkerServlet extends HttpServlet {
                 }
             }
         } catch (Exception ex) {
-            if (ex.getMessage().contains("returned a response status of 401 Unauthorized")) {
+            if (ex.getMessage().contains("returned a response status of 401 Unauthorized")
+                    || ex.getMessage().contains("returned a response status of 404 Not Found")) {
                 throw new IOException(ex);
             }
             if (numOfTries < Constants.RECONNECT_NTRY) {
