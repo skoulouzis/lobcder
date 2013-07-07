@@ -276,44 +276,18 @@ public class WorkerVPDRI implements PDRI {
             file = (VFile) getVfsClient().openLocation(vrl);
             in = file.getInputStream();
         } catch (Exception ex) {
-            if (ex instanceof ResourceNotFoundException
-                    || ex.getMessage().contains("Couldn open location. Get NULL object for location:")
-                    || ex instanceof nl.uva.vlet.exception.ResourceNotFoundException) {
-                try {
-//                    VRL assimilationVRL = new VRL(resourceUrl).append(URLEncoder.encode(fileName, "UTF-8"));
-                    VRL assimilationVRL = new VRL(resourceUrl).append(fileName);
-                    in = ((VFile) getVfsClient().openLocation(assimilationVRL)).getInputStream();
-                    sleepTime = 2;
-                } catch (VRLSyntaxException ex1) {
-                    throw new IOException(ex1);
-                } catch (VlException ex1) {
-                    if (ex instanceof ResourceNotFoundException
-                            || ex.getMessage().contains("Couldn open location. Get NULL object for location:")
-                            || ex instanceof nl.uva.vlet.exception.ResourceNotFoundException
-                            || ex1.getMessage() != null && ex1.getMessage().contains("Resource not found")) {
-                        throw new IOException(ex.getMessage());
-                    }
-                    if (reconnectAttemts < Constants.RECONNECT_NTRY) {
-                        try {
-                            sleepTime = sleepTime + 2;
-                            Thread.sleep(sleepTime);
-                            reconnect();
-                            return getData();
-                        } catch (InterruptedException ex2) {
-                            throw new IOException(ex2);
-                        }
-                    }
-                }
-            } else if (reconnectAttemts < Constants.RECONNECT_NTRY) {
+            if (reconnectAttemts < Constants.RECONNECT_NTRY) {
                 try {
                     sleepTime = sleepTime + 2;
                     Thread.sleep(sleepTime);
                     reconnect();
-                    return getData();
+                    getData();
                 } catch (InterruptedException ex1) {
-                    throw new IOException(ex);
+                    Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, ex1);
+                    throw new IOException(ex1);
                 }
             } else {
+                Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, ex);
                 throw new IOException(ex);
             }
         }
