@@ -101,7 +101,7 @@ public class WorkerGridHelper {
             context = new VFSClient().getVRSContext();
         }
         GridProxy gridProxy = context.getGridProxy();
-        if (destroyCert && gridProxy!=null) {
+        if (destroyCert && gridProxy != null) {
             gridProxy.destroy();
             gridProxy = null;
         }
@@ -119,7 +119,7 @@ public class WorkerGridHelper {
         }
     }
 
-    private static void copyVomsAndCerts() throws FileNotFoundException, VlException, URISyntaxException {
+    private static void copyVomsAndCerts() throws FileNotFoundException, VlException, URISyntaxException, IOException {
         File f = new File(System.getProperty("user.home") + "/.globus/vomsdir");
         File vomsFile = new File(f.getAbsoluteFile() + "/voms.xml");
         if (!vomsFile.exists()) {
@@ -127,8 +127,14 @@ public class WorkerGridHelper {
             ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
             InputStream in = classLoader.getResourceAsStream("/voms.xml");
             FileOutputStream out = new FileOutputStream(vomsFile);
-            CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((Constants.BUF_SIZE), in, out);
-            cBuff.startTransfer(new Long(-1));
+            int read;
+            byte[] copyBuffer = new byte[Constants.BUF_SIZE];
+            while ((read = in.read(copyBuffer, 0, copyBuffer.length)) != -1) {
+                out.write(copyBuffer, 0, read);
+            }
+            in.close();
+            out.flush();
+            out.close();
         }
         f = new File(Constants.CERT_LOCATION);
         if (!f.exists() || f.list().length == 0) {
@@ -140,8 +146,14 @@ public class WorkerGridHelper {
             for (File src : certs) {
                 FileInputStream in = new FileInputStream(src);
                 FileOutputStream out = new FileOutputStream(f.getAbsoluteFile() + "/" + src.getName());
-                CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((Constants.BUF_SIZE), in, out);
-                cBuff.startTransfer(new Long(-1));
+                byte[] copyBuffer = new byte[Constants.BUF_SIZE];
+                int read;
+                while ((read = in.read(copyBuffer, 0, copyBuffer.length)) != -1) {
+                    out.write(copyBuffer, 0, read);
+                }
+                in.close();
+                out.flush();
+                out.close();
             }
         }
     }

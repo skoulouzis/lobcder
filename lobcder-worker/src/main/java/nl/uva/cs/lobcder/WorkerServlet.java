@@ -53,7 +53,7 @@ public class WorkerServlet extends HttpServlet {
 
 //    private Client restClient;
     private String restURL;
-    private Map<String, Long> weightPDRIMap;
+    private Map<String, Double> weightPDRIMap;
     private long size;
     private int numOfTries = 0;
     private long numOfGets;
@@ -74,7 +74,7 @@ public class WorkerServlet extends HttpServlet {
         clientConfig = new DefaultClientConfig();
         clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
 
-        weightPDRIMap = new HashMap<String, Long>();
+        weightPDRIMap = new HashMap<String, Double>();
     }
 
     /**
@@ -97,7 +97,7 @@ public class WorkerServlet extends HttpServlet {
             try {
                 numOfGets++;
                 long start = System.currentTimeMillis();
-
+                Range range = null;
                 PDRI pdri = getPDRI(path);
                 if (pdri == null) {
                     response.setStatus(HttpStatus.SC_INTERNAL_SERVER_ERROR);
@@ -106,27 +106,37 @@ public class WorkerServlet extends HttpServlet {
                     OutputStream out = response.getOutputStream();
                     String rangeStr = request.getHeader(Constants.RANGE_HEADER_NAME);
                     if (rangeStr != null) {
-                        Range range = Range.parse(rangeStr.split("=")[1]);
+                        range = Range.parse(rangeStr.split("=")[1]);
                         pdri.copyRange(range, out);
-                        response.setStatus(HttpStatus.SC_PARTIAL_CONTENT);
+//                        response.setStatus(HttpStatus.SC_PARTIAL_CONTENT);
                         return;
                     } else {
                         trasfer(pdri, out, false);
                     }
                     long elapsed = System.currentTimeMillis() - start;
-                    long elapsedSec = elapsed / 1000;
-                    if (elapsedSec <= 0) {
-                        elapsedSec = 1;
+                    if (elapsed <= 0) {
+                        elapsed = 1;
                     }
 
-                    long speed = size / elapsedSec;
-                    Long oldSpeed = weightPDRIMap.get(pdri.getHost());
+                    long len;
+                    if (range != null) {
+                        len = range.getFinish() - range.getStart() + 1;
+                    } else {
+                        len = size;
+                    }
+
+                    double speed = ((len * 8.0) * 1000.0) / (elapsed * 1000.0);
+                    Double oldSpeed = weightPDRIMap.get(pdri.getHost());
                     if (oldSpeed == null) {
                         oldSpeed = speed;
                     }
-                    long averagre = (speed + oldSpeed) / numOfGets;
+                    double averagre = (speed + oldSpeed) / numOfGets;
                     this.weightPDRIMap.put(pdri.getHost(), averagre);
-                    Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "Average speed for  : {0} : " + averagre, pdri.getHost());
+
+                    String speedMsg = "Source: " + request.getLocalAddr() + " Destination: " + request.getRemoteAddr() + " Tx_Speed: " + speed + " Kbites/sec Tx_Size: " + len + " bytes";
+                    Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, speedMsg);
+                    String averageSpeedMsg = "Average speed: Source: " + pdri.getHost() + " Destination: " + request.getLocalAddr() + " Rx_Speed: " + averagre + " Kbites/sec Rx_Size: " + len + " bytes";
+                    Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, averageSpeedMsg);
                 }
                 numOfTries = 0;
                 sleepTime = 2;
@@ -207,8 +217,7 @@ public class WorkerServlet extends HttpServlet {
             params.add("path", filePath);
             WebResource res = webResource.path("items").path("query").queryParams(params);
 
-
-            Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "Asking master. Token: {0}", token);
+//            Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "Asking master. Token: {0}", token);
 
             List<LogicalDataWrapped> list = res.accept(MediaType.APPLICATION_XML).
                     get(new GenericType<List<LogicalDataWrapped>>() {
@@ -217,6 +226,7 @@ public class WorkerServlet extends HttpServlet {
             int count = 0;
             for (LogicalDataWrapped ld : list) {
                 if (ld != null) {
+
                     Set<PDRIDesc> pdris = ld.pdriList;
                     size = ld.logicalData.length;
                     if (pdris != null && !pdris.isEmpty()) {
@@ -340,14 +350,14 @@ public class WorkerServlet extends HttpServlet {
             } else {
                 host = uri.getHost();
             }
-            Long speed = weightPDRIMap.get(host);
+            Double speed = weightPDRIMap.get(host);
             Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "Speed: : {0}", speed);
             sumOfSpeed += speed;
         }
         int itemIndex = new Random().nextInt((int) sumOfSpeed);
 
         for (PDRIDesc p : pdris) {
-            Long speed = weightPDRIMap.get(new URI(p.resourceUrl).getHost());
+            Double speed = weightPDRIMap.get(new URI(p.resourceUrl).getHost());
             if (itemIndex < speed) {
                 Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "Returning : {0}", p.resourceUrl);
                 return p;

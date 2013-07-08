@@ -59,7 +59,6 @@ public class WorkerVPDRI implements PDRI {
     private final String resourceUrl;
     private boolean doChunked;
     private int sleepTime = 2;
-//    private static final Map<String, GridProxy> proxyCache = new HashMap<>();
     private boolean destroyCert;
 
     public WorkerVPDRI(String fileName, Long storageSiteId, String resourceUrl,
@@ -173,9 +172,11 @@ public class WorkerVPDRI implements PDRI {
                             reconnect();
                             copyRange(range, out);
                         } catch (InterruptedException ex2) {
-                            throw new IOException(ex1);
+                            Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, ex);
+                            throw new IOException(ex2);
                         }
                     } else {
+                        Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, ex1);
                         throw new IOException(ex1);
                     }
                 }
@@ -186,9 +187,11 @@ public class WorkerVPDRI implements PDRI {
                     reconnect();
                     copyRange(range, out);
                 } catch (InterruptedException ex1) {
-                    throw new IOException(ex);
+                    Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, ex1);
+                    throw new IOException(ex1);
                 }
             } else {
+                Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, ex);
                 throw new IOException(ex);
             }
         } finally {
@@ -211,15 +214,18 @@ public class WorkerVPDRI implements PDRI {
             en = new DesEncrypter(getKeyInt());
         }
 
-        int read;
+        int read = 0;
         try {
             if (file instanceof VRandomReadable) {
                 VRandomReadable ra = (VRandomReadable) file;
                 len = range.getFinish() - range.getStart() + 1;
                 byte[] buff = new byte[buffSize];
                 int totalBytesRead = 0;
-                while (totalBytesRead < len) {
+                while (totalBytesRead < len || read != -1) {
                     read = ra.readBytes(start, buff, 0, buff.length);
+                    if (read == -1) {
+                        break;
+                    }
                     totalBytesRead += read;
                     start += buff.length;
                     if (decript) {
