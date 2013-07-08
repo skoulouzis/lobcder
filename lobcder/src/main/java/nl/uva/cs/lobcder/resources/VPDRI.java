@@ -241,15 +241,18 @@ public class VPDRI implements PDRI {
             en = new DesEncrypter(getKeyInt());
         }
 
-        int read;
+        int read = 0;
         try {
             if (file instanceof VRandomReadable) {
                 VRandomReadable ra = (VRandomReadable) file;
                 len = range.getFinish() - range.getStart() + 1;
                 byte[] buff = new byte[buffSize];
                 int totalBytesRead = 0;
-                while (totalBytesRead < len) {
+                while (totalBytesRead < len || read != -1) {
                     read = ra.readBytes(start, buff, 0, buff.length);
+                    if (read == -1) {
+                        break;
+                    }
                     totalBytesRead += read;
                     start += buff.length;
                     if (decript) {
@@ -277,7 +280,10 @@ public class VPDRI implements PDRI {
                 }
 //                int totalBytesRead = 0;
 //                byte[] buff = new byte[buffSize];
-//                while (totalBytesRead < len) {
+//                while (totalBytesRead < len || read != -1) {
+//                    if (read == -1) {
+//                        break;
+//                    }
 //                    read = in.read(buff, 0, buff.length);
 //                    totalBytesRead += read;
 //                    start += buff.length;

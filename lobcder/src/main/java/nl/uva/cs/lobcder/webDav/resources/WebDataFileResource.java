@@ -335,7 +335,6 @@ public class WebDataFileResource extends WebDataResource implements
     @Override
     public String checkRedirect(Request request) {
         try {
-            WebDataFileResource.log.log(Level.FINE, "checkRedirect for {0}", getPath());
             switch (request.getMethod()) {
                 case GET:
                     String redirect = null;
@@ -349,6 +348,7 @@ public class WebDataFileResource extends WebDataResource implements
                         //Replica selection algorithm
                         redirect = getBestWorker();
                     }
+                    WebDataFileResource.log.log(Level.INFO, "Redirecting to: {0}", redirect);
                     return redirect;
                 default:
                     return null;
@@ -382,7 +382,6 @@ public class WebDataFileResource extends WebDataResource implements
             String worker = workers.get(workerIndex++);
             String w = worker + getPath();
             String token = UUID.randomUUID().toString();
-            log.log(Level.FINE, "Adding: {0} : {1}", new Object[]{token, worker});
             AuthWorker.setTicket(worker, token);
             return w + "/" + token;
         } else {
