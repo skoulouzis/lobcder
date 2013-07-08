@@ -58,7 +58,7 @@ public class WebDataFileResource extends WebDataResource implements
     private int sleepTime = 5;
     private List<String> workers;
     private boolean doRedirect = true;
-    private int workerIndex = 0;
+    private static int workerIndex = 0;
 
     public WebDataFileResource(@Nonnull LogicalData logicalData, Path path, @Nonnull JDBCatalogue catalogue, @Nonnull List<AuthI> authList) {
         super(logicalData, path, catalogue, authList);
@@ -375,15 +375,14 @@ public class WebDataFileResource extends WebDataResource implements
                 }
             }
 
-            String worker = workers.get(workerIndex);
-            String w = worker + getPath();
+
             if (workerIndex >= workers.size()) {
                 workerIndex = 0;
-            } else {
-                workerIndex++;
             }
+            String worker = workers.get(workerIndex++);
+            String w = worker + getPath();
             String token = UUID.randomUUID().toString();
-            log.log(Level.FINE, "Adding: " + token + " : " + worker);
+            log.log(Level.FINE, "Adding: {0} : {1}", new Object[]{token, worker});
             AuthWorker.setTicket(worker, token);
             return w + "/" + token;
         } else {
