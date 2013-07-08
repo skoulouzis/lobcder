@@ -224,7 +224,7 @@ public class WorkerServlet extends HttpServlet {
                         while (pdriDesc == null) {
                             count++;
                             pdriDesc = selectBestPDRI(pdris);
-                            if (count > 10) {
+                            if (count > Constants.RECONNECT_NTRY) {
                                 break;
                             }
                         }
@@ -254,6 +254,7 @@ public class WorkerServlet extends HttpServlet {
         }
         numOfTries = 0;
         sleepTime = 2;
+        Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "Selected pdri: {0}", pdriDesc.resourceUrl);
         return new WorkerVPDRI(pdriDesc.name, pdriDesc.id, pdriDesc.resourceUrl, pdriDesc.username, pdriDesc.password, pdriDesc.encrypt, BigInteger.ZERO, false);
     }
 
