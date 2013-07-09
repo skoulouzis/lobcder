@@ -389,27 +389,15 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
             if (fileLogicalData != null) {
                 throw new PreConditionFailedException(new WebDataFileResource(fileLogicalData, Path.path(getPath(), name), getCatalogue(), authList));
             } 
-//            else {
-//                fileLogicalData = new LogicalData();
-//                fileLogicalData.setName(name);
-//                fileLogicalData.setParentRef(getLogicalData().getUid());
-//                fileLogicalData.setType(Constants.LOGICAL_FILE);
-//                fileLogicalData.setOwner(getPrincipal().getUserId());
-//                fileLogicalData.setCreateDate(System.currentTimeMillis());
-//                fileLogicalData.setModifiedDate(System.currentTimeMillis());
-//            }
-//            WebDataFileResource lockedFile = new WebDataFileResource(fileLogicalData, Path.path(getPath(), name), getCatalogue(), authList);
-//            LockResult res = lockedFile.lock(lt, li);
             LockToken lockToken = new LockToken(UUID.randomUUID().toString(), lockInfo, timeout);
             return lockToken;
 
-        } catch (Exception ex) {
+        } catch (SQLException | PreConditionFailedException ex) {
             Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, ex);
+            if(ex instanceof PreConditionFailedException){
+                throw new RuntimeException(ex);
+            }
         }
-
-//        catch (SQLException | PreConditionFailedException | LockedException ex) {
-//            Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, ex);
-//        }
         return null;
     }
 }
