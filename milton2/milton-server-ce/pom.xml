@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-<!--	<parent>
+	<!--	<parent>
 		<groupId>io.milton</groupId>
 		<artifactId>milton</artifactId>
 		<version>2.4.2-SNAPSHOT</version>
@@ -223,5 +223,19 @@
 			<url>http://milton.io/maven/</url>
 		</repository> 
 	</repositories>
+
+
+	<distributionManagement>
+		<repository>
+			<id>elab.lab.uvalight.net</id>
+			<name>elab.lab.uvalight.net-releases</name>
+			<url>https://elab.lab.uvalight.net:8444/artifactory/ext-snapshot-local</url>
+		</repository>
+		<snapshotRepository>
+			<id>elab.lab.uvalight.net</id>
+			<name>elab.lab.uvalight.net-snapshots</name>
+			<url>https://elab.lab.uvalight.net:8444/artifactory/ext-snapshot-local</url>
+		</snapshotRepository>
+	</distributionManagement>
 </project>
 
