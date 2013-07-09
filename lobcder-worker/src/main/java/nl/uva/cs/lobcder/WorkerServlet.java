@@ -7,7 +7,6 @@ package nl.uva.cs.lobcder;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.GenericType;
 import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.json.JSONConfiguration;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
@@ -39,9 +38,7 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.xml.bind.annotation.XmlRootElement;
 import lombok.extern.java.Log;
 import nl.uva.vlet.data.StringUtil;
-import nl.uva.vlet.exception.VlException;
 import nl.uva.vlet.io.CircularStreamBufferTransferer;
-import nl.uva.vlet.vrl.VRL;
 import org.apache.http.HttpStatus;
 
 /**
