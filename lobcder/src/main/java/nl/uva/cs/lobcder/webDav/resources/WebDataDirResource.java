@@ -381,29 +381,35 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
      * @throws NotAuthorizedException
      */
     @Override
-    public LockToken createAndLock(String name, LockTimeout lt, LockInfo li) throws NotAuthorizedException {
+    public LockToken createAndLock(String name, LockTimeout timeout, LockInfo lockInfo) throws NotAuthorizedException {
         try (Connection connection = getCatalogue().getConnection()) {
             Path newPath = Path.path(getPath(), name);
             //If the resource exists 
             LogicalData fileLogicalData = getCatalogue().getLogicalDataByPath(newPath, connection);
             if (fileLogicalData != null) {
                 throw new PreConditionFailedException(new WebDataFileResource(fileLogicalData, Path.path(getPath(), name), getCatalogue(), authList));
-            } else {
-                fileLogicalData = new LogicalData();
-                fileLogicalData.setName(name);
-                fileLogicalData.setParentRef(getLogicalData().getUid());
-                fileLogicalData.setType(Constants.LOGICAL_FILE);
-                fileLogicalData.setOwner(getPrincipal().getUserId());
-                fileLogicalData.setCreateDate(System.currentTimeMillis());
-                fileLogicalData.setModifiedDate(System.currentTimeMillis());
-            }
-            WebDataFileResource lockedFile = new WebDataFileResource(fileLogicalData, Path.path(getPath(), name), getCatalogue(), authList);
-            LockResult res = lockedFile.lock(lt, li);
-            return res.getLockToken();
+            } 
+//            else {
+//                fileLogicalData = new LogicalData();
+//                fileLogicalData.setName(name);
+//                fileLogicalData.setParentRef(getLogicalData().getUid());
+//                fileLogicalData.setType(Constants.LOGICAL_FILE);
+//                fileLogicalData.setOwner(getPrincipal().getUserId());
+//                fileLogicalData.setCreateDate(System.currentTimeMillis());
+//                fileLogicalData.setModifiedDate(System.currentTimeMillis());
+//            }
+//            WebDataFileResource lockedFile = new WebDataFileResource(fileLogicalData, Path.path(getPath(), name), getCatalogue(), authList);
+//            LockResult res = lockedFile.lock(lt, li);
+            LockToken lockToken = new LockToken(UUID.randomUUID().toString(), lockInfo, timeout);
+            return lockToken;
 
-        } catch (SQLException | PreConditionFailedException | LockedException ex) {
+        } catch (Exception ex) {
             Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, ex);
         }
+
+//        catch (SQLException | PreConditionFailedException | LockedException ex) {
+//            Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, ex);
+//        }
         return null;
     }
 }

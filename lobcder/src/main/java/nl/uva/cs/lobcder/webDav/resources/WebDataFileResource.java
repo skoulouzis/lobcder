@@ -11,12 +11,26 @@ import io.milton.http.exceptions.*;
 import io.milton.resource.CollectionResource;
 import io.milton.resource.FileResource;
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.annotation.Nonnull;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.auth.AuthI;
+import nl.uva.cs.lobcder.auth.AuthWorker;
 import nl.uva.cs.lobcder.auth.Permissions;
 import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
 import nl.uva.cs.lobcder.resources.LogicalData;
@@ -25,26 +39,8 @@ import nl.uva.cs.lobcder.resources.PDRIDescr;
 import nl.uva.cs.lobcder.resources.PDRIFactory;
 import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.cs.lobcder.util.DesEncrypter;
-import nl.uva.vlet.io.CircularStreamBufferTransferer;
-
-import javax.annotation.Nonnull;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.Collection;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
-import java.util.logging.Level;
-import nl.uva.cs.lobcder.auth.AuthWorker;
 import nl.uva.cs.lobcder.util.WorkerHelper;
+import nl.uva.vlet.io.CircularStreamBufferTransferer;
 import org.apache.commons.codec.binary.Base64;
 
 /**
@@ -57,7 +53,7 @@ public class WebDataFileResource extends WebDataResource implements
 
     private int sleepTime = 5;
     private List<String> workers;
-    private boolean doRedirect = true;
+    private boolean doRedirect = false;
     private static int workerIndex = 0;
 
     public WebDataFileResource(@Nonnull LogicalData logicalData, Path path, @Nonnull JDBCatalogue catalogue, @Nonnull List<AuthI> authList) {
@@ -315,12 +311,12 @@ public class WebDataFileResource extends WebDataResource implements
             NotAuthorizedException {
         Set<String> keys = parameters.keySet();
         for (String s : keys) {
-            WebDataFileResource.log.log(Level.INFO, s + " : " + parameters.get(s));
+            WebDataFileResource.log.log(Level.INFO, "{0} : {1}", new Object[]{s, parameters.get(s)});
         }
 
         keys = files.keySet();
         for (String s : keys) {
-            WebDataFileResource.log.log(Level.INFO, s + " : " + files.get(s).getFieldName());
+            WebDataFileResource.log.log(Level.INFO, "{0} : {1}", new Object[]{s, files.get(s).getFieldName()});
         }
 
         throw new BadRequestException(this, "Not implemented");

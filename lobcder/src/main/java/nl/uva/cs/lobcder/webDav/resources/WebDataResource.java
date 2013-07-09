@@ -25,6 +25,14 @@ import io.milton.resource.LockableResource;
 import io.milton.resource.MultiNamespaceCustomPropertyResource;
 import io.milton.resource.PropFindableResource;
 import io.milton.resource.Resource;
+import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.*;
+import java.util.logging.Level;
+import javax.annotation.Nonnull;
+import javax.xml.namespace.QName;
 import lombok.Getter;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.auth.AuthI;
@@ -34,15 +42,6 @@ import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
 import nl.uva.cs.lobcder.resources.*;
 import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.cs.lobcder.util.DesEncrypter;
-
-import javax.annotation.Nonnull;
-import javax.xml.namespace.QName;
-import java.io.IOException;
-import java.security.NoSuchAlgorithmException;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.*;
-import java.util.logging.Level;
 
 /**
  * @author S. Koulouzis
@@ -203,7 +202,7 @@ public class WebDataResource implements PropFindableResource, Resource,
     @Override
     public String getPrincipalURL() {
         String principalURL = getUserlUrlPrefix() + getPrincipal().getUserId();
-        WebDataResource.log.fine("getPrincipalURL for " + getPath() + ": " + principalURL);
+        WebDataResource.log.log(Level.FINE, "getPrincipalURL for {0}: {1}", new Object[]{getPath(), principalURL});
         return principalURL;
     }
 
@@ -249,7 +248,7 @@ public class WebDataResource implements PropFindableResource, Resource,
 
     @Override
     public Map<Principal, List<Priviledge>> getAccessControlList() {
-        WebDataResource.log.fine("getAccessControlList for " + getPath());
+        WebDataResource.log.log(Level.FINE, "getAccessControlList for {0}", getPath());
         Permissions resourcePermission;
         HashMap<Principal, List<Priviledge>> acl = new HashMap<>();
         try {
@@ -319,7 +318,7 @@ public class WebDataResource implements PropFindableResource, Resource,
 
     @Override
     public void setAccessControlList(Map<Principal, List<Priviledge>> map) {
-        WebDataResource.log.fine("PLACEHOLDER setAccessControlList() for " + getPath());
+        WebDataResource.log.log(Level.FINE, "PLACEHOLDER setAccessControlList() for {0}", getPath());
 
         for (Map.Entry<Principal, List<Priviledge>> me : map.entrySet()) {
             Principal principal = me.getKey();

@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.security.NoSuchAlgorithmException;
 import java.sql.*;
-import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -23,7 +22,7 @@ import nl.uva.cs.lobcder.util.DesEncrypter;
 class ReplicateSweep implements Runnable {
 
     private final DataSource datasource;
-    private boolean aggressiveReplicate = true;
+    private boolean aggressiveReplicate = false;
 
     public ReplicateSweep(DataSource datasource) {
         this.datasource = datasource;
