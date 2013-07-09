@@ -172,11 +172,11 @@ public class WorkerVPDRI implements PDRI {
                             reconnect();
                             copyRange(range, out);
                         } catch (InterruptedException ex2) {
-                            Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, ex);
+                            Logger.getLogger(WorkerVPDRI.class.getName()).log(Level.SEVERE, null, ex);
                             throw new IOException(ex2);
                         }
                     } else {
-                        Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, ex1);
+                        Logger.getLogger(WorkerVPDRI.class.getName()).log(Level.SEVERE, null, ex1);
                         throw new IOException(ex1);
                     }
                 }
@@ -187,11 +187,11 @@ public class WorkerVPDRI implements PDRI {
                     reconnect();
                     copyRange(range, out);
                 } catch (InterruptedException ex1) {
-                    Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, ex1);
+                    Logger.getLogger(WorkerVPDRI.class.getName()).log(Level.SEVERE, null, ex1);
                     throw new IOException(ex1);
                 }
             } else {
-                Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(WorkerVPDRI.class.getName()).log(Level.SEVERE, null, ex);
                 throw new IOException(ex);
             }
         } finally {
@@ -223,7 +223,7 @@ public class WorkerVPDRI implements PDRI {
                 int totalBytesRead = 0;
                 while (totalBytesRead < len || read != -1) {
                     read = ra.readBytes(start, buff, 0, buff.length);
-                    if (read == -1 || totalBytesRead == len) {
+                    if (read == -1 || totalBytesRead >= len) {
                         break;
                     }
                     totalBytesRead += read;
@@ -289,11 +289,11 @@ public class WorkerVPDRI implements PDRI {
                     reconnect();
                     getData();
                 } catch (InterruptedException ex1) {
-                    Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, ex1);
+                    Logger.getLogger(WorkerVPDRI.class.getName()).log(Level.SEVERE, null, ex1);
                     throw new IOException(ex1);
                 }
             } else {
-                Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(WorkerVPDRI.class.getName()).log(Level.SEVERE, null, ex);
                 throw new IOException(ex);
             }
         }
