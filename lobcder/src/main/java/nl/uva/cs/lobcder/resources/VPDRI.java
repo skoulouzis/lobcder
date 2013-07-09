@@ -250,7 +250,7 @@ public class VPDRI implements PDRI {
                 int totalBytesRead = 0;
                 while (totalBytesRead < len || read != -1) {
                     read = ra.readBytes(start, buff, 0, buff.length);
-                    if (read == -1) {
+                     if (read == -1 || totalBytesRead == len) {
                         break;
                     }
                     totalBytesRead += read;
@@ -281,7 +281,7 @@ public class VPDRI implements PDRI {
 //                int totalBytesRead = 0;
 //                byte[] buff = new byte[buffSize];
 //                while (totalBytesRead < len || read != -1) {
-//                    if (read == -1) {
+//                     if (read == -1 || totalBytesRead == len) {
 //                        break;
 //                    }
 //                    read = in.read(buff, 0, buff.length);

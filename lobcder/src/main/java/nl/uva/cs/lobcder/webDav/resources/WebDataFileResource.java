@@ -8,6 +8,7 @@ import io.milton.common.ContentTypeUtils;
 import io.milton.common.Path;
 import io.milton.http.*;
 import io.milton.http.exceptions.*;
+import io.milton.resource.BufferingControlResource;
 import io.milton.resource.CollectionResource;
 import io.milton.resource.FileResource;
 import java.io.BufferedReader;
@@ -49,11 +50,11 @@ import org.apache.commons.codec.binary.Base64;
  */
 @Log
 public class WebDataFileResource extends WebDataResource implements
-        FileResource {
+        FileResource, BufferingControlResource {
 
     private int sleepTime = 5;
     private List<String> workers;
-    private boolean doRedirect = false;
+    private boolean doRedirect = true;
     private static int workerIndex = 0;
 
     public WebDataFileResource(@Nonnull LogicalData logicalData, Path path, @Nonnull JDBCatalogue catalogue, @Nonnull List<AuthI> authList) {
@@ -425,5 +426,16 @@ public class WebDataFileResource extends WebDataResource implements
             }
         }
         return true;
+    }
+
+    @Override
+    public Boolean isBufferingRequired() {
+        String res = ContentTypeUtils.findAcceptableContentType(getLogicalData().getContentTypesAsString(), null);
+        for(String type : Constants.BUFFERED_TYPES){
+            if(res.equals(type)){
+                 return true;
+            }
+        }
+        return false;
     }
 }
