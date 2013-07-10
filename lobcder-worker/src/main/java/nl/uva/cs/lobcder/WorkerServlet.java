@@ -7,8 +7,10 @@ package nl.uva.cs.lobcder;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.GenericType;
 import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.json.JSONConfiguration;
+import com.sun.jersey.client.urlconnection.HTTPSProperties;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 import io.milton.common.Path;
 import io.milton.http.Range;
@@ -21,6 +23,10 @@ import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +35,12 @@ import java.util.Random;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -56,10 +68,10 @@ public class WorkerServlet extends HttpServlet {
     private long numOfGets;
     private long sleepTime = 2;
     private String token;
-    private final DefaultClientConfig clientConfig;
     private Client restClient;
+    private final ClientConfig clientConfig;
 
-    public WorkerServlet() throws FileNotFoundException, IOException {
+    public WorkerServlet() throws FileNotFoundException, IOException, NoSuchAlgorithmException {
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         InputStream in = classLoader.getResourceAsStream("/auth.properties");
 
@@ -69,7 +81,20 @@ public class WorkerServlet extends HttpServlet {
         restURL = prop.getProperty(("rest.url"), "http://localhost:8080/lobcder/rest/");
 
 
-        clientConfig = new DefaultClientConfig();
+
+
+//        clientConfig = new DefaultClientConfig();
+//        clientConfig.getProperties().put(HTTPSProperties.PROPERTY_HTTPS_PROPERTIES, new HTTPSProperties(
+//                new HostnameVerifier() {
+//                    @Override
+//                    public boolean verify(String string, SSLSession ssls) {
+//                        return true;
+//                    }
+//                }));
+//        clientConfig.getProperties().put(HTTPSProperties.PROPERTY_HTTPS_PROPERTIES, new HTTPSProperties(null, SSLContext.getInstance("SSL")));
+
+        clientConfig = configureClient();
+
         clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
 
         weightPDRIMap = new HashMap<String, Double>();
@@ -215,7 +240,7 @@ public class WorkerServlet extends HttpServlet {
 
             WebResource webResource = restClient.resource(restURL);
 //            WebResource res = webResource.path("item").path("query").path(fileUID);
-            
+
             WebResource res = webResource.path("item").path("query").path(fileUID);
             LogicalDataWrapped theFile = res.accept(MediaType.APPLICATION_XML).
                     get(new GenericType<LogicalDataWrapped>() {
@@ -438,5 +463,46 @@ public class WorkerServlet extends HttpServlet {
         public String pdriGroupRef;
         public String resourceUrl;
         public String username;
+    }
+
+    public ClientConfig configureClient() {
+        TrustManager[] certs = new TrustManager[]{
+            new X509TrustManager() {
+                @Override
+                public X509Certificate[] getAcceptedIssuers() {
+                    return null;
+                }
+
+                @Override
+                public void checkServerTrusted(X509Certificate[] chain, String authType)
+                        throws CertificateException {
+                }
+
+                @Override
+                public void checkClientTrusted(X509Certificate[] chain, String authType)
+                        throws CertificateException {
+                }
+            }
+        };
+        SSLContext ctx = null;
+        try {
+            ctx = SSLContext.getInstance("TLS");
+            ctx.init(null, certs, new SecureRandom());
+        } catch (java.security.GeneralSecurityException ex) {
+        }
+        HttpsURLConnection.setDefaultSSLSocketFactory(ctx.getSocketFactory());
+        ClientConfig config = new DefaultClientConfig();
+        try {
+            config.getProperties().put(HTTPSProperties.PROPERTY_HTTPS_PROPERTIES, new HTTPSProperties(
+                    new HostnameVerifier() {
+                        @Override
+                        public boolean verify(String hostname, SSLSession session) {
+                            return true;
+                        }
+                    },
+                    ctx));
+        } catch (Exception e) {
+        }
+        return config;
     }
 }
