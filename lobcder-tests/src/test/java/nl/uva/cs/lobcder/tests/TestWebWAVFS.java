@@ -24,7 +24,7 @@ import java.util.logging.Logger;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import nl.uva.cs.lobcder.tests.TestREST.LogicalDataWrapped;
-import nl.uva.cs.lobcder.tests.TestREST.PDRI;
+import nl.uva.cs.lobcder.tests.TestREST.PDRIDesc;
 import nl.uva.vlet.Global;
 import nl.uva.vlet.GlobalConfig;
 import nl.uva.vlet.data.StringUtil;
@@ -489,7 +489,7 @@ public class TestWebWAVFS {
             int status = client1.executeMethod(put);
             assertEquals(HttpStatus.SC_CREATED, status);
 
-            Set<PDRI> pdris = null;
+            Set<PDRIDesc> pdris = null;
             boolean done = false;
             //Wait for replication 
             long sleepTime = 15000;
@@ -568,7 +568,7 @@ public class TestWebWAVFS {
         assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
     }
 
-    private Set<PDRI> getPdris(String testFileURI1) {
+    private Set<PDRIDesc> getPdris(String testFileURI1) {
         WebResource webResource = restClient.resource(restURL);
 
         MultivaluedMap<String, String> params = new MultivaluedMapImpl();
@@ -597,9 +597,9 @@ public class TestWebWAVFS {
 
     }
 
-    private void deletePhysicalData(Set<PDRI> pdris) throws VlException {
+    private void deletePhysicalData(Set<PDRIDesc> pdris) throws VlException {
         String endpoint = "";
-        for (PDRI p : pdris) {
+        for (PDRIDesc p : pdris) {
             VFSClient cli = getVFSClient(p.resourceUrl, p.username, p.password);
             if (p.resourceUrl.startsWith("/")) {
                 endpoint = "file:///" + p.resourceUrl;

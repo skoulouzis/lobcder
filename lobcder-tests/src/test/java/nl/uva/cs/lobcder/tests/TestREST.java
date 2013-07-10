@@ -198,7 +198,7 @@ public class TestREST {
             assertTrue((ldw.logicalData.pdriGroupId != 0));
             assertFalse(ldw.pdriList.isEmpty());
             assertNotNull(ldw.logicalData.contentTypesAsString);
-            for (PDRI pdri : ldw.pdriList) {
+            for (PDRIDesc pdri : ldw.pdriList) {
                 assertNotNull(pdri.name);
                 assertNotNull(pdri.password);
                 assertNotNull(pdri.resourceUrl);
@@ -337,7 +337,7 @@ public class TestREST {
 
         public LogicalData logicalData;
         public String path;
-        public Set<PDRI> pdriList;
+        public Set<PDRIDesc> pdriList;
         public Set<Permissions> permissions;
     }
 
@@ -369,7 +369,7 @@ public class TestREST {
     }
 
     @XmlRootElement
-    public static class PDRI {
+    public static class PDRIDesc {
 
         public String name;
         public String password;
