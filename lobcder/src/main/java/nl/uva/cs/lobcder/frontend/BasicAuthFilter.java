@@ -1,9 +1,12 @@
 package nl.uva.cs.lobcder.frontend;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.naming.InitialContext;
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
@@ -12,6 +15,7 @@ import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.auth.AuthI;
 import nl.uva.cs.lobcder.auth.AuthWorker;
 import nl.uva.cs.lobcder.auth.MyPrincipal;
+import nl.uva.cs.lobcder.util.WorkerHelper;
 import org.apache.commons.codec.binary.Base64;
 
 /**
@@ -54,9 +58,23 @@ public class BasicAuthFilter implements Filter {
 
                 MyPrincipal principal = null;
 
-                //Take some load off the DB 
+                //Only check tokens coming from workers 
                 if (uname.startsWith("worker-")) {
-                    principal = authWorker.checkToken(token);
+                    List<String> workers = WorkerHelper.getWorkers();
+                    for (String s : workers) {
+                        try {
+                            String host = new URI(s).getHost();
+                            if (request.getRemoteHost().equals(host)) {
+                                principal = authWorker.checkToken(token);
+                                if (principal != null) {
+                                    break;
+                                }
+                            }
+                        } catch (URISyntaxException ex) {
+                            principal = null;
+                            Logger.getLogger(BasicAuthFilter.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    }
                 } else {
                     for (AuthI a : authList) {
                         principal = a.checkToken(token);
@@ -65,8 +83,6 @@ public class BasicAuthFilter implements Filter {
                         }
                     }
                 }
-
-
 
 //                //Try the local db 
 //                if (principal == null) {
