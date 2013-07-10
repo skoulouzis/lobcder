@@ -1,6 +1,7 @@
 package nl.uva.cs.lobcder.frontend;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -63,8 +64,13 @@ public class BasicAuthFilter implements Filter {
                     List<String> workers = WorkerHelper.getWorkers();
                     for (String s : workers) {
                         try {
-                            String host = new URI(s).getHost();
-                            if (request.getRemoteHost().equals(host)) {
+                            String workerHost = new URI(s).getHost();
+                            String remoteHost = request.getRemoteHost();
+                            if(remoteHost.equals("localhost") || remoteHost.equals("127.0.0.1") ){
+//                                InetAddress.getLocalHost().getHostName();
+                                remoteHost = "localhost";
+                            }
+                            if (remoteHost.equals(workerHost)) {
                                 principal = authWorker.checkToken(token);
                                 if (principal != null) {
                                     break;

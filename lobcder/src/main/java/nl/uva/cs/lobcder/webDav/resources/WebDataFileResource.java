@@ -358,26 +358,13 @@ public class WebDataFileResource extends WebDataResource implements
 
     private String getBestWorker() throws IOException {
         if (doRedirect) {
-            ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-            InputStream in = classLoader.getResourceAsStream("/workers");
-            try (BufferedReader br = new BufferedReader(new InputStreamReader(in))) {
-                String line;
-                if (workers == null) {
-                    workers = new ArrayList<>();
-                }
-                while ((line = br.readLine()) != null) {
-                    if (!workers.contains(line)) {
-                        workers.add(line);
-                    }
-                }
-            }
-
+            workers = WorkerHelper.getWorkers();
 
             if (workerIndex >= workers.size()) {
                 workerIndex = 0;
             }
             String worker = workers.get(workerIndex++);
-            String w = worker + getPath();
+            String w = worker + getLogicalData().getUid();
             String token = UUID.randomUUID().toString();
             AuthWorker.setTicket(worker, token);
             return w + "/" + token;
@@ -431,9 +418,9 @@ public class WebDataFileResource extends WebDataResource implements
     @Override
     public Boolean isBufferingRequired() {
         String res = ContentTypeUtils.findAcceptableContentType(getLogicalData().getContentTypesAsString(), null);
-        for(String type : Constants.BUFFERED_TYPES){
-            if(res.equals(type)){
-                 return true;
+        for (String type : Constants.BUFFERED_TYPES) {
+            if (res.equals(type)) {
+                return true;
             }
         }
         return false;
