@@ -30,7 +30,10 @@ public class AuthWorker implements AuthI {
                     HashSet<String> roles = new HashSet<>();
                     roles.add("admin");
                     principal = new MyPrincipal("worker-", roles);
-//                    temporarryTokens.remove(token);
+                    temporarryTokens.remove(token);
+                    //            if (temporarryTokens.size() >= 100) {
+//                temporarryTokens.remove(0);
+//            }
                     break;
                 }
             }
@@ -52,9 +55,6 @@ public class AuthWorker implements AuthI {
 //            temporarryTokens.put(token, workerID);
             if (!temporarryTokens.contains(token)) {
                 temporarryTokens.add(token);
-            }
-            if (temporarryTokens.size() >= 100) {
-                temporarryTokens.remove(0);
             }
         }
     }

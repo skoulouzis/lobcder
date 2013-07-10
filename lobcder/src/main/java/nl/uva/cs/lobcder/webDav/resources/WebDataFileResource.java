@@ -381,11 +381,12 @@ public class WebDataFileResource extends WebDataResource implements
     }
 
     private boolean isInCache() throws SQLException, URISyntaxException {
-        Collection<PDRIDescr> pdris = getCatalogue().getPdriDescrByGroupId(getLogicalData().getPdriGroupId(), getCatalogue().getConnection());
-        getCatalogue().getConnection().close();
-        for (PDRIDescr p : pdris) {
-            if (new URI(p.getResourceUrl()).getScheme().equals("file")) {
-                return true;
+        try (Connection cn = getCatalogue().getConnection()) {
+            List<PDRIDescr> pdriDescr = getCatalogue().getPdriDescrByGroupId(getLogicalData().getPdriGroupId(), cn);
+            for (PDRIDescr pdri : pdriDescr) {
+                if (pdri.getResourceUrl().startsWith("file")) {
+                    return true;
+                }
             }
         }
         return false;

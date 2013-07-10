@@ -1006,7 +1006,7 @@ public class JDBCatalogue extends MyDataSource {
             String res = "";
             Collections.reverse(pil);
             for (PathInfo pi1 : pil) {
-                System.err.println("'" + pi1.getName() + "'");
+//                System.err.println("'" + pi1.getName() + "'");
                 res = res + "/" + pi1.getName();
             }
             return res;
