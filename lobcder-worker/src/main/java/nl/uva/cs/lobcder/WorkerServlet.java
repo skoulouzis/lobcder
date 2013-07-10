@@ -239,21 +239,17 @@ public class WorkerServlet extends HttpServlet {
             restClient.addFilter(new com.sun.jersey.api.client.filter.HTTPBasicAuthFilter("worker-" + InetAddress.getLocalHost().getHostName(), token));
 
             WebResource webResource = restClient.resource(restURL);
-//            WebResource res = webResource.path("item").path("query").path(fileUID);
+            
+//            Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "Asking master. Token: {0}", token);
 
             WebResource res = webResource.path("item").path("query").path(fileUID);
             LogicalDataWrapped theFile = res.accept(MediaType.APPLICATION_XML).
                     get(new GenericType<LogicalDataWrapped>() {
             });
 
-//            Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "Asking master. Token: {0}", token);
-
-//            List<LogicalDataWrapped> list = res.accept(MediaType.APPLICATION_XML).
-//                    get(new GenericType<List<LogicalDataWrapped>>() {
-//            });
+            
 
             int count = 0;
-//            for (LogicalDataWrapped ld : list) {
             if (theFile != null) {
 
                 Set<PDRIDesc> pdris = theFile.pdriList;
@@ -269,12 +265,12 @@ public class WorkerServlet extends HttpServlet {
                     }
                 }
             }
-//            }
         } catch (Exception ex) {
-//            if (ex.getMessage().contains("returned a response status of 401 Unauthorized")
-//                    || ex.getMessage().contains("returned a response status of 404 Not Found")) {
-//                throw new IOException(ex);
-//            }
+//            Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, ex);
+            if (ex.getMessage().contains("returned a response status of 404 Not Found")) {
+//                    || ex.getMessage().contains("returned a response status of 401 Unauthorized") ) {
+                throw new IOException(ex);
+            }
             if (numOfTries < Constants.RECONNECT_NTRY) {
                 try {
                     numOfTries++;

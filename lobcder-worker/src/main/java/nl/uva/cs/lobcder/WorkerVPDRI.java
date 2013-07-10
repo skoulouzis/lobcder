@@ -282,6 +282,7 @@ public class WorkerVPDRI implements PDRI {
             file = (VFile) getVfsClient().openLocation(vrl);
             in = file.getInputStream();
         } catch (Exception ex) {
+//            Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, ex);
             if (reconnectAttemts < Constants.RECONNECT_NTRY) {
                 try {
                     sleepTime = sleepTime + 2;
