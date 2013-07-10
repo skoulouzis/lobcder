@@ -57,6 +57,7 @@ public class WorkerServlet extends HttpServlet {
     private long sleepTime = 2;
     private String token;
     private final DefaultClientConfig clientConfig;
+    private Client restClient;
 
     public WorkerServlet() throws FileNotFoundException, IOException {
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
@@ -90,12 +91,12 @@ public class WorkerServlet extends HttpServlet {
         if (filePath.length() > 1) {
             Path pathAndToken = Path.path(filePath);
             token = pathAndToken.getName();
-            String path = pathAndToken.getParent().toString();
+            String fileUID = pathAndToken.getParent().toString();
             try {
                 numOfGets++;
                 long start = System.currentTimeMillis();
                 Range range = null;
-                PDRI pdri = getPDRI(path);
+                PDRI pdri = getPDRI(fileUID);
                 if (pdri == null) {
                     response.setStatus(HttpStatus.SC_INTERNAL_SERVER_ERROR);
                     return;
@@ -201,43 +202,49 @@ public class WorkerServlet extends HttpServlet {
         return "LOBCDER worker";
     }
 
-    private PDRI getPDRI(String filePath) throws IOException, URISyntaxException {
+    private PDRI getPDRI(String fileUID) throws IOException, URISyntaxException {
         PDRIDesc pdriDesc = null;//new PDRIDesc();
-        Client restClient = null;
-        try {
-            restClient = Client.create(clientConfig);
 
+        try {
+
+            if (restClient == null) {
+                restClient = Client.create(clientConfig);
+            }
+            restClient.removeAllFilters();
             restClient.addFilter(new com.sun.jersey.api.client.filter.HTTPBasicAuthFilter("worker-" + InetAddress.getLocalHost().getHostName(), token));
 
             WebResource webResource = restClient.resource(restURL);
-            MultivaluedMap<String, String> params = new MultivaluedMapImpl();
-            params.add("path", filePath);
-            WebResource res = webResource.path("items").path("query").queryParams(params);
+//            WebResource res = webResource.path("item").path("query").path(fileUID);
+            
+            WebResource res = webResource.path("item").path("query").path(fileUID);
+            LogicalDataWrapped theFile = res.accept(MediaType.APPLICATION_XML).
+                    get(new GenericType<LogicalDataWrapped>() {
+            });
 
 //            Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "Asking master. Token: {0}", token);
 
-            List<LogicalDataWrapped> list = res.accept(MediaType.APPLICATION_XML).
-                    get(new GenericType<List<LogicalDataWrapped>>() {
-            });
+//            List<LogicalDataWrapped> list = res.accept(MediaType.APPLICATION_XML).
+//                    get(new GenericType<List<LogicalDataWrapped>>() {
+//            });
 
             int count = 0;
-            for (LogicalDataWrapped ld : list) {
-                if (ld != null) {
+//            for (LogicalDataWrapped ld : list) {
+            if (theFile != null) {
 
-                    Set<PDRIDesc> pdris = ld.pdriList;
-                    size = ld.logicalData.length;
-                    if (pdris != null && !pdris.isEmpty()) {
+                Set<PDRIDesc> pdris = theFile.pdriList;
+                size = theFile.logicalData.length;
+                if (pdris != null && !pdris.isEmpty()) {
+                    pdriDesc = selectBestPDRI(pdris);
+                    while (pdriDesc == null) {
+                        count++;
                         pdriDesc = selectBestPDRI(pdris);
-                        while (pdriDesc == null) {
-                            count++;
-                            pdriDesc = selectBestPDRI(pdris);
-                            if (count > Constants.RECONNECT_NTRY) {
-                                break;
-                            }
+                        if (count > Constants.RECONNECT_NTRY) {
+                            break;
                         }
                     }
                 }
             }
+//            }
         } catch (Exception ex) {
 //            if (ex.getMessage().contains("returned a response status of 401 Unauthorized")
 //                    || ex.getMessage().contains("returned a response status of 404 Not Found")) {
@@ -248,21 +255,24 @@ public class WorkerServlet extends HttpServlet {
                     numOfTries++;
                     sleepTime = sleepTime + 2;
                     Thread.sleep(sleepTime);
-                    getPDRI(filePath);
+                    getPDRI(fileUID);
                 } catch (InterruptedException ex1) {
                     Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, ex1);
                     throw new IOException(ex1);
                 }
             }
         } finally {
-            if (restClient != null) {
-                restClient.destroy();
-            }
+//            if (restClient != null) {
+//                restClient.destroy();
+//            }
         }
         numOfTries = 0;
         sleepTime = 2;
         Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "Selected pdri: {0}", pdriDesc.resourceUrl);
-        return new WorkerVPDRI(pdriDesc.name, pdriDesc.id, pdriDesc.resourceUrl, pdriDesc.username, pdriDesc.password, pdriDesc.encrypt, BigInteger.ZERO, false);
+
+
+        return new WorkerVPDRI(pdriDesc.name, pdriDesc.id, pdriDesc.resourceUrl, pdriDesc.username, pdriDesc.password, pdriDesc.encrypt, BigInteger.valueOf(Long.valueOf(pdriDesc.key)), false);
+//        return new WorkerVPDRI(pdriDesc.name , pdriDesc.id, pdriDesc.resourceUrl, pdriDesc.username, pdriDesc.password, pdriDesc.encrypt, BigInteger.ZERO, false);
     }
 
     private void trasfer(PDRI pdri, OutputStream out, boolean withCircularStream) throws IOException {
@@ -382,17 +392,6 @@ public class WorkerServlet extends HttpServlet {
     }
 
     @XmlRootElement
-    public static class PDRIDesc {
-
-        public boolean encrypt;
-        public long id;
-        public String name;
-        public String password;
-        public String resourceUrl;
-        public String username;
-    }
-
-    @XmlRootElement
     public static class LogicalDataWrapped {
 
         public LogicalData logicalData;
@@ -426,5 +425,18 @@ public class WorkerServlet extends HttpServlet {
         public String owner;
         public Set<String> read;
         public Set<String> write;
+    }
+
+    @XmlRootElement
+    public static class PDRIDesc {
+
+        public boolean encrypt;
+        public long id;
+        public String key;
+        public String name;
+        public String password;
+        public String pdriGroupRef;
+        public String resourceUrl;
+        public String username;
     }
 }
