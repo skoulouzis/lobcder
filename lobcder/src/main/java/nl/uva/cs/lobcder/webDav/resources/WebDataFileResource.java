@@ -17,9 +17,12 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -350,6 +353,10 @@ public class WebDataFileResource extends WebDataResource implements
                 default:
                     return null;
             }
+        } catch (UnsupportedEncodingException ex) {
+            Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (URISyntaxException ex) {
+            Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, ex);
         } catch (SQLException | IOException ex) {
             Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -373,23 +380,18 @@ public class WebDataFileResource extends WebDataResource implements
         }
     }
 
-    private boolean isInCache() throws SQLException {
-//        Collection<PDRIDescr> pdris = getCatalogue().getPdriDescrByGroupId(getLogicalData().getPdriGroupId(), getCatalogue().getConnection());
-//        for (PDRIDescr p : pdris) {
-//            try {
-//                if (new URI(p.getResourceUrl()).getScheme().equals("file")) {
-//                    return true;
-//                }
-//            } catch (URISyntaxException ex) {
-//                Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, ex);
-//            }finally{
-//                getCatalogue().getConnection().close();
-//            }
-//        }
+    private boolean isInCache() throws SQLException, URISyntaxException {
+        Collection<PDRIDescr> pdris = getCatalogue().getPdriDescrByGroupId(getLogicalData().getPdriGroupId(), getCatalogue().getConnection());
+        getCatalogue().getConnection().close();
+        for (PDRIDescr p : pdris) {
+            if (new URI(p.getResourceUrl()).getScheme().equals("file")) {
+                return true;
+            }
+        }
         return false;
     }
 
-    private boolean canRedirect(Request request) throws SQLException, UnsupportedEncodingException {
+    private boolean canRedirect(Request request) throws SQLException, UnsupportedEncodingException, URISyntaxException {
         if (isInCache()) {
             return false;
         }
