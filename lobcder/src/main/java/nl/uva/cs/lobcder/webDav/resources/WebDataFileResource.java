@@ -64,6 +64,9 @@ public class WebDataFileResource extends WebDataResource implements
         super(logicalData, path, catalogue, authList);
         if (doRedirect) {
             workers = WorkerHelper.getWorkers();
+            if(workers == null || workers.isEmpty()){
+                doRedirect = false;
+            }
         }
     }
 
