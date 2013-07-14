@@ -62,14 +62,14 @@ public class WorkerServlet extends HttpServlet {
 
 //    private Client restClient;
     private String restURL;
-    private Map<String, Double> weightPDRIMap;
     private long size;
     private int numOfTries = 0;
-    private long numOfGets;
     private long sleepTime = 2;
     private String token;
     private Client restClient;
     private final ClientConfig clientConfig;
+    private static final Map<String, Double> weightPDRIMap = new HashMap<String, Double>();
+    private static final HashMap<String, Integer> numOfGetsMap = new HashMap<String, Integer>();
 
     public WorkerServlet() throws FileNotFoundException, IOException, NoSuchAlgorithmException {
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
@@ -79,25 +79,9 @@ public class WorkerServlet extends HttpServlet {
         Properties prop = Util.getTestProperties(in);
 
         restURL = prop.getProperty(("rest.url"), "http://localhost:8080/lobcder/rest/");
-
-
-
-
-//        clientConfig = new DefaultClientConfig();
-//        clientConfig.getProperties().put(HTTPSProperties.PROPERTY_HTTPS_PROPERTIES, new HTTPSProperties(
-//                new HostnameVerifier() {
-//                    @Override
-//                    public boolean verify(String string, SSLSession ssls) {
-//                        return true;
-//                    }
-//                }));
-//        clientConfig.getProperties().put(HTTPSProperties.PROPERTY_HTTPS_PROPERTIES, new HTTPSProperties(null, SSLContext.getInstance("SSL")));
-
         clientConfig = configureClient();
-
         clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
 
-        weightPDRIMap = new HashMap<String, Double>();
     }
 
     /**
@@ -118,7 +102,6 @@ public class WorkerServlet extends HttpServlet {
             token = pathAndToken.getName();
             String fileUID = pathAndToken.getParent().toString();
             try {
-                numOfGets++;
                 long start = System.currentTimeMillis();
                 Range range = null;
                 PDRI pdri = getPDRI(fileUID);
@@ -153,8 +136,13 @@ public class WorkerServlet extends HttpServlet {
                     if (oldSpeed == null) {
                         oldSpeed = speed;
                     }
-                    double averagre = (speed + oldSpeed) / numOfGets;
-                    this.weightPDRIMap.put(pdri.getHost(), averagre);
+                    Integer numOfGets = numOfGetsMap.get(pdri.getHost());
+                    if (numOfGets == null) {
+                        numOfGets = 1;
+                    }
+                    double averagre = (speed + oldSpeed) / (double) numOfGets;
+                    numOfGetsMap.put(pdri.getHost(), numOfGets++);
+                    weightPDRIMap.put(pdri.getHost(), averagre);
 
                     String speedMsg = "Source: " + request.getLocalAddr() + " Destination: " + request.getRemoteAddr() + " Tx_Speed: " + speed + " Kbites/sec Tx_Size: " + len + " bytes";
                     Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, speedMsg);
@@ -239,7 +227,7 @@ public class WorkerServlet extends HttpServlet {
             restClient.addFilter(new com.sun.jersey.api.client.filter.HTTPBasicAuthFilter("worker-" + InetAddress.getLocalHost().getHostName(), token));
 
             WebResource webResource = restClient.resource(restURL);
-            
+
 //            Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "Asking master. Token: {0}", token);
 
             WebResource res = webResource.path("item").path("query").path(fileUID);
@@ -247,7 +235,7 @@ public class WorkerServlet extends HttpServlet {
                     get(new GenericType<LogicalDataWrapped>() {
             });
 
-            
+
 
             int count = 0;
             if (theFile != null) {
