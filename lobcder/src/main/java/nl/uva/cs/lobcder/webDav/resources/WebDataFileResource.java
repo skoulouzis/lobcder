@@ -17,16 +17,20 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
+import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.UnknownHostException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 import java.util.logging.Level;
@@ -44,6 +48,7 @@ import nl.uva.cs.lobcder.resources.PDRIFactory;
 import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.cs.lobcder.util.DesEncrypter;
 import nl.uva.cs.lobcder.util.WorkerHelper;
+import nl.uva.vlet.data.StringUtil;
 import nl.uva.vlet.io.CircularStreamBufferTransferer;
 import org.apache.commons.codec.binary.Base64;
 
@@ -59,15 +64,19 @@ public class WebDataFileResource extends WebDataResource implements
     private List<String> workers;
     private boolean doRedirect = true;
     private static int workerIndex = 0;
+    private static final Map<String, Double> weightPDRIMap = new HashMap<>();
+    private static final Map<String, Integer> numOfGetsMap = new HashMap<>();
 
     public WebDataFileResource(@Nonnull LogicalData logicalData, Path path, @Nonnull JDBCatalogue catalogue, @Nonnull List<AuthI> authList) {
         super(logicalData, path, catalogue, authList);
         if (doRedirect) {
             workers = WorkerHelper.getWorkers();
-            if(workers == null || workers.isEmpty()){
+            if (workers == null || workers.isEmpty()) {
                 doRedirect = false;
             }
         }
+
+
     }
 
     @Override
@@ -168,20 +177,52 @@ public class WebDataFileResource extends WebDataResource implements
         return null;
     }
 
-    private PDRI transferer(Iterator<PDRIDescr> it, OutputStream out, int tryCount, PDRI pdri, boolean doCircularStreamBufferTransferer) throws IOException, NotFoundException {
-        InputStream in;
-        try {
-            boolean reconnect;
-            if (pdri == null && it.hasNext()) {
-                pdri = PDRIFactory.getFactory().createInstance(it.next(), false);
-                reconnect = false;
+    private PDRIDescr selectBestPDRI(List<PDRIDescr> pdris) throws URISyntaxException, UnknownHostException {
+        if (weightPDRIMap.isEmpty() || weightPDRIMap.size() < pdris.size()) {
+            //Just return one at random;
+            int index = new Random().nextInt(pdris.size());
+            PDRIDescr[] array = pdris.toArray(new PDRIDescr[pdris.size()]);
+            Logger.getLogger(WebDataFileResource.class.getName()).log(Level.FINE, "Selecting Random: {0}", array[index].getResourceUrl());
+            return array[index];
+        }
+
+        long sumOfSpeed = 0;
+        for (PDRIDescr p : pdris) {
+            URI uri = new URI(p.getResourceUrl());
+            String host;
+            if (uri.getScheme().equals("file")
+                    || StringUtil.isEmpty(uri.getHost())
+                    || uri.getHost().equals("localhost")
+                    || uri.getHost().equals("127.0.0.1")) {
+                host = InetAddress.getLocalHost().getHostName();
             } else {
-                reconnect = true;
+                host = uri.getHost();
             }
+            Double speed = weightPDRIMap.get(host);
+            Logger.getLogger(WebDataFileResource.class.getName()).log(Level.FINE, "Speed: : {0}", speed);
+            sumOfSpeed += speed;
+        }
+        int itemIndex = new Random().nextInt((int) sumOfSpeed);
+
+        for (PDRIDescr p : pdris) {
+            Double speed = weightPDRIMap.get(new URI(p.getResourceUrl()).getHost());
+            if (itemIndex < speed) {
+                Logger.getLogger(WebDataFileResource.class.getName()).log(Level.FINE, "Selecting:{0}  with speed: {1}", new Object[]{p.getResourceUrl(), speed});
+                return p;
+            }
+            itemIndex -= speed;
+        }
+
+        return null;
+    }
+
+    private PDRI transferer(List<PDRIDescr> pdris, OutputStream out, int tryCount, boolean doCircularStreamBufferTransferer) throws IOException, NotFoundException {
+        InputStream in;
+        PDRI pdri = null;
+        try {
+            PDRIDescr pdriDescr = selectBestPDRI(pdris);
+            pdri = PDRIFactory.getFactory().createInstance(pdriDescr, false);
             if (pdri != null) {
-                if (reconnect) {
-                    pdri.reconnect();
-                }
                 in = pdri.getData();
                 WebDataFileResource.log.log(Level.FINE, "sendContent() for {0}--------- {1}", new Object[]{getPath(), pdri.getFileName()});
                 if (!pdri.getEncrypted()) {
@@ -211,11 +252,11 @@ public class WebDataFileResource extends WebDataResource implements
                 sleepTime = sleepTime + 20;
                 Thread.sleep(sleepTime);
                 if (ex instanceof nl.uva.vlet.exception.VlInterruptedException && ++tryCount < Constants.RECONNECT_NTRY) {
-                    transferer(it, out, tryCount, pdri, false);
+                    transferer(pdris, out, tryCount, false);
                 } else if (++tryCount < Constants.RECONNECT_NTRY) {
-                    transferer(it, out, tryCount, pdri, false);
+                    transferer(pdris, out, tryCount, true);
                 } else {
-                    transferer(it, out, 0, null, true);
+                    transferer(pdris, out, 0, true);
                 }
             } catch (InterruptedException ex1) {
                 sleepTime = 5;
@@ -226,6 +267,63 @@ public class WebDataFileResource extends WebDataResource implements
         return pdri;
     }
 
+//    private PDRI transferer(Iterator<PDRIDescr> it, OutputStream out, int tryCount, PDRI pdri, boolean doCircularStreamBufferTransferer) throws IOException, NotFoundException {
+//        InputStream in;
+//        try {
+//            boolean reconnect;
+//            if (pdri == null && it.hasNext()) {
+//                pdri = PDRIFactory.getFactory().createInstance(it.next(), false);
+//                reconnect = false;
+//            } else {
+//                reconnect = true;
+//            }
+//            if (pdri != null) {
+//                if (reconnect) {
+//                    pdri.reconnect();
+//                }
+//                in = pdri.getData();
+//                WebDataFileResource.log.log(Level.FINE, "sendContent() for {0}--------- {1}", new Object[]{getPath(), pdri.getFileName()});
+//                if (!pdri.getEncrypted()) {
+//                    if (doCircularStreamBufferTransferer) {
+//                        CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((Constants.BUF_SIZE), in, out);
+//                        cBuff.startTransfer((long) -1);
+//                    } else {
+//                        int read;
+//                        byte[] copyBuffer = new byte[Constants.BUF_SIZE];
+//                        while ((read = in.read(copyBuffer, 0, copyBuffer.length)) != -1) {
+//                            out.write(copyBuffer, 0, read);
+//                        }
+//                    }
+//                } else {
+//                    DesEncrypter encrypter = new DesEncrypter(pdri.getKeyInt());
+//                    encrypter.decrypt(in, out);
+//                }
+//            } else {
+//                sleepTime = 5;
+//                throw new NotFoundException("Physical resource not found");
+//            }
+//        } catch (Exception ex) {
+//            if (ex instanceof NotFoundException) {
+//                throw (NotFoundException) ex;
+//            }
+//            try {
+//                sleepTime = sleepTime + 20;
+//                Thread.sleep(sleepTime);
+//                if (ex instanceof nl.uva.vlet.exception.VlInterruptedException && ++tryCount < Constants.RECONNECT_NTRY) {
+//                    transferer(it, out, tryCount, pdri, false);
+//                } else if (++tryCount < Constants.RECONNECT_NTRY) {
+//                    transferer(it, out, tryCount, pdri, false);
+//                } else {
+//                    transferer(it, out, 0, null, true);
+//                }
+//            } catch (InterruptedException ex1) {
+//                sleepTime = 5;
+//                throw new IOException(ex1);
+//            }
+//        }
+//        sleepTime = 5;
+//        return pdri;
+//    }
     private PDRI transfererRange(Iterator<PDRIDescr> it, OutputStream out, int tryCount, PDRI pdri, Range range) throws IOException, NotFoundException {
         try {
             boolean reconnect;
@@ -284,12 +382,15 @@ public class WebDataFileResource extends WebDataResource implements
         PDRI pdri;
         Iterator<PDRIDescr> it;
         try {
-            it = getCatalogue().getPdriDescrByGroupId(getLogicalData().getPdriGroupId()).iterator();
+            List<PDRIDescr> pdris = getCatalogue().getPdriDescrByGroupId(getLogicalData().getPdriGroupId());
+//            it = getCatalogue().getPdriDescrByGroupId(getLogicalData().getPdriGroupId()).iterator();
             if (range != null) {
+                it = pdris.iterator();
                 WebDataFileResource.log.log(Level.FINE, "Start: {0} end: {1} range: {2}", new Object[]{range.getStart(), range.getFinish(), range.getRange()});
                 pdri = transfererRange(it, out, 0, null, range);
             } else {
-                pdri = transferer(it, out, 0, null, false);
+//                pdri = transferer(it, out, 0, null, false);
+                pdri = transferer(pdris, out, 0, doRedirect);
             }
         } catch (SQLException ex) {
             throw new BadRequestException(this, ex.getMessage());
@@ -308,6 +409,19 @@ public class WebDataFileResource extends WebDataResource implements
             len = getContentLength();
         }
         double speed = ((len * 8.0) * 1000.0) / (elapsed * 1000.0);
+        Double oldSpeed = weightPDRIMap.get(pdri.getHost());
+        if (oldSpeed == null) {
+            oldSpeed = speed;
+        }
+
+        Integer numOfGets = numOfGetsMap.get(pdri.getHost());
+        if (numOfGets == null) {
+            numOfGets = 1;
+        }
+        double averagre = (speed + oldSpeed) / (double) numOfGets;
+        numOfGetsMap.put(pdri.getHost(), numOfGets++);
+        weightPDRIMap.put(pdri.getHost(), averagre);
+
         String msg = "Source: " + pdri.getHost() + " Destination: " + fromAddress + " Tx_Speed: " + speed + " Kbites/sec Tx_Size: " + getContentLength() + " bytes";
         WebDataFileResource.log.log(Level.INFO, msg);
     }
