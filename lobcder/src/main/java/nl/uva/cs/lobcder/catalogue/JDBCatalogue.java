@@ -5,9 +5,15 @@
 package nl.uva.cs.lobcder.catalogue;
 
 import io.milton.common.Path;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
+import java.io.IOException;
+import java.math.BigInteger;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.sql.*;
+import java.sql.Date;
+import java.util.*;
+import javax.annotation.Nonnull;
+import javax.naming.NamingException;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.SneakyThrows;
@@ -18,24 +24,9 @@ import nl.uva.cs.lobcder.resources.Credential;
 import nl.uva.cs.lobcder.resources.LogicalData;
 import nl.uva.cs.lobcder.resources.PDRI;
 import nl.uva.cs.lobcder.resources.PDRIDescr;
+import nl.uva.cs.lobcder.resources.StorageSite;
 import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.cs.lobcder.util.MyDataSource;
-
-import javax.annotation.Nonnull;
-import javax.naming.NamingException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.math.BigInteger;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.sql.*;
-import java.sql.Date;
-import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import nl.uva.cs.lobcder.resources.StorageSite;
-import org.apache.commons.codec.binary.Base64;
 
 /**
  *
@@ -70,53 +61,55 @@ public class JDBCatalogue extends MyDataSource {
 
     public Collection<StorageSite> getStorageSites(Connection connection) throws SQLException {
         try (Statement s = connection.createStatement()) {
-            ResultSet rs = s.executeQuery("SELECT storageSiteId, resourceURI, "
-                    + "currentNum, currentSize, quotaNum, quotaSize, username, "
-                    + "password, encrypt FROM storage_site_table JOIN credential_table ON "
-                    + "credentialRef = credintialId WHERE isCache != TRUE");
-            ArrayList<StorageSite> res = new ArrayList<>();
-            while (rs.next()) {
-                Credential c = new Credential();
-                c.setStorageSiteUsername(rs.getString(7));
-                c.setStorageSitePassword(rs.getString(8));
-                StorageSite ss = new StorageSite();
-                ss.setStorageSiteId(rs.getLong(1));
-                ss.setCredential(c);
-                ss.setResourceURI(rs.getString(2));
-                ss.setCurrentNum(rs.getLong(3));
-                ss.setCurrentSize(rs.getLong(4));
-                ss.setQuotaNum(rs.getLong(5));
-                ss.setQuotaSize(rs.getLong(6));
-                ss.setEncrypt(rs.getBoolean(7));
-                res.add(ss);
+            try (ResultSet rs = s.executeQuery("SELECT storageSiteId, resourceURI, "
+                            + "currentNum, currentSize, quotaNum, quotaSize, username, "
+                            + "password, encrypt FROM storage_site_table JOIN credential_table ON "
+                            + "credentialRef = credintialId WHERE isCache != TRUE")) {
+                ArrayList<StorageSite> res = new ArrayList<>();
+                while (rs.next()) {
+                    Credential c = new Credential();
+                    c.setStorageSiteUsername(rs.getString(7));
+                    c.setStorageSitePassword(rs.getString(8));
+                    StorageSite ss = new StorageSite();
+                    ss.setStorageSiteId(rs.getLong(1));
+                    ss.setCredential(c);
+                    ss.setResourceURI(rs.getString(2));
+                    ss.setCurrentNum(rs.getLong(3));
+                    ss.setCurrentSize(rs.getLong(4));
+                    ss.setQuotaNum(rs.getLong(5));
+                    ss.setQuotaSize(rs.getLong(6));
+                    ss.setEncrypt(rs.getBoolean(7));
+                    res.add(ss);
+                }
+                return res;
             }
-            return res;
         }
     }
 
     public Collection<StorageSite> getCacheStorageSites(Connection connection) throws SQLException {
         try (Statement s = connection.createStatement()) {
-            ResultSet rs = s.executeQuery("SELECT storageSiteId, resourceURI, "
-                    + "currentNum, currentSize, quotaNum, quotaSize, username, "
-                    + "password, encrypt FROM storage_site_table JOIN credential_table ON "
-                    + "credentialRef = credintialId WHERE isCache = TRUE");
-            ArrayList<StorageSite> res = new ArrayList<>();
-            while (rs.next()) {
-                Credential c = new Credential();
-                c.setStorageSiteUsername(rs.getString(7));
-                c.setStorageSitePassword(rs.getString(8));
-                StorageSite ss = new StorageSite();
-                ss.setStorageSiteId(rs.getLong(1));
-                ss.setCredential(c);
-                ss.setResourceURI(rs.getString(2));
-                ss.setCurrentNum(rs.getLong(3));
-                ss.setCurrentSize(rs.getLong(4));
-                ss.setQuotaNum(rs.getLong(5));
-                ss.setQuotaSize(rs.getLong(6));
-                ss.setEncrypt(rs.getBoolean(7));
-                res.add(ss);
+            try (ResultSet rs = s.executeQuery("SELECT storageSiteId, resourceURI, "
+                            + "currentNum, currentSize, quotaNum, quotaSize, username, "
+                            + "password, encrypt FROM storage_site_table JOIN credential_table ON "
+                            + "credentialRef = credintialId WHERE isCache = TRUE")) {
+                ArrayList<StorageSite> res = new ArrayList<>();
+                while (rs.next()) {
+                    Credential c = new Credential();
+                    c.setStorageSiteUsername(rs.getString(7));
+                    c.setStorageSitePassword(rs.getString(8));
+                    StorageSite ss = new StorageSite();
+                    ss.setStorageSiteId(rs.getLong(1));
+                    ss.setCredential(c);
+                    ss.setResourceURI(rs.getString(2));
+                    ss.setCurrentNum(rs.getLong(3));
+                    ss.setCurrentSize(rs.getLong(4));
+                    ss.setQuotaNum(rs.getLong(5));
+                    ss.setQuotaSize(rs.getLong(6));
+                    ss.setEncrypt(rs.getBoolean(7));
+                    res.add(ss);
+                }
+                return res;
             }
-            return res;
         }
     }
 

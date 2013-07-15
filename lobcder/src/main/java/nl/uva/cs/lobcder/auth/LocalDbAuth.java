@@ -45,26 +45,29 @@ public class LocalDbAuth implements AuthI {
                 String uname;
                 int id;
                 connection = datasource.getConnection();
-                Statement s = connection.createStatement();
-                HashSet<String> roles = new HashSet<>();
-                String query = "SELECT id, uname FROM auth_usernames_table WHERE token = '" + token + "'";
-                LocalDbAuth.log.fine(query);
-                ResultSet rs = s.executeQuery(query);
-                if (rs.next()) {
-                    id = rs.getInt(1);
-                    uname = rs.getString(2);
-                    roles.add("other");
-                    roles.add(uname);
-                } else {
-                    return null;
+                try (Statement s = connection.createStatement()) {
+                    HashSet<String> roles = new HashSet<>();
+                    String query = "SELECT id, uname FROM auth_usernames_table WHERE token = '" + token + "'";
+                    LocalDbAuth.log.fine(query);
+                    try (ResultSet rs = s.executeQuery(query)) {
+                        if (rs.next()) {
+                            id = rs.getInt(1);
+                            uname = rs.getString(2);
+                            roles.add("other");
+                            roles.add(uname);
+                        } else {
+                            return null;
+                        }
+                        query = "SELECT roleName FROM auth_roles_tables WHERE unameRef = " + id;
+                        LocalDbAuth.log.fine(query);
+                        try (ResultSet rs2 = s.executeQuery(query)) {
+                            while (rs2.next()) {
+                                roles.add(rs2.getString(1));
+                            }
+                            res = new MyPrincipal(uname, roles);
+                        }
+                    }
                 }
-                query = "SELECT roleName FROM auth_roles_tables WHERE unameRef = " + id;
-                LocalDbAuth.log.fine(query);
-                rs = s.executeQuery(query);
-                while (rs.next()) {
-                    roles.add(rs.getString(1));
-                }
-                res = new MyPrincipal(uname, roles);
             }
             if (pc != null) {
                 pc.putPrincipal(token, res);

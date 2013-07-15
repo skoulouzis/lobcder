@@ -14,7 +14,7 @@ import java.util.Map;
  */
 public class PrincipalCache implements PrincipalCacheI {
 
-    private class TimedPrincipal {
+    private static class TimedPrincipal {
 
         public final Date date;
         public final MyPrincipal principal;

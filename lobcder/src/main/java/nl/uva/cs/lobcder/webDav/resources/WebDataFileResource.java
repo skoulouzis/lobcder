@@ -11,10 +11,8 @@ import io.milton.http.exceptions.*;
 import io.milton.resource.BufferingControlResource;
 import io.milton.resource.CollectionResource;
 import io.milton.resource.FileResource;
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
@@ -23,15 +21,12 @@ import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.Set;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -217,7 +212,7 @@ public class WebDataFileResource extends WebDataResource implements
     }
 
     private PDRI transferer(List<PDRIDescr> pdris, OutputStream out, int tryCount, boolean doCircularStreamBufferTransferer) throws IOException, NotFoundException {
-        InputStream in;
+        InputStream in = null;
         PDRI pdri = null;
         try {
             PDRIDescr pdriDescr = selectBestPDRI(pdris);
@@ -261,6 +256,10 @@ public class WebDataFileResource extends WebDataResource implements
             } catch (InterruptedException ex1) {
                 sleepTime = 5;
                 throw new IOException(ex1);
+            }
+        }finally{
+            if(in!=null){
+                in.close();
             }
         }
         sleepTime = 5;
@@ -400,6 +399,11 @@ public class WebDataFileResource extends WebDataResource implements
             } else {
                 throw new BadRequestException(this, ex.getMessage());
             }
+        }finally{
+            if(out!=null){
+                out.flush();
+                out.close();
+            }
         }
         double elapsed = System.currentTimeMillis() - start;
         long len;
@@ -430,15 +434,15 @@ public class WebDataFileResource extends WebDataResource implements
     public String processForm(Map<String, String> parameters,
             Map<String, FileItem> files) throws BadRequestException,
             NotAuthorizedException {
-        Set<String> keys = parameters.keySet();
-        for (String s : keys) {
-            WebDataFileResource.log.log(Level.INFO, "{0} : {1}", new Object[]{s, parameters.get(s)});
-        }
-
-        keys = files.keySet();
-        for (String s : keys) {
-            WebDataFileResource.log.log(Level.INFO, "{0} : {1}", new Object[]{s, files.get(s).getFieldName()});
-        }
+//        Set<String> keys = parameters.keySet();
+//        for (String s : keys) {
+//            WebDataFileResource.log.log(Level.INFO, "{0} : {1}", new Object[]{s, parameters.get(s)});
+//        }
+//
+//        keys = files.keySet();
+//        for (String s : keys) {
+//            WebDataFileResource.log.log(Level.INFO, "{0} : {1}", new Object[]{s, files.get(s).getFieldName()});
+//        }
 
         throw new BadRequestException(this, "Not implemented");
     }

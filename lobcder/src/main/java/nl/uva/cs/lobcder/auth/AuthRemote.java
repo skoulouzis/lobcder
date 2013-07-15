@@ -10,16 +10,16 @@ import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.json.JSONConfiguration;
 import com.sun.jersey.client.urlconnection.HTTPSProperties;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-
-import javax.naming.InitialContext;
-import javax.net.ssl.*;
 import java.security.SecureRandom;
+import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.naming.InitialContext;
+import javax.net.ssl.*;
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
 /**
  *
@@ -80,8 +80,10 @@ public class AuthRemote implements AuthI {
 
                 clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
                 Client client = Client.create(clientConfig);
-                User u = client.resource(getServiceURL() + token).get(new GenericType<User>() {
-                });
+                User u;
+//                u = client.resource(getServiceURL() + token).get(new GenericType<User>() {
+//                });
+                u = client.resource(getServiceURL() + token).get(new MyGenericType<User>());
                 res = new MyPrincipal(u.username, new HashSet(Arrays.asList(u.role)));
                 res.getRoles().add("other");
                 res.getRoles().add(u.username);
@@ -95,34 +97,47 @@ public class AuthRemote implements AuthI {
     }
 
     private HostnameVerifier getHostnameVerifier() {
-        HostnameVerifier hv = new HostnameVerifier() {
-
-            @Override
-            public boolean verify(String string, SSLSession ssls) {
-                return true;
-            }
-        };
-        return hv;
+//        HostnameVerifier hv;
+//        hv = new HostnameVerifier() {
+//            @Override
+//            public boolean verify(String string, SSLSession ssls) {
+//                return true;
+//            }
+//        };
+        return new MyHostnameVerifier();
     }
 
     private SSLContext getSslContext() throws Exception {
         final SSLContext sslContext = SSLContext.getInstance("SSL");
-        sslContext.init(null, new TrustManager[]{new X509TrustManager() {
-
-                @Override
-                public X509Certificate[] getAcceptedIssuers() {
-                    return new X509Certificate[0];
-                }
-
-                @Override
-                public void checkClientTrusted(X509Certificate[] certs, String authType) {
-                }
-
-                @Override
-                public void checkServerTrusted(X509Certificate[] certs, String authType) {
-                }
-            }
+        sslContext.init(null, new TrustManager[]{new MyX509TrustManager()
                 }, new SecureRandom());
         return sslContext;
+    }
+
+    private static class MyGenericType<Integer> extends GenericType<User> {
+    };
+
+    private static class MyHostnameVerifier implements HostnameVerifier {
+
+        @Override
+        public boolean verify(String string, SSLSession ssls) {
+            return true;
+        }
+    }
+
+    private static class MyX509TrustManager implements X509TrustManager {
+
+        @Override
+        public void checkClientTrusted(X509Certificate[] xcs, String string) throws CertificateException {
+        }
+
+        @Override
+        public void checkServerTrusted(X509Certificate[] xcs, String string) throws CertificateException {
+        }
+
+        @Override
+        public X509Certificate[] getAcceptedIssuers() {
+            return new X509Certificate[0];
+        }
     }
 }
