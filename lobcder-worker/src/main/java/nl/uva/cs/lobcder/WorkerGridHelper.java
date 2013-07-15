@@ -18,7 +18,6 @@ import java.util.logging.Logger;
 import nl.uva.vlet.Global;
 import nl.uva.vlet.GlobalConfig;
 import nl.uva.vlet.exception.VlException;
-import nl.uva.vlet.io.CircularStreamBufferTransferer;
 import nl.uva.vlet.util.cog.GridProxy;
 import nl.uva.vlet.vfs.VFSClient;
 import nl.uva.vlet.vrs.VRS;
@@ -32,7 +31,7 @@ import org.apache.commons.io.FileUtils;
  */
 public class WorkerGridHelper {
 
-    public static void InitGlobalVFS() throws Exception {
+    public static void initGlobalVFS() throws Exception {
 
         if (!GlobalConfig.isGlobalInitialized()) {
             copyVomsAndCerts();
@@ -69,16 +68,24 @@ public class WorkerGridHelper {
     }
 
     public static String getProxyAsBase64String() throws FileNotFoundException, IOException {
-        InputStream fis = new FileInputStream(Constants.PROXY_FILE);
-        StringBuilder sb = new StringBuilder();
-        int read;
-        int buffSize = Constants.BUF_SIZE;
-        if (new File(Constants.PROXY_FILE).length() < Constants.BUF_SIZE) {
-            buffSize = (int) new File(Constants.PROXY_FILE).length();
-        }
-        byte[] copyBuffer = new byte[buffSize];
-        while ((read = fis.read(copyBuffer, 0, copyBuffer.length)) != -1) {
-            sb.append(new String(Base64.encodeBase64(copyBuffer)));
+        InputStream fis = null;
+        StringBuilder sb = null;
+        try {
+            fis = new FileInputStream(Constants.PROXY_FILE);
+            sb = new StringBuilder();
+
+            int buffSize = Constants.BUF_SIZE;
+            if (new File(Constants.PROXY_FILE).length() < Constants.BUF_SIZE) {
+                buffSize = (int) new File(Constants.PROXY_FILE).length();
+            }
+            byte[] copyBuffer = new byte[buffSize];
+            while ((fis.read(copyBuffer, 0, copyBuffer.length)) != -1) {
+                sb.append(new String(Base64.encodeBase64(copyBuffer)));
+            }
+        } finally {
+            if (fis != null) {
+                fis.close();
+            }
         }
         return sb.toString();
     }
@@ -126,15 +133,23 @@ public class WorkerGridHelper {
             f.mkdirs();
             ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
             InputStream in = classLoader.getResourceAsStream("/voms.xml");
-            FileOutputStream out = new FileOutputStream(vomsFile);
-            int read;
-            byte[] copyBuffer = new byte[Constants.BUF_SIZE];
-            while ((read = in.read(copyBuffer, 0, copyBuffer.length)) != -1) {
-                out.write(copyBuffer, 0, read);
+            FileOutputStream out = null;
+            try {
+                out = new FileOutputStream(vomsFile);
+                int read;
+                byte[] copyBuffer = new byte[Constants.BUF_SIZE];
+                while ((read = in.read(copyBuffer, 0, copyBuffer.length)) != -1) {
+                    out.write(copyBuffer, 0, read);
+                }
+            } finally {
+                if (in != null) {
+                    in.close();
+                }
+                if (out != null) {
+                    out.flush();
+                    out.close();
+                }
             }
-            in.close();
-            out.flush();
-            out.close();
         }
         f = new File(Constants.CERT_LOCATION);
         if (!f.exists() || f.list().length == 0) {
@@ -144,16 +159,25 @@ public class WorkerGridHelper {
             File sourceCerts = new File(res.toURI());
             File[] certs = sourceCerts.listFiles();
             for (File src : certs) {
-                FileInputStream in = new FileInputStream(src);
-                FileOutputStream out = new FileOutputStream(f.getAbsoluteFile() + "/" + src.getName());
-                byte[] copyBuffer = new byte[Constants.BUF_SIZE];
-                int read;
-                while ((read = in.read(copyBuffer, 0, copyBuffer.length)) != -1) {
-                    out.write(copyBuffer, 0, read);
+                FileInputStream in = null;
+                FileOutputStream out = null;
+                try {
+                    in = new FileInputStream(src);
+                    out = new FileOutputStream(f.getAbsoluteFile() + "/" + src.getName());
+                    byte[] copyBuffer = new byte[Constants.BUF_SIZE];
+                    int read;
+                    while ((read = in.read(copyBuffer, 0, copyBuffer.length)) != -1) {
+                        out.write(copyBuffer, 0, read);
+                    }
+                } finally {
+                    if (in != null) {
+                        in.close();
+                    }
+                    if (out != null) {
+                        out.flush();
+                        out.close();
+                    }
                 }
-                in.close();
-                out.flush();
-                out.close();
             }
         }
     }

@@ -40,7 +40,7 @@ public class WorkerVPDRI implements PDRI {
 
     static {
         try {
-            WorkerGridHelper.InitGlobalVFS();
+            WorkerGridHelper.initGlobalVFS();
         } catch (Exception ex) {
             Logger.getLogger(WorkerVPDRI.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -85,7 +85,7 @@ public class WorkerVPDRI implements PDRI {
     }
 
     private void initVFS() throws Exception {
-//        WorkerGridHelper.InitGlobalVFS();
+//        WorkerGridHelper.initGlobalVFS();
         this.vfsClient = new VFSClient();
         VRSContext context = this.getVfsClient().getVRSContext();
         //Bug in sftp: We have to put the username in the url
@@ -309,12 +309,12 @@ public class WorkerVPDRI implements PDRI {
         try {
             //            upload(in);
             VRL parentVrl = vrl.getParent();
-            VDir remoteDir = getVfsClient().mkdirs(parentVrl, true);
+            getVfsClient().mkdirs(parentVrl, true);
             getVfsClient().createFile(vrl, true);
             out = getVfsClient().getFile(vrl).getOutputStream();
             if (!getEncrypted()) {
                 CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((Constants.BUF_SIZE), in, out);
-                cBuff.startTransfer(new Long(-1));
+                cBuff.startTransfer(-1L);
 //                int read;
 //                byte[] copyBuffer = new byte[Constants.BUF_SIZE];
 //                while ((read = in.read(copyBuffer, 0, copyBuffer.length)) != -1) {
@@ -450,7 +450,7 @@ public class WorkerVPDRI implements PDRI {
             Logger.getLogger(WorkerVPDRI.class.getName()).log(Level.INFO, "Start replicating {0} to {1}", new Object[]{source.getURI(), getURI()});
             double start = System.currentTimeMillis();
             if (!vfsClient.existsDir(vrl.getParent())) {
-                VDir remoteDir = vfsClient.mkdirs(vrl.getParent(), true);
+                vfsClient.mkdirs(vrl.getParent(), true);
             }
             if (desteScheme.equals("swift") && sourceScheme.equals("file")) {
                 upload(source);

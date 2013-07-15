@@ -4,7 +4,6 @@
  */
 package nl.uva.cs.lobcder;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -21,11 +20,8 @@ import javax.crypto.CipherInputStream;
 import javax.crypto.CipherOutputStream;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
-import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-import static org.apache.commons.io.FileUtils.readFileToByteArray;
-import static org.apache.commons.io.FileUtils.writeStringToFile;
 
 /**
  *
@@ -80,7 +76,10 @@ public class DesEncrypter {
             try {
                 in.close();
             } finally {
-                cipherOut.close();
+                if (cipherOut != null) {
+                    cipherOut.close();
+                }
+
             }
         }
 
@@ -124,9 +123,13 @@ public class DesEncrypter {
             }
         } finally {
             try {
-                cipherIn.close();
+                if (cipherIn != null) {
+                    cipherIn.close();
+                }
             } finally {
-                out.close();
+                if (out != null) {
+                    out.close();
+                }
             }
         }
 //        try {
@@ -162,15 +165,15 @@ public class DesEncrypter {
         return bigIntKey;
     }
 
-    private void saveKey(Key key, File file) throws IOException {
-        byte[] encoded = key.getEncoded();
-        String data = new BigInteger(1, encoded).toString(16);
-        writeStringToFile(file, data);
-    }
+//    private void saveKey(Key key, File file) throws IOException {
+//        byte[] encoded = key.getEncoded();
+//        String data = new BigInteger(1, encoded).toString(16);
+//        writeStringToFile(file, data);
+//    }
 
-    private SecretKey loadKey(File file) throws IOException {
-        String hex = new String(readFileToByteArray(file));
-        byte[] encoded = new BigInteger(hex, 16).toByteArray();
-        return new SecretKeySpec(encoded, "DES");
-    }
+//    private SecretKey loadKey(File file) throws IOException {
+//        String hex = new String(readFileToByteArray(file));
+//        byte[] encoded = new BigInteger(hex, 16).toByteArray();
+//        return new SecretKeySpec(encoded, "DES");
+//    }
 }
