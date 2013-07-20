@@ -64,9 +64,9 @@ public class MyMiltonConfigurator extends DefaultMiltonConfigurator {
 
             webDataResourceFactory = (WebDataResourceFactory) builder.getMainResourceFactory();
             webDataResourceFactory.setCatalogue(catalogue);
-            List<AuthI> authList =new ArrayList<>();
-            authList.add(authRemote);
+            List<AuthI> authList = new ArrayList<>();
             authList.add(localDbAuth);
+            authList.add(authRemote);
 //            authList.add(workerAuth);
             webDataResourceFactory.setAuthList(authList);
 ///            webDataResourceFactory.setAuth1(authRemote);

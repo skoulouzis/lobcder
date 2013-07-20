@@ -80,9 +80,8 @@ public class AuthRemote implements AuthI {
 
                 clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
                 Client client = Client.create(clientConfig);
-                User u;
-//                u = client.resource(getServiceURL() + token).get(new GenericType<User>() {
-//                });
+                User u = null;
+//                u = client.resource(getServiceURL() + token).get(new GenericType<User>() {});
                 u = client.resource(getServiceURL() + token).get(new MyGenericType<User>());
                 res = new MyPrincipal(u.username, new HashSet(Arrays.asList(u.role)));
                 res.getRoles().add("other");
