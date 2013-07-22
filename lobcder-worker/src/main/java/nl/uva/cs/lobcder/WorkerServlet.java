@@ -77,6 +77,7 @@ public class WorkerServlet extends HttpServlet {
 
 //        String propBasePath = File.separator + "test.proprties";
         Properties prop = Util.getTestProperties(in);
+        in.close();
 
         restURL = prop.getProperty(("rest.url"), "http://localhost:8080/lobcder/rest/");
         clientConfig = configureClient();
