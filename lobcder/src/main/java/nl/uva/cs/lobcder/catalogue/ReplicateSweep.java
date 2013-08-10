@@ -22,7 +22,7 @@ import nl.uva.cs.lobcder.util.DesEncrypter;
 class ReplicateSweep implements Runnable {
 
     private final DataSource datasource;
-    private boolean aggressiveReplicate = true;
+    private boolean aggressiveReplicate = false;
 
     public ReplicateSweep(DataSource datasource) {
         this.datasource = datasource;

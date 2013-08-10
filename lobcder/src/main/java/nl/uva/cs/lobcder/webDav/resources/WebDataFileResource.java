@@ -57,7 +57,7 @@ public class WebDataFileResource extends WebDataResource implements
 
     private int sleepTime = 5;
     private List<String> workers;
-    private boolean doRedirect = true;
+    private boolean doRedirect = false;
     private static int workerIndex = 0;
     private static final Map<String, Double> weightPDRIMap = new HashMap<>();
     private static final Map<String, Integer> numOfGetsMap = new HashMap<>();
@@ -197,10 +197,18 @@ public class WebDataFileResource extends WebDataResource implements
             Logger.getLogger(WebDataFileResource.class.getName()).log(Level.FINE, "Speed: : {0}", speed);
             sumOfSpeed += speed;
         }
+        if (sumOfSpeed <= 0) {
+            int index = new Random().nextInt(pdris.size());
+            PDRIDescr[] array = pdris.toArray(new PDRIDescr[pdris.size()]);
+            return array[index];
+        }
         int itemIndex = new Random().nextInt((int) sumOfSpeed);
 
         for (PDRIDescr p : pdris) {
             Double speed = weightPDRIMap.get(new URI(p.getResourceUrl()).getHost());
+            if (speed == null) {
+                speed = Double.valueOf(0);
+            }
             if (itemIndex < speed) {
                 Logger.getLogger(WebDataFileResource.class.getName()).log(Level.FINE, "Selecting:{0}  with speed: {1}", new Object[]{p.getResourceUrl(), speed});
                 return p;
@@ -208,7 +216,9 @@ public class WebDataFileResource extends WebDataResource implements
             itemIndex -= speed;
         }
 
-        return null;
+        int index = new Random().nextInt(pdris.size());
+        PDRIDescr[] array = pdris.toArray(new PDRIDescr[pdris.size()]);
+        return array[index];
     }
 
     private PDRI transferer(List<PDRIDescr> pdris, OutputStream out, int tryCount, boolean doCircularStreamBufferTransferer) throws IOException, NotFoundException {
@@ -257,8 +267,8 @@ public class WebDataFileResource extends WebDataResource implements
                 sleepTime = 5;
                 throw new IOException(ex1);
             }
-        }finally{
-            if(in!=null){
+        } finally {
+            if (in != null) {
                 in.close();
             }
         }
@@ -399,8 +409,8 @@ public class WebDataFileResource extends WebDataResource implements
             } else {
                 throw new BadRequestException(this, ex.getMessage());
             }
-        }finally{
-            if(out!=null){
+        } finally {
+            if (out != null) {
                 out.flush();
                 out.close();
             }
