@@ -173,6 +173,9 @@ public class WebDataFileResource extends WebDataResource implements
     }
 
     private PDRIDescr selectBestPDRI(List<PDRIDescr> pdris) throws URISyntaxException, UnknownHostException {
+        if(pdris.size()==1){
+            return pdris.iterator().next();
+        }
         if (weightPDRIMap.isEmpty() || weightPDRIMap.size() < pdris.size()) {
             //Just return one at random;
             int index = new Random().nextInt(pdris.size());
