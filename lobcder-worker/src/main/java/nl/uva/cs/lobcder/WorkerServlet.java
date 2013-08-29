@@ -70,6 +70,8 @@ public class WorkerServlet extends HttpServlet {
     private final ClientConfig clientConfig;
     private static final Map<String, Double> weightPDRIMap = new HashMap<String, Double>();
     private static final HashMap<String, Integer> numOfGetsMap = new HashMap<String, Integer>();
+    private LogicalDataWrapped logicalData;
+//    private final String uname;
 
     public WorkerServlet() throws FileNotFoundException, IOException, NoSuchAlgorithmException {
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
@@ -80,6 +82,8 @@ public class WorkerServlet extends HttpServlet {
         in.close();
 
         restURL = prop.getProperty(("rest.url"), "http://localhost:8080/lobcder/rest/");
+//        token = prop.getProperty(("rest.pass"));
+//        uname = prop.getProperty(("rest.uname"));
         clientConfig = configureClient();
         clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
 
@@ -105,11 +109,15 @@ public class WorkerServlet extends HttpServlet {
             try {
                 long start = System.currentTimeMillis();
                 Range range = null;
+                long startGetPDRI = System.currentTimeMillis();
                 PDRI pdri = getPDRI(fileUID);
+                long elapsedGetPDRI = startGetPDRI - System.currentTimeMillis();
+                Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, "elapsedGetPDRI: " + elapsedGetPDRI);
                 if (pdri == null) {
                     response.setStatus(HttpStatus.SC_INTERNAL_SERVER_ERROR);
                     return;
                 } else {
+                    long startTransfer = System.currentTimeMillis();
                     OutputStream out = response.getOutputStream();
                     String rangeStr = request.getHeader(Constants.RANGE_HEADER_NAME);
                     if (rangeStr != null) {
@@ -118,8 +126,11 @@ public class WorkerServlet extends HttpServlet {
 //                        response.setStatus(HttpStatus.SC_PARTIAL_CONTENT);
                         return;
                     } else {
-                        trasfer(pdri, out, false);
+                        transfer(pdri, out, false);
                     }
+                    long elapsedTransfer = startTransfer - System.currentTimeMillis();
+                    Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, "elapsedTransfer: " + elapsedTransfer);
+
                     long elapsed = System.currentTimeMillis() - start;
                     if (elapsed <= 0) {
                         elapsed = 1;
@@ -219,30 +230,34 @@ public class WorkerServlet extends HttpServlet {
     private PDRI getPDRI(String fileUID) throws IOException, URISyntaxException {
         PDRIDesc pdriDesc = null;//new PDRIDesc();
 
+
         try {
+//            if (logicalData == null) {
+
 
             if (restClient == null) {
                 restClient = Client.create(clientConfig);
             }
             restClient.removeAllFilters();
             restClient.addFilter(new com.sun.jersey.api.client.filter.HTTPBasicAuthFilter("worker-" + InetAddress.getLocalHost().getHostName(), token));
+//            restClient.addFilter(new com.sun.jersey.api.client.filter.HTTPBasicAuthFilter(uname, token));
 
             WebResource webResource = restClient.resource(restURL);
-
-//            Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "Asking master. Token: {0}", token);
-
+            //            Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "Asking master. Token: {0}", token);
+            long startGetLogicalData = System.currentTimeMillis();
             WebResource res = webResource.path("item").path("query").path(fileUID);
-            LogicalDataWrapped theFile = res.accept(MediaType.APPLICATION_XML).
+            logicalData = res.accept(MediaType.APPLICATION_XML).
                     get(new GenericType<LogicalDataWrapped>() {
             });
-
-
+            long elapsedGetLogicalData = startGetLogicalData - System.currentTimeMillis();
+            Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "elapsedGetLogicalData: {0}", elapsedGetLogicalData);
+            //            }
 
             int count = 0;
-            if (theFile != null) {
+            if (logicalData != null) {
 
-                Set<PDRIDesc> pdris = theFile.pdriList;
-                size = theFile.logicalData.length;
+                Set<PDRIDesc> pdris = logicalData.pdriList;
+                size = logicalData.logicalData.length;
                 if (pdris != null && !pdris.isEmpty()) {
                     pdriDesc = selectBestPDRI(pdris);
                     while (pdriDesc == null) {
@@ -285,7 +300,7 @@ public class WorkerServlet extends HttpServlet {
 //        return new WorkerVPDRI(pdriDesc.name , pdriDesc.id, pdriDesc.resourceUrl, pdriDesc.username, pdriDesc.password, pdriDesc.encrypt, BigInteger.ZERO, false);
     }
 
-    private void trasfer(PDRI pdri, OutputStream out, boolean withCircularStream) throws IOException {
+    private void transfer(PDRI pdri, OutputStream out, boolean withCircularStream) throws IOException {
         InputStream in = null;
         try {
             in = pdri.getData();
@@ -314,6 +329,7 @@ public class WorkerServlet extends HttpServlet {
                 Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, ex);
                 throw new IOException(ex.getMessage());
             }
+
             withCircularStream = false;
 //            if (ex instanceof nl.uva.vlet.exception.VlException) {
 //                withCircularStream = false;
@@ -323,7 +339,7 @@ public class WorkerServlet extends HttpServlet {
                     numOfTries++;
                     sleepTime = sleepTime + 2;
                     Thread.sleep(sleepTime);
-                    trasfer(pdri, out, withCircularStream);
+                    transfer(pdri, out, withCircularStream);
                 } catch (InterruptedException ex1) {
                     Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, ex1);
                     throw new IOException(ex1.getMessage());
@@ -348,10 +364,14 @@ public class WorkerServlet extends HttpServlet {
     }
 
     private PDRIDesc selectBestPDRI(Set<PDRIDesc> pdris) throws URISyntaxException, UnknownHostException {
+        if (pdris.size() == 1) {
+            return pdris.iterator().next();
+        }
         if (weightPDRIMap.isEmpty() || weightPDRIMap.size() < pdris.size()) {
             //Just return one at random;
             int index = new Random().nextInt(pdris.size());
             PDRIDesc[] array = pdris.toArray(new PDRIDesc[pdris.size()]);
+            Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "Selecting Random: {0}", array[index].resourceUrl);
             return array[index];
         }
 
@@ -371,34 +391,28 @@ public class WorkerServlet extends HttpServlet {
             Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "Speed: : {0}", speed);
             sumOfSpeed += speed;
         }
+        if (sumOfSpeed <= 0) {
+            int index = new Random().nextInt(pdris.size());
+            PDRIDesc[] array = pdris.toArray(new PDRIDesc[pdris.size()]);
+            return array[index];
+        }
         int itemIndex = new Random().nextInt((int) sumOfSpeed);
 
         for (PDRIDesc p : pdris) {
             Double speed = weightPDRIMap.get(new URI(p.resourceUrl).getHost());
+            if (speed == null) {
+                speed = Double.valueOf(0);
+            }
             if (itemIndex < speed) {
-                Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "Returning : {0}", p.resourceUrl);
+                Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "Selecting:{0}  with speed: {1}", new Object[]{p.resourceUrl, speed});
                 return p;
             }
             itemIndex -= speed;
         }
-//        long sum = 0;
-//        int i = 0;
-//
-//        while (sum < itemIndex) {
-//            i++;
-//            winner = pdris.iterator().next();
-////            sum = sum + weightPDRIMap.get(new URI(winner.resourceUrl).getHost());
-//            sum = sum + weightPDRIMap.get(new URI(winner.resourceUrl).getHost());
-//        }
-//        PDRIDesc[] array = pdris.toArray(new PDRIDesc[pdris.size()]);
-//        int index;
-//        if (i > 0) {
-//            index = i - 1;
-//        } else {
-//            index = i;
-//        }
 
-        return null;
+        int index = new Random().nextInt(pdris.size());
+        PDRIDesc[] array = pdris.toArray(new PDRIDesc[pdris.size()]);
+        return array[index];
     }
 
     @XmlRootElement
