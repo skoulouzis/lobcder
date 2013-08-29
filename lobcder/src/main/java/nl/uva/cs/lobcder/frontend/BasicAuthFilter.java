@@ -29,10 +29,10 @@ public class BasicAuthFilter implements Filter {
 
     private String _realm;
     private List<AuthI> authList;
-    private final AuthWorker authWorker;
+//    private final AuthWorker authWorker;
 
     public BasicAuthFilter() {
-        authWorker = new AuthWorker();
+//        authWorker = new AuthWorker();
     }
 
     @Override
@@ -61,16 +61,25 @@ public class BasicAuthFilter implements Filter {
 
                 //Only check tokens coming from workers 
                 if (uname.startsWith("worker-")) {
+                    AuthI authWorker = null;
+                    for (AuthI a : authList) {
+                        if (a instanceof AuthWorker) {
+                            authWorker = a;
+                            break;
+                        }
+                    }
+
                     List<String> workers = WorkerHelper.getWorkers();
                     for (String s : workers) {
                         try {
                             String workerHost = new URI(s).getHost();
                             String remoteHost = request.getRemoteHost();
-                            if(remoteHost.equals("localhost") || remoteHost.equals("127.0.0.1") ){
+                            if (remoteHost.equals("localhost") || remoteHost.equals("127.0.0.1")) {
 //                                InetAddress.getLocalHost().getHostName();
                                 remoteHost = "localhost";
                             }
                             if (remoteHost.equals(workerHost)) {
+
                                 principal = authWorker.checkToken(token);
                                 if (principal != null) {
                                     break;
@@ -82,6 +91,8 @@ public class BasicAuthFilter implements Filter {
                         }
                     }
                 } else {
+
+
                     for (AuthI a : authList) {
                         principal = a.checkToken(token);
                         if (principal != null) {

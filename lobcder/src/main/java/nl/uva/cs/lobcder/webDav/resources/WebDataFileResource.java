@@ -57,7 +57,7 @@ public class WebDataFileResource extends WebDataResource implements
 
     private int sleepTime = 5;
     private List<String> workers;
-    private boolean doRedirect = false;
+    private boolean doRedirect = true;
     private static int workerIndex = 0;
     private static final Map<String, Double> weightPDRIMap = new HashMap<>();
     private static final Map<String, Integer> numOfGetsMap = new HashMap<>();
