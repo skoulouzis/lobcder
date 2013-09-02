@@ -11,7 +11,6 @@ import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.json.JSONConfiguration;
 import com.sun.jersey.client.urlconnection.HTTPSProperties;
-import com.sun.jersey.core.util.MultivaluedMapImpl;
 import io.milton.common.Path;
 import io.milton.http.Range;
 import java.io.FileNotFoundException;
@@ -28,7 +27,6 @@ import java.security.SecureRandom;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Random;
@@ -46,7 +44,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
 import javax.xml.bind.annotation.XmlRootElement;
 import lombok.extern.java.Log;
 import nl.uva.vlet.data.StringUtil;
@@ -70,7 +67,7 @@ public class WorkerServlet extends HttpServlet {
     private final ClientConfig clientConfig;
     private static final Map<String, Double> weightPDRIMap = new HashMap<String, Double>();
     private static final HashMap<String, Integer> numOfGetsMap = new HashMap<String, Integer>();
-    private LogicalDataWrapped logicalData;
+    private final Map<String, LogicalDataWrapped> logicalDataCache = new HashMap<String, LogicalDataWrapped>();
 //    private final String uname;
 
     public WorkerServlet() throws FileNotFoundException, IOException, NoSuchAlgorithmException {
@@ -86,7 +83,6 @@ public class WorkerServlet extends HttpServlet {
 //        uname = prop.getProperty(("rest.uname"));
         clientConfig = configureClient();
         clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
-
     }
 
     /**
@@ -198,6 +194,8 @@ public class WorkerServlet extends HttpServlet {
                     Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, ex);
                     response.setStatus(HttpStatus.SC_INTERNAL_SERVER_ERROR);
                 }
+            } finally {
+                logicalDataCache.remove(fileUID);
             }
         }
     }
@@ -229,29 +227,30 @@ public class WorkerServlet extends HttpServlet {
 
     private PDRI getPDRI(String fileUID) throws IOException, URISyntaxException {
         PDRIDesc pdriDesc = null;//new PDRIDesc();
-
+        LogicalDataWrapped logicalData = null;
 
         try {
-//            if (logicalData == null) {
-
-
-            if (restClient == null) {
-                restClient = Client.create(clientConfig);
-            }
-            restClient.removeAllFilters();
-            restClient.addFilter(new com.sun.jersey.api.client.filter.HTTPBasicAuthFilter("worker-" + InetAddress.getLocalHost().getHostName(), token));
+            logicalData = logicalDataCache.get(fileUID);
+            if (logicalData == null) {
+                if (restClient == null) {
+                    restClient = Client.create(clientConfig);
+                }
+                restClient.removeAllFilters();
+                restClient.addFilter(new com.sun.jersey.api.client.filter.HTTPBasicAuthFilter("worker-" + InetAddress.getLocalHost().getHostName(), token));
 //            restClient.addFilter(new com.sun.jersey.api.client.filter.HTTPBasicAuthFilter(uname, token));
 
-            WebResource webResource = restClient.resource(restURL);
-            //            Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "Asking master. Token: {0}", token);
-            long startGetLogicalData = System.currentTimeMillis();
-            WebResource res = webResource.path("item").path("query").path(fileUID);
-            logicalData = res.accept(MediaType.APPLICATION_XML).
-                    get(new GenericType<LogicalDataWrapped>() {
-            });
-            long elapsedGetLogicalData = startGetLogicalData - System.currentTimeMillis();
-            Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "elapsedGetLogicalData: {0}", elapsedGetLogicalData);
-            //            }
+                WebResource webResource = restClient.resource(restURL);
+//                Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "Asking master. Token: {0}", token);
+//                long startGetLogicalData = System.currentTimeMillis();
+
+                WebResource res = webResource.path("item").path("query").path(fileUID);
+                logicalData = res.accept(MediaType.APPLICATION_XML).
+                        get(new GenericType<LogicalDataWrapped>() {
+                });
+                logicalDataCache.put(fileUID, logicalData);
+//                long elapsedGetLogicalData = System.currentTimeMillis() - startGetLogicalData;
+//                Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "elapsedGetLogicalData: {0}", elapsedGetLogicalData);
+            }
 
             int count = 0;
             if (logicalData != null) {
@@ -272,7 +271,7 @@ public class WorkerServlet extends HttpServlet {
         } catch (Exception ex) {
 //            Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, ex);
             if (ex.getMessage().contains("returned a response status of 404 Not Found")) {
-//                    || ex.getMessage().contains("returned a response status of 401 Unauthorized") ) {
+//                    || ex.getMessage().contains("returned a response status of 401 Unauthorized")) {
                 throw new IOException(ex);
             }
             if (numOfTries < Constants.RECONNECT_NTRY) {

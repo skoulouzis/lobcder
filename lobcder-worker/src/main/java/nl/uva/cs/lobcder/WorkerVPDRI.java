@@ -282,10 +282,13 @@ public class WorkerVPDRI implements PDRI {
             file = (VFile) getVfsClient().openLocation(vrl);
             in = file.getInputStream();
         } catch (Exception ex) {
+//            if(ex.getMessage().contains("Couldn't create new channel to")){
+//                throw new IOException(ex);
+//            }
 //            Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, ex);
             if (reconnectAttemts < Constants.RECONNECT_NTRY) {
                 try {
-                    sleepTime = sleepTime + 2;
+                    sleepTime = sleepTime * 2;
                     Thread.sleep(sleepTime);
                     reconnect();
                     getData();

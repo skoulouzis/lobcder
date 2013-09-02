@@ -38,7 +38,7 @@ public class Constants {
 //    public static final QName[] PROP_NAMES = new QName[]{DATA_DIST_PROP_NAME, DRI_SUPERVISED_PROP_NAME, DRI_CHECKSUM_PROP_NAME, DRI_LAST_VALIDATION_DATE_PROP_NAME, DRI_STATUS_PROP_NANE, DESCRIPTION_PROP_NAME, DATA_LOC_PREF_NAME, ENCRYPT_PROP_NAME, AVAIL_STORAGE_SITES_PROP_NAME};
     public static final int BUF_SIZE = 512 * 1024;
 //    public static Long LOCK_TIME = new Long(60000);
-    public static final int RECONNECT_NTRY = 20;
+    public static final int RECONNECT_NTRY = 50;
     public static final String RANGE_HEADER_NAME = "range";
     public static final String CERT_LOCATION = System.getProperty("user.home") + "/.globus/certificates/";
     public static final String PROXY_FILE = "/tmp/myProxy";
