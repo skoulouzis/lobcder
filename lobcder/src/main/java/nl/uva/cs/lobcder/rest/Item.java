@@ -4,13 +4,16 @@
  */
 package nl.uva.cs.lobcder.rest;
 
+import com.google.common.collect.HashBiMap;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
@@ -35,6 +38,7 @@ import nl.uva.vlet.exception.VlException;
 @Path("item/")
 public class Item extends CatalogueHelper {
 
+    private static Map<Long, LogicalDataWrapped> ldCache = new HashMap<>();
     @Context
     HttpServletRequest request;
     @Context
@@ -44,17 +48,26 @@ public class Item extends CatalogueHelper {
     @GET
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public LogicalDataWrapped getLogicalData(@PathParam("uid") Long uid) throws FileNotFoundException, IOException, VlException, URISyntaxException, MalformedURLException, Exception {
+        MyPrincipal mp = (MyPrincipal) request.getAttribute("myprincipal");
+        LogicalDataWrapped res = ldCache.get(uid);
+        if (res != null) {
+            Permissions p = res.getPermissions();
+            if (!mp.canRead(p)) {
+                throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+            }
+            return res;
+        }
+
         try (Connection cn = getCatalogue().getConnection()) {
             LogicalData resLD = getCatalogue().getLogicalDataByUid(uid, cn);
             if (resLD == null) {
                 throw new WebApplicationException(Response.Status.NOT_FOUND);
             }
-            MyPrincipal mp = (MyPrincipal) request.getAttribute("myprincipal");
             Permissions p = getCatalogue().getPermissions(uid, resLD.getOwner(), cn);
             if (!mp.canRead(p)) {
                 throw new WebApplicationException(Response.Status.UNAUTHORIZED);
             }
-            LogicalDataWrapped res = new LogicalDataWrapped();
+            res = new LogicalDataWrapped();
             res.setLogicalData(resLD);
             res.setPermissions(p);
             res.setPath(getCatalogue().getPathforLogicalData(resLD));
@@ -72,6 +85,7 @@ public class Item extends CatalogueHelper {
                 }
                 res.setPdriList(pdriDescr);
             }
+            ldCache.put(uid, res);
             return res;
         } catch (SQLException ex) {
             log.log(Level.SEVERE, null, ex);

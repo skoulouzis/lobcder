@@ -29,7 +29,7 @@ public class BasicAuthFilter implements Filter {
 
     private String _realm;
     private List<AuthI> authList;
-//    private final AuthWorker authWorker;
+    private AuthWorker authWorker;
 
     public BasicAuthFilter() {
 //        authWorker = new AuthWorker();
@@ -61,13 +61,15 @@ public class BasicAuthFilter implements Filter {
 
                 //Only check tokens coming from workers 
                 if (uname.startsWith("worker-")) {
-                    AuthI authWorker = null;
-                    for (AuthI a : authList) {
-                        if (a instanceof AuthWorker) {
-                            authWorker = a;
-                            break;
+                    if (authWorker == null) {
+                        for (AuthI a : authList) {
+                            if (a instanceof AuthWorker) {
+                                authWorker = (AuthWorker) a;
+                                break;
+                            }
                         }
                     }
+
 
                     List<String> workers = WorkerHelper.getWorkers();
                     for (String s : workers) {
@@ -91,8 +93,6 @@ public class BasicAuthFilter implements Filter {
                         }
                     }
                 } else {
-
-
                     for (AuthI a : authList) {
                         principal = a.checkToken(token);
                         if (principal != null) {

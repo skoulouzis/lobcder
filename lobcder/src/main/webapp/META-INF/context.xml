@@ -6,14 +6,15 @@
                                 type="nl.uva.cs.lobcder.auth.PrincipalCache"/>
                                 
                                 
-  <Resource auth="Container" driverClassName="com.mysql.jdbc.Driver" 
-                                maxActive="100" 
-                                maxIdle="30" 
-                                maxWait="10000" 
+  <Resource auth="Container" driverClassName="com.mysql.jdbc.Driver"
+                                initialSize="64"
+                                maxActive="-1" 
+                                maxIdle="-1" 
+                                maxWait="-1" 
                                 name="jdbc/lobcder" 
                                 password="RoomC3156" 
                                 removeAbandoned="true" 
-                                removeAbandonedTimeout="30" 
+                                removeAbandonedTimeout="-1" 
                                 type="javax.sql.DataSource" 
                                 url="jdbc:mysql://localhost:3306/lobcderDB2" 
                                 username="lobcder"/>
