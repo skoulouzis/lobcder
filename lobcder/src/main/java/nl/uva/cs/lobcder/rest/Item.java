@@ -38,6 +38,7 @@ import nl.uva.vlet.exception.VlException;
 @Path("item/")
 public class Item extends CatalogueHelper {
 
+//    private Map<Long, LogicalDataWrapped> logicalDataCache = new HashMap<>();
     @Context
     HttpServletRequest request;
     @Context
@@ -48,14 +49,16 @@ public class Item extends CatalogueHelper {
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public LogicalDataWrapped getLogicalData(@PathParam("uid") Long uid) throws FileNotFoundException, IOException, VlException, URISyntaxException, MalformedURLException, Exception {
         MyPrincipal mp = (MyPrincipal) request.getAttribute("myprincipal");
+//        LogicalDataWrapped res = logicalDataCache.get(uid);
+//        if(res !=null ){            
+//        }
 
-
-        try (Connection cn = getCatalogue().getConnection()) {
-            LogicalData resLD = getCatalogue().getLogicalDataByUid(uid, cn);
+        try {
+            LogicalData resLD = getCatalogue().getLogicalDataByUid(uid);
             if (resLD == null) {
                 throw new WebApplicationException(Response.Status.NOT_FOUND);
             }
-            Permissions p = getCatalogue().getPermissions(uid, resLD.getOwner(), cn);
+            Permissions p = getCatalogue().getPermissions(uid, resLD.getOwner());
             if (!mp.canRead(p)) {
                 throw new WebApplicationException(Response.Status.UNAUTHORIZED);
             }
@@ -64,7 +67,7 @@ public class Item extends CatalogueHelper {
             res.setPermissions(p);
             res.setPath(getCatalogue().getPathforLogicalData(resLD));
             if (!resLD.isFolder() && mp.isAdmin()) {
-                List<PDRIDescr> pdriDescr = getCatalogue().getPdriDescrByGroupId(resLD.getPdriGroupId(), cn);
+                List<PDRIDescr> pdriDescr = getCatalogue().getPdriDescrByGroupId(resLD.getPdriGroupId());
                 for (PDRIDescr pdri : pdriDescr) {
                     if (pdri.getResourceUrl().startsWith("lfc")
                             || pdri.getResourceUrl().startsWith("srm")
