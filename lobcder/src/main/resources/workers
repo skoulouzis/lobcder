@@ -1,16 +1,1 @@
-http://146.50.12.129:9081/lobcder-worker/
-http://146.50.12.130:9081/lobcder-worker/
-http://146.50.12.131:9081/lobcder-worker/
-http://146.50.12.132:9081/lobcder-worker/
-http://146.50.12.133:9081/lobcder-worker/
-http://146.50.12.134:9081/lobcder-worker/
-http://146.50.12.135:9081/lobcder-worker/
-http://146.50.12.138:9081/lobcder-worker/
-http://146.50.12.139:9081/lobcder-worker/
-http://146.50.12.140:9081/lobcder-worker/
-http://146.50.12.141:9081/lobcder-worker/
-http://146.50.12.142:9081/lobcder-worker/
-http://146.50.12.143:9081/lobcder-worker/
-http://146.50.12.144:9081/lobcder-worker/
-http://146.50.12.145:9081/lobcder-worker/
-http://146.50.12.146:9081/lobcder-worker/
+http://localhost:8080/lobcder-worker/

@@ -38,7 +38,6 @@ import nl.uva.vlet.exception.VlException;
 @Path("item/")
 public class Item extends CatalogueHelper {
 
-    private static Map<Long, LogicalDataWrapped> ldCache = new HashMap<>();
     @Context
     HttpServletRequest request;
     @Context
@@ -49,14 +48,7 @@ public class Item extends CatalogueHelper {
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public LogicalDataWrapped getLogicalData(@PathParam("uid") Long uid) throws FileNotFoundException, IOException, VlException, URISyntaxException, MalformedURLException, Exception {
         MyPrincipal mp = (MyPrincipal) request.getAttribute("myprincipal");
-        LogicalDataWrapped res = ldCache.get(uid);
-        if (res != null) {
-            Permissions p = res.getPermissions();
-            if (!mp.canRead(p)) {
-                throw new WebApplicationException(Response.Status.UNAUTHORIZED);
-            }
-            return res;
-        }
+
 
         try (Connection cn = getCatalogue().getConnection()) {
             LogicalData resLD = getCatalogue().getLogicalDataByUid(uid, cn);
@@ -67,7 +59,7 @@ public class Item extends CatalogueHelper {
             if (!mp.canRead(p)) {
                 throw new WebApplicationException(Response.Status.UNAUTHORIZED);
             }
-            res = new LogicalDataWrapped();
+            LogicalDataWrapped res = new LogicalDataWrapped();
             res.setLogicalData(resLD);
             res.setPermissions(p);
             res.setPath(getCatalogue().getPathforLogicalData(resLD));
@@ -85,7 +77,6 @@ public class Item extends CatalogueHelper {
                 }
                 res.setPdriList(pdriDescr);
             }
-            ldCache.put(uid, res);
             return res;
         } catch (SQLException ex) {
             log.log(Level.SEVERE, null, ex);

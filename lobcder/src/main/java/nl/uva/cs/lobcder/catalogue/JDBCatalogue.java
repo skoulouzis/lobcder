@@ -36,6 +36,10 @@ import nl.uva.cs.lobcder.util.MyDataSource;
 public class JDBCatalogue extends MyDataSource {
 
     private Timer timer = null;
+    private Map<Long, LogicalData> logicalDataCache = new HashMap<>();
+    private Map<Long, Permissions> permissionsCache = new HashMap<>();
+    private Map<Long, String> pathCache = new HashMap<>();
+//    private Map<Long, List<PDRIDescr>> pDRIDescrCache = new HashMap<>();
 
     public JDBCatalogue() throws NamingException {
     }
@@ -127,6 +131,7 @@ public class JDBCatalogue extends MyDataSource {
             ResultSet rs = preparedStatement.getGeneratedKeys();
             rs.next();
             entry.setUid(rs.getLong(1));
+            logicalDataCache.put(entry.getUid(), entry);
             return entry;
         }
     }
@@ -165,6 +170,8 @@ public class JDBCatalogue extends MyDataSource {
             ResultSet rs = preparedStatement.getGeneratedKeys();
             rs.next();
             entry.setUid(rs.getLong(1));
+
+            logicalDataCache.put(entry.getUid(), entry);
             return entry;
         }
     }
@@ -182,6 +189,7 @@ public class JDBCatalogue extends MyDataSource {
             ps.setLong(4, entry.getPdriGroupId());
             ps.setLong(5, entry.getUid());
             ps.executeUpdate();
+            logicalDataCache.put(entry.getUid(), entry);
             return entry;
         }
     }
@@ -245,6 +253,10 @@ public class JDBCatalogue extends MyDataSource {
     }
 
     public List<PDRIDescr> getPdriDescrByGroupId(Long groupId, @Nonnull Connection connection) throws SQLException {
+        //        List<PDRIDescr> res = pDRIDescrCache.get(groupId);
+        //        if (res != null) {
+        //            return res;
+        //        }
         ArrayList<PDRIDescr> res = new ArrayList<PDRIDescr>();
         long pdriGroupRef;
         long pdriId;
@@ -277,6 +289,7 @@ public class JDBCatalogue extends MyDataSource {
 //                }
                 res.add(new PDRIDescr(fileName, ssID, resourceURI, uName, passwd, encrypt, BigInteger.valueOf(key), Long.valueOf(groupId), Long.valueOf(pdriId)));
             }
+//            pDRIDescrCache.put(groupId, res);
             return res;
         }
     }
@@ -404,6 +417,9 @@ public class JDBCatalogue extends MyDataSource {
                             res.setDescription(rs.getString(18));
                             res.setDataLocationPreference(rs.getString(19));
                             res.setStatus(rs.getString(20));
+
+                            logicalDataCache.put(res.getUid(), res);
+
                             return res;
                         } else {
                             return null;
@@ -431,6 +447,10 @@ public class JDBCatalogue extends MyDataSource {
     }
 
     public LogicalData getLogicalDataByUid(Long UID, @Nonnull Connection connection) throws SQLException {
+        LogicalData res = logicalDataCache.get(UID);
+        if (res != null) {
+            return res;
+        }
         try (PreparedStatement ps = connection.prepareStatement("SELECT parentRef, ownerId, datatype, ldName, "
                         + "createDate, modifiedDate, ldLength, contentTypesStr, pdriGroupRef, "
                         + "isSupervised, checksum, lastValidationDate, lockTokenID, lockScope, "
@@ -439,7 +459,7 @@ public class JDBCatalogue extends MyDataSource {
             ps.setLong(1, UID);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
-                LogicalData res = new LogicalData();
+                res = new LogicalData();
                 res.setUid(UID);
                 res.setParentRef(rs.getLong(1));
                 res.setOwner(rs.getString(2));
@@ -462,6 +482,7 @@ public class JDBCatalogue extends MyDataSource {
                 res.setDescription(rs.getString(19));
                 res.setDataLocationPreference(rs.getString(20));
                 res.setStatus(rs.getString(21));
+                logicalDataCache.put(UID, res);
                 return res;
             } else {
                 return null;
@@ -474,6 +495,7 @@ public class JDBCatalogue extends MyDataSource {
             try {
                 setPermissions(UID, perm, connection);
                 connection.commit();
+                permissionsCache.put(UID, perm);
             } catch (SQLException e) {
                 connection.rollback();
                 throw e;
@@ -492,17 +514,26 @@ public class JDBCatalogue extends MyDataSource {
                 s.addBatch("INSERT INTO permission_table (permType, ldUidRef, roleName) VALUES ('write', " + UID + " , '" + cw + "')");
             }
             s.executeBatch();
+            permissionsCache.put(UID, perm);
         }
     }
 
     public Permissions getPermissions(Long UID, String owner) throws SQLException {
+        Permissions perm = permissionsCache.get(UID);
+        if (perm != null) {
+            return perm;
+        }
         try (Connection connection = getConnection()) {
             return getPermissions(UID, owner, connection);
         }
     }
 
     public Permissions getPermissions(Long UID, @Nonnull String owner, @Nonnull Connection connection) throws SQLException {
-        Permissions p = new Permissions();
+        Permissions p = permissionsCache.get(UID);
+        if (p != null) {
+            return p;
+        }
+        p = new Permissions();
         try (Statement s = connection.createStatement()) {
             ResultSet rs = s.executeQuery("SELECT permType, roleName FROM permission_table WHERE permission_table.ldUidRef = " + UID);
             Set<String> canRead = new HashSet<String>();
@@ -517,6 +548,7 @@ public class JDBCatalogue extends MyDataSource {
             p.setRead(canRead);
             p.setWrite(canWrite);
             p.setOwner(owner);
+            permissionsCache.put(UID, p);
             return p;
         }
     }
@@ -592,6 +624,13 @@ public class JDBCatalogue extends MyDataSource {
             ps.setLong(3, toMove.getUid());
             ps.executeUpdate();
         }
+        LogicalData cached = logicalDataCache.get(toMove.getUid());
+        if (cached != null) {
+            cached.setName(newName);
+            cached.setUid(toMove.getUid());
+            logicalDataCache.put(toMove.getUid(), cached);
+        }
+
     }
 
     @SneakyThrows(CloneNotSupportedException.class)
@@ -670,6 +709,7 @@ public class JDBCatalogue extends MyDataSource {
                 ps.executeUpdate();
             }
         }
+        logicalDataCache.remove(toRemove.getUid());
     }
 
     public boolean removeFolderContent(LogicalData toRemove, MyPrincipal principal, Connection connection) throws SQLException {
@@ -700,6 +740,7 @@ public class JDBCatalogue extends MyDataSource {
         } else {
             return false;
         }
+        logicalDataCache.remove(toRemove.getUid());
         return flag;
     }
 
@@ -709,6 +750,11 @@ public class JDBCatalogue extends MyDataSource {
             ps.setLong(2, uid);
             ps.executeUpdate();
         }
+        LogicalData cached = logicalDataCache.get(uid);
+        if (cached != null) {
+            cached.setSupervised(flag);
+            logicalDataCache.put(uid, cached);
+        }
     }
 
     public void setLastValidationDate(@Nonnull Long uid, @Nonnull Long lastValidationDate, @Nonnull Connection connection) throws SQLException {
@@ -716,6 +762,11 @@ public class JDBCatalogue extends MyDataSource {
             ps.setLong(1, lastValidationDate);
             ps.setLong(2, uid);
             ps.executeUpdate();
+        }
+        LogicalData cached = logicalDataCache.get(uid);
+        if (cached != null) {
+            cached.setLastValidationDate(lastValidationDate);
+            logicalDataCache.put(uid, cached);
         }
     }
 
@@ -725,6 +776,11 @@ public class JDBCatalogue extends MyDataSource {
             ps.setLong(2, uid);
             ps.executeUpdate();
         }
+        LogicalData cached = logicalDataCache.get(uid);
+        if (cached != null) {
+            cached.setChecksum(checksum);
+            logicalDataCache.put(uid, cached);
+        }
     }
 
     public void setDriStatus(@Nonnull Long uid, @Nonnull String status, @Nonnull Connection connection) throws SQLException {
@@ -733,6 +789,10 @@ public class JDBCatalogue extends MyDataSource {
             ps.setLong(2, uid);
             ps.executeUpdate();
         }
+//        LogicalData cached = logicalDataCache.get(uid);
+//        if (cached != null) {
+//        logicalDataCache.put(uid, cached);
+//        }
     }
 
     public void setLockTokenID(@Nonnull Long uid, @Nonnull String lockTokenID, @Nonnull Connection connection) throws SQLException {
@@ -740,6 +800,11 @@ public class JDBCatalogue extends MyDataSource {
             ps.setString(1, lockTokenID);
             ps.setLong(2, uid);
             ps.executeUpdate();
+        }
+        LogicalData cached = logicalDataCache.get(uid);
+        if (cached != null) {
+            cached.setLockTokenID(lockTokenID);
+            logicalDataCache.put(uid, cached);
         }
     }
 
@@ -749,6 +814,11 @@ public class JDBCatalogue extends MyDataSource {
             ps.setLong(2, uid);
             ps.executeUpdate();
         }
+        LogicalData cached = logicalDataCache.get(uid);
+        if (cached != null) {
+            cached.setLockTimeout(lockTimeout);
+            logicalDataCache.put(uid, cached);
+        }
     }
 
     public void setLockDepth(Long uid, String lockDepth, Connection connection) throws SQLException {
@@ -756,6 +826,11 @@ public class JDBCatalogue extends MyDataSource {
             ps.setString(1, lockDepth);
             ps.setLong(2, uid);
             ps.executeUpdate();
+        }
+        LogicalData cached = logicalDataCache.get(uid);
+        if (cached != null) {
+            cached.setLockDepth(lockDepth);
+            logicalDataCache.put(uid, cached);
         }
     }
 
@@ -765,6 +840,11 @@ public class JDBCatalogue extends MyDataSource {
             ps.setLong(2, uid);
             ps.executeUpdate();
         }
+        LogicalData cached = logicalDataCache.get(uid);
+        if (cached != null) {
+            cached.setLockedByUser(lockedByUser);
+            logicalDataCache.put(uid, cached);
+        }
     }
 
     public void setLockScope(Long uid, String lockScope, Connection connection) throws SQLException {
@@ -773,6 +853,11 @@ public class JDBCatalogue extends MyDataSource {
             ps.setLong(2, uid);
             ps.executeUpdate();
         }
+        LogicalData cached = logicalDataCache.get(uid);
+        if (cached != null) {
+            cached.setLockScope(lockScope);
+            logicalDataCache.put(uid, cached);
+        }
     }
 
     public void setLockType(Long uid, String lockType, Connection connection) throws SQLException {
@@ -780,6 +865,12 @@ public class JDBCatalogue extends MyDataSource {
             ps.setString(1, lockType);
             ps.setLong(2, uid);
             ps.executeUpdate();
+        }
+
+        LogicalData cached = logicalDataCache.get(uid);
+        if (cached != null) {
+            cached.setLockType(lockType);
+            logicalDataCache.put(uid, cached);
         }
     }
 
@@ -904,6 +995,11 @@ public class JDBCatalogue extends MyDataSource {
             ps.setLong(2, uid);
             ps.executeUpdate();
         }
+        LogicalData cached = logicalDataCache.get(uid);
+        if (cached != null) {
+            cached.setDescription(description);
+            logicalDataCache.put(uid, cached);
+        }
     }
 
     public void registerStorageSite(String resourceURI, Credential credentials, int currentNum, int currentSize, int quotaNum, int quotaSize, Connection connection) throws CatalogueException {
@@ -914,6 +1010,11 @@ public class JDBCatalogue extends MyDataSource {
             ps.setString(1, locationPreference);
             ps.setLong(2, uid);
             ps.executeUpdate();
+        }
+        LogicalData cached = logicalDataCache.get(uid);
+        if (cached != null) {
+            cached.setDataLocationPreference(locationPreference);
+            logicalDataCache.put(uid, cached);
         }
     }
 
@@ -991,17 +1092,22 @@ public class JDBCatalogue extends MyDataSource {
     }
 
     public String getPathforLogicalData(LogicalData ld, @Nonnull Connection connection) throws SQLException {
+        String res = pathCache.get(ld.getUid());
+        if (res != null) {
+            return null;
+        }
         try (PreparedStatement ps = connection.prepareStatement(
                         "SELECT ldName, parentRef FROM ldata_table WHERE uid = ?")) {
             PathInfo pi = new PathInfo(ld.getName(), ld.getParentRef());
             List<PathInfo> pil = new ArrayList<>();
             getPathforLogicalData(pi, pil, ps);
-            String res = "";
+            res = "";
             Collections.reverse(pil);
             for (PathInfo pi1 : pil) {
 //                System.err.println("'" + pi1.getName() + "'");
                 res = res + "/" + pi1.getName();
             }
+            pathCache.put(ld.getUid(), res);
             return res;
         }
     }
@@ -1011,6 +1117,11 @@ public class JDBCatalogue extends MyDataSource {
             ps.setString(1, owner);
             ps.setLong(2, uid);
             ps.executeUpdate();
+        }
+        LogicalData cached = logicalDataCache.get(uid);
+        if (cached != null) {
+            cached.setOwner(owner);
+            logicalDataCache.put(uid, cached);
         }
     }
 }
