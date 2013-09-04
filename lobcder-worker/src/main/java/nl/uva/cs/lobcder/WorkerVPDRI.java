@@ -50,7 +50,7 @@ public class WorkerVPDRI implements PDRI {
     private final String username;
     private final String password;
     private final Long storageSiteId;
-    private final String baseDir = "LOBCDER-REPLICA-vTEST";//"LOBCDER-REPLICA-v2.0";
+    public static final String baseDir = "LOBCDER-REPLICA-vTEST";//"LOBCDER-REPLICA-v2.0";
     private final String fileName;
     private int reconnectAttemts = 0;
     private final static boolean debug = true; 

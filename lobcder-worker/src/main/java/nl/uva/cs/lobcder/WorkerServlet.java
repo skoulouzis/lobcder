@@ -13,7 +13,9 @@ import com.sun.jersey.api.json.JSONConfiguration;
 import com.sun.jersey.client.urlconnection.HTTPSProperties;
 import io.milton.common.Path;
 import io.milton.http.Range;
+import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -69,6 +71,9 @@ public class WorkerServlet extends HttpServlet {
     private static final HashMap<String, Integer> numOfGetsMap = new HashMap<String, Integer>();
     private final Map<String, LogicalDataWrapped> logicalDataCache = new HashMap<String, LogicalDataWrapped>();
 //    private final String uname;
+    private File cacheFile = new File(System.getProperty("java.io.tmpdir") + File.separator + File.separator + "lobcder-cache");
+    private String cacheFileID;
+    private String fileUID;
 
     public WorkerServlet() throws FileNotFoundException, IOException, NoSuchAlgorithmException {
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
@@ -83,6 +88,10 @@ public class WorkerServlet extends HttpServlet {
 //        uname = prop.getProperty(("rest.uname"));
         clientConfig = configureClient();
         clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
+
+        if (!new File(System.getProperty("java.io.tmpdir") + File.separator + WorkerVPDRI.baseDir).exists()) {
+            new File(System.getProperty("java.io.tmpdir") + File.separator + WorkerVPDRI.baseDir).mkdirs();
+        }
     }
 
     /**
@@ -101,7 +110,7 @@ public class WorkerServlet extends HttpServlet {
         if (filePath.length() > 1) {
             Path pathAndToken = Path.path(filePath);
             token = pathAndToken.getName();
-            String fileUID = pathAndToken.getParent().toString();
+            fileUID = pathAndToken.getParent().toString();
             try {
                 long start = System.currentTimeMillis();
                 Range range = null;
@@ -256,6 +265,20 @@ public class WorkerServlet extends HttpServlet {
             if (logicalData != null) {
 
                 Set<PDRIDesc> pdris = logicalData.pdriList;
+
+                if (cacheFileID != null && cacheFileID.equals(fileUID)) {
+                    PDRIDesc local = new PDRIDesc();
+                    local.encrypt = false;
+                    local.id = Long.valueOf(666);
+                    local.resourceUrl = "file:///" + System.getProperty("java.io.tmpdir");
+                    local.password = "non";
+                    local.username = "non";
+                    local.key = BigInteger.ONE.toString();
+                    local.name = cacheFile.getName();
+
+                    pdris.add(local);
+                }
+
                 size = logicalData.logicalData.length;
                 if (pdris != null && !pdris.isEmpty()) {
                     pdriDesc = selectBestPDRI(pdris);
@@ -301,6 +324,7 @@ public class WorkerServlet extends HttpServlet {
 
     private void transfer(PDRI pdri, OutputStream out, boolean withCircularStream) throws IOException {
         InputStream in = null;
+        OutputStream cacheFileOut = null;
         try {
             in = pdri.getData();
             int bufferSize;
@@ -309,16 +333,25 @@ public class WorkerServlet extends HttpServlet {
             } else {
                 bufferSize = Constants.BUF_SIZE;
             }
-            if (!pdri.getEncrypted() && withCircularStream) {
-                CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((bufferSize), in, out);
-                cBuff.startTransfer(new Long(-1));
-                cBuff.setStop(withCircularStream);
-            } else if (!pdri.getEncrypted() && !withCircularStream) {
+//            if (!pdri.getEncrypted() && withCircularStream) {
+//                CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((bufferSize), in, out);
+//                cBuff.startTransfer(new Long(-1));
+//                cBuff.setStop(withCircularStream);
+//            } else 
+
+            if (!pdri.getEncrypted()) {
                 int read;
+                if (cacheFileID == null || !cacheFileID.equals(fileUID)) {
+                    cacheFileOut = new FileOutputStream(cacheFile);
+                }
                 byte[] copyBuffer = new byte[bufferSize];
                 while ((read = in.read(copyBuffer, 0, copyBuffer.length)) != -1) {
                     out.write(copyBuffer, 0, read);
+                    if (cacheFileID == null || !cacheFileID.equals(fileUID)) {
+                        cacheFileOut.write(copyBuffer, 0, read);
+                    }
                 }
+                cacheFileID = fileUID;
             }
             numOfTries = 0;
             sleepTime = 2;
@@ -349,10 +382,10 @@ public class WorkerServlet extends HttpServlet {
             }
         } finally {
             try {
-//                if (out != null) {
-//                    out.flush();
-//                    out.close();
-//                }
+                if (cacheFileOut != null) {
+                    cacheFileOut.flush();
+                    cacheFileOut.close();
+                }
                 if (in != null) {
                     in.close();
                 }
@@ -365,6 +398,12 @@ public class WorkerServlet extends HttpServlet {
     private PDRIDesc selectBestPDRI(Set<PDRIDesc> pdris) throws URISyntaxException, UnknownHostException {
         if (pdris.size() == 1) {
             return pdris.iterator().next();
+        }
+        for (PDRIDesc p : pdris) {
+            URI uri = new URI(p.resourceUrl);
+            if (uri.getScheme().equals("file")) {
+                return p;
+            }
         }
         if (weightPDRIMap.isEmpty() || weightPDRIMap.size() < pdris.size()) {
             //Just return one at random;
