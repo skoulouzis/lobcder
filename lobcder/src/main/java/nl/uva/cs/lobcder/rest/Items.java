@@ -8,15 +8,13 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.extern.java.Log;
-import nl.uva.cs.lobcder.auth.MyPrincipal;
-import nl.uva.cs.lobcder.auth.Permissions;
-import nl.uva.cs.lobcder.resources.LogicalData;
-import nl.uva.cs.lobcder.util.CatalogueHelper;
-import nl.uva.cs.lobcder.util.Constants;
-
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Level;
 import javax.annotation.Nonnull;
 import javax.naming.NamingException;
 import javax.servlet.http.HttpServletRequest;
@@ -26,14 +24,15 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.*;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.logging.Level;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.extern.java.Log;
+import nl.uva.cs.lobcder.auth.MyPrincipal;
+import nl.uva.cs.lobcder.auth.Permissions;
+import nl.uva.cs.lobcder.resources.LogicalData;
 import nl.uva.cs.lobcder.resources.PDRIDescr;
+import nl.uva.cs.lobcder.util.CatalogueHelper;
+import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.cs.lobcder.util.GridHelper;
 import nl.uva.vlet.exception.VlException;
 
@@ -311,6 +310,7 @@ public class Items extends CatalogueHelper {
             throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
+    
 
     @Path("dri/")
     public DRItemsResource getDRI() {

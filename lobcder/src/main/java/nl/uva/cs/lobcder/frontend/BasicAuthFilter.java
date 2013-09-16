@@ -94,6 +94,9 @@ public class BasicAuthFilter implements Filter {
                     }
                 } else {
                     for (AuthI a : authList) {
+                        if (a instanceof AuthWorker) {
+                            continue;
+                        }
                         principal = a.checkToken(token);
                         if (principal != null) {
                             break;
