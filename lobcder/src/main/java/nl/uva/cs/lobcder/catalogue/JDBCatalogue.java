@@ -56,11 +56,17 @@ public class JDBCatalogue extends MyDataSource {
             }
         };
         timer = new Timer(true);
-        timer.schedule(gcTask, 5000, 5000); //once in 9 sec
+        timer.schedule(gcTask, 9000, 9000); //once in 9 sec
     }
 
     public void stopSweep() {
         timer.cancel();
+    }
+
+    public Collection<StorageSite> getStorageSites() throws SQLException {
+        try (Connection connection = getConnection()) {
+            return getStorageSites(connection);
+        }
     }
 
     public Collection<StorageSite> getStorageSites(Connection connection) throws SQLException {

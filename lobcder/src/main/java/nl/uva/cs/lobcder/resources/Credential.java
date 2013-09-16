@@ -4,9 +4,9 @@
  */
 package nl.uva.cs.lobcder.resources;
 
+import java.io.Serializable;
 import lombok.Data;
 import nl.uva.vlet.util.cog.GridProxy;
-import java.io.Serializable;
 
 /**
  *

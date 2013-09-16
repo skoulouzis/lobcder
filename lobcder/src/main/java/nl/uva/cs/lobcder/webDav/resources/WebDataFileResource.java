@@ -173,7 +173,7 @@ public class WebDataFileResource extends WebDataResource implements
     }
 
     private PDRIDescr selectBestPDRI(List<PDRIDescr> pdris) throws URISyntaxException, UnknownHostException {
-        if(pdris.size()==1){
+        if (pdris.size() == 1) {
             return pdris.iterator().next();
         }
         if (weightPDRIMap.isEmpty() || weightPDRIMap.size() < pdris.size()) {
@@ -514,19 +514,26 @@ public class WebDataFileResource extends WebDataResource implements
         }
     }
 
-    private boolean isInCache() throws SQLException, URISyntaxException {
-        try (Connection cn = getCatalogue().getConnection()) {
-            List<PDRIDescr> pdriDescr = getCatalogue().getPdriDescrByGroupId(getLogicalData().getPdriGroupId(), cn);
-            for (PDRIDescr pdri : pdriDescr) {
-                if (pdri.getResourceUrl().startsWith("file")) {
-                    return true;
-                }
+    private boolean isInCache() throws SQLException, URISyntaxException, IOException {
+        List<PDRIDescr> pdriDescr = getCatalogue().getPdriDescrByGroupId(getLogicalData().getPdriGroupId());
+        for (PDRIDescr pdri : pdriDescr) {
+            if (pdri.getResourceUrl().startsWith("file")) {
+                return true;
             }
         }
+
+//        try (Connection cn = getCatalogue().getConnection()) {
+//            List<PDRIDescr> pdriDescr = getCatalogue().getPdriDescrByGroupId(getLogicalData().getPdriGroupId(), cn);
+//            for (PDRIDescr pdri : pdriDescr) {
+//                if (pdri.getResourceUrl().startsWith("file")) {
+//                    return true;
+//                }
+//            }
+//        }
         return false;
     }
 
-    private boolean canRedirect(Request request) throws SQLException, UnsupportedEncodingException, URISyntaxException {
+    private boolean canRedirect(Request request) throws SQLException, UnsupportedEncodingException, URISyntaxException, IOException {
         if (isInCache()) {
             return false;
         }
