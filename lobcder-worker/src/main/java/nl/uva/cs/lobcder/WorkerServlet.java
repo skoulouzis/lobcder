@@ -71,7 +71,8 @@ public class WorkerServlet extends HttpServlet {
     private static final HashMap<String, Integer> numOfGetsMap = new HashMap<String, Integer>();
     private final Map<String, LogicalDataWrapped> logicalDataCache = new HashMap<String, LogicalDataWrapped>();
 //    private final String uname;
-    private File cacheFile = new File(System.getProperty("java.io.tmpdir") + File.separator + File.separator + "lobcder-cache");
+    private File baseDir = new File(System.getProperty("java.io.tmpdir") + File.separator + WorkerVPDRI.baseDir);
+    private File cacheFile;
     private String cacheFileID;
     private String fileUID;
 
@@ -89,9 +90,7 @@ public class WorkerServlet extends HttpServlet {
         clientConfig = configureClient();
         clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
 
-        if (!new File(System.getProperty("java.io.tmpdir") + File.separator + WorkerVPDRI.baseDir).exists()) {
-            new File(System.getProperty("java.io.tmpdir") + File.separator + WorkerVPDRI.baseDir).mkdirs();
-        }
+
     }
 
     /**
@@ -111,6 +110,7 @@ public class WorkerServlet extends HttpServlet {
             Path pathAndToken = Path.path(filePath);
             token = pathAndToken.getName();
             fileUID = pathAndToken.getParent().toString();
+            cacheFile = new File(baseDir, "lobcder-cache"+request.getLocalName());
             try {
                 long start = System.currentTimeMillis();
                 Range range = null;
@@ -266,11 +266,13 @@ public class WorkerServlet extends HttpServlet {
 
                 Set<PDRIDesc> pdris = logicalData.pdriList;
 
-                if (cacheFileID != null && cacheFileID.equals(fileUID)) {
+                if (cacheFileID != null && cacheFileID.equals(fileUID) && 
+                        cacheFile.exists() && cacheFile.length() == 
+                        logicalData.logicalData.length) {
                     PDRIDesc local = new PDRIDesc();
                     local.encrypt = false;
                     local.id = Long.valueOf(666);
-                    local.resourceUrl = "file:///" + System.getProperty("java.io.tmpdir");
+                    local.resourceUrl = "file:///" + baseDir.getParentFile().getAbsolutePath();
                     local.password = "non";
                     local.username = "non";
                     local.key = BigInteger.ONE.toString();
@@ -327,12 +329,13 @@ public class WorkerServlet extends HttpServlet {
         OutputStream cacheFileOut = null;
         try {
             in = pdri.getData();
-            int bufferSize;
-            if (pdri.getLength() < Constants.BUF_SIZE) {
-                bufferSize = (int) pdri.getLength();
-            } else {
-                bufferSize = Constants.BUF_SIZE;
-            }
+//            int bufferSize;
+//            if (pdri.getLength() < Constants.BUF_SIZE) {
+//                bufferSize = (int) pdri.getLength();
+//            } else {
+//                bufferSize = Constants.BUF_SIZE;
+//            }
+//            Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "bufferSize: {0}  MB ", (bufferSize / (1024 * 1024)) );
 //            if (!pdri.getEncrypted() && withCircularStream) {
 //                CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((bufferSize), in, out);
 //                cBuff.startTransfer(new Long(-1));
@@ -342,9 +345,12 @@ public class WorkerServlet extends HttpServlet {
             if (!pdri.getEncrypted()) {
                 int read;
                 if (cacheFileID == null || !cacheFileID.equals(fileUID)) {
+                    if (!baseDir.exists()) {
+                        baseDir.mkdirs();
+                    }
                     cacheFileOut = new FileOutputStream(cacheFile);
                 }
-                byte[] copyBuffer = new byte[bufferSize];
+                byte[] copyBuffer = new byte[Constants.BUF_SIZE];
                 while ((read = in.read(copyBuffer, 0, copyBuffer.length)) != -1) {
                     out.write(copyBuffer, 0, read);
                     if (cacheFileID == null || !cacheFileID.equals(fileUID)) {
@@ -355,9 +361,11 @@ public class WorkerServlet extends HttpServlet {
             }
             numOfTries = 0;
             sleepTime = 2;
+
         } catch (Exception ex) {
             if (ex.getMessage() != null && ex.getMessage().contains("Resource not found")
-                    || ex.getMessage().contains("Could not stat remote")) {
+                    || ex.getMessage().contains("Could not stat remote")
+                    || ex.getMessage().contains("Couldn't create new channel to")) {
                 Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, ex);
                 throw new IOException(ex.getMessage());
             }

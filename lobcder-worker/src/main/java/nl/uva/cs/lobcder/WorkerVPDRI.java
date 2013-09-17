@@ -53,7 +53,7 @@ public class WorkerVPDRI implements PDRI {
     public static final String baseDir = "LOBCDER-REPLICA-vTEST";//"LOBCDER-REPLICA-v2.0";
     private final String fileName;
     private int reconnectAttemts = 0;
-    private final static boolean debug = true; 
+    private final static boolean debug = true;
     private BigInteger keyInt;
     private boolean encrypt;
     private final String resourceUrl;
@@ -282,13 +282,14 @@ public class WorkerVPDRI implements PDRI {
             file = (VFile) getVfsClient().openLocation(vrl);
             in = file.getInputStream();
         } catch (Exception ex) {
-//            if(ex.getMessage().contains("Couldn't create new channel to")){
-//                throw new IOException(ex);
-//            }
+            if (ex.getMessage().contains("Couldn't create new channel to")) {
+                throw new IOException(ex);
+            }
 //            Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, ex);
             if (reconnectAttemts < Constants.RECONNECT_NTRY) {
+                Logger.getLogger(WorkerVPDRI.class.getName()).log(Level.INFO, "Got exception: " + ex.getClass().getName() + " " + ex.getMessage() + " reconnectAttemts: " + reconnectAttemts + " sleepTime: " + sleepTime);
                 try {
-                    sleepTime = sleepTime * 2;
+                    sleepTime = sleepTime * 10;
                     Thread.sleep(sleepTime);
                     reconnect();
                     getData();
