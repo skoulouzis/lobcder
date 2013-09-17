@@ -67,16 +67,18 @@ public class PathReservation extends CatalogueHelper {
         Candidate c = new Candidate();
         LogicalData ld;
         MyPrincipal mp;
-        Permissions p;
+        Permissions p=null;
         try (Connection cn = getCatalogue().getConnection()) {
             ld = getCatalogue().getLogicalDataByPath(io.milton.common.Path.path(hostIdFile[2]), cn);
-            p = getCatalogue().getPermissions(ld.getUid(), ld.getOwner(), cn);
+            if (ld != null) {
+                p = getCatalogue().getPermissions(ld.getUid(), ld.getOwner(), cn);
+            }
         } catch (SQLException ex) {
             log.log(Level.SEVERE, null, ex);
             throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
         }
         mp = (MyPrincipal) request.getAttribute("myprincipal");
-        if (mp.canRead(p)) {
+        if (p!=null && mp.canRead(p)) {
             c.setCommunicationID(communicationID);
             String url = getWorker(hostIdFile[0], ld);
             c.setURL(url);
