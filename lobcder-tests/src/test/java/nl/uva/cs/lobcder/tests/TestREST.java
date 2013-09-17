@@ -35,6 +35,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import javax.ws.rs.core.MediaType;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
@@ -125,7 +126,7 @@ public class TestREST {
     private void createCollection() throws IOException {
         MkColMethod mkcol = new MkColMethod(testcol);
         int status = this.client.executeMethod(mkcol);
-        assertEquals(status, HttpStatus.SC_CREATED );
+        assertEquals(status, HttpStatus.SC_CREATED);
 
 
         PutMethod put = new PutMethod(this.root + testResourceId + "/file1");
@@ -174,7 +175,7 @@ public class TestREST {
             }
             assertNotNull(logicalDataWrapped);
             for (Permissions p : logicalDataWrapped.permissions) {
-                assertEquals(username,p.owner);
+                assertEquals(username, p.owner);
                 assertTrue(p.read.contains("admin"));
 //                for (String s : p.read) {
 //                    System.err.println("Read:" + s);
@@ -222,7 +223,7 @@ public class TestREST {
         try {
             createCollection();
             WebResource webResource = restClient.resource(restURL);
-            
+
             MultivaluedMap<String, String> params = new MultivaluedMapImpl();
             params.add("path", "/testResourceId");
 
@@ -332,6 +333,63 @@ public class TestREST {
         }
     }
 
+    @Test
+    public void testReservation() throws IOException {
+        try {
+            createCollection();
+            WebResource webResource = restClient.resource(restURL);
+//reservation/5455/candidates/?host-id-file=sps1;dff;/sbuiifv/dsudsuds&host-id-file=sps2;dcsdcdff;/sbuiifv/dsudsud/asc
+            MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+            params.add("host-id-file", "host1;host1Id;/testResourceId");
+            params.add("host-id-file", "host2;host2Id;/testResourceId");
+            params.add("host-id-file", "host3;host3Id;/testResourceId");
+
+            WebResource res = webResource.path("reservation").path("some_communication_id").path("candidates").queryParams(params);
+            Candidate c = res.accept(MediaType.APPLICATION_XML).
+                    get(new GenericType<Candidate>() {
+            });
+
+            assertNotNull(c);
+            assertNotNull(c.URL);
+            assertNotNull(c.candidateID);
+            assertNotNull(c.communicationID);
+            assertNotNull(c.filePath);
+
+
+        } finally {
+            deleteCollection();
+        }
+    }
+
+    @Test
+    public void testGetWorkersStatus() throws IOException {
+        try {
+            createCollection();
+            WebResource webResource = restClient.resource(restURL);
+//        rest/reservation/workers/?host=kscvdfv&host=sp2&host=192.168.1.1
+            MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+            params.add("host", "host1");
+            params.add("host", "host2");
+            params.add("host", "host3");
+
+            WebResource res = webResource.path("reservation").path("workers").queryParams(params);
+            List<Worker> list = res.accept(MediaType.APPLICATION_XML).
+                    get(new GenericType<List<Worker>>() {
+            });
+
+            assertNotNull(list);
+            assertFalse(list.isEmpty());
+            for (Worker w : list) {
+                assertNotNull(w.status);
+                assertNotNull(w.hostName);
+            }
+
+
+        } finally {
+            deleteCollection();
+        }
+    }
+
     @XmlRootElement
     public static class LogicalDataWrapped {
 
@@ -375,5 +433,27 @@ public class TestREST {
         public String password;
         public String resourceUrl;
         public String username;
+    }
+
+    @XmlRootElement
+    public static class Candidate {
+
+        @XmlElement(name = "candidateID")
+        private String candidateID;
+        @XmlElement(name = "communicationID")
+        private String communicationID;
+        @XmlElement(name = "filePath")
+        private String filePath;
+        @XmlElement(name = "URL")
+        private String URL;
+    }
+
+    @XmlRootElement
+    public static class Worker {
+
+        @XmlElement(name = "hostName")
+        private String hostName;
+        @XmlElement(name = "status")
+        private String status;
     }
 }
