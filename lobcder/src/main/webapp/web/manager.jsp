@@ -12,10 +12,10 @@
         <h1>Welcome To LOBCDER Manager</h1>
 
         <p>
-            <a href="manageStorageSites.jsp">Manage storage sites</a>
+            <a href="viewStorageSites.action">Manage storage sites</a>
         </p>
         
-        <p><a href="index.jsp">Home</a>.</p>
+        <p><a href="../index.jsp">Home</a>.</p>
 
     </body>
 </html>

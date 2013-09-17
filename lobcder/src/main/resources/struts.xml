@@ -16,9 +16,11 @@
             <result>/index.jsp</result>
         </action>
 		
-        <action name="listStorageSites" class="nl.uva.cs.lobcder.frontend.web.ListStorageSites" method="execute">
-            <result name="success"> /manageStorageSites.jsp</result>
+        <action name="*StorageSites" class="nl.uva.cs.lobcder.frontend.web.ManageStorageSites" method="{1}">
+            <result name="success"> viewStorageSites.jsp</result>
+            <result name="input"> editStorageSites.jsp</result>
         </action>
+        
 
     </package>
 

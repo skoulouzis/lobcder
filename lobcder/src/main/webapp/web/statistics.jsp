@@ -12,6 +12,6 @@
         <title>JSP Page</title>
     </head>
     <body>
-        <p><a href="index.jsp">Home</a>.</p>
+        <p><a href="../index.jsp">Home</a>.</p>
     </body>
 </html>
