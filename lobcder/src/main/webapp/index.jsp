@@ -36,7 +36,7 @@
                                 <a href="index.jsp">Home</a>
                             </li>
                             <li class="list-parent">
-                                <a href="statistics.jsp">
+                                <a href="web/statistics.jsp">
                                     <i class="icon-globe icon-white">
                                     </i>
                                     Statistics
@@ -44,7 +44,7 @@
                             </li>
 
                             <li class="list-parent">
-                                <a href="manager.jsp">LOBCDER Manager</a>
+                                <a href="web/manager.jsp">LOBCDER Manager</a>
                             </li>
 
                         </ul>
