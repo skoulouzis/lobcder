@@ -380,7 +380,6 @@ public class WorkerVPDRI implements PDRI {
     @Override
     public String getHost() {
         try {
-            Logger.getLogger(WorkerVPDRI.class.getName()).log(Level.FINE, "getHostName: {0}", InetAddress.getLocalHost().getHostName());
             if (vrl.getScheme().equals("file")
                     || StringUtil.isEmpty(vrl.getHostname())
                     || vrl.getHostname().equals("localhost")
