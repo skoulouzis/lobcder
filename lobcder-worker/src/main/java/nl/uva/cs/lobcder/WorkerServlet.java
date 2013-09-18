@@ -75,6 +75,7 @@ public class WorkerServlet extends HttpServlet {
     private File cacheFile;
     private String cacheFileID;
     private String fileUID;
+    private String localAddrress;
 
     public WorkerServlet() throws FileNotFoundException, IOException, NoSuchAlgorithmException {
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
@@ -83,14 +84,13 @@ public class WorkerServlet extends HttpServlet {
 //        String propBasePath = File.separator + "test.proprties";
         Properties prop = Util.getTestProperties(in);
         in.close();
+        
 
         restURL = prop.getProperty(("rest.url"), "http://localhost:8080/lobcder/rest/");
 //        token = prop.getProperty(("rest.pass"));
 //        uname = prop.getProperty(("rest.uname"));
         clientConfig = configureClient();
         clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
-
-
     }
 
     /**
@@ -106,15 +106,19 @@ public class WorkerServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String filePath = request.getPathInfo();
+        Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "got request from : " + request.getRemoteAddr());
         if (filePath.length() > 1) {
+            localAddrress = request.getLocalAddr();
             Path pathAndToken = Path.path(filePath);
             token = pathAndToken.getName();
             fileUID = pathAndToken.getParent().toString();
-            cacheFile = new File(baseDir, "lobcder-cache"+request.getLocalName());
+            cacheFile = new File(baseDir, "lobcder-cache" + request.getLocalName());
+            Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "token: " + token + " fileUID: " + fileUID + " cacheFile: " + cacheFile);
             try {
                 long start = System.currentTimeMillis();
                 Range range = null;
                 long startGetPDRI = System.currentTimeMillis();
+                Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "start getPDRI at:" + startGetPDRI);
                 PDRI pdri = getPDRI(fileUID);
                 long elapsedGetPDRI = startGetPDRI - System.currentTimeMillis();
                 Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, "elapsedGetPDRI: " + elapsedGetPDRI);
@@ -169,6 +173,7 @@ public class WorkerServlet extends HttpServlet {
                 numOfTries = 0;
                 sleepTime = 2;
             } catch (Exception ex) {
+                 Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, ex);
                 //Maybe we can look for another pdri
                 if (ex.getMessage() != null) {
                     if (ex.getMessage().contains("Resource not found")
@@ -245,7 +250,13 @@ public class WorkerServlet extends HttpServlet {
                     restClient = Client.create(clientConfig);
                 }
                 restClient.removeAllFilters();
-                restClient.addFilter(new com.sun.jersey.api.client.filter.HTTPBasicAuthFilter("worker-" + InetAddress.getLocalHost().getHostName(), token));
+                String hostName = null;
+                try {
+                    hostName = InetAddress.getLocalHost().getHostName();
+                } catch (java.net.UnknownHostException ex) {
+                    hostName = localAddrress;
+                }
+                restClient.addFilter(new com.sun.jersey.api.client.filter.HTTPBasicAuthFilter("worker-" + hostName, token));
 //            restClient.addFilter(new com.sun.jersey.api.client.filter.HTTPBasicAuthFilter(uname, token));
 
                 WebResource webResource = restClient.resource(restURL);
@@ -266,9 +277,9 @@ public class WorkerServlet extends HttpServlet {
 
                 Set<PDRIDesc> pdris = logicalData.pdriList;
 
-                if (cacheFileID != null && cacheFileID.equals(fileUID) && 
-                        cacheFile.exists() && cacheFile.length() == 
-                        logicalData.logicalData.length) {
+                if (cacheFileID != null && cacheFileID.equals(fileUID)
+                        && cacheFile.exists() && cacheFile.length()
+                        == logicalData.logicalData.length) {
                     PDRIDesc local = new PDRIDesc();
                     local.encrypt = false;
                     local.id = Long.valueOf(666);
@@ -318,9 +329,9 @@ public class WorkerServlet extends HttpServlet {
         numOfTries = 0;
         sleepTime = 2;
         Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "Selected pdri: {0}", pdriDesc.resourceUrl);
-
-
-        return new WorkerVPDRI(pdriDesc.name, pdriDesc.id, pdriDesc.resourceUrl, pdriDesc.username, pdriDesc.password, pdriDesc.encrypt, BigInteger.valueOf(Long.valueOf(pdriDesc.key)), false);
+        WorkerVPDRI w = new WorkerVPDRI(pdriDesc.name, pdriDesc.id, pdriDesc.resourceUrl, pdriDesc.username, pdriDesc.password, pdriDesc.encrypt, BigInteger.valueOf(Long.valueOf(pdriDesc.key)), false);
+        w.setHostName(this.localAddrress);
+        return w;
 //        return new WorkerVPDRI(pdriDesc.name , pdriDesc.id, pdriDesc.resourceUrl, pdriDesc.username, pdriDesc.password, pdriDesc.encrypt, BigInteger.ZERO, false);
     }
 
@@ -410,6 +421,11 @@ public class WorkerServlet extends HttpServlet {
         for (PDRIDesc p : pdris) {
             URI uri = new URI(p.resourceUrl);
             if (uri.getScheme().equals("file")) {
+                return p;
+            }
+            if(uri.getHost().equals(localAddrress)){
+                String resURL = p.resourceUrl.replaceFirst( uri.getScheme(), "file");
+                p.resourceUrl = resURL;
                 return p;
             }
         }

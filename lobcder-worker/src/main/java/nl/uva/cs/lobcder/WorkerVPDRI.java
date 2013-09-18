@@ -60,6 +60,7 @@ public class WorkerVPDRI implements PDRI {
     private boolean doChunked;
     private int sleepTime = 2;
     private boolean destroyCert;
+    private String hostName;
 
     public WorkerVPDRI(String fileName, Long storageSiteId, String resourceUrl,
             String username, String password, boolean encrypt, BigInteger keyInt,
@@ -377,16 +378,27 @@ public class WorkerVPDRI implements PDRI {
     }
 
     @Override
-    public String getHost() throws UnknownHostException {
-        Logger.getLogger(WorkerVPDRI.class.getName()).log(Level.FINE, "getHostName: {0}", InetAddress.getLocalHost().getHostName());
-        if (vrl.getScheme().equals("file")
-                || StringUtil.isEmpty(vrl.getHostname())
-                || vrl.getHostname().equals("localhost")
-                || vrl.getHostname().equals("127.0.0.1")) {
-            return InetAddress.getLocalHost().getHostName();
-        } else {
-            return vrl.getHostname();
+    public String getHost() {
+        try {
+            Logger.getLogger(WorkerVPDRI.class.getName()).log(Level.FINE, "getHostName: {0}", InetAddress.getLocalHost().getHostName());
+            if (vrl.getScheme().equals("file")
+                    || StringUtil.isEmpty(vrl.getHostname())
+                    || vrl.getHostname().equals("localhost")
+                    || vrl.getHostname().equals("127.0.0.1")) {
+                return InetAddress.getLocalHost().getHostName();
+            } else {
+                return vrl.getHostname();
+            }
+        } catch (UnknownHostException ex) {
         }
+        if (hostName != null) {
+            return hostName;
+        }
+        return null;
+    }
+
+    protected void setHostName(String hostName) {
+        this.hostName = hostName;
     }
 
     @Override
