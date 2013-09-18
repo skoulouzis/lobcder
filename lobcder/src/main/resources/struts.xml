@@ -18,7 +18,7 @@
 		
         <action name="*StorageSites" class="nl.uva.cs.lobcder.frontend.web.ManageStorageSites" method="{1}">
             <result name="success"> viewStorageSites.jsp</result>
-            <result name="input"> editStorageSites.jsp</result>
+            <result name="edit"> editStorageSites.jsp</result>
         </action>
         
 

@@ -22,7 +22,8 @@ public class ManageStorageSites extends ActionSupport {
 
     private Collection<StorageSite> sites;
     private static JDBCatalogue catalogue = null;
-    private int storageSiteId;
+    private Long storageSiteId;
+    private StorageSite editSite;
 
     private JDBCatalogue getCatalogue() {
         if (catalogue == null) {
@@ -49,14 +50,32 @@ public class ManageStorageSites extends ActionSupport {
     }
 
     public String edit() {
-        System.out.println(storageSiteId);
         
-        return INPUT;
+        if (sites == null) {
+            try {
+                sites = getCatalogue().getStorageSites();
+            } catch (SQLException ex) {
+                Logger.getLogger(ManageStorageSites.class.getName()).log(Level.SEVERE, null, ex);
+                return ERROR;
+            }
+        }
+
+        for (StorageSite site : sites) {
+            if (site.getStorageSiteId() == storageSiteId) {
+                editSite = site;
+            }
+        }
+
+        return "edit";
     }
 
     public String view() {
         try {
             sites = getCatalogue().getStorageSites();
+            for (StorageSite site : sites) {
+                site.setCredential(null);
+                site.setResourceURI("url");
+            }
             return SUCCESS;
         } catch (SQLException ex) {
             return ERROR;
@@ -71,11 +90,19 @@ public class ManageStorageSites extends ActionSupport {
         this.sites = sites;
     }
 
-    public int getStorageSiteId() {
+    public StorageSite getEditSite() {
+        return editSite;
+    }
+
+    public void setEditSite(StorageSite editSite) {
+        this.editSite = editSite;
+    }
+
+    public Long getStorageSiteId() {
         return storageSiteId;
     }
 
-    public void setStorageSiteId(int storageSiteId) {
+    public void setStorageSiteId(Long storageSiteId) {
         this.storageSiteId = storageSiteId;
     }
 }

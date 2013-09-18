@@ -21,8 +21,6 @@
             <td> quota num: <s:property value="quotaNum" /></td>
             <td>  current size: <s:property value="currentSize" /></td>
             <td> current num: <s:property value="currentNum" /></td>
-            <td> user name: <s:property value="credential.storageSiteUsername" /></td>
-            <td>  password: <s:property value="credential.storageSitePassword" /></td>
             <td>  is encrypted: <s:property value="encrypt" /></td>
             </li>
         </s:iterator>
