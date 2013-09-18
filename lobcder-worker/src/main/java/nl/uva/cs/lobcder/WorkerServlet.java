@@ -84,7 +84,7 @@ public class WorkerServlet extends HttpServlet {
 //        String propBasePath = File.separator + "test.proprties";
         Properties prop = Util.getTestProperties(in);
         in.close();
-        
+
 
         restURL = prop.getProperty(("rest.url"), "http://localhost:8080/lobcder/rest/");
 //        token = prop.getProperty(("rest.pass"));
@@ -173,7 +173,7 @@ public class WorkerServlet extends HttpServlet {
                 numOfTries = 0;
                 sleepTime = 2;
             } catch (Exception ex) {
-                 Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, ex);
                 //Maybe we can look for another pdri
                 if (ex.getMessage() != null) {
                     if (ex.getMessage().contains("Resource not found")
@@ -355,7 +355,7 @@ public class WorkerServlet extends HttpServlet {
 
             if (!pdri.getEncrypted()) {
                 int read;
-                if (cacheFileID == null || !cacheFileID.equals(fileUID)) {
+                if (cacheFileID == null || !cacheFileID.equals(fileUID) && !pdri.getURI().startsWith("file")) {
                     if (!baseDir.exists()) {
                         baseDir.mkdirs();
                     }
@@ -364,7 +364,7 @@ public class WorkerServlet extends HttpServlet {
                 byte[] copyBuffer = new byte[Constants.BUF_SIZE];
                 while ((read = in.read(copyBuffer, 0, copyBuffer.length)) != -1) {
                     out.write(copyBuffer, 0, read);
-                    if (cacheFileID == null || !cacheFileID.equals(fileUID)) {
+                    if (cacheFileID == null || !cacheFileID.equals(fileUID) && cacheFileOut != null) {
                         cacheFileOut.write(copyBuffer, 0, read);
                     }
                 }
@@ -423,8 +423,8 @@ public class WorkerServlet extends HttpServlet {
             if (uri.getScheme().equals("file")) {
                 return p;
             }
-            if(uri.getHost().equals(localAddrress)){
-                String resURL = p.resourceUrl.replaceFirst( uri.getScheme(), "file");
+            if (uri.getHost().equals(localAddrress)) {
+                String resURL = p.resourceUrl.replaceFirst(uri.getScheme(), "file");
                 p.resourceUrl = resURL;
                 return p;
             }
