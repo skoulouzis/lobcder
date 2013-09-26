@@ -46,6 +46,12 @@
                   
                 var cols =
                     [
+                    {   key: 'select',
+                        allowHTML:  true, // to avoid HTML escaping
+                        label:      '<input type="checkbox" class="protocol-select-all" title="Toggle ALL records"/>',
+                        formatter:      '<input type="checkbox" checked/>',
+                        emptyCellValue: '<input type="checkbox"/>'
+                    },
                     { key: 'ID', label: 'ID'},
                     { key: 'resourceURI', label: 'URI',quickEdit:true },
                     { key: 'username', label: 'username', quickEdit:true},
@@ -67,6 +73,40 @@
                 ds.after("response", function() {
                     table.render("#storageSite")
                 });
+                
+                table.detach('*:change');
+                
+                // Define a listener on the DT first column for each record's "checkbox",
+                //   to set the value of `select` to the checkbox setting
+                table.delegate("click", function(e){
+                    // undefined to trigger the emptyCellValue
+                    var checked = e.target.get('checked') || undefined;
+                    
+                    this.getRecord(e.target).set('select', checked);
+
+                    // Uncheck the header checkbox
+                    this.get('contentBox')
+                    .one('.protocol-select-all').set('checked', false);
+                }, ".yui3-datatable-data .yui3-datatable-col-select input", table);
+
+
+                // Also define a listener on the single TH "checkbox" to
+                //   toggle all of the checkboxes
+                table.delegate('click', function (e) {
+                    // undefined to trigger the emptyCellValue
+                    var checked = e.target.get('checked') || undefined;
+
+                    // Set the selected attribute in all records in the ModelList silently
+                    // to avoid each update triggering a table update
+                    this.data.invoke('set', 'select', checked, { silent: true });
+
+                    // Update the table now that all records have been updated
+                    this.syncUI();
+                }, '.protocol-select-all', table);
+                //----------------
+                //   "checkbox" Click listeners ...
+                //----------------
+                
                 
                 table.qe.start();
 
