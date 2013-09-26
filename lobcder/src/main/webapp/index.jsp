@@ -44,7 +44,7 @@
                             </li>
 
                             <li class="list-parent">
-                                <a href="web/manager.jsp">LOBCDER Manager</a>
+                                <a href="manager.jsp">LOBCDER Manager</a>
                             </li>
 
                         </ul>

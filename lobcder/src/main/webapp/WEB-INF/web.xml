@@ -57,17 +57,5 @@
     <filter-mapping>
         <filter-name>BasicAuthFilter</filter-name>
         <servlet-name>Jersey REST Service</servlet-name>
-    </filter-mapping>
-    
-    
-    <filter>
-        <filter-name>struts2</filter-name>
-        <filter-class>org.apache.struts2.dispatcher.ng.filter.StrutsPrepareAndExecuteFilter</filter-class>
-    </filter>
-
-    <filter-mapping>
-        <filter-name>struts2</filter-name>
-        <url-pattern>/web/*</url-pattern>
-    </filter-mapping>
-    
+    </filter-mapping>    
 </web-app>

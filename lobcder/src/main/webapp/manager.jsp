@@ -1,6 +1,6 @@
 <%-- 
-    Document   : statistics
-    Created on : Aug 29, 2013, 4:51:42 PM
+    Document   : manager
+    Created on : Sep 26, 2013, 3:59:39 PM
     Author     : alogo
 --%>
 
@@ -12,6 +12,7 @@
         <title>JSP Page</title>
     </head>
     <body>
-        <p><a href="../index.jsp">Home</a>.</p>
+        <a href="index.jsp">Home</a>
+        <a href="manage_storage_sites.jsp">Storage Sites Manager</a>
     </body>
 </html>

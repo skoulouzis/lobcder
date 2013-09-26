@@ -73,8 +73,9 @@ public class JDBCatalogue extends MyDataSource {
         try (Statement s = connection.createStatement()) {
             try (ResultSet rs = s.executeQuery("SELECT storageSiteId, resourceURI, "
                             + "currentNum, currentSize, quotaNum, quotaSize, username, "
-                            + "password, encrypt FROM storage_site_table JOIN credential_table ON "
-                            + "credentialRef = credintialId WHERE isCache != TRUE")) {
+                            + "password, encrypt FROM storage_site_table "
+                            + "JOIN credential_table ON credentialRef = credintialId "
+                            + "WHERE isCache != TRUE")) {
                 ArrayList<StorageSite> res = new ArrayList<>();
                 while (rs.next()) {
                     Credential c = new Credential();
