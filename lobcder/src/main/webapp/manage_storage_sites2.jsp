@@ -483,6 +483,8 @@
             Y.one("#btnProcess").on("click", function(){
                 var recs = table.get('checkboxSelected');
                 process(recs);
+                table.checkboxClearAll();
+//                table.set('checkboxSelected', [1,3,5,7] );
             });
                 
             function process(recs) {
