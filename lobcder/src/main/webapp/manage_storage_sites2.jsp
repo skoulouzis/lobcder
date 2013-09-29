@@ -310,8 +310,8 @@
                 Y.Array.each( record_map, function(item){
                     raw_value  = theForm[item.field].value;
                     data_value = ( item.parser && Y.Lang.isFunction(item.parser) ) ? item.parser.call(this,raw_value)  : raw_value ;
-                    Y.log("data_value "+data_value);
                     newData[ item.ckey ] = data_value;
+                    //                    Y.log("newData "+newData.resourceURI);
                 });
 
                 //
@@ -319,12 +319,15 @@
                 //    check frmInsertFlag for whether it is "new" or "updated" data
                 //
                 if ( parseInt( theForm.frmInsertFlag.value ) === 0 ){
-                    Y.log("rec_id: "+rec_id +" newData: "+newData);
+                    //                    Y.log("rec_id: "+rec_id +" newData: "+newData);
                     //                        table.modifyRow( rec_id, newData );
                     table.modifyRow( rec_index, newData );
                 }else{
+                    //                    if(!newData.ID){
+                    //                        newData.ID = 666;
+                    //                    }
                     table.addRow( newData );
-                    Y.log(" newData: "+newData);
+                    //                    Y.log(" newData: "+newData);
                 }
             }
         
@@ -340,13 +343,10 @@
             //  Define DEFAULT data for a "New" inserted row
             //
             var default_data = {
-                valID : 0, // em_id : 0,
-                valURI : 'New Storage Site', // ename : 'New Storage Site',
-                valUsername : ' ',	  	 // etitle : '',
-                valpasswd : Y.DataType.Date.format( new Date(), "%F"),  // estart_date : Y.DataType.Date.format( new Date(), "%F"),
-                valEncrypted : 0, // esalary : 0.
-                valRecord : 0,
-                valInsert : 1
+                valURI : 'swift://host/path', // ename : 'New Storage Site',
+                valUsername : 'uName',	  	 // etitle : '',
+                valpasswd : 'secret',
+                valEncrypted : 'flase'
             };
         
             // position of "Insert Row" dialog
@@ -378,9 +378,7 @@
                         valURI : 	record.get('resourceURI'),
                         valUsername :	record.get('username'),
                         valpasswd :	record.get('password'),
-                        valEncrypted :	record.get('encrypted'),
-                        valRecord :	record.get('ID'),
-                        valInsert :	0
+                        valEncrypted :	record.get('encrypted')
                     }
         
                     xy[0] += 50;	// offset the dialog a tinch, from the Edit TD ...
@@ -390,7 +388,6 @@
                     // thePanel.get('buttons.footer')[0].set("label","Update");
                     thePanel.getButton(0, 'footer').set('label', 'Update');
                 } else {	//  we are INSERTING a new row ...
-        
                     insertFlag = true;   // used
                     xy = default_dialog_xy;
                     header_html = 'Inserting NEW Row';
@@ -434,7 +431,8 @@
                 ckey  = this.getCellColumnKey( cell ),
                 col   = this.getColumn(ckey);			//
                 //
-                rec_index= this.get('data').indexOf(rec);                   
+                rec_index= this.get('data').indexOf(rec);       
+                Y.log('------------------');
                 //
                 //  check for TD cell highlighting
                 //
@@ -480,11 +478,13 @@
             //                });
                 
                 
+            
             Y.one("#btnProcess").on("click", function(){
                 var recs = table.get('checkboxSelected');
-                process(recs);
+                if(recs.length>0){
+                    process(recs);
+                }
                 table.checkboxClearAll();
-//                table.set('checkboxSelected', [1,3,5,7] );
             });
                 
             function process(recs) {
@@ -492,8 +492,8 @@
 
                 Y.Array.each(recs,function (r) {
                     var record    = r.record;
+                    Y.log("record: "+record);
                     msg += record.get('ID') + ' : ' + record.get('resourceURI') + "\n";
-
                 });
                     
                 Y.log("msg "+msg);
@@ -504,7 +504,7 @@
             //  Handle the "Process Selected Rows" BUTTON press,
             // -------------------------
                 
-            //var btnProc = new Y.Button({srcNode:"#btnProcess"}).render();
+          
             //                Y.one("#btnProcess").on( "click", function(){
             //                    //
             //                    //  Get a NodeList of all nodes on the DT which have the checkboxes I defined,
