@@ -18,17 +18,22 @@ import javax.annotation.Nonnull;
 import javax.naming.NamingException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
+import javax.xml.bind.JAXBElement;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.auth.MyPrincipal;
+import nl.uva.cs.lobcder.auth.Permissions;
 import nl.uva.cs.lobcder.resources.StorageSite;
 import nl.uva.cs.lobcder.util.CatalogueHelper;
 import nl.uva.vlet.exception.VlException;
@@ -66,13 +71,24 @@ public class StorageSites extends CatalogueHelper {
             }
         }
         return null;
+    }
+
+    @PUT
+    @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public void setStorageSites(@QueryParam("site") String path, JAXBElement<StorageSiteWrapper> jbSites) throws SQLException {
+        MyPrincipal mp = (MyPrincipal) request.getAttribute("myprincipal");
+        if (mp.isAdmin()) {
+            try (Connection connection = getCatalogue().getConnection()) {
+                StorageSiteWrapper sites = jbSites.getValue();
+            }
+        }
 
     }
 
     private List<StorageSiteWrapper> queryStorageSites(@Nonnull MyPrincipal mp, @Nonnull Connection cn) throws SQLException {
         MultivaluedMap<String, String> queryParameters = info.getQueryParameters();
         List<String> ids = queryParameters.get("id");
-        if (ids !=null && ids.size() >0 && ids.get(0).equals("all")) {
+        if (ids != null && ids.size() > 0 && ids.get(0).equals("all")) {
             Collection<StorageSite> sites = getCatalogue().getStorageSites(cn);
             Collection<StorageSite> cachesites = getCatalogue().getCacheStorageSites(cn);
             List<StorageSiteWrapper> sitesWarpper = new ArrayList<>();
