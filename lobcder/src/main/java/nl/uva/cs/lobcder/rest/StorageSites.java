@@ -104,6 +104,7 @@ public class StorageSites extends CatalogueHelper {
                 sw.setQuotaSize(s.getQuotaSize());
                 sw.setResourceURI(s.getResourceURI());
                 sw.setStorageSiteId(s.getStorageSiteId());
+                sw.setCache(false);
                 sitesWarpper.add(sw);
             }
             for (StorageSite s : cachesites) {
@@ -118,6 +119,7 @@ public class StorageSites extends CatalogueHelper {
                 sw.setQuotaSize(s.getQuotaSize());
                 sw.setResourceURI(s.getResourceURI());
                 sw.setStorageSiteId(s.getStorageSiteId());
+                sw.setCache(true);
                 sitesWarpper.add(sw);
             }
             return sitesWarpper;

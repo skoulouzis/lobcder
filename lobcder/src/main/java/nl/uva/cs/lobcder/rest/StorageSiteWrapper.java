@@ -23,4 +23,5 @@ class StorageSiteWrapper {
     private String resourceURI;
     private CredentialWrapped credential;
     private boolean encrypt;
+    private boolean isCache;
 }

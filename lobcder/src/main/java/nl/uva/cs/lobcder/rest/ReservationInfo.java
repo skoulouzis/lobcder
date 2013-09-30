@@ -9,12 +9,14 @@ import lombok.Data;
 
 /**
  *
- * @author alogo
+ * @author S. Koulouzis
  */
 @XmlRootElement
 @Data
-public class Worker {
+public class ReservationInfo {
 
-    private String hostName;
-    private String status;
+    private String communicationID;
+    private int storageHostIndex;
+    private String storageHost;
+    private String workerDataAccessURL;
 }
