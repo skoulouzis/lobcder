@@ -160,11 +160,11 @@
             });
                 
                 
-            var fmtChkBox = function(o){
-                var chkd = (o.data.select) ? "checked" : "";
-                o.value = '<input type="checkbox" class="myCheckboxFmtr" ' + chkd + '/>';
-                o.className += ' center';
-            }
+            //            var fmtChkBox = function(o){
+            //                var chkd = (o.data.select) ? "checked" : "";
+            //                o.value = '<input type="checkbox" class="myCheckboxFmtr" ' + chkd + '/>';
+            //                o.className += ' center';
+            //            }
                 
             var fmtBlank = function(o) {
                 if (o.column.className) o.className += ' center '+o.column.className;
@@ -311,24 +311,28 @@
                     raw_value  = theForm[item.field].value;
                     data_value = ( item.parser && Y.Lang.isFunction(item.parser) ) ? item.parser.call(this,raw_value)  : raw_value ;
                     newData[ item.ckey ] = data_value;
-                    //                    Y.log("newData "+newData.resourceURI);
                 });
 
                 //
                 //  Now insert the "newData" object into DataTable's data,
                 //    check frmInsertFlag for whether it is "new" or "updated" data
                 //
-                if ( parseInt( theForm.frmInsertFlag.value ) === 0 ){
-                    //                    Y.log("rec_id: "+rec_id +" newData: "+newData);
-                    //                        table.modifyRow( rec_id, newData );
+                
+                Y.log("theForm.frmInsertFlag: "+theForm.frmInsertFlag);
+                Y.log("theForm.frmInsertFlag.value: "+theForm.frmInsertFlag.value);
+                Y.log("parseInt( theForm.frmInsertFlag.value ): "+parseInt( theForm.frmInsertFlag.value ));
+                Y.log("rec_index: "+rec_index);
+                //                if ( parseInt( theForm.frmInsertFlag.value ) === 0 ){
+                if(rec_index >= 0){
+                    Y.log("modifyRow");
+                    //table.modifyRow( rec_id, newData );
                     table.modifyRow( rec_index, newData );
+                      
                 }else{
-                    //                    if(!newData.ID){
-                    //                        newData.ID = 666;
-                    //                    }
+                    Y.log("Insert");
                     table.addRow( newData );
-                    //                    Y.log(" newData: "+newData);
                 }
+                rec_index = -1;
             }
         
             // trap an ENTER key on the form, save the data ...
