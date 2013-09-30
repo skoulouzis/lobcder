@@ -95,7 +95,8 @@ public class StorageSites extends CatalogueHelper {
             for (StorageSite s : sites) {
                 StorageSiteWrapper sw = new StorageSiteWrapper();
                 CredentialWrapped cw = new CredentialWrapped();
-                cw.setStorageSitePassword(s.getCredential().getStorageSitePassword());
+//                cw.setStorageSitePassword(s.getCredential().getStorageSitePassword());
+                cw.setStorageSitePassword("************");
                 cw.setStorageSiteUsername(s.getCredential().getStorageSiteUsername());
                 sw.setCredential(cw);
                 sw.setCurrentNum(s.getCurrentNum());
@@ -110,7 +111,8 @@ public class StorageSites extends CatalogueHelper {
             for (StorageSite s : cachesites) {
                 StorageSiteWrapper sw = new StorageSiteWrapper();
                 CredentialWrapped cw = new CredentialWrapped();
-                cw.setStorageSitePassword(s.getCredential().getStorageSitePassword());
+//                cw.setStorageSitePassword(s.getCredential().getStorageSitePassword());
+                cw.setStorageSitePassword("************");
                 cw.setStorageSiteUsername(s.getCredential().getStorageSiteUsername());
                 sw.setCredential(cw);
                 sw.setCurrentNum(s.getCurrentNum());

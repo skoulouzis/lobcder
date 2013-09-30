@@ -140,7 +140,7 @@
             //==================================================================================================
                 
             var ds = new Y.DataSource.IO({
-                source: "http://localhost:8080/lobcder/rest/storage_sites/"
+                source: "rest/storage_sites/"
             });
                 
                 
