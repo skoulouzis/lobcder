@@ -337,25 +337,29 @@ public class TestREST {
     public void testReservation() throws IOException {
         try {
             createCollection();
-            WebResource webResource = restClient.resource(restURL);
-//reservation/5455/candidates/?host-id-file=sps1;dff;/sbuiifv/dsudsuds&host-id-file=sps2;dcsdcdff;/sbuiifv/dsudsud/asc
-            MultivaluedMap<String, String> params = new MultivaluedMapImpl();
-            params.add("host-id-file", "host1;host1Id;/testResourceId");
-            params.add("host-id-file", "host2;host2Id;/testResourceId");
-            params.add("host-id-file", "host3;host3Id;/testResourceId");
 
-            WebResource res = webResource.path("reservation").path("some_communication_id").path("candidates").queryParams(params);
-            Candidate c = res.accept(MediaType.APPLICATION_XML).
-                    get(new GenericType<Candidate>() {
+            WebResource webResource = restClient.resource(restURL);
+//rest/reservation/5455/request/?dataPath=/&storageSiteHost=sps1&storageSiteHost=sps2&storageSiteHost=sps3
+            MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+
+            String dataPath = "/testResourceId/file1";
+            params.add("dataPath", dataPath);
+            params.add("storageSiteHost", "sps1");
+            params.add("storageSiteHost", "sps2");
+            params.add("storageSiteHost", "sps3");
+
+            WebResource res = webResource.path("reservation").path("some_communication_id").path("request").queryParams(params);
+            ReservationInfo info = res.accept(MediaType.APPLICATION_XML).
+                    get(new GenericType<ReservationInfo>() {
             });
 
-            assertNotNull(c);
-            assertNotNull(c.URL);
-            assertNotNull(c.candidateID);
-            assertNotNull(c.communicationID);
-            assertNotNull(c.filePath);
-
-
+            assertNotNull(info);
+            assertNotNull(info.communicationID);
+            assertNotNull(info.storageHost);
+            assertNotNull(info.storageHostIndex);
+            assertNotNull(info.workerDataAccessURL);
+            
+            
         } finally {
             deleteCollection();
         }
@@ -436,16 +440,16 @@ public class TestREST {
     }
 
     @XmlRootElement
-    public static class Candidate {
+    public static class ReservationInfo {
 
-        @XmlElement(name = "candidateID")
-        private String candidateID;
         @XmlElement(name = "communicationID")
         private String communicationID;
-        @XmlElement(name = "filePath")
-        private String filePath;
-        @XmlElement(name = "URL")
-        private String URL;
+        @XmlElement(name = "storageHost")
+        private String storageHost;
+        @XmlElement(name = "storageHostIndex")
+        private int storageHostIndex;
+        @XmlElement(name = "workerDataAccessURL")
+        private String workerDataAccessURL;
     }
 
     @XmlRootElement
