@@ -1,4 +1,4 @@
-DROP TABLE IF EXISTS permission_table, ldata_table, pdri_table, pdrigroup_table, storage_site_table, credential_table;
+-- DROP TABLE IF EXISTS permission_table, ldata_table, pdri_table, pdrigroup_table, storage_site_table, credential_table, requests_table;
 
 CREATE TABLE pdrigroup_table (
   pdriGroupId SERIAL PRIMARY KEY,
@@ -65,6 +65,19 @@ CREATE TABLE permission_table (
  permType ENUM('read', 'write'), INDEX(permType),
  ldUidRef BIGINT UNSIGNED, FOREIGN KEY(ldUidRef) REFERENCES ldata_table(uid) ON DELETE CASCADE, INDEX(ldUidRef),
  roleName VARCHAR(255)
+) ENGINE=InnoDB;
+
+
+CREATE TABLE requests_table (
+ uid SERIAL PRIMARY KEY,
+ methodName VARCHAR(255), INDEX(methodName),
+ requestURL VARCHAR(5240), INDEX(requestURL),
+ remoteAddr VARCHAR(5240),
+ contentLen BIGINT,
+ contentType VARCHAR(5240),
+ elapsedTime DOUBLE,
+ userName VARCHAR(255),
+ timeStamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
 DELIMITER |

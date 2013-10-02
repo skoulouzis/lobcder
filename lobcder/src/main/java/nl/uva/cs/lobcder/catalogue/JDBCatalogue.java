@@ -14,6 +14,7 @@ import java.sql.Date;
 import java.util.*;
 import javax.annotation.Nonnull;
 import javax.naming.NamingException;
+import javax.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.SneakyThrows;
@@ -154,7 +155,8 @@ public class JDBCatalogue extends MyDataSource {
                         + "lockScope, lockType, lockedByUser, lockDepth, "
                         + "lockTimeout, description, locationPreference, "
                         + "ldName) "
-                        + "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS)) {
+                        + "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, "
+                        + "?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS)) {
             preparedStatement.setLong(1, entry.getParentRef());
             preparedStatement.setString(2, entry.getOwner());
             preparedStatement.setString(3, entry.getType());
@@ -1131,6 +1133,29 @@ public class JDBCatalogue extends MyDataSource {
     private void putToPathCache(Long uid, String res) {
         checkPathCacheSize();
         pathCache.put(uid, res);
+    }
+
+    public void recordRequest(Connection connection, HttpServletRequest httpServletRequest, double elapsed) throws SQLException {
+        try (PreparedStatement preparedStatement = connection.prepareStatement(
+                        "INSERT INTO requests_table (methodName, requestURL, "
+                        + "remoteAddr, contentLen, contentType, elapsedTime,userName) "
+                        + "VALUES(?, ?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS)) {
+            preparedStatement.setString(1, httpServletRequest.getMethod());
+            preparedStatement.setString(2, httpServletRequest.getRequestURL().toString());
+            preparedStatement.setString(3, httpServletRequest.getRemoteAddr());
+            preparedStatement.setInt(4, httpServletRequest.getContentLength());
+            preparedStatement.setString(5, httpServletRequest.getContentType());
+            preparedStatement.setDouble(6, elapsed);
+
+            String authorizationHeader = httpServletRequest.getHeader("authorization");
+            String userNpasswd = "";
+            if (authorizationHeader != null) {
+                userNpasswd = authorizationHeader.split("Basic ")[1];
+            }
+            preparedStatement.setString(7, userNpasswd);
+            preparedStatement.executeUpdate();
+            ResultSet rs = preparedStatement.getGeneratedKeys();
+        }
     }
 
     @Data

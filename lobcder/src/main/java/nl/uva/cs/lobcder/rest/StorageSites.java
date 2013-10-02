@@ -33,7 +33,6 @@ import javax.ws.rs.core.UriInfo;
 import javax.xml.bind.JAXBElement;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.auth.MyPrincipal;
-import nl.uva.cs.lobcder.auth.Permissions;
 import nl.uva.cs.lobcder.resources.StorageSite;
 import nl.uva.cs.lobcder.util.CatalogueHelper;
 import nl.uva.vlet.exception.VlException;
@@ -59,12 +58,14 @@ public class StorageSites extends CatalogueHelper {
     @Path("query/")
     @GET
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public List<StorageSiteWrapper> getXml() throws FileNotFoundException, VlException, URISyntaxException, IOException, MalformedURLException, Exception {
+    public StorageSiteWrapperList getXml() throws FileNotFoundException, VlException, URISyntaxException, IOException, MalformedURLException, Exception {
         MyPrincipal mp = (MyPrincipal) request.getAttribute("myprincipal");
         if (mp.isAdmin()) {
             try (Connection cn = getCatalogue().getConnection()) {
                 List<StorageSiteWrapper> res = queryStorageSites(mp, cn);
-                return res;
+                StorageSiteWrapperList sswl = new StorageSiteWrapperList();
+                sswl.setSites(res);
+                return sswl;
             } catch (SQLException ex) {
                 log.log(Level.SEVERE, null, ex);
                 throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
@@ -73,13 +74,23 @@ public class StorageSites extends CatalogueHelper {
         return null;
     }
 
+    @Path("set/")
     @PUT
     @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public void setStorageSites(@QueryParam("site") String path, JAXBElement<StorageSiteWrapper> jbSites) throws SQLException {
+    public void set(JAXBElement<StorageSiteWrapperList> jbSites) throws SQLException {
         MyPrincipal mp = (MyPrincipal) request.getAttribute("myprincipal");
         if (mp.isAdmin()) {
             try (Connection connection = getCatalogue().getConnection()) {
-                StorageSiteWrapper sites = jbSites.getValue();
+                StorageSiteWrapperList sites = jbSites.getValue();
+                List<StorageSiteWrapper> sswl = sites.sites;
+                for (StorageSiteWrapper ssw : sswl) {
+                    log.log(Level.FINE, "sites: {0}", ssw.getResourceURI());
+                }
+                //                for(JAXBElement<StorageSiteWrapper> s : sites){
+                //                    StorageSiteWrapper ssw = s.getValue();
+                //                     log.log(Level.FINE, "sites: {0}", ssw.getResourceURI());
+                //                }
+
             }
         }
 

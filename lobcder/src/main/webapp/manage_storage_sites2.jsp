@@ -17,6 +17,7 @@
                         <tr><th>Storage Site Username :</th><td><input type="text" name="frmUsername" value="{valUsername}" /></td></tr>
                         <tr><th>Storage Site password :</th><td><input type="text" name="frmPassword" value="{valpasswd}" id="idCalInput" /></td></tr>
                         <tr><th>Is Storage Site Encrypted :</th><td><input type="text" name="frmEncrypted" value="{valEncrypted}" /></td></tr>
+                        <tr><th>Is Storage Site Cache :</th><td><input type="text" name="frmCache" value="{valCache}" /></td></tr>
                     </table>
                 </fieldset>
                 <input type="hidden" name="frmRecord" value="{valRecord}" />
@@ -146,7 +147,7 @@
                 
             ds.plug(Y.Plugin.DataSourceXMLSchema, {
                 schema: {
-                    resultListLocator: "storageSiteWrapper",
+                    resultListLocator: "sites",
                     resultFields: [
                         {key:"resourceURI", locator:"*[local-name() ='resourceURI']"},
                         {key:"password", locator:"*[local-name()='credential']/*[local-name()='storageSitePassword']"},
@@ -155,6 +156,8 @@
                         {key:"encrypted", locator:"*[local-name() ='encrypt']"},
                         {key:"quotaNum", locator:"*[local-name() ='quotaNum']"},
                         {key:"ID", locator:"*[local-name() ='storageSiteId']"},
+                        {key:"cache", locator:"*[local-name() ='cache']"}
+                        //                        
                     ]
                 }
             });
@@ -191,6 +194,15 @@
                 { key: 'username', label: 'username'},
                 { key: 'password', label: 'password'},
                 { key:'encrypted',  label:"encrypted?",
+                    formatConfig:yesNoformatConfig,
+                    editor:"radio",
+                    editorConfig:{
+                        radioOptions: yesNoformatConfig,
+                        overlayWidth: 250
+                    }
+                },
+                
+                { key:'cache',  label:"cache?",
                     formatConfig:yesNoformatConfig,
                     editor:"radio",
                     editorConfig:{
@@ -300,7 +312,8 @@
                     { field:'frmURI',  ckey:'resourceURI'},
                     { field:'frmUsername',  ckey:'username'},
                     { field:'frmPassword',  ckey:'password'},
-                    { field:'frmEncrypted', ckey:'encrypted'}
+                    { field:'frmEncrypted', ckey:'encrypted'},
+                    { field:'frmCache', ckey:'cache'}
                 ];
 
                 //
@@ -318,11 +331,7 @@
                 //    check frmInsertFlag for whether it is "new" or "updated" data
                 //
                 
-                Y.log("theForm.frmInsertFlag: "+theForm.frmInsertFlag);
-                Y.log("theForm.frmInsertFlag.value: "+theForm.frmInsertFlag.value);
-                Y.log("parseInt( theForm.frmInsertFlag.value ): "+parseInt( theForm.frmInsertFlag.value ));
-                Y.log("rec_index: "+rec_index);
-                //                if ( parseInt( theForm.frmInsertFlag.value ) === 0 ){
+                //                if ( parseInt( theForm.frmInsertFlag.value ) != 0 ){
                 if(rec_index >= 0){
                     Y.log("modifyRow");
                     //table.modifyRow( rec_id, newData );
@@ -332,6 +341,7 @@
                     Y.log("Insert");
                     table.addRow( newData );
                 }
+                
                 rec_index = -1;
             }
         
@@ -350,7 +360,8 @@
                 valURI : 'swift://host/path', // ename : 'New Storage Site',
                 valUsername : 'uName',	  	 // etitle : '',
                 valpasswd : 'secret',
-                valEncrypted : 'flase'
+                valEncrypted : 'flase',
+                valCache : 'flase'
             };
         
             // position of "Insert Row" dialog
@@ -484,6 +495,22 @@
                 
             
             Y.one("#btnProcess").on("click", function(){
+                
+                                
+                //                Y.YQLRESTClient.request({
+                //                    method: 'get',
+                //                    contentType: 'application/xml',
+                //                    content: '<storageSiteWrapperList><sites><cache>false</cache><credential><storageSitePassword>************</storageSitePassword><storageSiteUsername>skoulouz</storageSiteUsername></credential><currentNum>-1</currentNum><encrypt>false</encrypt><quotaNum>-1</quotaNum><quotaSize>-1</quotaSize><resourceURI>sftp://skoulouz@fs2.das4.science.uva.nl/home/skoulouz/tmp</resourceURI><storageSiteId>2</storageSiteId></sites><sites><cache>true</cache><credential><storageSitePassword>************</storageSitePassword><storageSiteUsername>fakeuser</storageSiteUsername></credential><currentNum>-1</currentNum><encrypt>false</encrypt><quotaNum>-1</quotaNum><quotaSize>-1</quotaSize><resourceURI>file:///tmp/</resourceURI><storageSiteId>1</storageSiteId></sites></storageSiteWrapperList>',
+                //                    url: 'http://localhost:8080/lobcder/rest/storage_sites/set'
+                //                    //                    url: 'http://term.ie/oauth/example/request_token.php'
+                //                }, function (result) {
+                //                    Y.log("----------------"+result);
+                ////                    Y.log("----------------"+result.response);
+                //                    //                    alert(result.response);
+                //                });
+
+    
+                
                 var recs = table.get('checkboxSelected');
                 if(recs.length>0){
                     process(recs);
@@ -499,7 +526,6 @@
                     Y.log("record: "+record);
                     msg += record.get('ID') + ' : ' + record.get('resourceURI') + "\n";
                 });
-                    
                 Y.log("msg "+msg);
                 alert(msg);
             }
