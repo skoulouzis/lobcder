@@ -4,22 +4,16 @@
  */
 package nl.uva.cs.lobcder.frontend;
 
-import com.google.common.io.CharStreams;
 import io.milton.servlet.MiltonFilter;
 import java.io.IOException;
-import java.security.Principal;
+import java.io.UnsupportedEncodingException;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.Enumeration;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.naming.InitialContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
 import nl.uva.cs.lobcder.util.CatalogueHelper;
@@ -78,7 +72,7 @@ public class MyFilter extends MiltonFilter {
         return catalogue;
     }
 
-    private void recordEvent(Connection connection, HttpServletRequest httpServletRequest, double elapsed) throws SQLException {
+    private void recordEvent(Connection connection, HttpServletRequest httpServletRequest, double elapsed) throws SQLException, UnsupportedEncodingException {
         getCatalogue().recordRequest(connection, httpServletRequest, elapsed);
         connection.commit();
     }

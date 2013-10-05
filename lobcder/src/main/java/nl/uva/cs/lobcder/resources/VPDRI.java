@@ -250,7 +250,7 @@ public class VPDRI implements PDRI {
                 int totalBytesRead = 0;
                 while (totalBytesRead < len || read != -1) {
                     read = ra.readBytes(start, buff, 0, buff.length);
-                     if (read == -1 || totalBytesRead == len) {
+                    if (read == -1 || totalBytesRead == len) {
                         break;
                     }
                     totalBytesRead += read;
@@ -323,6 +323,9 @@ public class VPDRI implements PDRI {
                 } catch (VRLSyntaxException ex1) {
                     throw new IOException(ex1);
                 } catch (VlException ex1) {
+                    if (ex instanceof ResourceNotFoundException){ //|| ex.getMessage().contains("Couldn open location. Get NULL object for location:")) {
+                        throw new IOException(ex1);
+                    }
                     if (reconnectAttemts < Constants.RECONNECT_NTRY) {
                         try {
                             sleeTime = sleeTime + 5;

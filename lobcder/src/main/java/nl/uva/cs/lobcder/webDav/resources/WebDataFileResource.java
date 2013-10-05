@@ -57,7 +57,7 @@ public class WebDataFileResource extends WebDataResource implements
 
     private int sleepTime = 5;
     private List<String> workers;
-    private boolean doRedirect = true;
+    private boolean doRedirect = false;
     private static int workerIndex = 0;
     private static final Map<String, Double> weightPDRIMap = new HashMap<>();
     private static final Map<String, Integer> numOfGetsMap = new HashMap<>();
@@ -256,6 +256,9 @@ public class WebDataFileResource extends WebDataResource implements
             if (ex instanceof NotFoundException) {
                 throw (NotFoundException) ex;
             }
+            if (ex.getMessage().contains("Resource not found.:Couldn't locate")) {
+                throw new NotFoundException(ex.getMessage());
+            }
             try {
                 sleepTime = sleepTime + 20;
                 Thread.sleep(sleepTime);
@@ -413,10 +416,11 @@ public class WebDataFileResource extends WebDataResource implements
                 throw new BadRequestException(this, ex.getMessage());
             }
         } finally {
-            if (out != null) {
-                out.flush();
-                out.close();
-            }
+            //Don't close the output, we need it to send back the response 
+//            if (out != null) {
+//                out.flush();
+//                out.close();
+//            }
         }
         double elapsed = System.currentTimeMillis() - start;
         long len;

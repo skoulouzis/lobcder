@@ -14,6 +14,7 @@ import javax.naming.InitialContext;
 import java.util.logging.Level;
 import nl.uva.cs.lobcder.auth.AuthI;
 import nl.uva.cs.lobcder.auth.AuthWorker;
+import nl.uva.cs.lobcder.util.WorkerHelper;
 
 @Log
 public class MyMiltonConfigurator extends DefaultMiltonConfigurator {
@@ -60,14 +61,20 @@ public class MyMiltonConfigurator extends DefaultMiltonConfigurator {
 
 
 //            workerAuth = (AuthWorker) envContext.lookup("bean/authWorker");
-            workerAuth = new AuthWorker();
+            List<String> workers = WorkerHelper.getWorkers();
+            if (workers != null && workers.size() > 0) {
+                workerAuth = new AuthWorker();
+            }
+
 
             webDataResourceFactory = (WebDataResourceFactory) builder.getMainResourceFactory();
             webDataResourceFactory.setCatalogue(catalogue);
             List<AuthI> authList = new ArrayList<>();
             authList.add(localDbAuth);
             authList.add(authRemote);
+//            if(workerAuth!=null){
 //            authList.add(workerAuth);
+//            }
             webDataResourceFactory.setAuthList(authList);
 ///            webDataResourceFactory.setAuth1(authRemote);
 //            webDataResourceFactory.setAuth2(localDbAuth);

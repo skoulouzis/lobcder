@@ -42,9 +42,9 @@ public class AuthWorker implements AuthI {
 
             for (String t : temporarryTokens) {
                 if (t.equals(token)) {
-//                    HashSet<String> roles = new HashSet<>();
-//                    roles.add("admin");
-//                    principal = new MyPrincipal("worker-", roles);
+                    HashSet<String> roles = new HashSet<>();
+                    roles.add("admin");
+                    principal = new MyPrincipal("worker-", roles);
 //                    Logger.getLogger(AuthWorker.class.getName()).log(Level.FINE, "Check token: {0}", token);
                     temporarryTokens.remove(token);
 //                    Logger.getLogger(AuthWorker.class.getName()).log(Level.FINE, "temporarryTokens.size(): {0}", temporarryTokens.size());
@@ -65,9 +65,9 @@ public class AuthWorker implements AuthI {
 //            }
 
 
-        HashSet<String> roles = new HashSet<>();
-        roles.add("admin");
-        principal = new MyPrincipal("worker-", roles);
+//        HashSet<String> roles = new HashSet<>();
+//        roles.add("admin");
+//        principal = new MyPrincipal("worker-", roles);
 
 //        Logger.getLogger(AuthWorker.class.getName()).log(Level.FINE, "Returning principal: {0}", principal);
         return principal;
@@ -75,11 +75,11 @@ public class AuthWorker implements AuthI {
     }
 
     public static void setTicket(String workerID, String token) {
-//        synchronized (temporarryTokens) {
-////            temporarryTokens.put(token, 0);
-//            if (!temporarryTokens.contains(token)) {
-//                temporarryTokens.add(token);
-//            }
-//        }
+        synchronized (temporarryTokens) {
+//            temporarryTokens.put(token, 0);
+            if (!temporarryTokens.contains(token)) {
+                temporarryTokens.add(token);
+            }
+        }
     }
 }

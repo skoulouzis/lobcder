@@ -6,6 +6,7 @@ package nl.uva.cs.lobcder.catalogue;
 
 import io.milton.common.Path;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -28,6 +29,7 @@ import nl.uva.cs.lobcder.resources.PDRIDescr;
 import nl.uva.cs.lobcder.resources.StorageSite;
 import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.cs.lobcder.util.MyDataSource;
+import org.apache.commons.codec.binary.Base64;
 
 /**
  *
@@ -1135,7 +1137,7 @@ public class JDBCatalogue extends MyDataSource {
         pathCache.put(uid, res);
     }
 
-    public void recordRequest(Connection connection, HttpServletRequest httpServletRequest, double elapsed) throws SQLException {
+    public void recordRequest(Connection connection, HttpServletRequest httpServletRequest, double elapsed) throws SQLException, UnsupportedEncodingException {
         try (PreparedStatement preparedStatement = connection.prepareStatement(
                         "INSERT INTO requests_table (methodName, requestURL, "
                         + "remoteAddr, contentLen, contentType, elapsedTime,userName) "
@@ -1150,8 +1152,33 @@ public class JDBCatalogue extends MyDataSource {
             String authorizationHeader = httpServletRequest.getHeader("authorization");
             String userNpasswd = "";
             if (authorizationHeader != null) {
-                userNpasswd = authorizationHeader.split("Basic ")[1];
+                final int index = authorizationHeader.indexOf(' ');
+                if (index > 0) {
+                    final String credentials = new String(Base64.decodeBase64(authorizationHeader.substring(index).getBytes()), "UTF8");
+                    String[] encodedToken = credentials.split(":");
+                    if (encodedToken.length > 1) {
+                        String token = new String(Base64.decodeBase64(encodedToken[1]));
+                        if (token.contains(";") && token.contains("uid=")) {
+                            String uid = token.split(";")[0];
+                            userNpasswd = uid.split("uid=")[1];
+                        } else {
+                            userNpasswd = credentials.substring(0, credentials.indexOf(":"));
+                        }
+                    }
+//                    if (userNpasswd == null || userNpasswd.length() < 1) {
+//                        userNpasswd = credentials.substring(0, credentials.indexOf(":"));
+//                    }
+
+//                final String credentials = new String(Base64.decodeBase64(autheader.substring(index)), "UTF8");
+
+//                final String token = credentials.substring(credentials.indexOf(":") + 1);
+                }
             }
+
+
+
+
+
             preparedStatement.setString(7, userNpasswd);
             preparedStatement.executeUpdate();
             ResultSet rs = preparedStatement.getGeneratedKeys();
