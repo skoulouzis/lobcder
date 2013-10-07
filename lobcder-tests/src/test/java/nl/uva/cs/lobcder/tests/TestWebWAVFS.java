@@ -46,7 +46,10 @@ import org.apache.commons.httpclient.params.HttpClientParams;
 import org.apache.commons.httpclient.protocol.Protocol;
 import org.apache.commons.httpclient.protocol.ProtocolSocketFactory;
 import org.apache.jackrabbit.webdav.*;
+import org.apache.jackrabbit.webdav.client.methods.CopyMethod;
 import org.apache.jackrabbit.webdav.client.methods.DeleteMethod;
+import org.apache.jackrabbit.webdav.client.methods.MkColMethod;
+import org.apache.jackrabbit.webdav.client.methods.MoveMethod;
 import org.apache.jackrabbit.webdav.client.methods.PropFindMethod;
 import org.apache.jackrabbit.webdav.client.methods.PutMethod;
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
@@ -154,7 +157,7 @@ public class TestWebWAVFS {
 
         client1 = new HttpClient();
         HttpClientParams params = new HttpClientParams();
-        params.setParameter("http.protocol.handle-redirects",false);
+        params.setParameter("http.protocol.handle-redirects", false);
         client1.setParams(params);
 
         assertNotNull(uri.getHost());
@@ -533,6 +536,45 @@ public class TestWebWAVFS {
         } catch (IOException ex) {
             Logger.getLogger(TestWebWAVFS.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
+            delete(testFileURI1);
+        }
+    }
+
+    @Test
+    public void testCopy() throws VlException, IOException {
+        String testFileURI1 = this.uri.toASCIIString() + TestSettings.TEST_FILE_NAME1 + ".txt";
+        String testcol = root + "testResourceId/";
+        try {
+            PutMethod put = new PutMethod(testFileURI1);
+            put.setRequestEntity(new StringRequestEntity(TestSettings.TEST_DATA, "text/plain", "UTF-8"));
+            int status = client1.executeMethod(put);
+            assertTrue(status == HttpStatus.SC_OK || status == HttpStatus.SC_CREATED);
+
+            GetMethod get = new GetMethod(testFileURI1);
+            status = client1.executeMethod(get);
+            assertEquals(HttpStatus.SC_OK, status);
+            String cont = get.getResponseBodyAsString();
+            assertEquals(TestSettings.TEST_DATA, cont);
+
+            MkColMethod mkcol = new MkColMethod(testcol);
+            status = client1.executeMethod(mkcol);
+            assertEquals(HttpStatus.SC_CREATED, status);
+            
+            
+            String targetURL = testcol+TestSettings.TEST_FILE_NAME1 + ".txt";
+            CopyMethod cp = new CopyMethod(testFileURI1, targetURL , true);
+            status = client1.executeMethod(cp);
+            assertTrue( status == HttpStatus.SC_OK || status == HttpStatus.SC_CREATED);
+            
+            
+            get = new GetMethod(targetURL);
+            status = client1.executeMethod(get);
+            assertEquals(HttpStatus.SC_OK, status);
+            cont = get.getResponseBodyAsString();
+            System.out.println(cont);
+            assertEquals(TestSettings.TEST_DATA, cont);
+        } finally {
+            delete(testcol);
             delete(testFileURI1);
         }
     }
