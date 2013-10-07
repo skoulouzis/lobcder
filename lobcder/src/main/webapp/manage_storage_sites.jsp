@@ -15,7 +15,9 @@
         <div id="dtable"></div>
 
         <div class="ba_content">
-            <button id="btnSelected" class="yui3-button">Save Selections</button>
+            <button id="btnSave" class="yui3-button">Save Selections</button>
+            <button id="btnInsert" class="yui3-button">Insert New Row</button>
+            <button id="btnDelete" class="yui3-button">Delete Selections</button>
         </div>
         <script src="http://yui.yahooapis.com/3.10.3/build/yui/yui-min.js"></script>
 
@@ -75,10 +77,11 @@
                     columns:	cols,
                     data:		ds,
                     checkboxSelectMode:   true,
+                    sortable:  true,
                     editable:       true,
                     editOpenType:   'click',
                     defaultEditor:  'text',
-                    primaryKeys: ['ID','resourceURI']
+                    primaryKeys: ['ID']
                 });
                 
                 
@@ -100,32 +103,113 @@
                 
                 
                 
-                Y.one("#btnSelected").on("click", function(){
+                Y.one("#btnSave").on("click", function(){
                     var recs = table.get('checkboxSelected');
-                    process(recs);
+                    var dataMsg = "<storageSiteWrapperList>"
+                    Y.Array.each(recs,function (r) {
+                        if(r.tr) {
+                            if ( confirm("Are you sure you want to save this record ?\n"+ r.record.get('ID')+" : "+r.record.get('resourceURI')) === true ) {
+                                dataMsg += "<sites>"
+                                var recindx = table.data.indexOf(r.record);
+                            
+                                dataMsg += "<cache>"
+                                dataMsg +=r.record.get('cache');
+                                dataMsg += "</cache>";
+                            
+                                dataMsg += "<credential><storageSitePassword>";
+                                dataMsg +=r.record.get('password');
+                                dataMsg +="</storageSitePassword>";
+                                dataMsg +="<storageSiteUsername>";
+                                dataMsg += r.record.get('username');
+                                dataMsg +="</storageSiteUsername>";
+                                dataMsg += "</credential>";
+                            
+                                dataMsg +="<currentNum>";
+                                dataMsg +=r.record.get('currentNum');
+                                dataMsg +="</currentNum>";
+                            
+                                dataMsg +="<encrypt>";
+                                dataMsg += r.record.get('encrypt');
+                                dataMsg+="</encrypt>";
+
+
+                                dataMsg +="<quotaSize>";
+                                dataMsg += r.record.get('quotaSize');
+                                dataMsg+="</quotaSize>";
+                            
+                                dataMsg +="<resourceURI>";
+                                dataMsg += r.record.get('resourceURI');
+                                dataMsg+="</resourceURI>";
+                              
+                                dataMsg += "</sites>"
+                            }
+                          
+                        }
+                    });
+                    dataMsg += "</storageSiteWrapperList>"
+                    //                    Y.log("dataMsg "+dataMsg);
+                    send(dataMsg);
+                    table.checkboxClearAll();
                 });
                 
                 
-                function process(recs) {
-                    var msg       = '',
-                    msgNumOff = '<li>({numOff} records selected are off of the current page)</li>',
-                    numOff    = 0,
-                    template  = '<li>Record index = {index} Data = {port} : {pname}</li>';
+                var send = function(dataMsg) {
+                    Y.log("dataMsg "+dataMsg);
+                    // Define a function to handle the response data.
+                    function complete(id, o, args) {
 
-                    // Loop thru returned records,
-                    // for records "off current page" they will have no TR or Record setting, but will have pkvalues set.
+                    };
+
+                    // Subscribe to event "io:complete", and pass an array
+                    // as an argument to the event handler "complete", since
+                    // "complete" is global.   At this point in the transaction
+                    // lifecycle, success or failure is not yet known.
+                    Y.on('io:complete', complete, Y, ['lorem', 'ipsum']);
+                
+                    var cfg = {
+                        method: 'PUT',
+                        data: dataMsg,
+                        headers: {
+                            'Content-Type': 'application/xml'
+                        }
+                    };
+                    var uriPUT = "rest/storage_sites/set";
+                    var requestPUT = Y.io(uriPUT,cfg);           
+                    Y.log("request: "+requestPUT);
+                }
+                
+                Y.one("#btnDelete").on("click", function(){
+                    var recs = table.get('checkboxSelected');
+                    // returns array of objects {tr,record,pkvalues} 
                     Y.Array.each(recs,function (r) {
                         if(r.tr) {
-                            var data    = r.record.getAttrs(['select', 'port', 'pname']),
-                            recindx = table.data.indexOf(r.record);
-
-                            data.index = recindx;
-                            msg += Y.Lang.sub(template, data);
-                        } else
-                            numOff++;
+                            var recindx = table.data.indexOf(r.record);
+                            Y.log("recindx "+recindx);
+                            if ( confirm("Are you sure you want to delete this record ?\n"+ r.record.get('ID')+" : "+r.record.get('resourceURI')) === true ) {
+                                table.removeRow(recindx);
+                            }
+                        }
                     },table);
-                }
-            
+                    table.checkboxClearAll();
+                });
+                
+                
+                
+                
+                
+                Y.one("#btnInsert").on("click",function() {
+                    Y.log("Insert new! "+ table.data.recordset);
+                    
+                    var max = -1;
+                    var colIndex=0;
+                    var record;
+                    while ( record = table.data.item(colIndex++)) {
+                        if(record.get('ID') > max){
+                            max = record.get('ID');
+                        }
+                    }
+                    table.addRow( [{ID:++max,resourceURI:'file://',username:'uname',password:'pass',encrypted:'false',cache:'false',currentNum:'-1',quotaNum:'-1'}] );
+                });
             });
         </script>
 
