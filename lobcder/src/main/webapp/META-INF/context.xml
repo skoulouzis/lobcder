@@ -32,4 +32,8 @@
   
   <Resource auth="Container" factory="org.apache.naming.factory.BeanFactory" 
             name="bean/authWorker" type="nl.uva.cs.lobcder.auth.AuthWorker"/>
+  
+  
+    <Resource auth="Container" factory="org.apache.naming.factory.BeanFactory" 
+            name="bean/Predictor" type="nl.uva.cs.lobcder.optimization.FileAccessPredictor"/>
 </Context>

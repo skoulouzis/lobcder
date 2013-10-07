@@ -11,11 +11,14 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.naming.Context;
 import javax.naming.InitialContext;
+import javax.naming.NamingException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
+import nl.uva.cs.lobcder.optimization.FileAccessPredictor;
 import nl.uva.cs.lobcder.util.CatalogueHelper;
 
 /**
@@ -26,26 +29,39 @@ import nl.uva.cs.lobcder.util.CatalogueHelper;
 public class MyFilter extends MiltonFilter {
 
     private JDBCatalogue catalogue;
+    private FileAccessPredictor fap;
+
+    public MyFilter() {
+        super();
+        try {
+            loadOptimizers();
+        } catch (Exception ex) {
+            Logger.getLogger(MyFilter.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
 
     @Override
     public void doFilter(javax.servlet.ServletRequest req, javax.servlet.ServletResponse resp, javax.servlet.FilterChain fc) throws IOException, ServletException {
         double start = System.currentTimeMillis();
+        String method = ((HttpServletRequest) req).getMethod();
+        StringBuffer reqURL = ((HttpServletRequest) req).getRequestURL();
+
         super.doFilter(req, resp, fc);
         double elapsed = System.currentTimeMillis() - start;
 
 
-        String method = ((HttpServletRequest) req).getMethod();
+
         String from = ((HttpServletRequest) req).getRemoteAddr();
 //        String user = ((HttpServletRequest) req).getRemoteUser();
         int contentLen = ((HttpServletRequest) req).getContentLength();
         String contentType = ((HttpServletRequest) req).getContentType();
-        
+
         String authorizationHeader = ((HttpServletRequest) req).getHeader("authorization");
         String userNpasswd = "";
         if (authorizationHeader != null) {
             userNpasswd = authorizationHeader.split("Basic ")[1];
         }
-        
+
         log.log(Level.INFO, "Req_Source: {0} Method: {1} Content_Len: {2} Content_Type: {3} Elapsed_Time: {4} sec EncodedUser: {5}", new Object[]{from, method, contentLen, contentType, elapsed / 1000.0, userNpasswd});
         try (Connection connection = getCatalogue().getConnection()) {
             recordEvent(connection, ((HttpServletRequest) req), elapsed);
@@ -76,4 +92,22 @@ public class MyFilter extends MiltonFilter {
         getCatalogue().recordRequest(connection, httpServletRequest, elapsed);
         connection.commit();
     }
+
+    private void loadOptimizers() throws Exception {
+//        Context ctx = new InitialContext();
+//        if (ctx == null) {
+//            throw new Exception("JNDI could not create InitalContext ");
+//        }
+//        Context envContext = (Context) ctx.lookup("java:/comp/env");
+//        fap = (FileAccessPredictor) envContext.lookup("bean/Predictor");
+//        fap.startGraphPopulation();
+    }
+    
+    
+    
+   	@Override
+	public void destroy() {
+            super.destroy();
+            
+        }
 }

@@ -713,7 +713,7 @@ public class JDBCatalogue extends MyDataSource {
             newFileEntry = registerLogicalData(newFileEntry, connection);
             setPermissions(newFileEntry.getUid(), permissionsForNew, connection);
             try (Statement s = connection.createStatement()) {
-                s.executeUpdate("UPDATE pdrigroup_table SET refCount=refCount+1 WHERE groupId = " + newFileEntry.getPdriGroupId());
+                s.executeUpdate("UPDATE pdrigroup_table SET refCount=refCount+1 WHERE pdriGroupId = " + newFileEntry.getPdriGroupId());
             }
         }
     }

@@ -12,8 +12,10 @@ import nl.uva.cs.lobcder.webDav.resources.WebDataResourceFactory;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import java.util.logging.Level;
+import javax.naming.NamingException;
 import nl.uva.cs.lobcder.auth.AuthI;
 import nl.uva.cs.lobcder.auth.AuthWorker;
+import nl.uva.cs.lobcder.optimization.FileAccessPredictor;
 import nl.uva.cs.lobcder.util.WorkerHelper;
 
 @Log
@@ -79,6 +81,9 @@ public class MyMiltonConfigurator extends DefaultMiltonConfigurator {
 ///            webDataResourceFactory.setAuth1(authRemote);
 //            webDataResourceFactory.setAuth2(localDbAuth);
 //            webDataResourceFactory.setAuth3(workerAuth);
+
+
+//            loadOptimizers(envContext);
         } catch (Exception e) {
             MyMiltonConfigurator.log.log(Level.SEVERE, null, e);
         }
@@ -89,4 +94,9 @@ public class MyMiltonConfigurator extends DefaultMiltonConfigurator {
         super.shutdown();
         catalogue.stopSweep();
     }
+
+//    private void loadOptimizers(Context envContext) throws NamingException {
+//        FileAccessPredictor fap = (FileAccessPredictor) envContext.lookup("bean/Predictor");
+//        fap.startGraphPopulation();
+//    }
 }
