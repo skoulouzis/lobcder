@@ -1185,6 +1185,49 @@ public class JDBCatalogue extends MyDataSource {
         }
     }
 
+    public void insertOrUpdateStorageSites(Collection<StorageSite> sites, Connection connection) throws SQLException {
+//        insert into table (id, name, age) values(1, "A", 19) on duplicate key update name=values(name), age=values(age)
+        for (StorageSite s : sites) {
+            long credentialID;
+            try (PreparedStatement preparedStatement = connection.prepareStatement(
+                            "INSERT INTO credential_table (username, "
+                            + "password) VALUES (?, ?)", Statement.RETURN_GENERATED_KEYS)) {
+                preparedStatement.setString(1, s.getCredential().getStorageSiteUsername());
+                preparedStatement.setString(2, s.getCredential().getStorageSitePassword());
+                preparedStatement.executeUpdate();
+                ResultSet rs = preparedStatement.getGeneratedKeys();
+                rs.next();
+                credentialID = rs.getLong(1);
+            }
+            try (PreparedStatement preparedStatement = connection.prepareStatement(
+                            "INSERT INTO storage_site_table "
+                            + "(resourceUri, credentialRef, currentNum, "
+                            + "currentSize, quotaNum, quotaSize, isCache, extra, "
+                            + "encrypt) "
+                            + "VALUES (?, ?, ?, ?, ?, ?, ?, NULL, ?)")) {
+                preparedStatement.setString(1, s.getResourceURI());
+                preparedStatement.setLong(2, credentialID);
+                preparedStatement.setLong(3, s.getCurrentNum());
+                preparedStatement.setLong(4, s.getCurrentSize());
+                preparedStatement.setLong(5, s.getQuotaNum());
+                preparedStatement.setLong(6, s.getQuotaSize());
+                preparedStatement.setBoolean(7, s.isCache());
+                preparedStatement.setBoolean(8, s.isEncrypt());
+                preparedStatement.executeUpdate();
+            }
+        }
+    }
+
+    public void deleteStorageSites(List<Long> ids, Connection connection) throws SQLException {
+        for (Long id : ids) {
+            try (PreparedStatement preparedStatement = connection.prepareStatement(
+                            "DELETE FROM storage_site_table WHERE storageSiteId = ?")) {
+                preparedStatement.setLong(1, id);
+                preparedStatement.executeUpdate();
+            }
+        }
+    }
+
     @Data
     @AllArgsConstructor
     public class PathInfo {

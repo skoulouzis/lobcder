@@ -24,6 +24,7 @@ public class StorageSite implements Cloneable {
         clone.setQuotaSize(new Long(quotaSize));
         clone.setResourceURI(resourceURI);
         clone.setEncrypt(encrypt);
+        clone.setCache(cache);
         return clone;
     }
     private Long storageSiteId;
@@ -34,4 +35,5 @@ public class StorageSite implements Cloneable {
     private String resourceURI;
     private Credential credential;
     private boolean encrypt;
+    private boolean cache;
 }

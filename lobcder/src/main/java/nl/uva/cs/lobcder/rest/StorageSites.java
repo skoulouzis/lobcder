@@ -23,7 +23,6 @@ import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
@@ -33,6 +32,7 @@ import javax.ws.rs.core.UriInfo;
 import javax.xml.bind.JAXBElement;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.auth.MyPrincipal;
+import nl.uva.cs.lobcder.resources.Credential;
 import nl.uva.cs.lobcder.resources.StorageSite;
 import nl.uva.cs.lobcder.util.CatalogueHelper;
 import nl.uva.vlet.exception.VlException;
@@ -81,19 +81,42 @@ public class StorageSites extends CatalogueHelper {
         MyPrincipal mp = (MyPrincipal) request.getAttribute("myprincipal");
         if (mp.isAdmin()) {
             try (Connection connection = getCatalogue().getConnection()) {
-                StorageSiteWrapperList sites = jbSites.getValue();
-                List<StorageSiteWrapper> sswl = sites.sites;
-                for (StorageSiteWrapper ssw : sswl) {
-                    log.log(Level.FINE, "sites: {0}", ssw.getResourceURI());
-                }
-                //                for(JAXBElement<StorageSiteWrapper> s : sites){
-                //                    StorageSiteWrapper ssw = s.getValue();
-                //                     log.log(Level.FINE, "sites: {0}", ssw.getResourceURI());
-                //                }
+                StorageSiteWrapperList sitesWL = jbSites.getValue();
+                List<StorageSiteWrapper> sswl = sitesWL.sites;
 
+                Collection<StorageSite> sites = new ArrayList<>();
+                for (StorageSiteWrapper ssw : sswl) {
+                    StorageSite site = new StorageSite();
+                    Credential cred = new Credential();
+                    cred.setStorageSitePassword(ssw.getCredential().getStorageSitePassword());
+                    cred.setStorageSiteUsername(ssw.getCredential().getStorageSiteUsername());
+                    site.setCredential(cred);
+                    site.setCurrentNum(ssw.getCurrentNum());
+                    site.setCurrentSize(ssw.getCurrentSize());
+                    site.setResourceURI(ssw.getResourceURI());
+                    site.setEncrypt(ssw.isEncrypt());
+                    site.setCache(ssw.isCache());
+                    site.setQuotaNum(ssw.getQuotaNum());
+                    site.setQuotaSize(ssw.getQuotaSize());
+                    sites.add(site);
+                }
+                getCatalogue().insertOrUpdateStorageSites(sites, connection);
+                connection.commit();
             }
         }
+    }
 
+    @Path("delete/")
+    @PUT
+    @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public void delete(IDWrapperList ids) throws SQLException {
+        MyPrincipal mp = (MyPrincipal) request.getAttribute("myprincipal");
+        if (mp.isAdmin()) {
+            try (Connection connection = getCatalogue().getConnection()) {
+                getCatalogue().deleteStorageSites(ids.ids, connection);
+                connection.commit();
+            }
+        }
     }
 
     private List<StorageSiteWrapper> queryStorageSites(@Nonnull MyPrincipal mp, @Nonnull Connection cn) throws SQLException {
@@ -117,6 +140,7 @@ public class StorageSites extends CatalogueHelper {
                 sw.setResourceURI(s.getResourceURI());
                 sw.setStorageSiteId(s.getStorageSiteId());
                 sw.setCache(false);
+                sw.setCurrentSize(s.getCurrentSize());
                 sitesWarpper.add(sw);
             }
             for (StorageSite s : cachesites) {
@@ -133,6 +157,7 @@ public class StorageSites extends CatalogueHelper {
                 sw.setResourceURI(s.getResourceURI());
                 sw.setStorageSiteId(s.getStorageSiteId());
                 sw.setCache(true);
+                sw.setCurrentSize(s.getCurrentSize());
                 sitesWarpper.add(sw);
             }
             return sitesWarpper;

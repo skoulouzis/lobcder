@@ -35,6 +35,7 @@
             "datatable-scroll", "datatable-sort",  "datatable-mutable", "event-custom",
             "datatype", "cssfonts", "cssbutton",
             'gallery-datatable-paginator','gallery-paginator-view',
+            "gallery-datatable-formatters",
             function (Y) {
                
                
@@ -51,15 +52,18 @@
                             {key:"password", locator:"*[local-name()='credential']/*[local-name()='storageSitePassword']"},
                             {key:"username", locator:"*[local-name()='credential']/*[local-name()='storageSiteUsername']"},
                             {key:"currentNum", locator:"*[local-name() ='currentNum']"},
+                            {key:"currentSize", locator:"*[local-name() ='currentSize']"},
                             {key:"encrypted", locator:"*[local-name() ='encrypt']"},
                             {key:"quotaNum", locator:"*[local-name() ='quotaNum']"},
+                            {key:"quotaSize", locator:"*[local-name() ='quotaSize']"},
                             {key:"ID", locator:"*[local-name() ='storageSiteId']"},
                             {key:"cache", locator:"*[local-name() ='cache']"}
-                            //                        
                         ]
                     }
                 });
             
+            
+                var encr = { 0:'false', 1:'true'};
             
                 var cols =
                     [
@@ -67,9 +71,15 @@
                     { key: 'resourceURI', label: 'URI' },
                     { key: 'username', label: 'username'},
                     { key: 'password', label: 'password'},
-                    { key:'encrypted',  label:"encrypted?"},
+                    { key:'encrypted',  label:"encrypted?",
+                        formatConfig: encr,
+                        editor:"checkbox", editorConfig:{ checkboxHash:{ 'true':true, 'false':false } }
+                    },
+                    //                    { key:'encrypted',  label:"encrypted?"},
                     { key:'cache',  label:"cache?"},
                     { key: 'currentNum', label: 'currentNum'},
+                    { key: 'currentSize', label: 'currentSize'},
+                    { key: 'quotaSize', label: 'quotaSize'},
                     { key: 'quotaNum', label: 'quotaNum'}
                 ];
             
@@ -91,14 +101,14 @@
                 });
                 
                 ds.after("response", function() {
-                    table.render("#dtable")
+                    table.render("#dtable");
                 }); 
             
             
                 table.after('cellEditorSave', function(o){
                     /*    td:  record:  colKey:   newVal:  prevVal:  editorName:     */
                     var msg = 'Editor: ' + o.editorName + ' saved newVal=' + o.newVal + ' oldVal=' + o.prevVal;
-                    Y.log(msg);
+                    //                    Y.log(msg);
                 });
                 
                 
@@ -111,7 +121,7 @@
                             if ( confirm("Are you sure you want to save this record ?\n"+ r.record.get('ID')+" : "+r.record.get('resourceURI')) === true ) {
                                 dataMsg += "<sites>"
                                 var recindx = table.data.indexOf(r.record);
-                            
+            
                                 dataMsg += "<cache>"
                                 dataMsg +=r.record.get('cache');
                                 dataMsg += "</cache>";
@@ -127,12 +137,19 @@
                                 dataMsg +="<currentNum>";
                                 dataMsg +=r.record.get('currentNum');
                                 dataMsg +="</currentNum>";
-                            
+                                
+                                dataMsg +="<currentSize>";
+                                dataMsg +=r.record.get('currentSize');
+                                dataMsg +="</currentSize>";
+                                                            
                                 dataMsg +="<encrypt>";
                                 dataMsg += r.record.get('encrypt');
                                 dataMsg+="</encrypt>";
-
-
+                                
+                                dataMsg +="<quotaNum>";
+                                dataMsg += r.record.get('quotaNum');
+                                dataMsg+="</quotaNum>";
+                                    
                                 dataMsg +="<quotaSize>";
                                 dataMsg += r.record.get('quotaSize');
                                 dataMsg+="</quotaSize>";
@@ -140,6 +157,10 @@
                                 dataMsg +="<resourceURI>";
                                 dataMsg += r.record.get('resourceURI');
                                 dataMsg+="</resourceURI>";
+                                
+                                dataMsg +="<storageSiteId>";
+                                dataMsg += r.record.get('storageSiteId');
+                                dataMsg+="</storageSiteId>";
                               
                                 dataMsg += "</sites>"
                             }
@@ -147,19 +168,20 @@
                         }
                     });
                     dataMsg += "</storageSiteWrapperList>"
-                    //                    Y.log("dataMsg "+dataMsg);
-                    send(dataMsg);
+                    Y.log("dataMsg "+dataMsg);
+                    var uriPUT = "rest/storage_sites/set";
+                    send(dataMsg,uriPUT);
                     table.checkboxClearAll();
                 });
                 
                 
-                var send = function(dataMsg) {
-                    Y.log("dataMsg "+dataMsg);
+                var send = function(dataMsg,uriPUT) {
+                    
                     // Define a function to handle the response data.
                     function complete(id, o, args) {
-
+                        //Y.log("complete. id: "+id);
                     };
-
+                    
                     // Subscribe to event "io:complete", and pass an array
                     // as an argument to the event handler "complete", since
                     // "complete" is global.   At this point in the transaction
@@ -173,23 +195,37 @@
                             'Content-Type': 'application/xml'
                         }
                     };
-                    var uriPUT = "rest/storage_sites/set";
                     var requestPUT = Y.io(uriPUT,cfg);           
                     Y.log("request: "+requestPUT);
+                    
+                    
+                    table.render("#dtable");
+                    table.datasource.load();
                 }
                 
                 Y.one("#btnDelete").on("click", function(){
                     var recs = table.get('checkboxSelected');
                     // returns array of objects {tr,record,pkvalues} 
+                    var dataMsg ="<idWrapperList>";
                     Y.Array.each(recs,function (r) {
                         if(r.tr) {
-                            var recindx = table.data.indexOf(r.record);
-                            Y.log("recindx "+recindx);
+                            var recindx = table.data.indexOf(r.record);                            
+                            var id = r.record.get('ID');
+                            Y.log("id "+id);
                             if ( confirm("Are you sure you want to delete this record ?\n"+ r.record.get('ID')+" : "+r.record.get('resourceURI')) === true ) {
                                 table.removeRow(recindx);
+                                dataMsg += "<ids>";
+                                dataMsg += id;
+                                dataMsg += "</ids>";
                             }
                         }
                     },table);
+                    
+                    dataMsg +="</idWrapperList>";
+                    
+                    var uriPUT = "rest/storage_sites/delete";
+                    send(dataMsg,uriPUT);
+                    
                     table.checkboxClearAll();
                 });
                 
@@ -208,7 +244,10 @@
                             max = record.get('ID');
                         }
                     }
-                    table.addRow( [{ID:++max,resourceURI:'file://',username:'uname',password:'pass',encrypted:'false',cache:'false',currentNum:'-1',quotaNum:'-1'}] );
+                    table.addRow( [{ID:++max,resourceURI:'file://',
+                            username:'uname',password:'pass',encrypted:'false',
+                            cache:'false',currentNum:'-1',quotaNum:'-1',
+                            quotaSize:'-1',currentSize:'-1'}] );
                 });
             });
         </script>

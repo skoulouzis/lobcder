@@ -6,6 +6,7 @@ package nl.uva.cs.lobcder.rest;
 
 import javax.xml.bind.annotation.XmlRootElement;
 import lombok.Data;
+import nl.uva.cs.lobcder.resources.Credential;
 
 /**
  *
@@ -24,4 +25,5 @@ class StorageSiteWrapper {
     private CredentialWrapped credential;
     private boolean encrypt;
     private boolean isCache;
+
 }

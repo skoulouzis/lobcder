@@ -4,6 +4,7 @@
  */
 package nl.uva.cs.lobcder.rest;
 
+import java.util.List;
 import javax.xml.bind.annotation.XmlRootElement;
 import lombok.Data;
 
@@ -13,11 +14,6 @@ import lombok.Data;
  */
 @XmlRootElement
 @Data
-public class ReservationInfo {
-
-    private String communicationID;
-    private int storageHostIndex;
-    private String storageHost;
-    private String workerDataAccessURL;
-    private String hostName;
+class IDWrapperList {
+     List<Long> ids;
 }
