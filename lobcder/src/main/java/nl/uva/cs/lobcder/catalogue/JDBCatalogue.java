@@ -1174,11 +1174,6 @@ public class JDBCatalogue extends MyDataSource {
 //                final String token = credentials.substring(credentials.indexOf(":") + 1);
                 }
             }
-
-
-
-
-
             preparedStatement.setString(7, userNpasswd);
             preparedStatement.executeUpdate();
             ResultSet rs = preparedStatement.getGeneratedKeys();
@@ -1186,35 +1181,89 @@ public class JDBCatalogue extends MyDataSource {
     }
 
     public void insertOrUpdateStorageSites(Collection<StorageSite> sites, Connection connection) throws SQLException {
-//        insert into table (id, name, age) values(1, "A", 19) on duplicate key update name=values(name), age=values(age)
+        Collection<Credential> credentials = getCredentials(connection);
+        Collection<StorageSite> existingSites = getStorageSites(connection);
+        existingSites.addAll(getCacheStorageSites(connection));
+        Collection<String> updatedSites = new ArrayList<>();
+
+
         for (StorageSite s : sites) {
-            long credentialID;
-            try (PreparedStatement preparedStatement = connection.prepareStatement(
-                            "INSERT INTO credential_table (username, "
-                            + "password) VALUES (?, ?)", Statement.RETURN_GENERATED_KEYS)) {
-                preparedStatement.setString(1, s.getCredential().getStorageSiteUsername());
-                preparedStatement.setString(2, s.getCredential().getStorageSitePassword());
-                preparedStatement.executeUpdate();
-                ResultSet rs = preparedStatement.getGeneratedKeys();
-                rs.next();
-                credentialID = rs.getLong(1);
+            long credentialID = -1;
+            for (Credential c : credentials) {
+                if (c.getStorageSiteUsername().equals(s.getCredential().getStorageSiteUsername())
+                        && c.getStorageSitePassword().equals(s.getCredential().getStorageSitePassword())) {
+                    credentialID = c.getId();
+                    break;
+                }
             }
-            try (PreparedStatement preparedStatement = connection.prepareStatement(
-                            "INSERT INTO storage_site_table "
-                            + "(resourceUri, credentialRef, currentNum, "
-                            + "currentSize, quotaNum, quotaSize, isCache, extra, "
-                            + "encrypt) "
-                            + "VALUES (?, ?, ?, ?, ?, ?, ?, NULL, ?)")) {
-                preparedStatement.setString(1, s.getResourceURI());
-                preparedStatement.setLong(2, credentialID);
-                preparedStatement.setLong(3, s.getCurrentNum());
-                preparedStatement.setLong(4, s.getCurrentSize());
-                preparedStatement.setLong(5, s.getQuotaNum());
-                preparedStatement.setLong(6, s.getQuotaSize());
-                preparedStatement.setBoolean(7, s.isCache());
-                preparedStatement.setBoolean(8, s.isEncrypt());
-                preparedStatement.executeUpdate();
+
+            if (credentialID == -1) {
+                try (PreparedStatement preparedStatement = connection.prepareStatement(
+                                "INSERT INTO credential_table (username, "
+                                + "password) VALUES (?, ?)", Statement.RETURN_GENERATED_KEYS)) {
+                    preparedStatement.setString(1, s.getCredential().getStorageSiteUsername());
+                    preparedStatement.setString(2, s.getCredential().getStorageSitePassword());
+                    preparedStatement.executeUpdate();
+                    ResultSet rs = preparedStatement.getGeneratedKeys();
+                    rs.next();
+                    credentialID = rs.getLong(1);
+                    s.getCredential().setId(credentialID);
+                    credentials.add(s.getCredential());
+                }
             }
+
+
+            for (StorageSite es : existingSites) {
+                if (es.getResourceURI().equals(s.getResourceURI())) {
+//                    Long id = es.getStorageSiteId();
+                    try (PreparedStatement preparedStatement = connection.prepareStatement(
+                                    "UPDATE storage_site_table SET "
+                                    + "`resourceUri` = ?, "
+                                    + "`credentialRef` = ?, "
+                                    + "`currentNum` = ?, "
+                                    + "`currentSize` = ?, "
+                                    + "`quotaNum` = ?, "
+                                    + "`quotaSize` = ?, "
+                                    + "`isCache` = ?, "
+                                    + "`encrypt` = ? "
+                                    + "WHERE storageSiteId = ?;")) {
+                        preparedStatement.setString(1, s.getResourceURI());
+                        preparedStatement.setLong(2, credentialID);
+                        preparedStatement.setLong(3, s.getCurrentNum());
+                        preparedStatement.setLong(4, s.getCurrentSize());
+                        preparedStatement.setLong(5, s.getQuotaNum());
+                        preparedStatement.setLong(6, s.getQuotaSize());
+                        preparedStatement.setBoolean(7, s.isCache());
+                        preparedStatement.setBoolean(8, s.isEncrypt());
+                        preparedStatement.setLong(9, es.getStorageSiteId());
+                        preparedStatement.executeUpdate();
+                    }
+                    updatedSites.add(es.getResourceURI());
+                }
+            }
+            if (!updatedSites.contains(s.getResourceURI())) {
+                try (PreparedStatement preparedStatement = connection.prepareStatement(
+                                "INSERT INTO storage_site_table "
+                                + "(resourceUri, credentialRef, currentNum, "
+                                + "currentSize, quotaNum, quotaSize, isCache, extra, "
+                                + "encrypt) "
+                                + "VALUES (?, ?, ?, ?, ?, ?, ?, NULL, ?)", Statement.RETURN_GENERATED_KEYS)) {
+                    preparedStatement.setString(1, s.getResourceURI());
+                    preparedStatement.setLong(2, credentialID);
+                    preparedStatement.setLong(3, s.getCurrentNum());
+                    preparedStatement.setLong(4, s.getCurrentSize());
+                    preparedStatement.setLong(5, s.getQuotaNum());
+                    preparedStatement.setLong(6, s.getQuotaSize());
+                    preparedStatement.setBoolean(7, s.isCache());
+                    preparedStatement.setBoolean(8, s.isEncrypt());
+                    preparedStatement.executeUpdate();
+                    ResultSet rs = preparedStatement.getGeneratedKeys();
+                    rs.next();
+                    s.setStorageSiteId(rs.getLong(1));
+                    existingSites.add(s);
+                }
+            }
+
         }
     }
 
@@ -1225,6 +1274,23 @@ public class JDBCatalogue extends MyDataSource {
                 preparedStatement.setLong(1, id);
                 preparedStatement.executeUpdate();
             }
+        }
+    }
+
+    private Collection<Credential> getCredentials(Connection connection) throws SQLException {
+        try (PreparedStatement preparedStatement = connection.prepareStatement(
+                        "select * from credential_table")) {
+
+            ResultSet rs = preparedStatement.executeQuery();
+            Collection<Credential> res = new ArrayList<>();
+            while (rs.next()) {
+                Credential c = new Credential();
+                c.setId(rs.getLong(1));
+                c.setStorageSiteUsername(rs.getString(2));
+                c.setStorageSitePassword(rs.getString(3));
+                res.add(c);
+            }
+            return res;
         }
     }
 

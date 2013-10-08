@@ -15,6 +15,7 @@ import nl.uva.vlet.util.cog.GridProxy;
 @Data
 public class Credential implements Serializable {
 
+    private Long id;
     private String storageSiteUsername;
     private String storageSitePassword;
     private GridProxy gridProxy;

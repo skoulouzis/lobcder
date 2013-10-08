@@ -83,25 +83,27 @@ public class StorageSites extends CatalogueHelper {
             try (Connection connection = getCatalogue().getConnection()) {
                 StorageSiteWrapperList sitesWL = jbSites.getValue();
                 List<StorageSiteWrapper> sswl = sitesWL.sites;
-
-                Collection<StorageSite> sites = new ArrayList<>();
-                for (StorageSiteWrapper ssw : sswl) {
-                    StorageSite site = new StorageSite();
-                    Credential cred = new Credential();
-                    cred.setStorageSitePassword(ssw.getCredential().getStorageSitePassword());
-                    cred.setStorageSiteUsername(ssw.getCredential().getStorageSiteUsername());
-                    site.setCredential(cred);
-                    site.setCurrentNum(ssw.getCurrentNum());
-                    site.setCurrentSize(ssw.getCurrentSize());
-                    site.setResourceURI(ssw.getResourceURI());
-                    site.setEncrypt(ssw.isEncrypt());
-                    site.setCache(ssw.isCache());
-                    site.setQuotaNum(ssw.getQuotaNum());
-                    site.setQuotaSize(ssw.getQuotaSize());
-                    sites.add(site);
+                if (sswl != null && sswl.size() > 0) {
+                    Collection<StorageSite> sites = new ArrayList<>();
+                    for (StorageSiteWrapper ssw : sswl) {
+                        StorageSite site = new StorageSite();
+                        Credential cred = new Credential();
+                        cred.setStorageSitePassword(ssw.getCredential().getStorageSitePassword());
+                        cred.setStorageSiteUsername(ssw.getCredential().getStorageSiteUsername());
+                        site.setCredential(cred);
+                        site.setCurrentNum(ssw.getCurrentNum());
+                        site.setCurrentSize(ssw.getCurrentSize());
+                        site.setResourceURI(ssw.getResourceURI());
+                        site.setEncrypt(ssw.isEncrypt());
+                        site.setCache(ssw.isCache());
+                        site.setQuotaNum(ssw.getQuotaNum());
+                        site.setQuotaSize(ssw.getQuotaSize());
+                        sites.add(site);
+                    }
+                    getCatalogue().insertOrUpdateStorageSites(sites, connection);
+                    connection.commit();
                 }
-                getCatalogue().insertOrUpdateStorageSites(sites, connection);
-                connection.commit();
+
             }
         }
     }

@@ -71,11 +71,15 @@
                     { key: 'resourceURI', label: 'URI' },
                     { key: 'username', label: 'username'},
                     { key: 'password', label: 'password'},
-                    { key:'encrypted',  label:"encrypted?",
-                        formatConfig: encr,
-                        editor:"checkbox", editorConfig:{ checkboxHash:{ 'true':true, 'false':false } }
-                    },
-                    //                    { key:'encrypted',  label:"encrypted?"},
+                    //                    { key:'encrypted',  label:"encrypted?",
+                    //                        formatConfig: encr,
+                    //                        editor:"checkbox", editorConfig:{ checkboxHash:{ 'true':true, 'false':false } }
+                    //                    },
+                    { key:'encrypted',  label:"encrypted?"},
+                    //                    { key:'cache',  label:"cache?",
+                    //                        formatConfig: encr,
+                    //                        editor:"checkbox", editorConfig:{ checkboxHash:{ 'true':true, 'false':false } }
+                    //                    },
                     { key:'cache',  label:"cache?"},
                     { key: 'currentNum', label: 'currentNum'},
                     { key: 'currentSize', label: 'currentSize'},
@@ -143,7 +147,8 @@
                                 dataMsg +="</currentSize>";
                                                             
                                 dataMsg +="<encrypt>";
-                                dataMsg += r.record.get('encrypt');
+                                dataMsg += r.record.get('encrypted');
+//                                Y.log("======  "+r.record.get('encrypted'));
                                 dataMsg+="</encrypt>";
                                 
                                 dataMsg +="<quotaNum>";
@@ -240,10 +245,15 @@
                     var colIndex=0;
                     var record;
                     while ( record = table.data.item(colIndex++)) {
-                        if(record.get('ID') > max){
-                            max = record.get('ID');
+                        var id = record.get('ID');
+                        var number = parseInt(id);
+                        Y.log("ID: "+number);
+                        if(number > max){
+                            max = number;
+                            Y.log("max= "+max);
                         }
                     }
+                    Y.log("max= "+max);
                     table.addRow( [{ID:++max,resourceURI:'file://',
                             username:'uname',password:'pass',encrypted:'false',
                             cache:'false',currentNum:'-1',quotaNum:'-1',
