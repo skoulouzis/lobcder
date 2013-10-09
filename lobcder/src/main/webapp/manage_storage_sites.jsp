@@ -148,7 +148,6 @@
                                                             
                                 dataMsg +="<encrypt>";
                                 dataMsg += r.record.get('encrypted');
-//                                Y.log("======  "+r.record.get('encrypted'));
                                 dataMsg+="</encrypt>";
                                 
                                 dataMsg +="<quotaNum>";

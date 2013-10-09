@@ -62,7 +62,7 @@ public class StorageSites extends CatalogueHelper {
         MyPrincipal mp = (MyPrincipal) request.getAttribute("myprincipal");
         if (mp.isAdmin()) {
             try (Connection cn = getCatalogue().getConnection()) {
-                List<StorageSiteWrapper> res = queryStorageSites(mp, cn);
+                List<StorageSiteWrapper> res = queryStorageSites(cn);
                 StorageSiteWrapperList sswl = new StorageSiteWrapperList();
                 sswl.setSites(res);
                 return sswl;
@@ -121,7 +121,7 @@ public class StorageSites extends CatalogueHelper {
         }
     }
 
-    private List<StorageSiteWrapper> queryStorageSites(@Nonnull MyPrincipal mp, @Nonnull Connection cn) throws SQLException {
+    private List<StorageSiteWrapper> queryStorageSites(@Nonnull Connection cn) throws SQLException {
         MultivaluedMap<String, String> queryParameters = info.getQueryParameters();
         List<String> ids = queryParameters.get("id");
         if (ids != null && ids.size() > 0 && ids.get(0).equals("all")) {

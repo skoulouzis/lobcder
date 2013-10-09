@@ -27,6 +27,7 @@ import nl.uva.cs.lobcder.resources.LogicalData;
 import nl.uva.cs.lobcder.resources.PDRI;
 import nl.uva.cs.lobcder.resources.PDRIDescr;
 import nl.uva.cs.lobcder.resources.StorageSite;
+import nl.uva.cs.lobcder.rest.UsersWrapper;
 import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.cs.lobcder.util.MyDataSource;
 import org.apache.commons.codec.binary.Base64;
@@ -1292,6 +1293,35 @@ public class JDBCatalogue extends MyDataSource {
             }
             return res;
         }
+    }
+
+    public List<UsersWrapper> getUsers(Connection connection) throws SQLException {
+        List<UsersWrapper> users = new ArrayList<>();
+        try (PreparedStatement preparedStatement = connection.prepareStatement(
+                        "select * from auth_usernames_table")) {
+            ResultSet rs = preparedStatement.executeQuery();
+            while (rs.next()) {
+                UsersWrapper uw = new UsersWrapper();
+                long id = rs.getLong(1);
+                uw.setId(id);
+                String token = rs.getString(2);
+                token = "****";
+                uw.setToken(token);
+                uw.setUname(rs.getString(3));
+
+                List<String> roles = new ArrayList<>();
+                try (PreparedStatement preparedStatement2 = connection.prepareStatement(
+                                "SELECT roleName FROM auth_roles_tables WHERE unameRef = " + id)) {
+                    ResultSet rs2 = preparedStatement2.executeQuery();
+                    while (rs2.next()) {
+                        roles.add(rs2.getString(1));
+                    }
+                }
+                uw.setRoles(roles);
+                users.add(uw);
+            }
+        }
+        return users;
     }
 
     @Data

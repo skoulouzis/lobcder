@@ -15,7 +15,6 @@
         <p><a href="index.jsp">Home</a></p>
         
         <p><a href="manage_storage_sites.jsp">Storage Sites Manager</a></p>
-        <p><a href="manage_storage_sites2.jsp">Storage Sites Manager</a></p>
-        <p><a href="3.jsp">Storage Sites Manager</a></p>
+        <p><a href="manage_users.jsp">Users Manager</a></p>
     </body>
 </html>
