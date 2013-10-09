@@ -22,7 +22,12 @@ class Graph {
     }
 
     boolean containsVertex(Vertex vertex) {
-        return vertices.contains(vertex);
+        for (Vertex v : vertices) {
+            if (v.getID().equals(vertex.getID())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     void addVertex(Vertex v) {

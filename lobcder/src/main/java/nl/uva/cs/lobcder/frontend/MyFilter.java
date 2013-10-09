@@ -13,7 +13,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.naming.Context;
 import javax.naming.InitialContext;
-import javax.naming.NamingException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import lombok.extern.java.Log;
@@ -29,22 +28,23 @@ import nl.uva.cs.lobcder.util.CatalogueHelper;
 public class MyFilter extends MiltonFilter {
 
     private JDBCatalogue catalogue;
-    private FileAccessPredictor fap;
+    private static FileAccessPredictor fap;
 
-    public MyFilter() {
-        super();
-        try {
-            loadOptimizers();
-        } catch (Exception ex) {
-            Logger.getLogger(MyFilter.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
+//    public MyFilter() {
+//    }
 
     @Override
     public void doFilter(javax.servlet.ServletRequest req, javax.servlet.ServletResponse resp, javax.servlet.FilterChain fc) throws IOException, ServletException {
         double start = System.currentTimeMillis();
         String method = ((HttpServletRequest) req).getMethod();
         StringBuffer reqURL = ((HttpServletRequest) req).getRequestURL();
+        
+        
+//        try {
+//            getFileAccessPredictor().predictNextFile(reqURL.toString());
+//        } catch (Exception ex) {
+//            Logger.getLogger(MyFilter.class.getName()).log(Level.SEVERE, null, ex);
+//        }
 
         super.doFilter(req, resp, fc);
         double elapsed = System.currentTimeMillis() - start;
@@ -93,21 +93,32 @@ public class MyFilter extends MiltonFilter {
         connection.commit();
     }
 
-    private void loadOptimizers() throws Exception {
-//        Context ctx = new InitialContext();
-//        if (ctx == null) {
-//            throw new Exception("JNDI could not create InitalContext ");
-//        }
-//        Context envContext = (Context) ctx.lookup("java:/comp/env");
-//        fap = (FileAccessPredictor) envContext.lookup("bean/Predictor");
-//        fap.startGraphPopulation();
-    }
-    
-    
-    
-   	@Override
-	public void destroy() {
-            super.destroy();
-            
+    private FileAccessPredictor getFileAccessPredictor() throws Exception {
+        if (fap == null) {
+            String jndiName = "bean/Predictor";
+            javax.naming.Context ctx;
+            try {
+                ctx = new InitialContext();
+                if (ctx == null) {
+                    throw new Exception("JNDI could not create InitalContext ");
+                }
+                javax.naming.Context envContext = (javax.naming.Context) ctx.lookup("java:/comp/env");
+                fap = (FileAccessPredictor) envContext.lookup(jndiName);
+                fap.startGraphPopulation();
+            } catch (Exception ex) {
+                Logger.getLogger(CatalogueHelper.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
+        return fap;
+    }
+
+    @Override
+    public void destroy() {
+        super.destroy();
+        try {
+            getFileAccessPredictor().stopGraphPopulation();
+        } catch (Exception ex) {
+            Logger.getLogger(MyFilter.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
 }

@@ -234,9 +234,6 @@
                 });
                 
                 
-                
-                
-                
                 Y.one("#btnInsert").on("click",function() {
                     Y.log("Insert new! "+ table.data.recordset);
                     

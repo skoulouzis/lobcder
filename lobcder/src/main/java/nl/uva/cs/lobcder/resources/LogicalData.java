@@ -74,6 +74,7 @@ public class LogicalData implements Cloneable {
         return type.equals(Constants.LOGICAL_FOLDER);
     }
 
+    @Override
     public LogicalData clone() throws CloneNotSupportedException {
         return (LogicalData) super.clone();
     }
