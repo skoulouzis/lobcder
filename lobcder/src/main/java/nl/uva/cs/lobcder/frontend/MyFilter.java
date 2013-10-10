@@ -4,6 +4,8 @@
  */
 package nl.uva.cs.lobcder.frontend;
 
+import io.milton.http.Request;
+import io.milton.http.Request.Method;
 import io.milton.servlet.MiltonFilter;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -18,6 +20,7 @@ import javax.servlet.http.HttpServletRequest;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
 import nl.uva.cs.lobcder.optimization.FileAccessPredictor;
+import nl.uva.cs.lobcder.optimization.LobState;
 import nl.uva.cs.lobcder.util.CatalogueHelper;
 
 /**
@@ -30,21 +33,20 @@ public class MyFilter extends MiltonFilter {
     private JDBCatalogue catalogue;
     private static FileAccessPredictor fap;
 
-//    public MyFilter() {
-//    }
+    public MyFilter() throws Exception {
+//        getFileAccessPredictor();
+    }
 
     @Override
     public void doFilter(javax.servlet.ServletRequest req, javax.servlet.ServletResponse resp, javax.servlet.FilterChain fc) throws IOException, ServletException {
         double start = System.currentTimeMillis();
         String method = ((HttpServletRequest) req).getMethod();
         StringBuffer reqURL = ((HttpServletRequest) req).getRequestURL();
-        
-        
-//        try {
-//            getFileAccessPredictor().predictNextFile(reqURL.toString());
-//        } catch (Exception ex) {
-//            Logger.getLogger(MyFilter.class.getName()).log(Level.SEVERE, null, ex);
-//        }
+
+
+//        predict(Request.Method.valueOf(method), reqURL.toString());
+
+
 
         super.doFilter(req, resp, fc);
         double elapsed = System.currentTimeMillis() - start;
@@ -117,6 +119,16 @@ public class MyFilter extends MiltonFilter {
         super.destroy();
         try {
             getFileAccessPredictor().stopGraphPopulation();
+        } catch (Exception ex) {
+            Logger.getLogger(MyFilter.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    private void predict(Method method, String reqURL) {
+        LobState currentState = new LobState(method, reqURL);
+        try {
+            LobState nextState = getFileAccessPredictor().predictNextState(currentState);
+            log.log(Level.INFO, "nextFile: {0}", nextState.getID());
         } catch (Exception ex) {
             Logger.getLogger(MyFilter.class.getName()).log(Level.SEVERE, null, ex);
         }

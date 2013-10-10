@@ -5,6 +5,9 @@
 package nl.uva.cs.lobcder.optimization;
 
 import io.milton.common.Path;
+import io.milton.http.Request.Method;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -29,8 +32,9 @@ class GraphPopulator implements Runnable {
 
     private final DataSource datasource;
 //    private Graph graph;
+    private Graph graph;
 
-    public GraphPopulator(DataSource datasource) {
+    GraphPopulator(DataSource datasource) {
         this.datasource = datasource;
     }
 
@@ -38,20 +42,21 @@ class GraphPopulator implements Runnable {
     public void run() {
         try (Connection connection = datasource.getConnection()) {
             LogicalData root = getLogicalDataByUid(Long.valueOf(1), connection);
-
             ArrayList<Path> nodes = getNodes(Path.root, root, connection, null);
 
-            String msg = "";
-            for (Path d : nodes) {
-                msg += d + "\n";
-            }
-            log.log(Level.INFO, "Nodes: " + msg);
+//            String msg = "";
+//            for (Path d : nodes) {
+//                msg += d + "\n";
+//            }
+//            log.log(Level.INFO, "Nodes: {0}", msg);
 
-            Graph graph = getGraph(nodes);
-            ArrayList<Path> transitions = getTransitions(connection);
+            Graph graph = populateGraph(nodes);
+            ArrayList<LobState> transitions = getTransitions(connection, nodes);
 
             graph = addEdges(graph, transitions);
-        } catch (SQLException ex) {
+
+            this.graph = graph;
+        } catch (MalformedURLException | SQLException ex) {
             Logger.getLogger(GraphPopulator.class.getName()).log(Level.SEVERE, null, ex);
         }
 
@@ -136,66 +141,20 @@ class GraphPopulator implements Runnable {
         }
     }
 
-    private Graph getGraph(List<Path> nodes) {
-        Graph graph = new Graph();
+    private Graph populateGraph(List<Path> nodes) {
+        graph = new Graph();
+
 
         for (int i = 0; i < nodes.size(); i++) {
-            Vertex v1 = new Vertex(nodes.get(i).toString());
-            if (!graph.containsVertex(v1)) {
-                graph.addVertex(v1);
+            for (Method m : Method.values()) {
+                LobState v1 = new LobState(m, nodes.get(i).toString());
+                if (!graph.containsState(v1)) {
+                    graph.addVertex(v1);
+                }
             }
+
         }
-
         return graph;
-//        for (int i = 0; i < nodes.size(); i++) {
-//            Vertex v1 = new Vertex(nodes.get(i).toString());
-//            for (int j = 0; j < nodes.size(); j++) {
-//                Vertex v2 = new Vertex(nodes.get(j).toString());
-//                Edge edge = new Edge(v1, v2);
-//                graph.setEdgeWeight(edge);
-//                log.log(Level.INFO, "edge: " + v1 + " : " + v2);
-//            }
-//        }
-//        log.log(Level.INFO, "Graph: " + graph);
-
-//        String next;
-//        int nextI;
-//        graph = new Graph();
-//        for (int i = 0; i < nodes.size(); i++) {
-//            if (i >= nodes.size() - 1) {
-////                nextI = i;
-//                break;
-//            } else {
-//                nextI = i + 1;
-//            }
-//            
-//            next = nodes.get(nextI);
-//            Vertex v1 = new Vertex(nodes.get(i));
-//            if (!graph.containsVertex(v1)) {
-//                graph.addVertex(v1);
-//            }
-//            Vertex v2 = new Vertex(next);
-//            if (!graph.containsVertex(v2)) {
-//                graph.addVertex(v2);
-//            }
-//            Edge edge;
-//            double w;
-//            edge = new Edge(v1, v2);
-//            if (graph.containsEdge(edge)) {
-//                w = graph.getWeight(v1, v2);
-////                System.out.println(w);
-//
-//                edge = new Edge(v1, v2, ++w);
-//                graph.setEdgeWeight(edge);
-//                w = graph.getWeight(v1, v2);
-////                System.out.println("ΑΑΑΑΑ " + nodes[i] + "->" + next + ": " + w);
-//            } else {
-//                edge = new Edge(v1, v2, 1.0);
-//                graph.setEdgeWeight(edge);
-//                w = graph.getWeight(v1, v2);
-////                System.out.println("ΒΒΒΒ " + nodes[i] + "->" + next + ": " + w);
-//            }
-//        }
     }
 
     private ArrayList<Path> getNodes(Path p, LogicalData node, Connection connection,
@@ -203,53 +162,68 @@ class GraphPopulator implements Runnable {
         if (nodes == null) {
             nodes = new ArrayList<>();
         }
+        if (!nodes.contains(p)) {
+            nodes.add(p);
+        }
+
         Collection<LogicalData> children = getChildrenByParentRef(node.getUid(), connection);
         for (LogicalData ld : children) {
             if (ld.getUid() != node.getUid()) {
-                log.log(Level.INFO, "children: " + ld.getName());
+//                log.log(Level.INFO, "children: " + ld.getName());
                 Path nextPath = Path.path(p, ld.getName());
 //                log.log(Level.INFO, "node: " + nextPath);
                 if (ld.isFolder()) {
                     getNodes(nextPath, ld, connection, nodes);
-                } else {
-                    log.log(Level.INFO, "node: " + nextPath);
+                }
+                if (!nodes.contains(nextPath)) {
                     nodes.add(nextPath);
                 }
             }
         }
         return nodes;
-
     }
 
-    private ArrayList<Path> getTransitions(Connection connection) throws SQLException {
-        ArrayList<Path> trans = new ArrayList<>();
-        try (PreparedStatement ps = connection.prepareStatement("select requestURL "
-                        + "from requests_table where methodName = 'GET'")) {
+    private ArrayList<LobState> getTransitions(Connection connection, ArrayList<Path> nodes) throws SQLException, MalformedURLException {
+        ArrayList<LobState> trans = new ArrayList<>();
+        StringBuilder query = new StringBuilder();
+        query.append("SELECT requestURL, methodName FROM requests_table WHERE ");
 
+
+        query.append("(requestURL LIKE '%" + nodes.get(1).toString() + "' ");
+        for (int i = 2; i < nodes.size(); i++) {
+            query.append("OR requestURL LIKE '%" + nodes.get(i) + "' ");
+        }
+        query.append(")");
+
+        try (PreparedStatement ps = connection.prepareStatement(query.toString())) {
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 String url = rs.getString(1);
-                log.log(Level.FINE, "URL: " + url);
-                String[] parts = url.split("http://localhost:8080/lobcder/dav");
+                String method = rs.getString(2);
+//                log.log(Level.FINE, "URL: {0}", new URL(url).getPath());
+                //                String[] parts = url.split("http://localhost:8080/lobcder/dav");
+                String strPath = new URL(url).getPath();
+                String[] parts = strPath.split("/lobcder/dav");
                 if (parts != null && parts.length > 1) {
                     Path path = Path.path(parts[1]);
-                    trans.add(path);
-                    log.log(Level.FINE, "URL: " + url + " size: " + trans.size());
+                    trans.add(new LobState(Method.valueOf(method), path.toString()));
+//                    log.log(Level.FINE, "path: {0} method {1}, size: {2}", new Object[]{path, method, trans.size()});
                 }
             }
         }
         return trans;
     }
 
-    private Graph addEdges(Graph graph, ArrayList<Path> transitions) {
+    private Graph addEdges(Graph graph, ArrayList<LobState> transitions) {
         for (int i = 0; i < transitions.size(); i++) {
             if (i >= transitions.size() - 1) {
 //                nextI = i;
                 break;
             } else {
-                Vertex v1 = new Vertex(transitions.get(i).toString());
-                Vertex v2 = new Vertex(transitions.get(i + 1).toString());
-                if (graph.containsVertex(v1) && graph.containsVertex(v2)) {
+                LobState v1 =  transitions.get(i);
+                LobState v2 = transitions.get(i + 1); 
+                if (graph.containsState(v1) && graph.containsState(v2)) {
+//                    log.log(Level.INFO, "V1: {0}: V2: {1}", new Object[]{v1.getID(),v2.getID()});
                     Edge e = new Edge(v1, v2);
                     double w = 0;
                     if (graph.containsEdge(e)) {
@@ -257,10 +231,14 @@ class GraphPopulator implements Runnable {
                     }
                     e = new Edge(v1, v2, ++w);
                     graph.setEdgeWeight(e);
-                    log.log(Level.INFO, "Edge: {0}: {1}", new Object[]{e, w});
+//                    log.log(Level.INFO, "Edge: {0}: {1}", new Object[]{e.getID(), w});
                 }
             }
         }
+        return graph;
+    }
+
+    Graph getGraph() {
         return graph;
     }
 }
