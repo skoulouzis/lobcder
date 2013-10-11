@@ -16,11 +16,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
-import javax.sql.DataSource;
-import lombok.extern.java.Log;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Nonnull;
+import javax.sql.DataSource;
+import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.resources.LogicalData;
 
 /**
@@ -71,7 +71,7 @@ class GraphPopulator implements Runnable {
                         + "FROM ldata_table WHERE ldata_table.parentRef = ?")) {
             preparedStatement.setLong(1, parentRef);
             ResultSet rs = preparedStatement.executeQuery();
-            LinkedList<LogicalData> res = new LinkedList<LogicalData>();
+            LinkedList<LogicalData> res = new LinkedList<>();
             while (rs.next()) {
                 LogicalData element = new LogicalData();
                 element.setUid(rs.getLong(1));
@@ -144,7 +144,6 @@ class GraphPopulator implements Runnable {
     private Graph populateGraph(List<Path> nodes) {
         graph = new Graph();
 
-
         for (int i = 0; i < nodes.size(); i++) {
             for (Method m : Method.values()) {
                 LobState v1 = new LobState(m, nodes.get(i).toString());
@@ -152,7 +151,6 @@ class GraphPopulator implements Runnable {
                     graph.addVertex(v1);
                 }
             }
-
         }
         return graph;
     }
@@ -188,10 +186,21 @@ class GraphPopulator implements Runnable {
         StringBuilder query = new StringBuilder();
         query.append("SELECT requestURL, methodName FROM requests_table WHERE ");
 
+        String queryPath;
+        if (nodes.get(0).isRoot()) {
+            queryPath = "/lobcder/dav";
+        } else {
+            queryPath = nodes.get(0).toString();
+        }
 
-        query.append("(requestURL LIKE '%" + nodes.get(1).toString() + "' ");
-        for (int i = 2; i < nodes.size(); i++) {
-            query.append("OR requestURL LIKE '%" + nodes.get(i) + "' ");
+        query.append("(requestURL LIKE '%" + queryPath + "' ");
+        for (int i = 1; i < nodes.size(); i++) {
+            if (nodes.get(i).isRoot()) {
+                queryPath = "/lobcder/dav";
+            } else {
+                queryPath = nodes.get(i).toString();
+            }
+            query.append("OR requestURL LIKE '%" + queryPath + "' ");
         }
         query.append(")");
 
@@ -204,11 +213,14 @@ class GraphPopulator implements Runnable {
                 //                String[] parts = url.split("http://localhost:8080/lobcder/dav");
                 String strPath = new URL(url).getPath();
                 String[] parts = strPath.split("/lobcder/dav");
+                Path path;
                 if (parts != null && parts.length > 1) {
-                    Path path = Path.path(parts[1]);
-                    trans.add(new LobState(Method.valueOf(method), path.toString()));
-//                    log.log(Level.FINE, "path: {0} method {1}, size: {2}", new Object[]{path, method, trans.size()});
+                    path = Path.path(parts[1]);
+                } else {
+                    path = Path.root;
                 }
+                trans.add(new LobState(Method.valueOf(method), path.toString()));
+//                log.log(Level.FINE, "path: {0} method {1}, size: {2}", new Object[]{path, method, trans.size()});
             }
         }
         return trans;
@@ -220,8 +232,8 @@ class GraphPopulator implements Runnable {
 //                nextI = i;
                 break;
             } else {
-                LobState v1 =  transitions.get(i);
-                LobState v2 = transitions.get(i + 1); 
+                LobState v1 = transitions.get(i);
+                LobState v2 = transitions.get(i + 1);
                 if (graph.containsState(v1) && graph.containsState(v2)) {
 //                    log.log(Level.INFO, "V1: {0}: V2: {1}", new Object[]{v1.getID(),v2.getID()});
                     Edge e = new Edge(v1, v2);

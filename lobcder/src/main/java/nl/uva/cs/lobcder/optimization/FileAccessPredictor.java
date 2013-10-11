@@ -30,7 +30,6 @@ public class FileAccessPredictor extends MyDataSource {
     }
 
     public void startGraphPopulation() {
-        FileAccessPredictor.log.fine("... aaaand where we go! ");
         graphPopulator = new GraphPopulator(getDatasource());
         TimerTask gcTask = new MyTask(graphPopulator);
 //        
@@ -38,21 +37,11 @@ public class FileAccessPredictor extends MyDataSource {
         timer.schedule(gcTask, 3600000, 3600000);
     }
 
-    public LobState predictNextState(LobState state) throws MalformedURLException {
-        return predictNextState(state.getMethod(), state.getResourceName());
-    }
+//    public LobState predictNextState(LobState state) throws MalformedURLException {
+//        return predictNextState(state.getMethod(), state.getResourceName());
+//    }
 
-    public LobState predictNextState(Request.Method method, String startingNode) throws MalformedURLException {
-        String strPath = new URL(startingNode).getPath();
-        String[] parts = strPath.split("/lobcder/dav");
-        String resource = null;
-        if (parts != null && parts.length > 1) {
-            resource = parts[1];
-        }
-
-
-        LobState node0 = new LobState(method, Path.path(resource).toString());
-
+    public LobState predictNextState(LobState state) {
         Graph graph = graphPopulator.getGraph();
         if (graph == null) {
             graphPopulator.run();
@@ -64,8 +53,8 @@ public class FileAccessPredictor extends MyDataSource {
         // Compute the total weight of all items together
         double totalWeight = 0.0d;
         for (LobState i : set) {
-            totalWeight += graphPopulator.getGraph().getWeight(node0, i);
-            log.log(Level.INFO, "totalWeight: " + totalWeight);
+            totalWeight += graphPopulator.getGraph().getWeight(state, i);
+            log.log(Level.INFO, "totalWeight: {0}", totalWeight);
         }
 
         // Now choose a random item
@@ -76,7 +65,7 @@ public class FileAccessPredictor extends MyDataSource {
         vertexArray = set.toArray(vertexArray);
         for (int i = 0; i < vertexArray.length; ++i) {
 
-            random -= graphPopulator.getGraph().getWeight(node0, vertexArray[i]);
+            random -= graphPopulator.getGraph().getWeight(state, vertexArray[i]);
             if (random <= 0.0d) {
                 randomIndex = i;
                 break;

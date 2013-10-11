@@ -4,11 +4,14 @@
  */
 package nl.uva.cs.lobcder.frontend;
 
+import io.milton.common.Path;
 import io.milton.http.Request;
 import io.milton.http.Request.Method;
 import io.milton.servlet.MiltonFilter;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.logging.Level;
@@ -32,6 +35,7 @@ public class MyFilter extends MiltonFilter {
 
     private JDBCatalogue catalogue;
     private static FileAccessPredictor fap;
+    private static LobState prevState;
 
     public MyFilter() throws Exception {
 //        getFileAccessPredictor();
@@ -44,9 +48,11 @@ public class MyFilter extends MiltonFilter {
         StringBuffer reqURL = ((HttpServletRequest) req).getRequestURL();
 
 
+
+//        long startPredict = System.currentTimeMillis();
 //        predict(Request.Method.valueOf(method), reqURL.toString());
-
-
+//        long elapsedPredict = System.currentTimeMillis() - startPredict;
+//        log.log(Level.INFO, "elapsedPredict: {0}", elapsedPredict);
 
         super.doFilter(req, resp, fc);
         double elapsed = System.currentTimeMillis() - start;
@@ -125,12 +131,38 @@ public class MyFilter extends MiltonFilter {
     }
 
     private void predict(Method method, String reqURL) {
-        LobState currentState = new LobState(method, reqURL);
+        String strPath = null;
         try {
-            LobState nextState = getFileAccessPredictor().predictNextState(currentState);
+            strPath = new URL(reqURL).getPath();
+        } catch (MalformedURLException ex) {
+            strPath = reqURL;
+        }
+        String[] parts = strPath.split("/lobcder/dav");
+        String resource = null;
+        if (parts != null && parts.length > 1) {
+            resource = parts[1];
+        } else {
+            resource = strPath;
+        }
+
+        LobState currentState = new LobState(method, Path.path(resource).toString());
+        LobState nextState = null;
+        try {
+            nextState = getFileAccessPredictor().predictNextState(currentState);
             log.log(Level.INFO, "nextFile: {0}", nextState.getID());
         } catch (Exception ex) {
             Logger.getLogger(MyFilter.class.getName()).log(Level.SEVERE, null, ex);
         }
+        if (prevState != null) {
+            if (currentState.getID().equals(prevState.getID())) {
+                log.log(Level.INFO, "Hit. currentState: {0} nextState: {1} prevState: {2}",
+                        new Object[]{currentState.getID(), nextState.getID(), prevState.getID()});
+            } else {
+                log.log(Level.INFO, "Miss. currentState: {0} nextState: {1} prevState: {2}",
+                        new Object[]{currentState.getID(), nextState.getID(), prevState.getID()});
+            }
+        }
+
+        prevState = nextState;
     }
 }
