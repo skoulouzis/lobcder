@@ -4,7 +4,6 @@
  */
 package nl.uva.cs.lobcder.util;
 
-import io.milton.http.Request;
 import javax.xml.namespace.QName;
 
 /**

@@ -4,6 +4,8 @@
  */
 package nl.uva.cs.lobcder.rest;
 
+import nl.uva.cs.lobcder.rest.wrappers.UsersWrapper;
+import nl.uva.cs.lobcder.rest.wrappers.UsersWrapperList;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.MalformedURLException;

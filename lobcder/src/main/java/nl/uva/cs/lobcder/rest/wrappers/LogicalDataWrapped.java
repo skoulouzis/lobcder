@@ -1,4 +1,4 @@
-package nl.uva.cs.lobcder.rest;
+package nl.uva.cs.lobcder.rest.wrappers;
 
 import lombok.Data;
 import nl.uva.cs.lobcder.auth.Permissions;

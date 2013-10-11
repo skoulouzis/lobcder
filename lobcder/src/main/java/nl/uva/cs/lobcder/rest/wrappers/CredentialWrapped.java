@@ -2,9 +2,8 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package nl.uva.cs.lobcder.rest;
+package nl.uva.cs.lobcder.rest.wrappers;
 
-import java.util.List;
 import javax.xml.bind.annotation.XmlRootElement;
 import lombok.Data;
 
@@ -14,6 +13,8 @@ import lombok.Data;
  */
 @XmlRootElement
 @Data
-class IDWrapperList {
-     List<Long> ids;
+public class CredentialWrapped {
+
+    private String storageSiteUsername;
+    private String storageSitePassword;
 }

@@ -2,10 +2,11 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package nl.uva.cs.lobcder.rest;
+package nl.uva.cs.lobcder.rest.wrappers;
 
 import javax.xml.bind.annotation.XmlRootElement;
 import lombok.Data;
+import nl.uva.cs.lobcder.rest.wrappers.CredentialWrapped;
 
 /**
  *
@@ -13,7 +14,7 @@ import lombok.Data;
  */
 @XmlRootElement
 @Data
-class StorageSiteWrapper {
+public class StorageSiteWrapper {
 
     private Long storageSiteId;
     private Long quotaSize;
@@ -24,5 +25,6 @@ class StorageSiteWrapper {
     private CredentialWrapped credential;
     private boolean encrypt;
     private boolean isCache;
+    private boolean saveFilesOnDelete;
 
 }

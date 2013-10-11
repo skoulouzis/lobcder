@@ -4,6 +4,7 @@
  */
 package nl.uva.cs.lobcder.rest;
 
+import nl.uva.cs.lobcder.rest.wrappers.LogicalDataWrapped;
 import com.google.common.collect.HashBiMap;
 import java.io.FileNotFoundException;
 import java.io.IOException;

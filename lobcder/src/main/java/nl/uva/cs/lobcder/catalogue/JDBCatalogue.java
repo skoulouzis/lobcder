@@ -27,7 +27,7 @@ import nl.uva.cs.lobcder.resources.LogicalData;
 import nl.uva.cs.lobcder.resources.PDRI;
 import nl.uva.cs.lobcder.resources.PDRIDescr;
 import nl.uva.cs.lobcder.resources.StorageSite;
-import nl.uva.cs.lobcder.rest.UsersWrapper;
+import nl.uva.cs.lobcder.rest.wrappers.UsersWrapper;
 import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.cs.lobcder.util.MyDataSource;
 import org.apache.commons.codec.binary.Base64;
@@ -67,33 +67,36 @@ public class JDBCatalogue extends MyDataSource {
         timer.cancel();
     }
 
-    public Collection<StorageSite> getStorageSites() throws SQLException {
+    public Collection<StorageSite> getStorageSites(Boolean includeCache) throws SQLException {
         try (Connection connection = getConnection()) {
-            return getStorageSites(connection);
+            return getStorageSites(connection,includeCache);
         }
     }
 
-    public Collection<StorageSite> getStorageSites(Connection connection) throws SQLException {
+    public Collection<StorageSite> getStorageSites(Connection connection, Boolean isCache) throws SQLException {
         try (Statement s = connection.createStatement()) {
             try (ResultSet rs = s.executeQuery("SELECT storageSiteId, resourceURI, "
                             + "currentNum, currentSize, quotaNum, quotaSize, username, "
                             + "password, encrypt FROM storage_site_table "
                             + "JOIN credential_table ON credentialRef = credintialId "
-                            + "WHERE isCache != TRUE")) {
+                            + "WHERE isCache = "+isCache)) {
+                
                 ArrayList<StorageSite> res = new ArrayList<>();
                 while (rs.next()) {
-                    Credential c = new Credential();
-                    c.setStorageSiteUsername(rs.getString(7));
-                    c.setStorageSitePassword(rs.getString(8));
                     StorageSite ss = new StorageSite();
                     ss.setStorageSiteId(rs.getLong(1));
-                    ss.setCredential(c);
+
                     ss.setResourceURI(rs.getString(2));
                     ss.setCurrentNum(rs.getLong(3));
                     ss.setCurrentSize(rs.getLong(4));
                     ss.setQuotaNum(rs.getLong(5));
                     ss.setQuotaSize(rs.getLong(6));
-                    ss.setEncrypt(rs.getBoolean(7));
+                    Credential c = new Credential();
+                    c.setStorageSiteUsername(rs.getString(7));
+                    c.setStorageSitePassword(rs.getString(8));
+                    ss.setCredential(c);
+                    ss.setEncrypt(rs.getBoolean(9));
+                    ss.setCache(isCache);
                     res.add(ss);
                 }
                 return res;
@@ -101,32 +104,32 @@ public class JDBCatalogue extends MyDataSource {
         }
     }
 
-    public Collection<StorageSite> getCacheStorageSites(Connection connection) throws SQLException {
-        try (Statement s = connection.createStatement()) {
-            try (ResultSet rs = s.executeQuery("SELECT storageSiteId, resourceURI, "
-                            + "currentNum, currentSize, quotaNum, quotaSize, username, "
-                            + "password, encrypt FROM storage_site_table JOIN credential_table ON "
-                            + "credentialRef = credintialId WHERE isCache = TRUE")) {
-                ArrayList<StorageSite> res = new ArrayList<>();
-                while (rs.next()) {
-                    Credential c = new Credential();
-                    c.setStorageSiteUsername(rs.getString(7));
-                    c.setStorageSitePassword(rs.getString(8));
-                    StorageSite ss = new StorageSite();
-                    ss.setStorageSiteId(rs.getLong(1));
-                    ss.setCredential(c);
-                    ss.setResourceURI(rs.getString(2));
-                    ss.setCurrentNum(rs.getLong(3));
-                    ss.setCurrentSize(rs.getLong(4));
-                    ss.setQuotaNum(rs.getLong(5));
-                    ss.setQuotaSize(rs.getLong(6));
-                    ss.setEncrypt(rs.getBoolean(7));
-                    res.add(ss);
-                }
-                return res;
-            }
-        }
-    }
+//    public Collection<StorageSite> getCacheStorageSites(Connection connection) throws SQLException {
+//        try (Statement s = connection.createStatement()) {
+//            try (ResultSet rs = s.executeQuery("SELECT storageSiteId, resourceURI, "
+//                            + "currentNum, currentSize, quotaNum, quotaSize, username, "
+//                            + "password, encrypt FROM storage_site_table JOIN credential_table ON "
+//                            + "credentialRef = credintialId WHERE isCache = TRUE")) {
+//                ArrayList<StorageSite> res = new ArrayList<>();
+//                while (rs.next()) {
+//                    Credential c = new Credential();
+//                    c.setStorageSiteUsername(rs.getString(7));
+//                    c.setStorageSitePassword(rs.getString(8));
+//                    StorageSite ss = new StorageSite();
+//                    ss.setStorageSiteId(rs.getLong(1));
+//                    ss.setCredential(c);
+//                    ss.setResourceURI(rs.getString(2));
+//                    ss.setCurrentNum(rs.getLong(3));
+//                    ss.setCurrentSize(rs.getLong(4));
+//                    ss.setQuotaNum(rs.getLong(5));
+//                    ss.setQuotaSize(rs.getLong(6));
+//                    ss.setEncrypt(rs.getBoolean(7));
+//                    res.add(ss);
+//                }
+//                return res;
+//            }
+//        }
+//    }
 
     public LogicalData registerDirLogicalData(LogicalData entry, @Nonnull Connection connection) throws SQLException {
         try (PreparedStatement preparedStatement = connection.prepareStatement(
@@ -270,12 +273,50 @@ public class JDBCatalogue extends MyDataSource {
         }
     }
 
+    public List<PDRIDescr> getPdriStorageSiteID(Long StorageSiteId, @Nonnull Connection connection) throws SQLException {
+        ArrayList<PDRIDescr> res = new ArrayList<>();
+        long pdriId;
+        try (PreparedStatement ps = connection.prepareStatement(""
+                        + "SELECT fileName, storageSiteRef, storage_site_table.resourceUri, "
+                        + "username, password, isEncrypted, encryptionKey, pdri_table.pdriId, pdriGroupRef "
+                        + "FROM pdri_table "
+                        + "JOIN storage_site_table ON storageSiteRef = storageSiteId "
+                        + "JOIN credential_table ON credentialRef = credintialId "
+                        + "WHERE storageSiteRef = ? ")) {
+            ps.setLong(1, StorageSiteId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                String fileName = rs.getString(1);
+                long ssID = rs.getLong(2);
+                String resourceURI = rs.getString(3);
+                String uName = rs.getString(4);
+                String passwd = rs.getString(5);
+                boolean encrypt = rs.getBoolean(6);
+                long key = rs.getLong(7);
+                pdriId = rs.getLong(8);
+                //                if (resourceURI.startsWith("lfc") || resourceURI.startsWith("srm")
+                //                        || resourceURI.startsWith("gftp")) {
+                //                    try {
+                //                        passwd = getProxyAsBase64String();
+                //                    } catch (FileNotFoundException ex) {
+                //                        Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+                //                    } catch (IOException ex) {
+                //                        Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+                //                    }
+                //                }
+                long groupId = rs.getLong(9);
+                res.add(new PDRIDescr(fileName, ssID, resourceURI, uName, passwd, encrypt, BigInteger.valueOf(key), groupId, Long.valueOf(pdriId)));
+            }
+            return res;
+        }
+    }
+
     public List<PDRIDescr> getPdriDescrByGroupId(Long groupId, @Nonnull Connection connection) throws SQLException {
         List<PDRIDescr> res = PDRIDescrCache.get(groupId);
         if (res != null) {
             return res;
         }
-        res = new ArrayList<PDRIDescr>();
+        res = new ArrayList<>();
         long pdriGroupRef;
         long pdriId;
         try (PreparedStatement ps = connection.prepareStatement("SELECT fileName, storageSiteRef, storage_site_table.resourceUri, "
@@ -557,8 +598,8 @@ public class JDBCatalogue extends MyDataSource {
         p = new Permissions();
         try (Statement s = connection.createStatement()) {
             ResultSet rs = s.executeQuery("SELECT permType, roleName FROM permission_table WHERE permission_table.ldUidRef = " + UID);
-            Set<String> canRead = new HashSet<String>();
-            Set<String> canWrite = new HashSet<String>();
+            Set<String> canRead = new HashSet<>();
+            Set<String> canWrite = new HashSet<>();
             while (rs.next()) {
                 if (rs.getString(1).equals("read")) {
                     canRead.add(rs.getString(2));
@@ -596,7 +637,7 @@ public class JDBCatalogue extends MyDataSource {
                         + "FROM ldata_table WHERE ldata_table.parentRef = ?")) {
             preparedStatement.setLong(1, parentRef);
             ResultSet rs = preparedStatement.executeQuery();
-            LinkedList<LogicalData> res = new LinkedList<LogicalData>();
+            LinkedList<LogicalData> res = new LinkedList<>();
             while (rs.next()) {
                 LogicalData element = new LogicalData();
                 element.setUid(rs.getLong(1));
@@ -1041,9 +1082,10 @@ public class JDBCatalogue extends MyDataSource {
 
     public void updatePdris(List<PDRIDescr> pdrisToUpdate, Connection connection) throws SQLException {
         for (PDRIDescr d : pdrisToUpdate) {
-            try (PreparedStatement ps = connection.prepareStatement("UPDATE pdri_table SET isEncrypted = ? WHERE fileName = ?")) {
+            try (PreparedStatement ps = connection.prepareStatement("UPDATE pdri_table SET isEncrypted = ?, storageSiteRef = ?, WHERE pdriId = ?")) {
                 ps.setBoolean(1, d.getEncrypt());
-                ps.setString(2, d.getName());
+                ps.setLong(2, d.getStorageSiteId());
+                ps.setLong(3, d.getId());
                 ps.executeUpdate();
                 List<PDRIDescr> res = getPdriDescrByGroupId(d.getPdriGroupRef(), connection);
                 PDRIDescrCache.put(d.getPdriGroupRef(), res);
@@ -1183,11 +1225,10 @@ public class JDBCatalogue extends MyDataSource {
 
     public void insertOrUpdateStorageSites(Collection<StorageSite> sites, Connection connection) throws SQLException {
         Collection<Credential> credentials = getCredentials(connection);
-        Collection<StorageSite> existingSites = getStorageSites(connection);
-        existingSites.addAll(getCacheStorageSites(connection));
+        Collection<StorageSite> existingSites = getStorageSites(connection,Boolean.FALSE);
+        existingSites.addAll(getStorageSites(connection,Boolean.TRUE));
         Collection<String> updatedSites = new ArrayList<>();
-
-
+        
         for (StorageSite s : sites) {
             long credentialID = -1;
             for (Credential c : credentials) {
@@ -1269,11 +1310,13 @@ public class JDBCatalogue extends MyDataSource {
     }
 
     public void deleteStorageSites(List<Long> ids, Connection connection) throws SQLException {
-        for (Long id : ids) {
-            try (PreparedStatement preparedStatement = connection.prepareStatement(
-                            "DELETE FROM storage_site_table WHERE storageSiteId = ?")) {
-                preparedStatement.setLong(1, id);
-                preparedStatement.executeUpdate();
+        if (ids != null && ids.size() > 0) {
+            for (Long id : ids) {
+                try (PreparedStatement preparedStatement = connection.prepareStatement(
+                                "DELETE FROM storage_site_table WHERE storageSiteId = ?")) {
+                    preparedStatement.setLong(1, id);
+                    preparedStatement.executeUpdate();
+                }
             }
         }
     }

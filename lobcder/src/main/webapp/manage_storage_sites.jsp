@@ -53,7 +53,7 @@
                             {key:"username", locator:"*[local-name()='credential']/*[local-name()='storageSiteUsername']"},
                             {key:"currentNum", locator:"*[local-name() ='currentNum']"},
                             {key:"currentSize", locator:"*[local-name() ='currentSize']"},
-                            {key:"encrypted", locator:"*[local-name() ='encrypt']"},
+                            {key:"encrypt", locator:"*[local-name() ='encrypt']"},
                             {key:"quotaNum", locator:"*[local-name() ='quotaNum']"},
                             {key:"quotaSize", locator:"*[local-name() ='quotaSize']"},
                             {key:"ID", locator:"*[local-name() ='storageSiteId']"},
@@ -71,11 +71,11 @@
                     { key: 'resourceURI', label: 'URI' },
                     { key: 'username', label: 'username'},
                     { key: 'password', label: 'password'},
-                    //                    { key:'encrypted',  label:"encrypted?",
+                    //                    { key:'encrypt',  label:"encrypt?",
                     //                        formatConfig: encr,
                     //                        editor:"checkbox", editorConfig:{ checkboxHash:{ 'true':true, 'false':false } }
                     //                    },
-                    { key:'encrypted',  label:"encrypted?"},
+                    { key:'encrypt',  label:"encrypt?"},
                     //                    { key:'cache',  label:"cache?",
                     //                        formatConfig: encr,
                     //                        editor:"checkbox", editorConfig:{ checkboxHash:{ 'true':true, 'false':false } }
@@ -105,6 +105,7 @@
                 });
                 
                 ds.after("response", function() {
+                    table.sort('ID');
                     table.render("#dtable");
                 }); 
             
@@ -119,6 +120,13 @@
                 
                 Y.one("#btnSave").on("click", function(){
                     var recs = table.get('checkboxSelected');
+                    var dataMsg = buildDataMsg(recs);
+                    var uriPUT = "rest/storage_sites/set";
+                    send(dataMsg,uriPUT);
+                    table.checkboxClearAll();
+                });
+                
+                var buildDataMsg = function(recs) {
                     var dataMsg = "<storageSiteWrapperList>"
                     Y.Array.each(recs,function (r) {
                         if(r.tr) {
@@ -147,7 +155,7 @@
                                 dataMsg +="</currentSize>";
                                                             
                                 dataMsg +="<encrypt>";
-                                dataMsg += r.record.get('encrypted');
+                                dataMsg += r.record.get('encrypt');
                                 dataMsg+="</encrypt>";
                                 
                                 dataMsg +="<quotaNum>";
@@ -163,7 +171,7 @@
                                 dataMsg+="</resourceURI>";
                                 
                                 dataMsg +="<storageSiteId>";
-                                dataMsg += r.record.get('storageSiteId');
+                                dataMsg += r.record.get('ID');
                                 dataMsg+="</storageSiteId>";
                               
                                 dataMsg += "</sites>"
@@ -172,12 +180,9 @@
                         }
                     });
                     dataMsg += "</storageSiteWrapperList>"
-                    Y.log("dataMsg "+dataMsg);
-                    var uriPUT = "rest/storage_sites/set";
-                    send(dataMsg,uriPUT);
-                    table.checkboxClearAll();
-                });
-                
+                    Y.log("dataMsg"+dataMsg);
+                    return dataMsg;
+                }
                 
                 var send = function(dataMsg,uriPUT) {
                     
@@ -210,22 +215,8 @@
                 Y.one("#btnDelete").on("click", function(){
                     var recs = table.get('checkboxSelected');
                     // returns array of objects {tr,record,pkvalues} 
-                    var dataMsg ="<idWrapperList>";
-                    Y.Array.each(recs,function (r) {
-                        if(r.tr) {
-                            var recindx = table.data.indexOf(r.record);                            
-                            var id = r.record.get('ID');
-                            Y.log("id "+id);
-                            if ( confirm("Are you sure you want to delete this record ?\n"+ r.record.get('ID')+" : "+r.record.get('resourceURI')) === true ) {
-                                table.removeRow(recindx);
-                                dataMsg += "<ids>";
-                                dataMsg += id;
-                                dataMsg += "</ids>";
-                            }
-                        }
-                    },table);
-                    
-                    dataMsg +="</idWrapperList>";
+                    // 
+                     var dataMsg = buildDataMsg(recs);
                     
                     var uriPUT = "rest/storage_sites/delete";
                     send(dataMsg,uriPUT);
@@ -251,7 +242,7 @@
                     }
                     Y.log("max= "+max);
                     table.addRow( [{ID:++max,resourceURI:'file://',
-                            username:'uname',password:'pass',encrypted:'false',
+                            username:'uname',password:'pass',encrypt:'false',
                             cache:'false',currentNum:'-1',quotaNum:'-1',
                             quotaSize:'-1',currentSize:'-1'}] );
                 });

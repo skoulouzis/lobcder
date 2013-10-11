@@ -88,14 +88,14 @@ public class WebDataResource implements PropFindableResource, Resource,
     public Object authenticate(String user, String password) {
         String token = password;
         MyPrincipal principal = null;
-        
-        for(AuthI a : authList){
+
+        for (AuthI a : authList) {
             principal = a.checkToken(token);
-            if(principal !=null){
+            if (principal != null) {
                 break;
             }
         }
-        
+
 //        if (auth2 != null) {
 //            principal = auth2.checkToken(token);
 //        }
@@ -338,7 +338,8 @@ public class WebDataResource implements PropFindableResource, Resource,
     }
 
     protected PDRI createPDRI(long fileLength, String fileName, Connection connection) throws SQLException, NoSuchAlgorithmException, IOException {
-        Collection<StorageSite> cacheSS = getCatalogue().getCacheStorageSites(connection);
+//        Collection<StorageSite> cacheSS = getCatalogue().getCacheStorageSites(connection);
+        Collection<StorageSite> cacheSS = getCatalogue().getStorageSites(connection, Boolean.TRUE);
         if (cacheSS == null || cacheSS.isEmpty()) {
             return new CachePDRI(UUID.randomUUID().toString() + "-" + fileName);
         } else {
@@ -452,7 +453,7 @@ public class WebDataResource implements PropFindableResource, Resource,
             } else if (qname.equals(Constants.AVAIL_STORAGE_SITES_PROP_NAME)) {
                 try (Connection connection = getCatalogue().getConnection()) {
                     connection.commit();
-                    Collection<StorageSite> ss = getCatalogue().getStorageSites(connection);
+                    Collection<StorageSite> ss = getCatalogue().getStorageSites(connection, Boolean.FALSE);
                     StringBuilder sb = new StringBuilder();
                     sb.append("[");
                     for (StorageSite s : ss) {

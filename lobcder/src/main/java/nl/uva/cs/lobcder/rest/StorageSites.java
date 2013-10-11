@@ -34,6 +34,9 @@ import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.auth.MyPrincipal;
 import nl.uva.cs.lobcder.resources.Credential;
 import nl.uva.cs.lobcder.resources.StorageSite;
+import nl.uva.cs.lobcder.rest.wrappers.CredentialWrapped;
+import nl.uva.cs.lobcder.rest.wrappers.StorageSiteWrapper;
+import nl.uva.cs.lobcder.rest.wrappers.StorageSiteWrapperList;
 import nl.uva.cs.lobcder.util.CatalogueHelper;
 import nl.uva.vlet.exception.VlException;
 
@@ -82,7 +85,7 @@ public class StorageSites extends CatalogueHelper {
         if (mp.isAdmin()) {
             try (Connection connection = getCatalogue().getConnection()) {
                 StorageSiteWrapperList sitesWL = jbSites.getValue();
-                List<StorageSiteWrapper> sswl = sitesWL.sites;
+                List<StorageSiteWrapper> sswl = sitesWL.getSites();
                 if (sswl != null && sswl.size() > 0) {
                     Collection<StorageSite> sites = new ArrayList<>();
                     for (StorageSiteWrapper ssw : sswl) {
@@ -111,11 +114,19 @@ public class StorageSites extends CatalogueHelper {
     @Path("delete/")
     @PUT
     @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public void delete(IDWrapperList ids) throws SQLException {
+    public void delete(JAXBElement<StorageSiteWrapperList> jbSites) throws SQLException {
+        StorageSiteWrapperList sitesWL = jbSites.getValue();
         MyPrincipal mp = (MyPrincipal) request.getAttribute("myprincipal");
-        if (mp.isAdmin()) {
+        if (sitesWL != null && sitesWL.getSites() != null && sitesWL.getSites().size() > 0 && mp.isAdmin()) {
+            List<Long> ids = new ArrayList<>();
+            for (StorageSiteWrapper ssw : sitesWL.getSites()) {
+                ids.add(ssw.getStorageSiteId());
+//                if(ssw.isSaveFilesOnDelete()){
+//                    getCatalogue().getPdriStorageSiteID(ssw.getStorageSiteId(), null);
+//                }
+            }
             try (Connection connection = getCatalogue().getConnection()) {
-                getCatalogue().deleteStorageSites(ids.ids, connection);
+                getCatalogue().deleteStorageSites(ids, connection);
                 connection.commit();
             }
         }
@@ -125,8 +136,8 @@ public class StorageSites extends CatalogueHelper {
         MultivaluedMap<String, String> queryParameters = info.getQueryParameters();
         List<String> ids = queryParameters.get("id");
         if (ids != null && ids.size() > 0 && ids.get(0).equals("all")) {
-            Collection<StorageSite> sites = getCatalogue().getStorageSites(cn);
-            Collection<StorageSite> cachesites = getCatalogue().getCacheStorageSites(cn);
+            Collection<StorageSite> sites = getCatalogue().getStorageSites(cn, Boolean.FALSE);
+            Collection<StorageSite> cachesites = getCatalogue().getStorageSites(cn, Boolean.TRUE);
             List<StorageSiteWrapper> sitesWarpper = new ArrayList<>();
             for (StorageSite s : sites) {
                 StorageSiteWrapper sw = new StorageSiteWrapper();

@@ -4,6 +4,8 @@
  */
 package nl.uva.cs.lobcder.rest;
 
+import nl.uva.cs.lobcder.rest.wrappers.WorkerStatus;
+import nl.uva.cs.lobcder.rest.wrappers.ReservationInfo;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.sql.Connection;

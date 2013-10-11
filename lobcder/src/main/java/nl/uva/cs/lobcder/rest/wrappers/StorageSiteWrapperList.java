@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package nl.uva.cs.lobcder.rest;
+package nl.uva.cs.lobcder.rest.wrappers;
 
 import java.util.List;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -14,9 +14,6 @@ import lombok.Data;
  */
 @XmlRootElement
 @Data
-public class UsersWrapper {
-    private Long id;
-    private String uname;
-    private String token;
-    private List<String> roles;
+public class StorageSiteWrapperList {
+    List<StorageSiteWrapper> sites;
 }
