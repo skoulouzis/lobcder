@@ -4,15 +4,12 @@
  */
 package nl.uva.cs.lobcder.rest;
 
-import nl.uva.cs.lobcder.rest.wrappers.UsersWrapper;
-import nl.uva.cs.lobcder.rest.wrappers.UsersWrapperList;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.Collection;
 import java.util.List;
 import java.util.logging.Level;
 import javax.servlet.http.HttpServletRequest;
@@ -28,7 +25,8 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.auth.MyPrincipal;
-import nl.uva.cs.lobcder.resources.StorageSite;
+import nl.uva.cs.lobcder.rest.wrappers.UsersWrapper;
+import nl.uva.cs.lobcder.rest.wrappers.UsersWrapperList;
 import nl.uva.cs.lobcder.util.CatalogueHelper;
 import nl.uva.vlet.exception.VlException;
 

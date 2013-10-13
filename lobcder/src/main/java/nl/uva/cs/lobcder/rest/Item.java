@@ -4,17 +4,12 @@
  */
 package nl.uva.cs.lobcder.rest;
 
-import nl.uva.cs.lobcder.rest.wrappers.LogicalDataWrapped;
-import com.google.common.collect.HashBiMap;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
-import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Level;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
@@ -27,6 +22,7 @@ import nl.uva.cs.lobcder.auth.MyPrincipal;
 import nl.uva.cs.lobcder.auth.Permissions;
 import nl.uva.cs.lobcder.resources.LogicalData;
 import nl.uva.cs.lobcder.resources.PDRIDescr;
+import nl.uva.cs.lobcder.rest.wrappers.LogicalDataWrapped;
 import nl.uva.cs.lobcder.util.CatalogueHelper;
 import nl.uva.cs.lobcder.util.GridHelper;
 import nl.uva.vlet.exception.VlException;

@@ -1348,7 +1348,7 @@ public class JDBCatalogue extends MyDataSource {
                 long id = rs.getLong(1);
                 uw.setId(id);
                 String token = rs.getString(2);
-                token = "****";
+//                token = "****";
                 uw.setToken(token);
                 uw.setUname(rs.getString(3));
 

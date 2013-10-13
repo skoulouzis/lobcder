@@ -44,8 +44,7 @@
                 });
                 
                 
-                ds.plug(Y.Plugin.DataSourceXMLSchema, {
-                    schema: {
+                var schema = {
                         resultListLocator: "users",
                         resultFields: [
                             {key:"id", locator:"*[local-name() ='id']"},
@@ -53,7 +52,11 @@
                             {key:"token", locator:"*[local-name() ='token']"},
                             {key:"uname", locator:"*[local-name() ='uname']"}
                         ]
-                    }
+                    };
+
+                
+                ds.plug(Y.Plugin.DataSourceXMLSchema, {
+                    schema: schema
                 });
             
             
