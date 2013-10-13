@@ -377,13 +377,13 @@ public class TestREST {
             params.add("host", "host3");
 
             WebResource res = webResource.path("reservation").path("workers").queryParams(params);
-            List<Worker> list = res.accept(MediaType.APPLICATION_XML).
-                    get(new GenericType<List<Worker>>() {
+            List<WorkerStatus> list = res.accept(MediaType.APPLICATION_XML).
+                    get(new GenericType<List<WorkerStatus>>() {
             });
 
             assertNotNull(list);
             assertFalse(list.isEmpty());
-            for (Worker w : list) {
+            for (WorkerStatus w : list) {
                 assertNotNull(w.status);
                 assertNotNull(w.hostName);
             }
@@ -453,7 +453,7 @@ public class TestREST {
     }
 
     @XmlRootElement
-    public static class Worker {
+    public static class WorkerStatus {
 
         @XmlElement(name = "hostName")
         private String hostName;
