@@ -25,6 +25,9 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ws.rs.core.MediaType;
@@ -193,7 +196,6 @@ public class WebDAVTest {
         //Just get something back 
         assertTrue("GetMethod status: " + status, status == HttpStatus.SC_NOT_FOUND || status == HttpStatus.SC_OK);
     }
-    
 
 //    http://greenbytes.de/tech/webdav/rfc5842.html#rfc.section.8.1
     @Test
@@ -1939,44 +1941,44 @@ public class WebDAVTest {
             assertEquals(len, get.getResponseContentLength());
 
             String response = get.getResponseBodyAsString();
-            System.err.println("response: " + response);
+            System.err.println("response:\t\t" + response);
 
             String part = TestSettings.TEST_DATA.substring(start, end + 1);
-            System.err.println("part: " + part);
+            System.err.println("part:\t\t" + part);
             assertEquals(part, response);
 
 
-//            start = 9;
-//            end = 19;
-//            len = end - start + 1;
-//            get = new GetMethod(testuri1);
-//            get.setRequestHeader(new Header("Range", "bytes=" + start + "-" + end));
-//            client.executeMethod(get);
-//            status = get.getStatusCode();
-//            assertEquals(HttpStatus.SC_PARTIAL_CONTENT, status);
-//            assertEquals(len, get.getResponseContentLength());
-//            response = get.getResponseBodyAsString();
-//            System.err.println("response: " + response);
-//            part = TestSettings.TEST_DATA.substring(start, end + 1);
-//            System.err.println("part: " + part);
-//            assertEquals(part, response);
-//
-//            start = TestSettings.TEST_DATA.length() / 2;
-//            end = TestSettings.TEST_DATA.length() - 3;
-//            len = end - start + 1;
-//            get = new GetMethod(testuri1);
-//            get.setRequestHeader(new Header("Range", "bytes=" + start + "-" + end));
-//            client.executeMethod(get);
-//            status = get.getStatusCode();
-//            assertEquals(HttpStatus.SC_PARTIAL_CONTENT, status);
-//            assertEquals(len, get.getResponseContentLength());
-//
-//            response = get.getResponseBodyAsString();
-//            System.err.println("response: " + response);
-//
-//            part = TestSettings.TEST_DATA.substring(start, end + 1);
-//            System.err.println("part: " + part);
-//            assertEquals(part, response);
+            start = 9;
+            end = 19;
+            len = end - start + 1;
+            get = new GetMethod(testuri1);
+            get.setRequestHeader(new Header("Range", "bytes=" + start + "-" + end));
+            client.executeMethod(get);
+            status = get.getStatusCode();
+            assertEquals(HttpStatus.SC_PARTIAL_CONTENT, status);
+            assertEquals(len, get.getResponseContentLength());
+            response = get.getResponseBodyAsString();
+            System.err.println("response:\t\t" + response);
+            part = TestSettings.TEST_DATA.substring(start, end + 1);
+            System.err.println("part:\t\t" + part);
+            assertEquals(part, response);
+
+            start = TestSettings.TEST_DATA.length() / 2;
+            end = TestSettings.TEST_DATA.length() - 3;
+            len = end - start + 1;
+            get = new GetMethod(testuri1);
+            get.setRequestHeader(new Header("Range", "bytes=" + start + "-" + end));
+            client.executeMethod(get);
+            status = get.getStatusCode();
+            assertEquals(HttpStatus.SC_PARTIAL_CONTENT, status);
+            assertEquals(len, get.getResponseContentLength());
+
+            response = get.getResponseBodyAsString();
+            System.err.println("response:\t\t" + response);
+
+            part = TestSettings.TEST_DATA.substring(start, end + 1);
+            System.err.println("part:\t\t" + part);
+            assertEquals(part, response);
 
 
 
@@ -1992,6 +1994,115 @@ public class WebDAVTest {
             } catch (IOException ex) {
                 Logger.getLogger(WebDAVTest.class.getName()).log(Level.SEVERE, null, ex);
             }
+        }
+    }
+
+    @Test
+    public void testConcurrentGet() throws DavException {
+        String testcol1 = root + "testCollection/";
+        String testuri1 = testcol1 + "file1";
+        try {
+            PutMethod put = new PutMethod(testuri1);
+            put.setRequestEntity(new StringRequestEntity(TestSettings.TEST_DATA, "text/plain", "UTF-8"));
+            int status = client.executeMethod(put);
+            assertEquals(HttpStatus.SC_CREATED, status);
+
+            //wait for replication
+            Thread.sleep(15000);
+
+
+
+            DavPropertyNameSet lenNameSet = new DavPropertyNameSet();
+            DavPropertyName lenPropertyName = DavPropertyName.create(DavPropertyName.PROPERTY_GETCONTENTLENGTH);
+            lenNameSet.add(lenPropertyName);
+
+
+            PropFindMethod propFind = new PropFindMethod(testuri1, lenNameSet, DavConstants.DEPTH_INFINITY);
+            status = client.executeMethod(propFind);
+            assertEquals(HttpStatus.SC_MULTI_STATUS, status);
+
+            MultiStatus multiStatus = propFind.getResponseBodyAsMultiStatus();
+            MultiStatusResponse[] responses = multiStatus.getResponses();
+
+
+            DavPropertySet prop = getProperties(responses[0]);
+            DavPropertyName[] names = prop.getPropertyNames();
+            for (int i = 0; i < names.length; i++) {
+//                System.err.println(names[i] + " : " + prop.get(names[i]));
+                System.err.println(names[i] + " : " + prop.get(names[i]).getValue());
+            }
+            String strLen = (String) prop.get(DavPropertyName.PROPERTY_GETCONTENTLENGTH).getValue();
+            int contentLen = Integer.valueOf(strLen);
+            System.err.println("size : " + contentLen);
+
+
+
+            int start = 0;
+            int end = 9;
+            int maxThreads = 6;
+            int chunksSize = contentLen / maxThreads;
+            int bytesLeft = contentLen % maxThreads;
+
+            ArrayBlockingQueue<Runnable> queue = new ArrayBlockingQueue<Runnable>(maxThreads);
+            ThreadPoolExecutor executorService = new ThreadPoolExecutor(
+                    maxThreads, // core thread pool size
+                    maxThreads, // maximum thread pool size
+                    20, // time to wait before resizing pool
+                    TimeUnit.SECONDS,
+                    queue,
+                    new ThreadPoolExecutor.CallerRunsPolicy());
+
+
+            for (int i = 0; i < maxThreads; i++) {
+                start = i * chunksSize;
+                if (i >= maxThreads - 1) {
+                    end = start + chunksSize + bytesLeft;
+                } else {
+                    end = start + chunksSize;
+                }
+                int len = end - start + 1;
+                System.err.println("Thread[" + i + "] bytes=" + start + "-" + end);
+                GetMethod get = new GetMethod(testuri1);
+                get.setRequestHeader(new Header("Range", "bytes=" + start + "-" + end));
+                GetRunnable getTask = new GetRunnable(get, start, end, len);
+                executorService.submit(getTask);
+
+//                client.executeMethod(get);
+//                status = get.getStatusCode();
+//                assertEquals(HttpStatus.SC_PARTIAL_CONTENT, status);
+//                assertEquals(len, get.getResponseContentLength());
+//
+//                String part = TestSettings.TEST_DATA.substring(start, end + 1);
+//                String response = get.getResponseBodyAsString();
+//                assertEquals(part, response);
+            }
+
+            long sleepTime = 50;
+            executorService.shutdown();
+            int count = executorService.getActiveCount();
+            while (!executorService.awaitTermination(30, TimeUnit.SECONDS)) {
+                //            while (count >= 1) {
+                count = executorService.getActiveCount();
+                sleepTime = 25 * count;
+                Thread.sleep(sleepTime);
+                System.err.println("Threads running: " + count);
+            }
+            System.err.println("getQueue: " + executorService.getQueue().size());
+
+
+        } catch (InterruptedException ex) {
+            Logger.getLogger(WebDAVTest.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(WebDAVTest.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            try {
+                DeleteMethod delete = new DeleteMethod(testcol1);
+                int status = client.executeMethod(delete);
+                assertTrue("DeleteMethod status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
+            } catch (IOException ex) {
+                Logger.getLogger(WebDAVTest.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            fail();
         }
     }
 
@@ -2216,4 +2327,40 @@ public class WebDAVTest {
 //        // exhausted reader without reaching end of headers
 //        fail("Unexpected end of data");
 //    }
+
+    private static class GetRunnable implements Runnable {
+
+        private final GetMethod get;
+        private final HttpClient client;
+        private final int len;
+        private final int start;
+        private final int end;
+
+        public GetRunnable(GetMethod get, int start, int end, int len) {
+            this.get = get;
+            this.len = len;
+            this.start = start;
+            this.end = end;
+            this.client = new HttpClient();
+            this.client.getState().setCredentials(
+                    new AuthScope(uri.getHost(), uri.getPort()),
+                    new UsernamePasswordCredentials(username, password));
+        }
+
+        @Override
+        public void run() {
+            try {
+                this.client.executeMethod(get);
+                int status = get.getStatusCode();
+                assertEquals(HttpStatus.SC_PARTIAL_CONTENT, status);
+                assertEquals(len, get.getResponseContentLength());
+
+                String part = TestSettings.TEST_DATA.substring(start, end + 1);
+                String response = get.getResponseBodyAsString();
+                assertEquals(part, response);
+            } catch (IOException ex) {
+                Logger.getLogger(WebDAVTest.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
 }
