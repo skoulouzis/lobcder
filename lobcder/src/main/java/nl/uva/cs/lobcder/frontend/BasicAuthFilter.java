@@ -26,75 +26,70 @@ import org.apache.commons.codec.binary.Base64;
  */
 @Log
 public class BasicAuthFilter implements Filter {
-    
+
     private String _realm;
     private List<AuthI> authList;
     private AuthWorker authWorker;
-    
+
     public BasicAuthFilter() {
     }
-    
+
     @Override
     public void destroy() {
         // Nothing to do.
     }
-    
+
     @Override
     public void doFilter(final ServletRequest request, final ServletResponse response,
             final FilterChain chain) throws IOException, ServletException {
-        
+
         final HttpServletRequest httpRequest = (HttpServletRequest) request;
         final HttpServletResponse httpResponse = (HttpServletResponse) response;
-        
+
         final String autheader = httpRequest.getHeader("Authorization");
         if (autheader != null) {
-            
+
             final int index = autheader.indexOf(' ');
             if (index > 0) {
                 final String credentials = new String(Base64.decodeBase64(autheader.substring(index).getBytes()), "UTF8");
 //                final String credentials = new String(Base64.decodeBase64(autheader.substring(index)), "UTF8");
                 final String uname = credentials.substring(0, credentials.indexOf(":"));
                 final String token = credentials.substring(credentials.indexOf(":") + 1);
-                
+
                 MyPrincipal principal = null;
                 List<String> workers = WorkerHelper.getWorkers();
-                
-                if (workers != null && workers.size() > 0) {
-                    //Only check tokens coming from workers 
-                    if (uname.startsWith("worker-")) {
-                        if (authWorker == null) {
-                            for (AuthI a : authList) {
-                                if (a instanceof AuthWorker) {
-                                    authWorker = (AuthWorker) a;
-                                    break;
-                                }
-                            }
-                        }
-                        
-                        
-                        
-                        for (String s : workers) {
-                            try {
-                                String workerHost = new URI(s).getHost();
-                                String remoteHost = request.getRemoteHost();
-                                if (remoteHost.equals("localhost") || remoteHost.equals("127.0.0.1")) {
-//                                InetAddress.getLocalHost().getHostName();
-                                    remoteHost = "localhost";
-                                }
-                                if (remoteHost.equals(workerHost)) {
-                                    
-                                    principal = authWorker.checkToken(token);
-                                    if (principal != null) {
-                                        break;
-                                    }
-                                }
-                            } catch (URISyntaxException ex) {
-                                principal = null;
-                                Logger.getLogger(BasicAuthFilter.class.getName()).log(Level.SEVERE, null, ex);
+
+                if (workers != null && workers.size() > 0 && uname.startsWith("worker-")) {
+                    if (authWorker == null) {
+                        for (AuthI a : authList) {
+                            if (a instanceof AuthWorker) {
+                                authWorker = (AuthWorker) a;
+                                break;
                             }
                         }
                     }
-                    
+                    for (String s : workers) {
+                        try {
+                            String workerHost = new URI(s).getHost();
+                            String remoteHost = request.getRemoteHost();
+                            if (remoteHost.equals("localhost") || remoteHost.equals("127.0.0.1")) {
+//                                InetAddress.getLocalHost().getHostName();
+                                remoteHost = "localhost";
+                            }
+                            if (remoteHost.equals(workerHost)) {
+
+                                principal = authWorker.checkToken(token);
+                                if (principal != null) {
+                                    break;
+                                }
+                            }
+                        } catch (URISyntaxException ex) {
+                            principal = null;
+                            Logger.getLogger(BasicAuthFilter.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    }
+
+
                 } else {
                     for (AuthI a : authList) {
                         if (a instanceof AuthWorker) {
@@ -124,11 +119,11 @@ public class BasicAuthFilter implements Filter {
                 }
             }
         }
-        
+
         httpResponse.setHeader("WWW-Authenticate", "Basic realm=\"" + _realm + "\"");
         httpResponse.sendError(HttpServletResponse.SC_UNAUTHORIZED);
     }
-    
+
     @Override
     public void init(final FilterConfig config) throws ServletException {
         _realm = "SECRET";
@@ -139,18 +134,18 @@ public class BasicAuthFilter implements Filter {
             AuthI auth = (AuthI) envContext.lookup(jndiName);
             authList = new ArrayList<>();
             authList.add(auth);
-            
-            
-            
+
+
+
             jndiName = "bean/authWorker";
             auth = (AuthI) envContext.lookup(jndiName);
             authList.add(auth);
-            
-            
+
+
             jndiName = "bean/authDB";
             auth = (AuthI) envContext.lookup(jndiName);
             authList.add(auth);
-            
+
         } catch (Exception ex) {
             log.log(Level.SEVERE, null, ex);
         }

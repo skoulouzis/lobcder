@@ -15,8 +15,8 @@ import java.util.Map;
  */
 class Graph {
 
-    private List<LobState> vertices = new ArrayList<LobState>();
-    private Map<String, Edge> edges = new HashMap<String, Edge>();
+    private List<LobState> vertices = new ArrayList<>();
+    private Map<String, Edge> edges = new HashMap<>();
 
     public Graph() {
     }

@@ -41,7 +41,7 @@ import nl.uva.cs.lobcder.util.WorkerHelper;
  */
 @Log
 @Path("reservation/")
-public class PathReservation extends CatalogueHelper {
+public class PathReservationService extends CatalogueHelper {
 
     @Context
     UriInfo info;
@@ -141,7 +141,6 @@ public class PathReservation extends CatalogueHelper {
                 workerIndex = 0;
             }
             worker = workers.get(workerIndex++);
-
         }
 
         if (!worker.endsWith("/")) {

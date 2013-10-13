@@ -1,4 +1,4 @@
--- DROP TABLE IF EXISTS permission_table, ldata_table, pdri_table, pdrigroup_table, storage_site_table, credential_table, requests_table;
+DROP TABLE IF EXISTS permission_table, ldata_table, pdri_table, pdrigroup_table, storage_site_table, credential_table, requests_table;
 
 CREATE TABLE pdrigroup_table (
   pdriGroupId SERIAL PRIMARY KEY,

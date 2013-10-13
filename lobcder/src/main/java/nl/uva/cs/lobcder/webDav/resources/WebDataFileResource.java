@@ -256,7 +256,7 @@ public class WebDataFileResource extends WebDataResource implements
             if (ex instanceof NotFoundException) {
                 throw (NotFoundException) ex;
             }
-            if (ex.getMessage().contains("Resource not found.:Couldn't locate")) {
+            if (ex.getMessage().contains("Resource not found")) {
                 throw new NotFoundException(ex.getMessage());
             }
             try {

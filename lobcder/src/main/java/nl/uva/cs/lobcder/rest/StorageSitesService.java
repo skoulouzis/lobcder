@@ -46,7 +46,7 @@ import nl.uva.vlet.exception.VlException;
  */
 @Log
 @Path("storage_sites/")
-public class StorageSites extends CatalogueHelper {
+public class StorageSitesService extends CatalogueHelper {
 
     @Context
     UriInfo info;
@@ -55,7 +55,7 @@ public class StorageSites extends CatalogueHelper {
     @Context
     HttpServletResponse servletResponse;
 
-    public StorageSites() throws NamingException {
+    public StorageSitesService() throws NamingException {
     }
 
     @Path("query/")

@@ -38,7 +38,7 @@ import nl.uva.vlet.exception.VlException;
  */
 @Log
 @Path("users/")
-public class Users extends CatalogueHelper {
+public class UsersService extends CatalogueHelper {
 
     @Context
     UriInfo info;
