@@ -33,7 +33,7 @@ import nl.uva.cs.lobcder.auth.MyPrincipal;
 import nl.uva.cs.lobcder.auth.Permissions;
 import nl.uva.cs.lobcder.resources.LogicalData;
 import nl.uva.cs.lobcder.util.CatalogueHelper;
-import nl.uva.cs.lobcder.util.WorkerHelper;
+import nl.uva.cs.lobcder.util.PropertiesHelper;
 
 /**
  *
@@ -108,7 +108,7 @@ public class PathReservationService extends CatalogueHelper {
             MultivaluedMap<String, String> queryParameters = info.getQueryParameters();
             List<String> queryWorkers = queryParameters.get("host");
             List<WorkerStatus> workersStatus = new ArrayList<>();
-            workers = WorkerHelper.getWorkers();
+            workers = PropertiesHelper.getWorkers();
             for (String worker : queryWorkers) {
                 WorkerStatus ws = new WorkerStatus();
                 ws.setStatus("UNKNOWN");
@@ -127,7 +127,7 @@ public class PathReservationService extends CatalogueHelper {
     }
 
     private String scheduleWorker(String storageSiteHost, LogicalData ld) throws MalformedURLException {
-        workers = WorkerHelper.getWorkers();
+        workers = PropertiesHelper.getWorkers();
         String worker = null;
         for (String w : workers) {
             URL wURI = new URL(w);

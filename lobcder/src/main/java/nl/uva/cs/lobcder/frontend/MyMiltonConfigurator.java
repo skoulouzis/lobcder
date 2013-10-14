@@ -16,7 +16,7 @@ import javax.naming.NamingException;
 import nl.uva.cs.lobcder.auth.AuthI;
 import nl.uva.cs.lobcder.auth.AuthWorker;
 import nl.uva.cs.lobcder.optimization.FileAccessPredictor;
-import nl.uva.cs.lobcder.util.WorkerHelper;
+import nl.uva.cs.lobcder.util.PropertiesHelper;
 
 @Log
 public class MyMiltonConfigurator extends DefaultMiltonConfigurator {
@@ -63,7 +63,7 @@ public class MyMiltonConfigurator extends DefaultMiltonConfigurator {
 
 
 //            workerAuth = (AuthWorker) envContext.lookup("bean/authWorker");
-            List<String> workers = WorkerHelper.getWorkers();
+            List<String> workers = PropertiesHelper.getWorkers();
             if (workers != null && workers.size() > 0) {
                 workerAuth = new AuthWorker();
             }

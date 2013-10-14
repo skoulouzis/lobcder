@@ -16,7 +16,7 @@ import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.auth.AuthI;
 import nl.uva.cs.lobcder.auth.AuthWorker;
 import nl.uva.cs.lobcder.auth.MyPrincipal;
-import nl.uva.cs.lobcder.util.WorkerHelper;
+import nl.uva.cs.lobcder.util.PropertiesHelper;
 import org.apache.commons.codec.binary.Base64;
 
 /**
@@ -57,7 +57,7 @@ public class BasicAuthFilter implements Filter {
                 final String token = credentials.substring(credentials.indexOf(":") + 1);
 
                 MyPrincipal principal = null;
-                List<String> workers = WorkerHelper.getWorkers();
+                List<String> workers = PropertiesHelper.getWorkers();
 
                 if (workers != null && workers.size() > 0 && uname.startsWith("worker-")) {
                     if (authWorker == null) {

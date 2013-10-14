@@ -69,7 +69,7 @@ public class JDBCatalogue extends MyDataSource {
 
     public Collection<StorageSite> getStorageSites(Boolean includeCache) throws SQLException {
         try (Connection connection = getConnection()) {
-            return getStorageSites(connection,includeCache);
+            return getStorageSites(connection, includeCache);
         }
     }
 
@@ -79,8 +79,8 @@ public class JDBCatalogue extends MyDataSource {
                             + "currentNum, currentSize, quotaNum, quotaSize, username, "
                             + "password, encrypt FROM storage_site_table "
                             + "JOIN credential_table ON credentialRef = credintialId "
-                            + "WHERE isCache = "+isCache)) {
-                
+                            + "WHERE isCache = " + isCache)) {
+
                 ArrayList<StorageSite> res = new ArrayList<>();
                 while (rs.next()) {
                     StorageSite ss = new StorageSite();
@@ -130,7 +130,6 @@ public class JDBCatalogue extends MyDataSource {
 //            }
 //        }
 //    }
-
     public LogicalData registerDirLogicalData(LogicalData entry, @Nonnull Connection connection) throws SQLException {
         try (PreparedStatement preparedStatement = connection.prepareStatement(
                         "INSERT INTO ldata_table(parentRef, ownerId, datatype, ldName, createDate, modifiedDate)"
@@ -1191,6 +1190,9 @@ public class JDBCatalogue extends MyDataSource {
             preparedStatement.setInt(4, httpServletRequest.getContentLength());
             preparedStatement.setString(5, httpServletRequest.getContentType());
             preparedStatement.setDouble(6, elapsed);
+//             preparedStatement.setString(7, httpServletRequest.getHeader("User-Agent"));
+
+
 
             String authorizationHeader = httpServletRequest.getHeader("authorization");
             String userNpasswd = "";
@@ -1225,10 +1227,10 @@ public class JDBCatalogue extends MyDataSource {
 
     public void insertOrUpdateStorageSites(Collection<StorageSite> sites, Connection connection) throws SQLException {
         Collection<Credential> credentials = getCredentials(connection);
-        Collection<StorageSite> existingSites = getStorageSites(connection,Boolean.FALSE);
-        existingSites.addAll(getStorageSites(connection,Boolean.TRUE));
+        Collection<StorageSite> existingSites = getStorageSites(connection, Boolean.FALSE);
+        existingSites.addAll(getStorageSites(connection, Boolean.TRUE));
         Collection<String> updatedSites = new ArrayList<>();
-        
+
         for (StorageSite s : sites) {
             long credentialID = -1;
             for (Credential c : credentials) {

@@ -27,6 +27,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -42,7 +43,7 @@ import nl.uva.cs.lobcder.resources.PDRIDescr;
 import nl.uva.cs.lobcder.resources.PDRIFactory;
 import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.cs.lobcder.util.DesEncrypter;
-import nl.uva.cs.lobcder.util.WorkerHelper;
+import nl.uva.cs.lobcder.util.PropertiesHelper;
 import nl.uva.vlet.data.StringUtil;
 import nl.uva.vlet.io.CircularStreamBufferTransferer;
 import org.apache.commons.codec.binary.Base64;
@@ -57,7 +58,7 @@ public class WebDataFileResource extends WebDataResource implements
 
     private int sleepTime = 5;
     private List<String> workers;
-    private boolean doRedirect = false;
+    private boolean doRedirect = true;
     private static int workerIndex = 0;
     private static final Map<String, Double> weightPDRIMap = new HashMap<>();
     private static final Map<String, Integer> numOfGetsMap = new HashMap<>();
@@ -65,7 +66,7 @@ public class WebDataFileResource extends WebDataResource implements
     public WebDataFileResource(@Nonnull LogicalData logicalData, Path path, @Nonnull JDBCatalogue catalogue, @Nonnull List<AuthI> authList) {
         super(logicalData, path, catalogue, authList);
         if (doRedirect) {
-            workers = WorkerHelper.getWorkers();
+            workers = PropertiesHelper.getWorkers();
             if (workers == null || workers.isEmpty()) {
                 doRedirect = false;
             }
@@ -503,7 +504,7 @@ public class WebDataFileResource extends WebDataResource implements
 
     private String getBestWorker() throws IOException {
         if (doRedirect) {
-            workers = WorkerHelper.getWorkers();
+            workers = PropertiesHelper.getWorkers();
 
             if (workerIndex >= workers.size()) {
                 workerIndex = 0;
@@ -558,6 +559,17 @@ public class WebDataFileResource extends WebDataResource implements
                 if (!authorise(request, Request.Method.GET, auth)) {
                     return false;
                 }
+            }
+        }
+        String userAgent = request.getHeaders().get("user-agent");
+        if (userAgent == null || userAgent.length() <= 1) {
+            return false;
+        }
+        WebDataFileResource.log.log(Level.FINE, "userAgent: {0}", userAgent);
+        List<String> nonRedirectableUserAgents = PropertiesHelper.getNonRedirectableUserAgents();
+        for (String s : nonRedirectableUserAgents) {
+            if (userAgent.contains(s)) {
+                return false;
             }
         }
         return true;
