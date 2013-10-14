@@ -304,6 +304,13 @@ public class WorkerServlet extends HttpServlet {
                     }
                 }
             }
+            numOfTries = 0;
+            sleepTime = 2;
+            Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "Selected pdri: {0}", pdriDesc.resourceUrl);
+            WorkerVPDRI w = new WorkerVPDRI(pdriDesc.name, pdriDesc.id, pdriDesc.resourceUrl, pdriDesc.username, pdriDesc.password, pdriDesc.encrypt, BigInteger.valueOf(Long.valueOf(pdriDesc.key)), false);
+            w.setHostName(this.localAddrress);
+            //        return new WorkerVPDRI(pdriDesc.name , pdriDesc.id, pdriDesc.resourceUrl, pdriDesc.username, pdriDesc.password, pdriDesc.encrypt, BigInteger.ZERO, false);
+            return w;
         } catch (Exception ex) {
 //            Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, ex);
             if (ex.getMessage().contains("returned a response status of 404 Not Found")) {
@@ -326,13 +333,7 @@ public class WorkerServlet extends HttpServlet {
 //                restClient.destroy();
 //            }
         }
-        numOfTries = 0;
-        sleepTime = 2;
-        Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "Selected pdri: {0}", pdriDesc.resourceUrl);
-        WorkerVPDRI w = new WorkerVPDRI(pdriDesc.name, pdriDesc.id, pdriDesc.resourceUrl, pdriDesc.username, pdriDesc.password, pdriDesc.encrypt, BigInteger.valueOf(Long.valueOf(pdriDesc.key)), false);
-        w.setHostName(this.localAddrress);
-        return w;
-//        return new WorkerVPDRI(pdriDesc.name , pdriDesc.id, pdriDesc.resourceUrl, pdriDesc.username, pdriDesc.password, pdriDesc.encrypt, BigInteger.ZERO, false);
+        return null;
     }
 
     private void transfer(PDRI pdri, OutputStream out, boolean withCircularStream) throws IOException {
@@ -474,7 +475,8 @@ public class WorkerServlet extends HttpServlet {
 
         int index = new Random().nextInt(pdris.size());
         PDRIDesc[] array = pdris.toArray(new PDRIDesc[pdris.size()]);
-        return array[index];
+        PDRIDesc res = array[index];
+        return res;
     }
 
     @XmlRootElement

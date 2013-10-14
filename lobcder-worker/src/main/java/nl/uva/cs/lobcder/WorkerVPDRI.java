@@ -156,7 +156,8 @@ public class WorkerVPDRI implements PDRI {
             file = (VFile) getVfsClient().openLocation(vrl);
             doCopy(file, range, out, getEncrypted());
         } catch (Exception ex) {
-            if (ex instanceof ResourceNotFoundException || ex.getMessage().contains("Couldn open location. Get NULL object for location:")) {
+            if (ex instanceof ResourceNotFoundException || 
+                    (ex.getMessage() !=null && ex.getMessage().contains("Couldn open location. Get NULL object for location:"))) {
                 try {
 //                    VRL assimilationVRL = new VRL(resourceUrl).append(URLEncoder.encode(fileName, "UTF-8"));
                     VRL assimilationVRL = new VRL(resourceUrl).append(fileName);
