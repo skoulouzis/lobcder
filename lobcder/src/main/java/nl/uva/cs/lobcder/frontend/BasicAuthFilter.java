@@ -59,6 +59,37 @@ public class BasicAuthFilter implements Filter {
                 MyPrincipal principal = null;
                 List<String> workers = PropertiesHelper.getWorkers();
 
+//                if (workers != null && workers.size() > 0 && uname.startsWith("worker")) {
+//                    String remoteHost = request.getRemoteHost();
+//                    if (remoteHost.equals("localhost") || remoteHost.equals("127.0.0.1")) {
+//                        remoteHost = "localhost";
+//                    }
+//                    boolean foundHim = false;
+//                    for (String s : workers) {
+//                        try {
+//                            String workerHost = new URI(s).getHost();
+//                            if (remoteHost.equals(workerHost)) {
+//                                foundHim = true;
+//                                break;
+//                            }
+//                        } catch (URISyntaxException ex) {
+//                            Logger.getLogger(BasicAuthFilter.class.getName()).log(Level.SEVERE, null, ex);
+//                        }
+//                    }
+//                    if (!foundHim) {
+//                        httpResponse.setHeader("WWW-Authenticate", "Basic realm=\"" + _realm + "\"");
+//                        httpResponse.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+//                        return;
+//                    }
+//                }
+//                for (AuthI a : authList) {
+//                    principal = a.checkToken(token);
+//                    if (principal != null) {
+//                        break;
+//                    }
+//                }
+
+//
                 if (workers != null && workers.size() > 0 && uname.startsWith("worker-")) {
                     if (authWorker == null) {
                         for (AuthI a : authList) {
@@ -88,8 +119,6 @@ public class BasicAuthFilter implements Filter {
                             Logger.getLogger(BasicAuthFilter.class.getName()).log(Level.SEVERE, null, ex);
                         }
                     }
-
-
                 } else {
                     for (AuthI a : authList) {
                         if (a instanceof AuthWorker) {

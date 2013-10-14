@@ -10,6 +10,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import nl.uva.cs.lobcder.webDav.resources.WebDataFileResource;
@@ -44,9 +45,8 @@ public class PropertiesHelper {
         }
         return workers;
     }
-    
-    
-     public static List<String> getNonRedirectableUserAgents() {
+
+    public static List<String> getNonRedirectableUserAgents() {
         ArrayList<String> workers = new ArrayList<>();
         BufferedReader br = null;
         try {
@@ -70,5 +70,12 @@ public class PropertiesHelper {
         }
         return workers;
     }
-     
+
+    public static String getWorkerToken() throws IOException {
+        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+        InputStream in = classLoader.getResourceAsStream("/auth.properties");
+        Properties properties = new Properties();
+        properties.load(in);
+        return properties.getProperty("worker.token");
+    }
 }

@@ -4,17 +4,16 @@
  */
 package nl.uva.cs.lobcder.auth;
 
-import lombok.extern.java.Log;
-
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
-import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashSet;
 import java.util.logging.Level;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
+import javax.sql.DataSource;
+import lombok.extern.java.Log;
 
 /**
  *
