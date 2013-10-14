@@ -19,7 +19,6 @@ import java.net.URL;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Properties;
@@ -51,7 +50,6 @@ import org.apache.commons.httpclient.contrib.ssl.EasySSLProtocolSocketFactory;
 import org.apache.commons.httpclient.methods.*;
 import org.apache.commons.httpclient.methods.OptionsMethod;
 import org.apache.commons.httpclient.methods.PutMethod;
-import org.apache.commons.httpclient.protocol.Protocol;
 import org.apache.commons.httpclient.protocol.ProtocolSocketFactory;
 import org.apache.jackrabbit.webdav.*;
 import org.apache.jackrabbit.webdav.bind.BindConstants;
@@ -68,10 +66,6 @@ import org.junit.Test;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
-import org.apache.commons.httpclient.methods.multipart.FilePart;
-import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
-import org.apache.commons.httpclient.methods.multipart.Part;
-import org.apache.commons.httpclient.methods.multipart.StringPart;
 import org.apache.commons.httpclient.protocol.Protocol;
 
 /**
@@ -2066,15 +2060,6 @@ public class WebDAVTest {
                 get.setRequestHeader(new Header("Range", "bytes=" + start + "-" + end));
                 GetRunnable getTask = new GetRunnable(get, start, end, len);
                 executorService.submit(getTask);
-
-//                client.executeMethod(get);
-//                status = get.getStatusCode();
-//                assertEquals(HttpStatus.SC_PARTIAL_CONTENT, status);
-//                assertEquals(len, get.getResponseContentLength());
-//
-//                String part = TestSettings.TEST_DATA.substring(start, end + 1);
-//                String response = get.getResponseBodyAsString();
-//                assertEquals(part, response);
             }
 
             long sleepTime = 50;
@@ -2102,7 +2087,6 @@ public class WebDAVTest {
             } catch (IOException ex) {
                 Logger.getLogger(WebDAVTest.class.getName()).log(Level.SEVERE, null, ex);
             }
-            fail();
         }
     }
 
