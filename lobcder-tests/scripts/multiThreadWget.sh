@@ -37,7 +37,7 @@ part_size=$(($len / $threads))
 offest=0
 
 
-echo "Threads: $threads partSize: $part_size len: $len"
+# echo "Threads: $threads partSize: $part_size len: $len"
 
 for ((i = 0 ; i < $threads ; i++));
 do 
@@ -49,8 +49,9 @@ do
 	then
 	  end=$len
 	fi
-	echo "part: $start - $end"
-   	wget -O $filename.$i --header="Range: bytes=$start-$end" --user=$username --password=$password  $url & 
+# 	echo "part: $start - $end"
+	echo ------------ -O $filename.$i --header=\"Range: bytes=$start-$end\" --user=$username --password=$password  $url
+   	wget -O $filename.$i --header=\"Range: bytes=$start-$end\" --user=$username --password=$password  $url & 
 done
 
 wait
