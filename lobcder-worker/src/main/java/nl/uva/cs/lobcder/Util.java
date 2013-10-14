@@ -18,7 +18,7 @@ class Util {
             throws IOException {
         Properties properties = new Properties();
         properties.load(in);
-
+        
         return properties;
     }
 }

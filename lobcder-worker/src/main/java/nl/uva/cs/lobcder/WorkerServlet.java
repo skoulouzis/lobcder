@@ -49,7 +49,6 @@ import javax.ws.rs.core.MediaType;
 import javax.xml.bind.annotation.XmlRootElement;
 import lombok.extern.java.Log;
 import nl.uva.vlet.data.StringUtil;
-import nl.uva.vlet.io.CircularStreamBufferTransferer;
 import org.apache.http.HttpStatus;
 
 /**
@@ -87,7 +86,7 @@ public class WorkerServlet extends HttpServlet {
 
 
         restURL = prop.getProperty(("rest.url"), "http://localhost:8080/lobcder/rest/");
-//        token = prop.getProperty(("rest.pass"));
+        token = prop.getProperty(("rest.pass"));
 //        uname = prop.getProperty(("rest.uname"));
         clientConfig = configureClient();
         clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
@@ -106,30 +105,31 @@ public class WorkerServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String filePath = request.getPathInfo();
-        Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "got request from : " + request.getRemoteAddr());
+        Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "got request from : {0}", request.getRemoteAddr());
         if (filePath.length() > 1) {
             localAddrress = request.getLocalAddr();
             Path pathAndToken = Path.path(filePath);
-            token = pathAndToken.getName();
+//            token = pathAndToken.getName();
             fileUID = pathAndToken.getParent().toString();
             cacheFile = new File(baseDir, "lobcder-cache" + request.getLocalName());
-            Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "token: " + token + " fileUID: " + fileUID + " cacheFile: " + cacheFile);
+            Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "token: {0} fileUID: {1} cacheFile: {2}", new Object[]{token, fileUID, cacheFile});
             try {
                 long start = System.currentTimeMillis();
                 Range range = null;
                 long startGetPDRI = System.currentTimeMillis();
-                Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "start getPDRI at:" + startGetPDRI);
+                Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "start getPDRI at:{0}", startGetPDRI);
                 PDRI pdri = getPDRI(fileUID);
                 long elapsedGetPDRI = startGetPDRI - System.currentTimeMillis();
-                Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, "elapsedGetPDRI: " + elapsedGetPDRI);
+                Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, "elapsedGetPDRI: {0}", elapsedGetPDRI);
                 if (pdri == null) {
                     response.setStatus(HttpStatus.SC_INTERNAL_SERVER_ERROR);
+                    Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, new NullPointerException());
                     return;
                 } else {
                     long startTransfer = System.currentTimeMillis();
                     OutputStream out = response.getOutputStream();
                     String rangeStr = request.getHeader(Constants.RANGE_HEADER_NAME);
-                    if (rangeStr != null) {
+                    if (rangeStr != null && rangeStr.contains("=")) {
                         range = Range.parse(rangeStr.split("=")[1]);
                         pdri.copyRange(range, out);
 //                        response.setStatus(HttpStatus.SC_PARTIAL_CONTENT);
@@ -138,7 +138,7 @@ public class WorkerServlet extends HttpServlet {
                         transfer(pdri, out, false);
                     }
                     long elapsedTransfer = startTransfer - System.currentTimeMillis();
-                    Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, "elapsedTransfer: " + elapsedTransfer);
+                    Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, "elapsedTransfer: {0}", elapsedTransfer);
 
                     long elapsed = System.currentTimeMillis() - start;
                     if (elapsed <= 0) {
@@ -256,11 +256,12 @@ public class WorkerServlet extends HttpServlet {
                 } catch (java.net.UnknownHostException ex) {
                     hostName = localAddrress;
                 }
-                restClient.addFilter(new com.sun.jersey.api.client.filter.HTTPBasicAuthFilter("worker-" + hostName, token));
-//            restClient.addFilter(new com.sun.jersey.api.client.filter.HTTPBasicAuthFilter(uname, token));
+                //restClient.addFilter(new com.sun.jersey.api.client.filter.HTTPBasicAuthFilter("worker-" + hostName, token));
+                restClient.addFilter(new com.sun.jersey.api.client.filter.HTTPBasicAuthFilter("worker-", token));
+                //restClient.addFilter(new com.sun.jersey.api.client.filter.HTTPBasicAuthFilter(uname, token));
 
                 WebResource webResource = restClient.resource(restURL);
-//                Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "Asking master. Token: {0}", token);
+                Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "Asking master. Token: {0}", token);
 //                long startGetLogicalData = System.currentTimeMillis();
 
                 WebResource res = webResource.path("item").path("query").path(fileUID);
@@ -303,6 +304,8 @@ public class WorkerServlet extends HttpServlet {
                         }
                     }
                 }
+            } else {
+                Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "logicalData IS NULL!!!!!!!!!!!!!");
             }
             numOfTries = 0;
             sleepTime = 2;
