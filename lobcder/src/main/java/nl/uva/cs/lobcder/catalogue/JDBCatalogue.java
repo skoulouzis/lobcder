@@ -1182,18 +1182,15 @@ public class JDBCatalogue extends MyDataSource {
     public void recordRequest(Connection connection, HttpServletRequest httpServletRequest, double elapsed) throws SQLException, UnsupportedEncodingException {
         try (PreparedStatement preparedStatement = connection.prepareStatement(
                         "INSERT INTO requests_table (methodName, requestURL, "
-                        + "remoteAddr, contentLen, contentType, elapsedTime,userName) "
-                        + "VALUES(?, ?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS)) {
+                        + "remoteAddr, contentLen, contentType, elapsedTime,userName, userAgent) "
+                        + "VALUES(?, ?, ?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS)) {
             preparedStatement.setString(1, httpServletRequest.getMethod());
             preparedStatement.setString(2, httpServletRequest.getRequestURL().toString());
             preparedStatement.setString(3, httpServletRequest.getRemoteAddr());
             preparedStatement.setInt(4, httpServletRequest.getContentLength());
             preparedStatement.setString(5, httpServletRequest.getContentType());
-            preparedStatement.setDouble(6, elapsed);
-//             preparedStatement.setString(7, httpServletRequest.getHeader("User-Agent"));
-
-
-
+            preparedStatement.setDouble(6, elapsed);            
+            
             String authorizationHeader = httpServletRequest.getHeader("authorization");
             String userNpasswd = "";
             if (authorizationHeader != null) {
@@ -1220,6 +1217,7 @@ public class JDBCatalogue extends MyDataSource {
                 }
             }
             preparedStatement.setString(7, userNpasswd);
+            preparedStatement.setString(8, httpServletRequest.getHeader("User-Agent"));
             preparedStatement.executeUpdate();
             ResultSet rs = preparedStatement.getGeneratedKeys();
         }

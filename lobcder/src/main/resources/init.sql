@@ -77,6 +77,7 @@ CREATE TABLE requests_table (
  contentType VARCHAR(5240),
  elapsedTime DOUBLE,
  userName VARCHAR(5240),
+ userAgent VARCHAR(1024),
  timeStamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
