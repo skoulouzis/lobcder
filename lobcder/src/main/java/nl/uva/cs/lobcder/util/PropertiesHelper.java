@@ -73,9 +73,34 @@ public class PropertiesHelper {
 
     public static String getWorkerToken() throws IOException {
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-        InputStream in = classLoader.getResourceAsStream("/auth.properties");
+        InputStream in = classLoader.getResourceAsStream("/lobcder.properties");
         Properties properties = new Properties();
         properties.load(in);
         return properties.getProperty("worker.token");
+    }
+
+    public static boolean doAggressiveReplication() throws IOException {
+        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+        InputStream in = classLoader.getResourceAsStream("/lobcder.properties");
+        Properties properties = new Properties();
+        properties.load(in);
+        return Boolean.valueOf(properties.getProperty("replication.aggressive"));
+    }
+
+    public static boolean doRedirectGets() throws IOException {
+        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+        InputStream in = classLoader.getResourceAsStream("/lobcder.properties");
+        Properties properties = new Properties();
+        properties.load(in);
+        return Boolean.valueOf(properties.getProperty("get.redirect"));
+    }
+
+    public static boolean doRemoteAuth() throws IOException {
+        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+        InputStream in = classLoader.getResourceAsStream("/lobcder.properties");
+        Properties properties = new Properties();
+        properties.load(in);
+        return Boolean.valueOf(properties.getProperty(" auth.useremote"));
+
     }
 }

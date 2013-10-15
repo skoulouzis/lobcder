@@ -52,6 +52,30 @@ public class PathReservationService extends CatalogueHelper {
     private List<String> workers;
     private static int workerIndex = 0;
 
+    @Path("get_workers/")
+    @GET
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public List<WorkerStatus> getXml() throws MalformedURLException {
+        //        rest/reservation/get_workers/?id=all
+        MyPrincipal mp = (MyPrincipal) request.getAttribute("myprincipal");
+        MultivaluedMap<String, String> queryParameters = info.getQueryParameters();
+        if (mp.getRoles().contains("planner") || mp.isAdmin()
+                && queryParameters != null && !queryParameters.isEmpty()) {
+            String workerID = queryParameters.getFirst("id");
+            ArrayList<WorkerStatus> workersStatus = new ArrayList<>();
+            workers = PropertiesHelper.getWorkers();
+            for(String s : workers){
+                WorkerStatus ws = new WorkerStatus();
+                ws.setHostName(new URL(s).getHost());
+                ws.setStatus("READY");
+                workersStatus.add(ws);
+            }
+            
+            return workersStatus;
+        }
+        return null;
+    }
+
     @Path("{commID}/request/")
     @GET
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
@@ -61,8 +85,10 @@ public class PathReservationService extends CatalogueHelper {
         MultivaluedMap<String, String> queryParameters = info.getQueryParameters();
         if (mp.getRoles().contains("planner") || mp.isAdmin()
                 && queryParameters != null && !queryParameters.isEmpty()) {
+
             String dataPath = queryParameters.getFirst("dataPath");
             if (dataPath != null && dataPath.length() > 0) {
+
                 List<String> storageList = queryParameters.get("storageSiteHost");
                 if (storageList != null && storageList.size() > 0) {
                     int index = new Random().nextInt(storageList.size());

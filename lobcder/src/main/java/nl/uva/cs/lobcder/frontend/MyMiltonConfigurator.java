@@ -3,20 +3,18 @@ package nl.uva.cs.lobcder.frontend;
 import io.milton.servlet.DefaultMiltonConfigurator;
 import java.util.ArrayList;
 import java.util.List;
-import lombok.extern.java.Log;
-import nl.uva.cs.lobcder.auth.AuthRemote;
-import nl.uva.cs.lobcder.auth.LocalDbAuth;
-import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
-import nl.uva.cs.lobcder.webDav.resources.WebDataResourceFactory;
+import java.util.logging.Level;
 
 import javax.naming.Context;
 import javax.naming.InitialContext;
-import java.util.logging.Level;
-import javax.naming.NamingException;
+import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.auth.AuthI;
+import nl.uva.cs.lobcder.auth.AuthRemote;
 import nl.uva.cs.lobcder.auth.AuthWorker;
-import nl.uva.cs.lobcder.optimization.FileAccessPredictor;
+import nl.uva.cs.lobcder.auth.LocalDbAuth;
+import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
 import nl.uva.cs.lobcder.util.PropertiesHelper;
+import nl.uva.cs.lobcder.webDav.resources.WebDataResourceFactory;
 
 @Log
 public class MyMiltonConfigurator extends DefaultMiltonConfigurator {
@@ -58,7 +56,10 @@ public class MyMiltonConfigurator extends DefaultMiltonConfigurator {
             Context envContext = (Context) ctx.lookup("java:/comp/env");
             catalogue = (JDBCatalogue) envContext.lookup("bean/JDBCatalog");
             catalogue.startSweep();
-            authRemote = (AuthRemote) envContext.lookup("bean/auth");
+            if (PropertiesHelper.doRemoteAuth()) {
+                authRemote = (AuthRemote) envContext.lookup("bean/auth");
+            }
+
             localDbAuth = new LocalDbAuth();
 
 
@@ -72,8 +73,13 @@ public class MyMiltonConfigurator extends DefaultMiltonConfigurator {
             webDataResourceFactory = (WebDataResourceFactory) builder.getMainResourceFactory();
             webDataResourceFactory.setCatalogue(catalogue);
             List<AuthI> authList = new ArrayList<>();
-            authList.add(localDbAuth);
-            authList.add(authRemote);
+            if (localDbAuth != null) {
+                authList.add(localDbAuth);
+            }
+            if (authRemote != null) {
+                authList.add(authRemote);
+            }
+
 //            if(workerAuth!=null){
 //            authList.add(workerAuth);
 //            }
@@ -94,7 +100,6 @@ public class MyMiltonConfigurator extends DefaultMiltonConfigurator {
         super.shutdown();
         catalogue.stopSweep();
     }
-
 //    private void loadOptimizers(Context envContext) throws NamingException {
 //        FileAccessPredictor fap = (FileAccessPredictor) envContext.lookup("bean/Predictor");
 //        fap.startGraphPopulation();

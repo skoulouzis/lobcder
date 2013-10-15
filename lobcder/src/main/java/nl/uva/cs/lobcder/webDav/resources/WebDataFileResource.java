@@ -65,6 +65,11 @@ public class WebDataFileResource extends WebDataResource implements
 
     public WebDataFileResource(@Nonnull LogicalData logicalData, Path path, @Nonnull JDBCatalogue catalogue, @Nonnull List<AuthI> authList) {
         super(logicalData, path, catalogue, authList);
+        try {
+            doRedirect = PropertiesHelper.doRedirectGets();
+        } catch (IOException ex) {
+            Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, ex);
+        }
         if (doRedirect) {
             workers = PropertiesHelper.getWorkers();
             if (workers == null || workers.isEmpty()) {
