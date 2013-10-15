@@ -19,12 +19,16 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.contrib.ssl.EasySSLProtocolSocketFactory;
+import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PutMethod;
 import org.apache.commons.httpclient.methods.StringRequestEntity;
 import org.apache.commons.httpclient.protocol.Protocol;
@@ -35,11 +39,6 @@ import org.junit.After;
 import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Test;
-
-import javax.ws.rs.core.MediaType;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
-import org.apache.commons.httpclient.methods.GetMethod;
 
 /**
  *
@@ -129,7 +128,7 @@ public class TestREST {
     private void createCollection() throws IOException {
         MkColMethod mkcol = new MkColMethod(testcol);
         int status = this.client.executeMethod(mkcol);
-        assertEquals(status, HttpStatus.SC_CREATED);
+        assertEquals(HttpStatus.SC_CREATED, status);
 
 
         PutMethod put = new PutMethod(this.root + testResourceId + "/file1");
@@ -346,7 +345,7 @@ public class TestREST {
             createCollection();
             //Wait for replication
             Thread.sleep(5000);
-            
+
 // /rest/reservation/get_workers/?id=all
             WebResource webResource = restClient.resource(restURL);
 
@@ -363,8 +362,8 @@ public class TestREST {
             if (workersList != null && workersList.size() > 0) {
                 //rest/reservation/5455/request/?dataPath=/&storageSiteHost=sps1&storageSiteHost=sps2&storageSiteHost=sps3
                 params = new MultivaluedMapImpl();
-                String dataPath = "/testResourceId/file1";
-                params.add("dataPath", dataPath);
+                String dataPath = "file1";
+                params.add("dataName", dataPath);
                 for (WorkerStatus w : workersList) {
                     params.add("storageSiteHost", w.hostName);
                 }
