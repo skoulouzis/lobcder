@@ -17,6 +17,8 @@ import java.net.URI;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.ws.rs.core.MultivaluedMap;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpStatus;
@@ -37,6 +39,7 @@ import org.junit.Test;
 import javax.ws.rs.core.MediaType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import org.apache.commons.httpclient.methods.GetMethod;
 
 /**
  *
@@ -148,6 +151,7 @@ public class TestREST {
 
     @Test
     public void testQueryItems() throws IOException {
+        System.err.println("testQueryItems");
         try {
             createCollection();
             WebResource webResource = restClient.resource(restURL);
@@ -220,6 +224,7 @@ public class TestREST {
 
     @Test
     public void testQueryItem() throws IOException {
+        System.err.println("testQueryItem");
         try {
             createCollection();
             WebResource webResource = restClient.resource(restURL);
@@ -280,6 +285,7 @@ public class TestREST {
 
     @Test
     public void testDataItem() throws IOException {
+        System.err.println("testDataItem");
         try {
             createCollection();
             WebResource webResource = restClient.resource(restURL);
@@ -335,31 +341,73 @@ public class TestREST {
 
     @Test
     public void testReservation() throws IOException {
+        System.err.println("testReservation");
         try {
             createCollection();
-
+            //Wait for replication
+            Thread.sleep(5000);
+            
+// /rest/reservation/get_workers/?id=all
             WebResource webResource = restClient.resource(restURL);
-//rest/reservation/5455/request/?dataPath=/&storageSiteHost=sps1&storageSiteHost=sps2&storageSiteHost=sps3
+
+            //Get list of workers 
             MultivaluedMap<String, String> params = new MultivaluedMapImpl();
-
-            String dataPath = "/testResourceId/file1";
-            params.add("dataPath", dataPath);
-            params.add("storageSiteHost", "sps1");
-            params.add("storageSiteHost", "sps2");
-            params.add("storageSiteHost", "sps3");
-
-            WebResource res = webResource.path("reservation").path("some_communication_id").path("request").queryParams(params);
-            ReservationInfo info = res.accept(MediaType.APPLICATION_XML).
-                    get(new GenericType<ReservationInfo>() {
+            params.add("id", "all");
+            WebResource res = webResource.path("reservation").path("get_workers").queryParams(params);
+            List<WorkerStatus> workersList = res.accept(MediaType.APPLICATION_XML).
+                    get(new GenericType<List<WorkerStatus>>() {
             });
 
-            assertNotNull(info);
-            assertNotNull(info.communicationID);
-            assertNotNull(info.storageHost);
-            assertNotNull(info.storageHostIndex);
-            assertNotNull(info.workerDataAccessURL);
-            
-            
+
+            //If we have workers ask for a path reservation 
+            if (workersList != null && workersList.size() > 0) {
+                //rest/reservation/5455/request/?dataPath=/&storageSiteHost=sps1&storageSiteHost=sps2&storageSiteHost=sps3
+                params = new MultivaluedMapImpl();
+                String dataPath = "/testResourceId/file1";
+                params.add("dataPath", dataPath);
+                for (WorkerStatus w : workersList) {
+                    params.add("storageSiteHost", w.hostName);
+                }
+
+                res = webResource.path("reservation").path("some_communication_id").path("request").queryParams(params);
+                ReservationInfo info = res.accept(MediaType.APPLICATION_XML).
+                        get(new GenericType<ReservationInfo>() {
+                });
+
+                assertNotNull(info);
+                assertNotNull(info.communicationID);
+                assertNotNull(info.storageHost);
+                assertNotNull(info.storageHostIndex);
+                assertNotNull(info.workerDataAccessURL);
+
+
+                //Check if worker is ready 
+                params = new MultivaluedMapImpl();
+                params.add("host", info.storageHost);
+
+
+                res = webResource.path("reservation").path("workers").queryParams(params);
+                List<WorkerStatus> list = res.accept(MediaType.APPLICATION_XML).
+                        get(new GenericType<List<WorkerStatus>>() {
+                });
+
+                assertNotNull(list);
+                assertFalse(list.isEmpty());
+                for (WorkerStatus w : list) {
+                    assertNotNull(w.status);
+                    assertNotNull(w.hostName);
+                    assertEquals("READY", w.status);
+                }
+
+                //Now get the file 
+                GetMethod get = new GetMethod(info.workerDataAccessURL);
+                int status = client.executeMethod(get);
+                assertEquals(HttpStatus.SC_OK, status);
+                assertEquals("foo", get.getResponseBodyAsString());
+
+            }
+        } catch (InterruptedException ex) {
+            Logger.getLogger(TestREST.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
             deleteCollection();
         }
@@ -367,6 +415,7 @@ public class TestREST {
 
     @Test
     public void testGetWorkersStatus() throws IOException {
+        System.err.println("testGetWorkersStatus");
         try {
             createCollection();
             WebResource webResource = restClient.resource(restURL);
