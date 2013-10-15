@@ -344,7 +344,7 @@ public class TestREST {
         try {
             createCollection();
             //Wait for replication
-            Thread.sleep(5000);
+            Thread.sleep(15000);
 
 // /rest/reservation/get_workers/?id=all
             WebResource webResource = restClient.resource(restURL);
@@ -405,7 +405,7 @@ public class TestREST {
                 assertEquals("foo", get.getResponseBodyAsString());
 
             }
-        } catch (InterruptedException ex) {
+        } catch (Exception ex) {
             Logger.getLogger(TestREST.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
             deleteCollection();
