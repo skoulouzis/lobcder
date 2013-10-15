@@ -64,13 +64,13 @@ public class PathReservationService extends CatalogueHelper {
             String workerID = queryParameters.getFirst("id");
             ArrayList<WorkerStatus> workersStatus = new ArrayList<>();
             workers = PropertiesHelper.getWorkers();
-            for(String s : workers){
+            for (String s : workers) {
                 WorkerStatus ws = new WorkerStatus();
                 ws.setHostName(new URL(s).getHost());
                 ws.setStatus("READY");
                 workersStatus.add(ws);
             }
-            
+
             return workersStatus;
         }
         return null;
@@ -86,8 +86,8 @@ public class PathReservationService extends CatalogueHelper {
         if (mp.getRoles().contains("planner") || mp.isAdmin()
                 && queryParameters != null && !queryParameters.isEmpty()) {
 
-            String dataPath = queryParameters.getFirst("dataPath");
-            if (dataPath != null && dataPath.length() > 0) {
+            String dataName = queryParameters.getFirst("dataName");
+            if (dataName != null && dataName.length() > 0) {
 
                 List<String> storageList = queryParameters.get("storageSiteHost");
                 if (storageList != null && storageList.size() > 0) {
@@ -95,12 +95,12 @@ public class PathReservationService extends CatalogueHelper {
                     String storageSiteHost;
                     String[] storageArray = storageList.toArray(new String[storageList.size()]);
                     storageSiteHost = storageArray[index];
-
-                    ReservationInfo info = new ReservationInfo();
                     LogicalData ld;
                     Permissions p = null;
                     try (Connection cn = getCatalogue().getConnection()) {
-                        ld = getCatalogue().getLogicalDataByPath(io.milton.common.Path.path(dataPath), cn);
+                        List<LogicalData> ldList = getCatalogue().getLogicalDataByName(io.milton.common.Path.path(dataName), cn);
+                        //Should be only one
+                        ld = ldList.get(0);
                         if (ld != null) {
                             p = getCatalogue().getPermissions(ld.getUid(), ld.getOwner(), cn);
                         }
@@ -108,7 +108,10 @@ public class PathReservationService extends CatalogueHelper {
                         log.log(Level.SEVERE, null, ex);
                         throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
                     }
-
+                    
+//                    Integer alocationStrategy = Integer.valueOf(queryParameters.getFirst("allocationStrategy"));
+                    
+                    ReservationInfo info = new ReservationInfo();
                     if (p != null && mp.canRead(p)) {
                         info.setCommunicationID(communicationID);
                         String workerURL = scheduleWorker(storageSiteHost, ld);

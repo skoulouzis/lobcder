@@ -1189,8 +1189,8 @@ public class JDBCatalogue extends MyDataSource {
             preparedStatement.setString(3, httpServletRequest.getRemoteAddr());
             preparedStatement.setInt(4, httpServletRequest.getContentLength());
             preparedStatement.setString(5, httpServletRequest.getContentType());
-            preparedStatement.setDouble(6, elapsed);            
-            
+            preparedStatement.setDouble(6, elapsed);
+
             String authorizationHeader = httpServletRequest.getHeader("authorization");
             String userNpasswd = "";
             if (authorizationHeader != null) {
@@ -1365,6 +1365,49 @@ public class JDBCatalogue extends MyDataSource {
             }
         }
         return users;
+    }
+
+    public List<LogicalData> getLogicalDataByName(Path fileName, Connection connection) throws SQLException {
+        try (PreparedStatement ps = connection.prepareStatement("SELECT uid, parentRef, "
+                        + "ownerId, datatype, ldName, createDate, modifiedDate, ldLength, "
+                        + "contentTypesStr, pdriGroupRef, isSupervised, checksum, "
+                        + "lastValidationDate, lockTokenID, lockScope, lockType, "
+                        + "lockedByUser, lockDepth, lockTimeout, description, "
+                        + "locationPreference, status "
+                        + "FROM ldata_table WHERE ldata_table.ldName = ?")) {
+            ps.setString(1, fileName.toString());
+            ResultSet rs = ps.executeQuery();
+            List<LogicalData> results = new ArrayList<>();
+            while (rs.next()) {
+                LogicalData res = new LogicalData();
+                res.setUid(rs.getLong(1));
+                res.setParentRef(rs.getLong(2));
+                res.setOwner(rs.getString(3));
+                res.setType(rs.getString(4));
+                res.setName(rs.getString(5));
+                res.setCreateDate(rs.getTimestamp(6).getTime());
+                res.setModifiedDate(rs.getTimestamp(7).getTime());
+                res.setLength(rs.getLong(8));
+                res.setContentTypesAsString(rs.getString(9));
+                res.setPdriGroupId(rs.getLong(10));
+                res.setSupervised(rs.getBoolean(11));
+                res.setChecksum(rs.getString(12));
+                res.setLastValidationDate(rs.getLong(13));
+                res.setLockTokenID(rs.getString(14));
+                res.setLockScope(rs.getString(15));
+                res.setLockType(rs.getString(16));
+                res.setLockedByUser(rs.getString(17));
+                res.setLockDepth(rs.getString(18));
+                res.setLockTimeout(rs.getLong(19));
+                res.setDescription(rs.getString(20));
+                res.setDataLocationPreference(rs.getString(21));
+                res.setStatus(rs.getString(22));
+                
+                putToLDataCache(res);
+                results.add(res);
+            }
+            return results;
+        }
     }
 
     @Data

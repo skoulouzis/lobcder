@@ -416,7 +416,8 @@ public class WebDataFileResource extends WebDataResource implements
         } catch (SQLException ex) {
             throw new BadRequestException(this, ex.getMessage());
         } catch (IOException ex) {
-            if (ex.getMessage().contains("Resource not found")) {
+            if (ex.getMessage().contains("Resource not found")
+                    || ex.getMessage().contains("Couldn't locate path")) {
                 throw new NotFoundException(ex.getMessage());
             } else {
                 throw new BadRequestException(this, ex.getMessage());
