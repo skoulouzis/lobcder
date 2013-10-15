@@ -71,7 +71,7 @@ public class WorkerServlet extends HttpServlet {
     private final Map<String, LogicalDataWrapped> logicalDataCache = new HashMap<String, LogicalDataWrapped>();
 //    private final String uname;
     private File baseDir = new File(System.getProperty("java.io.tmpdir") + File.separator + WorkerVPDRI.baseDir);
-    private File cacheFile;
+//    private File cacheFile;
     private String cacheFileID;
     private String fileUID;
     private String localAddrress;
@@ -111,8 +111,8 @@ public class WorkerServlet extends HttpServlet {
             Path pathAndToken = Path.path(filePath);
 //            token = pathAndToken.getName();
             fileUID = pathAndToken.getParent().toString();
-            cacheFile = new File(baseDir, "lobcder-cache" + request.getLocalName());
-            Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "token: {0} fileUID: {1} cacheFile: {2}", new Object[]{token, fileUID, cacheFile});
+//            cacheFile = new File(baseDir, "lobcder-cache" + request.getLocalName());
+            Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "token: {0} fileUID: {1}", new Object[]{token, fileUID});
             try {
                 long start = System.currentTimeMillis();
                 Range range = null;
@@ -132,7 +132,7 @@ public class WorkerServlet extends HttpServlet {
                     if (rangeStr != null && rangeStr.contains("=")) {
                         range = Range.parse(rangeStr.split("=")[1]);
                         pdri.copyRange(range, out);
-//                        response.setStatus(HttpStatus.SC_PARTIAL_CONTENT);
+                        response.setStatus(HttpStatus.SC_PARTIAL_CONTENT);
                         return;
                     } else {
                         transfer(pdri, out, false);
@@ -177,7 +177,8 @@ public class WorkerServlet extends HttpServlet {
                 //Maybe we can look for another pdri
                 if (ex.getMessage() != null) {
                     if (ex.getMessage().contains("Resource not found")
-                            || ex.getMessage().contains("Could not stat remote")) {
+                            || ex.getMessage().contains("Could not stat remote")
+                            || ex.getMessage().contains("Couldn't locate path")) {
                         Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, ex);
                         response.setStatus(HttpStatus.SC_CONFLICT);
                         return;
@@ -278,20 +279,19 @@ public class WorkerServlet extends HttpServlet {
 
                 Set<PDRIDesc> pdris = logicalData.pdriList;
 
-                if (cacheFileID != null && cacheFileID.equals(fileUID)
-                        && cacheFile.exists() && cacheFile.length()
-                        == logicalData.logicalData.length) {
-                    PDRIDesc local = new PDRIDesc();
-                    local.encrypt = false;
-                    local.id = Long.valueOf(666);
-                    local.resourceUrl = "file:///" + baseDir.getParentFile().getAbsolutePath();
-                    local.password = "non";
-                    local.username = "non";
-                    local.key = BigInteger.ONE.toString();
-                    local.name = cacheFile.getName();
-
-                    pdris.add(local);
-                }
+//                if (cacheFileID != null && cacheFileID.equals(fileUID)
+//                        && cacheFile.exists() && cacheFile.length()
+//                        == logicalData.logicalData.length) {
+//                    PDRIDesc local = new PDRIDesc();
+//                    local.encrypt = false;
+//                    local.id = Long.valueOf(666);
+//                    local.resourceUrl = "file:///" + baseDir.getParentFile().getAbsolutePath();
+//                    local.password = "non";
+//                    local.username = "non";
+//                    local.key = BigInteger.ONE.toString();
+//                    local.name = cacheFile.getName();
+//                    pdris.add(local);
+//                }
 
                 size = logicalData.logicalData.length;
                 if (pdris != null && !pdris.isEmpty()) {
@@ -341,7 +341,7 @@ public class WorkerServlet extends HttpServlet {
 
     private void transfer(PDRI pdri, OutputStream out, boolean withCircularStream) throws IOException {
         InputStream in = null;
-        OutputStream cacheFileOut = null;
+//        OutputStream cacheFileOut = null;
         try {
             in = pdri.getData();
 //            int bufferSize;
@@ -363,14 +363,14 @@ public class WorkerServlet extends HttpServlet {
                     if (!baseDir.exists()) {
                         baseDir.mkdirs();
                     }
-                    cacheFileOut = new FileOutputStream(cacheFile);
+//                    cacheFileOut = new FileOutputStream(cacheFile);
                 }
                 byte[] copyBuffer = new byte[Constants.BUF_SIZE];
                 while ((read = in.read(copyBuffer, 0, copyBuffer.length)) != -1) {
                     out.write(copyBuffer, 0, read);
-                    if (cacheFileID == null || !cacheFileID.equals(fileUID) && cacheFileOut != null) {
-                        cacheFileOut.write(copyBuffer, 0, read);
-                    }
+//                    if (cacheFileID == null || !cacheFileID.equals(fileUID) && cacheFileOut != null) {
+//                        cacheFileOut.write(copyBuffer, 0, read);
+//                    }
                 }
                 cacheFileID = fileUID;
             }
@@ -380,7 +380,8 @@ public class WorkerServlet extends HttpServlet {
         } catch (Exception ex) {
             if (ex.getMessage() != null && ex.getMessage().contains("Resource not found")
                     || ex.getMessage().contains("Could not stat remote")
-                    || ex.getMessage().contains("Couldn't create new channel to")) {
+                    || ex.getMessage().contains("Couldn't create new channel to")
+                    || ex.getMessage().contains("Couldn't locate path")) {
                 Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, ex);
                 throw new IOException(ex.getMessage());
             }
@@ -405,10 +406,10 @@ public class WorkerServlet extends HttpServlet {
             }
         } finally {
             try {
-                if (cacheFileOut != null) {
-                    cacheFileOut.flush();
-                    cacheFileOut.close();
-                }
+//                if (cacheFileOut != null) {
+//                    cacheFileOut.flush();
+//                    cacheFileOut.close();
+//                }
                 if (in != null) {
                     in.close();
                 }
@@ -420,8 +421,17 @@ public class WorkerServlet extends HttpServlet {
 
     private PDRIDesc selectBestPDRI(Set<PDRIDesc> pdris) throws URISyntaxException, UnknownHostException {
         if (pdris.size() == 1) {
-            return pdris.iterator().next();
+            PDRIDesc p = pdris.iterator().next();
+            URI uri = new URI(p.resourceUrl);
+            if (uri.getHost().equals(localAddrress) 
+                    || uri.getHost().equals("localhost")
+                    || uri.getHost().equals("127.0.0.1")) {
+                String resURL = p.resourceUrl.replaceFirst(uri.getScheme(), "file");
+                p.resourceUrl = resURL;
+            }
+            return p;
         }
+
         for (PDRIDesc p : pdris) {
             URI uri = new URI(p.resourceUrl);
             if (uri.getScheme().equals("file")) {
