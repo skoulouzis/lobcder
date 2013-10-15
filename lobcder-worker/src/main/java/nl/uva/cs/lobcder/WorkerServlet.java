@@ -28,7 +28,9 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Random;
@@ -183,7 +185,8 @@ public class WorkerServlet extends HttpServlet {
                         response.setStatus(HttpStatus.SC_CONFLICT);
                         return;
                     }
-                    if (ex.getMessage().contains("returned a response status of 404 Not Found")) {
+                    if (ex.getMessage().contains("returned a response status of 404 Not Found") 
+                            ||ex.getMessage().contains("PDRIS from master is either empty or contains unreachable files") ) {
                         Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, ex);
                         response.setStatus(HttpStatus.SC_NOT_FOUND);
                         return;
@@ -276,25 +279,28 @@ public class WorkerServlet extends HttpServlet {
 
             int count = 0;
             if (logicalData != null) {
-
+                List<PDRIDesc> removeIt = new ArrayList<PDRIDesc>();
                 Set<PDRIDesc> pdris = logicalData.pdriList;
-
-//                if (cacheFileID != null && cacheFileID.equals(fileUID)
-//                        && cacheFile.exists() && cacheFile.length()
-//                        == logicalData.logicalData.length) {
-//                    PDRIDesc local = new PDRIDesc();
-//                    local.encrypt = false;
-//                    local.id = Long.valueOf(666);
-//                    local.resourceUrl = "file:///" + baseDir.getParentFile().getAbsolutePath();
-//                    local.password = "non";
-//                    local.username = "non";
-//                    local.key = BigInteger.ONE.toString();
-//                    local.name = cacheFile.getName();
-//                    pdris.add(local);
-//                }
 
                 size = logicalData.logicalData.length;
                 if (pdris != null && !pdris.isEmpty()) {
+                    //Remove cache pdris 
+                    for (PDRIDesc p : pdris) {
+                        if (p.resourceUrl.startsWith("file")) {
+                            removeIt.add(p);
+                        }
+                    }
+                    if (!removeIt.isEmpty()) {
+                        pdris.removeAll(removeIt);
+                        if (pdris.isEmpty()) {
+                            logicalDataCache.clear();
+                            sleepTime = sleepTime + 2;
+                            Thread.sleep(sleepTime);
+                            throw new IOException("PDRIS from master is either empty or contains unreachable files");
+                        }
+                    }
+
+
                     pdriDesc = selectBestPDRI(pdris);
                     while (pdriDesc == null) {
                         count++;
@@ -316,7 +322,8 @@ public class WorkerServlet extends HttpServlet {
             return w;
         } catch (Exception ex) {
 //            Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, ex);
-            if (ex.getMessage().contains("returned a response status of 404 Not Found")) {
+            if (ex.getMessage() != null
+                    && ex.getMessage().contains("returned a response status of 404 Not Found")) {
 //                    || ex.getMessage().contains("returned a response status of 401 Unauthorized")) {
                 throw new IOException(ex);
             }
@@ -423,7 +430,7 @@ public class WorkerServlet extends HttpServlet {
         if (pdris.size() == 1) {
             PDRIDesc p = pdris.iterator().next();
             URI uri = new URI(p.resourceUrl);
-            if (uri.getHost().equals(localAddrress) 
+            if (uri.getHost() != null && uri.getHost().equals(localAddrress)
                     || uri.getHost().equals("localhost")
                     || uri.getHost().equals("127.0.0.1")) {
                 String resURL = p.resourceUrl.replaceFirst(uri.getScheme(), "file");
