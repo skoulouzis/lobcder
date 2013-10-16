@@ -72,9 +72,9 @@ public class WorkerServlet extends HttpServlet {
     private static final HashMap<String, Integer> numOfGetsMap = new HashMap<String, Integer>();
     private final Map<String, LogicalDataWrapped> logicalDataCache = new HashMap<String, LogicalDataWrapped>();
 //    private final String uname;
-    private File baseDir = new File(System.getProperty("java.io.tmpdir") + File.separator + WorkerVPDRI.baseDir);
+//    private File baseDir = new File(System.getProperty("java.io.tmpdir") + File.separator + WorkerVPDRI.baseDir);
 //    private File cacheFile;
-    private String cacheFileID;
+//    private String cacheFileID;
     private String fileUID;
     private String localAddrress;
 
@@ -185,8 +185,8 @@ public class WorkerServlet extends HttpServlet {
                         response.setStatus(HttpStatus.SC_CONFLICT);
                         return;
                     }
-                    if (ex.getMessage().contains("returned a response status of 404 Not Found") 
-                            ||ex.getMessage().contains("PDRIS from master is either empty or contains unreachable files") ) {
+                    if (ex.getMessage().contains("returned a response status of 404 Not Found")
+                            || ex.getMessage().contains("PDRIS from master is either empty or contains unreachable files")) {
                         Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, ex);
                         response.setStatus(HttpStatus.SC_NOT_FOUND);
                         return;
@@ -272,6 +272,9 @@ public class WorkerServlet extends HttpServlet {
                 logicalData = res.accept(MediaType.APPLICATION_XML).
                         get(new GenericType<LogicalDataWrapped>() {
                 });
+                if (logicalData == null) {
+                    Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, "logicalData from " + res.getURI() + " is NULL!!!!!!!!!!");
+                }
                 logicalDataCache.put(fileUID, logicalData);
 //                long elapsedGetLogicalData = System.currentTimeMillis() - startGetLogicalData;
 //                Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "elapsedGetLogicalData: {0}", elapsedGetLogicalData);
@@ -293,6 +296,7 @@ public class WorkerServlet extends HttpServlet {
                     if (!removeIt.isEmpty()) {
                         pdris.removeAll(removeIt);
                         if (pdris.isEmpty()) {
+                            Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, "PDRIS from master is either empty or contains unreachable files!!!!!!!!!!!!!");
                             logicalDataCache.clear();
                             sleepTime = sleepTime + 2;
                             Thread.sleep(sleepTime);
@@ -309,9 +313,11 @@ public class WorkerServlet extends HttpServlet {
                             break;
                         }
                     }
+                } else {
+                    Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, "pdris IS NULL!!!!!!!!!!!!!");
                 }
             } else {
-                Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "logicalData IS NULL!!!!!!!!!!!!!");
+                Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, "logicalData IS NULL!!!!!!!!!!!!!");
             }
             numOfTries = 0;
             sleepTime = 2;
@@ -366,12 +372,12 @@ public class WorkerServlet extends HttpServlet {
 
             if (!pdri.getEncrypted()) {
                 int read;
-                if (cacheFileID == null || !cacheFileID.equals(fileUID) && !pdri.getURI().startsWith("file")) {
-                    if (!baseDir.exists()) {
-                        baseDir.mkdirs();
-                    }
-//                    cacheFileOut = new FileOutputStream(cacheFile);
-                }
+//                if (cacheFileID == null || !cacheFileID.equals(fileUID) && !pdri.getURI().startsWith("file")) {
+//                    if (!baseDir.exists()) {
+//                        baseDir.mkdirs();
+//                    }
+////                    cacheFileOut = new FileOutputStream(cacheFile);
+//                }
                 byte[] copyBuffer = new byte[Constants.BUF_SIZE];
                 while ((read = in.read(copyBuffer, 0, copyBuffer.length)) != -1) {
                     out.write(copyBuffer, 0, read);
@@ -379,7 +385,7 @@ public class WorkerServlet extends HttpServlet {
 //                        cacheFileOut.write(copyBuffer, 0, read);
 //                    }
                 }
-                cacheFileID = fileUID;
+//                cacheFileID = fileUID;
             }
             numOfTries = 0;
             sleepTime = 2;
