@@ -4,7 +4,6 @@ import io.milton.servlet.DefaultMiltonConfigurator;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
-
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import lombok.extern.java.Log;
@@ -56,9 +55,9 @@ public class MyMiltonConfigurator extends DefaultMiltonConfigurator {
             Context envContext = (Context) ctx.lookup("java:/comp/env");
             catalogue = (JDBCatalogue) envContext.lookup("bean/JDBCatalog");
             catalogue.startSweep();
-            if (PropertiesHelper.doRemoteAuth()) {
-                authRemote = (AuthRemote) envContext.lookup("bean/auth");
-            }
+
+            authRemote = (AuthRemote) envContext.lookup("bean/auth");
+
 
             localDbAuth = new LocalDbAuth();
 

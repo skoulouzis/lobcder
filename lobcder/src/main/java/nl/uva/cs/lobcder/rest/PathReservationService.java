@@ -4,6 +4,7 @@
  */
 package nl.uva.cs.lobcder.rest;
 
+import java.io.IOException;
 import nl.uva.cs.lobcder.rest.wrappers.WorkerStatus;
 import nl.uva.cs.lobcder.rest.wrappers.ReservationInfo;
 import java.net.MalformedURLException;
@@ -79,7 +80,7 @@ public class PathReservationService extends CatalogueHelper {
     @Path("{commID}/request/")
     @GET
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public ReservationInfo request(@PathParam("commID") String communicationID) throws MalformedURLException {
+    public ReservationInfo request(@PathParam("commID") String communicationID) throws MalformedURLException, IOException {
         //        rest/reservation/5455/request/?dataPath=/sbuiifv/dsudsuds&storageSiteHost=sps1&storageSiteHost=sps2&storageSiteHost=sps3
         MyPrincipal mp = (MyPrincipal) request.getAttribute("myprincipal");
         MultivaluedMap<String, String> queryParameters = info.getQueryParameters();
@@ -90,38 +91,41 @@ public class PathReservationService extends CatalogueHelper {
             if (dataName != null && dataName.length() > 0) {
 
                 List<String> storageList = queryParameters.get("storageSiteHost");
+                String storageSiteHost = null;
+                int index = -1;
                 if (storageList != null && storageList.size() > 0) {
-                    int index = new Random().nextInt(storageList.size());
-                    String storageSiteHost;
-                    String[] storageArray = storageList.toArray(new String[storageList.size()]);
-                    storageSiteHost = storageArray[index];
-                    LogicalData ld;
-                    Permissions p = null;
-                    try (Connection cn = getCatalogue().getConnection()) {
-                        List<LogicalData> ldList = getCatalogue().getLogicalDataByName(io.milton.common.Path.path(dataName), cn);
-                        //Should be only one
-                        ld = ldList.get(0);
-                        if (ld != null) {
-                            p = getCatalogue().getPermissions(ld.getUid(), ld.getOwner(), cn);
-                        }
-                    } catch (SQLException ex) {
-                        log.log(Level.SEVERE, null, ex);
-                        throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
-                    }
-                    
-//                    Integer alocationStrategy = Integer.valueOf(queryParameters.getFirst("allocationStrategy"));
-                    
-                    ReservationInfo info = new ReservationInfo();
-                    if (p != null && mp.canRead(p)) {
-                        info.setCommunicationID(communicationID);
-                        String workerURL = scheduleWorker(storageSiteHost, ld);
-                        info.setCommunicationID(communicationID);
-                        info.setStorageHost(storageSiteHost);
-                        info.setStorageHostIndex(index);
-                        info.setWorkerDataAccessURL(workerURL);
-                    }
-                    return info;
+                    storageSiteHost = getStorageSiteHost(storageList);
+                    index = storageList.indexOf(storageSiteHost);
+                } else {
                 }
+
+                LogicalData ld;
+                Permissions p = null;
+                try (Connection cn = getCatalogue().getConnection()) {
+                    List<LogicalData> ldList = getCatalogue().getLogicalDataByName(io.milton.common.Path.path(dataName), cn);
+                    //Should be only one
+                    ld = ldList.get(0);
+                    if (ld != null) {
+                        p = getCatalogue().getPermissions(ld.getUid(), ld.getOwner(), cn);
+                    }
+                } catch (SQLException ex) {
+                    log.log(Level.SEVERE, null, ex);
+                    throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
+                }
+
+//                    Integer alocationStrategy = Integer.valueOf(queryParameters.getFirst("allocationStrategy"));
+
+                ReservationInfo info = new ReservationInfo();
+                if (p != null && mp.canRead(p)) {
+                    info.setCommunicationID(communicationID);
+                    String workerURL = scheduleWorker(storageSiteHost, ld);
+                    info.setCommunicationID(communicationID);
+                    info.setStorageHost(storageSiteHost);
+                    info.setStorageHostIndex(index);
+                    info.setWorkerDataAccessURL(workerURL);
+                }
+                return info;
+
             }
         }
         return null;
@@ -155,16 +159,22 @@ public class PathReservationService extends CatalogueHelper {
         return null;
     }
 
-    private String scheduleWorker(String storageSiteHost, LogicalData ld) throws MalformedURLException {
+    private String scheduleWorker(String storageSiteHost, LogicalData ld) throws MalformedURLException, IOException {
         workers = PropertiesHelper.getWorkers();
+        if (workers == null || workers.size() < 1 || !PropertiesHelper.doRedirectGets()) {
+            return null;
+        }
         String worker = null;
-        for (String w : workers) {
-            URL wURI = new URL(w);
-            if (wURI.getHost().equals(storageSiteHost)) {
-                worker = w;
-                break;
+        if (storageSiteHost != null) {
+            for (String w : workers) {
+                URL wURI = new URL(w);
+                if (wURI.getHost().equals(storageSiteHost)) {
+                    worker = w;
+                    break;
+                }
             }
         }
+
         if (worker == null || worker.length() <= 1) {
             if (workerIndex >= workers.size()) {
                 workerIndex = 0;
@@ -179,5 +189,24 @@ public class PathReservationService extends CatalogueHelper {
         String token = UUID.randomUUID().toString();
         AuthWorker.setTicket(worker, token);
         return w + "/" + token;
+    }
+
+    private String getStorageSiteHost(List<String> storageList) throws MalformedURLException {
+        workers = PropertiesHelper.getWorkers();
+        List<Object> selectionList = new ArrayList<>();
+        for (String w : workers) {
+            URL wURI = new URL(w);
+            if (storageList.contains(wURI.getHost())) {
+                selectionList.add(w);
+            }
+        }
+        if (!selectionList.isEmpty()) {
+            int index = new Random().nextInt(selectionList.size());
+
+            String[] storageArray = storageList.toArray(new String[selectionList.size()]);
+            return storageArray[index];
+        } else {
+            return null;
+        }
     }
 }

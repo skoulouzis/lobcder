@@ -14,6 +14,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.auth.AuthI;
+import nl.uva.cs.lobcder.auth.AuthRemote;
 import nl.uva.cs.lobcder.auth.AuthWorker;
 import nl.uva.cs.lobcder.auth.MyPrincipal;
 import nl.uva.cs.lobcder.util.PropertiesHelper;
@@ -121,7 +122,9 @@ public class BasicAuthFilter implements Filter {
                     }
                 } else {
                     for (AuthI a : authList) {
-                        if (a instanceof AuthWorker) {
+                        if (a instanceof AuthWorker
+                                || PropertiesHelper.doRemoteAuth() 
+                                && a instanceof AuthRemote) {
                             continue;
                         }
                         principal = a.checkToken(token);
