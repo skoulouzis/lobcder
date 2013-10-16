@@ -346,7 +346,8 @@ public class TestREST {
             //Wait for replication
             Thread.sleep(15000);
 
-// /rest/reservation/get_workers/?id=all
+
+            // /rest/reservation/get_workers/?id=all
             WebResource webResource = restClient.resource(restURL);
 
             //Get list of workers 
@@ -401,6 +402,30 @@ public class TestREST {
                 //Now get the file 
                 GetMethod get = new GetMethod(info.workerDataAccessURL);
                 int status = client.executeMethod(get);
+                assertEquals(HttpStatus.SC_OK, status);
+                assertEquals("foo", get.getResponseBodyAsString());
+
+
+
+
+                //run without host names 
+                params = new MultivaluedMapImpl();
+                dataPath = "file1";
+                params.add("dataName", dataPath);
+                res = webResource.path("reservation").path("some_communication_id").path("request").queryParams(params);
+                info = res.accept(MediaType.APPLICATION_XML).
+                        get(new GenericType<ReservationInfo>() {
+                });
+
+                assertNotNull(info);
+                assertNotNull(info.communicationID);
+                assertNotNull(info.storageHostIndex);
+                assertNotNull(info.workerDataAccessURL);
+
+
+                //Now get the file 
+                get = new GetMethod(info.workerDataAccessURL);
+                status = client.executeMethod(get);
                 assertEquals(HttpStatus.SC_OK, status);
                 assertEquals("foo", get.getResponseBodyAsString());
 
