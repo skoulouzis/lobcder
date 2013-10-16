@@ -103,6 +103,9 @@ public class PathReservationService extends CatalogueHelper {
                 Permissions p = null;
                 try (Connection cn = getCatalogue().getConnection()) {
                     List<LogicalData> ldList = getCatalogue().getLogicalDataByName(io.milton.common.Path.path(dataName), cn);
+                    if(ldList == null || ldList.isEmpty()){
+                        return null;
+                    }
                     //Should be only one
                     ld = ldList.get(0);
                     if (ld != null) {
