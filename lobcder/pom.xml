@@ -219,7 +219,7 @@
         </dependency>
     
     
-<!--        <dependency>
+        <!--        <dependency>
             <groupId>org.apache.struts</groupId>
             <artifactId>struts2-core</artifactId>
             <version>2.3.15.1</version>
@@ -231,6 +231,14 @@
             <artifactId>xercesImpl</artifactId>
             <version>2.7.1</version>
             <scope>provided</scope>
+        </dependency>
+        
+        
+        
+        <dependency>
+            <groupId>org.rendersnake</groupId>
+            <artifactId>rendersnake</artifactId>
+            <version>1.7.2</version>
         </dependency>
 
     </dependencies>
@@ -253,6 +261,12 @@
             <id>elab.lab.uvalight.net</id>
             <name>elab.lab.uvalight.net-releases</name>
             <url>https://elab.lab.uvalight.net:8444/artifactory/repo</url>
+        </repository>
+        
+        <repository>
+            <id>rendersnake-repo</id>
+            <name>Repository for rendersnake</name>
+            <url>http://rendersnake.googlecode.com/svn/repo</url>
         </repository>
 
         <!--       <repository>

@@ -168,7 +168,7 @@ public class WebDataFileResource extends WebDataResource implements
     @Override
     public String getContentType(String accepts) {
         String res = ContentTypeUtils.findAcceptableContentType(getLogicalData().getContentTypesAsString(), accepts);
-        log.log(Level.FINE, "getContentType(''{0}'') = ''{1}''  for {2}", new Object[]{accepts, res, getPath()});
+        log.log(Level.FINE, "getContentType(''accepts: {0}'') = ''{1}''  for {2}", new Object[]{accepts, res, getPath()});
         return res;
     }
 
