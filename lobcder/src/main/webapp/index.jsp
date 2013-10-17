@@ -81,7 +81,7 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </div> 
         <footer>
             <div id="bottom">
                 <span>

@@ -46,6 +46,9 @@ import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.cs.lobcder.util.SpeedLogger;
 import org.rendersnake.HtmlCanvas;
 import static org.rendersnake.HtmlAttributesFactory.href;
+import static org.rendersnake.HtmlAttributesFactory.border;
+import static org.rendersnake.HtmlAttributesFactory.class_;
+import static org.rendersnake.HtmlAttributesFactory.src;
 
 /**
  *
@@ -54,12 +57,12 @@ import static org.rendersnake.HtmlAttributesFactory.href;
 @Log
 public class WebDataDirResource extends WebDataResource implements FolderResource,
         CollectionResource, DeletableCollectionResource, LockingCollectionResource {
-    
+
     public WebDataDirResource(@Nonnull LogicalData logicalData, Path path, @Nonnull JDBCatalogue catalogue, @Nonnull List<AuthI> authList) {
         super(logicalData, path, catalogue, authList);
         WebDataDirResource.log.fine("Init. WebDataDirResource:  " + getPath());
     }
-    
+
     @Override
     public boolean authorise(Request request, Request.Method method, Auth auth) {
         if (auth == null) {
@@ -79,7 +82,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
             return false;
         }
     }
-    
+
     @Override
     public CollectionResource createCollection(String newName) throws NotAuthorizedException, ConflictException, BadRequestException {
         WebDataDirResource.log.log(Level.FINE, "createCollection {0} in {1}", new Object[]{newName, getPath()});
@@ -114,7 +117,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
             throw new BadRequestException(this, e1.getMessage());
         }
     }
-    
+
     @Override
     public Resource child(String childName) throws NotAuthorizedException {
         WebDataDirResource.log.fine("child(" + childName + ") for " + getPath());
@@ -141,7 +144,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
             return null;
         }
     }
-    
+
     @Override
     public List<? extends Resource> getChildren() throws NotAuthorizedException {
         WebDataDirResource.log.fine("getChildren() for " + getPath());
@@ -163,7 +166,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
             return null;
         }
     }
-    
+
     @Override
     public Resource createNew(String newName, InputStream inputStream, Long length, String contentType) throws IOException,
             ConflictException, NotAuthorizedException, BadRequestException {
@@ -191,7 +194,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                     //Create new
                     pdri = createPDRI(fileLogicalData.getLength(), newName, connection);
                     pdri.putData(inputStream);
-                    
+
                     fileLogicalData = getCatalogue().updateLogicalDataAndPdri(fileLogicalData, pdri, connection);
                     connection.commit();
                     resource = new WebDataFileResource(fileLogicalData, Path.path(getPath(), newName), getCatalogue(), authList);
@@ -242,7 +245,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
         SpeedLogger.logSpeed(msg);
         return resource;
     }
-    
+
     @Override
     public void copyTo(CollectionResource toCollection, String name) throws NotAuthorizedException, BadRequestException, ConflictException {
         WebDataDirResource toWDDR = (WebDataDirResource) toCollection;
@@ -265,7 +268,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
             throw new BadRequestException(this, e1.getMessage());
         }
     }
-    
+
     @Override
     public void delete() throws NotAuthorizedException, ConflictException, BadRequestException {
         WebDataDirResource.log.log(Level.FINE, "delete() for {0}", getPath());
@@ -286,78 +289,133 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
             throw new BadRequestException(this, e1.getMessage());
         }
     }
-    
+
     @Override
     public void sendContent(OutputStream out, Range range, Map<String, String> params, String contentType) throws IOException, NotAuthorizedException, BadRequestException {
         WebDataDirResource.log.fine("sendContent(" + contentType + ") for " + getPath());
         try (PrintStream ps = new PrintStream(out)) {
-            
+
             HtmlCanvas html = new HtmlCanvas();
-//            html
-//                 
-//                    .table()
-//                    .tr()
-//                    .th().content("Name")
-//                    .th().content("Size")
-//                    ._tr()
-//                    .tr()
-//                    .td().content("Name")
-//                    .td().content("0")
-//                    ._tr()
-//                    ._table();
-//
+            html
+                    //                    .a(href("otherpage.html")).content("Other Page")
+                    .table(border("1"))
+                    .tr()
+                    .th().content("Name")
+                    .th().content("Size")
+                    .th().content("Modification Date")
+                    .th().content("Creation Date")
+                    .th().content("Owner")
+                    .th().content("Content Type")
+                    .th().content("Type")
+                    .th().content("Is Supervised")
+                    .th().content("Uid");
+
+
+//            html.a(href("#top").class_("toplink")).content("top");
 //            ps.println(html.toHtml());
-            
-            html.a(href("#top").class_("toplink")).content("top");
-            ps.println(html.toHtml());
-            
-            ps.println("<HTML>\n"
-                    + "\n"
-                    + "<HEAD>\n"
-                    + "<TITLE>" + getPath() + "</TITLE>\n"
-                    + "</HEAD>\n"
-                    + "<BODY BGCOLOR=\"#FFFFFF\" TEXT=\"#000000\">");
-            ps.println("<dl>");
+
+//            ps.println("<HTML>\n"
+//                    + "\n"
+//                    + "<HEAD>\n"
+//                    + "<TITLE>" + getPath() + "</TITLE>\n"
+//                    + "</HEAD>\n"
+//                    + "<BODY BGCOLOR=\"#FFFFFF\" TEXT=\"#000000\">");
+//            ps.println("<dl>");
+            String ref;
+//            Path first = getPath().getStripFirst();
+//            if(!first.equals(Path.path("/dav"))){
+//                ref= "../dav" + getPath();
+//            }else{
+//                ref= "../" + getPath();
+//            }
+//            html._tr()
+//                    .tr()
+//                    .td()
+//                    .a(href(ref))
+//                    .img(src("").alt("../"))
+//                    ._a()
+//                    ._td();
             for (LogicalData ld : getCatalogue().getChildrenByParentRef(getLogicalData().getUid())) {
                 if (ld.isFolder()) {
+                    ref= "../dav" + getPath() + "/" + ld.getName();
                     if (ld.getUid() != 1) {
-                        ps.println("<dt>\t<a href=\"../dav" + getPath() + "/" + ld.getName() + "\">" + ld.getName() + "</a><a>\t" + ld.getLength() + "</a></dt>");
+//                        ps.println("<dt>\t<a href=\"../dav" + getPath() + "/" + ld.getName() + "\">" + ld.getName() + "</a><a>\t" + ld.getLength() + "</a></dt>");
                     } else {
-                        ps.println("<dt>ROOT</dt>");
+//                        html._tr()
+//                                .tr()
+//                                .td().content("/")
+//                                .td().content(String.valueOf(getChildren().size()))
+//                                .td().content(new Date(ld.getModifiedDate()).toString());
+//                        html._tr()
+//                                .tr()
+//                                .td()
+//                                .a(href("../dav" + getPath() + "/" + ld.getName()))
+//                                .img(src("").alt("/"))
+//                                ._a()
+//                                ._td()
+//                                .td().content(String.valueOf(getChildren().size()))
+//                                .td().content(new Date(ld.getModifiedDate()).toString());
                     }
                 } else {
-                    ps.println("<dd>\t<a href=\"../dav" + getPath() + "/" + ld.getName() + "\">" + ld.getName() + "</a>\t" + ld.getLength() + "</a></dd>");
+                    ref= "../dav" + getPath() + "/" + ld.getName();
+//                    ps.println("<dd>\t<a href=\"../dav" + getPath() + "/" + ld.getName() + "\">" + ld.getName() + "</a>\t" + ld.getLength() + "</a></dd>");
                 }
+                  html._tr()
+                        .tr()
+                        .td()
+//                        .a(href("../dav" + getPath() + "/" + ld.getName()))
+                          .a(href( ref ))
+                        .img(src("").alt(ld.getName()))
+                        ._a()
+                        ._td()
+                        .td().content(String.valueOf(ld.getLength()))
+                        .td().content(new Date(ld.getModifiedDate()).toString())
+                        .td().content(new Date(ld.getCreateDate()).toString())
+                        .td().content(ld.getOwner())
+                        .td().content(ld.getContentTypesAsString())
+                        .td().content(ld.getType())
+                        .td().content(ld.getSupervised().toString())
+                        .td().content(ld.getUid().toString());
             }
-            ps.println("</dl>");
-            ps.println("</BODY>\n"
-                    + "\n"
-                    + "</HTML>");
+//            ps.println("</dl>");
+//            ps.println("</BODY>\n"
+//                    + "\n"
+//                    + "</HTML>");
+            html._tr()
+                    ._table();
+            
+            
+//            html.
+//                    form()
+//                    .input();
+        
+            
+            ps.println(html.toHtml());
         } catch (SQLException e) {
             WebDataDirResource.log.log(Level.SEVERE, null, e);
             throw new BadRequestException(this);
         }
-        
+
     }
-    
+
     @Override
     public Long getMaxAgeSeconds(Auth auth) {
         WebDataDirResource.log.fine("getMaxAgeSeconds() for " + getPath());
         return null;
     }
-    
+
     @Override
     public String getContentType(String accepts) {
         WebDataDirResource.log.fine("getContentType(" + accepts + ") for " + getPath());
         return "text/html";
     }
-    
+
     @Override
     public Long getContentLength() {
         WebDataDirResource.log.fine("getContentLength() for " + getPath());
         return null;
     }
-    
+
     @Override
     public void moveTo(CollectionResource toCollection, String name) throws ConflictException, NotAuthorizedException, BadRequestException {
         WebDataDirResource toWDDR = (WebDataDirResource) toCollection;
@@ -380,14 +438,14 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
             throw new BadRequestException(this, e1.getMessage());
         }
     }
-    
+
     @Override
     public Date getCreateDate() {
         Date date = new Date(getLogicalData().getCreateDate());
         WebDataDirResource.log.log(Level.FINE, "getCreateDate() for {0} date: " + date, getPath());
         return new Date(getLogicalData().getCreateDate());
     }
-    
+
     @Override
     public boolean isLockedOutRecursive(Request rqst) {
         return false;
@@ -413,7 +471,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
             }
             LockToken lockToken = new LockToken(UUID.randomUUID().toString(), lockInfo, timeout);
             return lockToken;
-            
+
         } catch (SQLException | PreConditionFailedException ex) {
             Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, ex);
             if (ex instanceof PreConditionFailedException) {
