@@ -8,17 +8,17 @@ import java.util.TimerTask;
 
 /**
  *
- * @author alogo
+ * @author S. Koulouzis
  */
-class MyTask extends TimerTask {
-    private Runnable graphPopulator;
+public class MyTask extends TimerTask {
+    private Runnable task;
 
-    MyTask(Runnable graphPopulator) {
-        this.graphPopulator = graphPopulator;
+    public MyTask(Runnable task) {
+        this.task = task;
     }
 
     @Override
     public void run() {
-        graphPopulator.run();
+        task.run();
     }
 }

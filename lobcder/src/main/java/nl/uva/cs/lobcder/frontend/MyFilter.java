@@ -13,16 +13,26 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.naming.InitialContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
+import lombok.Data;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
 import nl.uva.cs.lobcder.optimization.FileAccessPredictor;
 import nl.uva.cs.lobcder.optimization.LobState;
+import nl.uva.cs.lobcder.optimization.MyTask;
 import nl.uva.cs.lobcder.util.CatalogueHelper;
+import org.apache.commons.codec.binary.Base64;
 
 /**
  *
@@ -34,6 +44,9 @@ public class MyFilter extends MiltonFilter {
     private JDBCatalogue catalogue;
     private static FileAccessPredictor fap;
     private static LobState prevState;
+    private static final BlockingQueue queue = new ArrayBlockingQueue(2000);
+    private static RequestEventRecorder recorder;
+    private Timer recordertimer;
 
     public MyFilter() throws Exception {
 //        getFileAccessPredictor();
@@ -68,12 +81,54 @@ public class MyFilter extends MiltonFilter {
             userNpasswd = authorizationHeader.split("Basic ")[1];
         }
 
+        RequestWapper my = new RequestWapper();
+        my.setMethod(method);
+        my.setContentLength(contentLen);
+        my.setContentType(contentType);
+        my.setTimeStamp(System.currentTimeMillis());
+        my.setElapsed(elapsed);
+        my.setRemoteAddr(from);
+        my.setRequestURL(((HttpServletRequest) req).getRequestURL().toString());
+        my.setUserAgent(userAgent);
+        my.setUserNpasswd(getUserName((HttpServletRequest) req));
+        queue.add(my);
+        startRecorder();
+
         log.log(Level.INFO, "Req_Source: {0} Method: {1} Content_Len: {2} Content_Type: {3} Elapsed_Time: {4} sec EncodedUser: {5} UserAgent: {6}", new Object[]{from, method, contentLen, contentType, elapsed / 1000.0, userNpasswd, userAgent});
-        try (Connection connection = getCatalogue().getConnection()) {
-            recordEvent(connection, ((HttpServletRequest) req), elapsed);
-        } catch (SQLException ex) {
-            Logger.getLogger(MyFilter.class.getName()).log(Level.SEVERE, null, ex);
+//        try (Connection connection = getCatalogue().getConnection()) {
+//            recordEvent(connection, ((HttpServletRequest) req), elapsed);
+//        } catch (SQLException ex) {
+//            Logger.getLogger(MyFilter.class.getName()).log(Level.SEVERE, null, ex);
+//        }
+    }
+
+    private String getUserName(HttpServletRequest httpServletRequest) throws UnsupportedEncodingException {
+        String authorizationHeader = httpServletRequest.getHeader("authorization");
+        String userNpasswd = "";
+        if (authorizationHeader != null) {
+            final int index = authorizationHeader.indexOf(' ');
+            if (index > 0) {
+                final String credentials = new String(Base64.decodeBase64(authorizationHeader.substring(index).getBytes()), "UTF8");
+                String[] encodedToken = credentials.split(":");
+                if (encodedToken.length > 1) {
+                    String token = new String(Base64.decodeBase64(encodedToken[1]));
+                    if (token.contains(";") && token.contains("uid=")) {
+                        String uid = token.split(";")[0];
+                        userNpasswd = uid.split("uid=")[1];
+                    } else {
+                        userNpasswd = credentials.substring(0, credentials.indexOf(":"));
+                    }
+                }
+//                    if (userNpasswd == null || userNpasswd.length() < 1) {
+//                        userNpasswd = credentials.substring(0, credentials.indexOf(":"));
+//                    }
+
+//                final String credentials = new String(Base64.decodeBase64(autheader.substring(index)), "UTF8");
+
+//                final String token = credentials.substring(credentials.indexOf(":") + 1);
+            }
         }
+        return userNpasswd;
     }
 
     public JDBCatalogue getCatalogue() {
@@ -123,6 +178,13 @@ public class MyFilter extends MiltonFilter {
         super.destroy();
         try {
             getFileAccessPredictor().stopGraphPopulation();
+            if (recordertimer != null) {
+                if (recorder != null) {
+                    recorder.comitToDB();
+                }
+                this.recordertimer.cancel();
+            }
+
         } catch (Exception ex) {
             Logger.getLogger(MyFilter.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -162,5 +224,60 @@ public class MyFilter extends MiltonFilter {
         }
 
         prevState = nextState;
+    }
+
+    private void startRecorder() {
+        if (recorder == null) {
+            recorder = new RequestEventRecorder(queue, getCatalogue());
+            TimerTask gcTask = new MyTask(recorder);
+
+            recordertimer = new Timer(true);
+            recordertimer.schedule(gcTask, 1000, 1000);
+        }
+
+    }
+
+    private static class RequestEventRecorder implements Runnable {
+
+        private final BlockingQueue queue;
+        private final JDBCatalogue catalogue;
+        private List<RequestWapper> req = new ArrayList<>();
+
+        private RequestEventRecorder(BlockingQueue queue, JDBCatalogue catalogue) {
+            this.queue = queue;
+            this.catalogue = catalogue;
+        }
+
+        @Override
+        public void run() {
+            try {
+                RequestWapper rw = (RequestWapper) queue.take();
+//                log.log(Level.FINE, "RequestWapper: {0} {1} {2} {3} {4} {5} {6} {7} {8}", new Object[]{rw.contentType, rw.method, rw.remoteAddr, rw.requestURL, rw.userAgent, rw.userNpasswd, rw.contentLength, rw.date, rw.elapsed});
+
+                req.add(rw);
+                if (req.size() >= 50) {
+                    try {
+                        comitToDB();
+                    } catch (UnsupportedEncodingException ex) {
+                        Logger.getLogger(MyFilter.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            } catch (InterruptedException ex) {
+                Logger.getLogger(MyFilter.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+
+        private void comitToDB() throws UnsupportedEncodingException {
+            if (req != null && !req.isEmpty()) {
+                try (Connection connection = catalogue.getConnection()) {
+                    catalogue.recordRequests(connection, req);
+                    connection.commit();
+                    req.clear();
+//                connection.close();
+                } catch (SQLException ex) {
+                    Logger.getLogger(MyFilter.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        }
     }
 }

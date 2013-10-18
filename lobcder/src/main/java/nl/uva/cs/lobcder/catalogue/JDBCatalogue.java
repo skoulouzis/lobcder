@@ -22,6 +22,8 @@ import lombok.SneakyThrows;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.auth.MyPrincipal;
 import nl.uva.cs.lobcder.auth.Permissions;
+import nl.uva.cs.lobcder.frontend.MyFilter;
+import nl.uva.cs.lobcder.frontend.RequestWapper;
 import nl.uva.cs.lobcder.resources.Credential;
 import nl.uva.cs.lobcder.resources.LogicalData;
 import nl.uva.cs.lobcder.resources.PDRI;
@@ -1191,35 +1193,28 @@ public class JDBCatalogue extends MyDataSource {
             preparedStatement.setString(5, httpServletRequest.getContentType());
             preparedStatement.setDouble(6, elapsed);
 
-            String authorizationHeader = httpServletRequest.getHeader("authorization");
-            String userNpasswd = "";
-            if (authorizationHeader != null) {
-                final int index = authorizationHeader.indexOf(' ');
-                if (index > 0) {
-                    final String credentials = new String(Base64.decodeBase64(authorizationHeader.substring(index).getBytes()), "UTF8");
-                    String[] encodedToken = credentials.split(":");
-                    if (encodedToken.length > 1) {
-                        String token = new String(Base64.decodeBase64(encodedToken[1]));
-                        if (token.contains(";") && token.contains("uid=")) {
-                            String uid = token.split(";")[0];
-                            userNpasswd = uid.split("uid=")[1];
-                        } else {
-                            userNpasswd = credentials.substring(0, credentials.indexOf(":"));
-                        }
-                    }
-//                    if (userNpasswd == null || userNpasswd.length() < 1) {
-//                        userNpasswd = credentials.substring(0, credentials.indexOf(":"));
-//                    }
 
-//                final String credentials = new String(Base64.decodeBase64(autheader.substring(index)), "UTF8");
-
-//                final String token = credentials.substring(credentials.indexOf(":") + 1);
-                }
-            }
+            String userNpasswd = getUserName(httpServletRequest);
             preparedStatement.setString(7, userNpasswd);
             preparedStatement.setString(8, httpServletRequest.getHeader("User-Agent"));
             preparedStatement.executeUpdate();
             ResultSet rs = preparedStatement.getGeneratedKeys();
+        }
+    }
+
+    public void recordRequests(Connection connection, List<RequestWapper> requestEvents) throws SQLException, UnsupportedEncodingException {
+        try (Statement s = connection.createStatement() ) {
+            for (RequestWapper e : requestEvents) {
+                String query = "INSERT INTO requests_table (methodName, requestURL, "
+                        + "remoteAddr, contentLen, contentType, elapsedTime,userName, timeStamp ,userAgent) "
+                        + "VALUES('" + e.getMethod() + "', '" + e.getRequestURL()
+                        + "', '" + e.getRemoteAddr() + "', '" + e.getContentLength()
+                        + "', '" + e.getContentType() + "',  '" + e.getElapsed()
+                        + "', '" + e.getUserNpasswd() + "',  '" + new Timestamp(e.getTimeStamp())
+                        + "', '" + e.getUserAgent() + "')";
+                s.addBatch(query);
+            }
+            s.executeBatch();
         }
     }
 
@@ -1402,12 +1397,41 @@ public class JDBCatalogue extends MyDataSource {
                 res.setDescription(rs.getString(20));
                 res.setDataLocationPreference(rs.getString(21));
                 res.setStatus(rs.getString(22));
-                
+
                 putToLDataCache(res);
                 results.add(res);
             }
             return results;
         }
+    }
+
+    private String getUserName(HttpServletRequest httpServletRequest) throws UnsupportedEncodingException {
+        String authorizationHeader = httpServletRequest.getHeader("authorization");
+        String userNpasswd = "";
+        if (authorizationHeader != null) {
+            final int index = authorizationHeader.indexOf(' ');
+            if (index > 0) {
+                final String credentials = new String(Base64.decodeBase64(authorizationHeader.substring(index).getBytes()), "UTF8");
+                String[] encodedToken = credentials.split(":");
+                if (encodedToken.length > 1) {
+                    String token = new String(Base64.decodeBase64(encodedToken[1]));
+                    if (token.contains(";") && token.contains("uid=")) {
+                        String uid = token.split(";")[0];
+                        userNpasswd = uid.split("uid=")[1];
+                    } else {
+                        userNpasswd = credentials.substring(0, credentials.indexOf(":"));
+                    }
+                }
+//                    if (userNpasswd == null || userNpasswd.length() < 1) {
+//                        userNpasswd = credentials.substring(0, credentials.indexOf(":"));
+//                    }
+
+//                final String credentials = new String(Base64.decodeBase64(autheader.substring(index)), "UTF8");
+
+//                final String token = credentials.substring(credentials.indexOf(":") + 1);
+            }
+        }
+        return userNpasswd;
     }
 
     @Data

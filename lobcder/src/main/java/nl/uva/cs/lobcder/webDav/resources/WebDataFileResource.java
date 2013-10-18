@@ -510,8 +510,8 @@ public class WebDataFileResource extends WebDataResource implements
 
     private String getBestWorker() throws IOException {
         if (doRedirect) {
-            workers = PropertiesHelper.getWorkers();
 
+            workers = PropertiesHelper.getWorkers();
             if (workerIndex >= workers.size()) {
                 workerIndex = 0;
             }
