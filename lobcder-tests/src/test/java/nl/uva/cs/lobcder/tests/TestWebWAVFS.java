@@ -79,6 +79,7 @@ public class TestWebWAVFS {
         try {
             InitGlobalVFS();
         } catch (Exception ex) {
+            fail(ex.getMessage());
         }
     }
 
@@ -86,6 +87,7 @@ public class TestWebWAVFS {
         try {
             GlobalConfig.setBaseLocation(new URL("http://dummy/url"));
         } catch (MalformedURLException ex) {
+            fail(ex.getMessage());
             Logger.getLogger(TestWebWAVFS.class.getName()).log(Level.SEVERE, null, ex);
         }
         // runtime configuration
@@ -500,6 +502,7 @@ public class TestWebWAVFS {
             try {
                 Thread.sleep(sleepTime);
             } catch (InterruptedException ex) {
+                fail(ex.getMessage());
                 Logger.getLogger(TestWebWAVFS.class.getName()).log(Level.SEVERE, null, ex);
             }
             pdris = getPdris(TestSettings.TEST_FILE_NAME1 + ".txt");
@@ -534,7 +537,9 @@ public class TestWebWAVFS {
 
 
         } catch (IOException ex) {
+            fail(ex.getMessage());
             Logger.getLogger(TestWebWAVFS.class.getName()).log(Level.SEVERE, null, ex);
+
         } finally {
             delete(testFileURI1);
         }
@@ -559,14 +564,14 @@ public class TestWebWAVFS {
             MkColMethod mkcol = new MkColMethod(testcol);
             status = client1.executeMethod(mkcol);
             assertEquals(HttpStatus.SC_CREATED, status);
-            
-            
-            String targetURL = testcol+TestSettings.TEST_FILE_NAME1 + ".txt";
-            CopyMethod cp = new CopyMethod(testFileURI1, targetURL , true);
+
+
+            String targetURL = testcol + TestSettings.TEST_FILE_NAME1 + ".txt";
+            CopyMethod cp = new CopyMethod(testFileURI1, targetURL, true);
             status = client1.executeMethod(cp);
-            assertTrue( status == HttpStatus.SC_OK || status == HttpStatus.SC_CREATED);
-            
-            
+            assertTrue(status == HttpStatus.SC_OK || status == HttpStatus.SC_CREATED);
+
+
             get = new GetMethod(targetURL);
             status = client1.executeMethod(get);
             assertEquals(HttpStatus.SC_OK, status);
@@ -599,6 +604,7 @@ public class TestWebWAVFS {
             userThread1.join();
             userThread2.join();
         } catch (InterruptedException ex) {
+            fail(ex.getMessage());
             Logger.getLogger(TestWebWAVFS.class.getName()).log(Level.SEVERE, null, ex);
         }
 
@@ -688,8 +694,10 @@ public class TestWebWAVFS {
                 assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
 
             } catch (DavException ex) {
+                fail(ex.getMessage());
                 Logger.getLogger(TestWebWAVFS.class.getName()).log(Level.SEVERE, null, ex);
             } catch (IOException ex) {
+                fail(ex.getMessage());
                 Logger.getLogger(TestWebWAVFS.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
