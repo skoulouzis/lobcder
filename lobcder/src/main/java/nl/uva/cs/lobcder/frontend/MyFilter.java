@@ -14,7 +14,6 @@ import java.net.URL;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -25,7 +24,6 @@ import java.util.logging.Logger;
 import javax.naming.InitialContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
-import lombok.Data;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
 import nl.uva.cs.lobcder.optimization.FileAccessPredictor;
@@ -44,7 +42,7 @@ public class MyFilter extends MiltonFilter {
     private JDBCatalogue catalogue;
     private static FileAccessPredictor fap;
     private static LobState prevState;
-    private static final BlockingQueue queue = new ArrayBlockingQueue(2000);
+    private static final BlockingQueue queue = new ArrayBlockingQueue(2500);
     private static RequestEventRecorder recorder;
     private Timer recordertimer;
 
@@ -232,7 +230,7 @@ public class MyFilter extends MiltonFilter {
             TimerTask gcTask = new MyTask(recorder);
 
             recordertimer = new Timer(true);
-            recordertimer.schedule(gcTask, 1000, 1000);
+            recordertimer.schedule(gcTask, 900, 900);
         }
 
     }

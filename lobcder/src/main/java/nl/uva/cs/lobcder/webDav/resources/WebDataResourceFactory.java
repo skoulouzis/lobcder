@@ -3,17 +3,16 @@ package nl.uva.cs.lobcder.webDav.resources;
 import io.milton.common.Path;
 import io.milton.http.ResourceFactory;
 import io.milton.resource.Resource;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.List;
+import java.util.logging.Level;
 import lombok.Setter;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.auth.AuthI;
 import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
 import nl.uva.cs.lobcder.resources.LogicalData;
 import nl.uva.cs.lobcder.util.Constants;
-
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.List;
-import java.util.logging.Level;
 
 @Log
 public class WebDataResourceFactory implements ResourceFactory {
@@ -27,6 +26,7 @@ public class WebDataResourceFactory implements ResourceFactory {
 //    @Setter
 //    @Setter
 //    private AuthI auth3;
+    private int attempts = 0;
 
     @Override
     public Resource getResource(String host, String strPath) {
@@ -43,10 +43,12 @@ public class WebDataResourceFactory implements ResourceFactory {
         //    ldri = Path.path(strPath);
         //}
 
-        try (Connection cn = catalogue.getConnection()) {
+//        try (Connection cn = catalogue.getConnection()) {
+        try {
             WebDataResourceFactory.log.log(Level.FINE, "getResource:  strPath: {0} path: {1} ldri: {2}" + "\n" + "\tgetResource:  host: {3} path: {4}", new Object[]{strPath, Path.path(strPath), ldri, host, ldri});
 
-            LogicalData entry = catalogue.getLogicalDataByPath(ldri, cn);
+//            LogicalData entry = catalogue.getLogicalDataByPath(ldri, cn);
+            LogicalData entry = catalogue.getLogicalDataByPath(ldri);
             if (entry == null) {
                 return null;
             }
@@ -57,10 +59,18 @@ public class WebDataResourceFactory implements ResourceFactory {
             if (entry.getType().equals(Constants.LOGICAL_FILE)) {
                 return new WebDataFileResource(entry, ldri, catalogue, authList);
             }
-            return null;
+            attempts = 0;
+//            return null;
         } catch (SQLException ex) {
-            WebDataResourceFactory.log.log(Level.SEVERE, null, 1);
-            throw new RuntimeException(ex);
+            if (attempts <= Constants.RECONNECT_NTRY) {
+                attempts++;
+                getResource(host, strPath);
+            } else {
+                WebDataResourceFactory.log.log(Level.SEVERE, null, ex);
+                throw new RuntimeException(ex);
+            }
+
         }
+        return null;
     }
 }

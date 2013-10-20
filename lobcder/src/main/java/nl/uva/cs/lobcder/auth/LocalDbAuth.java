@@ -14,6 +14,7 @@ import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.sql.DataSource;
 import lombok.extern.java.Log;
+import nl.uva.cs.lobcder.util.Constants;
 
 /**
  *
@@ -24,6 +25,7 @@ public class LocalDbAuth implements AuthI {
 
     private DataSource datasource = null;
     private PrincipalCacheI pc = null;
+    private int attempts=0;
 
     public LocalDbAuth() throws NamingException {
         javax.naming.Context ctx = new InitialContext();
@@ -34,55 +36,70 @@ public class LocalDbAuth implements AuthI {
 
     @Override
     public MyPrincipal checkToken(String token) {
-        Connection connection = null;
+//        Connection connection = null;
         MyPrincipal res = null;
         try {
             if (pc != null) {
-                res = pc.getPrincipal(token);
+                synchronized (pc) {
+                    res = pc.getPrincipal(token);
+                }
             }
             if (res == null) {
                 String uname;
                 int id;
-                connection = datasource.getConnection();
-                try (Statement s = connection.createStatement()) {
-                    HashSet<String> roles = new HashSet<>();
-                    String query = "SELECT id, uname FROM auth_usernames_table WHERE token = '" + token + "'";
-                    LocalDbAuth.log.fine(query);
-                    try (ResultSet rs = s.executeQuery(query)) {
-                        if (rs.next()) {
-                            id = rs.getInt(1);
-                            uname = rs.getString(2);
-                            roles.add("other");
-                            roles.add(uname);
-                        } else {
-                            return null;
-                        }
-                        query = "SELECT roleName FROM auth_roles_tables WHERE unameRef = " + id;
+                try (Connection connection = datasource.getConnection()) {
+                    try (Statement s = connection.createStatement()) {
+                        HashSet<String> roles = new HashSet<>();
+                        String query = "SELECT id, uname FROM auth_usernames_table WHERE token = '" + token + "'";
                         LocalDbAuth.log.fine(query);
-                        try (ResultSet rs2 = s.executeQuery(query)) {
-                            while (rs2.next()) {
-                                roles.add(rs2.getString(1));
+                        try (ResultSet rs = s.executeQuery(query)) {
+                            if (rs.next()) {
+                                id = rs.getInt(1);
+                                uname = rs.getString(2);
+                                roles.add("other");
+                                roles.add(uname);
+                            } else {
+                                return null;
                             }
-                            res = new MyPrincipal(uname, roles);
+                            query = "SELECT roleName FROM auth_roles_tables WHERE unameRef = " + id;
+                            LocalDbAuth.log.fine(query);
+                            try (ResultSet rs2 = s.executeQuery(query)) {
+                                while (rs2.next()) {
+                                    roles.add(rs2.getString(1));
+                                }
+                                res = new MyPrincipal(uname, roles);
+                            }
                         }
                     }
                 }
+//                connection = datasource.getConnection();
+
             }
             if (pc != null) {
-                pc.putPrincipal(token, res);
+                synchronized (pc) {
+                    pc.putPrincipal(token, res);
+                }
             }
+            attempts=0;
             return res;
         } catch (Exception ex) {
-            LocalDbAuth.log.log(Level.SEVERE, null, ex);
-            return null;
-        } finally {
-            try {
-                if (connection != null) {
-                    connection.close();
-                }
-            } catch (SQLException ex) {
+            if (ex instanceof SQLException 
+                    && attempts <=Constants.RECONNECT_NTRY) {
+                attempts++;
+                checkToken(token);
+            } else {
                 LocalDbAuth.log.log(Level.SEVERE, null, ex);
+                return null;
             }
+        } finally {
+//            try {
+//                if (connection != null) {
+//                    connection.close();
+//                }
+//            } catch (SQLException ex) {
+//                LocalDbAuth.log.log(Level.SEVERE, null, ex);
+//            }
         }
+        return null;
     }
 }

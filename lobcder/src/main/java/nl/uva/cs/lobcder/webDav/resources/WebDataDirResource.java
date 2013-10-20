@@ -57,6 +57,7 @@ import static org.rendersnake.HtmlAttributesFactory.src;
 @Log
 public class WebDataDirResource extends WebDataResource implements FolderResource,
         CollectionResource, DeletableCollectionResource, LockingCollectionResource {
+    private int attempts = 0;
 
     public WebDataDirResource(@Nonnull LogicalData logicalData, Path path, @Nonnull JDBCatalogue catalogue, @Nonnull List<AuthI> authList) {
         super(logicalData, path, catalogue, authList);
@@ -66,6 +67,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
     @Override
     public boolean authorise(Request request, Request.Method method, Auth auth) {
         if (auth == null) {
+            attempts = 0;
             return false;
         }
         try {
@@ -73,14 +75,25 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                 case MKCOL:
                     String msg = "From: " + fromAddress + " User: " + getPrincipal().getUserId() + " Method: " + method;
                     WebDataDirResource.log.log(Level.INFO, msg);
+                    attempts = 0;
                     return getPrincipal().canWrite(getPermissions());
                 default:
+                    attempts = 0;
                     return super.authorise(request, method, auth);
             }
         } catch (Throwable th) {
-            WebDataDirResource.log.log(Level.FINER, "Exception in authorize for a resource " + getPath(), th);
-            return false;
+            if (th instanceof java.sql.SQLException && attempts <= Constants.RECONNECT_NTRY) {
+                attempts++;
+                authorise(request, method, auth);
+
+            } else {
+                WebDataDirResource.log.log(Level.FINER, "Exception in authorize for a resource " + getPath(), th);
+                attempts = 0;
+                return false;
+            }
+
         }
+        return false;
     }
 
     @Override
@@ -337,7 +350,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
 //                    ._td();
             for (LogicalData ld : getCatalogue().getChildrenByParentRef(getLogicalData().getUid())) {
                 if (ld.isFolder()) {
-                    ref= "../dav" + getPath() + "/" + ld.getName();
+                    ref = "../dav" + getPath() + "/" + ld.getName();
                     if (ld.getUid() != 1) {
 //                        ps.println("<dt>\t<a href=\"../dav" + getPath() + "/" + ld.getName() + "\">" + ld.getName() + "</a><a>\t" + ld.getLength() + "</a></dt>");
                     } else {
@@ -357,14 +370,14 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
 //                                .td().content(new Date(ld.getModifiedDate()).toString());
                     }
                 } else {
-                    ref= "../dav" + getPath() + "/" + ld.getName();
+                    ref = "../dav" + getPath() + "/" + ld.getName();
 //                    ps.println("<dd>\t<a href=\"../dav" + getPath() + "/" + ld.getName() + "\">" + ld.getName() + "</a>\t" + ld.getLength() + "</a></dd>");
                 }
-                  html._tr()
+                html._tr()
                         .tr()
                         .td()
-//                        .a(href("../dav" + getPath() + "/" + ld.getName()))
-                          .a(href( ref ))
+                        //                        .a(href("../dav" + getPath() + "/" + ld.getName()))
+                        .a(href(ref))
                         .img(src("").alt(ld.getName()))
                         ._a()
                         ._td()
@@ -383,13 +396,13 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
 //                    + "</HTML>");
             html._tr()
                     ._table();
-            
-            
+
+
 //            html.
 //                    form()
 //                    .input();
-        
-            
+
+
             ps.println(html.toHtml());
         } catch (SQLException e) {
             WebDataDirResource.log.log(Level.SEVERE, null, e);
