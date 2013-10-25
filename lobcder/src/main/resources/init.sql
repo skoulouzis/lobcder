@@ -1,4 +1,4 @@
-DROP TABLE IF EXISTS permission_table, ldata_table, pdri_table, pdrigroup_table, storage_site_table, credential_table, requests_table;
+DROP TABLE IF EXISTS permission_table, ldata_table, wp4_table, pdri_table, pdrigroup_table, storage_site_table, credential_table, requests_table;
 
 CREATE TABLE pdrigroup_table (
   pdriGroupId SERIAL PRIMARY KEY,
@@ -60,6 +60,15 @@ CREATE TABLE ldata_table (
  status enum('unavailable', 'corrupted', 'OK')
 ) ENGINE=InnoDB;
 
+CREATE TABLE wp4_table (
+ id SERIAL PRIMARY KEY,
+ local_id BIGINT UNSIGNED, FOREIGN KEY(local_id) REFERENCES ldata_table(uid) ON DELETE SET NULL ,
+ global_id VARCHAR(255),
+ views INT UNSIGNED NOT NULL DEFAULT 0,
+ need_update BOOLEAN NOT NULL DEFAULT FALSE, INDEX(need_update),
+ need_create BOOLEAN NOT NULL DEFAULT TRUE, INDEX(need_create)
+) ENGINE=InnoDB;
+
 CREATE TABLE permission_table (
  id SERIAL PRIMARY KEY,
  permType ENUM('read', 'write'), INDEX(permType),
@@ -96,7 +105,7 @@ END|
 
 DROP TRIGGER IF EXISTS on_ldata_update |
 CREATE TRIGGER on_ldata_update
-BEFORE UPDATE ON ldata_table
+AFTER UPDATE ON ldata_table
 FOR EACH ROW BEGIN
   IF NEW.datatype = 'logical.file' THEN
     IF NEW.pdriGroupRef != OLD.pdriGroupRef THEN
@@ -108,7 +117,20 @@ FOR EACH ROW BEGIN
       END IF;
     END IF;
   END IF;
+  IF (NEW.ldName != OLD.ldName
+      OR NEW.modifiedDate != OLD.modifiedDate
+      OR NEW.ownerId != NEW.ownerId) THEN
+    UPDATE wp4_table SET need_update=TRUE WHERE local_id = NEW.uid;
+  END IF;
 END|
+
+DROP TRIGGER IF EXISTS on_ldata_insert |
+CREATE TRIGGER on_ldata_insert
+AFTER INSERT ON ldata_table
+FOR EACH ROW BEGIN
+  INSERT INTO wp4_table (local_id, global_id) VALUES(NEW.uid, UUID());
+END|
+
 
 -- DROP TRIGGER IF EXISTS on_pdri_incert |
 -- CREATE TRIGGER on_pdri_incert
