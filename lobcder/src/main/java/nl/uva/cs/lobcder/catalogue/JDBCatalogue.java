@@ -63,7 +63,7 @@ public class JDBCatalogue extends MyDataSource {
             }
         };
         timer = new Timer(true);
-        timer.schedule(gcTask, 9000, 9000); //once in 9 sec
+        timer.schedule(gcTask, 10000, 10000); //once in 10 sec
     }
 
     public void stopSweep() {
@@ -363,7 +363,6 @@ public class JDBCatalogue extends MyDataSource {
         }
         try (Connection connection = getConnection()) {
             res = getLogicalDataByPath(logicalResourceName, connection);
-            putToLDataCache(res, logicalResourceName.toString());
             return res;
         }
     }
