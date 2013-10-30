@@ -13,9 +13,7 @@ import com.sun.jersey.api.json.JSONConfiguration;
 import com.sun.jersey.client.urlconnection.HTTPSProperties;
 import io.milton.common.Path;
 import io.milton.http.Range;
-import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -331,6 +329,7 @@ public class WorkerServlet extends HttpServlet {
             if (ex.getMessage() != null
                     && ex.getMessage().contains("returned a response status of 404 Not Found")) {
 //                    || ex.getMessage().contains("returned a response status of 401 Unauthorized")) {
+                Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, ex);
                 throw new IOException(ex);
             }
             if (numOfTries < Constants.RECONNECT_NTRY) {
