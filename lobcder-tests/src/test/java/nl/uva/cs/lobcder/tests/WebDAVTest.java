@@ -1810,7 +1810,7 @@ public class WebDAVTest {
             put.setRequestEntity(new StringRequestEntity("foo", "text/plain", "UTF-8"));
             status = client.executeMethod(put);
             assertEquals(HttpStatus.SC_CREATED, status);
-
+            
             DavPropertyNameSet commentNameSet = new DavPropertyNameSet();
             DavPropertyName dataLocationPreferenceName = DavPropertyName.create("data-location-preference", Namespace.getNamespace("custom:"));
             commentNameSet.add(dataLocationPreferenceName);
