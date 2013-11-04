@@ -55,11 +55,13 @@ public class JDBCatalogue extends MyDataSource {
         TimerTask gcTask = new TimerTask() {
             Runnable deleteSweep = new DeleteSweep(getDatasource());
             Runnable replicateSweep = new ReplicateSweep(getDatasource());
+            Runnable wp4Sweep = new WP4Sweep(getDatasource());
 
             @Override
             public void run() {
                 deleteSweep.run();
                 replicateSweep.run();
+                wp4Sweep.run();
             }
         };
         timer = new Timer(true);
@@ -141,8 +143,8 @@ public class JDBCatalogue extends MyDataSource {
             preparedStatement.setString(2, entry.getOwner());
             preparedStatement.setString(3, Constants.LOGICAL_FOLDER);
             preparedStatement.setString(4, entry.getName());
-            preparedStatement.setDate(5, new Date(entry.getCreateDate()));
-            preparedStatement.setDate(6, new Date(entry.getModifiedDate()));
+            preparedStatement.setTimestamp(5, new Timestamp(entry.getCreateDate()));
+            preparedStatement.setTimestamp(6, new Timestamp(entry.getModifiedDate()));
             preparedStatement.executeUpdate();
             ResultSet rs = preparedStatement.getGeneratedKeys();
             rs.next();
@@ -169,8 +171,8 @@ public class JDBCatalogue extends MyDataSource {
             preparedStatement.setLong(1, entry.getParentRef());
             preparedStatement.setString(2, entry.getOwner());
             preparedStatement.setString(3, entry.getType());
-            preparedStatement.setDate(4, new Date(entry.getCreateDate()));
-            preparedStatement.setDate(5, new Date(entry.getModifiedDate()));
+            preparedStatement.setTimestamp(4, new Timestamp(entry.getCreateDate()));
+            preparedStatement.setTimestamp(5, new Timestamp(entry.getModifiedDate()));
             preparedStatement.setLong(6, entry.getLength());
             preparedStatement.setString(7, entry.getContentTypesAsString());
             preparedStatement.setLong(8, entry.getPdriGroupId());
@@ -220,7 +222,7 @@ public class JDBCatalogue extends MyDataSource {
 //        }
 
         try (Statement statement = connection.createStatement(java.sql.ResultSet.TYPE_FORWARD_ONLY, java.sql.ResultSet.CONCUR_UPDATABLE)) {
-            statement.executeUpdate("INSERT INTO pdrigroup_table (refCount) VALUES(1)", Statement.RETURN_GENERATED_KEYS);
+            statement.executeUpdate("INSERT INTO pdrigroup_table (refCount) VALUES(0)", Statement.RETURN_GENERATED_KEYS);
             ResultSet rs = statement.getGeneratedKeys();
             rs.next();
             Long newGroupId = rs.getLong(1);
