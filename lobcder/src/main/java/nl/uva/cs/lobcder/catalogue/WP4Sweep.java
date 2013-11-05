@@ -4,7 +4,10 @@ import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import lombok.Data;
+import lombok.SneakyThrows;
 import lombok.extern.java.Log;
+import org.w3c.dom.Node;
+import org.xml.sax.InputSource;
 
 import javax.sql.DataSource;
 import javax.ws.rs.core.MediaType;
@@ -16,7 +19,12 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.adapters.XmlAdapter;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpression;
+import javax.xml.xpath.XPathFactory;
 import java.sql.*;
+import java.util.UUID;
 import java.util.logging.Level;
 
 /**
@@ -26,12 +34,13 @@ import java.util.logging.Level;
 @Log
 class WP4Sweep implements Runnable {
 
-    static final String uri = "http://vphshare.atosresearch.eu/metadata-retrieval/rest/metadata";
-
     private final DataSource datasource;
 
-    public WP4Sweep(DataSource datasource) {
+    private final WP4ConnectorI connector;
+
+    public WP4Sweep(DataSource datasource, WP4ConnectorI connector) {
         this.datasource = datasource;
+        this.connector = connector;
     }
 
 
@@ -63,53 +72,82 @@ class WP4Sweep implements Runnable {
         @XmlJavaTypeAdapter(SqlTimestampAdapter.class)
         private Timestamp creation_date;
         private String global_id;
-        private int local_id;
+        private Long local_id;
         private String name;
         private String type;
         @XmlJavaTypeAdapter(SqlTimestampAdapter.class)
         private Timestamp updated_date;
         private int views;
+        private String category;
+        private String description;
+        private String licence;
+        private String rating;
+        private String semantic_annotations;
+        private String status;
+        private String tags;
     }
 
 
-    interface WP4ConnectorI {
-        public void create(ResourceMetadata resourceMetadata) throws Exception;
+
+    public static interface WP4ConnectorI {
+        public String create(ResourceMetadata resourceMetadata) throws Exception;
         public void update(ResourceMetadata resourceMetadata) throws Exception;
         public void delete(String global_id) throws Exception;
     }
 
-    class WP4Connector implements WP4ConnectorI{
+    public static class WP4Connector implements WP4ConnectorI{
 
-        private Client client = Client.create();
+        private Client client;
+        private XPathExpression expression;
+        private final String uri;
+
+        @SneakyThrows
+        public WP4Connector(String uri) {
+            this.uri = uri;
+            client = Client.create();
+            XPathFactory xpf = XPathFactory.newInstance();
+            XPath xpath = xpf.newXPath();
+            expression = xpath.compile("/message/data[1]/_global_id[1]");
+        }
 
         @Override
-        public void create(ResourceMetadata resourceMetadata) {
+        public String create(ResourceMetadata resourceMetadata) throws Exception{
             WebResource webResource = client.resource(uri);
-            webResource.type(MediaType.APPLICATION_XML).post(ClientResponse.class, resourceMetadata);
+            ClientResponse response = webResource.type(MediaType.APPLICATION_XML).post(ClientResponse.class, resourceMetadata);
+            if(response.getClientResponseStatus() == ClientResponse.Status.OK){
+                Node uidNode = (Node) expression.evaluate(new InputSource(response.getEntityInputStream()), XPathConstants.NODE);
+                return uidNode.getTextContent();
+            } else {
+                throw new Exception(response.getClientResponseStatus().toString());
+            }
         }
 
         @Override
         public void update(ResourceMetadata resourceMetadata) throws Exception {
-            WebResource webResource = client.resource(uri.concat("/").concat(resourceMetadata.getGlobal_id()));
-            webResource.type(MediaType.APPLICATION_XML).put(ClientResponse.class, resourceMetadata);
+            WebResource webResource = client.resource(uri);
+            ClientResponse response = webResource.path(resourceMetadata.getGlobal_id()).type(MediaType.APPLICATION_XML).put(ClientResponse.class, resourceMetadata);
+            if(response.getClientResponseStatus() != ClientResponse.Status.OK){
+                throw new Exception(response.getClientResponseStatus().toString());
+            }
         }
 
         @Override
         public void delete(String global_id) throws Exception {
-            WebResource webResource = client.resource(uri.concat("/").concat(global_id));
-            webResource.type(MediaType.APPLICATION_XML).delete();
+            WebResource webResource = client.resource(uri);
+            webResource.path(global_id).type(MediaType.APPLICATION_XML).delete();
         }
     }
 
-    class WP4ConnectorDebug implements WP4ConnectorI{
+    public static class WP4ConnectorDebug implements WP4ConnectorI{
         @Override
-        public void create(ResourceMetadata resourceMetadata) throws JAXBException {
+        public String create(ResourceMetadata resourceMetadata) throws JAXBException {
             System.err.println("CREATE WP4 METADATA");
             JAXBContext context = JAXBContext.newInstance(ResourceMetadata.class);
             Marshaller m = context.createMarshaller();
             m.setProperty( Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE );
             m.marshal(resourceMetadata, System.err);
             System.err.println("================================");
+            return UUID.randomUUID().toString();
         }
 
         @Override
@@ -133,21 +171,25 @@ class WP4Sweep implements Runnable {
     private void create(Connection connection, WP4ConnectorI wp4Connector) throws SQLException {
         try (Statement s1 = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY,
                 ResultSet.CONCUR_READ_ONLY)) {
-            try(PreparedStatement s2 = connection.prepareStatement("UPDATE wp4_table SET need_create = FALSE WHERE id = ?")) {
-                ResultSet rs = s1.executeQuery("SELECT uid, ownerId, datatype, ldName, createDate, global_id, id FROM ldata_table JOIN wp4_table ON uid=local_id WHERE need_create=TRUE");
+            try(PreparedStatement s2 = connection.prepareStatement("UPDATE wp4_table SET need_create = FALSE, global_id = ? WHERE id = ?")) {
+                ResultSet rs = s1.executeQuery("SELECT uid, ownerId, datatype, ldName, id FROM ldata_table JOIN wp4_table ON uid=local_id WHERE need_create=TRUE");
                 while (rs.next()) {
                     ResourceMetadata rm = new ResourceMetadata();
-                    rm.setLocal_id(rs.getInt(1));
+                    rm.setLocal_id(Long.valueOf(rs.getLong(1)));
                     rm.setAuthor(rs.getString(2));
                     rm.setType(rs.getString(3));
                     rm.setName(rs.getString(4));
-                    rm.setCreation_date(rs.getTimestamp(5));
-                    rm.setUpdated_date(rm.getCreation_date());
-                    rm.setGlobal_id(rs.getString(6));
                     rm.setViews(0);
+                    rm.setCategory("");
+                    rm.setDescription("");
+                    rm.setLicence("");
+                    rm.setRating("");
+                    rm.setSemantic_annotations("");
+                    rm.setTags("LOBCDER");
                     try {
-                        wp4Connector.create(rm);
-                        s2.setInt(1, rs.getInt(7));
+                        String res = wp4Connector.create(rm);
+                        s2.setString(1, res);
+                        s2.setLong(2, rs.getLong(5));
                         s2.executeUpdate();
                     } catch (Exception e) {
                         WP4Sweep.log.log(Level.SEVERE, null, e);
@@ -161,20 +203,16 @@ class WP4Sweep implements Runnable {
         try (Statement s1 = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY,
                 ResultSet.CONCUR_READ_ONLY)) {
             try(PreparedStatement s2 = connection.prepareStatement("UPDATE wp4_table SET need_update = FALSE WHERE id = ?")) {
-                ResultSet rs = s1.executeQuery("SELECT uid, ownerId, datatype, ldName, createDate, modifiedDate, global_id, views, id FROM ldata_table JOIN wp4_table ON uid=local_id WHERE need_update=TRUE");
+                ResultSet rs = s1.executeQuery("SELECT ownerId, ldName, global_id, views, id FROM ldata_table JOIN wp4_table ON uid=local_id WHERE need_update=TRUE");
                 while (rs.next()) {
                     ResourceMetadata rm = new ResourceMetadata();
-                    rm.setLocal_id(rs.getInt(1));
-                    rm.setAuthor(rs.getString(2));
-                    rm.setType(rs.getString(3));
-                    rm.setName(rs.getString(4));
-                    rm.setCreation_date(rs.getTimestamp(5));
-                    rm.setUpdated_date(rs.getTimestamp(6));
-                    rm.setGlobal_id(rs.getString(7));
-                    rm.setViews(rs.getInt(8));
+                    rm.setAuthor(rs.getString(1));
+                    rm.setName(rs.getString(2));
+                    rm.setGlobal_id(rs.getString(3));
+                    rm.setViews(rs.getInt(4));
                     try {
                         wp4Connector.update(rm);
-                        s2.setInt(1, rs.getInt(9));
+                        s2.setLong(1, rs.getLong(5));
                         s2.executeUpdate();
                     } catch (Exception e) {
                         WP4Sweep.log.log(Level.SEVERE, null, e);
@@ -187,7 +225,7 @@ class WP4Sweep implements Runnable {
     private void delete(Connection connection, WP4ConnectorI wp4Connector) throws SQLException {
         try (Statement s1 = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY,
                 ResultSet.CONCUR_UPDATABLE)) {
-            ResultSet rs = s1.executeQuery("SELECT global_id FROM wp4_table WHERE local_id IS NULL");
+            ResultSet rs = s1.executeQuery("SELECT global_id, id FROM wp4_table WHERE local_id IS NULL");
             while (rs.next()) {
                 try {
                     wp4Connector.delete(rs.getString(1));
@@ -204,10 +242,9 @@ class WP4Sweep implements Runnable {
     public void run() {
         try (Connection connection = datasource.getConnection()) {
             connection.setAutoCommit(true);
-            WP4ConnectorI wp4Connector = new WP4ConnectorDebug();
-            create(connection, wp4Connector);
-            update(connection, wp4Connector);
-            delete(connection, wp4Connector);
+            create(connection, connector);
+            update(connection, connector);
+            delete(connection, connector);
         } catch (SQLException e) {
             WP4Sweep.log.log(Level.SEVERE, null, e);
         }

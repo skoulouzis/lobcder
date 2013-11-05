@@ -1,4 +1,4 @@
-DROP TABLE IF EXISTS permission_table, ldata_table, wp4_table, pdri_table, pdrigroup_table, storage_site_table, credential_table, requests_table;
+DROP TABLE IF EXISTS permission_table, wp4_table, ldata_table, pdri_table, pdrigroup_table, storage_site_table, credential_table;
 
 CREATE TABLE pdrigroup_table (
   pdriGroupId SERIAL PRIMARY KEY,
@@ -80,12 +80,12 @@ CREATE TABLE permission_table (
 CREATE TABLE requests_table (
  uid SERIAL PRIMARY KEY,
  methodName VARCHAR(255), INDEX(methodName),
- requestURL VARCHAR(5240), INDEX(requestURL),
- remoteAddr VARCHAR(5240),
+ requestURL TEXT(5240),
+ remoteAddr TEXT(5240),
  contentLen BIGINT,
  contentType VARCHAR(5240),
  elapsedTime DOUBLE,
- userName VARCHAR(5240),
+ userName TEXT(5240),
  userAgent VARCHAR(1024),
  timeStamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
@@ -128,7 +128,7 @@ DROP TRIGGER IF EXISTS on_ldata_insert |
 CREATE TRIGGER on_ldata_insert
 AFTER INSERT ON ldata_table
 FOR EACH ROW BEGIN
-  INSERT INTO wp4_table (local_id, global_id) VALUES(NEW.uid, UUID());
+  INSERT INTO wp4_table (local_id) VALUES(NEW.uid);
 END|
 
 

@@ -5,21 +5,24 @@
 package nl.uva.cs.lobcder.webDav.resources;
 
 import io.milton.common.Path;
-import io.milton.http.Auth;
-import io.milton.http.LockInfo;
-import io.milton.http.LockTimeout;
-import io.milton.http.LockToken;
-import io.milton.http.Range;
-import io.milton.http.Request;
+import io.milton.http.*;
 import io.milton.http.exceptions.BadRequestException;
 import io.milton.http.exceptions.ConflictException;
 import io.milton.http.exceptions.NotAuthorizedException;
 import io.milton.http.exceptions.PreConditionFailedException;
-import io.milton.resource.CollectionResource;
-import io.milton.resource.DeletableCollectionResource;
-import io.milton.resource.FolderResource;
-import io.milton.resource.LockingCollectionResource;
-import io.milton.resource.Resource;
+import io.milton.resource.*;
+import lombok.extern.java.Log;
+import nl.uva.cs.lobcder.auth.AuthI;
+import nl.uva.cs.lobcder.auth.Permissions;
+import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
+import nl.uva.cs.lobcder.resources.LogicalData;
+import nl.uva.cs.lobcder.resources.PDRI;
+import nl.uva.cs.lobcder.resources.PDRIDescr;
+import nl.uva.cs.lobcder.util.Constants;
+import nl.uva.cs.lobcder.util.SpeedLogger;
+import org.rendersnake.HtmlCanvas;
+
+import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -32,20 +35,8 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.annotation.Nonnull;
-import lombok.extern.java.Log;
-import nl.uva.cs.lobcder.auth.AuthI;
-import nl.uva.cs.lobcder.auth.Permissions;
-import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
-import nl.uva.cs.lobcder.resources.LogicalData;
-import nl.uva.cs.lobcder.resources.PDRI;
-import nl.uva.cs.lobcder.resources.PDRIDescr;
-import nl.uva.cs.lobcder.util.Constants;
-import nl.uva.cs.lobcder.util.SpeedLogger;
-import org.rendersnake.HtmlCanvas;
-import static org.rendersnake.HtmlAttributesFactory.href;
-import static org.rendersnake.HtmlAttributesFactory.border;
-import static org.rendersnake.HtmlAttributesFactory.src;
+
+import static org.rendersnake.HtmlAttributesFactory.*;
 
 /**
  *
@@ -159,18 +150,28 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
     public List<? extends Resource> getChildren() throws NotAuthorizedException {
         WebDataDirResource.log.fine("getChildren() for " + getPath());
         try {
-            List<Resource> children = new ArrayList<>();
-            Collection<LogicalData> childrenLD = getCatalogue().getChildrenByParentRef(getLogicalData().getUid());
-            if (childrenLD != null) {
-                for (LogicalData childLD : childrenLD) {
-                    if (childLD.getType().equals(Constants.LOGICAL_FOLDER)) {
-                        children.add(new WebDataDirResource(childLD, Path.path(getPath(), childLD.getName()), getCatalogue(), authList));
-                    } else {
-                        children.add(new WebDataFileResource(childLD, Path.path(getPath(), childLD.getName()), getCatalogue(), authList));
+            try (Connection connection = getCatalogue().getConnection()) {
+                try {
+
+                    List<Resource> children = new ArrayList<>();
+                    Collection<LogicalData> childrenLD = getCatalogue().getChildrenByParentRef(getLogicalData().getUid(), connection);
+                    if (childrenLD != null) {
+                        for (LogicalData childLD : childrenLD) {
+                            if (childLD.getType().equals(Constants.LOGICAL_FOLDER)) {
+                                children.add(new WebDataDirResource(childLD, Path.path(getPath(), childLD.getName()), getCatalogue(), authList));
+                            } else {
+                                children.add(new WebDataFileResource(childLD, Path.path(getPath(), childLD.getName()), getCatalogue(), authList));
+                            }
+                        }
                     }
+                    getCatalogue().addViewForRes(getLogicalData().getUid(), connection);
+                    connection.commit();
+                    return children;
+                } catch (Exception e) {
+                    connection.rollback();
+                    throw e;
                 }
             }
-            return children;
         } catch (Exception e) {
             WebDataDirResource.log.log(Level.SEVERE, null, e);
             return null;
@@ -303,22 +304,23 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
     @Override
     public void sendContent(OutputStream out, Range range, Map<String, String> params, String contentType) throws IOException, NotAuthorizedException, BadRequestException {
         WebDataDirResource.log.fine("sendContent(" + contentType + ") for " + getPath());
-        try (PrintStream ps = new PrintStream(out)) {
 
-            HtmlCanvas html = new HtmlCanvas();
-            html
-                    //                    .a(href("otherpage.html")).content("Other Page")
-                    .table(border("1"))
-                    .tr()
-                    .th().content("Name")
-                    .th().content("Size")
-                    .th().content("Modification Date")
-                    .th().content("Creation Date")
-                    .th().content("Owner")
-                    .th().content("Content Type")
-                    .th().content("Type")
-                    .th().content("Is Supervised")
-                    .th().content("Uid");
+        try (Connection connection = getCatalogue().getConnection()) {
+            try (PrintStream ps = new PrintStream(out)) {
+                HtmlCanvas html = new HtmlCanvas();
+                html
+                        //                    .a(href("otherpage.html")).content("Other Page")
+                        .table(border("1"))
+                        .tr()
+                        .th().content("Name")
+                        .th().content("Size")
+                        .th().content("Modification Date")
+                        .th().content("Creation Date")
+                        .th().content("Owner")
+                        .th().content("Content Type")
+                        .th().content("Type")
+                        .th().content("Is Supervised")
+                        .th().content("Uid");
 
 
 //            html.a(href("#top").class_("toplink")).content("top");
@@ -331,7 +333,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
 //                    + "</HEAD>\n"
 //                    + "<BODY BGCOLOR=\"#FFFFFF\" TEXT=\"#000000\">");
 //            ps.println("<dl>");
-            String ref;
+                String ref;
 //            Path first = getPath().getStripFirst();
 //            if(!first.equals(Path.path("/dav"))){
 //                ref= "../dav" + getPath();
@@ -345,12 +347,12 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
 //                    .img(src("").alt("../"))
 //                    ._a()
 //                    ._td();
-            for (LogicalData ld : getCatalogue().getChildrenByParentRef(getLogicalData().getUid())) {
-                if (ld.isFolder()) {
-                    ref = "../dav" + getPath() + "/" + ld.getName();
-                    if (ld.getUid() != 1) {
+                for (LogicalData ld : getCatalogue().getChildrenByParentRef(getLogicalData().getUid(), connection)) {
+                    if (ld.isFolder()) {
+                        ref = "../dav" + getPath() + "/" + ld.getName();
+                        if (ld.getUid() != 1) {
 //                        ps.println("<dt>\t<a href=\"../dav" + getPath() + "/" + ld.getName() + "\">" + ld.getName() + "</a><a>\t" + ld.getLength() + "</a></dt>");
-                    } else {
+                        } else {
 //                        html._tr()
 //                                .tr()
 //                                .td().content("/")
@@ -365,34 +367,34 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
 //                                ._td()
 //                                .td().content(String.valueOf(getChildren().size()))
 //                                .td().content(new Date(ld.getModifiedDate()).toString());
-                    }
-                } else {
-                    ref = "../dav" + getPath() + "/" + ld.getName();
+                        }
+                    } else {
+                        ref = "../dav" + getPath() + "/" + ld.getName();
 //                    ps.println("<dd>\t<a href=\"../dav" + getPath() + "/" + ld.getName() + "\">" + ld.getName() + "</a>\t" + ld.getLength() + "</a></dd>");
+                    }
+                    html._tr()
+                            .tr()
+                            .td()
+                                    //                        .a(href("../dav" + getPath() + "/" + ld.getName()))
+                            .a(href(ref))
+                            .img(src("").alt(ld.getName()))
+                            ._a()
+                            ._td()
+                            .td().content(String.valueOf(ld.getLength()))
+                            .td().content(new Date(ld.getModifiedDate()).toString())
+                            .td().content(new Date(ld.getCreateDate()).toString())
+                            .td().content(ld.getOwner())
+                            .td().content(ld.getContentTypesAsString())
+                            .td().content(ld.getType())
+                            .td().content(ld.getSupervised().toString())
+                            .td().content(ld.getUid().toString());
                 }
-                html._tr()
-                        .tr()
-                        .td()
-                        //                        .a(href("../dav" + getPath() + "/" + ld.getName()))
-                        .a(href(ref))
-                        .img(src("").alt(ld.getName()))
-                        ._a()
-                        ._td()
-                        .td().content(String.valueOf(ld.getLength()))
-                        .td().content(new Date(ld.getModifiedDate()).toString())
-                        .td().content(new Date(ld.getCreateDate()).toString())
-                        .td().content(ld.getOwner())
-                        .td().content(ld.getContentTypesAsString())
-                        .td().content(ld.getType())
-                        .td().content(ld.getSupervised().toString())
-                        .td().content(ld.getUid().toString());
-            }
 //            ps.println("</dl>");
 //            ps.println("</BODY>\n"
 //                    + "\n"
 //                    + "</HTML>");
-            html._tr()
-                    ._table();
+                html._tr()
+                        ._table();
 
 
 //            html.
@@ -400,12 +402,17 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
 //                    .input();
 
 
-            ps.println(html.toHtml());
-        } catch (SQLException e) {
+                ps.println(html.toHtml());
+                getCatalogue().addViewForRes(getLogicalData().getUid(), connection);
+                connection.commit();
+            } catch (Exception e) {
+                connection.rollback();
+                throw e;
+            }
+        } catch (Exception e) {
             WebDataDirResource.log.log(Level.SEVERE, null, e);
             throw new BadRequestException(this);
         }
-
     }
 
     @Override

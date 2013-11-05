@@ -13,6 +13,7 @@ import java.net.URISyntaxException;
 import java.sql.*;
 import java.sql.Date;
 import java.util.*;
+import java.util.logging.Level;
 import javax.annotation.Nonnull;
 import javax.naming.NamingException;
 import javax.servlet.http.HttpServletRequest;
@@ -55,7 +56,8 @@ public class JDBCatalogue extends MyDataSource {
         TimerTask gcTask = new TimerTask() {
             Runnable deleteSweep = new DeleteSweep(getDatasource());
             Runnable replicateSweep = new ReplicateSweep(getDatasource());
-            Runnable wp4Sweep = new WP4Sweep(getDatasource());
+            Runnable wp4Sweep = new WP4Sweep(getDatasource(),
+                    new WP4Sweep.WP4Connector("http://vphshare.atosresearch.eu/metadata-retrieval/rest/metadata"));
 
             @Override
             public void run() {
@@ -1530,4 +1532,28 @@ public class JDBCatalogue extends MyDataSource {
             putToLDataCache(cached, null);
         }
     }
+
+    public void addViewForRes(@Nonnull Long uid, @Nonnull Connection connection) throws SQLException {
+        try (PreparedStatement ps = connection.prepareStatement("UPDATE wp4_table SET views = views + 1, need_update = TRUE WHERE local_id = ?")) {
+            ps.setLong(1, uid);
+            ps.executeUpdate();
+        }
+    }
+
+    public void addViewForRes(@Nonnull Long uid) {
+        try{
+            try(Connection connection = getConnection()){
+                try{
+                    addViewForRes(uid, connection);
+                    connection.commit();
+                } catch (Exception e) {
+                    connection.rollback();
+                    throw e;
+                }
+            }
+        } catch (Exception e) {
+             log.log(Level.SEVERE, null, e);
+        }
+    }
+
 }

@@ -31,14 +31,9 @@ public class WebDataResourceFactory implements ResourceFactory {
     @Override
     public Resource getResource(String host, String strPath) {
 
-        //Gets the root path. If instead we called :'ldri = Path.path(strPath);' we get back '/lobcder-1.0-SNAPSHOT'
-        //Path ldri = Path.path(strPath).getStripFirst().getStripFirst();
-        //Path ldri;
-        //if (strPath.equals("/")) {
-        //    ldri = Path.root;
-        //} else {
-        //    ldri = Path.path(strPath);
-        //}
+        if(strPath.equals("/login.html"))
+            return null;
+
         Path ldri = Path.path(strPath);
         String first;
         do{
