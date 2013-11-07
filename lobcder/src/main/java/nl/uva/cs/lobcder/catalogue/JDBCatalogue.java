@@ -11,8 +11,8 @@ import java.math.BigInteger;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.*;
-import java.sql.Date;
 import java.util.*;
+import java.util.Map.Entry;
 import java.util.logging.Level;
 import javax.annotation.Nonnull;
 import javax.naming.NamingException;
@@ -23,7 +23,6 @@ import lombok.SneakyThrows;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.auth.MyPrincipal;
 import nl.uva.cs.lobcder.auth.Permissions;
-import nl.uva.cs.lobcder.frontend.MyFilter;
 import nl.uva.cs.lobcder.frontend.RequestWapper;
 import nl.uva.cs.lobcder.resources.Credential;
 import nl.uva.cs.lobcder.resources.LogicalData;
@@ -702,13 +701,7 @@ public class JDBCatalogue extends MyDataSource {
             ps.setLong(3, toMove.getUid());
             ps.executeUpdate();
         }
-        LogicalData cached = getFromLDataCache(toMove.getUid(), null);
-        if (cached != null) {
-            cached.setName(newName);
-            cached.setUid(toMove.getUid());
-            putToLDataCache(cached, null);
-        }
-
+        removeFromLDataCache(toMove, null);
     }
 
     @SneakyThrows(CloneNotSupportedException.class)
@@ -787,7 +780,7 @@ public class JDBCatalogue extends MyDataSource {
                 ps.executeUpdate();
             }
         }
-        logicalDataCache.remove(toRemove.getUid());
+        removeFromLDataCache(toRemove, null);
     }
 
     public boolean removeFolderContent(LogicalData toRemove, MyPrincipal principal, Connection connection) throws SQLException {
@@ -818,7 +811,7 @@ public class JDBCatalogue extends MyDataSource {
         } else {
             return false;
         }
-        logicalDataCache.remove(toRemove.getUid());
+        removeFromLDataCache(toRemove, null);
         return flag;
     }
 
@@ -1141,6 +1134,21 @@ public class JDBCatalogue extends MyDataSource {
             updateTrue.replace(updateTrue.lastIndexOf("OR"), updateTrue.length(), "");
             try (PreparedStatement ps = connection.prepareStatement(updateTrue.toString())) {
                 ps.executeUpdate();
+            }
+        }
+    }
+
+    private void removeFromLDataCache(LogicalData entry, String path) {
+        logicalDataCache.remove(entry.getUid());
+        if (path != null) {
+            logicalDataCacheByPath.remove(path);
+        } else {
+            Iterator<Entry<String, LogicalData>> iter = logicalDataCacheByPath.entrySet().iterator();
+            while (iter.hasNext()) {
+                Entry<String, LogicalData> value = iter.next();
+                if(value.getValue().getUid() == entry.getUid()){
+                    iter.remove();
+                }
             }
         }
     }
@@ -1541,9 +1549,9 @@ public class JDBCatalogue extends MyDataSource {
     }
 
     public void addViewForRes(@Nonnull Long uid) {
-        try{
-            try(Connection connection = getConnection()){
-                try{
+        try {
+            try (Connection connection = getConnection()) {
+                try {
                     addViewForRes(uid, connection);
                     connection.commit();
                 } catch (Exception e) {
@@ -1552,8 +1560,7 @@ public class JDBCatalogue extends MyDataSource {
                 }
             }
         } catch (Exception e) {
-             log.log(Level.SEVERE, null, e);
+            log.log(Level.SEVERE, null, e);
         }
     }
-
 }

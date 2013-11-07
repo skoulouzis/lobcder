@@ -11,18 +11,6 @@ import io.milton.http.exceptions.ConflictException;
 import io.milton.http.exceptions.NotAuthorizedException;
 import io.milton.http.exceptions.PreConditionFailedException;
 import io.milton.resource.*;
-import lombok.extern.java.Log;
-import nl.uva.cs.lobcder.auth.AuthI;
-import nl.uva.cs.lobcder.auth.Permissions;
-import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
-import nl.uva.cs.lobcder.resources.LogicalData;
-import nl.uva.cs.lobcder.resources.PDRI;
-import nl.uva.cs.lobcder.resources.PDRIDescr;
-import nl.uva.cs.lobcder.util.Constants;
-import nl.uva.cs.lobcder.util.SpeedLogger;
-import org.rendersnake.HtmlCanvas;
-
-import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -35,8 +23,18 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
+import javax.annotation.Nonnull;
+import lombok.extern.java.Log;
+import nl.uva.cs.lobcder.auth.AuthI;
+import nl.uva.cs.lobcder.auth.Permissions;
+import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
+import nl.uva.cs.lobcder.resources.LogicalData;
+import nl.uva.cs.lobcder.resources.PDRI;
+import nl.uva.cs.lobcder.resources.PDRIDescr;
+import nl.uva.cs.lobcder.util.Constants;
+import nl.uva.cs.lobcder.util.SpeedLogger;
 import static org.rendersnake.HtmlAttributesFactory.*;
+import org.rendersnake.HtmlCanvas;
 
 /**
  *
@@ -49,7 +47,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
 
     public WebDataDirResource(@Nonnull LogicalData logicalData, Path path, @Nonnull JDBCatalogue catalogue, @Nonnull List<AuthI> authList) {
         super(logicalData, path, catalogue, authList);
-        WebDataDirResource.log.fine("Init. WebDataDirResource:  " + getPath());
+        WebDataDirResource.log.log(Level.FINE, "Init. WebDataDirResource:  {0}", getPath());
     }
 
     @Override
@@ -121,7 +119,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
 
     @Override
     public Resource child(String childName) throws NotAuthorizedException {
-        WebDataDirResource.log.fine("child(" + childName + ") for " + getPath());
+        WebDataDirResource.log.log(Level.FINE, "child({0}) for {1}", new Object[]{childName, getPath()});
         try (Connection connection = getCatalogue().getConnection()) {
             try {
                 LogicalData childLD = getCatalogue().getLogicalDataByParentRefAndName(getLogicalData().getUid(), childName, connection);
@@ -148,7 +146,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
 
     @Override
     public List<? extends Resource> getChildren() throws NotAuthorizedException {
-        WebDataDirResource.log.fine("getChildren() for " + getPath());
+        WebDataDirResource.log.log(Level.FINE, "getChildren() for {0}", getPath());
         try {
             try (Connection connection = getCatalogue().getConnection()) {
                 try {
@@ -260,7 +258,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
     @Override
     public void copyTo(CollectionResource toCollection, String name) throws NotAuthorizedException, BadRequestException, ConflictException {
         WebDataDirResource toWDDR = (WebDataDirResource) toCollection;
-        WebDataDirResource.log.fine("copyTo(" + toWDDR.getPath() + ", '" + name + "') for " + getPath());
+        WebDataDirResource.log.log(Level.FINE, "copyTo({0}, ''{1}'') for {2}", new Object[]{toWDDR.getPath(), name, getPath()});
         try (Connection connection = getCatalogue().getConnection()) {
             try {
                 Permissions newParentPerm = getCatalogue().getPermissions(toWDDR.getLogicalData().getUid(), toWDDR.getLogicalData().getOwner(), connection);
@@ -303,7 +301,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
 
     @Override
     public void sendContent(OutputStream out, Range range, Map<String, String> params, String contentType) throws IOException, NotAuthorizedException, BadRequestException {
-        WebDataDirResource.log.fine("sendContent(" + contentType + ") for " + getPath());
+        WebDataDirResource.log.log(Level.FINE, "sendContent({0}) for {1}", new Object[]{contentType, getPath()});
 
         try (Connection connection = getCatalogue().getConnection()) {
             try (PrintStream ps = new PrintStream(out)) {
@@ -417,26 +415,26 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
 
     @Override
     public Long getMaxAgeSeconds(Auth auth) {
-        WebDataDirResource.log.fine("getMaxAgeSeconds() for " + getPath());
+        WebDataDirResource.log.log(Level.FINE, "getMaxAgeSeconds() for {0}", getPath());
         return null;
     }
 
     @Override
     public String getContentType(String accepts) {
-        WebDataDirResource.log.fine("getContentType(" + accepts + ") for " + getPath());
+        WebDataDirResource.log.log(Level.FINE, "getContentType({0}) for {1}", new Object[]{accepts, getPath()});
         return "text/html";
     }
 
     @Override
     public Long getContentLength() {
-        WebDataDirResource.log.fine("getContentLength() for " + getPath());
+        WebDataDirResource.log.log(Level.FINE, "getContentLength() for {0}", getPath());
         return null;
     }
 
     @Override
     public void moveTo(CollectionResource toCollection, String name) throws ConflictException, NotAuthorizedException, BadRequestException {
         WebDataDirResource toWDDR = (WebDataDirResource) toCollection;
-        WebDataDirResource.log.fine("moveTo(" + toWDDR.getPath() + ", '" + name + "') for " + getPath());
+        WebDataDirResource.log.log(Level.FINE, "moveTo({0}, ''{1}'') for {2}", new Object[]{toWDDR.getPath(), name, getPath()});
         try (Connection connection = getCatalogue().getConnection()) {
             try {
                 Permissions newParentPerm = getCatalogue().getPermissions(toWDDR.getLogicalData().getUid(), toWDDR.getLogicalData().getOwner(), connection);
