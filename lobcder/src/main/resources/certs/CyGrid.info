@@ -1,0 +1,12 @@
+#
+# @(#)$Id: afe55e66.info,v 1.4 2008/07/11 07:35:56 pmacvsdg Exp $
+# Information for CA CyGrid
+#   obtained from afe55e66 in CyGrid/
+alias = CyGrid
+ca_url = http://cygrid.org.cy/CyGridCA/afe55e66.0
+crl_url = http://cygrid.org.cy/CyGridCA/afe55e66.r0
+email = cygrid-ca@ucy.ac.cy
+url = http://cygrid.org.cy/CyGridCA/
+status = accredited:classic
+version = 1.53
+sha1fp.0 = 8E:29:7B:4C:19:C2:D2:1B:E1:85:6B:F9:DF:F8:66:62:B8:CF:AE:A8

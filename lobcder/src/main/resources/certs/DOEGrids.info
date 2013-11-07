@@ -1,0 +1,12 @@
+#
+# @(#)$Id: 1c3f2ca8.info,v 1.8 2011/10/31 22:38:41 pmacvsmh Exp $
+# Information for CA DOEGrids
+#   obtained from 1c3f2ca8 in DOEGrids/
+alias = DOEGrids
+url = http://www.doegrids.org/
+crl_url = http://crl.doegrids.org/1c3f2ca8/1c3f2ca8.r0;http://commondatastorage.googleapis.com/1c3f2ca8/1c3f2ca8.crl
+email = trouble@es.net
+requires = ESnet
+status = accredited:classic
+version = 1.53
+sha1fp.0 = 79:8C:B3:38:42:EE:EB:EA:52:0C:2E:0E:8E:74:93:0B:34:1C:9B:C1
