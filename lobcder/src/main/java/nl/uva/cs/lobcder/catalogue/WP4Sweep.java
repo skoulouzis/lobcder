@@ -228,7 +228,9 @@ class WP4Sweep implements Runnable {
             ResultSet rs = s1.executeQuery("SELECT global_id, id FROM wp4_table WHERE local_id IS NULL");
             while (rs.next()) {
                 try {
-                    wp4Connector.delete(rs.getString(1));
+                    String global_id = rs.getString(1);
+                    if(global_id != null)
+                        wp4Connector.delete(rs.getString(1));
                     rs.deleteRow();
                 } catch (Exception e) {
                     WP4Sweep.log.log(Level.SEVERE, null, e);
