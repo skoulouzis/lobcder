@@ -345,6 +345,7 @@ public class TestWebWAVFS {
         String testFileURI1 = uri.toASCIIString() + TestSettings.TEST_FILE_NAME1 + ".txt";
         DeleteMethod del = new DeleteMethod(testFileURI1);
         int status = client1.executeMethod(del);
+        assertTrue(status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT ||  status == HttpStatus.SC_NOT_FOUND);
 
         try {
             //PROPFIND file is not there 
