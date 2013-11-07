@@ -6,17 +6,33 @@ package nl.uva.cs.lobcder.webDav.resources;
 
 import io.milton.common.Path;
 import io.milton.http.Auth;
+import io.milton.http.LockInfo;
+import io.milton.http.LockResult;
+import io.milton.http.LockTimeout;
+import io.milton.http.LockToken;
 import io.milton.http.Request;
 import io.milton.http.Response;
+import io.milton.http.exceptions.BadRequestException;
+import io.milton.http.exceptions.LockedException;
 import io.milton.http.exceptions.NotAuthorizedException;
+import io.milton.http.exceptions.PreConditionFailedException;
 import io.milton.http.values.HrefList;
 import io.milton.principal.DavPrincipals;
 import io.milton.principal.Principal;
 import io.milton.property.PropertySource;
 import io.milton.resource.AccessControlledResource;
+import io.milton.resource.LockableResource;
 import io.milton.resource.MultiNamespaceCustomPropertyResource;
 import io.milton.resource.PropFindableResource;
 import io.milton.resource.Resource;
+import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.*;
+import java.util.logging.Level;
+import javax.annotation.Nonnull;
+import javax.xml.namespace.QName;
 import lombok.Getter;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.auth.AuthI;
@@ -27,20 +43,12 @@ import nl.uva.cs.lobcder.resources.*;
 import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.cs.lobcder.util.DesEncrypter;
 
-import javax.annotation.Nonnull;
-import javax.xml.namespace.QName;
-import java.io.IOException;
-import java.security.NoSuchAlgorithmException;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.*;
-import java.util.logging.Level;
-
 /**
  * @author S. Koulouzis
  */
 @Log
-public class WebDataResource implements PropFindableResource, Resource, AccessControlledResource, MultiNamespaceCustomPropertyResource {
+public class WebDataResource implements PropFindableResource, Resource,
+        AccessControlledResource, MultiNamespaceCustomPropertyResource, LockableResource {
 
     @Getter
     private final LogicalData logicalData;
@@ -48,14 +56,14 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
     private final JDBCatalogue catalogue;
     @Getter
     private final Path path;
-    protected final AuthI auth1;
-    protected final AuthI auth2;
+    protected final List<AuthI> authList;
+//    protected final AuthI auth2;
     private static final ThreadLocal<MyPrincipal> principalHolder = new ThreadLocal<>();
     protected String fromAddress;
 
-    public WebDataResource(@Nonnull LogicalData logicalData, Path path, @Nonnull JDBCatalogue catalogue, @Nonnull AuthI auth1, AuthI auth2) {
-        this.auth1 = auth1;
-        this.auth2 = auth2;
+    public WebDataResource(@Nonnull LogicalData logicalData, Path path, @Nonnull JDBCatalogue catalogue, @Nonnull List<AuthI> authList) {
+        this.authList = authList;
+//        this.auth2 = auth2;
         this.logicalData = logicalData;
         this.catalogue = catalogue;
         this.path = path;
@@ -80,19 +88,27 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
     public Object authenticate(String user, String password) {
         String token = password;
         MyPrincipal principal = null;
-        if (auth2 != null) {
-            principal = auth2.checkToken(token);
+
+        for (AuthI a : authList) {
+            principal = a.checkToken(token);
+            if (principal != null) {
+                break;
+            }
         }
-        if (principal == null) {
-            principal = auth1.checkToken(token);
-        }
+
+//        if (auth2 != null) {
+//            principal = auth2.checkToken(token);
+//        }
+//        if (principal == null) {
+//            principal = auth1.checkToken(token);
+//        }
         if (principal != null) {
             principalHolder.set(principal);
             WebDataResource.log.log(Level.FINE, "getUserId: {0}", principal.getUserId());
             WebDataResource.log.log(Level.FINE, "getRolesStr: {0}", principal.getRolesStr());
+            String msg = "From: " + fromAddress + " user: " + principal.getUserId() + " password: " + password;
+            WebDataResource.log.log(Level.INFO, msg);
         }
-        String msg = "From: " + fromAddress + " user: " + principal.getUserId() + " password: " + password;
-        WebDataResource.log.log(Level.INFO, msg);
         return principal;
     }
 
@@ -106,13 +122,14 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
 
     @Override
     public boolean authorise(Request request, Request.Method method, Auth auth) {
-        fromAddress = request.getFromAddress();
-        String msg = "From: " + fromAddress + " User: " + getPrincipal().getUserId() + " Method: " + method;
-        WebDataResource.log.log(Level.INFO, msg);
+
         try {
             if (auth == null) {
                 return false;
             }
+            fromAddress = request.getFromAddress();
+            String msg = "From: " + fromAddress + " User: " + getPrincipal().getUserId() + " Method: " + method;
+            WebDataResource.log.log(Level.INFO, msg);
             LogicalData parentLD;
             Permissions p;
             switch (method) {
@@ -174,18 +191,6 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
         return new Date(getLogicalData().getModifiedDate());
     }
 
-    @Override
-    public String checkRedirect(Request request) {
-        WebDataResource.log.fine("checkRedirect.");
-        switch (request.getMethod()) {
-            case GET:
-                //Replica selection algorithm
-                return null;
-            default:
-                return null;
-        }
-    }
-
     String getUserlUrlPrefix() {
         return "http://lobcder.net/user/";
     }
@@ -197,7 +202,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
     @Override
     public String getPrincipalURL() {
         String principalURL = getUserlUrlPrefix() + getPrincipal().getUserId();
-        WebDataResource.log.fine("getPrincipalURL for " + getPath() + ": " + principalURL);
+        WebDataResource.log.log(Level.FINE, "getPrincipalURL for {0}: {1}", new Object[]{getPath(), principalURL});
         return principalURL;
     }
 
@@ -243,13 +248,12 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
 
     @Override
     public Map<Principal, List<Priviledge>> getAccessControlList() {
-        WebDataResource.log.fine("getAccessControlList for " + getPath());
+        WebDataResource.log.log(Level.FINE, "getAccessControlList for {0}", getPath());
         Permissions resourcePermission;
         HashMap<Principal, List<Priviledge>> acl = new HashMap<>();
         try {
             // Do the mapping
             Principal p = new DavPrincipals.AbstractDavPrincipal(getPrincipalURL()) {
-
                 @Override
                 public boolean matches(Auth auth, Resource current) {
                     return true;
@@ -277,7 +281,6 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
             for (String r : resourcePermission.getRead()) {
                 perm = new ArrayList<>();
                 p = new DavPrincipals.AbstractDavPrincipal(getRoleUrlPrefix() + r) {
-
                     @Override
                     public boolean matches(Auth auth, Resource current) {
                         return true;
@@ -293,7 +296,6 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
             for (String r : resourcePermission.getWrite()) {
                 perm = new ArrayList<>();
                 p = new DavPrincipals.AbstractDavPrincipal(getRoleUrlPrefix() + r) {
-
                     @Override
                     public boolean matches(Auth auth, Resource current) {
                         return true;
@@ -316,7 +318,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
 
     @Override
     public void setAccessControlList(Map<Principal, List<Priviledge>> map) {
-        WebDataResource.log.fine("PLACEHOLDER setAccessControlList() for " + getPath());
+        WebDataResource.log.log(Level.FINE, "PLACEHOLDER setAccessControlList() for {0}", getPath());
 
         for (Map.Entry<Principal, List<Priviledge>> me : map.entrySet()) {
             Principal principal = me.getKey();
@@ -336,11 +338,12 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
     }
 
     protected PDRI createPDRI(long fileLength, String fileName, Connection connection) throws SQLException, NoSuchAlgorithmException, IOException {
-        Collection<MyStorageSite> cacheSS = getCatalogue().getCacheStorageSites(connection);
+//        Collection<StorageSite> cacheSS = getCatalogue().getCacheStorageSites(connection);
+        Collection<StorageSite> cacheSS = getCatalogue().getStorageSites(connection, Boolean.TRUE);
         if (cacheSS == null || cacheSS.isEmpty()) {
             return new CachePDRI(UUID.randomUUID().toString() + "-" + fileName);
         } else {
-            MyStorageSite ss = cacheSS.iterator().next();
+            StorageSite ss = cacheSS.iterator().next();
             PDRIDescr pdriDescr = new PDRIDescr(
                     UUID.randomUUID().toString() + "-" + fileName,
                     ss.getStorageSiteId(),
@@ -354,6 +357,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
     @Override
     public Object getProperty(QName qname) {
         try {
+            log.log(Level.FINE, "qname: {0}", qname);
             if (qname.equals(Constants.DATA_DIST_PROP_NAME)) {
                 try (Connection connection = getCatalogue().getConnection()) {
                     try {
@@ -396,6 +400,8 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
                 return String.valueOf(getLogicalData().getChecksum());
             } else if (qname.equals(Constants.DRI_LAST_VALIDATION_DATE_PROP_NAME)) {
                 return String.valueOf(getLogicalData().getLastValidationDate());
+            } else if (qname.equals(Constants.DRI_STATUS_PROP_NANE)) {
+                return getLogicalData().getStatus();
             } else if (qname.equals(Constants.DAV_CURRENT_USER_PRIVILAGE_SET_PROP_NAME)) {
                 //List<Priviledge> list = getPriviledges(null);
                 return "";
@@ -447,10 +453,10 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
             } else if (qname.equals(Constants.AVAIL_STORAGE_SITES_PROP_NAME)) {
                 try (Connection connection = getCatalogue().getConnection()) {
                     connection.commit();
-                    Collection<MyStorageSite> ss = getCatalogue().getStorageSites(connection);
+                    Collection<StorageSite> ss = getCatalogue().getStorageSites(connection, Boolean.FALSE);
                     StringBuilder sb = new StringBuilder();
                     sb.append("[");
-                    for (MyStorageSite s : ss) {
+                    for (StorageSite s : ss) {
                         sb.append(s.getResourceURI()).append(",");
                     }
                     sb.replace(sb.lastIndexOf(","), sb.length(), "");
@@ -484,6 +490,9 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
                         Long v = Long.valueOf(value);
                         getLogicalData().setLastValidationDate(v);
                         catalogue.setLastValidationDate(getLogicalData().getUid(), v, connection);
+                    } else if (qname.equals(Constants.DRI_STATUS_PROP_NANE)) {
+                        getLogicalData().setStatus(value);
+                        catalogue.setDriStatus(getLogicalData().getUid(), value, connection);
                     } else if (qname.equals(Constants.DESCRIPTION_PROP_NAME)) {
                         String v = value;
                         getLogicalData().setDescription(v);
@@ -525,7 +534,7 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
 //                            if (hostEncryptMap.containsKey(host)) {
 //                                p.setEncrypt(hostEncryptMap.get(host));
 //                                pdrisToUpdate.add(p);
-//                            }
+//                            }}
 //                        }
 //                        if (!hostEncryptMap.isEmpty()) {
 //                            getCatalogue().updateStorageSites(hostEncryptMap, connection);
@@ -562,5 +571,126 @@ public class WebDataResource implements PropFindableResource, Resource, AccessCo
     @Override
     public List<QName> getAllPropertyNames() {
         return Arrays.asList(Constants.PROP_NAMES);
+    }
+
+    @Override
+    public LockResult lock(LockTimeout timeout, LockInfo lockInfo) throws NotAuthorizedException, PreConditionFailedException, LockedException {
+        if (getCurrentLock() != null) {
+            throw new LockedException(this);
+        }
+
+        LockToken lockToken = new LockToken(UUID.randomUUID().toString(), lockInfo, timeout);
+        Long lockTimeout;
+        try (Connection connection = getCatalogue().getConnection()) {
+            try {
+                getLogicalData().setLockTokenID(lockToken.tokenId);
+
+                getCatalogue().setLockTokenID(getLogicalData().getUid(), getLogicalData().getLockTokenID(), connection);
+                getLogicalData().setLockScope(lockToken.info.scope.toString());
+                getCatalogue().setLockScope(getLogicalData().getUid(), getLogicalData().getLockScope(), connection);
+                getLogicalData().setLockType(lockToken.info.type.toString());
+                getCatalogue().setLockType(getLogicalData().getUid(), getLogicalData().getLockType(), connection);
+                getLogicalData().setLockedByUser(lockToken.info.lockedByUser);
+                getCatalogue().setLockByUser(getLogicalData().getUid(), getLogicalData().getLockedByUser(), connection);
+                getLogicalData().setLockDepth(lockToken.info.depth.toString());
+                getCatalogue().setLockDepth(getLogicalData().getUid(), getLogicalData().getLockDepth(), connection);
+                lockTimeout = lockToken.timeout.getSeconds();
+                if (lockTimeout == null) {
+                    lockTimeout = Long.valueOf(12000);
+                }
+                getLogicalData().setLockTimeout(lockTimeout);
+
+                getCatalogue().setLockTimeout(getLogicalData().getUid(), lockTimeout, connection);
+                connection.commit();
+                return LockResult.success(lockToken);
+            } catch (Exception ex) {
+                log.log(Level.SEVERE, null, ex);
+                connection.rollback();
+                throw new PreConditionFailedException(this);
+            }
+        } catch (SQLException e) {
+            log.log(Level.SEVERE, null, e);
+            throw new PreConditionFailedException(this);
+        }
+
+    }
+
+    @Override
+    public LockResult refreshLock(String token) throws NotAuthorizedException, PreConditionFailedException {
+        try (Connection connection = getCatalogue().getConnection()) {
+            try {
+                if (getLogicalData().getLockTokenID() == null) {
+                    throw new RuntimeException("not locked");
+                } else {
+                    if (!getLogicalData().getLockTokenID().equals(token)) {
+                        throw new RuntimeException("invalid lock id");
+                    }
+                }
+                getLogicalData().setLockTimeout(System.currentTimeMillis() + Constants.LOCK_TIME);
+                getCatalogue().setLockTimeout(getLogicalData().getUid(), getLogicalData().getLockTimeout(), connection);
+                LockInfo lockInfo = new LockInfo(LockInfo.LockScope.valueOf(getLogicalData().getLockScope()),
+                        LockInfo.LockType.valueOf(getLogicalData().getLockType()), getLogicalData().getLockedByUser(),
+                        LockInfo.LockDepth.valueOf(getLogicalData().getLockDepth()));
+                LockTimeout lockTimeOut = new LockTimeout(getLogicalData().getLockTimeout());
+                LockToken lockToken = new LockToken(token, lockInfo, lockTimeOut);
+                connection.commit();
+                return LockResult.success(lockToken);
+            } catch (Exception ex) {
+                log.log(Level.SEVERE, null, ex);
+                connection.rollback();
+                throw new PreConditionFailedException(this);
+            }
+        } catch (SQLException e) {
+            log.log(Level.SEVERE, null, e);
+            throw new PreConditionFailedException(this);
+        }
+    }
+
+    @Override
+    public void unlock(String token) throws NotAuthorizedException, PreConditionFailedException {
+        try (Connection connection = getCatalogue().getConnection()) {
+            try {
+                if (getLogicalData().getLockTokenID() == null) {
+                    return;
+                } else {
+                    if (!getLogicalData().getLockTokenID().equals(token)) {
+                        throw new PreConditionFailedException(this);
+                    }
+                }
+                getCatalogue().setLockTokenID(getLogicalData().getUid(), null, connection);
+                connection.commit();
+                getLogicalData().setLockTokenID(null);
+                getLogicalData().setLockScope(null);
+                getLogicalData().setLockType(null);
+                getLogicalData().setLockedByUser(null);
+                getLogicalData().setLockDepth(null);
+                getLogicalData().setLockTimeout(null);
+            } catch (Exception ex) {
+                log.log(Level.SEVERE, null, ex);
+                connection.rollback();
+                throw new PreConditionFailedException(this);
+            }
+        } catch (SQLException e) {
+            log.log(Level.SEVERE, null, e);
+            throw new PreConditionFailedException(this);
+        }
+    }
+
+    @Override
+    public LockToken getCurrentLock() {
+        if (getLogicalData().getLockTokenID() == null) {
+            return null;
+        } else {
+            LockInfo lockInfo = new LockInfo(LockInfo.LockScope.valueOf(getLogicalData().getLockScope()),
+                    LockInfo.LockType.valueOf(getLogicalData().getLockType()),
+                    getLogicalData().getLockedByUser(), LockInfo.LockDepth.valueOf(getLogicalData().getLockDepth()));
+            LockTimeout lockTimeOut = new LockTimeout(getLogicalData().getLockTimeout());
+            return new LockToken(getLogicalData().getLockTokenID(), lockInfo, lockTimeOut);
+        }
+    }
+
+    @Override
+    public String checkRedirect(Request rqst) throws NotAuthorizedException, BadRequestException {
+        return null;
     }
 }

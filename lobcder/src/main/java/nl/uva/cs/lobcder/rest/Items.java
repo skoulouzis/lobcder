@@ -4,15 +4,20 @@
  */
 package nl.uva.cs.lobcder.rest;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.extern.java.Log;
-import nl.uva.cs.lobcder.auth.MyPrincipal;
-import nl.uva.cs.lobcder.auth.Permissions;
-import nl.uva.cs.lobcder.resources.LogicalData;
-import nl.uva.cs.lobcder.util.CatalogueHelper;
-import nl.uva.cs.lobcder.util.Constants;
-
+import nl.uva.cs.lobcder.rest.wrappers.LogicalDataWrapped;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.math.BigInteger;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.logging.Level;
 import javax.annotation.Nonnull;
 import javax.naming.NamingException;
 import javax.servlet.http.HttpServletRequest;
@@ -22,13 +27,17 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.*;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.logging.Level;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.extern.java.Log;
+import nl.uva.cs.lobcder.auth.MyPrincipal;
+import nl.uva.cs.lobcder.auth.Permissions;
+import nl.uva.cs.lobcder.resources.LogicalData;
+import nl.uva.cs.lobcder.resources.PDRIDescr;
+import nl.uva.cs.lobcder.util.CatalogueHelper;
+import nl.uva.cs.lobcder.util.Constants;
+import nl.uva.cs.lobcder.util.GridHelper;
+import nl.uva.vlet.exception.VlException;
 
 /**
  * @author dvasunin
@@ -47,7 +56,7 @@ public class Items extends CatalogueHelper {
     public Items() throws NamingException {
     }
 
-    private void queryLogicalData(Long parentUid, List<LogicalDataWrapped> ldwl, PreparedStatement ps1, PreparedStatement ps2, String path, MyPrincipal mp, Connection cn) throws SQLException {
+    private void queryLogicalData(Long parentUid, List<LogicalDataWrapped> ldwl, PreparedStatement ps1, PreparedStatement ps2, String path, MyPrincipal mp, Connection cn) throws SQLException, FileNotFoundException, VlException, URISyntaxException, IOException, MalformedURLException, Exception {
         ps1.setLong(1, parentUid);
         try (ResultSet resultSet = ps1.executeQuery()) {
             while (resultSet.next()) {
@@ -79,6 +88,7 @@ public class Items extends CatalogueHelper {
                     logicalData.setLockTimeout(resultSet.getLong(19));
                     logicalData.setDescription(resultSet.getString(20));
                     logicalData.setDataLocationPreference(resultSet.getString(21));
+                    logicalData.setStatus(resultSet.getString(22));
                     LogicalDataWrapped ldw = new LogicalDataWrapped();
                     ldw.setLogicalData(logicalData);
                     ldw.setPermissions(p);
@@ -86,7 +96,18 @@ public class Items extends CatalogueHelper {
                     ldw.setPath(mypath);
                     ldwl.add(ldw);
                     if (!logicalData.isFolder() && mp.isAdmin()) {
-                        ldw.setPdriList(getCatalogue().getPdriDescrByGroupId(logicalData.getPdriGroupId(), cn));
+                        List<PDRIDescr> pdriDescr = getCatalogue().getPdriDescrByGroupId(logicalData.getPdriGroupId(), cn);
+                        for (PDRIDescr pdri : pdriDescr) {
+                            if (pdri.getResourceUrl().startsWith("lfc")
+                                    || pdri.getResourceUrl().startsWith("srm")
+                                    || pdri.getResourceUrl().startsWith("gftp")) {
+                                pdriDescr.remove(pdri);
+                                GridHelper.initGridProxy(pdri.getUsername(), pdri.getPassword(), null, false);
+                                pdri.setPassword(GridHelper.getProxyAsBase64String());
+                                pdriDescr.add(pdri);
+                            }
+                        }
+                        ldw.setPdriList(pdriDescr);
                     }
                 }
             }
@@ -115,7 +136,7 @@ public class Items extends CatalogueHelper {
         }
     }
 
-    private List<LogicalDataWrapped> queryLogicalData(@Nonnull MyPrincipal mp, @Nonnull Connection cn) throws SQLException {
+    private List<LogicalDataWrapped> queryLogicalData(@Nonnull MyPrincipal mp, @Nonnull Connection cn) throws SQLException, FileNotFoundException, VlException, URISyntaxException, IOException, MalformedURLException, Exception {
         MultivaluedMap<String, String> queryParameters = info.getQueryParameters();
         boolean addFlag = true;
         String rootPath = (queryParameters.containsKey("path") && queryParameters.get("path").iterator().hasNext())
@@ -125,13 +146,17 @@ public class Items extends CatalogueHelper {
         }
         LogicalData ld = getCatalogue().getLogicalDataByPath(io.milton.common.Path.path(rootPath), cn);
         List<LogicalDataWrapped> logicalDataWrappedList = new ArrayList<>();
+        if (ld == null) {
+            return logicalDataWrappedList;
+        }
+
         Permissions p = getCatalogue().getPermissions(ld.getUid(), ld.getOwner(), cn);
         if (mp.canRead(p)) {
             try (PreparedStatement ps1 = cn.prepareStatement("SELECT uid, parentRef, "
                             + "ownerId, datatype, ldName, createDate, modifiedDate, ldLength, "
                             + "contentTypesStr, pdriGroupRef, isSupervised, checksum, lastValidationDate, "
                             + "lockTokenID, lockScope, lockType, lockedByUser, lockDepth, lockTimeout, "
-                            + "description, locationPreference "
+                            + "description, locationPreference, status "
                             + "FROM ldata_table WHERE (parentRef = ?) "
                             + "AND (? OR (isSupervised = ?)) "
                             + "AND (? OR (createDate BETWEEN FROM_UNIXTIME(?) AND FROM_UNIXTIME(?))) "
@@ -253,7 +278,18 @@ public class Items extends CatalogueHelper {
                         ldw.setPath(rootPath);
                         ldw.setPermissions(p);
                         if (mp.isAdmin()) {
-                            ldw.setPdriList(getCatalogue().getPdriDescrByGroupId(ld.getPdriGroupId(), cn));
+                            List<PDRIDescr> pdriDescr = getCatalogue().getPdriDescrByGroupId(ld.getPdriGroupId(), cn);
+                            for (PDRIDescr pdri : pdriDescr) {
+                                if (pdri.getResourceUrl().startsWith("lfc")
+                                        || pdri.getResourceUrl().startsWith("srm")
+                                        || pdri.getResourceUrl().startsWith("gftp")) {
+                                    pdriDescr.remove(pdri);
+                                    GridHelper.initGridProxy(pdri.getUsername(), pdri.getPassword(), null, false);
+                                    pdri.setPassword(GridHelper.getProxyAsBase64String());
+                                    pdriDescr.add(pdri);
+                                }
+                            }
+                            ldw.setPdriList(pdriDescr);
                         }
                         logicalDataWrappedList.add(ldw);
                     }
@@ -267,12 +303,12 @@ public class Items extends CatalogueHelper {
     @Path("query/")
     @GET
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public List<LogicalDataWrapped> getXml() {
+    public List<LogicalDataWrapped> getXml() throws FileNotFoundException, VlException, URISyntaxException, IOException, MalformedURLException, Exception {
         try (Connection cn = getCatalogue().getConnection()) {
             MyPrincipal mp = (MyPrincipal) request.getAttribute("myprincipal");
             List<LogicalDataWrapped> res = queryLogicalData(mp, cn);
             return res;
-        } catch (Exception ex) {
+        } catch (SQLException ex) {
             log.log(Level.SEVERE, null, ex);
             throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
         }

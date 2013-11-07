@@ -10,6 +10,7 @@
  ALTER TABLE ldata_table ADD lockDepth VARCHAR(255);
  ALTER TABLE ldata_table ADD lockTimeout BIGINT NOT NULL DEFAULT 0;
  ALTER TABLE ldata_table ADD description VARCHAR(255);
+ ALTER TABLE ldata_table ADD status enum('unavailable', 'corrupted', 'OK');
 
 
 # Here we createtables for built-in user IDs/roles

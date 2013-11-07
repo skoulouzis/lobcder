@@ -11,6 +11,8 @@
         <res-type>javax.sql.DataSource</res-type>
         <res-auth>Container</res-auth>
     </resource-ref>
+    
+    
     <servlet>
         <servlet-name>Jersey REST Service</servlet-name>
         <servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class>
@@ -35,7 +37,7 @@
 
         <!-- This param shows how to exclude certain paths from the MiltonFilter -->
         <!-- These paths will "fall through" the filter and be handled as normal servlet resources -->
-<!--        <init-param>
+        <!--        <init-param>
             <param-name>milton.exclude.paths</param-name>
             <param-value>/,/rest/</param-value>
         </init-param>-->
@@ -55,5 +57,5 @@
     <filter-mapping>
         <filter-name>BasicAuthFilter</filter-name>
         <servlet-name>Jersey REST Service</servlet-name>
-    </filter-mapping>
+    </filter-mapping>    
 </web-app>

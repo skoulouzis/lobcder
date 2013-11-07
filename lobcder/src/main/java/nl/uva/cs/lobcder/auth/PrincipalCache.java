@@ -14,7 +14,7 @@ import java.util.Map;
  */
 public class PrincipalCache implements PrincipalCacheI {
 
-    private class TimedPrincipal {
+    private static class TimedPrincipal {
 
         public final Date date;
         public final MyPrincipal principal;
@@ -24,7 +24,7 @@ public class PrincipalCache implements PrincipalCacheI {
             this.principal = principal;
         }
     }
-    private Map<String, TimedPrincipal> cache = new HashMap<String, TimedPrincipal>();
+    private Map<String, TimedPrincipal> cache = new HashMap<>();
     private long timeout; // msec
     public final static PrincipalCache pcache = new PrincipalCache();
 

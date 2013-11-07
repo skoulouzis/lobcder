@@ -1,14 +1,13 @@
 package nl.uva.cs.lobcder.catalogue;
 
+import java.io.IOException;
+import java.sql.*;
+import java.util.logging.Level;
+import javax.sql.DataSource;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.resources.PDRI;
 import nl.uva.cs.lobcder.resources.PDRIDescr;
 import nl.uva.cs.lobcder.resources.PDRIFactory;
-
-import javax.sql.DataSource;
-import java.io.IOException;
-import java.sql.*;
-import java.util.logging.Level;
 
 /**
  * User: dvasunin Date: 25.02.13 Time: 16:31 To change this template use File |

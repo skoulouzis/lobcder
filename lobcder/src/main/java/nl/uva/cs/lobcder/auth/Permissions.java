@@ -4,11 +4,10 @@
  */
 package nl.uva.cs.lobcder.auth;
 
-import lombok.Data;
-
-import javax.xml.bind.annotation.XmlRootElement;
 import java.util.HashSet;
 import java.util.Set;
+import javax.xml.bind.annotation.XmlRootElement;
+import lombok.Data;
 
 /**
  *
@@ -18,8 +17,8 @@ import java.util.Set;
 @XmlRootElement
 public class Permissions {
 
-    private Set<String> read = new HashSet<String>();
-    private Set<String> write = new HashSet<String>();
+    private Set<String> read = new HashSet<>();
+    private Set<String> write = new HashSet<>();
     private String owner = "";
 
     public Permissions() {

@@ -5,7 +5,7 @@
 
     <groupId>com.mycompany</groupId>
     <artifactId>lobcder</artifactId>
-    <version>2.2</version>
+    <version>2.4</version>
     <packaging>war</packaging>
 
     <name>lobcder</name>
@@ -76,7 +76,15 @@
         <dependency>
             <groupId>nl.uva.vlet</groupId>
             <artifactId>vlet-vfs.cloud</artifactId>
-            <version>1.1</version>
+            <version>2.0</version>
+        </dependency>
+        
+        
+        <dependency>
+            <groupId>nl.uva.vlet</groupId>
+            <artifactId>vlet-vfs.jcraft.ssh</artifactId>
+            <version>1.5.0-dev-1</version>
+            <scope>runtime</scope>
         </dependency>
 
         
@@ -133,8 +141,15 @@
             <version>1.4</version>
         </dependency>
         
-        
         <dependency>
+            <groupId>org.globus</groupId>
+            <artifactId>cog-url</artifactId>
+            <version>1.4</version>
+            
+        </dependency>
+        
+        
+<!--        <dependency>
             <groupId>bouncycastle</groupId>
             <artifactId>jce-jdk13</artifactId>
             <version>131</version>
@@ -145,7 +160,7 @@
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcprov-jdk15</artifactId>
             <version>1.43</version>
-        </dependency>
+        </dependency>-->
             
                 
         <dependency>
@@ -194,6 +209,37 @@
             <artifactId>mysql-connector-java</artifactId>
             <version>5.1.24</version>
         </dependency>
+        
+        
+        <dependency>
+            <groupId>javax.servlet.jsp</groupId>
+            <artifactId>jsp-api</artifactId>
+            <version>2.1</version>
+            <scope>provided</scope>
+        </dependency>
+    
+    
+        <!--        <dependency>
+            <groupId>org.apache.struts</groupId>
+            <artifactId>struts2-core</artifactId>
+            <version>2.3.15.1</version>
+        </dependency>-->
+        
+        
+        <dependency>
+            <groupId>xerces</groupId>
+            <artifactId>xercesImpl</artifactId>
+            <version>2.7.1</version>
+            <scope>provided</scope>
+        </dependency>
+        
+        
+        
+        <dependency>
+            <groupId>org.rendersnake</groupId>
+            <artifactId>rendersnake</artifactId>
+            <version>1.7.2</version>
+        </dependency>
 
     </dependencies>
     
@@ -215,6 +261,12 @@
             <id>elab.lab.uvalight.net</id>
             <name>elab.lab.uvalight.net-releases</name>
             <url>https://elab.lab.uvalight.net:8444/artifactory/repo</url>
+        </repository>
+        
+        <repository>
+            <id>rendersnake-repo</id>
+            <name>Repository for rendersnake</name>
+            <url>http://rendersnake.googlecode.com/svn/repo</url>
         </repository>
 
         <!--       <repository>
@@ -248,6 +300,7 @@
                 <artifactId>maven-war-plugin</artifactId>
                 <configuration>
                     <failOnMissingWebXml>true</failOnMissingWebXml>
+                    <attachClasses>true</attachClasses>
                 </configuration>
                 <!--If the version is not set to 2.1.1 we get the error: 'com.thoughtworks.xstream.converters.ConversionException: Cannot construct org.apache.maven.plugin.war.util.WebappStructure as it does not have a no-args constructor'-->
                 <version>2.3</version>
@@ -295,5 +348,19 @@
             </plugin>-->
         </plugins>
     </reporting>
+    
+    
+    <distributionManagement>
+        <repository>
+            <id>elab.lab.uvalight.net</id>
+            <name>elab.lab.uvalight.net-releases</name>
+            <url>https://elab.lab.uvalight.net:8444/artifactory/ext-snapshot-local</url>
+        </repository>
+        <snapshotRepository>
+            <id>elab.lab.uvalight.net</id>
+            <name>elab.lab.uvalight.net-snapshots</name>
+            <url>https://elab.lab.uvalight.net:8444/artifactory/ext-snapshot-local</url>
+        </snapshotRepository>
+    </distributionManagement>
 
 </project>

@@ -5,29 +5,34 @@
 package nl.uva.cs.lobcder.catalogue;
 
 import io.milton.common.Path;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.math.BigInteger;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.sql.*;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.logging.Level;
+import javax.annotation.Nonnull;
+import javax.naming.NamingException;
+import javax.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.SneakyThrows;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.auth.MyPrincipal;
 import nl.uva.cs.lobcder.auth.Permissions;
+import nl.uva.cs.lobcder.frontend.RequestWapper;
 import nl.uva.cs.lobcder.resources.Credential;
 import nl.uva.cs.lobcder.resources.LogicalData;
 import nl.uva.cs.lobcder.resources.PDRI;
 import nl.uva.cs.lobcder.resources.PDRIDescr;
+import nl.uva.cs.lobcder.resources.StorageSite;
+import nl.uva.cs.lobcder.rest.wrappers.UsersWrapper;
 import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.cs.lobcder.util.MyDataSource;
-
-import javax.annotation.Nonnull;
-import javax.naming.NamingException;
-import java.io.IOException;
-import java.math.BigInteger;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.sql.*;
-import java.sql.Date;
-import java.util.*;
-import nl.uva.cs.lobcder.resources.MyStorageSite;
+import org.apache.commons.codec.binary.Base64;
 
 /**
  *
@@ -37,82 +42,100 @@ import nl.uva.cs.lobcder.resources.MyStorageSite;
 public class JDBCatalogue extends MyDataSource {
 
     private Timer timer = null;
+    private Map<Long, LogicalData> logicalDataCache = new HashMap<>();
+    private Map<String, LogicalData> logicalDataCacheByPath = new HashMap<>();
+    private Map<Long, Permissions> permissionsCache = new HashMap<>();
+    private Map<Long, String> pathCache = new HashMap<>();
+    private Map<Long, List<PDRIDescr>> PDRIDescrCache = new HashMap<>();
 
     public JDBCatalogue() throws NamingException {
     }
 
     public void startSweep() {
         TimerTask gcTask = new TimerTask() {
-
             Runnable deleteSweep = new DeleteSweep(getDatasource());
             Runnable replicateSweep = new ReplicateSweep(getDatasource());
+            Runnable wp4Sweep = new WP4Sweep(getDatasource(),
+                    new WP4Sweep.WP4Connector("http://vphshare.atosresearch.eu/metadata-retrieval/rest/metadata"));
 
             @Override
             public void run() {
                 deleteSweep.run();
                 replicateSweep.run();
+                wp4Sweep.run();
             }
         };
         timer = new Timer(true);
-        timer.schedule(gcTask, 2000, 2000); //once in 9 sec
+        timer.schedule(gcTask, 10000, 10000); //once in 10 sec
     }
 
     public void stopSweep() {
         timer.cancel();
     }
 
-    public Collection<MyStorageSite> getStorageSites(Connection connection) throws SQLException {
-        try (Statement s = connection.createStatement()) {
-            ResultSet rs = s.executeQuery("SELECT storageSiteId, resourceURI, "
-                    + "currentNum, currentSize, quotaNum, quotaSize, username, "
-                    + "password, encrypt FROM storage_site_table JOIN credential_table ON "
-                    + "credentialRef = credintialId WHERE isCache != TRUE");
-            ArrayList<MyStorageSite> res = new ArrayList<>();
-            while (rs.next()) {
-                Credential c = new Credential();
-                c.setStorageSiteUsername(rs.getString(7));
-                c.setStorageSitePassword(rs.getString(8));
-                MyStorageSite ss = new MyStorageSite();
-                ss.setStorageSiteId(rs.getLong(1));
-                ss.setCredential(c);
-                ss.setResourceURI(rs.getString(2));
-                ss.setCurrentNum(rs.getLong(3));
-                ss.setCurrentSize(rs.getLong(4));
-                ss.setQuotaNum(rs.getLong(5));
-                ss.setQuotaSize(rs.getLong(6));
-                ss.setEncrypt(rs.getBoolean(7));
-                res.add(ss);
-            }
-            return res;
+    public Collection<StorageSite> getStorageSites(Boolean includeCache) throws SQLException {
+        try (Connection connection = getConnection()) {
+            return getStorageSites(connection, includeCache);
         }
     }
 
-    public Collection<MyStorageSite> getCacheStorageSites(Connection connection) throws SQLException {
+    public Collection<StorageSite> getStorageSites(Connection connection, Boolean isCache) throws SQLException {
         try (Statement s = connection.createStatement()) {
-            ResultSet rs = s.executeQuery("SELECT storageSiteId, resourceURI, "
-                    + "currentNum, currentSize, quotaNum, quotaSize, username, "
-                    + "password, encrypt FROM storage_site_table JOIN credential_table ON "
-                    + "credentialRef = credintialId WHERE isCache = TRUE");
-            ArrayList<MyStorageSite> res = new ArrayList<>();
-            while (rs.next()) {
-                Credential c = new Credential();
-                c.setStorageSiteUsername(rs.getString(7));
-                c.setStorageSitePassword(rs.getString(8));
-                MyStorageSite ss = new MyStorageSite();
-                ss.setStorageSiteId(rs.getLong(1));
-                ss.setCredential(c);
-                ss.setResourceURI(rs.getString(2));
-                ss.setCurrentNum(rs.getLong(3));
-                ss.setCurrentSize(rs.getLong(4));
-                ss.setQuotaNum(rs.getLong(5));
-                ss.setQuotaSize(rs.getLong(6));
-                ss.setEncrypt(rs.getBoolean(7));
-                res.add(ss);
+            try (ResultSet rs = s.executeQuery("SELECT storageSiteId, resourceURI, "
+                            + "currentNum, currentSize, quotaNum, quotaSize, username, "
+                            + "password, encrypt FROM storage_site_table "
+                            + "JOIN credential_table ON credentialRef = credintialId "
+                            + "WHERE isCache = " + isCache)) {
+
+                ArrayList<StorageSite> res = new ArrayList<>();
+                while (rs.next()) {
+                    StorageSite ss = new StorageSite();
+                    ss.setStorageSiteId(rs.getLong(1));
+
+                    ss.setResourceURI(rs.getString(2));
+                    ss.setCurrentNum(rs.getLong(3));
+                    ss.setCurrentSize(rs.getLong(4));
+                    ss.setQuotaNum(rs.getLong(5));
+                    ss.setQuotaSize(rs.getLong(6));
+                    Credential c = new Credential();
+                    c.setStorageSiteUsername(rs.getString(7));
+                    c.setStorageSitePassword(rs.getString(8));
+                    ss.setCredential(c);
+                    ss.setEncrypt(rs.getBoolean(9));
+                    ss.setCache(isCache);
+                    res.add(ss);
+                }
+                return res;
             }
-            return res;
         }
     }
 
+//    public Collection<StorageSite> getCacheStorageSites(Connection connection) throws SQLException {
+//        try (Statement s = connection.createStatement()) {
+//            try (ResultSet rs = s.executeQuery("SELECT storageSiteId, resourceURI, "
+//                            + "currentNum, currentSize, quotaNum, quotaSize, username, "
+//                            + "password, encrypt FROM storage_site_table JOIN credential_table ON "
+//                            + "credentialRef = credintialId WHERE isCache = TRUE")) {
+//                ArrayList<StorageSite> res = new ArrayList<>();
+//                while (rs.next()) {
+//                    Credential c = new Credential();
+//                    c.setStorageSiteUsername(rs.getString(7));
+//                    c.setStorageSitePassword(rs.getString(8));
+//                    StorageSite ss = new StorageSite();
+//                    ss.setStorageSiteId(rs.getLong(1));
+//                    ss.setCredential(c);
+//                    ss.setResourceURI(rs.getString(2));
+//                    ss.setCurrentNum(rs.getLong(3));
+//                    ss.setCurrentSize(rs.getLong(4));
+//                    ss.setQuotaNum(rs.getLong(5));
+//                    ss.setQuotaSize(rs.getLong(6));
+//                    ss.setEncrypt(rs.getBoolean(7));
+//                    res.add(ss);
+//                }
+//                return res;
+//            }
+//        }
+//    }
     public LogicalData registerDirLogicalData(LogicalData entry, @Nonnull Connection connection) throws SQLException {
         try (PreparedStatement preparedStatement = connection.prepareStatement(
                         "INSERT INTO ldata_table(parentRef, ownerId, datatype, ldName, createDate, modifiedDate)"
@@ -121,12 +144,16 @@ public class JDBCatalogue extends MyDataSource {
             preparedStatement.setString(2, entry.getOwner());
             preparedStatement.setString(3, Constants.LOGICAL_FOLDER);
             preparedStatement.setString(4, entry.getName());
-            preparedStatement.setDate(5, new Date(entry.getCreateDate()));
-            preparedStatement.setDate(6, new Date(entry.getModifiedDate()));
+            preparedStatement.setTimestamp(5, new Timestamp(entry.getCreateDate()));
+            preparedStatement.setTimestamp(6, new Timestamp(entry.getModifiedDate()));
             preparedStatement.executeUpdate();
             ResultSet rs = preparedStatement.getGeneratedKeys();
             rs.next();
             entry.setUid(rs.getLong(1));
+
+            String path = getPathforLogicalData(entry, connection);
+            putToLDataCache(entry, path);
+
             return entry;
         }
     }
@@ -140,12 +167,13 @@ public class JDBCatalogue extends MyDataSource {
                         + "lockScope, lockType, lockedByUser, lockDepth, "
                         + "lockTimeout, description, locationPreference, "
                         + "ldName) "
-                        + "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS)) {
+                        + "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, "
+                        + "?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS)) {
             preparedStatement.setLong(1, entry.getParentRef());
             preparedStatement.setString(2, entry.getOwner());
             preparedStatement.setString(3, entry.getType());
-            preparedStatement.setDate(4, new Date(entry.getCreateDate()));
-            preparedStatement.setDate(5, new Date(entry.getModifiedDate()));
+            preparedStatement.setTimestamp(4, new Timestamp(entry.getCreateDate()));
+            preparedStatement.setTimestamp(5, new Timestamp(entry.getModifiedDate()));
             preparedStatement.setLong(6, entry.getLength());
             preparedStatement.setString(7, entry.getContentTypesAsString());
             preparedStatement.setLong(8, entry.getPdriGroupId());
@@ -165,6 +193,8 @@ public class JDBCatalogue extends MyDataSource {
             ResultSet rs = preparedStatement.getGeneratedKeys();
             rs.next();
             entry.setUid(rs.getLong(1));
+
+            putToLDataCache(entry, null);
             return entry;
         }
     }
@@ -182,6 +212,7 @@ public class JDBCatalogue extends MyDataSource {
             ps.setLong(4, entry.getPdriGroupId());
             ps.setLong(5, entry.getUid());
             ps.executeUpdate();
+            putToLDataCache(entry, null);
             return entry;
         }
     }
@@ -192,7 +223,7 @@ public class JDBCatalogue extends MyDataSource {
 //        }
 
         try (Statement statement = connection.createStatement(java.sql.ResultSet.TYPE_FORWARD_ONLY, java.sql.ResultSet.CONCUR_UPDATABLE)) {
-            statement.executeUpdate("INSERT INTO pdrigroup_table (refCount) VALUES(1)", Statement.RETURN_GENERATED_KEYS);
+            statement.executeUpdate("INSERT INTO pdrigroup_table (refCount) VALUES(0)", Statement.RETURN_GENERATED_KEYS);
             ResultSet rs = statement.getGeneratedKeys();
             rs.next();
             Long newGroupId = rs.getLong(1);
@@ -239,13 +270,59 @@ public class JDBCatalogue extends MyDataSource {
     }
 
     public List<PDRIDescr> getPdriDescrByGroupId(Long groupId) throws SQLException, IOException {
+        List<PDRIDescr> res = PDRIDescrCache.get(groupId);
+        if (res != null) {
+            return res;
+        }
         try (Connection connection = getConnection()) {
             return getPdriDescrByGroupId(groupId, connection);
         }
     }
 
+    public List<PDRIDescr> getPdriStorageSiteID(Long StorageSiteId, @Nonnull Connection connection) throws SQLException {
+        ArrayList<PDRIDescr> res = new ArrayList<>();
+        long pdriId;
+        try (PreparedStatement ps = connection.prepareStatement(""
+                        + "SELECT fileName, storageSiteRef, storage_site_table.resourceUri, "
+                        + "username, password, isEncrypted, encryptionKey, pdri_table.pdriId, pdriGroupRef "
+                        + "FROM pdri_table "
+                        + "JOIN storage_site_table ON storageSiteRef = storageSiteId "
+                        + "JOIN credential_table ON credentialRef = credintialId "
+                        + "WHERE storageSiteRef = ? ")) {
+            ps.setLong(1, StorageSiteId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                String fileName = rs.getString(1);
+                long ssID = rs.getLong(2);
+                String resourceURI = rs.getString(3);
+                String uName = rs.getString(4);
+                String passwd = rs.getString(5);
+                boolean encrypt = rs.getBoolean(6);
+                long key = rs.getLong(7);
+                pdriId = rs.getLong(8);
+                //                if (resourceURI.startsWith("lfc") || resourceURI.startsWith("srm")
+                //                        || resourceURI.startsWith("gftp")) {
+                //                    try {
+                //                        passwd = getProxyAsBase64String();
+                //                    } catch (FileNotFoundException ex) {
+                //                        Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+                //                    } catch (IOException ex) {
+                //                        Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+                //                    }
+                //                }
+                long groupId = rs.getLong(9);
+                res.add(new PDRIDescr(fileName, ssID, resourceURI, uName, passwd, encrypt, BigInteger.valueOf(key), groupId, Long.valueOf(pdriId)));
+            }
+            return res;
+        }
+    }
+
     public List<PDRIDescr> getPdriDescrByGroupId(Long groupId, @Nonnull Connection connection) throws SQLException {
-        ArrayList<PDRIDescr> res = new ArrayList<PDRIDescr>();
+        List<PDRIDescr> res = PDRIDescrCache.get(groupId);
+        if (res != null) {
+            return res;
+        }
+        res = new ArrayList<>();
         long pdriGroupRef;
         long pdriId;
         try (PreparedStatement ps = connection.prepareStatement("SELECT fileName, storageSiteRef, storage_site_table.resourceUri, "
@@ -265,15 +342,31 @@ public class JDBCatalogue extends MyDataSource {
                 boolean encrypt = rs.getBoolean(6);
                 long key = rs.getLong(7);
                 pdriId = rs.getLong(8);
+//                if (resourceURI.startsWith("lfc") || resourceURI.startsWith("srm")
+//                        || resourceURI.startsWith("gftp")) {
+//                    try {
+//                        passwd = getProxyAsBase64String();
+//                    } catch (FileNotFoundException ex) {
+//                        Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+//                    } catch (IOException ex) {
+//                        Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+//                    }
+//                }
                 res.add(new PDRIDescr(fileName, ssID, resourceURI, uName, passwd, encrypt, BigInteger.valueOf(key), Long.valueOf(groupId), Long.valueOf(pdriId)));
             }
+            PDRIDescrCache.put(groupId, res);
             return res;
         }
     }
 
     public LogicalData getLogicalDataByPath(Path logicalResourceName) throws SQLException {
+        LogicalData res = getFromLDataCache(null, logicalResourceName.toString());
+        if (res != null) {
+            return res;
+        }
         try (Connection connection = getConnection()) {
-            return getLogicalDataByPath(logicalResourceName, connection);
+            res = getLogicalDataByPath(logicalResourceName, connection);
+            return res;
         }
     }
 
@@ -351,6 +444,10 @@ public class JDBCatalogue extends MyDataSource {
     }
 
     public LogicalData getLogicalDataByPath(Path logicalResourceName, @Nonnull Connection connection) throws SQLException {
+        LogicalData res = getFromLDataCache(null, logicalResourceName.toPath());
+        if (res != null) {
+            return res;
+        }
         try (PreparedStatement preparedStatement = connection.prepareStatement(
                         "SELECT uid FROM ldata_table WHERE ldata_table.parentRef = ? AND ldata_table.ldName = ?")) {
             long parent = 1;
@@ -365,13 +462,13 @@ public class JDBCatalogue extends MyDataSource {
                                     "SELECT uid, ownerId, datatype, createDate, modifiedDate, ldLength, "
                                     + "contentTypesStr, pdriGroupRef, isSupervised, checksum, lastValidationDate, "
                                     + "lockTokenID, lockScope, lockType, lockedByUser, lockDepth, lockTimeout, "
-                                    + "description, locationPreference "
+                                    + "description, locationPreference, status "
                                     + "FROM ldata_table WHERE ldata_table.parentRef = ? AND ldata_table.ldName = ?")) {
                         preparedStatement1.setLong(1, parent);
                         preparedStatement1.setString(2, p);
                         ResultSet rs = preparedStatement1.executeQuery();
                         if (rs.next()) {
-                            LogicalData res = new LogicalData();
+                            res = new LogicalData();
                             res.setUid(rs.getLong(1));
                             res.setParentRef(parent);
                             res.setOwner(rs.getString(2));
@@ -393,6 +490,9 @@ public class JDBCatalogue extends MyDataSource {
                             res.setLockTimeout(rs.getLong(17));
                             res.setDescription(rs.getString(18));
                             res.setDataLocationPreference(rs.getString(19));
+                            res.setStatus(rs.getString(20));
+
+                            putToLDataCache(res, logicalResourceName.toString());
                             return res;
                         } else {
                             return null;
@@ -414,21 +514,29 @@ public class JDBCatalogue extends MyDataSource {
     }
 
     public LogicalData getLogicalDataByUid(Long UID) throws SQLException {
+        LogicalData res = getFromLDataCache(UID, null);
+        if (res != null) {
+            return res;
+        }
         try (Connection connection = getConnection()) {
             return getLogicalDataByUid(UID, connection);
         }
     }
 
     public LogicalData getLogicalDataByUid(Long UID, @Nonnull Connection connection) throws SQLException {
+        LogicalData res = getFromLDataCache(UID, null);
+        if (res != null) {
+            return res;
+        }
         try (PreparedStatement ps = connection.prepareStatement("SELECT parentRef, ownerId, datatype, ldName, "
                         + "createDate, modifiedDate, ldLength, contentTypesStr, pdriGroupRef, "
                         + "isSupervised, checksum, lastValidationDate, lockTokenID, lockScope, "
-                        + "lockType, lockedByUser, lockDepth, lockTimeout, description, locationPreference "
+                        + "lockType, lockedByUser, lockDepth, lockTimeout, description, locationPreference, status "
                         + "FROM ldata_table WHERE ldata_table.uid = ?")) {
             ps.setLong(1, UID);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
-                LogicalData res = new LogicalData();
+                res = new LogicalData();
                 res.setUid(UID);
                 res.setParentRef(rs.getLong(1));
                 res.setOwner(rs.getString(2));
@@ -450,6 +558,9 @@ public class JDBCatalogue extends MyDataSource {
                 res.setLockTimeout(rs.getLong(18));
                 res.setDescription(rs.getString(19));
                 res.setDataLocationPreference(rs.getString(20));
+                res.setStatus(rs.getString(21));
+
+                putToLDataCache(res, null);
                 return res;
             } else {
                 return null;
@@ -480,21 +591,30 @@ public class JDBCatalogue extends MyDataSource {
                 s.addBatch("INSERT INTO permission_table (permType, ldUidRef, roleName) VALUES ('write', " + UID + " , '" + cw + "')");
             }
             s.executeBatch();
+            putToPermissionsCache(UID, perm);
         }
     }
 
     public Permissions getPermissions(Long UID, String owner) throws SQLException {
+        Permissions perm = getFromPermissionsCache(UID);
+        if (perm != null) {
+            return perm;
+        }
         try (Connection connection = getConnection()) {
             return getPermissions(UID, owner, connection);
         }
     }
 
     public Permissions getPermissions(Long UID, @Nonnull String owner, @Nonnull Connection connection) throws SQLException {
-        Permissions p = new Permissions();
+        Permissions p = getFromPermissionsCache(UID);
+        if (p != null) {
+            return p;
+        }
+        p = new Permissions();
         try (Statement s = connection.createStatement()) {
             ResultSet rs = s.executeQuery("SELECT permType, roleName FROM permission_table WHERE permission_table.ldUidRef = " + UID);
-            Set<String> canRead = new HashSet<String>();
-            Set<String> canWrite = new HashSet<String>();
+            Set<String> canRead = new HashSet<>();
+            Set<String> canWrite = new HashSet<>();
             while (rs.next()) {
                 if (rs.getString(1).equals("read")) {
                     canRead.add(rs.getString(2));
@@ -505,6 +625,7 @@ public class JDBCatalogue extends MyDataSource {
             p.setRead(canRead);
             p.setWrite(canWrite);
             p.setOwner(owner);
+            putToPermissionsCache(UID, p);
             return p;
         }
     }
@@ -531,7 +652,7 @@ public class JDBCatalogue extends MyDataSource {
                         + "FROM ldata_table WHERE ldata_table.parentRef = ?")) {
             preparedStatement.setLong(1, parentRef);
             ResultSet rs = preparedStatement.executeQuery();
-            LinkedList<LogicalData> res = new LinkedList<LogicalData>();
+            LinkedList<LogicalData> res = new LinkedList<>();
             while (rs.next()) {
                 LogicalData element = new LogicalData();
                 element.setUid(rs.getLong(1));
@@ -580,6 +701,7 @@ public class JDBCatalogue extends MyDataSource {
             ps.setLong(3, toMove.getUid());
             ps.executeUpdate();
         }
+        removeFromLDataCache(toMove, null);
     }
 
     @SneakyThrows(CloneNotSupportedException.class)
@@ -642,7 +764,7 @@ public class JDBCatalogue extends MyDataSource {
             newFileEntry = registerLogicalData(newFileEntry, connection);
             setPermissions(newFileEntry.getUid(), permissionsForNew, connection);
             try (Statement s = connection.createStatement()) {
-                s.executeUpdate("UPDATE pdrigroup_table SET refCount=refCount+1 WHERE groupId = " + newFileEntry.getPdriGroupId());
+                s.executeUpdate("UPDATE pdrigroup_table SET refCount=refCount+1 WHERE pdriGroupId = " + newFileEntry.getPdriGroupId());
             }
         }
     }
@@ -658,6 +780,7 @@ public class JDBCatalogue extends MyDataSource {
                 ps.executeUpdate();
             }
         }
+        removeFromLDataCache(toRemove, null);
     }
 
     public boolean removeFolderContent(LogicalData toRemove, MyPrincipal principal, Connection connection) throws SQLException {
@@ -688,6 +811,7 @@ public class JDBCatalogue extends MyDataSource {
         } else {
             return false;
         }
+        removeFromLDataCache(toRemove, null);
         return flag;
     }
 
@@ -697,6 +821,11 @@ public class JDBCatalogue extends MyDataSource {
             ps.setLong(2, uid);
             ps.executeUpdate();
         }
+        LogicalData cached = getFromLDataCache(uid, null);
+        if (cached != null) {
+            cached.setSupervised(flag);
+            putToLDataCache(cached, null);
+        }
     }
 
     public void setLastValidationDate(@Nonnull Long uid, @Nonnull Long lastValidationDate, @Nonnull Connection connection) throws SQLException {
@@ -704,6 +833,11 @@ public class JDBCatalogue extends MyDataSource {
             ps.setLong(1, lastValidationDate);
             ps.setLong(2, uid);
             ps.executeUpdate();
+        }
+        LogicalData cached = getFromLDataCache(uid, null);
+        if (cached != null) {
+            cached.setLastValidationDate(lastValidationDate);
+            putToLDataCache(cached, null);
         }
     }
 
@@ -713,6 +847,23 @@ public class JDBCatalogue extends MyDataSource {
             ps.setLong(2, uid);
             ps.executeUpdate();
         }
+        LogicalData cached = getFromLDataCache(uid, null);
+        if (cached != null) {
+            cached.setChecksum(checksum);
+            putToLDataCache(cached, null);
+        }
+    }
+
+    public void setDriStatus(@Nonnull Long uid, @Nonnull String status, @Nonnull Connection connection) throws SQLException {
+        try (PreparedStatement ps = connection.prepareStatement("UPDATE ldata_table SET status = ? WHERE uid = ?")) {
+            ps.setString(1, status);
+            ps.setLong(2, uid);
+            ps.executeUpdate();
+        }
+//        LogicalData cached = getFromLDataCache(uid);
+//        if (cached != null) {
+//        addToLDataCache( cached);
+//        }
     }
 
     public void setLockTokenID(@Nonnull Long uid, @Nonnull String lockTokenID, @Nonnull Connection connection) throws SQLException {
@@ -720,6 +871,11 @@ public class JDBCatalogue extends MyDataSource {
             ps.setString(1, lockTokenID);
             ps.setLong(2, uid);
             ps.executeUpdate();
+        }
+        LogicalData cached = getFromLDataCache(uid, null);
+        if (cached != null) {
+            cached.setLockTokenID(lockTokenID);
+            putToLDataCache(cached, null);
         }
     }
 
@@ -729,6 +885,11 @@ public class JDBCatalogue extends MyDataSource {
             ps.setLong(2, uid);
             ps.executeUpdate();
         }
+        LogicalData cached = getFromLDataCache(uid, null);
+        if (cached != null) {
+            cached.setLockTimeout(lockTimeout);
+            putToLDataCache(cached, null);
+        }
     }
 
     public void setLockDepth(Long uid, String lockDepth, Connection connection) throws SQLException {
@@ -736,6 +897,11 @@ public class JDBCatalogue extends MyDataSource {
             ps.setString(1, lockDepth);
             ps.setLong(2, uid);
             ps.executeUpdate();
+        }
+        LogicalData cached = getFromLDataCache(uid, null);
+        if (cached != null) {
+            cached.setLockDepth(lockDepth);
+            putToLDataCache(cached, null);
         }
     }
 
@@ -745,6 +911,11 @@ public class JDBCatalogue extends MyDataSource {
             ps.setLong(2, uid);
             ps.executeUpdate();
         }
+        LogicalData cached = getFromLDataCache(uid, null);
+        if (cached != null) {
+            cached.setLockedByUser(lockedByUser);
+            putToLDataCache(cached, null);
+        }
     }
 
     public void setLockScope(Long uid, String lockScope, Connection connection) throws SQLException {
@@ -752,6 +923,11 @@ public class JDBCatalogue extends MyDataSource {
             ps.setString(1, lockScope);
             ps.setLong(2, uid);
             ps.executeUpdate();
+        }
+        LogicalData cached = getFromLDataCache(uid, null);
+        if (cached != null) {
+            cached.setLockScope(lockScope);
+            putToLDataCache(cached, null);
         }
     }
 
@@ -761,128 +937,139 @@ public class JDBCatalogue extends MyDataSource {
             ps.setLong(2, uid);
             ps.executeUpdate();
         }
+
+        LogicalData cached = getFromLDataCache(uid, null);
+        if (cached != null) {
+            cached.setLockType(lockType);
+            putToLDataCache(cached, null);
+        }
     }
 
     /*
-    public LinkedList<LogicalData> queryLogicalData(MultivaluedMap<String, String> queryParameters, Connection connection) throws CatalogueException {
-    Statement s = null;
-    boolean connectionIsProvided = (connection == null) ? false : true;
-    boolean connectionAutocommit = false;
-    try {
-    if (connection == null) {
-    connection = getConnection();
-    connection.setAutoCommit(false);
-    } else {
-    connectionAutocommit = connection.getAutoCommit();
-    connection.setAutoCommit(false);
-    }
-    s = connection.createStatement();
-    boolean where = false;
-    StringBuilder query = new StringBuilder("SELECT uid, ownerId, datatype, "
-    + "ld_name, parent, createDate, modifiedDate, ld_length, "
-    + "contentTypesStr, pdriGroupId, isSupervised, checksum, "
-    + "lastValidationDate, lockTokenID, lockScope, "
-    + "lockType, lockedByUser, lockDepth, lockTimeout, description "
-    + "FROM ldata_table");
-    if (queryParameters.containsKey("path") && queryParameters.get("path").iterator().hasNext()) {
-    String path = queryParameters.get("path").iterator().next();
-    if (!path.equals("/")) {
-    query.append(where ? " AND" : " WHERE").append(" parent LIKE '").append(path).append("%'");
-    where = true;
-    }
-    queryParameters.remove("path");
-    }
-    if (queryParameters.containsKey("mStartDate") && queryParameters.get("mStartDate").iterator().hasNext()
-    && queryParameters.containsKey("mEndDate") && queryParameters.get("mEndDate").iterator().hasNext()) {
-    String mStartDate = Long.valueOf(queryParameters.get("mStartDate").iterator().next()).toString();
-    String mEndDate = Long.valueOf(queryParameters.get("mEndDate").iterator().next()).toString();
-    query.append(where ? " AND" : " WHERE").append(" modifiedDate BETWEEN FROM_UNIXTIME(").append(mStartDate).append(") AND FROM_UNIXTIME(").append(mEndDate).append(")");
-    where = true;
-    queryParameters.remove("mStartDate");
-    queryParameters.remove("mEndDate");
-    } else if (queryParameters.containsKey("mStartDate") && queryParameters.get("mStartDate").iterator().hasNext()) {
-    String mStartDate = Long.valueOf(queryParameters.get("mStartDate").iterator().next()).toString();
-    query.append(where ? " AND" : " WHERE").append(" modifiedDate >= UNIXTIME(").append(mStartDate).append(")");
-    where = true;
-    queryParameters.remove("mStartDate");
-    } else if (queryParameters.containsKey("mEndDate") && queryParameters.get("mEndDate").iterator().hasNext()) {
-    String mEndDate = Long.valueOf(queryParameters.get("mEndDate").iterator().next()).toString();
-    query.append(where ? " AND" : " WHERE").append(" modifiedDate <= UNIXTIME(").append(mEndDate).append(")");
-    where = true;
-    queryParameters.remove("mEndDate");
-    }
-    if (queryParameters.containsKey("isSupervised") && queryParameters.get("isSupervised").iterator().hasNext()) {
-    String isSupervised = Boolean.valueOf(queryParameters.get("isSupervised").iterator().next()).toString();
-    query.append(where ? " AND" : " WHERE").append(" isSupervised = ").append(isSupervised);
-    where = true;
-    queryParameters.remove("isSupervised");
-    }
-    JDBCatalogue.log.fine("queryLogicalData() SQL: " + query.toString());
-    ResultSet rs = s.executeQuery(query.toString());
-    LinkedList<LogicalData> ld_list = new LinkedList<LogicalData>();
-    while (rs.next()) {
-    LogicalData element = new LogicalData(this);
-    element.setUID(rs.getLong(1));
-    element.setOwner(rs.getString(2));
-    element.setType(rs.getString(3));
-    element.setName(rs.getString(4));
-    element.setParent(rs.getString(5));
-    element.setCreateDate(rs.getTimestamp(6).getTime());
-    element.setModifiedDate(rs.getTimestamp(7).getTime());
-    element.setLength(rs.getLong(8));
-    element.setContentTypesAsString(rs.getString(9));
-    element.setPdriGroupId(rs.getLong(10));
-    element.setSupervised(rs.getBoolean(11));
-    element.setChecksum(rs.getLong(12));
-    element.setLastValidationDate(rs.getLong(13));
-    //                element.setLockTokenID(rs.getString(14));
-    //                element.setLockScope(rs.getString(15));
-    //                element.setLockType(rs.getString(16));
-    //                element.setLockedByUser(rs.getString(17));
-    //                element.setLockDepth(rs.getString(18));
-    //                element.setLockTimeout(rs.getLong(19));
-    element.setDescription(rs.getString(14));
-    ld_list.add(element);
-    }
-    s.close();
-    return ld_list;
-    } catch (Exception e) {
-    try {
-    if (s != null && !s.isClosed()) {
-    s.close();
-    s = null;
-    }
-    if (!connectionIsProvided && !connection.isClosed()) {
-    connection.rollback();
-    connection.close();
-    }
-    } catch (SQLException ex) {
-    Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
-    }
-    throw new CatalogueException(e.getMessage());
-    } finally {
-    try {
-    if (s != null && !s.isClosed()) {
-    s.close();
-    }
-    if (!connectionIsProvided && !connection.isClosed()) {
-    connection.commit();
-    connection.close();
-    }
-    if (connectionIsProvided && !connection.isClosed()) {
-    connection.setAutoCommit(connectionAutocommit);
-    }
-    } catch (SQLException ex) {
-    Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
-    }
-    }
-    }
+     public LinkedList<LogicalData> queryLogicalData(MultivaluedMap<String, String> queryParameters, Connection connection) throws CatalogueException {
+     Statement s = null;
+     boolean connectionIsProvided = (connection == null) ? false : true;
+     boolean connectionAutocommit = false;
+     try {
+     if (connection == null) {
+     connection = getConnection();
+     connection.setAutoCommit(false);
+     } else {
+     connectionAutocommit = connection.getAutoCommit();
+     connection.setAutoCommit(false);
+     }
+     s = connection.createStatement();
+     boolean where = false;
+     StringBuilder query = new StringBuilder("SELECT uid, ownerId, datatype, "
+     + "ld_name, parent, createDate, modifiedDate, ld_length, "
+     + "contentTypesStr, pdriGroupId, isSupervised, checksum, "
+     + "lastValidationDate, lockTokenID, lockScope, "
+     + "lockType, lockedByUser, lockDepth, lockTimeout, description "
+     + "FROM ldata_table");
+     if (queryParameters.containsKey("path") && queryParameters.get("path").iterator().hasNext()) {
+     String path = queryParameters.get("path").iterator().next();
+     if (!path.equals("/")) {
+     query.append(where ? " AND" : " WHERE").append(" parent LIKE '").append(path).append("%'");
+     where = true;
+     }
+     queryParameters.remove("path");
+     }
+     if (queryParameters.containsKey("mStartDate") && queryParameters.get("mStartDate").iterator().hasNext()
+     && queryParameters.containsKey("mEndDate") && queryParameters.get("mEndDate").iterator().hasNext()) {
+     String mStartDate = Long.valueOf(queryParameters.get("mStartDate").iterator().next()).toString();
+     String mEndDate = Long.valueOf(queryParameters.get("mEndDate").iterator().next()).toString();
+     query.append(where ? " AND" : " WHERE").append(" modifiedDate BETWEEN FROM_UNIXTIME(").append(mStartDate).append(") AND FROM_UNIXTIME(").append(mEndDate).append(")");
+     where = true;
+     queryParameters.remove("mStartDate");
+     queryParameters.remove("mEndDate");
+     } else if (queryParameters.containsKey("mStartDate") && queryParameters.get("mStartDate").iterator().hasNext()) {
+     String mStartDate = Long.valueOf(queryParameters.get("mStartDate").iterator().next()).toString();
+     query.append(where ? " AND" : " WHERE").append(" modifiedDate >= UNIXTIME(").append(mStartDate).append(")");
+     where = true;
+     queryParameters.remove("mStartDate");
+     } else if (queryParameters.containsKey("mEndDate") && queryParameters.get("mEndDate").iterator().hasNext()) {
+     String mEndDate = Long.valueOf(queryParameters.get("mEndDate").iterator().next()).toString();
+     query.append(where ? " AND" : " WHERE").append(" modifiedDate <= UNIXTIME(").append(mEndDate).append(")");
+     where = true;
+     queryParameters.remove("mEndDate");
+     }
+     if (queryParameters.containsKey("isSupervised") && queryParameters.get("isSupervised").iterator().hasNext()) {
+     String isSupervised = Boolean.valueOf(queryParameters.get("isSupervised").iterator().next()).toString();
+     query.append(where ? " AND" : " WHERE").append(" isSupervised = ").append(isSupervised);
+     where = true;
+     queryParameters.remove("isSupervised");
+     }
+     JDBCatalogue.log.fine("queryLogicalData() SQL: " + query.toString());
+     ResultSet rs = s.executeQuery(query.toString());
+     LinkedList<LogicalData> ld_list = new LinkedList<LogicalData>();
+     while (rs.next()) {
+     LogicalData element = new LogicalData(this);
+     element.setUID(rs.getLong(1));
+     element.setOwner(rs.getString(2));
+     element.setType(rs.getString(3));
+     element.setName(rs.getString(4));
+     element.setParent(rs.getString(5));
+     element.setCreateDate(rs.getTimestamp(6).getTime());
+     element.setModifiedDate(rs.getTimestamp(7).getTime());
+     element.setLength(rs.getLong(8));
+     element.setContentTypesAsString(rs.getString(9));
+     element.setPdriGroupId(rs.getLong(10));
+     element.setSupervised(rs.getBoolean(11));
+     element.setChecksum(rs.getLong(12));
+     element.setLastValidationDate(rs.getLong(13));
+     //                element.setLockTokenID(rs.getString(14));
+     //                element.setLockScope(rs.getString(15));
+     //                element.setLockType(rs.getString(16));
+     //                element.setLockedByUser(rs.getString(17));
+     //                element.setLockDepth(rs.getString(18));
+     //                element.setLockTimeout(rs.getLong(19));
+     element.setDescription(rs.getString(14));
+     ld_list.add(element);
+     }
+     s.close();
+     return ld_list;
+     } catch (Exception e) {
+     try {
+     if (s != null && !s.isClosed()) {
+     s.close();
+     s = null;
+     }
+     if (!connectionIsProvided && !connection.isClosed()) {
+     connection.rollback();
+     connection.close();
+     }
+     } catch (SQLException ex) {
+     Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+     }
+     throw new CatalogueException(e.getMessage());
+     } finally {
+     try {
+     if (s != null && !s.isClosed()) {
+     s.close();
+     }
+     if (!connectionIsProvided && !connection.isClosed()) {
+     connection.commit();
+     connection.close();
+     }
+     if (connectionIsProvided && !connection.isClosed()) {
+     connection.setAutoCommit(connectionAutocommit);
+     }
+     } catch (SQLException ex) {
+     Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
+     }
+     }
+     }
      */
     public void setDescription(Long uid, String description, Connection connection) throws SQLException {
         try (PreparedStatement ps = connection.prepareStatement("UPDATE ldata_table SET description = ? WHERE uid = ?")) {
             ps.setString(1, description);
             ps.setLong(2, uid);
             ps.executeUpdate();
+        }
+        LogicalData cached = getFromLDataCache(uid, null);
+        if (cached != null) {
+            cached.setDescription(description);
+            putToLDataCache(cached, null);
         }
     }
 
@@ -895,14 +1082,22 @@ public class JDBCatalogue extends MyDataSource {
             ps.setLong(2, uid);
             ps.executeUpdate();
         }
+        LogicalData cached = getFromLDataCache(uid, null);
+        if (cached != null) {
+            cached.setDataLocationPreference(locationPreference);
+            putToLDataCache(cached, null);
+        }
     }
 
     public void updatePdris(List<PDRIDescr> pdrisToUpdate, Connection connection) throws SQLException {
         for (PDRIDescr d : pdrisToUpdate) {
-            try (PreparedStatement ps = connection.prepareStatement("UPDATE pdri_table SET isEncrypted = ? WHERE fileName = ?")) {
+            try (PreparedStatement ps = connection.prepareStatement("UPDATE pdri_table SET isEncrypted = ?, storageSiteRef = ?, WHERE pdriId = ?")) {
                 ps.setBoolean(1, d.getEncrypt());
-                ps.setString(2, d.getName());
+                ps.setLong(2, d.getStorageSiteId());
+                ps.setLong(3, d.getId());
                 ps.executeUpdate();
+                List<PDRIDescr> res = getPdriDescrByGroupId(d.getPdriGroupRef(), connection);
+                PDRIDescrCache.put(d.getPdriGroupRef(), res);
             }
         }
     }
@@ -943,6 +1138,340 @@ public class JDBCatalogue extends MyDataSource {
         }
     }
 
+    private void removeFromLDataCache(LogicalData entry, String path) {
+        logicalDataCache.remove(entry.getUid());
+        if (path != null) {
+            logicalDataCacheByPath.remove(path);
+        } else {
+            Iterator<Entry<String, LogicalData>> iter = logicalDataCacheByPath.entrySet().iterator();
+            while (iter.hasNext()) {
+                Entry<String, LogicalData> value = iter.next();
+                if(value.getValue().getUid() == entry.getUid()){
+                    iter.remove();
+                }
+            }
+        }
+    }
+
+    private void putToLDataCache(LogicalData entry, String path) {
+        checkLDataCacheSize();
+        logicalDataCache.put(entry.getUid(), entry);
+        if (path != null) {
+            logicalDataCacheByPath.put(path, entry);
+        }
+    }
+
+    private void putToPermissionsCache(Long UID, Permissions perm) {
+        checkPermissionsCacheSize();
+        permissionsCache.put(UID, perm);
+    }
+
+    private Permissions getFromPermissionsCache(Long UID) {
+        checkPermissionsCacheSize();
+        return permissionsCache.get(UID);
+    }
+
+    private LogicalData getFromLDataCache(Long uid, String path) {
+        checkLDataCacheSize();
+        if (uid != null) {
+            return logicalDataCache.get(uid);
+        }
+        if (path != null) {
+            return logicalDataCacheByPath.get(path);
+        }
+        return null;
+    }
+
+    private String getFromPathCache(Long uid) {
+        checkPathCacheSize();
+        return pathCache.get(uid);
+    }
+
+    private void checkLDataCacheSize() {
+        if (logicalDataCache.size() >= Constants.CACHE_SIZE) {
+            Long key = logicalDataCache.keySet().iterator().next();
+            logicalDataCache.remove(key);
+        }
+
+        if (logicalDataCacheByPath.size() >= Constants.CACHE_SIZE) {
+            String key = logicalDataCacheByPath.keySet().iterator().next();
+            logicalDataCacheByPath.remove(key);
+        }
+
+    }
+
+    private void checkPermissionsCacheSize() {
+        if (permissionsCache.size() >= Constants.CACHE_SIZE) {
+            Long key = permissionsCache.keySet().iterator().next();
+            permissionsCache.remove(key);
+        }
+    }
+
+    private void checkPathCacheSize() {
+        if (pathCache.size() >= Constants.CACHE_SIZE) {
+            Long key = pathCache.keySet().iterator().next();
+            pathCache.remove(key);
+        }
+    }
+
+    private void putToPathCache(Long uid, String res) {
+        checkPathCacheSize();
+        pathCache.put(uid, res);
+    }
+
+    public void recordRequest(Connection connection, HttpServletRequest httpServletRequest, double elapsed) throws SQLException, UnsupportedEncodingException {
+        try (PreparedStatement preparedStatement = connection.prepareStatement(
+                        "INSERT INTO requests_table (methodName, requestURL, "
+                        + "remoteAddr, contentLen, contentType, elapsedTime,userName, userAgent) "
+                        + "VALUES(?, ?, ?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS)) {
+            preparedStatement.setString(1, httpServletRequest.getMethod());
+            preparedStatement.setString(2, httpServletRequest.getRequestURL().toString());
+            preparedStatement.setString(3, httpServletRequest.getRemoteAddr());
+            preparedStatement.setInt(4, httpServletRequest.getContentLength());
+            preparedStatement.setString(5, httpServletRequest.getContentType());
+            preparedStatement.setDouble(6, elapsed);
+
+
+            String userNpasswd = getUserName(httpServletRequest);
+            preparedStatement.setString(7, userNpasswd);
+            preparedStatement.setString(8, httpServletRequest.getHeader("User-Agent"));
+            preparedStatement.executeUpdate();
+            ResultSet rs = preparedStatement.getGeneratedKeys();
+        }
+    }
+
+    public void recordRequests(Connection connection, List<RequestWapper> requestEvents) throws SQLException, UnsupportedEncodingException {
+        try (Statement s = connection.createStatement()) {
+            for (RequestWapper e : requestEvents) {
+                String query = "INSERT INTO requests_table (methodName, requestURL, "
+                        + "remoteAddr, contentLen, contentType, elapsedTime,userName, timeStamp ,userAgent) "
+                        + "VALUES('" + e.getMethod() + "', '" + e.getRequestURL()
+                        + "', '" + e.getRemoteAddr() + "', '" + e.getContentLength()
+                        + "', '" + e.getContentType() + "',  '" + e.getElapsed()
+                        + "', '" + e.getUserNpasswd() + "',  '" + new Timestamp(e.getTimeStamp())
+                        + "', '" + e.getUserAgent() + "')";
+                s.addBatch(query);
+            }
+            s.executeBatch();
+        }
+    }
+
+    public void insertOrUpdateStorageSites(Collection<StorageSite> sites, Connection connection) throws SQLException {
+        Collection<Credential> credentials = getCredentials(connection);
+        Collection<StorageSite> existingSites = getStorageSites(connection, Boolean.FALSE);
+        existingSites.addAll(getStorageSites(connection, Boolean.TRUE));
+        Collection<String> updatedSites = new ArrayList<>();
+
+        for (StorageSite s : sites) {
+            long credentialID = -1;
+            for (Credential c : credentials) {
+                if (c.getStorageSiteUsername().equals(s.getCredential().getStorageSiteUsername())
+                        && c.getStorageSitePassword().equals(s.getCredential().getStorageSitePassword())) {
+                    credentialID = c.getId();
+                    break;
+                }
+            }
+
+            if (credentialID == -1) {
+                try (PreparedStatement preparedStatement = connection.prepareStatement(
+                                "INSERT INTO credential_table (username, "
+                                + "password) VALUES (?, ?)", Statement.RETURN_GENERATED_KEYS)) {
+                    preparedStatement.setString(1, s.getCredential().getStorageSiteUsername());
+                    preparedStatement.setString(2, s.getCredential().getStorageSitePassword());
+                    preparedStatement.executeUpdate();
+                    ResultSet rs = preparedStatement.getGeneratedKeys();
+                    rs.next();
+                    credentialID = rs.getLong(1);
+                    s.getCredential().setId(credentialID);
+                    credentials.add(s.getCredential());
+                }
+            }
+
+
+            for (StorageSite es : existingSites) {
+                if (es.getResourceURI().equals(s.getResourceURI())) {
+//                    Long id = es.getStorageSiteId();
+                    try (PreparedStatement preparedStatement = connection.prepareStatement(
+                                    "UPDATE storage_site_table SET "
+                                    + "`resourceUri` = ?, "
+                                    + "`credentialRef` = ?, "
+                                    + "`currentNum` = ?, "
+                                    + "`currentSize` = ?, "
+                                    + "`quotaNum` = ?, "
+                                    + "`quotaSize` = ?, "
+                                    + "`isCache` = ?, "
+                                    + "`encrypt` = ? "
+                                    + "WHERE storageSiteId = ?;")) {
+                        preparedStatement.setString(1, s.getResourceURI());
+                        preparedStatement.setLong(2, credentialID);
+                        preparedStatement.setLong(3, s.getCurrentNum());
+                        preparedStatement.setLong(4, s.getCurrentSize());
+                        preparedStatement.setLong(5, s.getQuotaNum());
+                        preparedStatement.setLong(6, s.getQuotaSize());
+                        preparedStatement.setBoolean(7, s.isCache());
+                        preparedStatement.setBoolean(8, s.isEncrypt());
+                        preparedStatement.setLong(9, es.getStorageSiteId());
+                        preparedStatement.executeUpdate();
+                    }
+                    updatedSites.add(es.getResourceURI());
+                }
+            }
+            if (!updatedSites.contains(s.getResourceURI())) {
+                try (PreparedStatement preparedStatement = connection.prepareStatement(
+                                "INSERT INTO storage_site_table "
+                                + "(resourceUri, credentialRef, currentNum, "
+                                + "currentSize, quotaNum, quotaSize, isCache, extra, "
+                                + "encrypt) "
+                                + "VALUES (?, ?, ?, ?, ?, ?, ?, NULL, ?)", Statement.RETURN_GENERATED_KEYS)) {
+                    preparedStatement.setString(1, s.getResourceURI());
+                    preparedStatement.setLong(2, credentialID);
+                    preparedStatement.setLong(3, s.getCurrentNum());
+                    preparedStatement.setLong(4, s.getCurrentSize());
+                    preparedStatement.setLong(5, s.getQuotaNum());
+                    preparedStatement.setLong(6, s.getQuotaSize());
+                    preparedStatement.setBoolean(7, s.isCache());
+                    preparedStatement.setBoolean(8, s.isEncrypt());
+                    preparedStatement.executeUpdate();
+                    ResultSet rs = preparedStatement.getGeneratedKeys();
+                    rs.next();
+                    s.setStorageSiteId(rs.getLong(1));
+                    existingSites.add(s);
+                }
+            }
+
+        }
+    }
+
+    public void deleteStorageSites(List<Long> ids, Connection connection) throws SQLException {
+        if (ids != null && ids.size() > 0) {
+            for (Long id : ids) {
+                try (PreparedStatement preparedStatement = connection.prepareStatement(
+                                "DELETE FROM storage_site_table WHERE storageSiteId = ?")) {
+                    preparedStatement.setLong(1, id);
+                    preparedStatement.executeUpdate();
+                }
+            }
+        }
+    }
+
+    private Collection<Credential> getCredentials(Connection connection) throws SQLException {
+        try (PreparedStatement preparedStatement = connection.prepareStatement(
+                        "select * from credential_table")) {
+
+            ResultSet rs = preparedStatement.executeQuery();
+            Collection<Credential> res = new ArrayList<>();
+            while (rs.next()) {
+                Credential c = new Credential();
+                c.setId(rs.getLong(1));
+                c.setStorageSiteUsername(rs.getString(2));
+                c.setStorageSitePassword(rs.getString(3));
+                res.add(c);
+            }
+            return res;
+        }
+    }
+
+    public List<UsersWrapper> getUsers(Connection connection) throws SQLException {
+        List<UsersWrapper> users = new ArrayList<>();
+        try (PreparedStatement preparedStatement = connection.prepareStatement(
+                        "select * from auth_usernames_table")) {
+            ResultSet rs = preparedStatement.executeQuery();
+            while (rs.next()) {
+                UsersWrapper uw = new UsersWrapper();
+                long id = rs.getLong(1);
+                uw.setId(id);
+                String token = rs.getString(2);
+//                token = "****";
+                uw.setToken(token);
+                uw.setUname(rs.getString(3));
+
+                List<String> roles = new ArrayList<>();
+                try (PreparedStatement preparedStatement2 = connection.prepareStatement(
+                                "SELECT roleName FROM auth_roles_tables WHERE unameRef = " + id)) {
+                    ResultSet rs2 = preparedStatement2.executeQuery();
+                    while (rs2.next()) {
+                        roles.add(rs2.getString(1));
+                    }
+                }
+                uw.setRoles(roles);
+                users.add(uw);
+            }
+        }
+        return users;
+    }
+
+    public List<LogicalData> getLogicalDataByName(Path fileName, Connection connection) throws SQLException {
+        try (PreparedStatement ps = connection.prepareStatement("SELECT uid, parentRef, "
+                        + "ownerId, datatype, ldName, createDate, modifiedDate, ldLength, "
+                        + "contentTypesStr, pdriGroupRef, isSupervised, checksum, "
+                        + "lastValidationDate, lockTokenID, lockScope, lockType, "
+                        + "lockedByUser, lockDepth, lockTimeout, description, "
+                        + "locationPreference, status "
+                        + "FROM ldata_table WHERE ldata_table.ldName = ?")) {
+            ps.setString(1, fileName.toString());
+            ResultSet rs = ps.executeQuery();
+            List<LogicalData> results = new ArrayList<>();
+            while (rs.next()) {
+                LogicalData res = new LogicalData();
+                res.setUid(rs.getLong(1));
+                res.setParentRef(rs.getLong(2));
+                res.setOwner(rs.getString(3));
+                res.setType(rs.getString(4));
+                res.setName(rs.getString(5));
+                res.setCreateDate(rs.getTimestamp(6).getTime());
+                res.setModifiedDate(rs.getTimestamp(7).getTime());
+                res.setLength(rs.getLong(8));
+                res.setContentTypesAsString(rs.getString(9));
+                res.setPdriGroupId(rs.getLong(10));
+                res.setSupervised(rs.getBoolean(11));
+                res.setChecksum(rs.getString(12));
+                res.setLastValidationDate(rs.getLong(13));
+                res.setLockTokenID(rs.getString(14));
+                res.setLockScope(rs.getString(15));
+                res.setLockType(rs.getString(16));
+                res.setLockedByUser(rs.getString(17));
+                res.setLockDepth(rs.getString(18));
+                res.setLockTimeout(rs.getLong(19));
+                res.setDescription(rs.getString(20));
+                res.setDataLocationPreference(rs.getString(21));
+                res.setStatus(rs.getString(22));
+
+                putToLDataCache(res, null);
+                results.add(res);
+            }
+            return results;
+        }
+    }
+
+    private String getUserName(HttpServletRequest httpServletRequest) throws UnsupportedEncodingException {
+        String authorizationHeader = httpServletRequest.getHeader("authorization");
+        String userNpasswd = "";
+        if (authorizationHeader != null) {
+            final int index = authorizationHeader.indexOf(' ');
+            if (index > 0) {
+                final String credentials = new String(Base64.decodeBase64(authorizationHeader.substring(index).getBytes()), "UTF8");
+                String[] encodedToken = credentials.split(":");
+                if (encodedToken.length > 1) {
+                    String token = new String(Base64.decodeBase64(encodedToken[1]));
+                    if (token.contains(";") && token.contains("uid=")) {
+                        String uid = token.split(";")[0];
+                        userNpasswd = uid.split("uid=")[1];
+                    } else {
+                        userNpasswd = credentials.substring(0, credentials.indexOf(":"));
+                    }
+                }
+//                    if (userNpasswd == null || userNpasswd.length() < 1) {
+//                        userNpasswd = credentials.substring(0, credentials.indexOf(":"));
+//                    }
+
+//                final String credentials = new String(Base64.decodeBase64(autheader.substring(index)), "UTF8");
+
+//                final String token = credentials.substring(credentials.indexOf(":") + 1);
+            }
+        }
+        return userNpasswd;
+    }
+
     @Data
     @AllArgsConstructor
     public class PathInfo {
@@ -965,23 +1494,35 @@ public class JDBCatalogue extends MyDataSource {
     }
 
     public String getPathforLogicalData(LogicalData ld) throws SQLException {
+        String res = getFromPathCache(ld.getUid());
+        if (res != null) {
+            return res;
+        }
         try (Connection connection = getConnection()) {
-            return getPathforLogicalData(ld, connection);
+            res = getPathforLogicalData(ld, connection);
+            putToPathCache(ld.getUid(), res);
+            return res;
         }
     }
 
     public String getPathforLogicalData(LogicalData ld, @Nonnull Connection connection) throws SQLException {
+        String res = getFromPathCache(ld.getUid());
+        if (res != null) {
+            return res;
+        }
         try (PreparedStatement ps = connection.prepareStatement(
                         "SELECT ldName, parentRef FROM ldata_table WHERE uid = ?")) {
             PathInfo pi = new PathInfo(ld.getName(), ld.getParentRef());
             List<PathInfo> pil = new ArrayList<>();
             getPathforLogicalData(pi, pil, ps);
-            String res = "";
+            res = "";
             Collections.reverse(pil);
             for (PathInfo pi1 : pil) {
-                System.err.println("'" + pi1.getName() + "'");
+//                System.err.println("'" + pi1.getName() + "'");
                 res = res + "/" + pi1.getName();
             }
+
+            putToPathCache(ld.getUid(), res);
             return res;
         }
     }
@@ -991,6 +1532,35 @@ public class JDBCatalogue extends MyDataSource {
             ps.setString(1, owner);
             ps.setLong(2, uid);
             ps.executeUpdate();
+        }
+        LogicalData cached = getFromLDataCache(uid, null);
+
+        if (cached != null) {
+            cached.setOwner(owner);
+            putToLDataCache(cached, null);
+        }
+    }
+
+    public void addViewForRes(@Nonnull Long uid, @Nonnull Connection connection) throws SQLException {
+        try (PreparedStatement ps = connection.prepareStatement("UPDATE wp4_table SET views = views + 1, need_update = TRUE WHERE local_id = ?")) {
+            ps.setLong(1, uid);
+            ps.executeUpdate();
+        }
+    }
+
+    public void addViewForRes(@Nonnull Long uid) {
+        try {
+            try (Connection connection = getConnection()) {
+                try {
+                    addViewForRes(uid, connection);
+                    connection.commit();
+                } catch (Exception e) {
+                    connection.rollback();
+                    throw e;
+                }
+            }
+        } catch (Exception e) {
+            log.log(Level.SEVERE, null, e);
         }
     }
 }

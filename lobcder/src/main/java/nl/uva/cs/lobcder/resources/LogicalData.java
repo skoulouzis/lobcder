@@ -1,5 +1,6 @@
 package nl.uva.cs.lobcder.resources;
 
+import io.milton.common.Path;
 import lombok.Data;
 import nl.uva.cs.lobcder.util.Constants;
 
@@ -33,6 +34,7 @@ public class LogicalData implements Cloneable {
     private Boolean supervised = Boolean.FALSE;
     private String checksum = "";
     private Long lastValidationDate = Long.valueOf(0);
+    private String status;
     @XmlTransient
     private String lockTokenID;
     @XmlTransient

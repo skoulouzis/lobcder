@@ -4,9 +4,9 @@
  */
 package nl.uva.cs.lobcder.resources;
 
+import java.io.Serializable;
 import lombok.Data;
 import nl.uva.vlet.util.cog.GridProxy;
-import java.io.Serializable;
 
 /**
  *
@@ -15,6 +15,7 @@ import java.io.Serializable;
 @Data
 public class Credential implements Serializable {
 
+    private Long id;
     private String storageSiteUsername;
     private String storageSitePassword;
     private GridProxy gridProxy;

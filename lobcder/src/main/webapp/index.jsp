@@ -1,5 +1,12 @@
+<%-- 
+    Document   : index
+    Created on : Sep 16, 2013, 3:05:12 PM
+    Author     : alogo
+--%>
+
+<%@page contentType="text/html" pageEncoding="UTF-8"%>
 <!DOCTYPE html>
-<HTML lang="en">
+<html>
     <head>
         <meta charset="utf-8">
         <title>
@@ -19,27 +26,30 @@
                 </div>
             </div>
         </header>
+
         <div id="content">
             <div class="container">
                 <div class="row">
                     <div class="span2">
                         <ul id="main-nav" class="nav nav-tabs nav-stacked">
                             <li class="active" id="navhome">
-                                <a href="/lobcder-2.0-SNAPSHOT/">
-                                    <i class="icon-home icon-white">
-                                    </i>
-                                    Home
-                                </a>
+                                <a href="index.jsp">Home</a>
                             </li>
                             <li class="list-parent">
-                                <a href="/lobcder-2.0-SNAPSHOT/statistics.jsp">
+                                <a href="web/statistics.jsp">
                                     <i class="icon-globe icon-white">
                                     </i>
                                     Statistics
                                 </a>
                             </li>
+
+                            <li class="list-parent">
+                                <a href="manager.jsp">LOBCDER Manager</a>
+                            </li>
+
                         </ul>
                     </div>
+
                     <div id="page-content" class="span9">
                         <p style="text-align: justify; max-width: 90%;">
                             LOBCDER is a storage federation service that aims 
@@ -71,7 +81,7 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </div> 
         <footer>
             <div id="bottom">
                 <span>

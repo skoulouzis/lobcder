@@ -4,21 +4,28 @@
  */
 package nl.uva.cs.lobcder.rest;
 
-import lombok.extern.java.Log;
-import nl.uva.cs.lobcder.auth.MyPrincipal;
-import nl.uva.cs.lobcder.auth.Permissions;
-import nl.uva.cs.lobcder.resources.LogicalData;
-import nl.uva.cs.lobcder.util.CatalogueHelper;
-
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
+import java.sql.SQLException;
+import java.util.List;
+import java.util.logging.Level;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.logging.Level;
+import lombok.extern.java.Log;
+import nl.uva.cs.lobcder.auth.MyPrincipal;
+import nl.uva.cs.lobcder.auth.Permissions;
+import nl.uva.cs.lobcder.resources.LogicalData;
+import nl.uva.cs.lobcder.resources.PDRIDescr;
+import nl.uva.cs.lobcder.rest.wrappers.LogicalDataWrapped;
+import nl.uva.cs.lobcder.util.CatalogueHelper;
+import nl.uva.cs.lobcder.util.GridHelper;
+import nl.uva.vlet.exception.VlException;
 
 /**
  *
@@ -28,6 +35,7 @@ import java.util.logging.Level;
 @Path("item/")
 public class Item extends CatalogueHelper {
 
+//    private Map<Long, LogicalDataWrapped> logicalDataCache = new HashMap<>();
     @Context
     HttpServletRequest request;
     @Context
@@ -36,14 +44,18 @@ public class Item extends CatalogueHelper {
     @Path("query/{uid}")
     @GET
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public LogicalDataWrapped getLogicalData(@PathParam("uid") Long uid) {
-        try (Connection cn = getCatalogue().getConnection()) {
-            LogicalData resLD = getCatalogue().getLogicalDataByUid(uid, cn);
+    public LogicalDataWrapped getLogicalData(@PathParam("uid") Long uid) throws FileNotFoundException, IOException, VlException, URISyntaxException, MalformedURLException, Exception {
+        MyPrincipal mp = (MyPrincipal) request.getAttribute("myprincipal");
+//        LogicalDataWrapped res = logicalDataCache.get(uid);
+//        if(res !=null ){            
+//        }
+
+        try {
+            LogicalData resLD = getCatalogue().getLogicalDataByUid(uid);
             if (resLD == null) {
                 throw new WebApplicationException(Response.Status.NOT_FOUND);
             }
-            MyPrincipal mp = (MyPrincipal) request.getAttribute("myprincipal");
-            Permissions p = getCatalogue().getPermissions(uid, resLD.getOwner(), cn);
+            Permissions p = getCatalogue().getPermissions(uid, resLD.getOwner());
             if (!mp.canRead(p)) {
                 throw new WebApplicationException(Response.Status.UNAUTHORIZED);
             }
@@ -52,7 +64,18 @@ public class Item extends CatalogueHelper {
             res.setPermissions(p);
             res.setPath(getCatalogue().getPathforLogicalData(resLD));
             if (!resLD.isFolder() && mp.isAdmin()) {
-                res.setPdriList(getCatalogue().getPdriDescrByGroupId(resLD.getPdriGroupId(), cn));
+                List<PDRIDescr> pdriDescr = getCatalogue().getPdriDescrByGroupId(resLD.getPdriGroupId());
+                for (PDRIDescr pdri : pdriDescr) {
+                    if (pdri.getResourceUrl().startsWith("lfc")
+                            || pdri.getResourceUrl().startsWith("srm")
+                            || pdri.getResourceUrl().startsWith("gftp")) {
+                        pdriDescr.remove(pdri);
+                        GridHelper.initGridProxy(pdri.getUsername(), pdri.getPassword(), null, false);
+                        pdri.setPassword(GridHelper.getProxyAsBase64String());
+                        pdriDescr.add(pdri);
+                    }
+                }
+                res.setPdriList(pdriDescr);
             }
             return res;
         } catch (SQLException ex) {

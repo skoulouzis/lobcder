@@ -1,15 +1,15 @@
-DROP TABLE IF EXISTS permission_table, ldata_table, pdri_table, pdrigroup_table, storage_site_table, credential_table;
+DROP TABLE IF EXISTS permission_table, wp4_table, ldata_table, pdri_table, pdrigroup_table, storage_site_table, credential_table;
 
 CREATE TABLE pdrigroup_table (
   pdriGroupId SERIAL PRIMARY KEY,
   refCount INT, INDEX(refCount)
-);
+) ENGINE=InnoDB;
 
 CREATE TABLE credential_table (
   credintialId SERIAL PRIMARY KEY,
   username VARCHAR(255),
   password VARCHAR(255)
-);
+) ENGINE=InnoDB;
 
 
 
@@ -24,7 +24,7 @@ CREATE TABLE storage_site_table (
   isCache BOOLEAN NOT NULL DEFAULT FALSE, INDEX(isCache),
   extra VARCHAR(512),
   encrypt BOOLEAN NOT NULL DEFAULT FALSE, INDEX(encrypt)
-);
+) ENGINE=InnoDB;
 
 CREATE TABLE pdri_table (
   pdriId SERIAL PRIMARY KEY,
@@ -33,7 +33,7 @@ CREATE TABLE pdri_table (
   pdriGroupRef BIGINT UNSIGNED, INDEX(pdriGroupRef), FOREIGN KEY(pdriGroupRef) REFERENCES pdrigroup_table(pdriGroupId) ON DELETE CASCADE,
   isEncrypted BOOLEAN NOT NULL DEFAULT FALSE,
   encryptionKey BIGINT UNSIGNED 
-);
+) ENGINE=InnoDB;
 
 CREATE TABLE ldata_table (
  uid SERIAL PRIMARY KEY,
@@ -56,15 +56,39 @@ CREATE TABLE ldata_table (
  lockDepth  VARCHAR(255),
  lockTimeout  BIGINT NOT NULL DEFAULT 0,
  description VARCHAR(1024),
- locationPreference VARCHAR(1024)
-);
+ locationPreference VARCHAR(1024),
+ status enum('unavailable', 'corrupted', 'OK')
+) ENGINE=InnoDB;
+
+CREATE TABLE wp4_table (
+ id SERIAL PRIMARY KEY,
+ local_id BIGINT UNSIGNED, FOREIGN KEY(local_id) REFERENCES ldata_table(uid) ON DELETE SET NULL ,
+ global_id VARCHAR(255),
+ views INT UNSIGNED NOT NULL DEFAULT 0,
+ need_update BOOLEAN NOT NULL DEFAULT FALSE, INDEX(need_update),
+ need_create BOOLEAN NOT NULL DEFAULT TRUE, INDEX(need_create)
+) ENGINE=InnoDB;
 
 CREATE TABLE permission_table (
  id SERIAL PRIMARY KEY,
  permType ENUM('read', 'write'), INDEX(permType),
  ldUidRef BIGINT UNSIGNED, FOREIGN KEY(ldUidRef) REFERENCES ldata_table(uid) ON DELETE CASCADE, INDEX(ldUidRef),
  roleName VARCHAR(255)
-);
+) ENGINE=InnoDB;
+
+
+CREATE TABLE requests_table (
+ uid SERIAL PRIMARY KEY,
+ methodName VARCHAR(255), INDEX(methodName),
+ requestURL TEXT(5240),
+ remoteAddr TEXT(5240),
+ contentLen BIGINT,
+ contentType VARCHAR(5240),
+ elapsedTime DOUBLE,
+ userName TEXT(5240),
+ userAgent VARCHAR(1024),
+ timeStamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
 
 DELIMITER |
 
@@ -81,7 +105,7 @@ END|
 
 DROP TRIGGER IF EXISTS on_ldata_update |
 CREATE TRIGGER on_ldata_update
-BEFORE UPDATE ON ldata_table
+AFTER UPDATE ON ldata_table
 FOR EACH ROW BEGIN
   IF NEW.datatype = 'logical.file' THEN
     IF NEW.pdriGroupRef != OLD.pdriGroupRef THEN
@@ -93,7 +117,20 @@ FOR EACH ROW BEGIN
       END IF;
     END IF;
   END IF;
+  IF (NEW.ldName != OLD.ldName
+      OR NEW.modifiedDate != OLD.modifiedDate
+      OR NEW.ownerId != NEW.ownerId) THEN
+    UPDATE wp4_table SET need_update=TRUE WHERE local_id = NEW.uid;
+  END IF;
 END|
+
+DROP TRIGGER IF EXISTS on_ldata_insert |
+CREATE TRIGGER on_ldata_insert
+AFTER INSERT ON ldata_table
+FOR EACH ROW BEGIN
+  INSERT INTO wp4_table (local_id) VALUES(NEW.uid);
+END|
+
 
 -- DROP TRIGGER IF EXISTS on_pdri_incert |
 -- CREATE TRIGGER on_pdri_incert
@@ -111,6 +148,7 @@ UPDATE ldata_table SET parentRef = @rootRef WHERE uid = @rootRef;
 INSERT INTO permission_table (permType, ldUidRef, roleName) VALUES  ('read', @rootRef, 'other'),
                                                                     ('read', @rootRef, 'admin'),
                                                                     ('write', @rootRef, 'admin');
+
 INSERT INTO  credential_table(username, password) VALUES ('fakeuser', 'fakepass');
 SET @credRef = LAST_INSERT_ID();
 INSERT INTO storage_site_table(resourceUri, credentialRef, currentNum, currentSize, quotaNum, quotaSize, isCache)
