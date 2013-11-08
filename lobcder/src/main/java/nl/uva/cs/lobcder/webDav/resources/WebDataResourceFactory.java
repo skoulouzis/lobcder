@@ -31,12 +31,13 @@ public class WebDataResourceFactory implements ResourceFactory {
     @Override
     public Resource getResource(String host, String strPath) {
 
-        if(strPath.equals("/login.html"))
+        if (strPath.equals("/login.html")) {
             return null;
-
+        }
+        
         Path ldri = Path.path(strPath);
         String first;
-        do{
+        do {
             first = ldri.getFirst();
             ldri = ldri.getStripFirst();
         } while (!first.equals("dav"));

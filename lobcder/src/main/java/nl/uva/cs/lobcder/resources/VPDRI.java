@@ -449,7 +449,7 @@ public class VPDRI implements PDRI {
     public long getLength() throws IOException {
         try {
             return getVfsClient().getFile(vrl).getLength();
-        } catch (IOException | VlException ex) {
+        } catch (Exception ex) {
             if (reconnectAttemts < Constants.RECONNECT_NTRY) {
                 reconnect();
                 getLength();
@@ -526,7 +526,7 @@ public class VPDRI implements PDRI {
 //            putData(source.getData());
             double elapsed = System.currentTimeMillis() - start;
             double speed = ((source.getLength() * 8.0) * 1000.0) / (elapsed * 1000.0);
-
+            
             String msg = "Source: " + source.getHost() + " Destination: " + vrl.getScheme() + "://" + getHost() + " Replication_Speed: " + speed + " Kbites/sec Repl_Size: " + (getLength()) + " bytes";
             VPDRI.log.log(Level.INFO, msg);
             SpeedLogger.logSpeed(msg);

@@ -21,6 +21,8 @@ import nl.uva.cs.lobcder.webDav.resources.WebDataFileResource;
  */
 public class PropertiesHelper {
 
+    private static final String propertiesPath = "/lobcder.properties";
+
     public static List<String> getWorkers() {
         ArrayList<String> workers = new ArrayList<>();
         BufferedReader br = null;
@@ -73,7 +75,7 @@ public class PropertiesHelper {
 
     public static String getWorkerToken() throws IOException {
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-        InputStream in = classLoader.getResourceAsStream("/lobcder.properties");
+        InputStream in = classLoader.getResourceAsStream(propertiesPath);
         Properties properties = new Properties();
         properties.load(in);
         return properties.getProperty("worker.token");
@@ -81,26 +83,41 @@ public class PropertiesHelper {
 
     public static boolean doAggressiveReplication() throws IOException {
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-        InputStream in = classLoader.getResourceAsStream("/lobcder.properties");
+        InputStream in = classLoader.getResourceAsStream(propertiesPath);
         Properties properties = new Properties();
         properties.load(in);
-        return Boolean.valueOf(properties.getProperty("replication.aggressive"));
+        return Boolean.valueOf(properties.getProperty("replication.aggressive", "false"));
     }
 
     public static boolean doRedirectGets() throws IOException {
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-        InputStream in = classLoader.getResourceAsStream("/lobcder.properties");
+        InputStream in = classLoader.getResourceAsStream(propertiesPath);
         Properties properties = new Properties();
         properties.load(in);
-        return Boolean.valueOf(properties.getProperty("get.redirect"));
+        return Boolean.valueOf(properties.getProperty("get.redirect", "false"));
     }
 
     public static boolean doRemoteAuth() throws IOException {
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-        InputStream in = classLoader.getResourceAsStream("/lobcder.properties");
+        InputStream in = classLoader.getResourceAsStream(propertiesPath);
         Properties properties = new Properties();
         properties.load(in);
-        return Boolean.valueOf(properties.getProperty(" auth.useremote"));
+        return Boolean.valueOf(properties.getProperty("auth.use.remote", "true"));
+    }
 
+    public static String getMetadataReposetoryURL() throws IOException {
+        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+        InputStream in = classLoader.getResourceAsStream(propertiesPath);
+        Properties properties = new Properties();
+        properties.load(in);
+        return properties.getProperty("metadata.reposetory.url", "http://vphshare.atosresearch.eu/metadata-retrieval/rest/metadata");
+    }
+
+    public static Boolean useMetadataReposetory() throws IOException {
+        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+        InputStream in = classLoader.getResourceAsStream(propertiesPath);
+        Properties properties = new Properties();
+        properties.load(in);
+        return Boolean.valueOf(properties.getProperty("use.metadata.reposetory", "true"));
     }
 }

@@ -32,6 +32,7 @@ import nl.uva.cs.lobcder.resources.StorageSite;
 import nl.uva.cs.lobcder.rest.wrappers.UsersWrapper;
 import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.cs.lobcder.util.MyDataSource;
+import nl.uva.cs.lobcder.util.PropertiesHelper;
 import org.apache.commons.codec.binary.Base64;
 
 /**
@@ -51,20 +52,27 @@ public class JDBCatalogue extends MyDataSource {
     public JDBCatalogue() throws NamingException {
     }
 
-    public void startSweep() {
-        TimerTask gcTask = new TimerTask() {
-            Runnable deleteSweep = new DeleteSweep(getDatasource());
-            Runnable replicateSweep = new ReplicateSweep(getDatasource());
-            Runnable wp4Sweep = new WP4Sweep(getDatasource(),
-                    new WP4Sweep.WP4Connector("http://vphshare.atosresearch.eu/metadata-retrieval/rest/metadata"));
-
-            @Override
-            public void run() {
-                deleteSweep.run();
-                replicateSweep.run();
-                wp4Sweep.run();
-            }
-        };
+    public void startSweep() throws IOException {
+        TimerTask gcTask = new SweeprsTimerTask(getDatasource());
+//        TimerTask gcTask = new TimerTask() {
+//            Runnable deleteSweep = new DeleteSweep(getDatasource());
+//            Runnable replicateSweep = new ReplicateSweep(getDatasource());
+//            
+//            Boolean useRepo = PropertiesHelper.useMetadataReposetory();
+//            
+//            
+//            String metadataReposetory = PropertiesHelper.getMetadataReposetoryURL();
+//            
+//            Runnable wp4Sweep = new WP4Sweep(getDatasource(),
+//                    new WP4Sweep.WP4Connector(metadataReposetory));
+//
+//            @Override
+//            public void run() {
+//                deleteSweep.run();
+//                replicateSweep.run();
+//                wp4Sweep.run();
+//            }
+//        };
         timer = new Timer(true);
         timer.schedule(gcTask, 10000, 10000); //once in 10 sec
     }
@@ -1146,7 +1154,7 @@ public class JDBCatalogue extends MyDataSource {
             Iterator<Entry<String, LogicalData>> iter = logicalDataCacheByPath.entrySet().iterator();
             while (iter.hasNext()) {
                 Entry<String, LogicalData> value = iter.next();
-                if(value.getValue().getUid() == entry.getUid()){
+                if (value.getValue().getUid() == entry.getUid()) {
                     iter.remove();
                 }
             }

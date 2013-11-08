@@ -89,9 +89,9 @@ public class BasicAuthFilter implements Filter {
 //                        break;
 //                    }
 //                }
-
-//
-                if (workers != null && workers.size() > 0 && uname.startsWith("worker-")) {
+                
+                if (PropertiesHelper.doRedirectGets() && workers != null && 
+                        workers.size() > 0 && uname.startsWith("worker-")) {
                     if (authWorker == null) {
                         for (AuthI a : authList) {
                             if (a instanceof AuthWorker) {
