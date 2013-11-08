@@ -716,7 +716,7 @@ public class JDBCatalogue extends MyDataSource {
     public void copyFolder(LogicalData toCopy, LogicalData newParent, String newName, MyPrincipal principal, Connection connection) throws SQLException {
         Permissions toCopyPerm = getPermissions(toCopy.getUid(), toCopy.getOwner(), connection);
         Permissions newParentPerm = getPermissions(newParent.getUid(), newParent.getOwner(), connection);
-        Permissions permissionsForNew = new Permissions(principal);
+        Permissions permissionsForNew = new Permissions(principal, newParentPerm);
         if (toCopy.isFolder() && principal.canWrite(newParentPerm)) {
             // ignore folder if there is a problem
             LogicalData newFolderEntry = toCopy.clone();
@@ -760,7 +760,7 @@ public class JDBCatalogue extends MyDataSource {
     public void copyFile(LogicalData toCopy, LogicalData newParent, String newName, MyPrincipal principal, Connection connection) throws SQLException {
         Permissions toCopyPerm = getPermissions(toCopy.getUid(), toCopy.getOwner(), connection);
         Permissions newParentPerm = getPermissions(newParent.getUid(), newParent.getOwner(), connection);
-        Permissions permissionsForNew = new Permissions(principal);
+        Permissions permissionsForNew = new Permissions(principal, newParentPerm);
         if (!toCopy.isFolder() && principal.canRead(toCopyPerm) && principal.canWrite(newParentPerm)) {
             LogicalData newFileEntry = toCopy.clone();
             newFileEntry.setUid(Long.valueOf(0));

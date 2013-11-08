@@ -102,7 +102,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                     WebDataDirResource res = new WebDataDirResource(newFolderEntry, newCollectionPath, getCatalogue(), authList);
                     getCatalogue().setPermissions(
                             getCatalogue().registerDirLogicalData(newFolderEntry, connection).getUid(),
-                            new Permissions(getPrincipal()), connection);
+                            new Permissions(getPrincipal(), getPermissions()), connection);
                     connection.commit();
                     return res;
                 }
@@ -223,7 +223,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                     pdri.putData(inputStream);
                     //fileLogicalData.setChecksum(pdri.getChecksum());
                     fileLogicalData = getCatalogue().associateLogicalDataAndPdri(fileLogicalData, pdri, connection);
-                    getCatalogue().setPermissions(fileLogicalData.getUid(), new Permissions(getPrincipal()), connection);
+                    getCatalogue().setPermissions(fileLogicalData.getUid(), new Permissions(getPrincipal(), getPermissions()), connection);
                     connection.commit();
                     resource = new WebDataFileResource(fileLogicalData, Path.path(getPath(), newName), getCatalogue(), authList);
 //                    return new WebDataFileResource(fileLogicalData, Path.path(getPath(), newName), getCatalogue(), authList);
@@ -466,15 +466,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
         return false;
     }
 
-    /**
-     * This means to just lock the name Not to create the resource.
-     *
-     * @param name
-     * @param lt
-     * @param li
-     * @return
-     * @throws NotAuthorizedException
-     */
+
     @Override
     public LockToken createAndLock(String name, LockTimeout timeout, LockInfo lockInfo) throws NotAuthorizedException {
         try (Connection connection = getCatalogue().getConnection()) {
