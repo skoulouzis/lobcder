@@ -47,7 +47,7 @@ public class JDBCatalogue extends MyDataSource {
     private Map<String, LogicalData> logicalDataCacheByPath = new HashMap<>();
     private Map<Long, Permissions> permissionsCache = new HashMap<>();
     private Map<Long, String> pathCache = new HashMap<>();
-    private Map<Long, List<PDRIDescr>> PDRIDescrCache = new HashMap<>();
+//    Map<Long, List<PDRIDescr>> PDRIDescrCache = new HashMap<>();
 
     public JDBCatalogue() throws NamingException {
     }
@@ -278,10 +278,10 @@ public class JDBCatalogue extends MyDataSource {
     }
 
     public List<PDRIDescr> getPdriDescrByGroupId(Long groupId) throws SQLException, IOException {
-        List<PDRIDescr> res = PDRIDescrCache.get(groupId);
-        if (res != null) {
-            return res;
-        }
+//        List<PDRIDescr> res = PDRIDescrCache.get(groupId);
+//        if (res != null) {
+//            return res;
+//        }
         try (Connection connection = getConnection()) {
             return getPdriDescrByGroupId(groupId, connection);
         }
@@ -326,11 +326,11 @@ public class JDBCatalogue extends MyDataSource {
     }
 
     public List<PDRIDescr> getPdriDescrByGroupId(Long groupId, @Nonnull Connection connection) throws SQLException {
-        List<PDRIDescr> res = PDRIDescrCache.get(groupId);
-        if (res != null) {
-            return res;
-        }
-        res = new ArrayList<>();
+        //        List<PDRIDescr> res = PDRIDescrCache.get(groupId);
+        //        if (res != null) {
+        //            return res;
+        //        }
+        ArrayList<PDRIDescr> res = new ArrayList<>();
         long pdriGroupRef;
         long pdriId;
         try (PreparedStatement ps = connection.prepareStatement("SELECT fileName, storageSiteRef, storage_site_table.resourceUri, "
@@ -362,7 +362,7 @@ public class JDBCatalogue extends MyDataSource {
 //                }
                 res.add(new PDRIDescr(fileName, ssID, resourceURI, uName, passwd, encrypt, BigInteger.valueOf(key), Long.valueOf(groupId), Long.valueOf(pdriId)));
             }
-            PDRIDescrCache.put(groupId, res);
+//            PDRIDescrCache.put(groupId, res);
             return res;
         }
     }
@@ -1105,7 +1105,7 @@ public class JDBCatalogue extends MyDataSource {
                 ps.setLong(3, d.getId());
                 ps.executeUpdate();
                 List<PDRIDescr> res = getPdriDescrByGroupId(d.getPdriGroupRef(), connection);
-                PDRIDescrCache.put(d.getPdriGroupRef(), res);
+//                PDRIDescrCache.put(d.getPdriGroupRef(), res);
             }
         }
     }

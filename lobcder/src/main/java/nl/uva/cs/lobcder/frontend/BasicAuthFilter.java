@@ -89,9 +89,9 @@ public class BasicAuthFilter implements Filter {
 //                        break;
 //                    }
 //                }
-                
-                if (PropertiesHelper.doRedirectGets() && workers != null && 
-                        workers.size() > 0 && uname.startsWith("worker-")) {
+
+                if (PropertiesHelper.doRedirectGets() && workers != null
+                        && workers.size() > 0 && uname.startsWith("worker-")) {
                     if (authWorker == null) {
                         for (AuthI a : authList) {
                             if (a instanceof AuthWorker) {
@@ -122,8 +122,10 @@ public class BasicAuthFilter implements Filter {
                     }
                 } else {
                     for (AuthI a : authList) {
-                        if (a instanceof AuthWorker
-                                || PropertiesHelper.doRemoteAuth() 
+                        if (a instanceof AuthWorker) {
+                            continue;
+                        }
+                        if (!PropertiesHelper.doRemoteAuth()
                                 && a instanceof AuthRemote) {
                             continue;
                         }

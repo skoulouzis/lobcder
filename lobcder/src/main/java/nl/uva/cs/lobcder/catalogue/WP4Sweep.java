@@ -40,7 +40,8 @@ class WP4Sweep implements Runnable {
     private final DataSource datasource;
     private final WP4ConnectorI connector;
     private int unknownHostExceptionCounter;
-    private int sleepTime = 300;
+    private boolean runSweeper=true;
+    private int runnCounter;
 
     public WP4Sweep(DataSource datasource, WP4ConnectorI connector) {
         this.datasource = datasource;
@@ -259,30 +260,29 @@ class WP4Sweep implements Runnable {
 
     @Override
     public void run() {
-        try (Connection connection = datasource.getConnection()) {
-            connection.setAutoCommit(true);
-            create(connection, connector);
-            update(connection, connector);
-            delete(connection, connector);
-        } catch (Exception ex) {
-            if (ex instanceof UnknownHostException) {
-                unknownHostExceptionCounter++;
-                sleepTime = sleepTime * 2;
-                if (unknownHostExceptionCounter >= Constants.RECONNECT_NTRY) {
-                    unknownHostExceptionCounter = 0;
-                    sleepTime = 3600000;
-                }
-                try {
-                    Thread.currentThread().sleep(sleepTime);
-                    if (sleepTime >= 3600000) {
-                        sleepTime = 300;
+        runnCounter++;
+        if(runnCounter >= Constants.RECONNECT_NTRY ){
+            runSweeper = true;
+            runnCounter=0;
+            unknownHostExceptionCounter=0;
+        }
+        if (!runSweeper) {
+            try (Connection connection = datasource.getConnection()) {
+                connection.setAutoCommit(true);
+                create(connection, connector);
+                update(connection, connector);
+                delete(connection, connector);
+            } catch (Exception ex) {
+                if (ex instanceof UnknownHostException) {
+                    unknownHostExceptionCounter++;
+                    if (unknownHostExceptionCounter >= Constants.RECONNECT_NTRY) {
+                        runSweeper = false;
                     }
-                } catch (InterruptedException ex1) {
-                    Logger.getLogger(WP4Sweep.class.getName()).log(Level.SEVERE, null, ex1);
+                } else {
+                    Logger.getLogger(WP4Sweep.class.getName()).log(Level.SEVERE, null, ex);
                 }
-            } else {
-                Logger.getLogger(WP4Sweep.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
+
     }
 }

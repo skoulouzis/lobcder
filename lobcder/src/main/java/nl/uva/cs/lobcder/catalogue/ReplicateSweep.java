@@ -95,6 +95,7 @@ class ReplicateSweep implements Runnable {
             cpdri.delete();
             ps.setLong(1, cd.pdriId);
             ps.executeUpdate();
+            // PDRIDescrCache.
         }
     }
 
