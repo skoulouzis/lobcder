@@ -29,9 +29,6 @@ import org.codehaus.jackson.annotate.JsonIgnoreProperties;
  */
 public class AuthRemote implements AuthI {
 
-    public AuthRemote() throws IOException {
-        serviceURL = PropertiesHelper.getAuthRemoteURL();
-    }
     private static PrincipalCacheI pc = null;
 
     static {
@@ -56,12 +53,13 @@ public class AuthRemote implements AuthI {
         return serviceURL;
     }
 
-//    /**
-//     * @param serviceURL the serviceURL to set
-//     */
-//    public void setServiceURL(String serviceURL) {
-//        this.serviceURL = serviceURL;
-//    }
+    /**
+     * @param serviceURL the serviceURL to set
+     */
+    public void setServiceURL(String serviceURL) {
+        this.serviceURL = serviceURL;
+    }
+
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class User {
 
