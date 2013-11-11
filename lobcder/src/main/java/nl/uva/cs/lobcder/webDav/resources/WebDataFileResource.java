@@ -25,6 +25,7 @@ import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
+import java.nio.file.Files;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.*;
@@ -46,6 +47,7 @@ import nl.uva.cs.lobcder.util.PropertiesHelper;
 import nl.uva.vlet.data.StringUtil;
 import nl.uva.vlet.io.CircularStreamBufferTransferer;
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.io.FilenameUtils;
 
 /**
  *
@@ -406,6 +408,9 @@ public class WebDataFileResource extends WebDataResource implements
 //            it = getCatalogue().getPdriDescrByGroupId(getLogicalData().getPdriGroupId()).iterator();
             if (range != null) {
                 it = pdris.iterator();
+                if (range.getFinish() == null) {
+                    range = new Range(range.getStart(), (getContentLength() - 1));
+                }
                 WebDataFileResource.log.log(Level.FINE, "Start: {0} end: {1} range: {2}", new Object[]{range.getStart(), range.getFinish(), range.getRange()});
                 pdri = transfererRange(it, out, 0, null, range);
             } else {
