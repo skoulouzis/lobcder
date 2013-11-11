@@ -10,6 +10,7 @@ import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.json.JSONConfiguration;
 import com.sun.jersey.client.urlconnection.HTTPSProperties;
+import java.io.IOException;
 import java.security.SecureRandom;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
@@ -19,6 +20,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.naming.InitialContext;
 import javax.net.ssl.*;
+import nl.uva.cs.lobcder.util.PropertiesHelper;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
 /**
@@ -27,6 +29,9 @@ import org.codehaus.jackson.annotate.JsonIgnoreProperties;
  */
 public class AuthRemote implements AuthI {
 
+    public AuthRemote() throws IOException {
+        serviceURL = PropertiesHelper.getAuthRemoteURL();
+    }
     private static PrincipalCacheI pc = null;
 
     static {
@@ -51,13 +56,12 @@ public class AuthRemote implements AuthI {
         return serviceURL;
     }
 
-    /**
-     * @param serviceURL the serviceURL to set
-     */
-    public void setServiceURL(String serviceURL) {
-        this.serviceURL = serviceURL;
-    }
-
+//    /**
+//     * @param serviceURL the serviceURL to set
+//     */
+//    public void setServiceURL(String serviceURL) {
+//        this.serviceURL = serviceURL;
+//    }
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class User {
 

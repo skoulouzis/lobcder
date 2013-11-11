@@ -57,6 +57,10 @@ public class BasicAuthFilter implements Filter {
                 final String uname = credentials.substring(0, credentials.indexOf(":"));
                 final String token = credentials.substring(credentials.indexOf(":") + 1);
 
+
+                double start = System.currentTimeMillis();
+
+
                 MyPrincipal principal = null;
                 List<String> workers = PropertiesHelper.getWorkers();
 
@@ -146,6 +150,30 @@ public class BasicAuthFilter implements Filter {
 //                    }
 //                    principal = authT.checkToken(token);
 //                }
+
+                String method = ((HttpServletRequest) httpRequest).getMethod();
+                StringBuffer reqURL = ((HttpServletRequest) httpRequest).getRequestURL();
+                double elapsed = System.currentTimeMillis() - start;
+                
+                String userAgent = ((HttpServletRequest) httpRequest).getHeader("User-Agent");
+
+                String from = ((HttpServletRequest) httpRequest).getRemoteAddr();
+//        String user = ((HttpServletRequest) httpRequest).getRemoteUser();
+                int contentLen = ((HttpServletRequest) httpRequest).getContentLength();
+                String contentType = ((HttpServletRequest) httpRequest).getContentType();
+
+                String authorizationHeader = ((HttpServletRequest) httpRequest).getHeader("authorization");
+                String userNpasswd = "";
+                if (authorizationHeader != null) {
+                    userNpasswd = authorizationHeader.split("Basic ")[1];
+                }
+                String queryString = ((HttpServletRequest) httpRequest).getQueryString();
+
+                log.log(Level.INFO, "Req_Source: {0} Method: {1} Content_Len: {2} "
+                        + "Content_Type: {3} Elapsed_Time: {4} sec EncodedUser: {5} "
+                        + "UserAgent: {6} queryString: {7} reqURL: {8}", 
+                        new Object[]{from, method, contentLen, contentType, elapsed / 1000.0, userNpasswd, userAgent, queryString, reqURL});
+                
                 if (principal != null) {
                     httpRequest.setAttribute("myprincipal", principal);
                     chain.doFilter(httpRequest, httpResponse);

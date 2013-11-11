@@ -25,7 +25,7 @@ public class LocalDbAuth implements AuthI {
 
     private DataSource datasource = null;
     private PrincipalCacheI pc = null;
-    private int attempts=0;
+    private int attempts = 0;
 
     public LocalDbAuth() throws NamingException {
         javax.naming.Context ctx = new InitialContext();
@@ -80,11 +80,11 @@ public class LocalDbAuth implements AuthI {
                     pc.putPrincipal(token, res);
                 }
             }
-            attempts=0;
+            attempts = 0;
             return res;
         } catch (Exception ex) {
-            if (ex instanceof SQLException 
-                    && attempts <=Constants.RECONNECT_NTRY) {
+            if (ex instanceof SQLException
+                    && attempts <= Constants.RECONNECT_NTRY) {
                 attempts++;
                 checkToken(token);
             } else {

@@ -120,4 +120,12 @@ public class PropertiesHelper {
         properties.load(in);
         return Boolean.valueOf(properties.getProperty("use.metadata.reposetory", "true"));
     }
+
+    public static String getAuthRemoteURL() throws IOException {
+        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+        InputStream in = classLoader.getResourceAsStream(propertiesPath);
+        Properties properties = new Properties();
+        properties.load(in);
+        return properties.getProperty("auth.remote.url","https://jump.vph-share.eu/validatetkt/?ticket=");
+    }
 }
