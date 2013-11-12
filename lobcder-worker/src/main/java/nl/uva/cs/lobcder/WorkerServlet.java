@@ -86,7 +86,7 @@ public class WorkerServlet extends HttpServlet {
 
 
         restURL = prop.getProperty(("rest.url"), "http://localhost:8080/lobcder/rest/");
-        token = prop.getProperty(("rest.pass"));
+        token = prop.getProperty(("rest.password"));
 //        uname = prop.getProperty(("rest.uname"));
         clientConfig = configureClient();
         clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
@@ -121,6 +121,17 @@ public class WorkerServlet extends HttpServlet {
                 PDRI pdri = getPDRI(fileUID);
                 long elapsedGetPDRI = startGetPDRI - System.currentTimeMillis();
                 Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, "elapsedGetPDRI: {0}", elapsedGetPDRI);
+                long len;
+                String rangeStr = request.getHeader(Constants.RANGE_HEADER_NAME);
+                if (rangeStr != null && rangeStr.contains("=")) {
+                    range = Range.parse(rangeStr.split("=")[1]);
+                }
+                if (range != null) {
+                    len = range.getFinish() - range.getStart() + 1;
+                } else {
+                    len = size;
+                }
+                response.setContentLength((int) len);
                 if (pdri == null) {
                     response.setStatus(HttpStatus.SC_INTERNAL_SERVER_ERROR);
                     Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, new NullPointerException());
@@ -128,8 +139,7 @@ public class WorkerServlet extends HttpServlet {
                 } else {
                     long startTransfer = System.currentTimeMillis();
                     OutputStream out = response.getOutputStream();
-                    String rangeStr = request.getHeader(Constants.RANGE_HEADER_NAME);
-                    if (rangeStr != null && rangeStr.contains("=")) {
+                    if (range != null) {
                         range = Range.parse(rangeStr.split("=")[1]);
                         pdri.copyRange(range, out);
                         response.setStatus(HttpStatus.SC_PARTIAL_CONTENT);
@@ -144,14 +154,6 @@ public class WorkerServlet extends HttpServlet {
                     if (elapsed <= 0) {
                         elapsed = 1;
                     }
-
-                    long len;
-                    if (range != null) {
-                        len = range.getFinish() - range.getStart() + 1;
-                    } else {
-                        len = size;
-                    }
-
                     double speed = ((len * 8.0) * 1000.0) / (elapsed * 1000.0);
                     Double oldSpeed = weightPDRIMap.get(pdri.getHost());
                     if (oldSpeed == null) {
