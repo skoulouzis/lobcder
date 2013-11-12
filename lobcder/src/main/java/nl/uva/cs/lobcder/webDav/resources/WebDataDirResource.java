@@ -4,6 +4,7 @@
  */
 package nl.uva.cs.lobcder.webDav.resources;
 
+import com.google.common.io.Files;
 import io.milton.common.Path;
 import io.milton.http.*;
 import io.milton.http.exceptions.BadRequestException;
@@ -30,7 +31,6 @@ import nl.uva.cs.lobcder.auth.Permissions;
 import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
 import nl.uva.cs.lobcder.resources.LogicalData;
 import nl.uva.cs.lobcder.resources.PDRI;
-import nl.uva.cs.lobcder.resources.PDRIDescr;
 import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.cs.lobcder.util.SpeedLogger;
 import static org.rendersnake.HtmlAttributesFactory.*;
@@ -43,11 +43,14 @@ import org.rendersnake.HtmlCanvas;
 @Log
 public class WebDataDirResource extends WebDataResource implements FolderResource,
         CollectionResource, DeletableCollectionResource, LockingCollectionResource {
+
     private int attempts = 0;
+    private Map<String, String> mimeTypeMap = new HashMap<>();
 
     public WebDataDirResource(@Nonnull LogicalData logicalData, Path path, @Nonnull JDBCatalogue catalogue, @Nonnull List<AuthI> authList) {
         super(logicalData, path, catalogue, authList);
         WebDataDirResource.log.log(Level.FINE, "Init. WebDataDirResource:  {0}", getPath());
+        mimeTypeMap.put("mp4", "video/mp4");
     }
 
     @Override
@@ -181,7 +184,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
             ConflictException, NotAuthorizedException, BadRequestException {
         WebDataDirResource.log.log(Level.FINE, "createNew. for {0}\n\t newName:\t{1}\n\t length:\t{2}\n\t contentType:\t{3}", new Object[]{getPath(), newName, length, contentType});
         LogicalData fileLogicalData;
-        List<PDRIDescr> pdriDescrList;
+//        List<PDRIDescr> pdriDescrList;
         WebDataFileResource resource;
         PDRI pdri;
         double start = System.currentTimeMillis();
@@ -190,6 +193,9 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
 //                Long uid = getCatalogue().getLogicalDataUidByParentRefAndName(getLogicalData().getUid(), newName, connection);
                 Path newPath = Path.path(getPath(), newName);
                 fileLogicalData = getCatalogue().getLogicalDataByPath(newPath, connection);
+                if (contentType == null) {
+                    contentType = mimeTypeMap.get(Files.getFileExtension(newName));
+                }
                 if (fileLogicalData != null) {  // Resource exists, update
 //                    throw new ConflictException(this, newName);
                     Permissions p = getCatalogue().getPermissions(fileLogicalData.getUid(), fileLogicalData.getOwner(), connection);
@@ -198,6 +204,9 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                     }
                     fileLogicalData.setLength(length);
                     fileLogicalData.setModifiedDate(System.currentTimeMillis());
+                    if (contentType == null) {
+                        contentType = mimeTypeMap.get(Files.getFileExtension(newName));
+                    }
                     fileLogicalData.addContentType(contentType);
 
                     //Create new
@@ -373,7 +382,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                     html._tr()
                             .tr()
                             .td()
-                                    //                        .a(href("../dav" + getPath() + "/" + ld.getName()))
+                            //                        .a(href("../dav" + getPath() + "/" + ld.getName()))
                             .a(href(ref))
                             .img(src("").alt(ld.getName()))
                             ._a()
@@ -465,7 +474,6 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
     public boolean isLockedOutRecursive(Request rqst) {
         return false;
     }
-
 
     @Override
     public LockToken createAndLock(String name, LockTimeout timeout, LockInfo lockInfo) throws NotAuthorizedException {

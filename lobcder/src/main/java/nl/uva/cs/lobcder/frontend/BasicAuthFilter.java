@@ -154,7 +154,7 @@ public class BasicAuthFilter implements Filter {
                 String method = ((HttpServletRequest) httpRequest).getMethod();
                 StringBuffer reqURL = ((HttpServletRequest) httpRequest).getRequestURL();
                 double elapsed = System.currentTimeMillis() - start;
-                
+
                 String userAgent = ((HttpServletRequest) httpRequest).getHeader("User-Agent");
 
                 String from = ((HttpServletRequest) httpRequest).getRemoteAddr();
@@ -171,9 +171,9 @@ public class BasicAuthFilter implements Filter {
 
                 log.log(Level.INFO, "Req_Source: {0} Method: {1} Content_Len: {2} "
                         + "Content_Type: {3} Elapsed_Time: {4} sec EncodedUser: {5} "
-                        + "UserAgent: {6} queryString: {7} reqURL: {8}", 
+                        + "UserAgent: {6} queryString: {7} reqURL: {8}",
                         new Object[]{from, method, contentLen, contentType, elapsed / 1000.0, userNpasswd, userAgent, queryString, reqURL});
-                
+
                 if (principal != null) {
                     httpRequest.setAttribute("myprincipal", principal);
                     chain.doFilter(httpRequest, httpResponse);

@@ -184,8 +184,9 @@ public class VPDRI implements PDRI {
         try {
             file = (VFile) getVfsClient().openLocation(vrl);
             doCopy(file, range, out, getEncrypted());
-        } catch (IOException | VlException | InvalidAlgorithmParameterException | NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | IllegalBlockSizeException | BadPaddingException ex) {
-            if (ex instanceof ResourceNotFoundException || ex.getMessage().contains("Couldn open location. Get NULL object for location:")) {
+        } catch (Exception ex) {
+            if (ex instanceof ResourceNotFoundException
+                    || ex.getMessage().contains("Couldn open location. Get NULL object for location:")) {
                 try {
 //                    VRL assimilationVRL = new VRL(resourceUrl).append(URLEncoder.encode(fileName, "UTF-8"));
                     VRL assimilationVRL = new VRL(resourceUrl).append(fileName);
@@ -245,7 +246,6 @@ public class VPDRI implements PDRI {
         try {
             if (file instanceof VRandomReadable) {
                 VRandomReadable ra = (VRandomReadable) file;
-                len = range.getFinish() - range.getStart() + 1;
                 byte[] buff = new byte[buffSize];
                 int totalBytesRead = 0;
                 while (totalBytesRead < len || read != -1) {
@@ -323,7 +323,7 @@ public class VPDRI implements PDRI {
                 } catch (VRLSyntaxException ex1) {
                     throw new IOException(ex1);
                 } catch (VlException ex1) {
-                    if (ex instanceof ResourceNotFoundException){ //|| ex.getMessage().contains("Couldn open location. Get NULL object for location:")) {
+                    if (ex instanceof ResourceNotFoundException) { //|| ex.getMessage().contains("Couldn open location. Get NULL object for location:")) {
                         throw new IOException(ex1);
                     }
                     if (reconnectAttemts < Constants.RECONNECT_NTRY) {
@@ -526,7 +526,7 @@ public class VPDRI implements PDRI {
 //            putData(source.getData());
             double elapsed = System.currentTimeMillis() - start;
             double speed = ((source.getLength() * 8.0) * 1000.0) / (elapsed * 1000.0);
-            
+
             String msg = "Source: " + source.getHost() + " Destination: " + vrl.getScheme() + "://" + getHost() + " Replication_Speed: " + speed + " Kbites/sec Repl_Size: " + (getLength()) + " bytes";
             VPDRI.log.log(Level.INFO, msg);
             SpeedLogger.logSpeed(msg);
