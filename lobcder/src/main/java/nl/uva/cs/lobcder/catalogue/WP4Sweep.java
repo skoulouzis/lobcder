@@ -39,9 +39,6 @@ class WP4Sweep implements Runnable {
 
     private final DataSource datasource;
     private final WP4ConnectorI connector;
-    private int unknownHostExceptionCounter;
-    private boolean runSweeper=true;
-    private int runnCounter;
 
     public WP4Sweep(DataSource datasource, WP4ConnectorI connector) {
         this.datasource = datasource;
@@ -260,13 +257,7 @@ class WP4Sweep implements Runnable {
 
     @Override
     public void run() {
-        runnCounter++;
-        if(runnCounter >= Constants.RECONNECT_NTRY ){
-            runSweeper = true;
-            runnCounter=0;
-            unknownHostExceptionCounter=0;
-        }
-        if (!runSweeper) {
+        
             try (Connection connection = datasource.getConnection()) {
                 connection.setAutoCommit(true);
                 create(connection, connector);
@@ -274,15 +265,15 @@ class WP4Sweep implements Runnable {
                 delete(connection, connector);
             } catch (Exception ex) {
                 if (ex instanceof UnknownHostException) {
-                    unknownHostExceptionCounter++;
-                    if (unknownHostExceptionCounter >= Constants.RECONNECT_NTRY) {
-                        runSweeper = false;
-                    }
+//                    unknownHostExceptionCounter++;
+//                    if (unknownHostExceptionCounter >= Constants.RECONNECT_NTRY) {
+//                        runSweeper = false;
+//                    }
                 } else {
                     Logger.getLogger(WP4Sweep.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
-        }
+        
 
     }
 }
