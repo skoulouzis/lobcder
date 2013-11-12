@@ -1,11 +1,12 @@
 package nl.uva.cs.lobcder.rest.wrappers;
 
-import java.util.List;
-import javax.xml.bind.annotation.XmlRootElement;
 import lombok.Data;
 import nl.uva.cs.lobcder.auth.Permissions;
 import nl.uva.cs.lobcder.resources.LogicalData;
 import nl.uva.cs.lobcder.resources.PDRIDescr;
+
+import javax.xml.bind.annotation.XmlRootElement;
+import java.util.List;
 
 /**
  * User: dvasunin
@@ -16,7 +17,6 @@ import nl.uva.cs.lobcder.resources.PDRIDescr;
 @XmlRootElement
 @Data
 public class LogicalDataWrapped {
-
     private LogicalData logicalData;
     private String path;
     private Permissions permissions;

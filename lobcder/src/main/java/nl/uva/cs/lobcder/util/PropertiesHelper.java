@@ -4,6 +4,8 @@
  */
 package nl.uva.cs.lobcder.util;
 
+import nl.uva.cs.lobcder.webDav.resources.WebDataFileResource;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -13,7 +15,6 @@ import java.util.List;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import nl.uva.cs.lobcder.webDav.resources.WebDataFileResource;
 
 /**
  *
@@ -127,5 +128,13 @@ public class PropertiesHelper {
         Properties properties = new Properties();
         properties.load(in);
         return properties.getProperty("auth.remote.url","https://jump.vph-share.eu/validatetkt/?ticket=");
+    }
+
+    public static int getDefaultRowLimit() throws IOException {
+        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+        InputStream in = classLoader.getResourceAsStream(propertiesPath);
+        Properties properties = new Properties();
+        properties.load(in);
+        return Integer.valueOf(properties.getProperty("default.rowlimit","500"));
     }
 }
