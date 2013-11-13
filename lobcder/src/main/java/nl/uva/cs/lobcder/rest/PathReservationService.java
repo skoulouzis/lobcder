@@ -4,6 +4,7 @@
  */
 package nl.uva.cs.lobcder.rest;
 
+import com.google.common.io.Files;
 import java.io.IOException;
 import nl.uva.cs.lobcder.rest.wrappers.WorkerStatus;
 import nl.uva.cs.lobcder.rest.wrappers.ReservationInfo;
@@ -35,6 +36,7 @@ import nl.uva.cs.lobcder.auth.Permissions;
 import nl.uva.cs.lobcder.resources.LogicalData;
 import nl.uva.cs.lobcder.util.CatalogueHelper;
 import nl.uva.cs.lobcder.util.PropertiesHelper;
+import org.apache.commons.io.FilenameUtils;
 
 /**
  *
@@ -86,10 +88,9 @@ public class PathReservationService extends CatalogueHelper {
         MultivaluedMap<String, String> queryParameters = info.getQueryParameters();
         if (mp.getRoles().contains("planner") || mp.isAdmin()
                 && queryParameters != null && !queryParameters.isEmpty()) {
-
+            
             String dataName = queryParameters.getFirst("dataName");
             if (dataName != null && dataName.length() > 0) {
-
                 List<String> storageList = queryParameters.get("storageSiteHost");
                 String storageSiteHost = null;
                 int index = -1;
@@ -102,7 +103,14 @@ public class PathReservationService extends CatalogueHelper {
                 LogicalData ld;
                 Permissions p = null;
                 try (Connection cn = getCatalogue().getConnection()) {
-                    List<LogicalData> ldList = getCatalogue().getLogicalDataByName(io.milton.common.Path.path(dataName), cn);
+                    //-----------------THIS IS TEMPORARY IT'S ONLY FOR THE DEMO!!!!!!!!!!
+                    String fileNameWithOutExt = FilenameUtils.removeExtension(dataName);
+                    fileNameWithOutExt+=".webm";
+                    List<LogicalData> ldList = getCatalogue().getLogicalDataByName(io.milton.common.Path.path(fileNameWithOutExt), cn);
+                    if(ldList == null || ldList.isEmpty()){
+                        ldList = getCatalogue().getLogicalDataByName(io.milton.common.Path.path(dataName), cn);
+                    }
+                    //--------------------------------------------------------------
                     if(ldList == null || ldList.isEmpty()){
                         return null;
                     }
