@@ -15,10 +15,13 @@ import java.net.UnknownHostException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.GET;
@@ -125,16 +128,20 @@ public class PathReservationService extends CatalogueHelper {
                     log.log(Level.SEVERE, null, ex);
                     throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
                 }
-
-//                    Integer alocationStrategy = Integer.valueOf(queryParameters.getFirst("allocationStrategy"));
+                //                    Integer alocationStrategy = Integer.valueOf(queryParameters.getFirst("allocationStrategy"));
 
                 ReservationInfo info = new ReservationInfo();
                 if (p != null && mp.canRead(p)) {
+
+
                     info.setCommunicationID(communicationID);
                     String workerURL = scheduleWorker(storageSiteHost, ld);
                     info.setCommunicationID(communicationID);
+                    storageSiteHost = replaceIP(storageSiteHost);
                     info.setStorageHost(storageSiteHost);
                     info.setStorageHostIndex(index);
+
+                    workerURL = replaceIP(workerURL);
                     info.setWorkerDataAccessURL(workerURL);
                 }
                 return info;
@@ -181,9 +188,8 @@ public class PathReservationService extends CatalogueHelper {
         if (storageSiteHost != null) {
             for (String w : workers) {
                 URL wURI = new URL(w);
-                InetAddress address = InetAddress.getByName(storageSiteHost);
-                String host = address.getHostAddress();
-                if (wURI.getHost().equals(host)) {
+                String ip = getIP(storageSiteHost);
+                if (wURI.getHost().equals(ip)) {
                     worker = w;
                     break;
                 }
@@ -197,6 +203,12 @@ public class PathReservationService extends CatalogueHelper {
             worker = workers.get(workerIndex++);
         }
 
+
+
+        URL workerURL = new URL(worker);
+        String workerIP = getIP(workerURL.getHost());
+        worker = new URL(workerURL.getProtocol(), workerIP, workerURL.getFile()).toString();
+
         if (!worker.endsWith("/")) {
             worker += "/";
         }
@@ -208,24 +220,53 @@ public class PathReservationService extends CatalogueHelper {
 
     private String getStorageSiteHost(List<String> storageList) throws MalformedURLException, UnknownHostException {
         workers = PropertiesHelper.getWorkers();
-        List<Object> selectionList = new ArrayList<>();
+        List<String> selectionList = new ArrayList<>();
         for (String w : workers) {
             URL wURI = new URL(w);
 
             for (String h : storageList) {
-                InetAddress address = InetAddress.getByName(h);
-                String host = address.getHostAddress();
-                if (host.equals(wURI.getHost())) {
-                    selectionList.add(w);
+                String ip = getIP(h);
+                if (ip.equals(wURI.getHost())) {
+                    selectionList.add(new URL(wURI.getProtocol(), ip, wURI.getPort(), wURI.getFile()).toString());
                 }
             }
         }
         if (!selectionList.isEmpty()) {
             int index = new Random().nextInt(selectionList.size());
             String[] storageArray = storageList.toArray(new String[selectionList.size()]);
+
             return storageArray[index];
         } else {
             return null;
         }
+    }
+
+    private String getIP(String hostName) {
+        try {
+            return InetAddress.getByName(hostName).getHostAddress();
+        } catch (UnknownHostException ex) {
+            return hostName;
+        }
+    }
+
+    private String replaceIP(String host) throws MalformedURLException {
+        URL hostURL;
+        host = getIP(host);
+        Map<String, String> map = PropertiesHelper.getIPMap();
+        try {
+            hostURL = new URL(host);
+        } catch (MalformedURLException ex) {
+            if (map.containsKey(host)) {
+                String mapedIP = map.get(host);
+                return mapedIP;
+            }
+            return host;
+        }
+
+        if (map.containsKey(hostURL.getHost())) {
+            String mapedIP = map.get(hostURL.getHost());
+            return new URL(hostURL.getProtocol(), mapedIP, hostURL.getPort(), hostURL.getFile()).toString();
+        }
+        return host;
     }
 }
