@@ -6,10 +6,12 @@ package nl.uva.cs.lobcder.rest;
 
 import com.google.common.io.Files;
 import java.io.IOException;
+import java.net.InetAddress;
 import nl.uva.cs.lobcder.rest.wrappers.WorkerStatus;
 import nl.uva.cs.lobcder.rest.wrappers.ReservationInfo;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -88,7 +90,7 @@ public class PathReservationService extends CatalogueHelper {
         MultivaluedMap<String, String> queryParameters = info.getQueryParameters();
         if (mp.getRoles().contains("planner") || mp.isAdmin()
                 && queryParameters != null && !queryParameters.isEmpty()) {
-            
+
             String dataName = queryParameters.getFirst("dataName");
             if (dataName != null && dataName.length() > 0) {
                 List<String> storageList = queryParameters.get("storageSiteHost");
@@ -105,13 +107,13 @@ public class PathReservationService extends CatalogueHelper {
                 try (Connection cn = getCatalogue().getConnection()) {
                     //-----------------THIS IS TEMPORARY IT'S ONLY FOR THE DEMO!!!!!!!!!!
                     String fileNameWithOutExt = FilenameUtils.removeExtension(dataName);
-                    fileNameWithOutExt+=".webm";
+                    fileNameWithOutExt += ".webm";
                     List<LogicalData> ldList = getCatalogue().getLogicalDataByName(io.milton.common.Path.path(fileNameWithOutExt), cn);
-                    if(ldList == null || ldList.isEmpty()){
+                    if (ldList == null || ldList.isEmpty()) {
                         ldList = getCatalogue().getLogicalDataByName(io.milton.common.Path.path(dataName), cn);
                     }
                     //--------------------------------------------------------------
-                    if(ldList == null || ldList.isEmpty()){
+                    if (ldList == null || ldList.isEmpty()) {
                         return null;
                     }
                     //Should be only one
@@ -179,7 +181,9 @@ public class PathReservationService extends CatalogueHelper {
         if (storageSiteHost != null) {
             for (String w : workers) {
                 URL wURI = new URL(w);
-                if (wURI.getHost().equals(storageSiteHost)) {
+                InetAddress address = InetAddress.getByName(storageSiteHost);
+                String host = address.getHostAddress();
+                if (wURI.getHost().equals(host)) {
                     worker = w;
                     break;
                 }
@@ -202,18 +206,22 @@ public class PathReservationService extends CatalogueHelper {
         return w + "/" + token;
     }
 
-    private String getStorageSiteHost(List<String> storageList) throws MalformedURLException {
+    private String getStorageSiteHost(List<String> storageList) throws MalformedURLException, UnknownHostException {
         workers = PropertiesHelper.getWorkers();
         List<Object> selectionList = new ArrayList<>();
         for (String w : workers) {
             URL wURI = new URL(w);
-            if (storageList.contains(wURI.getHost())) {
-                selectionList.add(w);
+
+            for (String h : storageList) {
+                InetAddress address = InetAddress.getByName(h);
+                String host = address.getHostAddress();
+                if (host.equals(wURI.getHost())) {
+                    selectionList.add(w);
+                }
             }
         }
         if (!selectionList.isEmpty()) {
             int index = new Random().nextInt(selectionList.size());
-
             String[] storageArray = storageList.toArray(new String[selectionList.size()]);
             return storageArray[index];
         } else {
