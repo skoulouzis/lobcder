@@ -14,7 +14,7 @@
     
     
     <servlet>
-        <servlet-name>Jersey REST Service</servlet-name>
+        <servlet-name>ProtectedREST</servlet-name>
         <servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class>
         <init-param>
             <param-name>com.sun.jersey.config.property.packages</param-name>
@@ -22,10 +22,24 @@
         </init-param>
         <load-on-startup>1</load-on-startup>
     </servlet>
+    <servlet>
+        <servlet-name>UnprotectedREST</servlet-name>
+        <servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class>
+        <init-param>
+            <param-name>com.sun.jersey.config.property.packages</param-name>
+            <param-value>nl.uva.cs.lobcder.urest</param-value>
+        </init-param>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
     <servlet-mapping>
-        <servlet-name>Jersey REST Service</servlet-name>
+        <servlet-name>ProtectedREST</servlet-name>
         <url-pattern>/rest/*</url-pattern>
     </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>UnprotectedREST</servlet-name>
+        <url-pattern>/urest/*</url-pattern>
+    </servlet-mapping>
+
     <filter>
         <filter-name>BasicAuthFilter</filter-name>
         <filter-class>nl.uva.cs.lobcder.frontend.BasicAuthFilter</filter-class>
@@ -56,6 +70,6 @@
     </filter-mapping>
     <filter-mapping>
         <filter-name>BasicAuthFilter</filter-name>
-        <servlet-name>Jersey REST Service</servlet-name>
+        <servlet-name>ProtectedREST</servlet-name>
     </filter-mapping>    
 </web-app>

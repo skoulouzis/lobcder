@@ -54,25 +54,6 @@ public class JDBCatalogue extends MyDataSource {
 
     public void startSweep() throws IOException {
         TimerTask gcTask = new SweeprsTimerTask(getDatasource());
-//        TimerTask gcTask = new TimerTask() {
-//            Runnable deleteSweep = new DeleteSweep(getDatasource());
-//            Runnable replicateSweep = new ReplicateSweep(getDatasource());
-//            
-//            Boolean useRepo = PropertiesHelper.useMetadataReposetory();
-//            
-//            
-//            String metadataReposetory = PropertiesHelper.getMetadataReposetoryURL();
-//            
-//            Runnable wp4Sweep = new WP4Sweep(getDatasource(),
-//                    new WP4Sweep.WP4Connector(metadataReposetory));
-//
-//            @Override
-//            public void run() {
-//                deleteSweep.run();
-//                replicateSweep.run();
-//                wp4Sweep.run();
-//            }
-//        };
         timer = new Timer(true);
         timer.schedule(gcTask, 10000, 10000); //once in 10 sec
     }

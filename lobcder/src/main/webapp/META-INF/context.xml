@@ -16,7 +16,7 @@
                                 removeAbandoned="true" 
                                 removeAbandonedTimeout="-1" 
                                 type="javax.sql.DataSource" 
-                                url="jdbc:mysql://localhost:3306/lobcderDB2" 
+                                url="jdbc:mysql://localhost:3306/lobcder"
                                 username="lobcder"/>
                                 
                                 

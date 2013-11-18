@@ -63,7 +63,7 @@ public class Items extends CatalogueHelper {
         Long uid;
         String path;
     }
-    private List<LogicalDataWrapped> queryLogicalData1(MyData myData, int limit, PreparedStatement ps1, PreparedStatement ps2, MyPrincipal mp, Connection cn) throws Exception {
+    private List<LogicalDataWrapped> queryLogicalData(MyData myData, int limit, PreparedStatement ps1, PreparedStatement ps2, MyPrincipal mp, Connection cn) throws Exception {
         List<LogicalDataWrapped> ldwl = new LinkedList<>();
         Queue<MyData> dirs = new LinkedList<>();
         dirs.offer(myData);
@@ -318,7 +318,7 @@ public class Items extends CatalogueHelper {
                         rowLimit--;
                     }
                     if(rowLimit != 0) {
-                        logicalDataWrappedList.addAll(queryLogicalData1(new MyData(ld.getUid(), rootPath.equals("/") ? "" : rootPath), rowLimit, ps1, ps2, mp, cn));
+                        logicalDataWrappedList.addAll(queryLogicalData(new MyData(ld.getUid(), rootPath.equals("/") ? "" : rootPath), rowLimit, ps1, ps2, mp, cn));
                     }
                 }
             }

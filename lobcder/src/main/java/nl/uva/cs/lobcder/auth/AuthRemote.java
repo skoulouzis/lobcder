@@ -10,24 +10,27 @@ import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.json.JSONConfiguration;
 import com.sun.jersey.client.urlconnection.HTTPSProperties;
-import java.io.IOException;
+import nl.uva.cs.lobcder.util.CatalogueHelper;
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
+
+import javax.naming.InitialContext;
+import javax.net.ssl.*;
 import java.security.SecureRandom;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.naming.InitialContext;
-import javax.net.ssl.*;
-import nl.uva.cs.lobcder.util.PropertiesHelper;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
 /**
  *
  * @author dvasunin
  */
-public class AuthRemote implements AuthI {
+public class AuthRemote extends CatalogueHelper implements AuthI  {
 
     private static PrincipalCacheI pc = null;
 
@@ -73,6 +76,18 @@ public class AuthRemote implements AuthI {
         try {
             if (pc != null) {
                 res = pc.getPrincipal(token);
+            }
+            if(token.length() == 12){
+                try(Connection cn = getCatalogue().getConnection()) {
+                    try(PreparedStatement ps = cn.prepareStatement("SELECT long_tkt FROM tokens_table WHERE short_tkt = ?")) {
+                        ps.setString(1, token);
+                        try(ResultSet rs = ps.executeQuery()){
+                            if(rs.next())   {
+                                token = rs.getString(1);
+                            }
+                        }
+                    }
+                }
             }
             if (res == null) {
                 ClientConfig clientConfig = new DefaultClientConfig();
