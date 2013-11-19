@@ -136,6 +136,12 @@ public class TestREST {
         status = this.client.executeMethod(put);
         assertEquals(HttpStatus.SC_CREATED, status);
 
+        //Are you sure it's there ????
+        GetMethod get = new GetMethod(this.root + testResourceId + "/file1");
+        status = client.executeMethod(get);
+        assertEquals(HttpStatus.SC_OK, status);
+        assertEquals("foo", get.getResponseBodyAsString());
+
 //        put = new PutMethod(this.root + "testResourceId/file2");
 //        put.setRequestEntity(new StringRequestEntity("foo", "text/plain", "UTF-8"));
 //        status = this.client.executeMethod(put);
