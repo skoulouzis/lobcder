@@ -133,6 +133,7 @@ public class PathReservationService extends CatalogueHelper {
                 ReservationInfo info = new ReservationInfo();
                 if (p != null && mp.canRead(p)) {
 
+
                     info.setCommunicationID(communicationID);
                     String workerURL = scheduleWorker(storageSiteHost, ld);
                     info.setCommunicationID(communicationID);
@@ -241,9 +242,6 @@ public class PathReservationService extends CatalogueHelper {
     }
 
     private String getIP(String hostName) {
-        if (hostName == null) {
-            return hostName;
-        }
         try {
             return InetAddress.getByName(hostName).getHostAddress();
         } catch (UnknownHostException ex) {
@@ -252,9 +250,6 @@ public class PathReservationService extends CatalogueHelper {
     }
 
     private String replaceIP(String host) throws MalformedURLException {
-        if (host == null) {
-            return host;
-        }
         URL hostURL;
         host = getIP(host);
         Map<String, String> map = PropertiesHelper.getIPMap();

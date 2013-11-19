@@ -18,14 +18,14 @@ class SweeprsTimerTask extends TimerTask {
 
     private final DeleteSweep deleteSweep;
     private final ReplicateSweep replicateSweep;
-    private final TokensDeleteSweep tokensDeleteSweep;
+//    private final TokensDeleteSweep tokensDeleteSweep;
     private final Boolean useRepo;
     private WP4Sweep wp4Sweep = null;
 
     SweeprsTimerTask(DataSource datasource) throws IOException {
         deleteSweep = new DeleteSweep(datasource);
         replicateSweep = new ReplicateSweep(datasource);
-        tokensDeleteSweep = new TokensDeleteSweep(datasource);
+//        tokensDeleteSweep = new TokensDeleteSweep(datasource);
 
         useRepo = PropertiesHelper.useMetadataReposetory();
         if (useRepo) {
@@ -43,6 +43,6 @@ class SweeprsTimerTask extends TimerTask {
         if (wp4Sweep != null) {
             wp4Sweep.run();
         }
-        tokensDeleteSweep.run();
+//        tokensDeleteSweep.run();
     }
 }
