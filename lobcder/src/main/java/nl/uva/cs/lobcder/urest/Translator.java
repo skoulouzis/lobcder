@@ -1,7 +1,7 @@
 package nl.uva.cs.lobcder.urest;
 
 import lombok.extern.java.Log;
-import nl.uva.cs.lobcder.util.CatalogueHelper;
+import nl.uva.cs.lobcder.util.SingletonesHelper;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -19,8 +19,7 @@ import java.sql.*;
 
 @Log
 @Path("getshort/")
-public class Translator extends CatalogueHelper {
-
+public class Translator {
 
     protected String getShortId(String id, Connection cn) throws SQLException {
         String res = null;
@@ -48,8 +47,7 @@ public class Translator extends CatalogueHelper {
     @Produces(MediaType.TEXT_PLAIN)
     @GET
     public String getShortWeb(@PathParam("id") String longId) throws SQLException {
-        try (Connection cn = getCatalogue().getConnection()) {
-            cn.setAutoCommit(true);
+        try (Connection cn = SingletonesHelper.getInstance().getDataSource().getConnection()) {
             String shortId = getShortId(longId, cn);
             if(shortId == null){
                 shortId = org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric(12);
@@ -58,6 +56,4 @@ public class Translator extends CatalogueHelper {
             return shortId;
         }
     }
-
-
 }

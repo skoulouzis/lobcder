@@ -1,11 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Context antiJARLocking="true" path="/lobcder">
-  <Resource auth="Container" factory="org.apache.naming.factory.BeanFactory" 
-                                name="bean/PrincipalCache" 
-                                timeout="600000" 
-                                type="nl.uva.cs.lobcder.auth.PrincipalCache"/>
-                                
-                                
   <Resource auth="Container" driverClassName="com.mysql.jdbc.Driver"
                                 initialSize="64"
                                 maxActive="-1" 
@@ -22,18 +16,7 @@
                                 
   <Resource auth="Container" factory="org.apache.naming.factory.BeanFactory" 
             name="bean/JDBCatalog" type="nl.uva.cs.lobcder.catalogue.JDBCatalogue"/>
-    
-  <Resource auth="Container" factory="org.apache.naming.factory.BeanFactory" 
-            name="bean/authDB"  type="nl.uva.cs.lobcder.auth.LocalDbAuth" />  
-  
-  <Resource auth="Container" factory="org.apache.naming.factory.BeanFactory" 
-            name="bean/auth"
-            serviceURL="https://jump.vph-share.eu/validatetkt/?ticket="
-            type="nl.uva.cs.lobcder.auth.AuthRemote"/>
-  
-  <Resource auth="Container" factory="org.apache.naming.factory.BeanFactory" 
-            name="bean/authWorker" type="nl.uva.cs.lobcder.auth.AuthWorker"/>
-  
+
   <Resource auth="Container" factory="org.apache.naming.factory.BeanFactory" 
             name="bean/Predictor" type="nl.uva.cs.lobcder.optimization.FileAccessPredictor"/>
 </Context>

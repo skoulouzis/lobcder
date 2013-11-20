@@ -1,24 +1,20 @@
 package nl.uva.cs.lobcder.frontend;
 
-import java.io.IOException;
-import java.net.InetAddress;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.naming.InitialContext;
+import lombok.extern.java.Log;
+import nl.uva.cs.lobcder.auth.*;
+import nl.uva.cs.lobcder.util.PropertiesHelper;
+import nl.uva.cs.lobcder.util.SingletonesHelper;
+import org.apache.commons.codec.binary.Base64;
+
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import lombok.extern.java.Log;
-import nl.uva.cs.lobcder.auth.AuthI;
-import nl.uva.cs.lobcder.auth.AuthRemote;
-import nl.uva.cs.lobcder.auth.AuthWorker;
-import nl.uva.cs.lobcder.auth.MyPrincipal;
-import nl.uva.cs.lobcder.util.PropertiesHelper;
-import org.apache.commons.codec.binary.Base64;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * A very simple Servlet Filter for HTTP Basic Auth.
@@ -31,9 +27,6 @@ public class BasicAuthFilter implements Filter {
     private String _realm;
     private List<AuthI> authList;
     private AuthWorker authWorker;
-
-    public BasicAuthFilter() {
-    }
 
     @Override
     public void destroy() {
@@ -130,7 +123,7 @@ public class BasicAuthFilter implements Filter {
                             continue;
                         }
                         if (!PropertiesHelper.doRemoteAuth()
-                                && a instanceof AuthRemote) {
+                                && a instanceof AuthTicket) {
                             continue;
                         }
                         principal = a.checkToken(token);
@@ -189,27 +182,7 @@ public class BasicAuthFilter implements Filter {
     @Override
     public void init(final FilterConfig config) throws ServletException {
         _realm = "SECRET";
-        try {
-            String jndiName = "bean/auth";
-            javax.naming.Context ctx = new InitialContext();
-            javax.naming.Context envContext = (javax.naming.Context) ctx.lookup("java:/comp/env");
-            AuthI auth = (AuthI) envContext.lookup(jndiName);
-            authList = new ArrayList<>();
-            authList.add(auth);
-
-
-
-            jndiName = "bean/authWorker";
-            auth = (AuthI) envContext.lookup(jndiName);
-            authList.add(auth);
-
-
-            jndiName = "bean/authDB";
-            auth = (AuthI) envContext.lookup(jndiName);
-            authList.add(auth);
-
-        } catch (Exception ex) {
-            log.log(Level.SEVERE, null, ex);
-        }
+        authList = SingletonesHelper.getInstance().getAuth();
+        authList.add(new AuthWorker());
     }
 }
