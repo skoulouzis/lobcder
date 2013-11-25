@@ -5,6 +5,7 @@ BASE10NUM (?<![0-9.+-])(?>[+-]?(?:(?:[0-9]+(?:\.[0-9]+)?)|(?:\.[0-9]+)))
 NUMBER (?:%{BASE10NUM})
 BASE16NUM (?<![0-9A-Fa-f])(?:[+-]?(?:0x)?(?:[0-9A-Fa-f]+))
 BASE16FLOAT \b(?<![0-9A-Fa-f.])(?:[+-]?(?:0x)?(?:(?:[0-9A-Fa-f]+(?:\.[0-9A-Fa-f]*)?)|(?:\.[0-9A-Fa-f]+)))\b
+FLOAT_OR_NUM (BASE16FLOAT|NUMBER)
 
 POSINT \b(?:[1-9][0-9]*)\b
 NONNEGINT \b(?:[0-9]+)\b
@@ -104,7 +105,5 @@ LOGLEVEL ([T|t]race|TRACE|[D|d]ebug|DEBUG|[N|n]otice|NOTICE|[I|i]nfo|INFO|[W|w]a
 LOCAL_DB_TOKEN (?<=token = ).*
 LOCAL_DB_UNAME_REF (?<=unameRef = ).*
 IPORHOST_PATH_URI (?:%{IPORHOST}|%{PATH}|%{URI})
-
-#Source: 149.156.10.132 Destination: vphlob Rx_Speed: 11117.299035369775 Kbites/sec Rx_Size: 864370 bytes
-
-#Source: 149.156.10.131 Destination: 149.156.10.132 Tx Speed: 820.4387096774194 Kbites/sec Tx_Size: 635840 bytes
+WEBDAV_VERB (GET|PUT|POST|COPY|DELETE|HEAD|MKCOL|MOVE|OPTIONS|TRACE|LOCK|UNLOCK|PROPFIND|PROPPATCH|MS-SEARCH|SEARCH|POLL|SUBSCRIBE)
+USER_AGENT (?:"([^"]+)")|([^\s]+)
