@@ -1,0 +1,12 @@
+#
+# @(#)$Id: e72045ce.info,v 1.5 2011/11/22 12:05:05 pmacvsdg Exp $
+#   
+alias = SWITCH-QuoVadis-Grid-ICA
+requires = QuoVadis-Root-CA1
+ca_url = http://trust.quovadisglobal.com/pem/qvgridg1.crt
+crl_url = http://crl.quovadisglobal.com/qvgridg1.crl
+email = grid@switch.ch
+status = accredited:classic
+url = http://www.switch.ch/grid/certificates/
+version = 1.53
+sha1fp.0 = 39:4B:FA:49:40:63:A5:D0:88:4C:67:8F:FC:AB:38:2F:7C:47:64:DA

@@ -1,0 +1,12 @@
+#
+# @(#)$Id: ffc3d59b.info,v 1.2 2011/06/27 09:43:40 pmacvsdg Exp $
+# Information for 2011 CA UKeScience eScience issuing CA 2B
+#
+alias = UKeScienceCA-2B
+requires = UKeScienceRoot-2007
+url = http://www.grid-support.ac.uk/ca/
+crl_url = http://crl.ca.ngs.ac.uk/crl/escience2b.crl
+email = support@grid-support.ac.uk
+status = accredited:classic
+version = 1.53
+sha1fp.0 = DB:D9:5A:B4:E9:AD:74:26:E0:33:68:AA:B1:77:CC:5B:64:B2:CB:0E

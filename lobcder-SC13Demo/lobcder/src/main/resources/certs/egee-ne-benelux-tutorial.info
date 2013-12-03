@@ -1,0 +1,10 @@
+#
+# @(#)$Id: 8c13c962.info,v 1.2 2011/09/18 13:19:54 pmacvsdg Exp $
+# Information for the Worthless EGEE Northern and Benelux Tutorial CA 1
+alias = egee-ne-benelux-tutorial
+crl_url = http://ca.dutchgrid.nl/egee-ne/cacrl.pem
+url = http://ca.dutchgrid.nl/egee-ne/
+ca_url = http://ca.dutchgrid.nl/egee-ne/cacert.pem
+status = unaccredited
+version = 2.0
+sha1fp.0 = 20:BC:72:7B:46:28:F2:6C:6E:54:D2:98:E2:2E:83:AC:1B:14:4C:A0
