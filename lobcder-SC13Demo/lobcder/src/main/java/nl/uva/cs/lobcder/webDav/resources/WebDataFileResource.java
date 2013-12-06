@@ -24,6 +24,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.net.UnknownHostException;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -42,6 +43,7 @@ import nl.uva.cs.lobcder.resources.PDRIDescr;
 import nl.uva.cs.lobcder.resources.PDRIFactory;
 import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.cs.lobcder.util.DesEncrypter;
+import nl.uva.cs.lobcder.util.Network;
 import nl.uva.cs.lobcder.util.PropertiesHelper;
 import nl.uva.vlet.data.StringUtil;
 import nl.uva.vlet.io.CircularStreamBufferTransferer;
@@ -519,6 +521,10 @@ public class WebDataFileResource extends WebDataResource implements
                 workerIndex = 0;
             }
             String worker = workers.get(workerIndex++);
+            
+            
+            worker = Network.replaceIP(worker);
+
             String w = worker + "/" + getLogicalData().getUid();
             String token = UUID.randomUUID().toString();
             AuthWorker.setTicket(worker, token);

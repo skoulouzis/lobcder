@@ -4,7 +4,6 @@
  */
 package nl.uva.cs.lobcder.rest;
 
-import com.google.common.io.Files;
 import java.io.IOException;
 import java.net.InetAddress;
 import nl.uva.cs.lobcder.rest.wrappers.WorkerStatus;
@@ -15,13 +14,11 @@ import java.net.UnknownHostException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.GET;
@@ -40,6 +37,7 @@ import nl.uva.cs.lobcder.auth.MyPrincipal;
 import nl.uva.cs.lobcder.auth.Permissions;
 import nl.uva.cs.lobcder.resources.LogicalData;
 import nl.uva.cs.lobcder.util.CatalogueHelper;
+import nl.uva.cs.lobcder.util.Network;
 import nl.uva.cs.lobcder.util.PropertiesHelper;
 import org.apache.commons.io.FilenameUtils;
 
@@ -137,11 +135,11 @@ public class PathReservationService extends CatalogueHelper {
                     info.setCommunicationID(communicationID);
                     String workerURL = scheduleWorker(storageSiteHost, ld);
                     info.setCommunicationID(communicationID);
-                    storageSiteHost = replaceIP(storageSiteHost);
+                    storageSiteHost = Network.replaceIP(storageSiteHost);
                     info.setStorageHost(storageSiteHost);
                     info.setStorageHostIndex(index);
 
-                    workerURL = replaceIP(workerURL);
+                    workerURL = Network.replaceIP(workerURL);
                     info.setWorkerDataAccessURL(workerURL);
                 }
                 return info;
@@ -188,7 +186,7 @@ public class PathReservationService extends CatalogueHelper {
         if (storageSiteHost != null) {
             for (String w : workers) {
                 URL wURI = new URL(w);
-                String ip = getIP(storageSiteHost);
+                String ip = Network.getIP(storageSiteHost);
                 if (wURI.getHost().equals(ip)) {
                     worker = w;
                     break;
@@ -206,7 +204,7 @@ public class PathReservationService extends CatalogueHelper {
 
 
         URL workerURL = new URL(worker);
-        String workerIP = getIP(workerURL.getHost());
+        String workerIP = Network.getIP(workerURL.getHost());
         worker =  new URL(workerURL.getProtocol(), workerIP, workerURL.getPort(), workerURL.getFile()).toString();
 
         if (!worker.endsWith("/")) {
@@ -225,7 +223,7 @@ public class PathReservationService extends CatalogueHelper {
             URL wURI = new URL(w);
 
             for (String h : storageList) {
-                String ip = getIP(h);
+                String ip = Network.getIP(h);
                 if (ip.equals(wURI.getHost())) {
                     selectionList.add(new URL(wURI.getProtocol(), ip, wURI.getPort(), wURI.getFile()).toString());
                 }
@@ -241,38 +239,5 @@ public class PathReservationService extends CatalogueHelper {
         }
     }
 
-    private String getIP(String hostName) {
-        if (hostName == null) {
-            return hostName;
-        }
-        try {
-            return InetAddress.getByName(hostName).getHostAddress();
-        } catch (UnknownHostException ex) {
-            return hostName;
-        }
-    }
-
-    private String replaceIP(String host) throws MalformedURLException {
-        if (host == null) {
-            return host;
-        }
-        URL hostURL;
-        host = getIP(host);
-        Map<String, String> map = PropertiesHelper.getIPMap();
-        try {
-            hostURL = new URL(host);
-        } catch (MalformedURLException ex) {
-            if (map.containsKey(host)) {
-                String mapedIP = map.get(host);
-                return mapedIP;
-            }
-            return host;
-        }
-
-        if (map.containsKey(hostURL.getHost())) {
-            String mapedIP = map.get(hostURL.getHost());
-            return new URL(hostURL.getProtocol(), mapedIP, hostURL.getPort(), hostURL.getFile()).toString();
-        }
-        return host;
-    }
+   
 }

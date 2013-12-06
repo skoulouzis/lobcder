@@ -143,9 +143,13 @@ public class PropertiesHelper {
     public static Map<String, String> getIPMap() {
         HashMap<String, String> ipMap = new HashMap<>();
         BufferedReader br = null;
+        InputStream in = null;
         try {
             ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-            InputStream in = classLoader.getResourceAsStream("/ip-map");
+            in = classLoader.getResourceAsStream("/ip-map");
+            if (in == null) {
+                return null;
+            }
             br = new BufferedReader(new InputStreamReader(in));
             String line;
 
@@ -153,12 +157,16 @@ public class PropertiesHelper {
                 String[] keyValue = line.split(" ");
                 ipMap.put(keyValue[0], keyValue[1]);
             }
-            br.close();
         } catch (IOException ex) {
             Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
             try {
-                br.close();
+                if (br != null) {
+                    br.close();
+                }
+                if (in != null) {
+                    in.close();
+                }
             } catch (IOException ex) {
                 Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, ex);
             }
