@@ -1,5 +1,7 @@
 #!/bin/bash
 
+#example: ./averageUploads.sh ~/Downloads/files2 wlan0
+
 srcPath=$1
 iface=$2
 

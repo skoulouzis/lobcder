@@ -1,12 +1,13 @@
 #!/bin/bash
 
+# example ./measureUploads.sh ./arch.tar eth0
 
-loopNum=2
+loopNum=5
 srcFilePath=$1
 iface=$2
 multithread=$3
 
-dest="http://user:secret@host:8080/lobcder/dav/"
+dest="http://alogo:hondos@h0.wf.vlan400.uvalight.net:8082/lobcder/dav/"
 
 if [[ -d $srcFilePath ]]; then
   size=`du -sb $srcFilePath | awk '{print $1}'`
@@ -17,9 +18,9 @@ fileSize=$(echo "($size * 8) / (1000 * 1000)" |bc -l)
 
 for ((i = 0 ; i < $loopNum ; i++)); do
   if [ -n "$multithread" ]; then
-    ./uploadFile.sh  $srcFilePath $dest $iface mmm
+    ./uploadFileCurl.sh  $srcFilePath $dest $iface mmm
   else
-    ./uploadFile.sh  $srcFilePath $dest $iface
+    ./uploadFileCurl.sh  $srcFilePath $dest $iface
   fi
   mv report.csv report-$fileSize-$i.csv
 done
