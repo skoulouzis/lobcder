@@ -107,3 +107,5 @@ LOCAL_DB_UNAME_REF (?<=unameRef = ).*
 IPORHOST_PATH_URI (?:%{IPORHOST}|%{PATH}|%{URI})
 WEBDAV_VERB (GET|PUT|POST|COPY|DELETE|HEAD|MKCOL|MOVE|OPTIONS|TRACE|LOCK|UNLOCK|PROPFIND|PROPPATCH|MS-SEARCH|SEARCH|POLL|SUBSCRIBE)
 USER_AGENT (?:"([^"]+)")|([^\s]+)
+TOMCAT_VERSION (([0-9].[0-9].[0-9][0-9]))
+USER_AGENT (Mozilla/* (*) * *) |davfs2/* *|python-requests/* * *|Jakarta *|Java/*|Wget/* (*))
