@@ -54,7 +54,7 @@ public class FileAccessPredictor extends MyDataSource {
         double totalWeight = 0.0d;
         for (LobState i : set) {
             totalWeight += graphPopulator.getGraph().getWeight(state, i);
-            log.log(Level.INFO, "totalWeight: {0}", totalWeight);
+//            log.log(Level.INFO, "totalWeight: {0}", totalWeight);
         }
 
         // Now choose a random item
@@ -64,7 +64,6 @@ public class FileAccessPredictor extends MyDataSource {
         LobState[] vertexArray = new LobState[set.size()];
         vertexArray = set.toArray(vertexArray);
         for (int i = 0; i < vertexArray.length; ++i) {
-
             random -= graphPopulator.getGraph().getWeight(state, vertexArray[i]);
             if (random <= 0.0d) {
                 randomIndex = i;

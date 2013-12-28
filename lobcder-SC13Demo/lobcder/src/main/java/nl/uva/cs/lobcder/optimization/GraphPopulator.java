@@ -6,6 +6,10 @@ package nl.uva.cs.lobcder.optimization;
 
 import io.milton.common.Path;
 import io.milton.http.Request.Method;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.sql.Connection;
@@ -14,8 +18,12 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Nonnull;
@@ -56,7 +64,14 @@ class GraphPopulator implements Runnable {
             graph = addEdges(graph, transitions);
 
             this.graph = graph;
-        } catch (MalformedURLException | SQLException ex) {
+
+            saveAsCSV(graph);
+
+        } catch (SQLException ex) {
+            Logger.getLogger(GraphPopulator.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (MalformedURLException ex) {
+            Logger.getLogger(GraphPopulator.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
             Logger.getLogger(GraphPopulator.class.getName()).log(Level.SEVERE, null, ex);
         }
 
@@ -252,5 +267,23 @@ class GraphPopulator implements Runnable {
 
     Graph getGraph() {
         return graph;
+    }
+
+    private void saveAsCSV(Graph graph) throws IOException {
+        Map<String, Edge> edges = graph.getEdges();
+        Set<Entry<String, Edge>> entrySet = edges.entrySet();
+        Iterator<Entry<String, Edge>> iter = entrySet.iterator();
+        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+        URL url = classLoader.getResource("/webapp/data/stateTrans.csv");
+//        FileWriter writer = new FileWriter(null);
+        String data = "source;target;weight\n";
+        while (iter.hasNext()) {
+            Entry<String, Edge> entry = iter.next();
+            Edge edge = entry.getValue();
+//            if (edge.getWeight() > 1) {
+                data += edge.getVertex1().getID() + ";" + edge.getVertex2().getID() + ";" + edge.getWeight() + "\n";
+//            }
+        }
+        log.log(Level.INFO, data);
     }
 }

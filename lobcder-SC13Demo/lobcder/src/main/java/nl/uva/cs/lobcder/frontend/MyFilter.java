@@ -5,6 +5,7 @@
 package nl.uva.cs.lobcder.frontend;
 
 import io.milton.common.Path;
+import io.milton.http.Request;
 import io.milton.http.Request.Method;
 import io.milton.servlet.MiltonFilter;
 import java.io.IOException;
@@ -58,10 +59,10 @@ public class MyFilter extends MiltonFilter {
 
 
 
-//        long startPredict = System.currentTimeMillis();
-//        predict(Request.Method.valueOf(method), reqURL.toString());
-//        long elapsedPredict = System.currentTimeMillis() - startPredict;
-//        log.log(Level.INFO, "elapsedPredict: {0}", elapsedPredict);
+        long startPredict = System.currentTimeMillis();
+        predict(Request.Method.valueOf(method), reqURL.toString());
+        long elapsedPredict = System.currentTimeMillis() - startPredict;
+        log.log(Level.INFO, "elapsedPredict: {0}", elapsedPredict);
 
         super.doFilter(req, resp, fc);
         double elapsed = System.currentTimeMillis() - start;
@@ -206,6 +207,7 @@ public class MyFilter extends MiltonFilter {
         LobState currentState = new LobState(method, Path.path(resource).toString());
         LobState nextState = null;
         try {
+                    
             nextState = getFileAccessPredictor().predictNextState(currentState);
             log.log(Level.INFO, "nextFile: {0}", nextState.getID());
         } catch (Exception ex) {

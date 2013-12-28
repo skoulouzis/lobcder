@@ -23,8 +23,8 @@ class Graph {
 
     boolean containsState(LobState vertex) {
         for (LobState v : vertices) {
-            if (v.getResourceName().equals(vertex.getResourceName()) &&
-                    v.getMethod().toString().equals(vertex.getMethod().toString())) {
+            if (v.getResourceName().equals(vertex.getResourceName())
+                    && v.getMethod().toString().equals(vertex.getMethod().toString())) {
                 return true;
             }
         }
@@ -66,10 +66,14 @@ class Graph {
     }
 
     private String getEdgeID(LobState v1, LobState v2) {
-        return v1.getMethod()+","+v1.getResourceName() + ":" + v2.getMethod()+","+v2.getResourceName();
+        return v1.getMethod() + "," + v1.getResourceName() + ":" + v2.getMethod() + "," + v2.getResourceName();
     }
 
     List<LobState> vertexSet() {
         return this.vertices;
+    }
+
+    public Map<String, Edge> getEdges() {
+        return edges;
     }
 }
