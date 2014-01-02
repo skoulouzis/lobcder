@@ -13,12 +13,16 @@ import io.milton.http.Request.Method;
  */
 public class LobState {
 
-    private final String resource;
-    private final Method method;
+    private String resource;
+    private Method method;
 
     public LobState(Request.Method method, String resource) {
         this.resource = resource;
         this.method = method;
+    }
+
+    public LobState() {
+        
     }
 
     public String getResourceName() {
@@ -31,5 +35,13 @@ public class LobState {
 
     public String getID() {
         return getMethod() + "," + getResourceName();
+    }
+
+    void setMethod(Method method) {
+        this.method = method;
+    }
+
+    void setResourceName(String resource) {
+        this.resource = resource;
     }
 }

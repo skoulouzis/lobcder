@@ -90,6 +90,14 @@ CREATE TABLE requests_table (
  timeStamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
+
+CREATE TABLE state_table (
+ uid SERIAL PRIMARY KEY,
+ sourceState VARCHAR(1024),INDEX(sourceState),
+ targetState VARCHAR(1024),
+ weight DOUBLE
+) ENGINE=InnoDB;
+
 DELIMITER |
 
 DROP TRIGGER IF EXISTS on_ldata_delete |

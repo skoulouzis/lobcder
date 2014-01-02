@@ -198,19 +198,25 @@
             var nodes = {};
             // Compute the distinct nodes from the links.
             links.forEach(function(link) {
+                console.log("---------- "+link.source);
                 link.source = nodes[link.source] || (nodes[link.source] = {name: link.source});
                 link.target = nodes[link.target] || (nodes[link.target] = {name: link.target});
             });
+            
+            
+            //            console.log("links "+links);
+            //            console.log("nodes "+nodes);
 
             var width = 1200,
-            height = 500;
+            height = 900;
             
             var force = d3.layout.force()
             .nodes(d3.values(nodes))
             .links(links)
             .size([width, height])
             .linkDistance(function(d) { 
-                var dist = (1/d.weight)*100;
+                var dist = (1/d.weight)*5;
+                //                var dist = 2;
                 return dist; 
             })
             //        .linkStrength(0.5)

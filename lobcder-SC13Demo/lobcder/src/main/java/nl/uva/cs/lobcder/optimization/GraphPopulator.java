@@ -6,18 +6,17 @@ package nl.uva.cs.lobcder.optimization;
 
 import io.milton.common.Path;
 import io.milton.http.Request.Method;
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -40,7 +39,9 @@ class GraphPopulator implements Runnable {
 
     private final DataSource datasource;
 //    private Graph graph;
-    private Graph graph;
+//    private Graph graph;
+    private Map<String, Double> weightsMap = new HashMap<>();
+    private StringBuilder sb = new StringBuilder();
 
     GraphPopulator(DataSource datasource) {
         this.datasource = datasource;
@@ -49,29 +50,37 @@ class GraphPopulator implements Runnable {
     @Override
     public void run() {
         try (Connection connection = datasource.getConnection()) {
-            LogicalData root = getLogicalDataByUid(Long.valueOf(1), connection);
-            ArrayList<Path> nodes = getNodes(Path.root, root, connection, null);
+            try {
 
-//            String msg = "";
-//            for (Path d : nodes) {
-//                msg += d + "\n";
-//            }
-//            log.log(Level.INFO, "Nodes: {0}", msg);
+                buildOrUpdateGlobalGraph(connection);
+                
+                log.log(Level.INFO, sb.toString());
 
-            Graph graph = populateGraph(nodes);
-            ArrayList<LobState> transitions = getTransitions(connection, nodes);
+                //            LogicalData root = getLogicalDataByUid(Long.valueOf(1), connection);
+                //            ArrayList<Path> nodes = getNodes(Path.root, root, connection, null);
 
-            graph = addEdges(graph, transitions);
+                //            String msg = "";
+                //            ArrayList<Path> nodes = getNodes(Path.root, root, connection, null);
+                //                msg += d + "\n";
+                //            }
+                //            log.log(Level.INFO, "Nodes: {0}", msg);
 
-            this.graph = graph;
+                //            Graph graph = populateGraph(nodes);
+                //            log.log(Level.INFO, "Nodes: {0}", msg);
 
-            saveAsCSV(graph);
+                //            ArrayList<LobState> transitions = getTransitions(connection, nodes);
 
+                //            graph = addEdges(graph, transitions);
+
+                //            this.graph = graph;
+
+                //        } catch (Exception ex) {
+                //            Logger.getLogger(GraphPopulator.class.getName()).log(Level.SEVERE, null, ex);
+                //        }
+            } catch (MalformedURLException ex) {
+                Logger.getLogger(GraphPopulator.class.getName()).log(Level.SEVERE, null, ex);
+            }
         } catch (SQLException ex) {
-            Logger.getLogger(GraphPopulator.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (MalformedURLException ex) {
-            Logger.getLogger(GraphPopulator.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (IOException ex) {
             Logger.getLogger(GraphPopulator.class.getName()).log(Level.SEVERE, null, ex);
         }
 
@@ -157,17 +166,18 @@ class GraphPopulator implements Runnable {
     }
 
     private Graph populateGraph(List<Path> nodes) {
-        graph = new Graph();
-
-        for (int i = 0; i < nodes.size(); i++) {
-            for (Method m : Method.values()) {
-                LobState v1 = new LobState(m, nodes.get(i).toString());
-                if (!graph.containsState(v1)) {
-                    graph.addVertex(v1);
-                }
-            }
-        }
-        return graph;
+//        graph = new Graph();
+//
+//        for (int i = 0; i < nodes.size(); i++) {
+//            for (Method m : Method.values()) {
+//                LobState v1 = new LobState(m, nodes.get(i).toString());
+//                if (!graph.containsState(v1)) {
+//                    graph.addVertex(v1);
+//                }
+//            }
+//        }
+//        return graph;
+        return null;
     }
 
     private ArrayList<Path> getNodes(Path p, LogicalData node, Connection connection,
@@ -265,10 +275,9 @@ class GraphPopulator implements Runnable {
         return graph;
     }
 
-    Graph getGraph() {
-        return graph;
-    }
-
+//    Graph getGraph() {
+//        return graph;
+//    }
     private void saveAsCSV(Graph graph) throws IOException {
         Map<String, Edge> edges = graph.getEdges();
         Set<Entry<String, Edge>> entrySet = edges.entrySet();
@@ -281,9 +290,160 @@ class GraphPopulator implements Runnable {
             Entry<String, Edge> entry = iter.next();
             Edge edge = entry.getValue();
 //            if (edge.getWeight() > 1) {
-                data += edge.getVertex1().getID() + ";" + edge.getVertex2().getID() + ";" + edge.getWeight() + "\n";
+            data += edge.getVertex1().getID() + ";" + edge.getVertex2().getID() + ";" + edge.getWeight() + "\n";
 //            }
         }
         log.log(Level.INFO, data);
+    }
+
+    private void buildOrUpdateGlobalGraph(Connection connection) throws SQLException, MalformedURLException {
+        connection.setAutoCommit(false);
+        try (Statement s = connection.createStatement()) {
+            try (ResultSet rs = s.executeQuery("select methodName, requestURL from requests_table")) {
+                LobState prevState = new LobState();
+                if (rs.first()) {
+                    prevState.setMethod(Method.valueOf(rs.getString(1)));
+                    URL url = new URL(rs.getString(2));
+                    prevState.setResourceName(url.getPath());
+                }
+                while (rs.next()) {
+                    LobState currentState = new LobState();
+                    currentState.setMethod(Method.valueOf(rs.getString(1)));
+                    URL url = new URL(rs.getString(2));
+                    currentState.setResourceName(url.getPath());
+                    insertOrUpdateState(connection, prevState, currentState);
+//                    log.log(Level.INFO, "source: " + prevState.getID() + " target: " + currentState.getID() + " weight: " + 1.0);
+                    prevState = currentState;
+                    connection.commit();
+                }
+            }
+            connection.commit();
+        }
+    }
+
+    private void insertOrUpdateState(Connection connection, LobState prevState, LobState currentState) throws SQLException {
+        try (PreparedStatement ps = connection.prepareStatement("select uid, weight from state_table WHERE sourceState = ? AND targetState = ?")) {
+            ps.setString(1, prevState.getID());
+            ps.setString(2, currentState.getID());
+            ResultSet rs2 = ps.executeQuery();
+            double weight = 1.0;
+            if (rs2.next()) {
+                long uid = rs2.getLong(1);
+                weight = rs2.getDouble(2);
+                weight++;
+                updateState(connection, uid, weight);
+            } else {
+                insertState(connection, prevState.getID(), currentState.getID());
+            }
+            sb.append(prevState.getID()).append(";").append(currentState.getID()).append(";").append(weight).append("\n");
+            log.log(Level.INFO, "source: " + prevState.getID() + " target: " + currentState.getID() + " weight: " + weight);
+            connection.commit();
+        }
+    }
+
+    private void updateState(Connection connection, long uid, double weight) throws SQLException {
+        try (PreparedStatement ps = connection.prepareStatement("UPDATE state_table SET `weight` = ? WHERE uid = ?")) {
+            ps.setDouble(1, weight);
+            ps.setLong(2, uid);
+            ps.executeUpdate();
+            connection.commit();
+        }
+    }
+
+    private void insertState(Connection connection, String iD1, String iD2) throws SQLException {
+        try (PreparedStatement preparedStatement = connection.prepareStatement(""
+                        + "INSERT INTO state_table (sourceState, targetState, weight) VALUES (?, ?, ?)",
+                        Statement.RETURN_GENERATED_KEYS)) {
+            preparedStatement.setString(1, iD1);
+            preparedStatement.setString(2, iD2);
+            preparedStatement.setDouble(3, 1.0);
+            preparedStatement.executeUpdate();
+            connection.commit();
+        }
+    }
+
+    private void buildOrUpdateGlobalGraph() throws SQLException, MalformedURLException {
+        try (Connection connection = datasource.getConnection()) {
+            connection.setAutoCommit(false);
+            try (Statement s = connection.createStatement()) {
+                try (ResultSet rs = s.executeQuery("select methodName, requestURL from requests_table")) {
+                    LobState prevState = new LobState();
+                    if (rs.first()) {
+                        prevState.setMethod(Method.valueOf(rs.getString(1)));
+                        URL url = new URL(rs.getString(2));
+                        prevState.setResourceName(url.getPath());
+                    }
+                    while (rs.next()) {
+                        LobState currentState = new LobState();
+                        currentState.setMethod(Method.valueOf(rs.getString(1)));
+                        URL url = new URL(rs.getString(2));
+                        currentState.setResourceName(url.getPath());
+                        insertOrUpdateState(prevState, currentState);
+                        prevState = currentState;
+                        connection.commit();
+                    }
+                }
+            }
+            connection.close();
+        }
+    }
+
+    private void insertOrUpdateState(LobState prevState, LobState currentState) throws SQLException {
+        try (Connection connection = datasource.getConnection()) {
+            connection.setAutoCommit(false);
+            try (PreparedStatement ps = connection.prepareStatement("select uid, weight from state_table WHERE sourceState = ? AND targetState = ?")) {
+                ps.setString(1, prevState.getID());
+                ps.setString(2, currentState.getID());
+                ResultSet rs2 = ps.executeQuery();
+                double weight = 1;
+//                if (weightsMap.containsKey(prevState.getID() + "-" + currentState.getID())) {
+//                    weight = weightsMap.get(prevState.getID() + "-" + currentState.getID());
+//                    weight++;
+//                } else {
+//                    weight = 1.0;
+//                }
+//                weightsMap.put(prevState.getID() + "-" + currentState.getID(), weight);
+                if (rs2.next()) {
+                    long uid = rs2.getLong(1);
+                    weight = rs2.getDouble(2);
+                    weight++;
+                    updateState(uid, weight);
+                } else {
+                    insertState(prevState.getID(), currentState.getID());
+                }
+                log.log(Level.INFO, "source: " + prevState.getID() + " target: " + currentState.getID() + " weight: " + weight);
+                connection.commit();
+                connection.close();
+            }
+        }
+    }
+
+    private void updateState(long uid, double weight) throws SQLException {
+        try (Connection connection = datasource.getConnection()) {
+            connection.setAutoCommit(false);
+            try (PreparedStatement ps = connection.prepareStatement("UPDATE state_table SET `weight` = ? WHERE uid = ?")) {
+                ps.setLong(2, uid);
+                ps.setDouble(1, weight);
+                ps.executeUpdate();
+                connection.commit();
+            }
+            connection.close();
+        }
+    }
+
+    private void insertState(String iD1, String iD2) throws SQLException {
+        try (Connection connection = datasource.getConnection()) {
+            connection.setAutoCommit(false);
+            try (PreparedStatement preparedStatement = connection.prepareStatement(""
+                            + "INSERT INTO state_table (sourceState, targetState, weight) VALUES (?, ?, ?)",
+                            Statement.RETURN_GENERATED_KEYS)) {
+                preparedStatement.setString(1, iD1);
+                preparedStatement.setString(2, iD2);
+                preparedStatement.setDouble(3, 1.0);
+                preparedStatement.executeUpdate();
+                connection.commit();
+            }
+            connection.close();
+        }
     }
 }
