@@ -8,6 +8,7 @@ import io.milton.common.Path;
 import io.milton.http.Request;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -37,43 +38,9 @@ public class FileAccessPredictor extends MyDataSource {
         timer.schedule(gcTask, 3600000, 3600000);
     }
 
-//    public LobState predictNextState(LobState state) throws MalformedURLException {
-//        return predictNextState(state.getMethod(), state.getResourceName());
-//    }
-
-    public LobState predictNextState(LobState state) {
-//        Graph graph = graphPopulator.getGraph();
-//        if (graph == null) {
-            graphPopulator.run();
-//        }
-//
-//        List<LobState> set = graphPopulator.getGraph().vertexSet();
-//
-//
-//        // Compute the total weight of all items together
-//        double totalWeight = 0.0d;
-//        for (LobState i : set) {
-//            totalWeight += graphPopulator.getGraph().getWeight(state, i);
-////            log.log(Level.INFO, "totalWeight: {0}", totalWeight);
-//        }
-//
-//        // Now choose a random item
-//        int randomIndex = -1;
-//        double random = Math.random() * totalWeight;
-//
-//        LobState[] vertexArray = new LobState[set.size()];
-//        vertexArray = set.toArray(vertexArray);
-//        for (int i = 0; i < vertexArray.length; ++i) {
-//            random -= graphPopulator.getGraph().getWeight(state, vertexArray[i]);
-//            if (random <= 0.0d) {
-//                randomIndex = i;
-//                break;
-//            }
-//        }
-//        LobState myRandomItem = vertexArray[randomIndex];
-////        System.out.println("Will go to: " + myRandomItem + " " + node0 + "->" + myRandomItem + ": " + graphPopulator.getGraph().getWeight(node0, myRandomItem));
-//        return myRandomItem;
-        return null;
+    public LobState predictNextState(LobState state) throws SQLException {
+        graphPopulator.run();
+        return graphPopulator.getNextState(state);
     }
 
     public void stopGraphPopulation() {

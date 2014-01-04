@@ -47,7 +47,7 @@
                 link.weight = +link.weight;
             });
 
-            var width = 3200,
+            var width = 6400,
             height = 4800;
 
             var force = d3.layout.force()
@@ -170,7 +170,7 @@
             function click() {
                 return function(d, i) {
                     //fade all elements
-                    svg.selectAll("circle, path.link,marker").style("opacity", 0.5);
+                    svg.selectAll("circle, path.link,marker").style("opacity", 0.1);
                     
                     var associated_links = svg.selectAll("path.link").filter(function(d) {
                         return d.source.index == i || d.target.index == i;

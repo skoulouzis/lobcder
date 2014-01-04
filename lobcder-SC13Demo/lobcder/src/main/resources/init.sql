@@ -95,7 +95,8 @@ CREATE TABLE state_table (
  uid SERIAL PRIMARY KEY,
  sourceState VARCHAR(1024),INDEX(sourceState),
  targetState VARCHAR(1024),
- weight DOUBLE
+ weight DOUBLE,
+ timeStamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
 DELIMITER |
