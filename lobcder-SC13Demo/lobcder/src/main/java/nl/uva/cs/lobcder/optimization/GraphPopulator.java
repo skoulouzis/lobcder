@@ -14,7 +14,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
-import java.util.Date;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -74,22 +73,43 @@ class GraphPopulator implements Runnable {
     private void buildOrUpdateGlobalGraph(Connection connection) throws SQLException, MalformedURLException {
         connection.setAutoCommit(false);
         try (Statement s = connection.createStatement()) {
-            try (ResultSet rs = s.executeQuery("SELECT methodName, requestURL, timeStamp FROM requests_table")) {
+            Timestamp latestState = null;
+            try (ResultSet rs = s.executeQuery("SELECT timeStamp FROM state_table ORDER BY timeStamp DESC LIMIT 1")) {
+                if (rs.next()) {
+                    latestState = rs.getTimestamp(1);
+                }
+            }
+            String query;
+            if (latestState != null) {
+                query = "SELECT methodName, requestURL, timeStamp FROM requests_table WHERE timeStamp > '" + latestState+"'";
+            } else {
+                query = "SELECT methodName, requestURL, timeStamp FROM requests_table";
+            }
+            try (ResultSet rs = s.executeQuery(query)) {
+//            try (PreparedStatement ps = connection.prepareStatement("SELECT methodName, requestURL, timeStamp FROM requests_table WHERE timeStamp > ?")) {
+//                ps.setTimestamp(1, latestState);
+//                ResultSet rs = ps.executeQuery();
                 LobState prevState = new LobState();
                 if (rs.first()) {
                     prevState.setMethod(Method.valueOf(rs.getString(1)));
                     URL url = new URL(rs.getString(2));
+                    if (url.toString().endsWith("/")) {
+                        URL newURL = new URL(url.toString().substring(0, url.toString().length() - 1));
+                        url = newURL;
+                    }
                     prevState.setResourceName(url.getPath());
                 }
                 while (rs.next()) {
                     LobState currentState = new LobState();
                     currentState.setMethod(Method.valueOf(rs.getString(1)));
                     URL url = new URL(rs.getString(2));
+                    if (url.toString().endsWith("/")) {
+                        URL newURL = new URL(url.toString().substring(0, url.toString().length() - 1));
+                        url = newURL;
+                    }
                     currentState.setResourceName(url.getPath());
-                    //                    java.sql.Date timeStamp = rs.getDate(3);
                     Timestamp timeStamp = rs.getTimestamp(3);
                     insertOrUpdateState(connection, prevState, currentState, timeStamp);
-//                    log.log(Level.INFO, "source: " + prevState.getID() + " target: " + currentState.getID() + " timeStamp: " + timeStamp);
                     prevState = currentState;
                     connection.commit();
                 }
@@ -99,28 +119,36 @@ class GraphPopulator implements Runnable {
     }
 
     private void insertOrUpdateState(Connection connection, LobState prevState, LobState currentState, Timestamp timeStamp) throws SQLException {
-        try (PreparedStatement ps = connection.prepareStatement("select uid, weight from state_table WHERE sourceState = ? AND targetState = ?")) {
+        try (PreparedStatement ps = connection.prepareStatement("select uid, weight, timeStamp from state_table WHERE sourceState = ? AND targetState = ?")) {
             ps.setString(1, prevState.getID());
             ps.setString(2, currentState.getID());
             ResultSet rs2 = ps.executeQuery();
             double weight = 1.0;
+            long uid = 0;
             if (rs2.next()) {
-                long uid = rs2.getLong(1);
+                uid = rs2.getLong(1);
                 weight = rs2.getDouble(2);
+                Timestamp ts = rs2.getTimestamp(3);
+                if (ts.after(timeStamp)) {
+                    timeStamp = ts;
+                }
                 weight++;
-                updateState(connection, uid, weight);
+                updateState(connection, uid, weight, timeStamp);
             } else {
                 insertState(connection, prevState.getID(), currentState.getID(), timeStamp);
             }
-            log.log(Level.INFO, "source: {0} target: {1} weight: {2} timeStamp: {3}", new Object[]{prevState.getID(), currentState.getID(), weight, timeStamp});
+            if (uid == 1) {
+                log.log(Level.INFO, "source: {0} target: {1} weight: {2} timeStamp: {3}", new Object[]{prevState.getID(), currentState.getID(), weight, timeStamp});
+            }
             connection.commit();
         }
     }
 
-    private void updateState(Connection connection, long uid, double weight) throws SQLException {
-        try (PreparedStatement ps = connection.prepareStatement("UPDATE state_table SET `weight` = ? WHERE uid = ?")) {
+    private void updateState(Connection connection, long uid, double weight, Timestamp timeStamp) throws SQLException {
+        try (PreparedStatement ps = connection.prepareStatement("UPDATE state_table SET `weight` = ?, timeStamp = ? WHERE uid = ?")) {
             ps.setDouble(1, weight);
-            ps.setLong(2, uid);
+            ps.setTimestamp(2, timeStamp);
+            ps.setLong(3, uid);
             ps.executeUpdate();
             connection.commit();
         }
@@ -138,7 +166,7 @@ class GraphPopulator implements Runnable {
             connection.commit();
         }
     }
-    
+
     LobState getNextState(LobState state) throws SQLException {
         LobState nextState = null;
         try (Connection connection = datasource.getConnection()) {
