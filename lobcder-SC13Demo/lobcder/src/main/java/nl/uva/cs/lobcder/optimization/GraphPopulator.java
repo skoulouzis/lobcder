@@ -5,6 +5,8 @@
 package nl.uva.cs.lobcder.optimization;
 
 import io.milton.http.Request.Method;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -41,33 +43,40 @@ class GraphPopulator implements Runnable {
     public void run() {
         if (buildGlobalGraph) {
             try (Connection connection = datasource.getConnection()) {
-                try {
-                    buildOrUpdateGlobalGraph(connection);
-                } catch (MalformedURLException ex) {
-                    Logger.getLogger(GraphPopulator.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            } catch (SQLException ex) {
+
+                buildOrUpdateGlobalGraph(connection);
+                saveAsCSV(connection);
+
+            } catch (Exception ex) {
                 Logger.getLogger(GraphPopulator.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
     }
 
-    private void saveAsCSV(Graph graph) throws IOException {
-        Map<String, Edge> edges = graph.getEdges();
-        Set<Entry<String, Edge>> entrySet = edges.entrySet();
-        Iterator<Entry<String, Edge>> iter = entrySet.iterator();
-        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-        URL url = classLoader.getResource("/webapp/data/stateTrans.csv");
-//        FileWriter writer = new FileWriter(null);
-        String data = "source;target;weight\n";
-        while (iter.hasNext()) {
-            Entry<String, Edge> entry = iter.next();
-            Edge edge = entry.getValue();
-//            if (edge.getWeight() > 1) {
-            data += edge.getVertex1().getID() + ";" + edge.getVertex2().getID() + ";" + edge.getWeight() + "\n";
-//            }
+    private void saveAsCSV(Connection connection) throws IOException, SQLException {
+        try (Statement s = connection.createStatement()) {
+            try (ResultSet rs = s.executeQuery("select * from state_table")) {
+                FileWriter writer = new FileWriter("stateTrans.csv");
+                writer.append("uid;");
+                writer.append("source;");
+                writer.append("target;");
+                writer.append("weight;");
+                writer.append("timestamp;");
+                writer.append("\n");
+                while (rs.next()) {
+                    int uid = rs.getInt(1);
+                    String source = rs.getString(2);
+                    String target = rs.getString(3);
+                    double weight = rs.getDouble(4);
+                    Timestamp timestamp = rs.getTimestamp(5);
+                    String line = uid + ";" + source + ";" + target + ";" + weight + ";" + timestamp + "\n";
+                    writer.append(line);
+                }
+                writer.flush();
+                writer.close();
+            }
         }
-        log.log(Level.INFO, data);
+        connection.close();
     }
 
     private void buildOrUpdateGlobalGraph(Connection connection) throws SQLException, MalformedURLException {
@@ -81,7 +90,7 @@ class GraphPopulator implements Runnable {
             }
             String query;
             if (latestState != null) {
-                query = "SELECT methodName, requestURL, timeStamp FROM requests_table WHERE timeStamp > '" + latestState+"'";
+                query = "SELECT methodName, requestURL, timeStamp FROM requests_table WHERE timeStamp > '" + latestState + "'";
             } else {
                 query = "SELECT methodName, requestURL, timeStamp FROM requests_table";
             }

@@ -38,13 +38,15 @@
 
             // Compute the distinct nodes from the links.
             links.forEach(function(link) {
-                link.source = nodes[link.source] || 
-                    (nodes[link.source] = {name: link.source});
+                if(link.weight > 2){
+                    link.source = nodes[link.source] || 
+                        (nodes[link.source] = {name: link.source});
                 
-                link.target = nodes[link.target] || 
-                    (nodes[link.target] = {name: link.target});
+                    link.target = nodes[link.target] || 
+                        (nodes[link.target] = {name: link.target});
                 
-                link.weight = +link.weight;
+                    link.weight = +link.weight;
+                }
             });
 
             var width = 6400,
@@ -54,8 +56,7 @@
             .nodes(d3.values(nodes))
             .links(links)
             .size([width, height])
-            .linkDistance(60)
-            .charge(-300)
+            .charge(-3000)
             .linkDistance(function(d) { 
                 var dist = (1/d.weight)*3000;
                 return dist; 
@@ -90,7 +91,7 @@
             .attr("class", "link")
             .attr("marker-end", "url(#end)")
             .style("stroke-width", function(d) { 
-                return Math.sqrt(d.weight)/3; 
+                return Math.sqrt(d.weight)/1.5; 
             });
             
 
@@ -107,12 +108,13 @@
 
             // add the nodes
             node.append("circle")
-            .attr("r", 5);
+            .attr("r", 10);
 
             // add the text 
             node.append("text")
-            .attr("x", 12)
+            .attr("x", 8)
             .attr("dy", ".35em")
+            .style("font", "12px sans-serif")
             .text(function(d) { return d.name; });
 
             // add the curvy lines
@@ -179,9 +181,9 @@
                         d3.select(this).style("opacity", 1)
                         .style("stroke", "red");
                         
-//                        //THE FOLLOWING CAUSES: Uncaught TypeError: Cannot call method 'setProperty' of undefined
-//                        d3.select(dLink.source).style("opacity", 1);
-//                        d3.select(dLink.target).style("opacity", 1);
+                        //                        //THE FOLLOWING CAUSES: Uncaught TypeError: Cannot call method 'setProperty' of undefined
+                        //                        d3.select(dLink.source).style("opacity", 1);
+                        //                        d3.select(dLink.target).style("opacity", 1);
                     });
                     
                   
@@ -191,7 +193,7 @@
                     .style("fill", "red")
                     .style("stroke", "red")
                     .style("stroke-width", ".5px")
-                    .style("font", "20px sans-serif");
+                    .style("font", "25px sans-serif");
                     
                     
                     d3.select(this).select("circle").transition()
@@ -231,11 +233,11 @@
                     .style("fill", "#ccc");
                     d3.select(this).select("text").transition()
                     .duration(750)
-                    .attr("x", 12)
+//                    .attr("x", 8)
                     .style("stroke", "none")
                     .style("fill", "black")
                     .style("stroke", "none")
-                    .style("font", "10px sans-serif");
+                    .style("font", "12px sans-serif");
                 };
             }
 

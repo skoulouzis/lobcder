@@ -1,463 +1,455 @@
-uid;source;target;weight
-1;GET,/;GET,/;122
-2;GET,/;GET,/files;4
-3;GET,/files;GET,/;2
-4;GET,/;GET,/PPD-PageMaker;2
-5;GET,/PPD-PageMaker;GET,/;2
-6;GET,/;GET,/Polla_Yposxomenoi_Spot_3.mp3;4
-7;GET,/Polla_Yposxomenoi_Spot_3.mp3;OPTIONS,/;2
-8;OPTIONS,/;OPTIONS,/;108
-9;OPTIONS,/;PROPFIND,/;96
-10;PROPFIND,/;PROPFIND,/;96
-11;PROPFIND,/;PUT,/file1M;2
-12;PUT,/file1M;GET,/;2
-13;GET,/files;GET,/files/popularUsers.png;2
-14;GET,/files/popularUsers.png;GET,/files/popularUsers.png;10
-15;GET,/files/popularUsers.png;GET,/;2
-16;GET,/;OPTIONS,/;16
-17;PROPFIND,/;OPTIONS,/;10
-18;PROPFIND,/;PROPFIND,/file1M;4
-19;PROPFIND,/file1M;DELETE,/file1M;4
-20;DELETE,/file1M;OPTIONS,/;2
-21;DELETE,/file1M;PROPFIND,/;2
-22;PROPFIND,/;MKCOL,/dir1/;2
-23;MKCOL,/dir1/;MKCOL,/dir1/;10
-24;MKCOL,/dir1/;OPTIONS,/;2
-25;PROPFIND,/;MKCOL,/dir2/;2
-26;MKCOL,/dir2/;OPTIONS,/;2
-27;PROPFIND,/;MKCOL,/Downloads/;4
-28;MKCOL,/Downloads/;PROPFIND,/;4
-29;MKCOL,/Downloads/;MKCOL,/Downloads/;10
-30;PROPFIND,/;PROPFIND,/Downloads/;6
-31;PROPFIND,/Downloads/;DELETE,/Downloads/;2
-32;DELETE,/Downloads/;PROPFIND,/;2
-33;PROPFIND,/;MKCOL,/testResourceId/;6
-34;MKCOL,/testResourceId/;MKCOL,/testResourceId/;144
-35;MKCOL,/testResourceId/;PUT,/testResourceId/file1;110
-36;PUT,/testResourceId/file1;PUT,/testResourceId/file1;108
-37;PUT,/testResourceId/file1;DELETE,/testResourceId/;38
-38;DELETE,/testResourceId/;DELETE,/testResourceId/;158
-39;DELETE,/testResourceId/;MKCOL,/testResourceId/;108
-40;PUT,/testResourceId/file1;PUT,/testFileName1.txt;2
-41;PUT,/testFileName1.txt;PUT,/testFileName1.txt;128
-42;PUT,/testFileName1.txt;GET,/testFileName1.txt;60
-43;GET,/testFileName1.txt;GET,/testFileName1.txt;74
-44;GET,/testFileName1.txt;MKCOL,/testResourceId/;14
-45;MKCOL,/testResourceId/;COPY,/testFileName1.txt;14
-46;COPY,/testFileName1.txt;COPY,/testFileName1.txt;14
-47;COPY,/testFileName1.txt;GET,/testResourceId/testFileName1.txt;14
-48;GET,/testResourceId/testFileName1.txt;GET,/testResourceId/testFileName1.txt;14
-49;GET,/testResourceId/testFileName1.txt;DELETE,/testResourceId/;14
-50;DELETE,/testResourceId/;DELETE,/testFileName1.txt;14
-51;DELETE,/testFileName1.txt;DELETE,/testFileName1.txt;128
-52;DELETE,/testFileName1.txt;PUT,/testFileNameT2;6
-53;PUT,/testFileNameT2;PUT,/testFileNameT1;16
-54;PUT,/testFileNameT1;PUT,/testFileNameT2;12
-55;PUT,/testFileNameT1;PROPFIND,/testFileNameT1;12
-56;PROPFIND,/testFileNameT1;PROPFIND,/testFileNameT1;2
-57;PROPFIND,/testFileNameT1;DELETE,/testFileNameT1;12
-58;DELETE,/testFileNameT1;DELETE,/testFileNameT1;8
-59;DELETE,/testFileNameT1;DELETE,/testFileName1;2
-60;DELETE,/testFileName1;PUT,/testFileName1;16
-61;PUT,/testFileName1;PUT,/testFileName1;16
-62;PUT,/testFileName1;PUT,/testTxtFileName.txt;14
-63;PUT,/testTxtFileName.txt;PUT,/testTxtFileName.txt;14
-64;PUT,/testTxtFileName.txt;DELETE,/testFileName1;14
-65;DELETE,/testFileName1;DELETE,/testFileName1;14
-66;DELETE,/testFileName1;DELETE,/testTxtFileName.txt;14
-67;DELETE,/testTxtFileName.txt;DELETE,/testTxtFileName.txt;14
-68;DELETE,/testTxtFileName.txt;PUT,/testFileName1.txt;14
-69;PUT,/testFileName1.txt;PROPFIND,/testFileName1.txt;30
-70;PROPFIND,/testFileName1.txt;PROPFIND,/testFileName1.txt;48
-71;PROPFIND,/testFileName1.txt;DELETE,/testFileName1.txt;32
-72;DELETE,/testFileName1.txt;PROPFIND,/testFileName1.txt;26
-73;DELETE,/testFileName1.txt;PUT,/testFileName1.txt;40
-74;GET,/testFileName1.txt;DELETE,/testFileName1.txt;32
-75;PUT,/testFileName1.txt;DELETE,/testFileName1.txt;10
-76;DELETE,/testFileName1.txt;GET,/;4
-77;GET,/Polla_Yposxomenoi_Spot_3.mp3;GET,/Polla_Yposxomenoi_Spot_3.mp3;14
-78;GET,/Polla_Yposxomenoi_Spot_3.mp3;GET,/;2
-79;GET,/;MKCOL,/testResourceId/;2
-80;DELETE,/testResourceId/;DELETE,/testFileName1;8
-81;PUT,/testFileNameT1;PUT,/testFileNameT1;4
-82;PUT,/testFileNameT2;PROPFIND,/testFileNameT1;4
-83;PROPFIND,/testFileNameT1;PROPFIND,/testFileNameT2;4
-84;PROPFIND,/testFileNameT2;PROPFIND,/testFileNameT1;10
-85;DELETE,/testFileNameT1;PROPFIND,/testFileNameT2;12
-86;PROPFIND,/testFileNameT2;DELETE,/testFileNameT1;6
-87;DELETE,/testFileNameT1;DELETE,/testFileNameT2;6
-88;DELETE,/testFileNameT2;DELETE,/testFileNameT2;10
-89;DELETE,/testFileNameT2;GET,/;2
-90;PROPFIND,/;PUT,/das4_instructions.pdf;8
-91;PUT,/das4_instructions.pdf;GET,/;6
-92;GET,/;GET,/das4_instructions.pdf;10
-93;GET,/das4_instructions.pdf;GET,/das4_instructions.pdf;26
-94;GET,/das4_instructions.pdf;GET,/;6
-95;GET,/das4_instructions.pdf;MKCOL,/testResourceId/;2
-96;PROPFIND,/testFileNameT1;PUT,/testFileNameT2;10
-97;PUT,/testFileNameT2;PROPFIND,/testFileNameT2;8
-98;PROPFIND,/testFileNameT2;DELETE,/testFileNameT2;8
-99;DELETE,/testFileNameT2;DELETE,/testFileName1.txt;4
-100;GET,/;PROPFIND,/testFileName1.txt;2
-101;PROPFIND,/testFileName1.txt;PUT,/testFileName1.txt;14
-102;PROPFIND,/testFileName1.txt;GET,/testFileName1.txt;14
-103;GET,/testFileName1.txt;PUT,/testFileName1.txt;28
-104;DELETE,/testFileName1.txt;DELETE,/testFileName1;4
-105;DELETE,/testFileName1.txt;PUT,/testFileNameT1;8
-106;DELETE,/testFileNameT2;DELETE,/testFileNameT1;2
-107;DELETE,/testFileNameT2;DELETE,/testFileName1;2
-108;PUT,/testFileName1;ACL,/testFileName1;2
-109;ACL,/testFileName1;DELETE,/testResourceId/;2
-110;PUT,/testResourceId/file1;PUT,/testResourceId/file2;26
-111;PUT,/testResourceId/file2;PUT,/testResourceId/file2;26
-112;PUT,/testResourceId/file2;PUT,/testResourceId/file3;26
-113;PUT,/testResourceId/file3;PUT,/testResourceId/file3;26
-114;PUT,/testResourceId/file3;MKCOL,/testResourceId/folder4/;26
-115;MKCOL,/testResourceId/folder4/;MKCOL,/testResourceId/folder4/;26
-116;MKCOL,/testResourceId/folder4/;PUT,/testResourceId/folder4/file5;26
-117;PUT,/testResourceId/folder4/file5;PUT,/testResourceId/folder4/file5;26
-118;PUT,/testResourceId/folder4/file5;PROPFIND,/testResourceId/;26
-119;PROPFIND,/testResourceId/;PROPFIND,/testResourceId/;50
-120;PROPFIND,/testResourceId/;PROPPATCH,/testResourceId/;24
-121;PROPPATCH,/testResourceId/;PROPFIND,/testResourceId/;24
-122;PROPFIND,/testResourceId/;DELETE,/testResourceId/;28
-123;PUT,/testResourceId/file1;PROPFIND,/testResourceId/file1;12
-124;PROPFIND,/testResourceId/file1;PROPFIND,/testResourceId/file1;24
-125;PROPFIND,/testResourceId/file1;PROPPATCH,/testResourceId/file1;12
-126;PROPPATCH,/testResourceId/file1;PROPFIND,/testResourceId/file1;12
-127;PROPFIND,/testResourceId/file1;DELETE,/testResourceId/;12
-128;DELETE,/testResourceId/;PUT,/tmp7398022892278569728.tmp;2
-129;PUT,/tmp7398022892278569728.tmp;PUT,/tmp7398022892278569728.tmp;2
-130;PUT,/tmp7398022892278569728.tmp;GET,/tmp7398022892278569728.tmp;2
-131;GET,/tmp7398022892278569728.tmp;GET,/tmp7398022892278569728.tmp;2
-132;GET,/tmp7398022892278569728.tmp;DELETE,/tmp7398022892278569728.tmp;2
-133;DELETE,/tmp7398022892278569728.tmp;DELETE,/tmp7398022892278569728.tmp;2
-134;DELETE,/tmp7398022892278569728.tmp;PUT,/testCollection/file1;2
-135;PUT,/testCollection/file1;PUT,/testCollection/file1;12
-136;PUT,/testCollection/file1;GET,/testCollection/file1;6
-137;GET,/testCollection/file1;GET,/testCollection/file1;92
-138;GET,/testCollection/file1;DELETE,/testCollection/;12
-139;DELETE,/testCollection/;DELETE,/testCollection/;12
-140;DELETE,/testCollection/;PUT,/testCollection/file1;6
-141;PUT,/testCollection/file1;PROPFIND,/testCollection/file1;6
-142;PROPFIND,/testCollection/file1;PROPFIND,/testCollection/file1;6
-143;PROPFIND,/testCollection/file1;GET,/testCollection/file1;6
-144;DELETE,/testCollection/;GET,/;6
-145;OPTIONS,/;MKCOL,/testResourceId/;8
-146;MKCOL,/testResourceId/;PUT,/testResourceId/bindtest1;8
-147;PUT,/testResourceId/bindtest1;PUT,/testResourceId/bindtest1;8
-148;PUT,/testResourceId/bindtest1;GET,/testResourceId/bindtest1;8
-149;GET,/testResourceId/bindtest1;GET,/testResourceId/bindtest1;8
-150;GET,/testResourceId/bindtest1;MOVE,/testResourceId/bindtest1;8
-151;MOVE,/testResourceId/bindtest1;MOVE,/testResourceId/bindtest1;8
-152;MOVE,/testResourceId/bindtest1;GET,/testResourceId/bindtest2;8
-153;GET,/testResourceId/bindtest2;GET,/testResourceId/bindtest2;8
-154;GET,/testResourceId/bindtest2;DELETE,/testResourceId/;8
-155;DELETE,/testResourceId/;MKCOL,/testSimpleBind/;8
-156;MKCOL,/testSimpleBind/;MKCOL,/testSimpleBind/;16
-157;MKCOL,/testSimpleBind/;MKCOL,/testSimpleBind/bindtest1/;16
-158;MKCOL,/testSimpleBind/bindtest1/;MKCOL,/testSimpleBind/bindtest1/;16
-159;MKCOL,/testSimpleBind/bindtest1/;MKCOL,/testSimpleBind/bindtest2/;16
-160;MKCOL,/testSimpleBind/bindtest2/;MKCOL,/testSimpleBind/bindtest2/;16
-161;MKCOL,/testSimpleBind/bindtest2/;PUT,/testSimpleBind/bindtest1/res1;16
-162;PUT,/testSimpleBind/bindtest1/res1;PUT,/testSimpleBind/bindtest1/res1;16
-163;PUT,/testSimpleBind/bindtest1/res1;GET,/testSimpleBind/bindtest1/res1;6
-164;GET,/testSimpleBind/bindtest1/res1;GET,/testSimpleBind/bindtest1/res1;6
-165;GET,/testSimpleBind/bindtest1/res1;DELETE,/testSimpleBind/;6
-166;DELETE,/testSimpleBind/;DELETE,/testSimpleBind/;14
-167;DELETE,/testSimpleBind/;MKCOL,/testRebind/;6
-168;MKCOL,/testRebind/;MKCOL,/testRebind/;6
-169;MKCOL,/testRebind/;MKCOL,/testRebind/bindtest1/;6
-170;MKCOL,/testRebind/bindtest1/;MKCOL,/testRebind/bindtest1/;6
-171;MKCOL,/testRebind/bindtest1/;MKCOL,/testRebind/bindtest2/;4
-172;MKCOL,/testRebind/bindtest2/;MKCOL,/testRebind/bindtest2/;4
-173;MKCOL,/testRebind/bindtest2/;PUT,/testRebind/bindtest1/res1;4
-174;PUT,/testRebind/bindtest1/res1;PUT,/testRebind/bindtest1/res1;4
-175;PUT,/testRebind/bindtest1/res1;GET,/testRebind/bindtest1/res1;4
-176;GET,/testRebind/bindtest1/res1;GET,/testRebind/bindtest1/res1;4
-177;GET,/testRebind/bindtest1/res1;DELETE,/testRebind/;4
-178;DELETE,/testRebind/;DELETE,/testRebind/;4
-179;DELETE,/testRebind/;MKCOL,/testSimpleBind/;4
-180;PUT,/testSimpleBind/bindtest1/res1;PUT,/testSimpleBind/bindtest2/res2;8
-181;PUT,/testSimpleBind/bindtest2/res2;PUT,/testSimpleBind/bindtest2/res2;8
-182;PUT,/testSimpleBind/bindtest2/res2;DELETE,/testSimpleBind/;8
-183;DELETE,/testSimpleBind/;MKCOL,/testSimpleBind/;4
-184;DELETE,/testSimpleBind/;MKCOL,/testParentSet/;4
-185;MKCOL,/testParentSet/;MKCOL,/testParentSet/;4
-186;MKCOL,/testParentSet/;MKCOL,/testParentSet/bindtest1/;4
-187;MKCOL,/testParentSet/bindtest1/;MKCOL,/testParentSet/bindtest1/;4
-188;MKCOL,/testParentSet/bindtest1/;MKCOL,/testParentSet/bindtest2/;4
-189;MKCOL,/testParentSet/bindtest2/;MKCOL,/testParentSet/bindtest2/;4
-190;MKCOL,/testParentSet/bindtest2/;PUT,/testParentSet/bindtest1/res1;4
-191;PUT,/testParentSet/bindtest1/res1;PUT,/testParentSet/bindtest1/res1;4
-192;PUT,/testParentSet/bindtest1/res1;DELETE,/testParentSet/;4
-193;DELETE,/testParentSet/;DELETE,/testParentSet/;4
-194;DELETE,/testParentSet/;MKCOL,/testBindCollections/;4
-195;MKCOL,/testBindCollections/;MKCOL,/testBindCollections/;4
-196;MKCOL,/testBindCollections/;MKCOL,/testBindCollections/a1/;4
-197;MKCOL,/testBindCollections/a1/;MKCOL,/testBindCollections/a1/;4
-198;MKCOL,/testBindCollections/a1/;MKCOL,/testBindCollections/a2/;4
-199;MKCOL,/testBindCollections/a2/;MKCOL,/testBindCollections/a2/;4
-200;MKCOL,/testBindCollections/a2/;MKCOL,/testBindCollections/a1/b1/;4
-201;MKCOL,/testBindCollections/a1/b1/;MKCOL,/testBindCollections/a1/b1/;4
-202;MKCOL,/testBindCollections/a1/b1/;MKCOL,/testBindCollections/a1/b1/c1/;4
-203;MKCOL,/testBindCollections/a1/b1/c1/;MKCOL,/testBindCollections/a1/b1/c1/;4
-204;MKCOL,/testBindCollections/a1/b1/c1/;PUT,/testBindCollections/a1/b1/c1/x1;4
-205;PUT,/testBindCollections/a1/b1/c1/x1;PUT,/testBindCollections/a1/b1/c1/x1;4
-206;PUT,/testBindCollections/a1/b1/c1/x1;DELETE,/testBindCollections/;4
-207;DELETE,/testBindCollections/;DELETE,/testBindCollections/;4
-208;DELETE,/testBindCollections/;MKCOL,/testUnbind/;4
-209;MKCOL,/testUnbind/;MKCOL,/testUnbind/;4
-210;MKCOL,/testUnbind/;MKCOL,/testUnbind/bindtest1/;4
-211;MKCOL,/testUnbind/bindtest1/;MKCOL,/testUnbind/bindtest1/;4
-212;MKCOL,/testUnbind/bindtest1/;MKCOL,/testUnbind/bindtest2/;4
-213;MKCOL,/testUnbind/bindtest2/;MKCOL,/testUnbind/bindtest2/;4
-214;MKCOL,/testUnbind/bindtest2/;PUT,/testUnbind/bindtest1/res1;4
-215;PUT,/testUnbind/bindtest1/res1;PUT,/testUnbind/bindtest1/res1;4
-216;PUT,/testUnbind/bindtest1/res1;DELETE,/testUnbind/;4
-217;DELETE,/testUnbind/;DELETE,/testUnbind/;4
-218;DELETE,/testUnbind/;DELETE,/testResourceId/;4
-219;DELETE,/testResourceId/;PUT,/testResourceId/movetest;4
-220;PUT,/testResourceId/movetest;PUT,/testResourceId/movetest;12
-221;PUT,/testResourceId/movetest;DELETE,/testResourceId/;2
-222;DELETE,/testResourceId/;PUT,/tmp8468421643242455437.tmp;2
-223;PUT,/tmp8468421643242455437.tmp;PUT,/tmp8468421643242455437.tmp;2
-224;PUT,/tmp8468421643242455437.tmp;GET,/tmp8468421643242455437.tmp;2
-225;GET,/tmp8468421643242455437.tmp;GET,/tmp8468421643242455437.tmp;2
-226;GET,/tmp8468421643242455437.tmp;DELETE,/tmp8468421643242455437.tmp;2
-227;DELETE,/tmp8468421643242455437.tmp;DELETE,/tmp8468421643242455437.tmp;2
-228;DELETE,/tmp8468421643242455437.tmp;PUT,/testCollection/file1;2
-229;PUT,/testResourceId/movetest;MOVE,/testResourceId/movetest;2
-230;MOVE,/testResourceId/movetest;MOVE,/testResourceId/movetest;2
-231;MOVE,/testResourceId/movetest;HEAD,/testResourceId/movetest2;2
-232;HEAD,/testResourceId/movetest2;HEAD,/testResourceId/movetest2;2
-233;HEAD,/testResourceId/movetest2;HEAD,/testResourceId/movetest;2
-234;HEAD,/testResourceId/movetest;DELETE,/testResourceId/movetest;2
-235;DELETE,/testResourceId/movetest;DELETE,/testResourceId/movetest;2
-236;DELETE,/testResourceId/movetest;DELETE,/testResourceId/;2
-237;DELETE,/testResourceId/;PUT,/iflocktest;2
-238;PUT,/iflocktest;PUT,/iflocktest;20
-239;PUT,/iflocktest;LOCK,/iflocktest;2
-240;LOCK,/iflocktest;LOCK,/iflocktest;2
-241;LOCK,/iflocktest;PUT,/iflocktest;2
-242;PUT,/iflocktest;UNLOCK,/iflocktest;2
-243;UNLOCK,/iflocktest;UNLOCK,/iflocktest;2
-244;UNLOCK,/iflocktest;DELETE,/iflocktest;2
-245;DELETE,/iflocktest;DELETE,/iflocktest;2
-246;DELETE,/iflocktest;MKCOL,/testPropfindInclude/;2
-247;MKCOL,/testPropfindInclude/;MKCOL,/testPropfindInclude/;2
-248;MKCOL,/testPropfindInclude/;PUT,/testPropfindInclude/iftest/;2
-249;PUT,/testPropfindInclude/iftest/;PUT,/testPropfindInclude/iftest/;2
-250;PUT,/testPropfindInclude/iftest/;PROPFIND,/testPropfindInclude/iftest/;2
-251;PROPFIND,/testPropfindInclude/iftest/;PROPFIND,/testPropfindInclude/iftest/;2
-252;PROPFIND,/testPropfindInclude/iftest/;DELETE,/testPropfindInclude/;2
-253;DELETE,/testPropfindInclude/;DELETE,/testPropfindInclude/;2
-254;DELETE,/testPropfindInclude/;DELETE,/testResourceId/;2
-255;DELETE,/testResourceId/;PUT,/testFileName1.txt;2
-256;DELETE,/testFileName1.txt;MKCOL,/testResourceId/;2
-257;MKCOL,/testResourceId/;DELETE,/testResourceId/;12
-258;DELETE,/testResourceId/;GET,/;2
-259;GET,/;GET,/lobcder/dav;2
-260;GET,/lobcder/dav;GET,/lobcder/dav;92
-261;GET,/lobcder/dav;OPTIONS,/;4
-262;PROPFIND,/;PROPFIND,/testFileName1;2
-263;PROPFIND,/testFileName1;DELETE,/testFileName1;2
-264;DELETE,/testFileName1;PROPFIND,/;2
-265;PROPFIND,/;PUT,/7_bridges.mp4;10
-266;PUT,/7_bridges.mp4;PROPFIND,/;8
-267;PROPFIND,/;PROPFIND,/7_bridges.mp4;16
-268;PROPFIND,/7_bridges.mp4;DELETE,/7_bridges.mp4;22
-269;DELETE,/7_bridges.mp4;PUT,/7_bridges.mp4;8
-270;PUT,/7_bridges.mp4;PROPFIND,/7_bridges.mp4;4
-271;DELETE,/7_bridges.mp4;PROPFIND,/;2
-272;PROPFIND,/;PROPFIND,/das4_instructions.pdf;8
-273;PROPFIND,/das4_instructions.pdf;DELETE,/das4_instructions.pdf;8
-274;DELETE,/das4_instructions.pdf;PUT,/7_bridges.mp4;2
-275;DELETE,/7_bridges.mp4;PUT,/das4_instructions.pdf;2
-276;PUT,/das4_instructions.pdf;PROPFIND,/;4
-277;DELETE,/das4_instructions.pdf;PROPFIND,/;4
-278;PROPFIND,/;PUT,/7_bridgses;2
-279;PUT,/7_bridgses;PROPFIND,/;2
-280;PROPFIND,/;PROPFIND,/7_bridgses;2
-281;PROPFIND,/7_bridgses;DELETE,/7_bridgses;2
-282;DELETE,/7_bridgses;PROPFIND,/;2
-283;DELETE,/7_bridges.mp4;PUT,/MythBusters.S12E09.HDTV.x264-KILLERS.mp4;2
-284;PUT,/MythBusters.S12E09.HDTV.x264-KILLERS.mp4;PROPFIND,/;2
-285;PROPFIND,/;PROPFIND,/MythBusters.S12E09.HDTV.x264-KILLERS.mp4;4
-286;PROPFIND,/MythBusters.S12E09.HDTV.x264-KILLERS.mp4;DELETE,/MythBusters.S12E09.HDTV.x264-KILLERS.mp4;4
-287;DELETE,/MythBusters.S12E09.HDTV.x264-KILLERS.mp4;PUT,/file20M;2
-288;PUT,/file20M;PROPFIND,/;2
-289;PROPFIND,/;PROPFIND,/file20M;2
-290;PROPFIND,/file20M;DELETE,/file20M;2
-291;DELETE,/file20M;PUT,/file49M;2
-292;PUT,/file49M;PROPFIND,/;2
-293;PROPFIND,/;PROPFIND,/file49M;2
-294;PROPFIND,/file49M;DELETE,/file49M;2
-295;DELETE,/file49M;PUT,/file50M;2
-296;PUT,/file50M;PUT,/file50Plus;2
-297;PUT,/file50Plus;PROPFIND,/m/;2
-298;PROPFIND,/m/;PROPFIND,/;2
-299;PROPFIND,/;PROPFIND,/file50Plus;12
-300;PROPFIND,/file50Plus;DELETE,/file50Plus;12
-301;DELETE,/file50Plus;PROPFIND,/file50M;2
-302;PROPFIND,/file50M;DELETE,/file50M;2
-303;DELETE,/file50M;PUT,/file51M;2
-304;PUT,/file51M;PROPFIND,/;2
-305;PROPFIND,/;PROPFIND,/file51M;2
-306;PROPFIND,/file51M;DELETE,/file51M;2
-307;DELETE,/file51M;PUT,/file;2
-308;PUT,/file;PROPFIND,/;2
-309;PROPFIND,/;PROPFIND,/file;2
-310;PROPFIND,/file;DELETE,/file;2
-311;DELETE,/file;PROPFIND,/;2
-312;PROPFIND,/;PUT,/Lecture1.pdf;2
-313;PUT,/Lecture1.pdf;PROPFIND,/;2
-314;PROPFIND,/;PROPFIND,/Lecture1.pdf;2
-315;PROPFIND,/Lecture1.pdf;DELETE,/Lecture1.pdf;2
-316;DELETE,/Lecture1.pdf;PUT,/7_bridges.mp4;2
-317;DELETE,/7_bridges.mp4;OPTIONS,/;2
-318;PROPFIND,/;PUT,/file50Plus;8
-319;PUT,/file50Plus;PROPFIND,/;10
-320;DELETE,/file50Plus;PROPFIND,/;8
-321;PUT,/7_bridges.mp4;PROPFIND,/8;2
-322;PROPFIND,/8;DELETE,/8;2
-323;DELETE,/8;PROPFIND,/;2
-324;DELETE,/7_bridges.mp4;PUT,/file50Plus;2
-325;PROPFIND,/;GET,/file50Plus;2
-326;GET,/file50Plus;PROPFIND,/;2
-327;DELETE,/file50Plus;MKCOL,/testResourceId/;2
-328;DELETE,/testFileNameT2;DELETE,/testResourceId/;4
-329;DELETE,/testResourceId/;PUT,/tmp5075340417246610475.tmp;2
-330;PUT,/tmp5075340417246610475.tmp;PUT,/tmp5075340417246610475.tmp;2
-331;PUT,/tmp5075340417246610475.tmp;GET,/tmp5075340417246610475.tmp;2
-332;GET,/tmp5075340417246610475.tmp;GET,/tmp5075340417246610475.tmp;2
-333;GET,/tmp5075340417246610475.tmp;DELETE,/tmp5075340417246610475.tmp;2
-334;DELETE,/tmp5075340417246610475.tmp;DELETE,/tmp5075340417246610475.tmp;2
-335;DELETE,/tmp5075340417246610475.tmp;PUT,/testCollection/file1;2
-336;PUT,/testSimpleBind/bindtest1/res1;OPTIONS,/;2
-337;PUT,/7_bridges.mp4;GET,/;6
-338;GET,/;PROPFIND,/;2
-339;GET,/;GET,/7_bridges.mp4;12
-340;GET,/7_bridges.mp4;GET,/7_bridges.mp4;226
-341;GET,/7_bridges.mp4;GET,/7_bridges.mp4.;2
-342;GET,/7_bridges.mp4.;GET,/7_bridges.mp4.;10
-343;GET,/7_bridges.mp4.;GET,/7_bridges.mp4;2
-344;GET,/7_bridges.mp4;GET,/;8
-345;GET,/7_bridges.mp4;GET,/lobcder/dav;6
-346;GET,/lobcder/dav;GET,/7_bridges.mp4;4
-347;GET,/lobcder/dav;GET,/;2
-348;GET,/7_bridges.mp4;OPTIONS,/;2
-349;PROPFIND,/;PUT,/7_bridges.webm;2
-350;PUT,/7_bridges.webm;OPTIONS,/;2
-351;PROPFIND,/;MKCOL,/fff/;2
-352;MKCOL,/fff/;MKCOL,/fff/;2
-353;MKCOL,/fff/;PROPFIND,/;2
-354;PROPFIND,/;PROPFIND,/7_bridges.webm;2
-355;PROPFIND,/7_bridges.webm;DELETE,/7_bridges.webm;2
-356;DELETE,/7_bridges.webm;PROPFIND,/7_bridges.mp4;2
-357;DELETE,/7_bridges.mp4;PROPFIND,/fff/;2
-358;PROPFIND,/fff/;PROPFIND,/;2
-359;PROPFIND,/;PROPFIND,/fff/;2
-360;PROPFIND,/fff/;DELETE,/fff/;2
-361;DELETE,/fff/;PROPFIND,/;2
-362;PUT,/testResourceId/file1;GET,/testResourceId/file1;32
-363;GET,/testResourceId/file1;GET,/testResourceId/file1;30
-364;GET,/testResourceId/file1;PROPFIND,/;2
-365;PROPFIND,/;PROPFIND,/testResourceId/;2
-366;GET,/testResourceId/file1;DELETE,/testResourceId/;26
-367;GET,/testResourceId/file1;GET,/;2
-368;GET,/;GET,/testResourceId;2
-369;GET,/testResourceId;DELETE,/testResourceId/;2
-370;GET,/testResourceId/file1;GET,/testResourceId;2
-371;GET,/testResourceId;MKCOL,/testResourceId/;2
-372;DELETE,/testResourceId/;PROPFIND,/;2
-373;MKCOL,/testResourceId/;PROPFIND,/testFileName1.txt;2
-374;PROPFIND,/testFileName1.txt;PROPPATCH,/testFileName1.txt;2
-375;PROPPATCH,/testFileName1.txt;PROPFIND,/testFileName1.txt;2
-376;DELETE,/testFileName1.txt;DELETE,/testResourceId/;2
-377;DELETE,/testResourceId/;OPTIONS,/;2
-378;MKCOL,/testRebind/bindtest1/;OPTIONS,/;2
-379;PROPFIND,/;PROPFIND,/%2a;2
-380;PROPFIND,/%2a;DELETE,/%2a;2
-381;DELETE,/%2a;OPTIONS,/;2
-382;PUT,/7_bridges.mp4;OPTIONS,/;2
-383;DELETE,/7_bridges.mp4;MKCOL,/aaaaaaa/;2
-384;MKCOL,/aaaaaaa/;MKCOL,/aaaaaaa/;2
-385;MKCOL,/aaaaaaa/;PROPFIND,/;2
-386;PROPFIND,/;PROPFIND,/aaaaaaa/;2
-387;PROPFIND,/aaaaaaa/;DELETE,/aaaaaaa/;2
-388;DELETE,/aaaaaaa/;OPTIONS,/;2
-389;PROPFIND,/;GET,/;5
-390;GET,/;POST,/;2
-391;POST,/;POST,/;8
-392;POST,/;OPTIONS,/;2
-393;PROPFIND,/;PUT,/mp4.tar.gz;2
-394;PUT,/mp4.tar.gz;OPTIONS,/;2
-395;DELETE,/das4_instructions.pdf;OPTIONS,/;2
-396;PROPFIND,/;PUT,/MythBusters.S12E09.HDTV.x264-KILLERS.mp4;44
-397;PUT,/MythBusters.S12E09.HDTV.x264-KILLERS.mp4;OPTIONS,/;42
-398;PUT,/MythBusters.S12E09.HDTV.x264-KILLERS.mp4;GET,/;2
-399;GET,/das4_instructions.pdf;GET,/lobcder/dav;2
-400;GET,/;PUT,/Downloads/files4/;2
-401;PUT,/Downloads/files4/;PUT,/Downloads/files4/3.zip;2
-402;PUT,/Downloads/files4/3.zip;PUT,/Downloads/files4/5.zip;2
-403;PUT,/Downloads/files4/5.zip;PUT,/Downloads/files4/1.zip;2
-404;PUT,/Downloads/files4/1.zip;PUT,/Downloads/files4/8.zip;2
-405;PUT,/Downloads/files4/8.zip;PUT,/Downloads/files4/6.zip;2
-406;PUT,/Downloads/files4/6.zip;PUT,/Downloads/files4/4.zip;2
-407;PUT,/Downloads/files4/4.zip;PUT,/Downloads/files4/2.zip;2
-408;PUT,/Downloads/files4/2.zip;PUT,/Downloads/files4/7.zip;2
-409;PUT,/Downloads/files4/7.zip;PROPFIND,/;2
-410;PROPFIND,/Downloads/;PROPFIND,/Downloads/;14
-411;PROPFIND,/Downloads/;PROPFIND,/Downloads/files4/;4
-412;PROPFIND,/Downloads/files4/;PROPFIND,/Downloads/;4
-413;PROPFIND,/Downloads/;PROPFIND,/Downloads/files4;2
-414;PROPFIND,/Downloads/files4;DELETE,/Downloads/files4;2
-415;DELETE,/Downloads/files4;PROPFIND,/Downloads/;2
-416;PROPFIND,/Downloads/;PUT,/Downloads/1.zip;2
-417;PUT,/Downloads/1.zip;PUT,/Downloads/2.zip;2
-418;PUT,/Downloads/2.zip;PUT,/Downloads/3.zip;2
-419;PUT,/Downloads/3.zip;PUT,/Downloads/4.zip;2
-420;PUT,/Downloads/4.zip;PUT,/Downloads/5.zip;2
-421;PUT,/Downloads/5.zip;GET,/mp4.tar.gz;2
-422;GET,/mp4.tar.gz;PUT,/Downloads/6.zip;2
-423;PUT,/Downloads/6.zip;PUT,/Downloads/7.zip;2
-424;PUT,/Downloads/7.zip;PUT,/Downloads/8.zip;2
-425;PUT,/Downloads/8.zip;PROPFIND,/Downloads/;2
-426;PROPFIND,/Downloads/;GET,/Downloads/8.zip;2
-427;GET,/Downloads/8.zip;GET,/Downloads/7.zip;2
-428;GET,/Downloads/7.zip;GET,/Downloads/6.zip;2
-429;GET,/Downloads/6.zip;GET,/Downloads/5.zip;2
-430;GET,/Downloads/5.zip;GET,/Downloads/4.zip;2
-431;GET,/Downloads/4.zip;GET,/Downloads/3.zip;2
-432;GET,/Downloads/3.zip;GET,/Downloads/2.zip;2
-433;GET,/Downloads/2.zip;GET,/Downloads/1.zip;2
-434;GET,/Downloads/1.zip;PROPFIND,/;2
-435;PROPFIND,/Downloads/;PROPFIND,/Downloads/8.zip;2
-436;PROPFIND,/Downloads/8.zip;DELETE,/Downloads/8.zip;2
-437;DELETE,/Downloads/8.zip;PROPFIND,/Downloads/7.zip;2
-438;PROPFIND,/Downloads/7.zip;DELETE,/Downloads/7.zip;4
-439;DELETE,/Downloads/7.zip;PROPFIND,/Downloads/6.zip;2
-440;PROPFIND,/Downloads/6.zip;DELETE,/Downloads/6.zip;2
-441;DELETE,/Downloads/6.zip;PROPFIND,/Downloads/5.zip;2
-442;PROPFIND,/Downloads/5.zip;DELETE,/Downloads/5.zip;2
-443;DELETE,/Downloads/5.zip;PROPFIND,/Downloads/4.zip;2
-444;PROPFIND,/Downloads/4.zip;DELETE,/Downloads/4.zip;2
-445;DELETE,/Downloads/4.zip;PROPFIND,/Downloads/3.zip;2
-446;PROPFIND,/Downloads/3.zip;DELETE,/Downloads/3.zip;2
-447;DELETE,/Downloads/3.zip;PROPFIND,/Downloads/2.zip;2
-448;PROPFIND,/Downloads/2.zip;DELETE,/Downloads/2.zip;2
-449;DELETE,/Downloads/2.zip;PROPFIND,/Downloads/1.zip;2
-450;PROPFIND,/Downloads/1.zip;DELETE,/Downloads/1.zip;2
-451;DELETE,/Downloads/1.zip;PROPFIND,/Downloads/;2
-452;PROPFIND,/Downloads/;GET,/;2
-453;GET,/;PROPFIND,/Downloads/;2
-454;PROPFIND,/Downloads/;PUT,/Downloads/7.zip;2
-455;PUT,/Downloads/7.zip;PUT,/Downloads/7.zip;24
-456;PUT,/Downloads/7.zip;PROPFIND,/Downloads/;2
-457;PROPFIND,/Downloads/;GET,/Downloads/7.zip;10
-458;GET,/Downloads/7.zip;PROPFIND,/Downloads/;10
-459;PROPFIND,/Downloads/;PROPFIND,/Downloads/7.zip;2
-460;DELETE,/Downloads/7.zip;PROPFIND,/Downloads/;2
-461;PROPFIND,/Downloads/;PROPFIND,/;2
-462;DELETE,/MythBusters.S12E09.HDTV.x264-KILLERS.mp4;PROPFIND,/;2
+uid;source;target;weight;timestamp;
+1;GET,/lobcder/dav;GET,/lobcder/dav;152.0;2014-01-05 19:59:51.0
+2;GET,/lobcder/dav;GET,/lobcder/dav/files;2.0;2013-10-21 01:06:25.0
+3;GET,/lobcder/dav/files;GET,/lobcder/dav;1.0;2013-10-18 19:54:13.0
+4;GET,/lobcder/dav;GET,/lobcder/dav/PPD-PageMaker;1.0;2013-10-18 19:55:00.0
+5;GET,/lobcder/dav/PPD-PageMaker;GET,/lobcder/dav;1.0;2013-10-20 23:01:41.0
+6;GET,/lobcder/dav;GET,/lobcder/dav/Polla_Yposxomenoi_Spot_3.mp3;2.0;2013-11-05 15:44:36.0
+7;GET,/lobcder/dav/Polla_Yposxomenoi_Spot_3.mp3;OPTIONS,/lobcder/dav;1.0;2013-10-20 23:03:37.0
+8;OPTIONS,/lobcder/dav;OPTIONS,/lobcder/dav;54.0;2013-12-28 21:04:21.0
+9;OPTIONS,/lobcder/dav;PROPFIND,/lobcder/dav;48.0;2013-12-28 21:04:21.0
+10;PROPFIND,/lobcder/dav;PROPFIND,/lobcder/dav;48.0;2013-12-28 21:16:33.0
+11;PROPFIND,/lobcder/dav;PUT,/lobcder/dav/file1M;1.0;2013-10-20 23:04:32.0
+12;PUT,/lobcder/dav/file1M;GET,/lobcder/dav;1.0;2013-10-21 01:06:12.0
+13;GET,/lobcder/dav/files;GET,/lobcder/dav/files/popularUsers.png;1.0;2013-10-21 01:06:46.0
+14;GET,/lobcder/dav/files/popularUsers.png;GET,/lobcder/dav/files/popularUsers.png;5.0;2013-10-21 01:17:55.0
+15;GET,/lobcder/dav/files/popularUsers.png;GET,/lobcder/dav;1.0;2013-10-23 13:51:55.0
+16;GET,/lobcder/dav;OPTIONS,/lobcder/dav;10.0;2013-12-28 21:04:17.0
+17;PROPFIND,/lobcder/dav;OPTIONS,/lobcder/dav;5.0;2013-11-21 15:37:26.0
+18;PROPFIND,/lobcder/dav;PROPFIND,/lobcder/dav/file1M;2.0;2013-10-29 15:40:58.0
+19;PROPFIND,/lobcder/dav/file1M;DELETE,/lobcder/dav/file1M;2.0;2013-10-29 15:40:58.0
+20;DELETE,/lobcder/dav/file1M;OPTIONS,/lobcder/dav;1.0;2013-10-29 15:40:48.0
+21;DELETE,/lobcder/dav/file1M;PROPFIND,/lobcder/dav;1.0;2013-10-29 15:40:59.0
+22;PROPFIND,/lobcder/dav;MKCOL,/lobcder/dav/dir1;1.0;2013-10-29 15:41:24.0
+23;MKCOL,/lobcder/dav/dir1;MKCOL,/lobcder/dav/dir1;5.0;2013-10-29 15:44:48.0
+24;MKCOL,/lobcder/dav/dir1;OPTIONS,/lobcder/dav;1.0;2013-10-29 15:45:23.0
+25;PROPFIND,/lobcder/dav;MKCOL,/lobcder/dav/dir2;1.0;2013-10-29 15:52:54.0
+26;MKCOL,/lobcder/dav/dir2;OPTIONS,/lobcder/dav;1.0;2013-10-29 16:45:58.0
+27;PROPFIND,/lobcder/dav;MKCOL,/lobcder/dav/Downloads;2.0;2013-10-29 16:46:27.0
+28;MKCOL,/lobcder/dav/Downloads;PROPFIND,/lobcder/dav;2.0;2013-10-29 16:53:53.0
+29;MKCOL,/lobcder/dav/Downloads;MKCOL,/lobcder/dav/Downloads;5.0;2013-10-29 16:53:48.0
+30;PROPFIND,/lobcder/dav;PROPFIND,/lobcder/dav/Downloads;3.0;2013-12-28 21:07:08.0
+31;PROPFIND,/lobcder/dav/Downloads;DELETE,/lobcder/dav/Downloads;1.0;2013-10-29 16:54:02.0
+32;DELETE,/lobcder/dav/Downloads;PROPFIND,/lobcder/dav;1.0;2013-10-29 16:54:04.0
+33;PROPFIND,/lobcder/dav;MKCOL,/lobcder/dav/testResourceId;3.0;2013-11-19 15:12:43.0
+34;MKCOL,/lobcder/dav/testResourceId;MKCOL,/lobcder/dav/testResourceId;72.0;2013-11-19 15:17:54.0
+35;MKCOL,/lobcder/dav/testResourceId;PUT,/lobcder/dav/testResourceId/file1;55.0;2013-11-19 15:17:53.0
+36;PUT,/lobcder/dav/testResourceId/file1;PUT,/lobcder/dav/testResourceId/file1;54.0;2013-11-19 15:17:53.0
+37;PUT,/lobcder/dav/testResourceId/file1;DELETE,/lobcder/dav/testResourceId;19.0;2013-11-08 18:27:21.0
+38;DELETE,/lobcder/dav/testResourceId;DELETE,/lobcder/dav/testResourceId;79.0;2013-11-19 15:17:54.0
+39;DELETE,/lobcder/dav/testResourceId;MKCOL,/lobcder/dav/testResourceId;54.0;2013-11-19 15:17:53.0
+40;PUT,/lobcder/dav/testResourceId/file1;PUT,/lobcder/dav/testFileName1.txt;1.0;2013-10-29 16:55:37.0
+41;PUT,/lobcder/dav/testFileName1.txt;PUT,/lobcder/dav/testFileName1.txt;64.0;2013-11-19 15:16:33.0
+42;PUT,/lobcder/dav/testFileName1.txt;GET,/lobcder/dav/testFileName1.txt;30.0;2013-11-19 15:16:33.0
+43;GET,/lobcder/dav/testFileName1.txt;GET,/lobcder/dav/testFileName1.txt;37.0;2013-11-19 15:16:33.0
+44;GET,/lobcder/dav/testFileName1.txt;MKCOL,/lobcder/dav/testResourceId;7.0;2013-11-19 15:16:33.0
+45;MKCOL,/lobcder/dav/testResourceId;COPY,/lobcder/dav/testFileName1.txt;7.0;2013-11-19 15:16:33.0
+46;COPY,/lobcder/dav/testFileName1.txt;COPY,/lobcder/dav/testFileName1.txt;7.0;2013-11-19 15:16:33.0
+47;COPY,/lobcder/dav/testFileName1.txt;GET,/lobcder/dav/testResourceId/testFileName1.txt;7.0;2013-11-19 15:16:33.0
+48;GET,/lobcder/dav/testResourceId/testFileName1.txt;GET,/lobcder/dav/testResourceId/testFileName1.txt;7.0;2013-11-19 15:16:33.0
+49;GET,/lobcder/dav/testResourceId/testFileName1.txt;DELETE,/lobcder/dav/testResourceId;7.0;2013-11-19 15:16:33.0
+50;DELETE,/lobcder/dav/testResourceId;DELETE,/lobcder/dav/testFileName1.txt;7.0;2013-11-19 15:16:33.0
+51;DELETE,/lobcder/dav/testFileName1.txt;DELETE,/lobcder/dav/testFileName1.txt;64.0;2013-11-19 15:17:51.0
+52;DELETE,/lobcder/dav/testFileName1.txt;PUT,/lobcder/dav/testFileNameT2;3.0;2013-11-07 19:19:37.0
+53;PUT,/lobcder/dav/testFileNameT2;PUT,/lobcder/dav/testFileNameT1;8.0;2013-11-19 15:16:33.0
+54;PUT,/lobcder/dav/testFileNameT1;PUT,/lobcder/dav/testFileNameT2;6.0;2013-11-19 15:16:33.0
+55;PUT,/lobcder/dav/testFileNameT1;PROPFIND,/lobcder/dav/testFileNameT1;6.0;2013-11-19 15:16:33.0
+56;PROPFIND,/lobcder/dav/testFileNameT1;PROPFIND,/lobcder/dav/testFileNameT1;1.0;2013-10-29 16:55:38.0
+57;PROPFIND,/lobcder/dav/testFileNameT1;DELETE,/lobcder/dav/testFileNameT1;6.0;2013-11-19 15:16:34.0
+58;DELETE,/lobcder/dav/testFileNameT1;DELETE,/lobcder/dav/testFileNameT1;4.0;2013-11-19 15:16:34.0
+59;DELETE,/lobcder/dav/testFileNameT1;DELETE,/lobcder/dav/testFileName1;1.0;2013-10-29 16:55:38.0
+60;DELETE,/lobcder/dav/testFileName1;PUT,/lobcder/dav/testFileName1;8.0;2013-11-19 15:16:15.0
+61;PUT,/lobcder/dav/testFileName1;PUT,/lobcder/dav/testFileName1;8.0;2013-11-19 15:16:15.0
+62;PUT,/lobcder/dav/testFileName1;PUT,/lobcder/dav/testTxtFileName.txt;7.0;2013-11-19 15:16:15.0
+63;PUT,/lobcder/dav/testTxtFileName.txt;PUT,/lobcder/dav/testTxtFileName.txt;7.0;2013-11-19 15:16:15.0
+64;PUT,/lobcder/dav/testTxtFileName.txt;DELETE,/lobcder/dav/testFileName1;7.0;2013-11-19 15:16:15.0
+65;DELETE,/lobcder/dav/testFileName1;DELETE,/lobcder/dav/testFileName1;7.0;2013-11-19 15:16:15.0
+66;DELETE,/lobcder/dav/testFileName1;DELETE,/lobcder/dav/testTxtFileName.txt;7.0;2013-11-19 15:16:15.0
+67;DELETE,/lobcder/dav/testTxtFileName.txt;DELETE,/lobcder/dav/testTxtFileName.txt;7.0;2013-11-19 15:16:15.0
+68;DELETE,/lobcder/dav/testTxtFileName.txt;PUT,/lobcder/dav/testFileName1.txt;7.0;2013-11-19 15:16:15.0
+69;PUT,/lobcder/dav/testFileName1.txt;PROPFIND,/lobcder/dav/testFileName1.txt;15.0;2013-11-19 15:16:16.0
+70;PROPFIND,/lobcder/dav/testFileName1.txt;PROPFIND,/lobcder/dav/testFileName1.txt;24.0;2013-11-19 15:17:51.0
+71;PROPFIND,/lobcder/dav/testFileName1.txt;DELETE,/lobcder/dav/testFileName1.txt;16.0;2013-11-19 15:17:51.0
+72;DELETE,/lobcder/dav/testFileName1.txt;PROPFIND,/lobcder/dav/testFileName1.txt;13.0;2013-11-19 15:16:16.0
+73;DELETE,/lobcder/dav/testFileName1.txt;PUT,/lobcder/dav/testFileName1.txt;20.0;2013-11-19 15:16:33.0
+74;GET,/lobcder/dav/testFileName1.txt;DELETE,/lobcder/dav/testFileName1.txt;16.0;2013-11-19 15:16:17.0
+75;PUT,/lobcder/dav/testFileName1.txt;DELETE,/lobcder/dav/testFileName1.txt;5.0;2013-11-19 15:16:33.0
+76;DELETE,/lobcder/dav/testFileName1.txt;GET,/lobcder/dav;2.0;2013-11-07 19:20:45.0
+77;GET,/lobcder/dav/Polla_Yposxomenoi_Spot_3.mp3;GET,/lobcder/dav/Polla_Yposxomenoi_Spot_3.mp3;7.0;2013-11-05 15:45:47.0
+78;GET,/lobcder/dav/Polla_Yposxomenoi_Spot_3.mp3;GET,/lobcder/dav;1.0;2013-11-07 18:44:34.0
+79;GET,/lobcder/dav;MKCOL,/lobcder/dav/testResourceId;1.0;2013-11-07 18:47:00.0
+80;DELETE,/lobcder/dav/testResourceId;DELETE,/lobcder/dav/testFileName1;4.0;2013-11-19 15:16:15.0
+81;PUT,/lobcder/dav/testFileNameT1;PUT,/lobcder/dav/testFileNameT1;2.0;2013-11-07 19:19:37.0
+82;PUT,/lobcder/dav/testFileNameT2;PROPFIND,/lobcder/dav/testFileNameT1;2.0;2013-11-07 19:30:21.0
+83;PROPFIND,/lobcder/dav/testFileNameT1;PROPFIND,/lobcder/dav/testFileNameT2;2.0;2013-11-07 19:30:21.0
+84;PROPFIND,/lobcder/dav/testFileNameT2;PROPFIND,/lobcder/dav/testFileNameT1;5.0;2013-11-19 15:16:34.0
+85;DELETE,/lobcder/dav/testFileNameT1;PROPFIND,/lobcder/dav/testFileNameT2;6.0;2013-11-19 15:16:34.0
+86;PROPFIND,/lobcder/dav/testFileNameT2;DELETE,/lobcder/dav/testFileNameT1;3.0;2013-11-08 18:28:01.0
+87;DELETE,/lobcder/dav/testFileNameT1;DELETE,/lobcder/dav/testFileNameT2;3.0;2013-11-08 18:28:01.0
+88;DELETE,/lobcder/dav/testFileNameT2;DELETE,/lobcder/dav/testFileNameT2;5.0;2013-11-19 15:16:34.0
+89;DELETE,/lobcder/dav/testFileNameT2;GET,/lobcder/dav;1.0;2013-11-07 18:56:14.0
+90;PROPFIND,/lobcder/dav;PUT,/lobcder/dav/das4_instructions.pdf;4.0;2013-12-04 17:48:25.0
+91;PUT,/lobcder/dav/das4_instructions.pdf;GET,/lobcder/dav;3.0;2013-12-04 17:48:31.0
+92;GET,/lobcder/dav;GET,/lobcder/dav/das4_instructions.pdf;5.0;2013-12-27 17:50:07.0
+93;GET,/lobcder/dav/das4_instructions.pdf;GET,/lobcder/dav/das4_instructions.pdf;13.0;2013-12-27 17:53:07.0
+94;GET,/lobcder/dav/das4_instructions.pdf;GET,/lobcder/dav;4.0;2013-12-27 20:35:18.0
+95;GET,/lobcder/dav/das4_instructions.pdf;MKCOL,/lobcder/dav/testResourceId;1.0;2013-11-07 19:18:00.0
+96;PROPFIND,/lobcder/dav/testFileNameT1;PUT,/lobcder/dav/testFileNameT2;5.0;2013-11-19 15:16:34.0
+97;PUT,/lobcder/dav/testFileNameT2;PROPFIND,/lobcder/dav/testFileNameT2;4.0;2013-11-19 15:16:34.0
+98;PROPFIND,/lobcder/dav/testFileNameT2;DELETE,/lobcder/dav/testFileNameT2;4.0;2013-11-19 15:16:34.0
+99;DELETE,/lobcder/dav/testFileNameT2;DELETE,/lobcder/dav/testFileName1.txt;2.0;2013-11-07 19:30:36.0
+100;GET,/lobcder/dav;PROPFIND,/lobcder/dav/testFileName1.txt;1.0;2013-11-07 19:20:54.0
+101;PROPFIND,/lobcder/dav/testFileName1.txt;PUT,/lobcder/dav/testFileName1.txt;7.0;2013-11-19 15:16:16.0
+102;PROPFIND,/lobcder/dav/testFileName1.txt;GET,/lobcder/dav/testFileName1.txt;7.0;2013-11-19 15:16:16.0
+103;GET,/lobcder/dav/testFileName1.txt;PUT,/lobcder/dav/testFileName1.txt;14.0;2013-11-19 15:16:16.0
+104;DELETE,/lobcder/dav/testFileName1.txt;DELETE,/lobcder/dav/testFileName1;2.0;2013-11-07 19:55:52.0
+105;DELETE,/lobcder/dav/testFileName1.txt;PUT,/lobcder/dav/testFileNameT1;4.0;2013-11-19 15:16:33.0
+106;DELETE,/lobcder/dav/testFileNameT2;DELETE,/lobcder/dav/testFileNameT1;1.0;2013-11-07 19:56:12.0
+107;DELETE,/lobcder/dav/testFileNameT2;DELETE,/lobcder/dav/testFileName1;1.0;2013-11-07 19:56:25.0
+108;PUT,/lobcder/dav/testFileName1;ACL,/lobcder/dav/testFileName1;1.0;2013-11-07 19:56:26.0
+109;ACL,/lobcder/dav/testFileName1;DELETE,/lobcder/dav/testResourceId;1.0;2013-11-07 19:57:04.0
+110;PUT,/lobcder/dav/testResourceId/file1;PUT,/lobcder/dav/testResourceId/file2;13.0;2013-11-19 15:17:53.0
+111;PUT,/lobcder/dav/testResourceId/file2;PUT,/lobcder/dav/testResourceId/file2;13.0;2013-11-19 15:17:53.0
+112;PUT,/lobcder/dav/testResourceId/file2;PUT,/lobcder/dav/testResourceId/file3;13.0;2013-11-19 15:17:53.0
+113;PUT,/lobcder/dav/testResourceId/file3;PUT,/lobcder/dav/testResourceId/file3;13.0;2013-11-19 15:17:53.0
+114;PUT,/lobcder/dav/testResourceId/file3;MKCOL,/lobcder/dav/testResourceId/folder4;13.0;2013-11-19 15:17:53.0
+115;MKCOL,/lobcder/dav/testResourceId/folder4;MKCOL,/lobcder/dav/testResourceId/folder4;13.0;2013-11-19 15:17:53.0
+116;MKCOL,/lobcder/dav/testResourceId/folder4;PUT,/lobcder/dav/testResourceId/folder4/file5;13.0;2013-11-19 15:17:53.0
+117;PUT,/lobcder/dav/testResourceId/folder4/file5;PUT,/lobcder/dav/testResourceId/folder4/file5;13.0;2013-11-19 15:17:53.0
+118;PUT,/lobcder/dav/testResourceId/folder4/file5;PROPFIND,/lobcder/dav/testResourceId;13.0;2013-11-19 15:17:53.0
+119;PROPFIND,/lobcder/dav/testResourceId;PROPFIND,/lobcder/dav/testResourceId;25.0;2013-11-19 15:17:53.0
+120;PROPFIND,/lobcder/dav/testResourceId;PROPPATCH,/lobcder/dav/testResourceId;12.0;2013-11-19 15:17:53.0
+121;PROPPATCH,/lobcder/dav/testResourceId;PROPFIND,/lobcder/dav/testResourceId;12.0;2013-11-19 15:17:53.0
+122;PROPFIND,/lobcder/dav/testResourceId;DELETE,/lobcder/dav/testResourceId;14.0;2013-11-19 15:17:53.0
+123;PUT,/lobcder/dav/testResourceId/file1;PROPFIND,/lobcder/dav/testResourceId/file1;6.0;2013-11-08 18:28:20.0
+124;PROPFIND,/lobcder/dav/testResourceId/file1;PROPFIND,/lobcder/dav/testResourceId/file1;12.0;2013-11-08 18:28:20.0
+125;PROPFIND,/lobcder/dav/testResourceId/file1;PROPPATCH,/lobcder/dav/testResourceId/file1;6.0;2013-11-08 18:28:20.0
+126;PROPPATCH,/lobcder/dav/testResourceId/file1;PROPFIND,/lobcder/dav/testResourceId/file1;6.0;2013-11-08 18:28:20.0
+127;PROPFIND,/lobcder/dav/testResourceId/file1;DELETE,/lobcder/dav/testResourceId;6.0;2013-11-08 18:28:20.0
+128;DELETE,/lobcder/dav/testResourceId;PUT,/lobcder/dav/tmp7398022892278569728.tmp;1.0;2013-11-07 19:57:06.0
+129;PUT,/lobcder/dav/tmp7398022892278569728.tmp;PUT,/lobcder/dav/tmp7398022892278569728.tmp;1.0;2013-11-07 19:57:06.0
+130;PUT,/lobcder/dav/tmp7398022892278569728.tmp;GET,/lobcder/dav/tmp7398022892278569728.tmp;1.0;2013-11-07 19:57:06.0
+131;GET,/lobcder/dav/tmp7398022892278569728.tmp;GET,/lobcder/dav/tmp7398022892278569728.tmp;1.0;2013-11-07 19:57:06.0
+132;GET,/lobcder/dav/tmp7398022892278569728.tmp;DELETE,/lobcder/dav/tmp7398022892278569728.tmp;1.0;2013-11-07 19:57:06.0
+133;DELETE,/lobcder/dav/tmp7398022892278569728.tmp;DELETE,/lobcder/dav/tmp7398022892278569728.tmp;1.0;2013-11-07 19:57:06.0
+134;DELETE,/lobcder/dav/tmp7398022892278569728.tmp;PUT,/lobcder/dav/testCollection/file1;1.0;2013-11-07 19:57:06.0
+135;PUT,/lobcder/dav/testCollection/file1;PUT,/lobcder/dav/testCollection/file1;6.0;2013-11-08 18:28:37.0
+136;PUT,/lobcder/dav/testCollection/file1;GET,/lobcder/dav/testCollection/file1;3.0;2013-11-08 18:28:36.0
+137;GET,/lobcder/dav/testCollection/file1;GET,/lobcder/dav/testCollection/file1;46.0;2013-11-08 18:28:52.0
+138;GET,/lobcder/dav/testCollection/file1;DELETE,/lobcder/dav/testCollection;6.0;2013-11-08 18:28:52.0
+139;DELETE,/lobcder/dav/testCollection;DELETE,/lobcder/dav/testCollection;6.0;2013-11-08 18:28:52.0
+140;DELETE,/lobcder/dav/testCollection;PUT,/lobcder/dav/testCollection/file1;3.0;2013-11-08 18:28:37.0
+141;PUT,/lobcder/dav/testCollection/file1;PROPFIND,/lobcder/dav/testCollection/file1;3.0;2013-11-08 18:28:52.0
+142;PROPFIND,/lobcder/dav/testCollection/file1;PROPFIND,/lobcder/dav/testCollection/file1;3.0;2013-11-08 18:28:52.0
+143;PROPFIND,/lobcder/dav/testCollection/file1;GET,/lobcder/dav/testCollection/file1;3.0;2013-11-08 18:28:52.0
+144;DELETE,/lobcder/dav/testCollection;GET,/lobcder/dav;3.0;2013-11-08 18:28:52.0
+145;OPTIONS,/lobcder/dav;MKCOL,/lobcder/dav/testResourceId;4.0;2013-11-19 15:17:54.0
+146;MKCOL,/lobcder/dav/testResourceId;PUT,/lobcder/dav/testResourceId/bindtest1;4.0;2013-11-19 15:17:54.0
+147;PUT,/lobcder/dav/testResourceId/bindtest1;PUT,/lobcder/dav/testResourceId/bindtest1;4.0;2013-11-19 15:17:54.0
+148;PUT,/lobcder/dav/testResourceId/bindtest1;GET,/lobcder/dav/testResourceId/bindtest1;4.0;2013-11-19 15:17:54.0
+149;GET,/lobcder/dav/testResourceId/bindtest1;GET,/lobcder/dav/testResourceId/bindtest1;4.0;2013-11-19 15:17:54.0
+150;GET,/lobcder/dav/testResourceId/bindtest1;MOVE,/lobcder/dav/testResourceId/bindtest1;4.0;2013-11-19 15:17:54.0
+151;MOVE,/lobcder/dav/testResourceId/bindtest1;MOVE,/lobcder/dav/testResourceId/bindtest1;4.0;2013-11-19 15:17:54.0
+152;MOVE,/lobcder/dav/testResourceId/bindtest1;GET,/lobcder/dav/testResourceId/bindtest2;4.0;2013-11-19 15:17:54.0
+153;GET,/lobcder/dav/testResourceId/bindtest2;GET,/lobcder/dav/testResourceId/bindtest2;4.0;2013-11-19 15:17:54.0
+154;GET,/lobcder/dav/testResourceId/bindtest2;DELETE,/lobcder/dav/testResourceId;4.0;2013-11-19 15:17:54.0
+155;DELETE,/lobcder/dav/testResourceId;MKCOL,/lobcder/dav/testSimpleBind;4.0;2013-11-19 15:17:54.0
+156;MKCOL,/lobcder/dav/testSimpleBind;MKCOL,/lobcder/dav/testSimpleBind;8.0;2013-11-19 15:17:54.0
+157;MKCOL,/lobcder/dav/testSimpleBind;MKCOL,/lobcder/dav/testSimpleBind/bindtest1;8.0;2013-11-19 15:17:54.0
+158;MKCOL,/lobcder/dav/testSimpleBind/bindtest1;MKCOL,/lobcder/dav/testSimpleBind/bindtest1;8.0;2013-11-19 15:17:54.0
+159;MKCOL,/lobcder/dav/testSimpleBind/bindtest1;MKCOL,/lobcder/dav/testSimpleBind/bindtest2;8.0;2013-11-19 15:17:54.0
+160;MKCOL,/lobcder/dav/testSimpleBind/bindtest2;MKCOL,/lobcder/dav/testSimpleBind/bindtest2;8.0;2013-11-19 15:17:54.0
+161;MKCOL,/lobcder/dav/testSimpleBind/bindtest2;PUT,/lobcder/dav/testSimpleBind/bindtest1/res1;8.0;2013-11-19 15:17:54.0
+162;PUT,/lobcder/dav/testSimpleBind/bindtest1/res1;PUT,/lobcder/dav/testSimpleBind/bindtest1/res1;8.0;2013-11-19 15:17:54.0
+163;PUT,/lobcder/dav/testSimpleBind/bindtest1/res1;GET,/lobcder/dav/testSimpleBind/bindtest1/res1;3.0;2013-11-19 15:17:54.0
+164;GET,/lobcder/dav/testSimpleBind/bindtest1/res1;GET,/lobcder/dav/testSimpleBind/bindtest1/res1;3.0;2013-11-19 15:17:55.0
+165;GET,/lobcder/dav/testSimpleBind/bindtest1/res1;DELETE,/lobcder/dav/testSimpleBind;3.0;2013-11-19 15:17:55.0
+166;DELETE,/lobcder/dav/testSimpleBind;DELETE,/lobcder/dav/testSimpleBind;7.0;2013-11-19 15:17:55.0
+167;DELETE,/lobcder/dav/testSimpleBind;MKCOL,/lobcder/dav/testRebind;3.0;2013-11-19 15:17:55.0
+168;MKCOL,/lobcder/dav/testRebind;MKCOL,/lobcder/dav/testRebind;3.0;2013-11-19 15:17:55.0
+169;MKCOL,/lobcder/dav/testRebind;MKCOL,/lobcder/dav/testRebind/bindtest1;3.0;2013-11-19 15:17:55.0
+170;MKCOL,/lobcder/dav/testRebind/bindtest1;MKCOL,/lobcder/dav/testRebind/bindtest1;3.0;2013-11-19 15:17:55.0
+171;MKCOL,/lobcder/dav/testRebind/bindtest1;MKCOL,/lobcder/dav/testRebind/bindtest2;2.0;2013-11-07 20:07:54.0
+172;MKCOL,/lobcder/dav/testRebind/bindtest2;MKCOL,/lobcder/dav/testRebind/bindtest2;2.0;2013-11-07 20:07:54.0
+173;MKCOL,/lobcder/dav/testRebind/bindtest2;PUT,/lobcder/dav/testRebind/bindtest1/res1;2.0;2013-11-07 20:07:54.0
+174;PUT,/lobcder/dav/testRebind/bindtest1/res1;PUT,/lobcder/dav/testRebind/bindtest1/res1;2.0;2013-11-07 20:07:54.0
+175;PUT,/lobcder/dav/testRebind/bindtest1/res1;GET,/lobcder/dav/testRebind/bindtest1/res1;2.0;2013-11-07 20:07:54.0
+176;GET,/lobcder/dav/testRebind/bindtest1/res1;GET,/lobcder/dav/testRebind/bindtest1/res1;2.0;2013-11-07 20:07:54.0
+177;GET,/lobcder/dav/testRebind/bindtest1/res1;DELETE,/lobcder/dav/testRebind;2.0;2013-11-07 20:07:54.0
+178;DELETE,/lobcder/dav/testRebind;DELETE,/lobcder/dav/testRebind;2.0;2013-11-07 20:07:54.0
+179;DELETE,/lobcder/dav/testRebind;MKCOL,/lobcder/dav/testSimpleBind;2.0;2013-11-07 20:07:54.0
+180;PUT,/lobcder/dav/testSimpleBind/bindtest1/res1;PUT,/lobcder/dav/testSimpleBind/bindtest2/res2;4.0;2013-11-07 20:07:54.0
+181;PUT,/lobcder/dav/testSimpleBind/bindtest2/res2;PUT,/lobcder/dav/testSimpleBind/bindtest2/res2;4.0;2013-11-07 20:07:54.0
+182;PUT,/lobcder/dav/testSimpleBind/bindtest2/res2;DELETE,/lobcder/dav/testSimpleBind;4.0;2013-11-07 20:07:54.0
+183;DELETE,/lobcder/dav/testSimpleBind;MKCOL,/lobcder/dav/testSimpleBind;2.0;2013-11-07 20:07:54.0
+184;DELETE,/lobcder/dav/testSimpleBind;MKCOL,/lobcder/dav/testParentSet;2.0;2013-11-07 20:07:54.0
+185;MKCOL,/lobcder/dav/testParentSet;MKCOL,/lobcder/dav/testParentSet;2.0;2013-11-07 20:07:54.0
+186;MKCOL,/lobcder/dav/testParentSet;MKCOL,/lobcder/dav/testParentSet/bindtest1;2.0;2013-11-07 20:07:54.0
+187;MKCOL,/lobcder/dav/testParentSet/bindtest1;MKCOL,/lobcder/dav/testParentSet/bindtest1;2.0;2013-11-07 20:07:54.0
+188;MKCOL,/lobcder/dav/testParentSet/bindtest1;MKCOL,/lobcder/dav/testParentSet/bindtest2;2.0;2013-11-07 20:07:54.0
+189;MKCOL,/lobcder/dav/testParentSet/bindtest2;MKCOL,/lobcder/dav/testParentSet/bindtest2;2.0;2013-11-07 20:07:54.0
+190;MKCOL,/lobcder/dav/testParentSet/bindtest2;PUT,/lobcder/dav/testParentSet/bindtest1/res1;2.0;2013-11-07 20:07:54.0
+191;PUT,/lobcder/dav/testParentSet/bindtest1/res1;PUT,/lobcder/dav/testParentSet/bindtest1/res1;2.0;2013-11-07 20:07:54.0
+192;PUT,/lobcder/dav/testParentSet/bindtest1/res1;DELETE,/lobcder/dav/testParentSet;2.0;2013-11-07 20:07:54.0
+193;DELETE,/lobcder/dav/testParentSet;DELETE,/lobcder/dav/testParentSet;2.0;2013-11-07 20:07:55.0
+194;DELETE,/lobcder/dav/testParentSet;MKCOL,/lobcder/dav/testBindCollections;2.0;2013-11-07 20:07:55.0
+195;MKCOL,/lobcder/dav/testBindCollections;MKCOL,/lobcder/dav/testBindCollections;2.0;2013-11-07 20:07:55.0
+196;MKCOL,/lobcder/dav/testBindCollections;MKCOL,/lobcder/dav/testBindCollections/a1;2.0;2013-11-07 20:07:55.0
+197;MKCOL,/lobcder/dav/testBindCollections/a1;MKCOL,/lobcder/dav/testBindCollections/a1;2.0;2013-11-07 20:07:55.0
+198;MKCOL,/lobcder/dav/testBindCollections/a1;MKCOL,/lobcder/dav/testBindCollections/a2;2.0;2013-11-07 20:07:55.0
+199;MKCOL,/lobcder/dav/testBindCollections/a2;MKCOL,/lobcder/dav/testBindCollections/a2;2.0;2013-11-07 20:07:55.0
+200;MKCOL,/lobcder/dav/testBindCollections/a2;MKCOL,/lobcder/dav/testBindCollections/a1/b1;2.0;2013-11-07 20:07:55.0
+201;MKCOL,/lobcder/dav/testBindCollections/a1/b1;MKCOL,/lobcder/dav/testBindCollections/a1/b1;2.0;2013-11-07 20:07:55.0
+202;MKCOL,/lobcder/dav/testBindCollections/a1/b1;MKCOL,/lobcder/dav/testBindCollections/a1/b1/c1;2.0;2013-11-07 20:07:55.0
+203;MKCOL,/lobcder/dav/testBindCollections/a1/b1/c1;MKCOL,/lobcder/dav/testBindCollections/a1/b1/c1;2.0;2013-11-07 20:07:55.0
+204;MKCOL,/lobcder/dav/testBindCollections/a1/b1/c1;PUT,/lobcder/dav/testBindCollections/a1/b1/c1/x1;2.0;2013-11-07 20:07:55.0
+205;PUT,/lobcder/dav/testBindCollections/a1/b1/c1/x1;PUT,/lobcder/dav/testBindCollections/a1/b1/c1/x1;2.0;2013-11-07 20:07:55.0
+206;PUT,/lobcder/dav/testBindCollections/a1/b1/c1/x1;DELETE,/lobcder/dav/testBindCollections;2.0;2013-11-07 20:07:55.0
+207;DELETE,/lobcder/dav/testBindCollections;DELETE,/lobcder/dav/testBindCollections;2.0;2013-11-07 20:07:55.0
+208;DELETE,/lobcder/dav/testBindCollections;MKCOL,/lobcder/dav/testUnbind;2.0;2013-11-07 20:07:55.0
+209;MKCOL,/lobcder/dav/testUnbind;MKCOL,/lobcder/dav/testUnbind;2.0;2013-11-07 20:07:55.0
+210;MKCOL,/lobcder/dav/testUnbind;MKCOL,/lobcder/dav/testUnbind/bindtest1;2.0;2013-11-07 20:07:55.0
+211;MKCOL,/lobcder/dav/testUnbind/bindtest1;MKCOL,/lobcder/dav/testUnbind/bindtest1;2.0;2013-11-07 20:07:55.0
+212;MKCOL,/lobcder/dav/testUnbind/bindtest1;MKCOL,/lobcder/dav/testUnbind/bindtest2;2.0;2013-11-07 20:07:55.0
+213;MKCOL,/lobcder/dav/testUnbind/bindtest2;MKCOL,/lobcder/dav/testUnbind/bindtest2;2.0;2013-11-07 20:07:55.0
+214;MKCOL,/lobcder/dav/testUnbind/bindtest2;PUT,/lobcder/dav/testUnbind/bindtest1/res1;2.0;2013-11-07 20:07:55.0
+215;PUT,/lobcder/dav/testUnbind/bindtest1/res1;PUT,/lobcder/dav/testUnbind/bindtest1/res1;2.0;2013-11-07 20:07:55.0
+216;PUT,/lobcder/dav/testUnbind/bindtest1/res1;DELETE,/lobcder/dav/testUnbind;2.0;2013-11-07 20:07:55.0
+217;DELETE,/lobcder/dav/testUnbind;DELETE,/lobcder/dav/testUnbind;2.0;2013-11-07 20:07:55.0
+218;DELETE,/lobcder/dav/testUnbind;DELETE,/lobcder/dav/testResourceId;2.0;2013-11-07 20:07:55.0
+219;DELETE,/lobcder/dav/testResourceId;PUT,/lobcder/dav/testResourceId/movetest;2.0;2013-11-07 20:07:55.0
+220;PUT,/lobcder/dav/testResourceId/movetest;PUT,/lobcder/dav/testResourceId/movetest;6.0;2013-11-07 20:07:55.0
+221;PUT,/lobcder/dav/testResourceId/movetest;DELETE,/lobcder/dav/testResourceId;1.0;2013-11-07 20:07:18.0
+222;DELETE,/lobcder/dav/testResourceId;PUT,/lobcder/dav/tmp8468421643242455437.tmp;1.0;2013-11-07 20:07:23.0
+223;PUT,/lobcder/dav/tmp8468421643242455437.tmp;PUT,/lobcder/dav/tmp8468421643242455437.tmp;1.0;2013-11-07 20:07:23.0
+224;PUT,/lobcder/dav/tmp8468421643242455437.tmp;GET,/lobcder/dav/tmp8468421643242455437.tmp;1.0;2013-11-07 20:07:23.0
+225;GET,/lobcder/dav/tmp8468421643242455437.tmp;GET,/lobcder/dav/tmp8468421643242455437.tmp;1.0;2013-11-07 20:07:23.0
+226;GET,/lobcder/dav/tmp8468421643242455437.tmp;DELETE,/lobcder/dav/tmp8468421643242455437.tmp;1.0;2013-11-07 20:07:23.0
+227;DELETE,/lobcder/dav/tmp8468421643242455437.tmp;DELETE,/lobcder/dav/tmp8468421643242455437.tmp;1.0;2013-11-07 20:07:23.0
+228;DELETE,/lobcder/dav/tmp8468421643242455437.tmp;PUT,/lobcder/dav/testCollection/file1;1.0;2013-11-07 20:07:23.0
+229;PUT,/lobcder/dav/testResourceId/movetest;MOVE,/lobcder/dav/testResourceId/movetest;1.0;2013-11-07 20:07:55.0
+230;MOVE,/lobcder/dav/testResourceId/movetest;MOVE,/lobcder/dav/testResourceId/movetest;1.0;2013-11-07 20:07:55.0
+231;MOVE,/lobcder/dav/testResourceId/movetest;HEAD,/lobcder/dav/testResourceId/movetest2;1.0;2013-11-07 20:07:55.0
+232;HEAD,/lobcder/dav/testResourceId/movetest2;HEAD,/lobcder/dav/testResourceId/movetest2;1.0;2013-11-07 20:07:55.0
+233;HEAD,/lobcder/dav/testResourceId/movetest2;HEAD,/lobcder/dav/testResourceId/movetest;1.0;2013-11-07 20:07:55.0
+234;HEAD,/lobcder/dav/testResourceId/movetest;DELETE,/lobcder/dav/testResourceId/movetest;1.0;2013-11-07 20:07:55.0
+235;DELETE,/lobcder/dav/testResourceId/movetest;DELETE,/lobcder/dav/testResourceId/movetest;1.0;2013-11-07 20:07:55.0
+236;DELETE,/lobcder/dav/testResourceId/movetest;DELETE,/lobcder/dav/testResourceId;1.0;2013-11-07 20:07:55.0
+237;DELETE,/lobcder/dav/testResourceId;PUT,/lobcder/dav/iflocktest;1.0;2013-11-07 20:07:55.0
+238;PUT,/lobcder/dav/iflocktest;PUT,/lobcder/dav/iflocktest;10.0;2013-11-07 20:07:55.0
+239;PUT,/lobcder/dav/iflocktest;LOCK,/lobcder/dav/iflocktest;1.0;2013-11-07 20:07:55.0
+240;LOCK,/lobcder/dav/iflocktest;LOCK,/lobcder/dav/iflocktest;1.0;2013-11-07 20:07:55.0
+241;LOCK,/lobcder/dav/iflocktest;PUT,/lobcder/dav/iflocktest;1.0;2013-11-07 20:07:55.0
+242;PUT,/lobcder/dav/iflocktest;UNLOCK,/lobcder/dav/iflocktest;1.0;2013-11-07 20:07:55.0
+243;UNLOCK,/lobcder/dav/iflocktest;UNLOCK,/lobcder/dav/iflocktest;1.0;2013-11-07 20:07:55.0
+244;UNLOCK,/lobcder/dav/iflocktest;DELETE,/lobcder/dav/iflocktest;1.0;2013-11-07 20:07:55.0
+245;DELETE,/lobcder/dav/iflocktest;DELETE,/lobcder/dav/iflocktest;1.0;2013-11-07 20:07:55.0
+246;DELETE,/lobcder/dav/iflocktest;MKCOL,/lobcder/dav/testPropfindInclude;1.0;2013-11-07 20:07:55.0
+247;MKCOL,/lobcder/dav/testPropfindInclude;MKCOL,/lobcder/dav/testPropfindInclude;1.0;2013-11-07 20:07:55.0
+248;MKCOL,/lobcder/dav/testPropfindInclude;PUT,/lobcder/dav/testPropfindInclude/iftest;1.0;2013-11-07 20:07:55.0
+249;PUT,/lobcder/dav/testPropfindInclude/iftest;PUT,/lobcder/dav/testPropfindInclude/iftest;1.0;2013-11-07 20:07:56.0
+250;PUT,/lobcder/dav/testPropfindInclude/iftest;PROPFIND,/lobcder/dav/testPropfindInclude/iftest;1.0;2013-11-07 20:07:56.0
+251;PROPFIND,/lobcder/dav/testPropfindInclude/iftest;PROPFIND,/lobcder/dav/testPropfindInclude/iftest;1.0;2013-11-07 20:07:56.0
+252;PROPFIND,/lobcder/dav/testPropfindInclude/iftest;DELETE,/lobcder/dav/testPropfindInclude;1.0;2013-11-07 20:07:56.0
+253;DELETE,/lobcder/dav/testPropfindInclude;DELETE,/lobcder/dav/testPropfindInclude;1.0;2013-11-07 20:07:56.0
+254;DELETE,/lobcder/dav/testPropfindInclude;DELETE,/lobcder/dav/testResourceId;1.0;2013-11-07 20:07:56.0
+255;DELETE,/lobcder/dav/testResourceId;PUT,/lobcder/dav/testFileName1.txt;1.0;2013-11-07 20:07:56.0
+256;DELETE,/lobcder/dav/testFileName1.txt;MKCOL,/lobcder/dav/testResourceId;1.0;2013-11-08 14:22:12.0
+257;MKCOL,/lobcder/dav/testResourceId;DELETE,/lobcder/dav/testResourceId;6.0;2013-11-19 15:12:04.0
+258;DELETE,/lobcder/dav/testResourceId;GET,/lobcder/dav;1.0;2013-11-08 14:22:30.0
+259;PROPFIND,/lobcder/dav;PROPFIND,/lobcder/dav/testFileName1;1.0;2013-11-08 16:00:33.0
+260;PROPFIND,/lobcder/dav/testFileName1;DELETE,/lobcder/dav/testFileName1;1.0;2013-11-08 16:00:40.0
+261;DELETE,/lobcder/dav/testFileName1;PROPFIND,/lobcder/dav;1.0;2013-11-08 16:00:42.0
+262;PROPFIND,/lobcder/dav;PUT,/lobcder/dav/7_bridges.mp4;5.0;2013-11-20 16:21:27.0
+263;PUT,/lobcder/dav/7_bridges.mp4;PROPFIND,/lobcder/dav;4.0;2013-11-12 15:11:33.0
+264;PROPFIND,/lobcder/dav;PROPFIND,/lobcder/dav/7_bridges.mp4;8.0;2013-11-20 16:52:53.0
+265;PROPFIND,/lobcder/dav/7_bridges.mp4;DELETE,/lobcder/dav/7_bridges.mp4;11.0;2013-11-20 16:52:53.0
+266;DELETE,/lobcder/dav/7_bridges.mp4;PUT,/lobcder/dav/7_bridges.mp4;4.0;2013-11-12 15:11:57.0
+267;PUT,/lobcder/dav/7_bridges.mp4;PROPFIND,/lobcder/dav/7_bridges.mp4;2.0;2013-11-08 16:16:36.0
+268;DELETE,/lobcder/dav/7_bridges.mp4;PROPFIND,/lobcder/dav;1.0;2013-11-08 16:12:34.0
+269;PROPFIND,/lobcder/dav;PROPFIND,/lobcder/dav/das4_instructions.pdf;4.0;2013-12-04 17:48:19.0
+270;PROPFIND,/lobcder/dav/das4_instructions.pdf;DELETE,/lobcder/dav/das4_instructions.pdf;4.0;2013-12-04 17:48:19.0
+271;DELETE,/lobcder/dav/das4_instructions.pdf;PUT,/lobcder/dav/7_bridges.mp4;1.0;2013-11-08 16:12:49.0
+272;DELETE,/lobcder/dav/7_bridges.mp4;PUT,/lobcder/dav/das4_instructions.pdf;1.0;2013-11-08 16:16:52.0
+273;PUT,/lobcder/dav/das4_instructions.pdf;PROPFIND,/lobcder/dav;2.0;2013-11-08 16:22:04.0
+274;DELETE,/lobcder/dav/das4_instructions.pdf;PROPFIND,/lobcder/dav;2.0;2013-11-08 16:22:06.0
+275;PROPFIND,/lobcder/dav;PUT,/lobcder/dav/7_bridgses;1.0;2013-11-08 16:22:19.0
+276;PUT,/lobcder/dav/7_bridgses;PROPFIND,/lobcder/dav;1.0;2013-11-08 16:22:56.0
+277;PROPFIND,/lobcder/dav;PROPFIND,/lobcder/dav/7_bridgses;1.0;2013-11-08 16:22:56.0
+278;PROPFIND,/lobcder/dav/7_bridgses;DELETE,/lobcder/dav/7_bridgses;1.0;2013-11-08 16:22:56.0
+279;DELETE,/lobcder/dav/7_bridgses;PROPFIND,/lobcder/dav;1.0;2013-11-08 16:23:38.0
+280;DELETE,/lobcder/dav/7_bridges.mp4;PUT,/lobcder/dav/MythBusters.S12E09.HDTV.x264-KILLERS.mp4;1.0;2013-11-08 16:25:06.0
+281;PUT,/lobcder/dav/MythBusters.S12E09.HDTV.x264-KILLERS.mp4;PROPFIND,/lobcder/dav;1.0;2013-11-08 16:39:27.0
+282;PROPFIND,/lobcder/dav;PROPFIND,/lobcder/dav/MythBusters.S12E09.HDTV.x264-KILLERS.mp4;2.0;2013-12-28 21:16:34.0
+283;PROPFIND,/lobcder/dav/MythBusters.S12E09.HDTV.x264-KILLERS.mp4;DELETE,/lobcder/dav/MythBusters.S12E09.HDTV.x264-KILLERS.mp4;2.0;2013-12-28 21:16:34.0
+284;DELETE,/lobcder/dav/MythBusters.S12E09.HDTV.x264-KILLERS.mp4;PUT,/lobcder/dav/file20M;1.0;2013-11-08 16:39:49.0
+285;PUT,/lobcder/dav/file20M;PROPFIND,/lobcder/dav;1.0;2013-11-08 16:40:44.0
+286;PROPFIND,/lobcder/dav;PROPFIND,/lobcder/dav/file20M;1.0;2013-11-08 16:40:44.0
+287;PROPFIND,/lobcder/dav/file20M;DELETE,/lobcder/dav/file20M;1.0;2013-11-08 16:40:44.0
+288;DELETE,/lobcder/dav/file20M;PUT,/lobcder/dav/file49M;1.0;2013-11-08 16:41:12.0
+289;PUT,/lobcder/dav/file49M;PROPFIND,/lobcder/dav;1.0;2013-11-08 16:42:40.0
+290;PROPFIND,/lobcder/dav;PROPFIND,/lobcder/dav/file49M;1.0;2013-11-08 16:42:40.0
+291;PROPFIND,/lobcder/dav/file49M;DELETE,/lobcder/dav/file49M;1.0;2013-11-08 16:42:40.0
+292;DELETE,/lobcder/dav/file49M;PUT,/lobcder/dav/file50M;1.0;2013-11-08 16:44:15.0
+293;PUT,/lobcder/dav/file50M;PUT,/lobcder/dav/file50Plus;1.0;2013-11-08 16:46:56.0
+294;PUT,/lobcder/dav/file50Plus;PROPFIND,/lobcder/dav/m;1.0;2013-11-08 16:47:45.0
+295;PROPFIND,/lobcder/dav/m;PROPFIND,/lobcder/dav;1.0;2013-11-08 16:47:46.0
+296;PROPFIND,/lobcder/dav;PROPFIND,/lobcder/dav/file50Plus;6.0;2013-11-08 18:26:37.0
+297;PROPFIND,/lobcder/dav/file50Plus;DELETE,/lobcder/dav/file50Plus;6.0;2013-11-08 18:26:38.0
+298;DELETE,/lobcder/dav/file50Plus;PROPFIND,/lobcder/dav/file50M;1.0;2013-11-08 16:47:52.0
+299;PROPFIND,/lobcder/dav/file50M;DELETE,/lobcder/dav/file50M;1.0;2013-11-08 16:47:52.0
+300;DELETE,/lobcder/dav/file50M;PUT,/lobcder/dav/file51M;1.0;2013-11-08 16:48:25.0
+301;PUT,/lobcder/dav/file51M;PROPFIND,/lobcder/dav;1.0;2013-11-08 16:50:08.0
+302;PROPFIND,/lobcder/dav;PROPFIND,/lobcder/dav/file51M;1.0;2013-11-08 16:50:08.0
+303;PROPFIND,/lobcder/dav/file51M;DELETE,/lobcder/dav/file51M;1.0;2013-11-08 16:50:08.0
+304;DELETE,/lobcder/dav/file51M;PUT,/lobcder/dav/file;1.0;2013-11-08 16:50:31.0
+305;PUT,/lobcder/dav/file;PROPFIND,/lobcder/dav;1.0;2013-11-08 16:51:41.0
+306;PROPFIND,/lobcder/dav;PROPFIND,/lobcder/dav/file;1.0;2013-11-08 16:55:27.0
+307;PROPFIND,/lobcder/dav/file;DELETE,/lobcder/dav/file;1.0;2013-11-08 16:55:27.0
+308;DELETE,/lobcder/dav/file;PROPFIND,/lobcder/dav;1.0;2013-11-08 16:56:27.0
+309;PROPFIND,/lobcder/dav;PUT,/lobcder/dav/Lecture1.pdf;1.0;2013-11-08 16:56:50.0
+310;PUT,/lobcder/dav/Lecture1.pdf;PROPFIND,/lobcder/dav;1.0;2013-11-08 16:57:47.0
+311;PROPFIND,/lobcder/dav;PROPFIND,/lobcder/dav/Lecture1.pdf;1.0;2013-11-08 16:57:47.0
+312;PROPFIND,/lobcder/dav/Lecture1.pdf;DELETE,/lobcder/dav/Lecture1.pdf;1.0;2013-11-08 16:57:47.0
+313;DELETE,/lobcder/dav/Lecture1.pdf;PUT,/lobcder/dav/7_bridges.mp4;1.0;2013-11-08 16:57:58.0
+314;DELETE,/lobcder/dav/7_bridges.mp4;OPTIONS,/lobcder/dav;1.0;2013-11-08 16:59:35.0
+315;PROPFIND,/lobcder/dav;PUT,/lobcder/dav/file50Plus;4.0;2013-11-08 18:19:23.0
+316;PUT,/lobcder/dav/file50Plus;PROPFIND,/lobcder/dav;5.0;2013-11-08 18:21:15.0
+317;DELETE,/lobcder/dav/file50Plus;PROPFIND,/lobcder/dav;4.0;2013-11-08 18:19:16.0
+318;PUT,/lobcder/dav/7_bridges.mp4;PROPFIND,/lobcder/dav/8;1.0;2013-11-08 17:02:34.0
+319;PROPFIND,/lobcder/dav/8;DELETE,/lobcder/dav/8;1.0;2013-11-08 17:02:34.0
+320;DELETE,/lobcder/dav/8;PROPFIND,/lobcder/dav;1.0;2013-11-08 17:02:37.0
+321;DELETE,/lobcder/dav/7_bridges.mp4;PUT,/lobcder/dav/file50Plus;1.0;2013-11-08 17:02:53.0
+322;PROPFIND,/lobcder/dav;GET,/lobcder/dav/file50Plus;1.0;2013-11-08 17:14:01.0
+323;GET,/lobcder/dav/file50Plus;PROPFIND,/lobcder/dav;1.0;2013-11-08 17:17:58.0
+324;DELETE,/lobcder/dav/file50Plus;MKCOL,/lobcder/dav/testResourceId;1.0;2013-11-08 18:27:00.0
+325;DELETE,/lobcder/dav/testFileNameT2;DELETE,/lobcder/dav/testResourceId;2.0;2013-11-19 15:17:00.0
+326;DELETE,/lobcder/dav/testResourceId;PUT,/lobcder/dav/tmp5075340417246610475.tmp;1.0;2013-11-08 18:28:20.0
+327;PUT,/lobcder/dav/tmp5075340417246610475.tmp;PUT,/lobcder/dav/tmp5075340417246610475.tmp;1.0;2013-11-08 18:28:20.0
+328;PUT,/lobcder/dav/tmp5075340417246610475.tmp;GET,/lobcder/dav/tmp5075340417246610475.tmp;1.0;2013-11-08 18:28:21.0
+329;GET,/lobcder/dav/tmp5075340417246610475.tmp;GET,/lobcder/dav/tmp5075340417246610475.tmp;1.0;2013-11-08 18:28:21.0
+330;GET,/lobcder/dav/tmp5075340417246610475.tmp;DELETE,/lobcder/dav/tmp5075340417246610475.tmp;1.0;2013-11-08 18:28:21.0
+331;DELETE,/lobcder/dav/tmp5075340417246610475.tmp;DELETE,/lobcder/dav/tmp5075340417246610475.tmp;1.0;2013-11-08 18:28:21.0
+332;DELETE,/lobcder/dav/tmp5075340417246610475.tmp;PUT,/lobcder/dav/testCollection/file1;1.0;2013-11-08 18:28:21.0
+333;PUT,/lobcder/dav/testSimpleBind/bindtest1/res1;OPTIONS,/lobcder/dav;1.0;2013-11-11 14:05:56.0
+334;PUT,/lobcder/dav/7_bridges.mp4;GET,/lobcder/dav;3.0;2013-11-12 15:12:04.0
+335;GET,/lobcder/dav;PROPFIND,/lobcder/dav;1.0;2013-11-11 14:06:54.0
+336;GET,/lobcder/dav;GET,/lobcder/dav/7_bridges.mp4;8.0;2013-11-12 15:12:46.0
+337;GET,/lobcder/dav/7_bridges.mp4;GET,/lobcder/dav/7_bridges.mp4;113.0;2013-11-12 15:58:55.0
+338;GET,/lobcder/dav/7_bridges.mp4;GET,/lobcder/dav/7_bridges.mp4.;1.0;2013-11-11 14:39:05.0
+339;GET,/lobcder/dav/7_bridges.mp4.;GET,/lobcder/dav/7_bridges.mp4.;5.0;2013-11-11 14:39:20.0
+340;GET,/lobcder/dav/7_bridges.mp4.;GET,/lobcder/dav/7_bridges.mp4;1.0;2013-11-11 14:39:28.0
+341;GET,/lobcder/dav/7_bridges.mp4;GET,/lobcder/dav;7.0;2013-11-13 13:17:45.0
+342;GET,/lobcder/dav/7_bridges.mp4;OPTIONS,/lobcder/dav;1.0;2013-11-12 15:09:44.0
+343;PROPFIND,/lobcder/dav;PUT,/lobcder/dav/7_bridges.webm;1.0;2013-11-13 13:20:02.0
+344;PUT,/lobcder/dav/7_bridges.webm;OPTIONS,/lobcder/dav;1.0;2013-11-19 14:20:25.0
+345;PROPFIND,/lobcder/dav;MKCOL,/lobcder/dav/fff;1.0;2013-11-19 14:20:31.0
+346;MKCOL,/lobcder/dav/fff;MKCOL,/lobcder/dav/fff;1.0;2013-11-19 14:22:49.0
+347;MKCOL,/lobcder/dav/fff;PROPFIND,/lobcder/dav;1.0;2013-11-19 14:40:42.0
+348;PROPFIND,/lobcder/dav;PROPFIND,/lobcder/dav/7_bridges.webm;1.0;2013-11-19 14:40:46.0
+349;PROPFIND,/lobcder/dav/7_bridges.webm;DELETE,/lobcder/dav/7_bridges.webm;1.0;2013-11-19 14:40:46.0
+350;DELETE,/lobcder/dav/7_bridges.webm;PROPFIND,/lobcder/dav/7_bridges.mp4;1.0;2013-11-19 14:40:46.0
+351;DELETE,/lobcder/dav/7_bridges.mp4;PROPFIND,/lobcder/dav/fff;1.0;2013-11-19 14:40:46.0
+352;PROPFIND,/lobcder/dav/fff;PROPFIND,/lobcder/dav;1.0;2013-11-19 14:40:54.0
+353;PROPFIND,/lobcder/dav;PROPFIND,/lobcder/dav/fff;1.0;2013-11-19 14:40:55.0
+354;PROPFIND,/lobcder/dav/fff;DELETE,/lobcder/dav/fff;1.0;2013-11-19 14:40:55.0
+355;DELETE,/lobcder/dav/fff;PROPFIND,/lobcder/dav;1.0;2013-11-19 14:44:21.0
+356;PUT,/lobcder/dav/testResourceId/file1;GET,/lobcder/dav/testResourceId/file1;16.0;2013-11-19 15:16:00.0
+357;GET,/lobcder/dav/testResourceId/file1;GET,/lobcder/dav/testResourceId/file1;15.0;2013-11-19 15:16:01.0
+358;GET,/lobcder/dav/testResourceId/file1;PROPFIND,/lobcder/dav;1.0;2013-11-19 14:46:54.0
+359;PROPFIND,/lobcder/dav;PROPFIND,/lobcder/dav/testResourceId;1.0;2013-11-19 14:47:00.0
+360;GET,/lobcder/dav/testResourceId/file1;DELETE,/lobcder/dav/testResourceId;13.0;2013-11-19 15:16:01.0
+361;GET,/lobcder/dav/testResourceId/file1;GET,/lobcder/dav;1.0;2013-11-19 15:02:16.0
+362;GET,/lobcder/dav;GET,/lobcder/dav/testResourceId;1.0;2013-11-19 15:02:19.0
+363;GET,/lobcder/dav/testResourceId;DELETE,/lobcder/dav/testResourceId;1.0;2013-11-19 15:03:15.0
+364;GET,/lobcder/dav/testResourceId/file1;GET,/lobcder/dav/testResourceId;1.0;2013-11-19 15:06:08.0
+365;GET,/lobcder/dav/testResourceId;MKCOL,/lobcder/dav/testResourceId;1.0;2013-11-19 15:12:04.0
+366;DELETE,/lobcder/dav/testResourceId;PROPFIND,/lobcder/dav;1.0;2013-11-19 15:12:23.0
+367;MKCOL,/lobcder/dav/testResourceId;PROPFIND,/lobcder/dav/testFileName1.txt;1.0;2013-11-19 15:17:51.0
+368;PROPFIND,/lobcder/dav/testFileName1.txt;PROPPATCH,/lobcder/dav/testFileName1.txt;1.0;2013-11-19 15:17:51.0
+369;PROPPATCH,/lobcder/dav/testFileName1.txt;PROPFIND,/lobcder/dav/testFileName1.txt;1.0;2013-11-19 15:17:51.0
+370;DELETE,/lobcder/dav/testFileName1.txt;DELETE,/lobcder/dav/testResourceId;1.0;2013-11-19 15:17:51.0
+371;DELETE,/lobcder/dav/testResourceId;OPTIONS,/lobcder/dav;1.0;2013-11-19 15:17:54.0
+372;MKCOL,/lobcder/dav/testRebind/bindtest1;OPTIONS,/lobcder/dav;1.0;2013-11-20 16:17:50.0
+373;PROPFIND,/lobcder/dav;PROPFIND,/lobcder/dav/%2a;1.0;2013-11-20 16:18:00.0
+374;PROPFIND,/lobcder/dav/%2a;DELETE,/lobcder/dav/%2a;1.0;2013-11-20 16:18:00.0
+375;DELETE,/lobcder/dav/%2a;OPTIONS,/lobcder/dav;1.0;2013-11-20 16:21:05.0
+376;PUT,/lobcder/dav/7_bridges.mp4;OPTIONS,/lobcder/dav;1.0;2013-11-20 16:52:45.0
+377;DELETE,/lobcder/dav/7_bridges.mp4;MKCOL,/lobcder/dav/aaaaaaa;1.0;2013-11-20 16:52:59.0
+378;MKCOL,/lobcder/dav/aaaaaaa;MKCOL,/lobcder/dav/aaaaaaa;1.0;2013-11-20 16:53:02.0
+379;MKCOL,/lobcder/dav/aaaaaaa;PROPFIND,/lobcder/dav;1.0;2013-11-20 16:53:13.0
+380;PROPFIND,/lobcder/dav;PROPFIND,/lobcder/dav/aaaaaaa;1.0;2013-11-20 20:18:02.0
+381;PROPFIND,/lobcder/dav/aaaaaaa;DELETE,/lobcder/dav/aaaaaaa;1.0;2013-11-20 20:18:02.0
+382;DELETE,/lobcder/dav/aaaaaaa;OPTIONS,/lobcder/dav;1.0;2013-11-20 20:26:32.0
+383;PROPFIND,/lobcder/dav;GET,/lobcder/dav;3.0;2013-12-29 20:57:08.0
+384;GET,/lobcder/dav;POST,/lobcder/dav;1.0;2013-12-04 16:54:48.0
+385;POST,/lobcder/dav;POST,/lobcder/dav;4.0;2013-12-04 17:02:13.0
+386;POST,/lobcder/dav;OPTIONS,/lobcder/dav;1.0;2013-12-04 17:03:04.0
+387;PROPFIND,/lobcder/dav;PUT,/lobcder/dav/mp4.tar.gz;1.0;2013-12-04 17:03:46.0
+388;PUT,/lobcder/dav/mp4.tar.gz;OPTIONS,/lobcder/dav;1.0;2013-12-04 17:47:40.0
+389;DELETE,/lobcder/dav/das4_instructions.pdf;OPTIONS,/lobcder/dav;1.0;2013-12-04 17:48:24.0
+390;PROPFIND,/lobcder/dav;PUT,/lobcder/dav/MythBusters.S12E09.HDTV.x264-KILLERS.mp4;22.0;2013-12-04 19:15:57.0
+391;PUT,/lobcder/dav/MythBusters.S12E09.HDTV.x264-KILLERS.mp4;OPTIONS,/lobcder/dav;21.0;2013-12-04 19:15:54.0
+392;PUT,/lobcder/dav/MythBusters.S12E09.HDTV.x264-KILLERS.mp4;GET,/lobcder/dav;1.0;2013-12-12 12:46:58.0
+393;GET,/lobcder/dav;PUT,/lobcder/dav/Downloads/files4;1.0;2013-12-28 21:05:12.0
+394;PUT,/lobcder/dav/Downloads/files4;PUT,/lobcder/dav/Downloads/files4/3.zip;1.0;2013-12-28 21:05:33.0
+395;PUT,/lobcder/dav/Downloads/files4/3.zip;PUT,/lobcder/dav/Downloads/files4/5.zip;1.0;2013-12-28 21:05:33.0
+396;PUT,/lobcder/dav/Downloads/files4/5.zip;PUT,/lobcder/dav/Downloads/files4/1.zip;1.0;2013-12-28 21:05:33.0
+397;PUT,/lobcder/dav/Downloads/files4/1.zip;PUT,/lobcder/dav/Downloads/files4/8.zip;1.0;2013-12-28 21:05:33.0
+398;PUT,/lobcder/dav/Downloads/files4/8.zip;PUT,/lobcder/dav/Downloads/files4/6.zip;1.0;2013-12-28 21:05:33.0
+399;PUT,/lobcder/dav/Downloads/files4/6.zip;PUT,/lobcder/dav/Downloads/files4/4.zip;1.0;2013-12-28 21:05:33.0
+400;PUT,/lobcder/dav/Downloads/files4/4.zip;PUT,/lobcder/dav/Downloads/files4/2.zip;1.0;2013-12-28 21:05:33.0
+401;PUT,/lobcder/dav/Downloads/files4/2.zip;PUT,/lobcder/dav/Downloads/files4/7.zip;1.0;2013-12-28 21:05:33.0
+402;PUT,/lobcder/dav/Downloads/files4/7.zip;PROPFIND,/lobcder/dav;1.0;2013-12-28 21:05:38.0
+403;PROPFIND,/lobcder/dav/Downloads;PROPFIND,/lobcder/dav/Downloads;7.0;2013-12-28 21:07:15.0
+404;PROPFIND,/lobcder/dav/Downloads;PROPFIND,/lobcder/dav/Downloads/files4;3.0;2013-12-28 21:05:56.0
+405;PROPFIND,/lobcder/dav/Downloads/files4;PROPFIND,/lobcder/dav/Downloads;2.0;2013-12-28 21:05:52.0
+406;PROPFIND,/lobcder/dav/Downloads/files4;DELETE,/lobcder/dav/Downloads/files4;1.0;2013-12-28 21:05:56.0
+407;DELETE,/lobcder/dav/Downloads/files4;PROPFIND,/lobcder/dav/Downloads;1.0;2013-12-28 21:05:57.0
+408;PROPFIND,/lobcder/dav/Downloads;PUT,/lobcder/dav/Downloads/1.zip;1.0;2013-12-28 21:06:08.0
+409;PUT,/lobcder/dav/Downloads/1.zip;PUT,/lobcder/dav/Downloads/2.zip;1.0;2013-12-28 21:06:11.0
+410;PUT,/lobcder/dav/Downloads/2.zip;PUT,/lobcder/dav/Downloads/3.zip;1.0;2013-12-28 21:06:14.0
+411;PUT,/lobcder/dav/Downloads/3.zip;PUT,/lobcder/dav/Downloads/4.zip;1.0;2013-12-28 21:06:19.0
+412;PUT,/lobcder/dav/Downloads/4.zip;PUT,/lobcder/dav/Downloads/5.zip;1.0;2013-12-28 21:06:23.0
+413;PUT,/lobcder/dav/Downloads/5.zip;GET,/lobcder/dav/mp4.tar.gz;1.0;2013-12-28 21:06:26.0
+414;GET,/lobcder/dav/mp4.tar.gz;PUT,/lobcder/dav/Downloads/6.zip;1.0;2013-12-28 21:06:26.0
+415;PUT,/lobcder/dav/Downloads/6.zip;PUT,/lobcder/dav/Downloads/7.zip;1.0;2013-12-28 21:06:30.0
+416;PUT,/lobcder/dav/Downloads/7.zip;PUT,/lobcder/dav/Downloads/8.zip;1.0;2013-12-28 21:06:34.0
+417;PUT,/lobcder/dav/Downloads/8.zip;PROPFIND,/lobcder/dav/Downloads;1.0;2013-12-28 21:06:38.0
+418;PROPFIND,/lobcder/dav/Downloads;GET,/lobcder/dav/Downloads/8.zip;1.0;2013-12-28 21:06:54.0
+419;GET,/lobcder/dav/Downloads/8.zip;GET,/lobcder/dav/Downloads/7.zip;1.0;2013-12-28 21:06:54.0
+420;GET,/lobcder/dav/Downloads/7.zip;GET,/lobcder/dav/Downloads/6.zip;1.0;2013-12-28 21:06:54.0
+421;GET,/lobcder/dav/Downloads/6.zip;GET,/lobcder/dav/Downloads/5.zip;1.0;2013-12-28 21:06:55.0
+422;GET,/lobcder/dav/Downloads/5.zip;GET,/lobcder/dav/Downloads/4.zip;1.0;2013-12-28 21:06:55.0
+423;GET,/lobcder/dav/Downloads/4.zip;GET,/lobcder/dav/Downloads/3.zip;1.0;2013-12-28 21:06:55.0
+424;GET,/lobcder/dav/Downloads/3.zip;GET,/lobcder/dav/Downloads/2.zip;1.0;2013-12-28 21:06:55.0
+425;GET,/lobcder/dav/Downloads/2.zip;GET,/lobcder/dav/Downloads/1.zip;1.0;2013-12-28 21:06:55.0
+426;GET,/lobcder/dav/Downloads/1.zip;PROPFIND,/lobcder/dav;1.0;2013-12-28 21:06:58.0
+427;PROPFIND,/lobcder/dav/Downloads;PROPFIND,/lobcder/dav/Downloads/8.zip;1.0;2013-12-28 21:07:15.0
+428;PROPFIND,/lobcder/dav/Downloads/8.zip;DELETE,/lobcder/dav/Downloads/8.zip;1.0;2013-12-28 21:07:15.0
+429;DELETE,/lobcder/dav/Downloads/8.zip;PROPFIND,/lobcder/dav/Downloads/7.zip;1.0;2013-12-28 21:07:15.0
+430;PROPFIND,/lobcder/dav/Downloads/7.zip;DELETE,/lobcder/dav/Downloads/7.zip;2.0;2013-12-28 21:16:24.0
+431;DELETE,/lobcder/dav/Downloads/7.zip;PROPFIND,/lobcder/dav/Downloads/6.zip;1.0;2013-12-28 21:07:15.0
+432;PROPFIND,/lobcder/dav/Downloads/6.zip;DELETE,/lobcder/dav/Downloads/6.zip;1.0;2013-12-28 21:07:15.0
+433;DELETE,/lobcder/dav/Downloads/6.zip;PROPFIND,/lobcder/dav/Downloads/5.zip;1.0;2013-12-28 21:07:15.0
+434;PROPFIND,/lobcder/dav/Downloads/5.zip;DELETE,/lobcder/dav/Downloads/5.zip;1.0;2013-12-28 21:07:15.0
+435;DELETE,/lobcder/dav/Downloads/5.zip;PROPFIND,/lobcder/dav/Downloads/4.zip;1.0;2013-12-28 21:07:15.0
+436;PROPFIND,/lobcder/dav/Downloads/4.zip;DELETE,/lobcder/dav/Downloads/4.zip;1.0;2013-12-28 21:07:15.0
+437;DELETE,/lobcder/dav/Downloads/4.zip;PROPFIND,/lobcder/dav/Downloads/3.zip;1.0;2013-12-28 21:07:15.0
+438;PROPFIND,/lobcder/dav/Downloads/3.zip;DELETE,/lobcder/dav/Downloads/3.zip;1.0;2013-12-28 21:07:15.0
+439;DELETE,/lobcder/dav/Downloads/3.zip;PROPFIND,/lobcder/dav/Downloads/2.zip;1.0;2013-12-28 21:07:15.0
+440;PROPFIND,/lobcder/dav/Downloads/2.zip;DELETE,/lobcder/dav/Downloads/2.zip;1.0;2013-12-28 21:07:15.0
+441;DELETE,/lobcder/dav/Downloads/2.zip;PROPFIND,/lobcder/dav/Downloads/1.zip;1.0;2013-12-28 21:07:15.0
+442;PROPFIND,/lobcder/dav/Downloads/1.zip;DELETE,/lobcder/dav/Downloads/1.zip;1.0;2013-12-28 21:07:15.0
+443;DELETE,/lobcder/dav/Downloads/1.zip;PROPFIND,/lobcder/dav/Downloads;1.0;2013-12-28 21:07:16.0
+444;PROPFIND,/lobcder/dav/Downloads;GET,/lobcder/dav;1.0;2013-12-28 21:08:17.0
+445;GET,/lobcder/dav;PROPFIND,/lobcder/dav/Downloads;1.0;2013-12-28 21:15:29.0
+446;PROPFIND,/lobcder/dav/Downloads;PUT,/lobcder/dav/Downloads/7.zip;1.0;2013-12-28 21:15:41.0
+447;PUT,/lobcder/dav/Downloads/7.zip;PUT,/lobcder/dav/Downloads/7.zip;12.0;2013-12-28 21:15:54.0
+448;PUT,/lobcder/dav/Downloads/7.zip;PROPFIND,/lobcder/dav/Downloads;1.0;2013-12-28 21:16:03.0
+449;PROPFIND,/lobcder/dav/Downloads;GET,/lobcder/dav/Downloads/7.zip;5.0;2013-12-28 21:16:16.0
+450;GET,/lobcder/dav/Downloads/7.zip;PROPFIND,/lobcder/dav/Downloads;5.0;2013-12-28 21:16:24.0
+451;PROPFIND,/lobcder/dav/Downloads;PROPFIND,/lobcder/dav/Downloads/7.zip;1.0;2013-12-28 21:16:24.0
+452;DELETE,/lobcder/dav/Downloads/7.zip;PROPFIND,/lobcder/dav/Downloads;1.0;2013-12-28 21:16:25.0
+453;PROPFIND,/lobcder/dav/Downloads;PROPFIND,/lobcder/dav;1.0;2013-12-28 21:16:27.0
+454;DELETE,/lobcder/dav/MythBusters.S12E09.HDTV.x264-KILLERS.mp4;PROPFIND,/lobcder/dav;1.0;2013-12-28 21:16:36.0
