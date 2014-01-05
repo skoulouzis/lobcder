@@ -1080,7 +1080,7 @@ public class JDBCatalogue extends MyDataSource {
 
     public void updatePdris(List<PDRIDescr> pdrisToUpdate, Connection connection) throws SQLException {
         for (PDRIDescr d : pdrisToUpdate) {
-            try (PreparedStatement ps = connection.prepareStatement("UPDATE pdri_table SET isEncrypted = ?, storageSiteRef = ?, WHERE pdriId = ?")) {
+            try (PreparedStatement ps = connection.prepareStatement("UPDATE pdri_table SET isEncrypted = ?, storageSiteRef = ? WHERE pdriId = ?")) {
                 ps.setBoolean(1, d.getEncrypt());
                 ps.setLong(2, d.getStorageSiteId());
                 ps.setLong(3, d.getId());
