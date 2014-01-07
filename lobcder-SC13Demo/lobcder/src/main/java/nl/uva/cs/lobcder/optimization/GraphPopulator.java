@@ -5,7 +5,6 @@
 package nl.uva.cs.lobcder.optimization;
 
 import io.milton.http.Request.Method;
-import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -16,10 +15,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.sql.DataSource;
@@ -45,7 +40,7 @@ class GraphPopulator implements Runnable {
             try (Connection connection = datasource.getConnection()) {
 
                 buildOrUpdateGlobalGraph(connection);
-                saveAsCSV(connection);
+//                saveAsCSV(connection);
 
             } catch (Exception ex) {
                 Logger.getLogger(GraphPopulator.class.getName()).log(Level.SEVERE, null, ex);
@@ -77,6 +72,33 @@ class GraphPopulator implements Runnable {
             }
         }
         connection.close();
+    }
+
+    public boolean isUptodate() throws SQLException {
+        try (Connection connection = datasource.getConnection()) {
+            try (Statement s = connection.createStatement()) {
+                Timestamp latestState = null;
+                try (ResultSet rs = s.executeQuery("SELECT timeStamp FROM state_table ORDER BY timeStamp DESC LIMIT 1")) {
+                    if (rs.next()) {
+                        latestState = rs.getTimestamp(1);
+                    }
+                }
+                String query;
+                if (latestState != null) {
+                    query = "SELECT COUNT(*) FROM requests_table WHERE timeStamp > '" + latestState + "'";
+                } else {
+                    return false;
+                }
+                try (ResultSet rs = s.executeQuery(query)) {
+                    if (rs.next()) {
+                        if (rs.getInt(1) < 10) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     private void buildOrUpdateGlobalGraph(Connection connection) throws SQLException, MalformedURLException {

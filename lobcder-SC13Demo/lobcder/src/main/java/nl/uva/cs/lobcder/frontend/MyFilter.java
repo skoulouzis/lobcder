@@ -189,31 +189,25 @@ public class MyFilter extends MiltonFilter {
         }
     }
 
-    private void predict(Method method, String reqURL) {
-        String strPath = null;
-        try {
-            strPath = new URL(reqURL).getPath();
-        } catch (MalformedURLException ex) {
-            strPath = reqURL;
+    private void predict(Method method, String reqURL) throws MalformedURLException {
+        URL url = new URL(reqURL);
+        if (url.toString().endsWith("/")) {
+            URL newURL = new URL(url.toString().substring(0, url.toString().length() - 1));
+            url = newURL;
         }
-        String[] parts = strPath.split("/lobcder/dav");
-        String resource = null;
-        if (parts != null && parts.length > 1) {
-            resource = parts[1];
-        } else {
-            resource = strPath;
-        }
-
-        LobState currentState = new LobState(method, Path.path(resource).toString());
+        
+        LobState currentState = new LobState(method, url.getPath());
         LobState nextState = null;
         try {
-                    
+
             nextState = getFileAccessPredictor().predictNextState(currentState);
-            log.log(Level.INFO, "nextFile: {0}", nextState.getID());
+            if (nextState != null) {
+                log.log(Level.INFO, "nextFile: {0}", nextState.getID());
+            }
         } catch (Exception ex) {
             Logger.getLogger(MyFilter.class.getName()).log(Level.SEVERE, null, ex);
         }
-        if (prevState != null) {
+        if (prevState != null && nextState != null) {
             if (currentState.getID().equals(prevState.getID())) {
                 log.log(Level.INFO, "Hit. currentState: {0} nextState: {1} prevState: {2}",
                         new Object[]{currentState.getID(), nextState.getID(), prevState.getID()});
@@ -222,7 +216,6 @@ public class MyFilter extends MiltonFilter {
                         new Object[]{currentState.getID(), nextState.getID(), prevState.getID()});
             }
         }
-
         prevState = nextState;
     }
 

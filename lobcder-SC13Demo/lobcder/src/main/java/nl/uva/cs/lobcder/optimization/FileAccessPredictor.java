@@ -39,7 +39,10 @@ public class FileAccessPredictor extends MyDataSource {
     }
 
     public LobState predictNextState(LobState state) throws SQLException {
-        graphPopulator.run();
+        if (!graphPopulator.isUptodate()) {
+            Thread t = new Thread(graphPopulator);
+            t.start();
+        }
         return graphPopulator.getNextState(state);
     }
 
