@@ -31,6 +31,7 @@ import nl.uva.cs.lobcder.auth.Permissions;
 import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
 import nl.uva.cs.lobcder.resources.LogicalData;
 import nl.uva.cs.lobcder.resources.PDRI;
+import nl.uva.cs.lobcder.resources.PDRIDescr;
 import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.cs.lobcder.util.SpeedLogger;
 import static org.rendersnake.HtmlAttributesFactory.*;
@@ -475,6 +476,15 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
         return false;
     }
 
+    /**
+     * This means to just lock the name Not to create the resource.
+     *
+     * @param name
+     * @param lt
+     * @param li
+     * @return
+     * @throws NotAuthorizedException
+     */
     @Override
     public LockToken createAndLock(String name, LockTimeout timeout, LockInfo lockInfo) throws NotAuthorizedException {
         try (Connection connection = getCatalogue().getConnection()) {

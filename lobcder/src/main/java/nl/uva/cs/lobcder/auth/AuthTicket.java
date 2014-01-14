@@ -4,12 +4,6 @@
  */
 package nl.uva.cs.lobcder.auth;
 
-import lombok.Setter;
-import lombok.extern.java.Log;
-import nl.uva.cs.lobcder.util.PropertiesHelper;
-import org.apache.commons.codec.binary.Base64;
-
-import javax.sql.DataSource;
 import java.io.InputStream;
 import java.security.KeyFactory;
 import java.security.PublicKey;
@@ -23,6 +17,11 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Properties;
 import java.util.logging.Level;
+import javax.sql.DataSource;
+import lombok.Setter;
+import lombok.extern.java.Log;
+import nl.uva.cs.lobcder.util.PropertiesHelper;
+import org.apache.commons.codec.binary.Base64;
 
 /**
  *

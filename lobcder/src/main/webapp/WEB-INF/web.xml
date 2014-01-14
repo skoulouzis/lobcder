@@ -35,6 +35,7 @@
         <servlet-name>ProtectedREST</servlet-name>
         <url-pattern>/rest/*</url-pattern>
     </servlet-mapping>
+    
     <servlet-mapping>
         <servlet-name>UnprotectedREST</servlet-name>
         <url-pattern>/urest/*</url-pattern>
