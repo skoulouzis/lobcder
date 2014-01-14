@@ -9,6 +9,8 @@ import lombok.Data;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.HashSet;
 import java.util.Set;
+import javax.xml.bind.annotation.XmlRootElement;
+import lombok.Data;
 
 /**
  *

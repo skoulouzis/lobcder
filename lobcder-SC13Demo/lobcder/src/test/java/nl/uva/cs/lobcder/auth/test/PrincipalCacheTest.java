@@ -4,18 +4,16 @@
  */
 package nl.uva.cs.lobcder.auth.test;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.LinkedList;
 import nl.uva.cs.lobcder.auth.MyPrincipal;
 import nl.uva.cs.lobcder.auth.PrincipalCache;
-import nl.uva.cs.lobcder.auth.PrincipalCacheI;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
-import static org.junit.Assert.*;
+
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashSet;
+
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 /**
  *
@@ -28,9 +26,8 @@ public class PrincipalCacheTest {
         System.out.println("testCache");
         String token = "token";
         PrincipalCache instance = new PrincipalCache();
-        instance.setTimeout(1000);
         MyPrincipal principal = getPrincipal("user1");
-        instance.putPrincipal(token, principal);
+        instance.putPrincipal(token, principal, new Date().getTime() + 1000);
         Thread.sleep(500);
         MyPrincipal result = instance.getPrincipal(token);
         assertNotNull(result);        
@@ -41,9 +38,8 @@ public class PrincipalCacheTest {
         System.out.println("testCacheTimeout");
         String token = "token";
         PrincipalCache instance = new PrincipalCache();
-        instance.setTimeout(1000);
         MyPrincipal principal = getPrincipal(token);
-        instance.putPrincipal(token, principal);
+        instance.putPrincipal(token, principal, new Date().getTime() + 1000);
         Thread.sleep(1500);
         MyPrincipal result = instance.getPrincipal(token);
         assertNull(result);        

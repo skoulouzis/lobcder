@@ -16,23 +16,21 @@ public class PrincipalCache implements PrincipalCacheI {
 
     private static class TimedPrincipal {
 
-        public final Date date;
+        public final long date;
         public final MyPrincipal principal;
 
-        TimedPrincipal(Date date, MyPrincipal principal) {
+        TimedPrincipal(long date, MyPrincipal principal) {
             this.date = date;
             this.principal = principal;
         }
     }
     private Map<String, TimedPrincipal> cache = new HashMap<>();
-    private long timeout; // msec
-    public final static PrincipalCache pcache = new PrincipalCache();
 
     @Override
     public synchronized MyPrincipal getPrincipal(String token) {
         TimedPrincipal res = cache.get(token);
         if (res != null) {
-            if (new Date(res.date.getTime() + getTimeout()).after(new Date())) {
+            if (res.date >= new Date().getTime()) {
                 return res.principal;
             } else {
                 cache.remove(token);
@@ -42,15 +40,7 @@ public class PrincipalCache implements PrincipalCacheI {
     }
 
     @Override
-    public synchronized void putPrincipal(String token, MyPrincipal principal) {
-        cache.put(token, new TimedPrincipal(new Date(), principal));
-    }
-
-    public long getTimeout() {
-        return timeout;
-    }
-
-    public void setTimeout(long timeout) {
-        this.timeout = timeout;
+    public synchronized void putPrincipal(String token, MyPrincipal principal, long exp_date) {
+        cache.put(token, new TimedPrincipal(exp_date, principal));
     }
 }

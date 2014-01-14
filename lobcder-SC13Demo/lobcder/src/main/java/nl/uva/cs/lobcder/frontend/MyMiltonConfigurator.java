@@ -1,26 +1,23 @@
 package nl.uva.cs.lobcder.frontend;
 
 import io.milton.servlet.DefaultMiltonConfigurator;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.logging.Level;
-import javax.naming.Context;
-import javax.naming.InitialContext;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.auth.AuthI;
-import nl.uva.cs.lobcder.auth.AuthRemote;
 import nl.uva.cs.lobcder.auth.AuthWorker;
-import nl.uva.cs.lobcder.auth.LocalDbAuth;
 import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
 import nl.uva.cs.lobcder.util.PropertiesHelper;
+import nl.uva.cs.lobcder.util.SingletonesHelper;
 import nl.uva.cs.lobcder.webDav.resources.WebDataResourceFactory;
+
+import javax.naming.Context;
+import javax.naming.InitialContext;
+import java.util.List;
+import java.util.logging.Level;
 
 @Log
 public class MyMiltonConfigurator extends DefaultMiltonConfigurator {
 
     private JDBCatalogue catalogue;
-    private AuthRemote authRemote;
-    private LocalDbAuth localDbAuth;
     private WebDataResourceFactory webDataResourceFactory;
     private AuthWorker workerAuth;
 
@@ -56,12 +53,6 @@ public class MyMiltonConfigurator extends DefaultMiltonConfigurator {
             catalogue = (JDBCatalogue) envContext.lookup("bean/JDBCatalog");
             catalogue.startSweep();
 
-            authRemote = (AuthRemote) envContext.lookup("bean/auth");
-
-
-            localDbAuth = new LocalDbAuth();
-
-
 //            workerAuth = (AuthWorker) envContext.lookup("bean/authWorker");
             List<String> workers = PropertiesHelper.getWorkers();
             if (workers != null && workers.size() > 0) {
@@ -71,15 +62,9 @@ public class MyMiltonConfigurator extends DefaultMiltonConfigurator {
 
             webDataResourceFactory = (WebDataResourceFactory) builder.getMainResourceFactory();
             webDataResourceFactory.setCatalogue(catalogue);
-            List<AuthI> authList = new ArrayList<>();
-            if (localDbAuth != null) {
-                authList.add(localDbAuth);
-            }
-            if (authRemote != null) {
-                authList.add(authRemote);
-            }
+            List<AuthI> authList = SingletonesHelper.getInstance().getAuth();
 
-//            if(workerAuth!=null){
+            //            if(workerAuth!=null){
 //            authList.add(workerAuth);
 //            }
             webDataResourceFactory.setAuthList(authList);

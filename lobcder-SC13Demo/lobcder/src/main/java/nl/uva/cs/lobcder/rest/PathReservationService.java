@@ -132,6 +132,7 @@ public class PathReservationService extends CatalogueHelper {
                 ReservationInfo info = new ReservationInfo();
                 if (p != null && mp.canRead(p)) {
 
+
                     info.setCommunicationID(communicationID);
                     String workerURL = scheduleWorker(storageSiteHost, ld);
                     info.setCommunicationID(communicationID);

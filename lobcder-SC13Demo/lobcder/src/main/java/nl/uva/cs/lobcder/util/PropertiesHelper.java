@@ -24,7 +24,7 @@ import java.util.logging.Logger;
  */
 public class PropertiesHelper {
 
-    private static final String propertiesPath = "/lobcder.properties";
+    public static final String propertiesPath = "lobcder.properties";
 
     public static List<String> getWorkers() {
         ArrayList<String> workers = null;
