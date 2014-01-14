@@ -375,3 +375,11 @@ END
 |
 
 DELIMITER ;
+
+
+CREATE TABLE IF NOT EXISTS tokens_table (
+  short_tkt CHAR(12) NOT NULL PRIMARY KEY,
+  long_tkt VARCHAR(5240) NOT NULL, INDEX(long_tkt),
+  exp_date DATETIME, INDEX(exp_date)
+) ENGINE=InnoDB;
+

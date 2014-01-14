@@ -12,5 +12,5 @@ public interface PrincipalCacheI {
 
     MyPrincipal getPrincipal(String token);
 
-    void putPrincipal(String token, MyPrincipal principal);
+    void putPrincipal(String token, MyPrincipal principal, long exp_date);
 }

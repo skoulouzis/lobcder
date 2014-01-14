@@ -42,6 +42,7 @@ public class Constants {
     public static final String RANGE_HEADER_NAME = "range";
     public static final String CERT_LOCATION = System.getProperty("user.home") + "/.globus/certificates/";
     public static final String PROXY_FILE = "/tmp/myProxy";
-    public static String[] BUFFERED_TYPES = new String[]{"audio/mpeg"};
+    public static String[] BUFFERED_TYPES = new String[]{"audio/mpeg","video/mp4"};
     public static int CACHE_SIZE = 300;
+
 }

@@ -5,14 +5,17 @@
 package nl.uva.cs.lobcder.rest;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import nl.uva.cs.lobcder.rest.wrappers.WorkerStatus;
 import nl.uva.cs.lobcder.rest.wrappers.ReservationInfo;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
 import java.util.logging.Level;
@@ -35,6 +38,7 @@ import nl.uva.cs.lobcder.auth.Permissions;
 import nl.uva.cs.lobcder.resources.LogicalData;
 import nl.uva.cs.lobcder.util.CatalogueHelper;
 import nl.uva.cs.lobcder.util.PropertiesHelper;
+import org.apache.commons.io.FilenameUtils;
 
 /**
  *
@@ -56,7 +60,7 @@ public class PathReservationService extends CatalogueHelper {
     @Path("get_workers/")
     @GET
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public List<WorkerStatus> getXml() throws MalformedURLException {
+    public List<WorkerStatus> getXml() throws MalformedURLException, IOException {
         //        rest/reservation/get_workers/?id=all
         MyPrincipal mp = (MyPrincipal) request.getAttribute("myprincipal");
         MultivaluedMap<String, String> queryParameters = info.getQueryParameters();
@@ -65,6 +69,9 @@ public class PathReservationService extends CatalogueHelper {
             String workerID = queryParameters.getFirst("id");
             ArrayList<WorkerStatus> workersStatus = new ArrayList<>();
             workers = PropertiesHelper.getWorkers();
+            if (workers == null || workers.size() < 1 || !PropertiesHelper.doRedirectGets()) {
+                return null;
+            }
             for (String s : workers) {
                 WorkerStatus ws = new WorkerStatus();
                 ws.setHostName(new URL(s).getHost());
@@ -89,7 +96,6 @@ public class PathReservationService extends CatalogueHelper {
 
             String dataName = queryParameters.getFirst("dataName");
             if (dataName != null && dataName.length() > 0) {
-
                 List<String> storageList = queryParameters.get("storageSiteHost");
                 String storageSiteHost = null;
                 int index = -1;
@@ -102,8 +108,15 @@ public class PathReservationService extends CatalogueHelper {
                 LogicalData ld;
                 Permissions p = null;
                 try (Connection cn = getCatalogue().getConnection()) {
-                    List<LogicalData> ldList = getCatalogue().getLogicalDataByName(io.milton.common.Path.path(dataName), cn);
-                    if(ldList == null || ldList.isEmpty()){
+                    //-----------------THIS IS TEMPORARY IT'S ONLY FOR THE DEMO!!!!!!!!!!
+                    String fileNameWithOutExt = FilenameUtils.removeExtension(dataName);
+                    fileNameWithOutExt += ".webm";
+                    List<LogicalData> ldList = getCatalogue().getLogicalDataByName(io.milton.common.Path.path(fileNameWithOutExt), cn);
+                    if (ldList == null || ldList.isEmpty()) {
+                        ldList = getCatalogue().getLogicalDataByName(io.milton.common.Path.path(dataName), cn);
+                    }
+                    //--------------------------------------------------------------
+                    if (ldList == null || ldList.isEmpty()) {
                         return null;
                     }
                     //Should be only one
@@ -115,16 +128,20 @@ public class PathReservationService extends CatalogueHelper {
                     log.log(Level.SEVERE, null, ex);
                     throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
                 }
-
-//                    Integer alocationStrategy = Integer.valueOf(queryParameters.getFirst("allocationStrategy"));
+                //                    Integer alocationStrategy = Integer.valueOf(queryParameters.getFirst("allocationStrategy"));
 
                 ReservationInfo info = new ReservationInfo();
                 if (p != null && mp.canRead(p)) {
+
+
                     info.setCommunicationID(communicationID);
                     String workerURL = scheduleWorker(storageSiteHost, ld);
                     info.setCommunicationID(communicationID);
+                    storageSiteHost = replaceIP(storageSiteHost);
                     info.setStorageHost(storageSiteHost);
                     info.setStorageHostIndex(index);
+
+                    workerURL = replaceIP(workerURL);
                     info.setWorkerDataAccessURL(workerURL);
                 }
                 return info;
@@ -137,7 +154,7 @@ public class PathReservationService extends CatalogueHelper {
     @Path("workers/")
     @GET
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public List<WorkerStatus> getWorkersState() {
+    public List<WorkerStatus> getWorkersState() throws IOException {
 //        rest/reservation/workers/?host=kscvdfv&host=sp2&host=192.168.1.1
         MyPrincipal mp = (MyPrincipal) request.getAttribute("myprincipal");
         if (mp.getRoles().contains("planner") || mp.isAdmin()) {
@@ -145,6 +162,9 @@ public class PathReservationService extends CatalogueHelper {
             List<String> queryWorkers = queryParameters.get("host");
             List<WorkerStatus> workersStatus = new ArrayList<>();
             workers = PropertiesHelper.getWorkers();
+            if (workers == null || workers.isEmpty() ) {
+                return workersStatus;
+            }
             for (String worker : queryWorkers) {
                 WorkerStatus ws = new WorkerStatus();
                 ws.setStatus("UNKNOWN");
@@ -171,7 +191,8 @@ public class PathReservationService extends CatalogueHelper {
         if (storageSiteHost != null) {
             for (String w : workers) {
                 URL wURI = new URL(w);
-                if (wURI.getHost().equals(storageSiteHost)) {
+                String ip = getIP(storageSiteHost);
+                if (wURI.getHost().equals(ip)) {
                     worker = w;
                     break;
                 }
@@ -185,6 +206,12 @@ public class PathReservationService extends CatalogueHelper {
             worker = workers.get(workerIndex++);
         }
 
+
+
+        URL workerURL = new URL(worker);
+        String workerIP = getIP(workerURL.getHost());
+        worker = new URL(workerURL.getProtocol(), workerIP, workerURL.getFile()).toString();
+
         if (!worker.endsWith("/")) {
             worker += "/";
         }
@@ -194,22 +221,58 @@ public class PathReservationService extends CatalogueHelper {
         return w + "/" + token;
     }
 
-    private String getStorageSiteHost(List<String> storageList) throws MalformedURLException {
+    private String getStorageSiteHost(List<String> storageList) throws MalformedURLException, UnknownHostException, IOException {
         workers = PropertiesHelper.getWorkers();
-        List<Object> selectionList = new ArrayList<>();
+        if (workers == null || workers.size() < 1 || !PropertiesHelper.doRedirectGets()) {
+            return null;
+        }
+        List<String> selectionList = new ArrayList<>();
         for (String w : workers) {
             URL wURI = new URL(w);
-            if (storageList.contains(wURI.getHost())) {
-                selectionList.add(w);
+
+            for (String h : storageList) {
+                String ip = getIP(h);
+                if (ip.equals(wURI.getHost())) {
+                    selectionList.add(new URL(wURI.getProtocol(), ip, wURI.getPort(), wURI.getFile()).toString());
+                }
             }
         }
         if (!selectionList.isEmpty()) {
             int index = new Random().nextInt(selectionList.size());
-
             String[] storageArray = storageList.toArray(new String[selectionList.size()]);
+
             return storageArray[index];
         } else {
             return null;
         }
+    }
+
+    private String getIP(String hostName) {
+        try {
+            return InetAddress.getByName(hostName).getHostAddress();
+        } catch (UnknownHostException ex) {
+            return hostName;
+        }
+    }
+
+    private String replaceIP(String host) throws MalformedURLException {
+        URL hostURL;
+        host = getIP(host);
+        Map<String, String> map = PropertiesHelper.getIPMap();
+        try {
+            hostURL = new URL(host);
+        } catch (MalformedURLException ex) {
+            if (map.containsKey(host)) {
+                String mapedIP = map.get(host);
+                return mapedIP;
+            }
+            return host;
+        }
+
+        if (map.containsKey(hostURL.getHost())) {
+            String mapedIP = map.get(hostURL.getHost());
+            return new URL(hostURL.getProtocol(), mapedIP, hostURL.getPort(), hostURL.getFile()).toString();
+        }
+        return host;
     }
 }

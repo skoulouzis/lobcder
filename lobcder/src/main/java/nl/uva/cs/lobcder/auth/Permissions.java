@@ -4,6 +4,9 @@
  */
 package nl.uva.cs.lobcder.auth;
 
+import lombok.Data;
+
+import javax.xml.bind.annotation.XmlRootElement;
 import java.util.HashSet;
 import java.util.Set;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -24,9 +27,15 @@ public class Permissions {
     public Permissions() {
     }
 
-    public Permissions(MyPrincipal mp) {
+//    public Permissions(MyPrincipal mp) {
+//        owner = mp.getUserId();
+//        read.addAll(mp.getRoles());
+//    }
+
+    public Permissions(MyPrincipal mp, Permissions rootPermissions) {
         owner = mp.getUserId();
-        read.addAll(mp.getRoles());
+        read.addAll(rootPermissions.getRead());
+        read.retainAll(mp.getRoles());
     }
 
     public String getReadStr() {

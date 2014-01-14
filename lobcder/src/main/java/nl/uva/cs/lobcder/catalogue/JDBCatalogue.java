@@ -32,6 +32,7 @@ import nl.uva.cs.lobcder.resources.StorageSite;
 import nl.uva.cs.lobcder.rest.wrappers.UsersWrapper;
 import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.cs.lobcder.util.MyDataSource;
+import nl.uva.cs.lobcder.util.PropertiesHelper;
 import org.apache.commons.codec.binary.Base64;
 
 /**
@@ -42,29 +43,17 @@ import org.apache.commons.codec.binary.Base64;
 public class JDBCatalogue extends MyDataSource {
 
     private Timer timer = null;
-    private Map<Long, LogicalData> logicalDataCache = new HashMap<>();
-    private Map<String, LogicalData> logicalDataCacheByPath = new HashMap<>();
-    private Map<Long, Permissions> permissionsCache = new HashMap<>();
-    private Map<Long, String> pathCache = new HashMap<>();
-    private Map<Long, List<PDRIDescr>> PDRIDescrCache = new HashMap<>();
+//    private Map<Long, LogicalData> logicalDataCache = new HashMap<>();
+//    private Map<String, LogicalData> logicalDataCacheByPath = new HashMap<>();
+//    private Map<Long, Permissions> permissionsCache = new HashMap<>();
+//    private Map<Long, String> pathCache = new HashMap<>();
+//    Map<Long, List<PDRIDescr>> PDRIDescrCache = new HashMap<>();
 
     public JDBCatalogue() throws NamingException {
     }
 
-    public void startSweep() {
-        TimerTask gcTask = new TimerTask() {
-            Runnable deleteSweep = new DeleteSweep(getDatasource());
-            Runnable replicateSweep = new ReplicateSweep(getDatasource());
-            Runnable wp4Sweep = new WP4Sweep(getDatasource(),
-                    new WP4Sweep.WP4Connector("http://vphshare.atosresearch.eu/metadata-retrieval/rest/metadata"));
-
-            @Override
-            public void run() {
-                deleteSweep.run();
-                replicateSweep.run();
-                wp4Sweep.run();
-            }
-        };
+    public void startSweep() throws IOException {
+        TimerTask gcTask = new SweeprsTimerTask(getDatasource());
         timer = new Timer(true);
         timer.schedule(gcTask, 10000, 10000); //once in 10 sec
     }
@@ -270,10 +259,10 @@ public class JDBCatalogue extends MyDataSource {
     }
 
     public List<PDRIDescr> getPdriDescrByGroupId(Long groupId) throws SQLException, IOException {
-        List<PDRIDescr> res = PDRIDescrCache.get(groupId);
-        if (res != null) {
-            return res;
-        }
+//        List<PDRIDescr> res = PDRIDescrCache.get(groupId);
+//        if (res != null) {
+//            return res;
+//        }
         try (Connection connection = getConnection()) {
             return getPdriDescrByGroupId(groupId, connection);
         }
@@ -318,11 +307,11 @@ public class JDBCatalogue extends MyDataSource {
     }
 
     public List<PDRIDescr> getPdriDescrByGroupId(Long groupId, @Nonnull Connection connection) throws SQLException {
-        List<PDRIDescr> res = PDRIDescrCache.get(groupId);
-        if (res != null) {
-            return res;
-        }
-        res = new ArrayList<>();
+        //        List<PDRIDescr> res = PDRIDescrCache.get(groupId);
+        //        if (res != null) {
+        //            return res;
+        //        }
+        ArrayList<PDRIDescr> res = new ArrayList<>();
         long pdriGroupRef;
         long pdriId;
         try (PreparedStatement ps = connection.prepareStatement("SELECT fileName, storageSiteRef, storage_site_table.resourceUri, "
@@ -354,7 +343,7 @@ public class JDBCatalogue extends MyDataSource {
 //                }
                 res.add(new PDRIDescr(fileName, ssID, resourceURI, uName, passwd, encrypt, BigInteger.valueOf(key), Long.valueOf(groupId), Long.valueOf(pdriId)));
             }
-            PDRIDescrCache.put(groupId, res);
+//            PDRIDescrCache.put(groupId, res);
             return res;
         }
     }
@@ -708,7 +697,7 @@ public class JDBCatalogue extends MyDataSource {
     public void copyFolder(LogicalData toCopy, LogicalData newParent, String newName, MyPrincipal principal, Connection connection) throws SQLException {
         Permissions toCopyPerm = getPermissions(toCopy.getUid(), toCopy.getOwner(), connection);
         Permissions newParentPerm = getPermissions(newParent.getUid(), newParent.getOwner(), connection);
-        Permissions permissionsForNew = new Permissions(principal);
+        Permissions permissionsForNew = new Permissions(principal, newParentPerm);
         if (toCopy.isFolder() && principal.canWrite(newParentPerm)) {
             // ignore folder if there is a problem
             LogicalData newFolderEntry = toCopy.clone();
@@ -752,7 +741,7 @@ public class JDBCatalogue extends MyDataSource {
     public void copyFile(LogicalData toCopy, LogicalData newParent, String newName, MyPrincipal principal, Connection connection) throws SQLException {
         Permissions toCopyPerm = getPermissions(toCopy.getUid(), toCopy.getOwner(), connection);
         Permissions newParentPerm = getPermissions(newParent.getUid(), newParent.getOwner(), connection);
-        Permissions permissionsForNew = new Permissions(principal);
+        Permissions permissionsForNew = new Permissions(principal, newParentPerm);
         if (!toCopy.isFolder() && principal.canRead(toCopyPerm) && principal.canWrite(newParentPerm)) {
             LogicalData newFileEntry = toCopy.clone();
             newFileEntry.setUid(Long.valueOf(0));
@@ -1091,13 +1080,13 @@ public class JDBCatalogue extends MyDataSource {
 
     public void updatePdris(List<PDRIDescr> pdrisToUpdate, Connection connection) throws SQLException {
         for (PDRIDescr d : pdrisToUpdate) {
-            try (PreparedStatement ps = connection.prepareStatement("UPDATE pdri_table SET isEncrypted = ?, storageSiteRef = ?, WHERE pdriId = ?")) {
+            try (PreparedStatement ps = connection.prepareStatement("UPDATE pdri_table SET isEncrypted = ?, storageSiteRef = ? WHERE pdriId = ?")) {
                 ps.setBoolean(1, d.getEncrypt());
                 ps.setLong(2, d.getStorageSiteId());
                 ps.setLong(3, d.getId());
                 ps.executeUpdate();
                 List<PDRIDescr> res = getPdriDescrByGroupId(d.getPdriGroupRef(), connection);
-                PDRIDescrCache.put(d.getPdriGroupRef(), res);
+//                PDRIDescrCache.put(d.getPdriGroupRef(), res);
             }
         }
     }
@@ -1139,84 +1128,85 @@ public class JDBCatalogue extends MyDataSource {
     }
 
     private void removeFromLDataCache(LogicalData entry, String path) {
-        logicalDataCache.remove(entry.getUid());
-        if (path != null) {
-            logicalDataCacheByPath.remove(path);
-        } else {
-            Iterator<Entry<String, LogicalData>> iter = logicalDataCacheByPath.entrySet().iterator();
-            while (iter.hasNext()) {
-                Entry<String, LogicalData> value = iter.next();
-                if(value.getValue().getUid() == entry.getUid()){
-                    iter.remove();
-                }
-            }
-        }
+//        logicalDataCache.remove(entry.getUid());
+//        if (path != null) {
+//            logicalDataCacheByPath.remove(path);
+//        } else {
+//            Iterator<Entry<String, LogicalData>> iter = logicalDataCacheByPath.entrySet().iterator();
+//            while (iter.hasNext()) {
+//                Entry<String, LogicalData> value = iter.next();
+//                if (value.getValue().getUid() == entry.getUid()) {
+//                    iter.remove();
+//                }
+//            }
+//        }
     }
 
     private void putToLDataCache(LogicalData entry, String path) {
-        checkLDataCacheSize();
-        logicalDataCache.put(entry.getUid(), entry);
-        if (path != null) {
-            logicalDataCacheByPath.put(path, entry);
-        }
+//        checkLDataCacheSize();
+//        logicalDataCache.put(entry.getUid(), entry);
+//        if (path != null) {
+//            logicalDataCacheByPath.put(path, entry);
+//        }
     }
 
     private void putToPermissionsCache(Long UID, Permissions perm) {
-        checkPermissionsCacheSize();
-        permissionsCache.put(UID, perm);
+//        checkPermissionsCacheSize();
+//        permissionsCache.put(UID, perm);
     }
 
     private Permissions getFromPermissionsCache(Long UID) {
-        checkPermissionsCacheSize();
-        return permissionsCache.get(UID);
+//        checkPermissionsCacheSize();
+//        return permissionsCache.get(UID);
+        return null;
     }
 
     private LogicalData getFromLDataCache(Long uid, String path) {
-        checkLDataCacheSize();
-        if (uid != null) {
-            return logicalDataCache.get(uid);
-        }
-        if (path != null) {
-            return logicalDataCacheByPath.get(path);
-        }
+//        checkLDataCacheSize();
+//        if (uid != null) {
+//            return logicalDataCache.get(uid);
+//        }
+//        if (path != null) {
+//            return logicalDataCacheByPath.get(path);
+//        }
         return null;
     }
 
     private String getFromPathCache(Long uid) {
-        checkPathCacheSize();
-        return pathCache.get(uid);
+//        checkPathCacheSize();
+//        return pathCache.get(uid);
+        return null;
     }
 
     private void checkLDataCacheSize() {
-        if (logicalDataCache.size() >= Constants.CACHE_SIZE) {
-            Long key = logicalDataCache.keySet().iterator().next();
-            logicalDataCache.remove(key);
-        }
-
-        if (logicalDataCacheByPath.size() >= Constants.CACHE_SIZE) {
-            String key = logicalDataCacheByPath.keySet().iterator().next();
-            logicalDataCacheByPath.remove(key);
-        }
-
+//        if (logicalDataCache.size() >= Constants.CACHE_SIZE) {
+//            Long key = logicalDataCache.keySet().iterator().next();
+//            logicalDataCache.remove(key);
+//        }
+//
+//        if (logicalDataCacheByPath.size() >= Constants.CACHE_SIZE) {
+//            String key = logicalDataCacheByPath.keySet().iterator().next();
+//            logicalDataCacheByPath.remove(key);
+//        }
     }
 
     private void checkPermissionsCacheSize() {
-        if (permissionsCache.size() >= Constants.CACHE_SIZE) {
-            Long key = permissionsCache.keySet().iterator().next();
-            permissionsCache.remove(key);
-        }
+//        if (permissionsCache.size() >= Constants.CACHE_SIZE) {
+//            Long key = permissionsCache.keySet().iterator().next();
+//            permissionsCache.remove(key);
+//        }
     }
 
     private void checkPathCacheSize() {
-        if (pathCache.size() >= Constants.CACHE_SIZE) {
-            Long key = pathCache.keySet().iterator().next();
-            pathCache.remove(key);
-        }
+//        if (pathCache.size() >= Constants.CACHE_SIZE) {
+//            Long key = pathCache.keySet().iterator().next();
+//            pathCache.remove(key);
+//        }
     }
 
     private void putToPathCache(Long uid, String res) {
-        checkPathCacheSize();
-        pathCache.put(uid, res);
+//        checkPathCacheSize();
+//        pathCache.put(uid, res);
     }
 
     public void recordRequest(Connection connection, HttpServletRequest httpServletRequest, double elapsed) throws SQLException, UnsupportedEncodingException {

@@ -4,6 +4,7 @@
  */
 package nl.uva.cs.lobcder.webDav.resources;
 
+import com.google.common.io.Files;
 import io.milton.common.Path;
 import io.milton.http.*;
 import io.milton.http.exceptions.BadRequestException;
@@ -43,11 +44,14 @@ import org.rendersnake.HtmlCanvas;
 @Log
 public class WebDataDirResource extends WebDataResource implements FolderResource,
         CollectionResource, DeletableCollectionResource, LockingCollectionResource {
+
     private int attempts = 0;
+    private Map<String, String> mimeTypeMap = new HashMap<>();
 
     public WebDataDirResource(@Nonnull LogicalData logicalData, Path path, @Nonnull JDBCatalogue catalogue, @Nonnull List<AuthI> authList) {
         super(logicalData, path, catalogue, authList);
         WebDataDirResource.log.log(Level.FINE, "Init. WebDataDirResource:  {0}", getPath());
+        mimeTypeMap.put("mp4", "video/mp4");
     }
 
     @Override
@@ -102,7 +106,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                     WebDataDirResource res = new WebDataDirResource(newFolderEntry, newCollectionPath, getCatalogue(), authList);
                     getCatalogue().setPermissions(
                             getCatalogue().registerDirLogicalData(newFolderEntry, connection).getUid(),
-                            new Permissions(getPrincipal()), connection);
+                            new Permissions(getPrincipal(), getPermissions()), connection);
                     connection.commit();
                     return res;
                 }
@@ -181,7 +185,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
             ConflictException, NotAuthorizedException, BadRequestException {
         WebDataDirResource.log.log(Level.FINE, "createNew. for {0}\n\t newName:\t{1}\n\t length:\t{2}\n\t contentType:\t{3}", new Object[]{getPath(), newName, length, contentType});
         LogicalData fileLogicalData;
-        List<PDRIDescr> pdriDescrList;
+//        List<PDRIDescr> pdriDescrList;
         WebDataFileResource resource;
         PDRI pdri;
         double start = System.currentTimeMillis();
@@ -190,6 +194,9 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
 //                Long uid = getCatalogue().getLogicalDataUidByParentRefAndName(getLogicalData().getUid(), newName, connection);
                 Path newPath = Path.path(getPath(), newName);
                 fileLogicalData = getCatalogue().getLogicalDataByPath(newPath, connection);
+                if (contentType == null) {
+                    contentType = mimeTypeMap.get(Files.getFileExtension(newName));
+                }
                 if (fileLogicalData != null) {  // Resource exists, update
 //                    throw new ConflictException(this, newName);
                     Permissions p = getCatalogue().getPermissions(fileLogicalData.getUid(), fileLogicalData.getOwner(), connection);
@@ -198,6 +205,9 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                     }
                     fileLogicalData.setLength(length);
                     fileLogicalData.setModifiedDate(System.currentTimeMillis());
+                    if (contentType == null) {
+                        contentType = mimeTypeMap.get(Files.getFileExtension(newName));
+                    }
                     fileLogicalData.addContentType(contentType);
 
                     //Create new
@@ -223,7 +233,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                     pdri.putData(inputStream);
                     //fileLogicalData.setChecksum(pdri.getChecksum());
                     fileLogicalData = getCatalogue().associateLogicalDataAndPdri(fileLogicalData, pdri, connection);
-                    getCatalogue().setPermissions(fileLogicalData.getUid(), new Permissions(getPrincipal()), connection);
+                    getCatalogue().setPermissions(fileLogicalData.getUid(), new Permissions(getPrincipal(), getPermissions()), connection);
                     connection.commit();
                     resource = new WebDataFileResource(fileLogicalData, Path.path(getPath(), newName), getCatalogue(), authList);
 //                    return new WebDataFileResource(fileLogicalData, Path.path(getPath(), newName), getCatalogue(), authList);
@@ -373,7 +383,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                     html._tr()
                             .tr()
                             .td()
-                                    //                        .a(href("../dav" + getPath() + "/" + ld.getName()))
+                            //                        .a(href("../dav" + getPath() + "/" + ld.getName()))
                             .a(href(ref))
                             .img(src("").alt(ld.getName()))
                             ._a()

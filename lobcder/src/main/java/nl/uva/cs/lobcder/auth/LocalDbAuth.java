@@ -4,17 +4,18 @@
  */
 package nl.uva.cs.lobcder.auth;
 
+import lombok.Setter;
+import lombok.extern.java.Log;
+import nl.uva.cs.lobcder.util.Constants;
+
+import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.logging.Level;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
-import javax.sql.DataSource;
-import lombok.extern.java.Log;
-import nl.uva.cs.lobcder.util.Constants;
 
 /**
  *
@@ -23,25 +24,20 @@ import nl.uva.cs.lobcder.util.Constants;
 @Log
 public class LocalDbAuth implements AuthI {
 
+    @Setter
     private DataSource datasource = null;
-    private PrincipalCacheI pc = null;
-    private int attempts=0;
-
-    public LocalDbAuth() throws NamingException {
-        javax.naming.Context ctx = new InitialContext();
-        javax.naming.Context envContext = (javax.naming.Context) ctx.lookup("java:/comp/env");
-        pc = (PrincipalCacheI) envContext.lookup("bean/PrincipalCache");
-        datasource = (DataSource) envContext.lookup("jdbc/lobcder");
-    }
+    @Setter
+    private PrincipalCacheI principalCache = null;
+    private int attempts = 0;
 
     @Override
     public MyPrincipal checkToken(String token) {
 //        Connection connection = null;
         MyPrincipal res = null;
         try {
-            if (pc != null) {
-                synchronized (pc) {
-                    res = pc.getPrincipal(token);
+            if (principalCache != null) {
+                synchronized (principalCache) {
+                    res = principalCache.getPrincipal(token);
                 }
             }
             if (res == null) {
@@ -75,16 +71,16 @@ public class LocalDbAuth implements AuthI {
 //                connection = datasource.getConnection();
 
             }
-            if (pc != null) {
-                synchronized (pc) {
-                    pc.putPrincipal(token, res);
+            if (principalCache != null) {
+                synchronized (principalCache) {
+                    principalCache.putPrincipal(token, res, new Date().getTime() + 10000);
                 }
             }
-            attempts=0;
+            attempts = 0;
             return res;
         } catch (Exception ex) {
-            if (ex instanceof SQLException 
-                    && attempts <=Constants.RECONNECT_NTRY) {
+            if (ex instanceof SQLException
+                    && attempts <= Constants.RECONNECT_NTRY) {
                 attempts++;
                 checkToken(token);
             } else {

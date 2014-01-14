@@ -104,7 +104,7 @@ public class MyAuthTest extends Debug implements AuthI {
                 }
             }
             if (pc != null) {
-                pc.putPrincipal(token, res);
+                pc.putPrincipal(token, res, System.currentTimeMillis() + 86400000);
             }
             return res;
         } catch (Exception ex) {

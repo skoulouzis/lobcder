@@ -95,6 +95,7 @@ class ReplicateSweep implements Runnable {
             cpdri.delete();
             ps.setLong(1, cd.pdriId);
             ps.executeUpdate();
+            // PDRIDescrCache.
         }
     }
 
@@ -166,7 +167,7 @@ class ReplicateSweep implements Runnable {
                 }
                 connection.commit();
                 for (PDRIDescr cd : toReplicate) {
-                    log.log(Level.FINE, "to replicate: " + cd.getResourceUrl());
+                    log.log(Level.FINE, "to replicate: {0}", cd.getResourceUrl());
                     try (PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO pdri_table "
                                     + "(fileName, storageSiteRef, pdriGroupRef,isEncrypted, encryptionKey) VALUES(?, ?, ?, ?, ?)")) {
                         source = new PDRIFactory().createInstance(cd, false);

@@ -3,6 +3,7 @@ package nl.uva.cs.lobcder.catalogue;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
+import java.net.UnknownHostException;
 import lombok.Data;
 import lombok.SneakyThrows;
 import lombok.extern.java.Log;
@@ -26,6 +27,8 @@ import javax.xml.xpath.XPathFactory;
 import java.sql.*;
 import java.util.UUID;
 import java.util.logging.Level;
+import java.util.logging.Logger;
+import nl.uva.cs.lobcder.util.Constants;
 
 /**
  * User: dvasunin Date: 25.02.13 Time: 16:31 To change this template use File |
@@ -35,7 +38,6 @@ import java.util.logging.Level;
 class WP4Sweep implements Runnable {
 
     private final DataSource datasource;
-
     private final WP4ConnectorI connector;
 
     public WP4Sweep(DataSource datasource, WP4ConnectorI connector) {
@@ -43,12 +45,11 @@ class WP4Sweep implements Runnable {
         this.connector = connector;
     }
 
-
     public static class SqlTimestampAdapter extends XmlAdapter<java.util.Date, Timestamp> {
 
         @Override
         public java.util.Date marshal(Timestamp sqlDate) throws Exception {
-            if(null == sqlDate) {
+            if (null == sqlDate) {
                 return null;
             }
             return new java.util.Date(sqlDate.getTime());
@@ -56,18 +57,18 @@ class WP4Sweep implements Runnable {
 
         @Override
         public java.sql.Timestamp unmarshal(java.util.Date utilDate) throws Exception {
-            if(null == utilDate) {
+            if (null == utilDate) {
                 return null;
             }
             return new java.sql.Timestamp(utilDate.getTime());
         }
-
     }
 
     @Data
     @XmlRootElement(name = "resource_metadata")
     @XmlAccessorType(XmlAccessType.FIELD)
     public static class ResourceMetadata {
+
         private String author;
         @XmlJavaTypeAdapter(SqlTimestampAdapter.class)
         private Timestamp creation_date;
@@ -87,15 +88,16 @@ class WP4Sweep implements Runnable {
         private String tags;
     }
 
-
-
     public static interface WP4ConnectorI {
+
         public String create(ResourceMetadata resourceMetadata) throws Exception;
+
         public void update(ResourceMetadata resourceMetadata) throws Exception;
+
         public void delete(String global_id) throws Exception;
     }
 
-    public static class WP4Connector implements WP4ConnectorI{
+    public static class WP4Connector implements WP4ConnectorI {
 
         private Client client;
         private XPathExpression expression;
@@ -111,10 +113,10 @@ class WP4Sweep implements Runnable {
         }
 
         @Override
-        public String create(ResourceMetadata resourceMetadata) throws Exception{
+        public String create(ResourceMetadata resourceMetadata) throws Exception {
             WebResource webResource = client.resource(uri);
             ClientResponse response = webResource.type(MediaType.APPLICATION_XML).post(ClientResponse.class, resourceMetadata);
-            if(response.getClientResponseStatus() == ClientResponse.Status.OK){
+            if (response.getClientResponseStatus() == ClientResponse.Status.OK) {
                 Node uidNode = (Node) expression.evaluate(new InputSource(response.getEntityInputStream()), XPathConstants.NODE);
                 return uidNode.getTextContent();
             } else {
@@ -126,7 +128,7 @@ class WP4Sweep implements Runnable {
         public void update(ResourceMetadata resourceMetadata) throws Exception {
             WebResource webResource = client.resource(uri);
             ClientResponse response = webResource.path(resourceMetadata.getGlobal_id()).type(MediaType.APPLICATION_XML).put(ClientResponse.class, resourceMetadata);
-            if(response.getClientResponseStatus() != ClientResponse.Status.OK){
+            if (response.getClientResponseStatus() != ClientResponse.Status.OK) {
                 throw new Exception(response.getClientResponseStatus().toString());
             }
         }
@@ -138,40 +140,41 @@ class WP4Sweep implements Runnable {
         }
     }
 
-    public static class WP4ConnectorDebug implements WP4ConnectorI{
+    public static class WP4ConnectorDebug implements WP4ConnectorI {
+
         @Override
         public String create(ResourceMetadata resourceMetadata) throws JAXBException {
             System.err.println("CREATE WP4 METADATA");
             JAXBContext context = JAXBContext.newInstance(ResourceMetadata.class);
             Marshaller m = context.createMarshaller();
-            m.setProperty( Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE );
+            m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
             m.marshal(resourceMetadata, System.err);
             System.err.println("================================");
             return UUID.randomUUID().toString();
         }
 
         @Override
-        public void update(ResourceMetadata resourceMetadata) throws JAXBException{
+        public void update(ResourceMetadata resourceMetadata) throws JAXBException {
             System.err.println("UPDATE WP4 METADATA");
             JAXBContext context = JAXBContext.newInstance(ResourceMetadata.class);
             Marshaller m = context.createMarshaller();
-            m.setProperty( Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE );
+            m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
             m.marshal(resourceMetadata, System.err);
             System.err.println("================================");
         }
 
         @Override
-        public void delete(String global_id)  {
+        public void delete(String global_id) {
             System.err.println("DELETE WP4 METADATA");
             System.err.println(global_id);
             System.err.println("================================");
         }
     }
 
-    private void create(Connection connection, WP4ConnectorI wp4Connector) throws SQLException {
+    private void create(Connection connection, WP4ConnectorI wp4Connector) throws SQLException, UnknownHostException {
         try (Statement s1 = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY,
-                ResultSet.CONCUR_READ_ONLY)) {
-            try(PreparedStatement s2 = connection.prepareStatement("UPDATE wp4_table SET need_create = FALSE, global_id = ? WHERE id = ?")) {
+                        ResultSet.CONCUR_READ_ONLY)) {
+            try (PreparedStatement s2 = connection.prepareStatement("UPDATE wp4_table SET need_create = FALSE, global_id = ? WHERE id = ?")) {
                 ResultSet rs = s1.executeQuery("SELECT uid, ownerId, datatype, ldName, id FROM ldata_table JOIN wp4_table ON uid=local_id WHERE need_create=TRUE");
                 while (rs.next()) {
                     ResourceMetadata rm = new ResourceMetadata();
@@ -192,17 +195,21 @@ class WP4Sweep implements Runnable {
                         s2.setLong(2, rs.getLong(5));
                         s2.executeUpdate();
                     } catch (Exception e) {
-                        WP4Sweep.log.log(Level.SEVERE, null, e);
+                        if (e instanceof com.sun.jersey.api.client.ClientHandlerException && e.getMessage().contains("java.net.UnknownHostException")) {
+                            throw new java.net.UnknownHostException(e.getMessage());
+                        } else {
+                            WP4Sweep.log.log(Level.SEVERE, null, e);
+                        }
                     }
                 }
             }
         }
     }
 
-    private void update(Connection connection, WP4ConnectorI wp4Connector) throws SQLException {
+    private void update(Connection connection, WP4ConnectorI wp4Connector) throws SQLException, UnknownHostException {
         try (Statement s1 = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY,
-                ResultSet.CONCUR_READ_ONLY)) {
-            try(PreparedStatement s2 = connection.prepareStatement("UPDATE wp4_table SET need_update = FALSE WHERE id = ?")) {
+                        ResultSet.CONCUR_READ_ONLY)) {
+            try (PreparedStatement s2 = connection.prepareStatement("UPDATE wp4_table SET need_update = FALSE WHERE id = ?")) {
                 ResultSet rs = s1.executeQuery("SELECT ownerId, ldName, global_id, views, id FROM ldata_table JOIN wp4_table ON uid=local_id WHERE need_update=TRUE");
                 while (rs.next()) {
                     ResourceMetadata rm = new ResourceMetadata();
@@ -215,6 +222,32 @@ class WP4Sweep implements Runnable {
                         s2.setLong(1, rs.getLong(5));
                         s2.executeUpdate();
                     } catch (Exception e) {
+                        if (e instanceof com.sun.jersey.api.client.ClientHandlerException && e.getMessage().contains("java.net.UnknownHostException")) {
+                            throw new java.net.UnknownHostException(e.getMessage());
+                        } else {
+                            WP4Sweep.log.log(Level.SEVERE, null, e);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void delete(Connection connection, WP4ConnectorI wp4Connector) throws SQLException, UnknownHostException {
+        try (Statement s1 = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY,
+                        ResultSet.CONCUR_UPDATABLE)) {
+            ResultSet rs = s1.executeQuery("SELECT global_id, id FROM wp4_table WHERE local_id IS NULL");
+            while (rs.next()) {
+                try {
+                    String global_id = rs.getString(1);
+                    if (global_id != null) {
+                        wp4Connector.delete(rs.getString(1));
+                    }
+                    rs.deleteRow();
+                } catch (Exception e) {
+                    if (e instanceof com.sun.jersey.api.client.ClientHandlerException && e.getMessage().contains("java.net.UnknownHostException")) {
+                        throw new java.net.UnknownHostException(e.getMessage());
+                    } else {
                         WP4Sweep.log.log(Level.SEVERE, null, e);
                     }
                 }
@@ -222,33 +255,25 @@ class WP4Sweep implements Runnable {
         }
     }
 
-    private void delete(Connection connection, WP4ConnectorI wp4Connector) throws SQLException {
-        try (Statement s1 = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY,
-                ResultSet.CONCUR_UPDATABLE)) {
-            ResultSet rs = s1.executeQuery("SELECT global_id, id FROM wp4_table WHERE local_id IS NULL");
-            while (rs.next()) {
-                try {
-                    String global_id = rs.getString(1);
-                    if(global_id != null)
-                        wp4Connector.delete(rs.getString(1));
-                    rs.deleteRow();
-                } catch (Exception e) {
-                    WP4Sweep.log.log(Level.SEVERE, null, e);
-                }
-            }
-        }
-    }
-
-
     @Override
     public void run() {
-        try (Connection connection = datasource.getConnection()) {
-            connection.setAutoCommit(true);
-            create(connection, connector);
-            update(connection, connector);
-            delete(connection, connector);
-        } catch (SQLException e) {
-            WP4Sweep.log.log(Level.SEVERE, null, e);
-        }
+        
+            try (Connection connection = datasource.getConnection()) {
+                connection.setAutoCommit(true);
+                create(connection, connector);
+                update(connection, connector);
+                delete(connection, connector);
+            } catch (Exception ex) {
+                if (ex instanceof UnknownHostException) {
+//                    unknownHostExceptionCounter++;
+//                    if (unknownHostExceptionCounter >= Constants.RECONNECT_NTRY) {
+//                        runSweeper = false;
+//                    }
+                } else {
+                    Logger.getLogger(WP4Sweep.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        
+
     }
 }

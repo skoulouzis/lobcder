@@ -4,20 +4,19 @@
  */
 package nl.uva.cs.lobcder.rest;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.extern.java.Log;
+import nl.uva.cs.lobcder.auth.MyPrincipal;
+import nl.uva.cs.lobcder.auth.Permissions;
+import nl.uva.cs.lobcder.resources.LogicalData;
+import nl.uva.cs.lobcder.resources.PDRIDescr;
 import nl.uva.cs.lobcder.rest.wrappers.LogicalDataWrapped;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.math.BigInteger;
-import java.net.MalformedURLException;
-import java.net.URISyntaxException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.logging.Level;
+import nl.uva.cs.lobcder.util.CatalogueHelper;
+import nl.uva.cs.lobcder.util.Constants;
+import nl.uva.cs.lobcder.util.GridHelper;
+import nl.uva.cs.lobcder.util.PropertiesHelper;
+
 import javax.annotation.Nonnull;
 import javax.naming.NamingException;
 import javax.servlet.http.HttpServletRequest;
@@ -27,17 +26,16 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.extern.java.Log;
-import nl.uva.cs.lobcder.auth.MyPrincipal;
-import nl.uva.cs.lobcder.auth.Permissions;
-import nl.uva.cs.lobcder.resources.LogicalData;
-import nl.uva.cs.lobcder.resources.PDRIDescr;
-import nl.uva.cs.lobcder.util.CatalogueHelper;
-import nl.uva.cs.lobcder.util.Constants;
-import nl.uva.cs.lobcder.util.GridHelper;
-import nl.uva.vlet.exception.VlException;
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
+import java.util.logging.Level;
 
 /**
  * @author dvasunin
@@ -46,6 +44,8 @@ import nl.uva.vlet.exception.VlException;
 @Path("items/")
 public class Items extends CatalogueHelper {
 
+    private int defaultRowLimit;
+
     @Context
     UriInfo info;
     @Context
@@ -53,90 +53,104 @@ public class Items extends CatalogueHelper {
     @Context
     HttpServletResponse servletResponse;
 
-    public Items() throws NamingException {
+    public Items() throws NamingException, IOException {
+        defaultRowLimit = PropertiesHelper.getDefaultRowLimit();
     }
 
-    private void queryLogicalData(Long parentUid, List<LogicalDataWrapped> ldwl, PreparedStatement ps1, PreparedStatement ps2, String path, MyPrincipal mp, Connection cn) throws SQLException, FileNotFoundException, VlException, URISyntaxException, IOException, MalformedURLException, Exception {
-        ps1.setLong(1, parentUid);
-        try (ResultSet resultSet = ps1.executeQuery()) {
-            while (resultSet.next()) {
-                Long uid = resultSet.getLong(1);
-                String datatype = resultSet.getString(4);
-                String ldName = resultSet.getString(5);
-                String owner = resultSet.getString(3);
-                Permissions p = getCatalogue().getPermissions(uid, owner, cn);
-                if (mp.canRead(p) && uid != 1) {
-                    LogicalData logicalData = new LogicalData();
-                    logicalData.setUid(uid);
-                    logicalData.setParentRef(parentUid);
-                    logicalData.setOwner(owner);
-                    logicalData.setType(datatype);
-                    logicalData.setName(ldName);
-                    logicalData.setCreateDate(resultSet.getTimestamp(6).getTime());
-                    logicalData.setModifiedDate(resultSet.getTimestamp(7).getTime());
-                    logicalData.setLength(resultSet.getLong(8));
-                    logicalData.setContentTypesAsString(resultSet.getString(9));
-                    logicalData.setPdriGroupId(resultSet.getLong(10));
-                    logicalData.setSupervised(resultSet.getBoolean(11));
-                    logicalData.setChecksum(resultSet.getString(12));
-                    logicalData.setLastValidationDate(resultSet.getLong(13));
-                    logicalData.setLockTokenID(resultSet.getString(14));
-                    logicalData.setLockScope(resultSet.getString(15));
-                    logicalData.setLockType(resultSet.getString(16));
-                    logicalData.setLockedByUser(resultSet.getString(17));
-                    logicalData.setLockDepth(resultSet.getString(18));
-                    logicalData.setLockTimeout(resultSet.getLong(19));
-                    logicalData.setDescription(resultSet.getString(20));
-                    logicalData.setDataLocationPreference(resultSet.getString(21));
-                    logicalData.setStatus(resultSet.getString(22));
-                    LogicalDataWrapped ldw = new LogicalDataWrapped();
-                    ldw.setLogicalData(logicalData);
-                    ldw.setPermissions(p);
-                    String mypath = path + "/" + logicalData.getName();
-                    ldw.setPath(mypath);
-                    ldwl.add(ldw);
-                    if (!logicalData.isFolder() && mp.isAdmin()) {
-                        List<PDRIDescr> pdriDescr = getCatalogue().getPdriDescrByGroupId(logicalData.getPdriGroupId(), cn);
-                        for (PDRIDescr pdri : pdriDescr) {
-                            if (pdri.getResourceUrl().startsWith("lfc")
-                                    || pdri.getResourceUrl().startsWith("srm")
-                                    || pdri.getResourceUrl().startsWith("gftp")) {
-                                pdriDescr.remove(pdri);
-                                GridHelper.initGridProxy(pdri.getUsername(), pdri.getPassword(), null, false);
-                                pdri.setPassword(GridHelper.getProxyAsBase64String());
-                                pdriDescr.add(pdri);
+    @Data
+    @AllArgsConstructor
+    class MyData {
+        Long uid;
+        String path;
+    }
+    private List<LogicalDataWrapped> queryLogicalData(MyData myData, int limit, PreparedStatement ps1, PreparedStatement ps2, MyPrincipal mp, Connection cn) throws Exception {
+        List<LogicalDataWrapped> ldwl = new LinkedList<>();
+        Queue<MyData> dirs = new LinkedList<>();
+        dirs.offer(myData);
+        MyData dir;
+        while((dir = dirs.poll()) != null) {
+            ps1.setLong(1, dir.getUid());
+            ps1.setInt(20, limit + 1);
+            try (ResultSet resultSet = ps1.executeQuery()) {
+                while (resultSet.next()) {
+                    Long uid = resultSet.getLong(1);
+                    String datatype = resultSet.getString(4);
+                    String ldName = resultSet.getString(5);
+                    String owner = resultSet.getString(3);
+                    Permissions p = getCatalogue().getPermissions(uid, owner, cn);
+                    if (mp.canRead(p) && uid != 1) {
+                        LogicalData logicalData = new LogicalData();
+                        logicalData.setUid(uid);
+                        logicalData.setParentRef(myData.getUid());
+                        logicalData.setOwner(owner);
+                        logicalData.setType(datatype);
+                        logicalData.setName(ldName);
+                        logicalData.setCreateDate(resultSet.getTimestamp(6).getTime());
+                        logicalData.setModifiedDate(resultSet.getTimestamp(7).getTime());
+                        logicalData.setLength(resultSet.getLong(8));
+                        logicalData.setContentTypesAsString(resultSet.getString(9));
+                        logicalData.setPdriGroupId(resultSet.getLong(10));
+                        logicalData.setSupervised(resultSet.getBoolean(11));
+                        logicalData.setChecksum(resultSet.getString(12));
+                        logicalData.setLastValidationDate(resultSet.getLong(13));
+                        logicalData.setLockTokenID(resultSet.getString(14));
+                        logicalData.setLockScope(resultSet.getString(15));
+                        logicalData.setLockType(resultSet.getString(16));
+                        logicalData.setLockedByUser(resultSet.getString(17));
+                        logicalData.setLockDepth(resultSet.getString(18));
+                        logicalData.setLockTimeout(resultSet.getLong(19));
+                        logicalData.setDescription(resultSet.getString(20));
+                        logicalData.setDataLocationPreference(resultSet.getString(21));
+                        logicalData.setStatus(resultSet.getString(22));
+
+                        LogicalDataWrapped ldw = new LogicalDataWrapped();
+                        ldw.setLogicalData(logicalData);
+                        ldw.setPermissions(p);
+                        ldw.setPath(myData.getPath().concat("/").concat(logicalData.getName()));
+                        if (!logicalData.isFolder() && mp.isAdmin()) {
+                            List<PDRIDescr> pdriDescr = getCatalogue().getPdriDescrByGroupId(logicalData.getPdriGroupId(), cn);
+                            for (PDRIDescr pdri : pdriDescr) {
+                                if (pdri.getResourceUrl().startsWith("lfc")
+                                        || pdri.getResourceUrl().startsWith("srm")
+                                        || pdri.getResourceUrl().startsWith("gftp")) {
+                                    pdriDescr.remove(pdri);
+                                    GridHelper.initGridProxy(pdri.getUsername(), pdri.getPassword(), null, false);
+                                    pdri.setPassword(GridHelper.getProxyAsBase64String());
+                                    pdriDescr.add(pdri);
+                                }
                             }
+                            ldw.setPdriList(pdriDescr);
                         }
-                        ldw.setPdriList(pdriDescr);
+                        ldwl.add(ldw);
+                        limit--;
+                    }
+                    if(limit == 0)
+                        break;
+                }
+            }
+            if(limit != 0) {
+                ps2.setLong(1, dir.getUid());
+                try(ResultSet resultSet = ps2.executeQuery()){
+                    while (resultSet.next()) {
+                        Long myUid = resultSet.getLong(1);
+                        String myOwner = resultSet.getString(2);
+                        String myPath = dir.getPath().concat("/").concat(resultSet.getString(3));
+                        Permissions p = getCatalogue().getPermissions(myUid, myOwner, cn);
+                        if (mp.canRead(p) && myUid != 1) {
+                            dirs.offer(new MyData(myUid, myPath));
+                        }
                     }
                 }
-            }
-            ps2.setLong(1, parentUid);
-            ResultSet resultSet1 = ps2.executeQuery();
-            @Data
-            @AllArgsConstructor
-            class MyData {
-
-                Long uid;
-                String path;
-            }
-            ArrayList<MyData> mdl = new ArrayList<>();
-            while (resultSet1.next()) {
-                Long myUid = resultSet1.getLong(1);
-                String myOwner = resultSet1.getString(2);
-                String myPath = path + "/" + resultSet1.getString(3);
-                Permissions p = getCatalogue().getPermissions(myUid, myOwner, cn);
-                if (mp.canRead(p) && myUid != 1) {
-                    mdl.add(new MyData(myUid, myPath));
-                }
-            }
-            for (MyData md : mdl) {
-                queryLogicalData(md.getUid(), ldwl, ps1, ps2, md.getPath(), mp, cn);
+            } else {
+                break;
             }
         }
+        return ldwl;
     }
 
-    private List<LogicalDataWrapped> queryLogicalData(@Nonnull MyPrincipal mp, @Nonnull Connection cn) throws SQLException, FileNotFoundException, VlException, URISyntaxException, IOException, MalformedURLException, Exception {
+
+    private List<LogicalDataWrapped> queryLogicalData(@Nonnull MyPrincipal mp, @Nonnull Connection cn) throws Exception
+        {
         MultivaluedMap<String, String> queryParameters = info.getQueryParameters();
         boolean addFlag = true;
         String rootPath = (queryParameters.containsKey("path") && queryParameters.get("path").iterator().hasNext())
@@ -144,9 +158,17 @@ public class Items extends CatalogueHelper {
         if (!rootPath.equals("/") && rootPath.endsWith("/")) {
             rootPath = rootPath.substring(0, rootPath.length() - 1);
         }
+
+        int rowLimit;
+        try {
+            rowLimit = (queryParameters.containsKey("limit") && queryParameters.get("limit").iterator().hasNext())
+                ? Integer.valueOf(queryParameters.get("limit").iterator().next()).intValue() : defaultRowLimit;
+        } catch (Throwable th) {
+            rowLimit = defaultRowLimit;
+        }
         LogicalData ld = getCatalogue().getLogicalDataByPath(io.milton.common.Path.path(rootPath), cn);
         List<LogicalDataWrapped> logicalDataWrappedList = new ArrayList<>();
-        if (ld == null) {
+        if (ld == null || rowLimit < 1) {
             return logicalDataWrappedList;
         }
 
@@ -165,7 +187,8 @@ public class Items extends CatalogueHelper {
                             + "AND (? OR (modifiedDate BETWEEN FROM_UNIXTIME(?) AND FROM_UNIXTIME(?))) "
                             + "AND (? OR (modifiedDate >= FROM_UNIXTIME(?))) "
                             + "AND (? OR (modifiedDate <= FROM_UNIXTIME(?))) "
-                            + "AND (? OR (ldName LIKE CONCAT('%', ? , '%')))");
+                            + "AND (? OR (ldName LIKE CONCAT('%', ? , '%')))"
+                            + "LIMIT ?");
                     PreparedStatement ps2 = cn.prepareStatement("SELECT uid, ownerId, "
                             + "ldName FROM ldata_table WHERE parentRef = ? AND datatype = '" + Constants.LOGICAL_FOLDER + "'")) {
                 {
@@ -292,8 +315,11 @@ public class Items extends CatalogueHelper {
                             ldw.setPdriList(pdriDescr);
                         }
                         logicalDataWrappedList.add(ldw);
+                        rowLimit--;
                     }
-                    queryLogicalData(ld.getUid(), logicalDataWrappedList, ps1, ps2, rootPath.equals("/") ? "" : rootPath, mp, cn);
+                    if(rowLimit != 0) {
+                        logicalDataWrappedList.addAll(queryLogicalData(new MyData(ld.getUid(), rootPath.equals("/") ? "" : rootPath), rowLimit, ps1, ps2, mp, cn));
+                    }
                 }
             }
         }
@@ -303,7 +329,7 @@ public class Items extends CatalogueHelper {
     @Path("query/")
     @GET
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public List<LogicalDataWrapped> getXml() throws FileNotFoundException, VlException, URISyntaxException, IOException, MalformedURLException, Exception {
+    public List<LogicalDataWrapped> getXml() throws Exception {
         try (Connection cn = getCatalogue().getConnection()) {
             MyPrincipal mp = (MyPrincipal) request.getAttribute("myprincipal");
             List<LogicalDataWrapped> res = queryLogicalData(mp, cn);

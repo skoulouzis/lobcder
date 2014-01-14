@@ -72,6 +72,7 @@ public class AuthRemote implements AuthI {
             if (pc != null) {
                 res = pc.getPrincipal(token);
             }
+             User u = null;
             if (res == null) {
                 ClientConfig clientConfig = new DefaultClientConfig();
                 //  ClientConfig config = new DefaultClientConfig();
@@ -80,14 +81,14 @@ public class AuthRemote implements AuthI {
 
                 clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
                 Client client = Client.create(clientConfig);
-                User u = client.resource(getServiceURL() + token).get(new GenericType<User>() {
+                u = client.resource(getServiceURL() + token).get(new GenericType<User>() {
                 });
                 res = new MyPrincipal(u.username, new HashSet(Arrays.asList(u.role)));
                 res.getRoles().add("other");
                 res.getRoles().add(u.username);
             }
             if (pc != null) {
-                pc.putPrincipal(token, res);
+                pc.putPrincipal(token, res, System.currentTimeMillis() +  86400000 );
             }
         } catch (Exception e) {
         }

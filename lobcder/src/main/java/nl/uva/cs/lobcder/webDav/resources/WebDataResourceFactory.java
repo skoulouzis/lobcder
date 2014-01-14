@@ -6,8 +6,6 @@ import io.milton.resource.Resource;
 import lombok.Setter;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.auth.AuthI;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
 import nl.uva.cs.lobcder.resources.LogicalData;
 import nl.uva.cs.lobcder.util.Constants;
@@ -33,12 +31,13 @@ public class WebDataResourceFactory implements ResourceFactory {
     @Override
     public Resource getResource(String host, String strPath) {
 
-        if(strPath.equals("/login.html"))
+        if (strPath.equals("/login.html")) {
             return null;
-
+        }
+        
         Path ldri = Path.path(strPath);
         String first;
-        do{
+        do {
             first = ldri.getFirst();
             ldri = ldri.getStripFirst();
         } while (!first.equals("dav"));
@@ -62,9 +61,14 @@ public class WebDataResourceFactory implements ResourceFactory {
             attempts = 0;
 //            return null;
         } catch (SQLException ex) {
-            WebDataResourceFactory.log.log(Level.SEVERE, null, 1);
-            Logger.getLogger(WebDataResourceFactory.class.getName()).log(Level.SEVERE, null, ex);
-            throw new RuntimeException(ex);
+            if (attempts <= Constants.RECONNECT_NTRY) {
+                attempts++;
+                getResource(host, strPath);
+            } else {
+                WebDataResourceFactory.log.log(Level.SEVERE, null, ex);
+                throw new RuntimeException(ex);
+            }
+
         }
         return null;
     }

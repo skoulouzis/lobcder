@@ -357,7 +357,7 @@ public class WebDataFileResource extends WebDataResource implements
                 if (reconnect) {
                     pdri.reconnect();
                 }
-                WebDataFileResource.log.log(Level.FINE, "sendContent() for {0}--------- {1}", new Object[]{getPath(), pdri.getFileName()});
+                WebDataFileResource.log.log(Level.FINE, "transfererRange() for {0}--------- {1}", new Object[]{getPath(), pdri.getFileName()});
                 pdri.copyRange(range, out);
 //                if (!) {
 //                    
@@ -405,6 +405,9 @@ public class WebDataFileResource extends WebDataResource implements
             List<PDRIDescr> pdris = getCatalogue().getPdriDescrByGroupId(getLogicalData().getPdriGroupId());
 //            it = getCatalogue().getPdriDescrByGroupId(getLogicalData().getPdriGroupId()).iterator();
             if (range != null) {
+                if (range.getFinish() == null) {
+                    range = new Range(range.getStart(), (getContentLength() - 1));
+                }
                 it = pdris.iterator();
                 WebDataFileResource.log.log(Level.FINE, "Start: {0} end: {1} range: {2}", new Object[]{range.getStart(), range.getFinish(), range.getRange()});
                 pdri = transfererRange(it, out, 0, null, range);
@@ -516,7 +519,7 @@ public class WebDataFileResource extends WebDataResource implements
                 workerIndex = 0;
             }
             String worker = workers.get(workerIndex++);
-            String w = worker + getLogicalData().getUid();
+            String w = worker + "/" + getLogicalData().getUid();
             String token = UUID.randomUUID().toString();
             AuthWorker.setTicket(worker, token);
             return w + "/" + token;
