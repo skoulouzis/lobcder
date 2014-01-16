@@ -114,7 +114,6 @@ public class AuthTicket implements AuthI  {
             User u = null;
 
             // check errors
-
             Integer posSign = ticket.lastIndexOf(";sig=");
 
             if (posSign < 0) {

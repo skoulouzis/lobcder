@@ -40,7 +40,7 @@ class GraphPopulator implements Runnable {
             try (Connection connection = datasource.getConnection()) {
 
                 buildOrUpdateGlobalGraph(connection);
-//                saveAsCSV(connection);
+                saveAsCSV(connection);
 
             } catch (Exception ex) {
                 Logger.getLogger(GraphPopulator.class.getName()).log(Level.SEVERE, null, ex);

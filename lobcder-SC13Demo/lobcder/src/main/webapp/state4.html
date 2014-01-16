@@ -38,7 +38,7 @@
 
             // Compute the distinct nodes from the links.
             links.forEach(function(link) {
-                if(link.weight > 2){
+                if(link.weight > 10){
                     link.source = nodes[link.source] || 
                         (nodes[link.source] = {name: link.source});
                 
@@ -58,7 +58,7 @@
             .size([width, height])
             .charge(-3000)
             .linkDistance(function(d) { 
-                var dist = (1/d.weight)*3000;
+                var dist = Math.sqrt(1/d.weight*100);
                 return dist; 
             })
             .on("tick", tick)
@@ -91,7 +91,7 @@
             .attr("class", "link")
             .attr("marker-end", "url(#end)")
             .style("stroke-width", function(d) { 
-                return Math.sqrt(d.weight)/1.5; 
+                return Math.sqrt(d.weight)/10; 
             });
             
 
@@ -114,7 +114,7 @@
             node.append("text")
             .attr("x", 8)
             .attr("dy", ".35em")
-            .style("font", "12px sans-serif")
+            .style("font", "15px sans-serif")
             .text(function(d) { return d.name; });
 
             // add the curvy lines
