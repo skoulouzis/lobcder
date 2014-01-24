@@ -121,7 +121,7 @@ public class PropertiesHelper {
         InputStream in = classLoader.getResourceAsStream(propertiesPath);
         Properties properties = new Properties();
         properties.load(in);
-        return Boolean.valueOf(properties.getProperty("use.metadata.reposetory", "true"));
+        return Boolean.valueOf(properties.getProperty("use.metadata.repository", "true"));
     }
 
     public static String getAuthRemoteURL() throws IOException {
