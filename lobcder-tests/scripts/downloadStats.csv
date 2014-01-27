@@ -1,0 +1,2 @@
+Date;fileSize(MBit);MeanSpeed(MBit/sec)SingleFile;StdevSpeed(MBit/sec)SingleFile;MeanSpeed(MBit/sec)MultiFileSinglethread;StdevSpeed(MBit/sec)MultiFileSinglethread;MeanSpeed(MBit/sec)MultiFileMultithread;StdevSpeed(MBit/sec)MultiFileMultithread
+14/01/2013;419.51232;27.45;3.701144;17.22;4.686544;37.58;4.103047

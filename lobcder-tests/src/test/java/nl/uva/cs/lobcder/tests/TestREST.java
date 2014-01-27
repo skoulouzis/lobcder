@@ -10,6 +10,7 @@ import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.json.JSONConfiguration;
+import com.sun.jersey.client.urlconnection.HTTPSProperties;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 import java.io.File;
 import java.io.IOException;
@@ -19,6 +20,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.net.ssl.SSLContext;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.xml.bind.annotation.XmlElement;
@@ -40,6 +42,23 @@ import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Test;
 
+
+import java.security.SecureRandom;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
+
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.config.ClientConfig;
+import com.sun.jersey.api.client.config.DefaultClientConfig;
+import com.sun.jersey.client.urlconnection.HTTPSProperties;
+
 /**
  *
  * @author S. koulouzis
@@ -56,6 +75,7 @@ public class TestREST {
     private String restURL;
     private Client restClient;
     private String testResourceId;
+    private String translatorURL;
 
     @Before
     public void setUp() throws Exception {
@@ -108,13 +128,17 @@ public class TestREST {
                 new AuthScope(this.uri.getHost(), this.uri.getPort()),
                 new UsernamePasswordCredentials(this.username, this.password));
 
-        restURL = prop.getProperty(("rest.test.url"), "http://localhost:8080/lobcder-2.0-SNAPSHOT/rest/");
+        restURL = prop.getProperty(("rest.test.url"), "http://localhost:8080/lobcder/rest/");
         testResourceId = "testResourceId";
         testcol = this.root + testResourceId + "/";
 
+        translatorURL = prop.getProperty(("translator.test.url"), "http://localhost:8080/lobcder/urest/");
 
 
-        ClientConfig clientConfig = new DefaultClientConfig();
+
+        ClientConfig clientConfig = configureClient();
+//        SSLContext ctx = SSLContext.getInstance("SSL");
+//        clientConfig.getProperties().put(HTTPSProperties.PROPERTY_HTTPS_PROPERTIES, new HTTPSProperties(hostnameVerifier, ctx));
         clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
         restClient = Client.create(clientConfig);
         restClient.addFilter(new com.sun.jersey.api.client.filter.HTTPBasicAuthFilter(username, password));
@@ -471,6 +495,88 @@ public class TestREST {
         } finally {
             deleteCollection();
         }
+    }
+
+    @Test
+    public void testTicketTranslator() throws IOException {
+        System.err.println("testTicketTranslator");
+        try {
+            createCollection();
+
+            ClientConfig clientConfig = new DefaultClientConfig();
+            clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
+            Client nonAuthRestClient = Client.create(clientConfig);
+
+            WebResource webResource = nonAuthRestClient.resource(translatorURL);
+            WebResource res = webResource.path("getshort").path(password);
+
+            String shortToken = res.accept(MediaType.TEXT_PLAIN).get(String.class);
+            assertNotNull(shortToken);
+
+
+            Client shortAuthRestClient = Client.create(clientConfig);
+            shortAuthRestClient.addFilter(new com.sun.jersey.api.client.filter.HTTPBasicAuthFilter(username, shortToken));
+
+
+
+
+            webResource = shortAuthRestClient.resource(restURL);
+
+            MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+            params.add("path", "/testResourceId");
+
+            res = webResource.path("items").path("query").queryParams(params);
+            List<LogicalDataWrapped> list = res.accept(MediaType.APPLICATION_XML).
+                    get(new GenericType<List<LogicalDataWrapped>>() {
+            });
+
+            assertNotNull(list);
+            assertFalse(list.isEmpty());
+
+        } finally {
+            deleteCollection();
+        }
+    }
+
+    public static ClientConfig configureClient() {
+        TrustManager[] certs = new TrustManager[]{
+            new X509TrustManager() {
+                @Override
+                public X509Certificate[] getAcceptedIssuers() {
+                    return null;
+                }
+
+                @Override
+                public void checkServerTrusted(X509Certificate[] chain, String authType)
+                        throws CertificateException {
+                }
+
+                @Override
+                public void checkClientTrusted(X509Certificate[] chain, String authType)
+                        throws CertificateException {
+                }
+            }
+        };
+        SSLContext ctx = null;
+        try {
+            ctx = SSLContext.getInstance("TLS");
+            ctx.init(null, certs, new SecureRandom());
+        } catch (java.security.GeneralSecurityException ex) {
+        }
+        HttpsURLConnection.setDefaultSSLSocketFactory(ctx.getSocketFactory());
+        ClientConfig config = new DefaultClientConfig();
+        try {
+            config.getProperties().put(HTTPSProperties.PROPERTY_HTTPS_PROPERTIES, new HTTPSProperties(
+                    new HostnameVerifier() {
+                        @Override
+                        public boolean verify(String hostname, SSLSession session) {
+                            return true;
+                        }
+                    },
+                    ctx));
+        } catch (Exception e) {
+        }
+        return config;
     }
 
     @XmlRootElement

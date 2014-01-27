@@ -1,11 +1,11 @@
 #!/bin/bash
 
-#example: ./averageUploads.sh ~/Downloads/files2 wlan0
+#example: ./averageDownloads.sh http://USER:PASS@localhost:8080/lobcder/dav/Downloads ~/Downloads/files2/ wlan0
 
-srcURL=http://$USER:$PASS@$HOST:8082/lobcder/dav
+srcURL=$1
 dest=file
-testData=$1
-iface=$2
+testData=$2
+iface=$3
 
 lstChar=`echo "$srcURL" | tail -c 2`
 if [ "$lstChar" = "/" ] ;then
@@ -23,7 +23,7 @@ done
 
 wait
 
-sleep 10
+sleep 20
 
 
 

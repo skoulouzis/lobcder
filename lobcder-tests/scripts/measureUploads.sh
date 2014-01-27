@@ -3,11 +3,12 @@
 # example ./measureUploads.sh ./arch.tar eth0
 
 loopNum=5
-srcFilePath=$1
-iface=$2
-multithread=$3
+dest=$1
+srcFilePath=$2
+iface=$3
+multithread=$4
 
-dest="http://alogo:hondos@h0.wf.vlan400.uvalight.net:8082/lobcder/dav/"
+
 
 if [[ -d $srcFilePath ]]; then
   size=`du -sb $srcFilePath | awk '{print $1}'`

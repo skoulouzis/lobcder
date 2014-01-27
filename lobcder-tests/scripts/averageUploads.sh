@@ -1,21 +1,22 @@
 #!/bin/bash
 
-#example: ./averageUploads.sh ~/Downloads/files2 wlan0
+#example: ./averageUploads.sh http://USER:PASS@localhost:8080/lobcder/dav/Downloads ../testData/ wlan0
 
-srcPath=$1
-iface=$2
+dest=$1
+srcPath=$2
+iface=$3
 
-tar -cvf arch.tar $1
+tar -cvf arch.tar $srcPath
 
-./measureUploads.sh ./arch.tar $iface
+./measureUploads.sh $dest ./arch.tar $iface
 mv collectedUpload.csv collectedUpload-singlefile-1.csv
 mv stats.csv stats-singlefile-1.csv
 
-./measureUploads.sh $srcPath $iface
+./measureUploads.sh $dest $srcPath $iface
 mv collectedUpload.csv collectedUpload-multifile-singlethread-1.csv
 mv stats.csv stats-multifile-singlethread-1.csv
 
-./measureUploads.sh $srcPath $iface mmm
+./measureUploads.sh $dest $srcPath $iface mmm
 mv collectedUpload.csv collectedUpload-multifile-multithread-1.csv
 mv stats.csv stats-multifile-multifile-multithread-1.csv
 
