@@ -49,6 +49,7 @@ import javax.ws.rs.core.MediaType;
 import javax.xml.bind.annotation.XmlRootElement;
 import lombok.extern.java.Log;
 import nl.uva.vlet.data.StringUtil;
+import nl.uva.vlet.io.CircularStreamBufferTransferer;
 import org.apache.http.HttpStatus;
 
 /**
@@ -108,6 +109,8 @@ public class WorkerServlet extends HttpServlet {
         Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "got request from : {0}", request.getRemoteAddr());
         if (filePath.length() > 1) {
             localAddrress = request.getLocalAddr();
+            String ip = getIP(localAddrress);
+            localAddrress = ip;
             Path pathAndToken = Path.path(filePath);
 //            token = pathAndToken.getName();
             fileUID = pathAndToken.getParent().toString();
@@ -119,7 +122,7 @@ public class WorkerServlet extends HttpServlet {
                 long startGetPDRI = System.currentTimeMillis();
                 Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "start getPDRI at:{0}", startGetPDRI);
                 PDRI pdri = getPDRI(fileUID);
-                long elapsedGetPDRI = startGetPDRI - System.currentTimeMillis();
+                long elapsedGetPDRI = System.currentTimeMillis() - startGetPDRI;
                 Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, "elapsedGetPDRI: {0}", elapsedGetPDRI);
                 long len;
                 String rangeStr = request.getHeader(Constants.RANGE_HEADER_NAME);
@@ -137,7 +140,9 @@ public class WorkerServlet extends HttpServlet {
                     Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, new NullPointerException());
                     return;
                 } else {
-                    long startTransfer = System.currentTimeMillis();
+                    response.setBufferSize(Constants.BUF_SIZE/20);
+//                    Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "response.getBufferSize(): " + response.getBufferSize() / (1024 * 1024) + "MB");
+
                     OutputStream out = response.getOutputStream();
                     if (range != null) {
                         range = Range.parse(rangeStr.split("=")[1]);
@@ -147,9 +152,6 @@ public class WorkerServlet extends HttpServlet {
                     } else {
                         transfer(pdri, out, false);
                     }
-                    long elapsedTransfer = startTransfer - System.currentTimeMillis();
-                    Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, "elapsedTransfer: {0}", elapsedTransfer);
-
                     long elapsed = System.currentTimeMillis() - start;
                     if (elapsed <= 0) {
                         elapsed = 1;
@@ -272,12 +274,15 @@ public class WorkerServlet extends HttpServlet {
                 logicalData = res.accept(MediaType.APPLICATION_XML).
                         get(new GenericType<LogicalDataWrapped>() {
                 });
+
                 if (logicalData == null) {
-                    Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, "logicalData from " + res.getURI() + " is NULL!!!!!!!!!!");
+                    Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, "logicalData from {0} is NULL!!!!!!!!!!", res.getURI());
                 }
                 logicalDataCache.put(fileUID, logicalData);
 //                long elapsedGetLogicalData = System.currentTimeMillis() - startGetLogicalData;
 //                Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "elapsedGetLogicalData: {0}", elapsedGetLogicalData);
+            } else {
+                Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "Cache hit. fileUID: {0}", fileUID);
             }
 
             int count = 0;
@@ -354,39 +359,20 @@ public class WorkerServlet extends HttpServlet {
     }
 
     private void transfer(PDRI pdri, OutputStream out, boolean withCircularStream) throws IOException {
+        long startTransfer = System.currentTimeMillis();
         InputStream in = null;
-//        OutputStream cacheFileOut = null;
         try {
             in = pdri.getData();
-//            int bufferSize;
-//            if (pdri.getLength() < Constants.BUF_SIZE) {
-//                bufferSize = (int) pdri.getLength();
-//            } else {
-//                bufferSize = Constants.BUF_SIZE;
-//            }
-//            Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "bufferSize: {0}  MB ", (bufferSize / (1024 * 1024)) );
-//            if (!pdri.getEncrypted() && withCircularStream) {
-//                CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((bufferSize), in, out);
-//                cBuff.startTransfer(new Long(-1));
-//                cBuff.setStop(withCircularStream);
-//            } else 
 
             if (!pdri.getEncrypted()) {
-                int read;
-//                if (cacheFileID == null || !cacheFileID.equals(fileUID) && !pdri.getURI().startsWith("file")) {
-//                    if (!baseDir.exists()) {
-//                        baseDir.mkdirs();
-//                    }
-////                    cacheFileOut = new FileOutputStream(cacheFile);
+                Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "bufferSize: {0}  MB ", (Constants.BUF_SIZE / (1024 * 1024)));
+                CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((Constants.BUF_SIZE), in, out);
+                cBuff.startTransfer(new Long(-1));
+//                int read;
+//                byte[] copyBuffer = new byte[bufferSize];
+//                while ((read = in.read(copyBuffer, 0, copyBuffer.length)) != -1) {
+//                    out.write(copyBuffer, 0, read);
 //                }
-                byte[] copyBuffer = new byte[Constants.BUF_SIZE];
-                while ((read = in.read(copyBuffer, 0, copyBuffer.length)) != -1) {
-                    out.write(copyBuffer, 0, read);
-//                    if (cacheFileID == null || !cacheFileID.equals(fileUID) && cacheFileOut != null) {
-//                        cacheFileOut.write(copyBuffer, 0, read);
-//                    }
-                }
-//                cacheFileID = fileUID;
             }
             numOfTries = 0;
             sleepTime = 2;
@@ -431,13 +417,17 @@ public class WorkerServlet extends HttpServlet {
                 //
             }
         }
+
+        long elapsedTransfer = System.currentTimeMillis() - startTransfer;
+        Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "elapsedTransfer: {0}  msec ", (elapsedTransfer));
     }
 
     private PDRIDesc selectBestPDRI(Set<PDRIDesc> pdris) throws URISyntaxException, UnknownHostException {
         if (pdris.size() == 1) {
             PDRIDesc p = pdris.iterator().next();
             URI uri = new URI(p.resourceUrl);
-            if (uri.getHost() != null && uri.getHost().equals(localAddrress)
+            String resourceIP = getIP(uri.getHost());
+            if (resourceIP != null && uri.getHost().equals(localAddrress)
                     || uri.getHost().equals("localhost")
                     || uri.getHost().equals("127.0.0.1")) {
                 String resURL = p.resourceUrl.replaceFirst(uri.getScheme(), "file");
@@ -451,7 +441,9 @@ public class WorkerServlet extends HttpServlet {
             if (uri.getScheme().equals("file")) {
                 return p;
             }
-            if (uri.getHost().equals(localAddrress)) {
+            Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "PDRI_host: {0} localAddrress: {1}", new Object[]{uri.getHost(), localAddrress});
+            String resourceIP = getIP(uri.getHost());
+            if (resourceIP.equals(localAddrress)) {
                 String resURL = p.resourceUrl.replaceFirst(uri.getScheme(), "file");
                 p.resourceUrl = resURL;
                 return p;
@@ -504,6 +496,14 @@ public class WorkerServlet extends HttpServlet {
         PDRIDesc[] array = pdris.toArray(new PDRIDesc[pdris.size()]);
         PDRIDesc res = array[index];
         return res;
+    }
+
+    private String getIP(String hostName) {
+        try {
+            return InetAddress.getByName(hostName).getHostAddress();
+        } catch (UnknownHostException ex) {
+            return hostName;
+        }
     }
 
     @XmlRootElement
