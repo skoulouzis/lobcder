@@ -5,6 +5,7 @@
 package nl.uva.cs.lobcder.frontend;
 
 import io.milton.common.Path;
+import io.milton.http.Request;
 import io.milton.http.Request.Method;
 import io.milton.servlet.MiltonFilter;
 import java.io.IOException;
@@ -30,6 +31,7 @@ import nl.uva.cs.lobcder.optimization.FileAccessPredictor;
 import nl.uva.cs.lobcder.optimization.LobState;
 import nl.uva.cs.lobcder.optimization.MyTask;
 import nl.uva.cs.lobcder.util.CatalogueHelper;
+import nl.uva.cs.lobcder.util.PropertiesHelper;
 import org.apache.commons.codec.binary.Base64;
 
 /**
@@ -56,20 +58,23 @@ public class MyFilter extends MiltonFilter {
         String method = ((HttpServletRequest) req).getMethod();
         StringBuffer reqURL = ((HttpServletRequest) req).getRequestURL();
 
+        if (PropertiesHelper.doPrediction()) {
+            long startPredict = System.currentTimeMillis();
+            predict(Request.Method.valueOf(method), reqURL.toString());
+            long elapsedPredict = System.currentTimeMillis() - startPredict;
+            log.log(Level.INFO, "elapsedPredict: {0}", elapsedPredict);
+        }
 
-
-//        long startPredict = System.currentTimeMillis();
-//        predict(Request.Method.valueOf(method), reqURL.toString());
-//        long elapsedPredict = System.currentTimeMillis() - startPredict;
-//        log.log(Level.INFO, "elapsedPredict: {0}", elapsedPredict);
 
         super.doFilter(req, resp, fc);
+
+
+
         double elapsed = System.currentTimeMillis() - start;
 
         String userAgent = ((HttpServletRequest) req).getHeader("User-Agent");
 
         String from = ((HttpServletRequest) req).getRemoteAddr();
-//        String user = ((HttpServletRequest) req).getRemoteUser();
         int contentLen = ((HttpServletRequest) req).getContentLength();
         String contentType = ((HttpServletRequest) req).getContentType();
 
@@ -79,18 +84,21 @@ public class MyFilter extends MiltonFilter {
             userNpasswd = authorizationHeader.split("Basic ")[1];
         }
 
-        RequestWapper my = new RequestWapper();
-        my.setMethod(method);
-        my.setContentLength(contentLen);
-        my.setContentType(contentType);
-        my.setTimeStamp(System.currentTimeMillis());
-        my.setElapsed(elapsed);
-        my.setRemoteAddr(from);
-        my.setRequestURL(((HttpServletRequest) req).getRequestURL().toString());
-        my.setUserAgent(userAgent);
-        my.setUserNpasswd(getUserName((HttpServletRequest) req));
-        queue.add(my);
-        startRecorder();
+        if (PropertiesHelper.doRequestLoging()) {
+            RequestWapper my = new RequestWapper();
+            my.setMethod(method);
+            my.setContentLength(contentLen);
+            my.setContentType(contentType);
+            my.setTimeStamp(System.currentTimeMillis());
+            my.setElapsed(elapsed);
+            my.setRemoteAddr(from);
+            my.setRequestURL(((HttpServletRequest) req).getRequestURL().toString());
+            my.setUserAgent(userAgent);
+            my.setUserNpasswd(getUserName((HttpServletRequest) req));
+            queue.add(my);
+            startRecorder();
+        }
+
 
         log.log(Level.INFO, "Req_Source: {0} Method: {1} Content_Len: {2} Content_Type: {3} Elapsed_Time: {4} sec EncodedUser: {5} UserAgent: {6}", new Object[]{from, method, contentLen, contentType, elapsed / 1000.0, userNpasswd, userAgent});
 //        try (Connection connection = getCatalogue().getConnection()) {

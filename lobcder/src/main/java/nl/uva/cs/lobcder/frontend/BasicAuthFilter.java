@@ -41,6 +41,10 @@ public class BasicAuthFilter implements Filter {
         final HttpServletResponse httpResponse = (HttpServletResponse) response;
 
         final String autheader = httpRequest.getHeader("Authorization");
+        
+        
+//        log.log(Level.INFO, "Auth for rest. autheader: "+autheader);
+        
         if (autheader != null) {
 
             final int index = autheader.indexOf(' ');
@@ -86,7 +90,7 @@ public class BasicAuthFilter implements Filter {
 //                        break;
 //                    }
 //                }
-
+//                log.log(Level.INFO, "Auth for rest. User: "+uname +" token: "+token);
                 if (PropertiesHelper.doRedirectGets() && workers != null
                         && workers.size() > 0 && uname.startsWith("worker-")) {
                     if (authWorker == null) {
