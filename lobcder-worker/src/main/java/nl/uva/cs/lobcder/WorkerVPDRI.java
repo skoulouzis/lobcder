@@ -12,6 +12,7 @@ import java.net.UnknownHostException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.crypto.BadPaddingException;
@@ -61,6 +62,7 @@ public class WorkerVPDRI implements PDRI {
     private int sleepTime = 2;
     private boolean destroyCert;
     private String hostName;
+    private final Integer bufferSize;
 
     public WorkerVPDRI(String fileName, Long storageSiteId, String resourceUrl,
             String username, String password, boolean encrypt, BigInteger keyInt,
@@ -80,6 +82,13 @@ public class WorkerVPDRI implements PDRI {
 //            this.resourceUrl = resourceUrl;
             Logger.getLogger(WorkerVPDRI.class.getName()).log(Level.FINE, "fileName: {0}, storageSiteId: {1}, username: {2}, password: {3}, VRL: {4}", new Object[]{fileName, storageSiteId, username, password, vrl});
             initVFS();
+
+
+            ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+            InputStream in = classLoader.getResourceAsStream("/lobcder-worker.properties");
+            Properties prop = Util.getTestProperties(in);
+            in.close();
+            bufferSize = Integer.valueOf(prop.getProperty(("buffer.size"), "4194304"));
         } catch (Exception ex) {
             throw new IOException(ex);
         }
@@ -156,8 +165,8 @@ public class WorkerVPDRI implements PDRI {
             file = (VFile) getVfsClient().openLocation(vrl);
             doCopy(file, range, out, getEncrypted());
         } catch (Exception ex) {
-            if (ex instanceof ResourceNotFoundException || 
-                    (ex.getMessage() !=null && ex.getMessage().contains("Couldn open location. Get NULL object for location:"))) {
+            if (ex instanceof ResourceNotFoundException
+                    || (ex.getMessage() != null && ex.getMessage().contains("Couldn open location. Get NULL object for location:"))) {
                 try {
 //                    VRL assimilationVRL = new VRL(resourceUrl).append(URLEncoder.encode(fileName, "UTF-8"));
                     VRL assimilationVRL = new VRL(resourceUrl).append(fileName);
@@ -206,10 +215,10 @@ public class WorkerVPDRI implements PDRI {
         InputStream in = null;
         int buffSize;
         Long start = range.getStart();
-        if (len <= Constants.BUF_SIZE) {
+        if (len <= bufferSize) {
             buffSize = (int) len;
         } else {
-            buffSize = Constants.BUF_SIZE;
+            buffSize = bufferSize;
         }
         DesEncrypter en = null;
         if (decript) {
@@ -319,7 +328,7 @@ public class WorkerVPDRI implements PDRI {
             getVfsClient().createFile(vrl, true);
             out = getVfsClient().getFile(vrl).getOutputStream();
             if (!getEncrypted()) {
-                CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((Constants.BUF_SIZE), in, out);
+                CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((bufferSize), in, out);
                 cBuff.startTransfer(-1L);
 //                int read;
 //                byte[] copyBuffer = new byte[Constants.BUF_SIZE];

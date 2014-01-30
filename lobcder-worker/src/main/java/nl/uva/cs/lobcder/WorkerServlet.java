@@ -76,14 +76,21 @@ public class WorkerServlet extends HttpServlet {
 //    private String cacheFileID;
     private String fileUID;
     private String localAddrress;
+    private final Integer bufferSize;
+    private final Boolean setBufferSize;
 
     public WorkerServlet() throws FileNotFoundException, IOException, NoSuchAlgorithmException {
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-        InputStream in = classLoader.getResourceAsStream("/auth.properties");
+        InputStream in = classLoader.getResourceAsStream("/lobcder-worker.properties");
 
 //        String propBasePath = File.separator + "test.proprties";
         Properties prop = Util.getTestProperties(in);
         in.close();
+
+
+        bufferSize = Integer.valueOf(prop.getProperty(("buffer.size"), "4194304"));
+
+        setBufferSize = Boolean.valueOf(prop.getProperty(("response.set.buffer.size"), "false"));
 
 
         restURL = prop.getProperty(("rest.url"), "http://localhost:8080/lobcder/rest/");
@@ -140,7 +147,9 @@ public class WorkerServlet extends HttpServlet {
                     Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, new NullPointerException());
                     return;
                 } else {
-                    response.setBufferSize(Constants.BUF_SIZE/20);
+                    if (setBufferSize) {
+                        response.setBufferSize(bufferSize / 20);
+                    }
 //                    Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "response.getBufferSize(): " + response.getBufferSize() / (1024 * 1024) + "MB");
 
                     OutputStream out = response.getOutputStream();
@@ -365,8 +374,8 @@ public class WorkerServlet extends HttpServlet {
             in = pdri.getData();
 
             if (!pdri.getEncrypted()) {
-                Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "bufferSize: {0}  MB ", (Constants.BUF_SIZE / (1024 * 1024)));
-                CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((Constants.BUF_SIZE), in, out);
+                Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "bufferSize: {0}  MB ", (bufferSize / (1024 * 1024)));
+                CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((bufferSize), in, out);
                 cBuff.startTransfer(new Long(-1));
 //                int read;
 //                byte[] copyBuffer = new byte[bufferSize];

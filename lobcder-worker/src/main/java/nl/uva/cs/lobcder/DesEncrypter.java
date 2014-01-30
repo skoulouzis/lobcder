@@ -13,6 +13,7 @@ import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.AlgorithmParameterSpec;
+import java.util.Properties;
 import java.util.Random;
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -32,6 +33,7 @@ public class DesEncrypter {
     private final Cipher ecipher;
     private final Cipher dcipher;
     private Key key = null;
+    private final Integer bufferSize;
 
     public DesEncrypter(BigInteger keyInt) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, InvalidAlgorithmParameterException, IOException {
         byte[] iv = new byte[]{(byte) 0x8E, 0x12, 0x39, (byte) 0x9C, 0x07, 0x72, 0x6F, 0x5A};
@@ -56,6 +58,12 @@ public class DesEncrypter {
 
         ecipher.init(Cipher.ENCRYPT_MODE, key, paramSpec);
         dcipher.init(Cipher.DECRYPT_MODE, key, paramSpec);
+
+        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+        InputStream in = classLoader.getResourceAsStream("/lobcder-worker.properties");
+        Properties prop = Util.getTestProperties(in);
+        in.close();
+        bufferSize = Integer.valueOf(prop.getProperty(("buffer.size"), "4194304"));
     }
 
     public byte[] encrypt(byte[] data) throws IllegalBlockSizeException, BadPaddingException {
@@ -68,7 +76,7 @@ public class DesEncrypter {
         try {
             int read;
             cipherOut = new CipherOutputStream(out, ecipher);
-            byte[] copyBuffer = new byte[Constants.BUF_SIZE];
+            byte[] copyBuffer = new byte[bufferSize];
             while ((read = in.read(copyBuffer, 0, copyBuffer.length)) != -1) {
                 cipherOut.write(copyBuffer, 0, read);
             }
@@ -117,7 +125,7 @@ public class DesEncrypter {
         try {
             int read;
             cipherIn = new CipherInputStream(in, dcipher);
-            byte[] copyBuffer = new byte[Constants.BUF_SIZE];
+            byte[] copyBuffer = new byte[bufferSize];
             while ((read = cipherIn.read(copyBuffer, 0, copyBuffer.length)) != -1) {
                 out.write(copyBuffer, 0, read);
             }
@@ -164,13 +172,11 @@ public class DesEncrypter {
         BigInteger bigIntKey = new BigInteger(63, 0, new Random());
         return bigIntKey;
     }
-
 //    private void saveKey(Key key, File file) throws IOException {
 //        byte[] encoded = key.getEncoded();
 //        String data = new BigInteger(1, encoded).toString(16);
 //        writeStringToFile(file, data);
 //    }
-
 //    private SecretKey loadKey(File file) throws IOException {
 //        String hex = new String(readFileToByteArray(file));
 //        byte[] encoded = new BigInteger(hex, 16).toByteArray();

@@ -13,6 +13,7 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import nl.uva.vlet.Global;
@@ -30,6 +31,8 @@ import org.apache.commons.io.FileUtils;
  * @author S. Koulouzis
  */
 public class WorkerGridHelper {
+
+    private static Integer bufferSize;
 
     public static void initGlobalVFS() throws Exception {
 
@@ -65,6 +68,13 @@ public class WorkerGridHelper {
             }
             Global.init();
         }
+
+
+        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+        InputStream in = classLoader.getResourceAsStream("/lobcder-worker.properties");
+        Properties prop = Util.getTestProperties(in);
+        in.close();
+        bufferSize = Integer.valueOf(prop.getProperty(("buffer.size"), "4194304"));
     }
 
     public static String getProxyAsBase64String() throws FileNotFoundException, IOException {
@@ -74,8 +84,8 @@ public class WorkerGridHelper {
             fis = new FileInputStream(Constants.PROXY_FILE);
             sb = new StringBuilder();
 
-            int buffSize = Constants.BUF_SIZE;
-            if (new File(Constants.PROXY_FILE).length() < Constants.BUF_SIZE) {
+            int buffSize = bufferSize;
+            if (new File(Constants.PROXY_FILE).length() < bufferSize) {
                 buffSize = (int) new File(Constants.PROXY_FILE).length();
             }
             byte[] copyBuffer = new byte[buffSize];
@@ -137,7 +147,7 @@ public class WorkerGridHelper {
             try {
                 out = new FileOutputStream(vomsFile);
                 int read;
-                byte[] copyBuffer = new byte[Constants.BUF_SIZE];
+                byte[] copyBuffer = new byte[bufferSize];
                 while ((read = in.read(copyBuffer, 0, copyBuffer.length)) != -1) {
                     out.write(copyBuffer, 0, read);
                 }
@@ -164,7 +174,7 @@ public class WorkerGridHelper {
                 try {
                     in = new FileInputStream(src);
                     out = new FileOutputStream(f.getAbsoluteFile() + "/" + src.getName());
-                    byte[] copyBuffer = new byte[Constants.BUF_SIZE];
+                    byte[] copyBuffer = new byte[bufferSize];
                     int read;
                     while ((read = in.read(copyBuffer, 0, copyBuffer.length)) != -1) {
                         out.write(copyBuffer, 0, read);
