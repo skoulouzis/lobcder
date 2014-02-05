@@ -267,7 +267,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
             Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, ex);
         }
         WebDataDirResource.log.log(Level.INFO, msg);
-        SpeedLogger.logSpeed(msg);
+//        SpeedLogger.logSpeed(msg);
         return resource;
     }
 
