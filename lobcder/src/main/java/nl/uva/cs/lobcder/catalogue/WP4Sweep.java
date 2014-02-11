@@ -118,6 +118,7 @@ class WP4Sweep implements Runnable {
             ClientResponse response = webResource.type(MediaType.APPLICATION_XML).post(ClientResponse.class, resourceMetadata);
             if (response.getClientResponseStatus() == ClientResponse.Status.OK) {
                 Node uidNode = (Node) expression.evaluate(new InputSource(response.getEntityInputStream()), XPathConstants.NODE);
+                log.log(Level.FINE, "Send metadata to uri: {0} author: {1} category: {2} description: {3} global_id: {4} licence: {5} name: {6} rating: {7} semantic_annotations: {8} status: {9} tags: {10} type: {11}", new Object[]{uri, resourceMetadata.author, resourceMetadata.category, resourceMetadata.description, resourceMetadata.global_id, resourceMetadata.licence, resourceMetadata.name, resourceMetadata.rating, resourceMetadata.semantic_annotations, resourceMetadata.status, resourceMetadata.tags, resourceMetadata.type});
                 return uidNode.getTextContent();
             } else {
                 throw new Exception(response.getClientResponseStatus().toString());
@@ -131,12 +132,14 @@ class WP4Sweep implements Runnable {
             if (response.getClientResponseStatus() != ClientResponse.Status.OK) {
                 throw new Exception(response.getClientResponseStatus().toString());
             }
+            log.log(Level.FINE, "Send metadata to uri: {0} author: {1} category: {2} description: {3} global_id: {4} licence: {5} name: {6} rating: {7} semantic_annotations: {8} status: {9} tags: {10} type: {11}", new Object[]{uri, resourceMetadata.author, resourceMetadata.category, resourceMetadata.description, resourceMetadata.global_id, resourceMetadata.licence, resourceMetadata.name, resourceMetadata.rating, resourceMetadata.semantic_annotations, resourceMetadata.status, resourceMetadata.tags, resourceMetadata.type});
         }
 
         @Override
         public void delete(String global_id) throws Exception {
             WebResource webResource = client.resource(uri);
             webResource.path(global_id).type(MediaType.APPLICATION_XML).delete();
+            log.log(Level.FINE, "Deleting metadata. global_id: {0}", global_id);
         }
     }
 
@@ -257,23 +260,23 @@ class WP4Sweep implements Runnable {
 
     @Override
     public void run() {
-        
-            try (Connection connection = datasource.getConnection()) {
-                connection.setAutoCommit(true);
-                create(connection, connector);
-                update(connection, connector);
-                delete(connection, connector);
-            } catch (Exception ex) {
-                if (ex instanceof UnknownHostException) {
+
+        try (Connection connection = datasource.getConnection()) {
+            connection.setAutoCommit(true);
+            create(connection, connector);
+            update(connection, connector);
+            delete(connection, connector);
+        } catch (Exception ex) {
+            if (ex instanceof UnknownHostException) {
 //                    unknownHostExceptionCounter++;
 //                    if (unknownHostExceptionCounter >= Constants.RECONNECT_NTRY) {
 //                        runSweeper = false;
 //                    }
-                } else {
-                    Logger.getLogger(WP4Sweep.class.getName()).log(Level.SEVERE, null, ex);
-                }
+            } else {
+                Logger.getLogger(WP4Sweep.class.getName()).log(Level.SEVERE, null, ex);
             }
-        
+        }
+
 
     }
 }
