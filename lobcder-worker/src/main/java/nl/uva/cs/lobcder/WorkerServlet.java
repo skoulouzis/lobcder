@@ -13,12 +13,15 @@ import com.sun.jersey.api.json.JSONConfiguration;
 import com.sun.jersey.client.urlconnection.HTTPSProperties;
 import io.milton.common.Path;
 import io.milton.http.Range;
+import java.io.BufferedInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.math.BigInteger;
 import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
@@ -27,6 +30,7 @@ import java.security.SecureRandom;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -57,7 +61,7 @@ import org.apache.http.HttpStatus;
  * @author S. Koulouzis
  */
 @Log
-public class WorkerServlet extends HttpServlet {
+public final class WorkerServlet extends HttpServlet {
 
 //    private Client restClient;
     private String restURL;
@@ -75,9 +79,10 @@ public class WorkerServlet extends HttpServlet {
 //    private File cacheFile;
 //    private String cacheFileID;
     private String fileUID;
-    private String localAddrress;
+//    private String localAddrress;
     private final Integer bufferSize;
-    private final Boolean setBufferSize;
+    private final Boolean setResponseBufferSize;
+    private boolean useCircularBuffer;
 
     public WorkerServlet() throws FileNotFoundException, IOException, NoSuchAlgorithmException {
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
@@ -90,7 +95,8 @@ public class WorkerServlet extends HttpServlet {
 
         bufferSize = Integer.valueOf(prop.getProperty(("buffer.size"), "4194304"));
 
-        setBufferSize = Boolean.valueOf(prop.getProperty(("response.set.buffer.size"), "false"));
+        setResponseBufferSize = Boolean.valueOf(prop.getProperty(("response.set.buffer.size"), "false"));
+        useCircularBuffer = Boolean.valueOf(prop.getProperty(("use.circular.buffer"), "true"));
 
 
         restURL = prop.getProperty(("rest.url"), "http://localhost:8080/lobcder/rest/");
@@ -115,9 +121,9 @@ public class WorkerServlet extends HttpServlet {
         String filePath = request.getPathInfo();
         Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "got request from : {0}", request.getRemoteAddr());
         if (filePath.length() > 1) {
-            localAddrress = request.getLocalAddr();
-            String ip = getIP(localAddrress);
-            localAddrress = ip;
+//            localAddrress = request.getLocalAddr();
+//            String ip = getIP(localAddrress);
+//            localAddrress = ip;
             Path pathAndToken = Path.path(filePath);
 //            token = pathAndToken.getName();
             fileUID = pathAndToken.getParent().toString();
@@ -147,10 +153,10 @@ public class WorkerServlet extends HttpServlet {
                     Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, new NullPointerException());
                     return;
                 } else {
-                    if (setBufferSize) {
-                        response.setBufferSize(bufferSize / 20);
+                    if (setResponseBufferSize) {
+                        response.setBufferSize(bufferSize);
                     }
-//                    Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "response.getBufferSize(): " + response.getBufferSize() / (1024 * 1024) + "MB");
+                    Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "response.getBufferSize(): {0}MB", response.getBufferSize() / (1024.0 * 1024.0));
 
                     OutputStream out = response.getOutputStream();
                     if (range != null) {
@@ -265,12 +271,12 @@ public class WorkerServlet extends HttpServlet {
                     restClient = Client.create(clientConfig);
                 }
                 restClient.removeAllFilters();
-                String hostName = null;
-                try {
-                    hostName = InetAddress.getLocalHost().getHostName();
-                } catch (java.net.UnknownHostException ex) {
-                    hostName = localAddrress;
-                }
+//                String hostName = null;
+//                try {
+//                    hostName = InetAddress.getLocalHost().getHostName();
+//                } catch (java.net.UnknownHostException ex) {
+//                    hostName = localAddrress;
+//                }
                 //restClient.addFilter(new com.sun.jersey.api.client.filter.HTTPBasicAuthFilter("worker-" + hostName, token));
                 restClient.addFilter(new com.sun.jersey.api.client.filter.HTTPBasicAuthFilter("worker-", token));
                 //restClient.addFilter(new com.sun.jersey.api.client.filter.HTTPBasicAuthFilter(uname, token));
@@ -284,9 +290,6 @@ public class WorkerServlet extends HttpServlet {
                         get(new GenericType<LogicalDataWrapped>() {
                 });
 
-                if (logicalData == null) {
-                    Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, "logicalData from {0} is NULL!!!!!!!!!!", res.getURI());
-                }
                 logicalDataCache.put(fileUID, logicalData);
 //                long elapsedGetLogicalData = System.currentTimeMillis() - startGetLogicalData;
 //                Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "elapsedGetLogicalData: {0}", elapsedGetLogicalData);
@@ -337,7 +340,7 @@ public class WorkerServlet extends HttpServlet {
             sleepTime = 2;
             Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "Selected pdri: {0}", pdriDesc.resourceUrl);
             WorkerVPDRI w = new WorkerVPDRI(pdriDesc.name, pdriDesc.id, pdriDesc.resourceUrl, pdriDesc.username, pdriDesc.password, pdriDesc.encrypt, BigInteger.valueOf(Long.valueOf(pdriDesc.key)), false);
-            w.setHostName(this.localAddrress);
+//            w.setHostName(this.localAddrress);
             //        return new WorkerVPDRI(pdriDesc.name , pdriDesc.id, pdriDesc.resourceUrl, pdriDesc.username, pdriDesc.password, pdriDesc.encrypt, BigInteger.ZERO, false);
             return w;
         } catch (Exception ex) {
@@ -371,17 +374,19 @@ public class WorkerServlet extends HttpServlet {
         long startTransfer = System.currentTimeMillis();
         InputStream in = null;
         try {
-            in = pdri.getData();
-
+            in = new BufferedInputStream(pdri.getData(), bufferSize);
             if (!pdri.getEncrypted()) {
-                Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "bufferSize: {0}  MB ", (bufferSize / (1024 * 1024)));
-                CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((bufferSize), in, out);
-                cBuff.startTransfer(new Long(-1));
-//                int read;
-//                byte[] copyBuffer = new byte[bufferSize];
-//                while ((read = in.read(copyBuffer, 0, copyBuffer.length)) != -1) {
-//                    out.write(copyBuffer, 0, read);
-//                }
+                if (useCircularBuffer) {
+                    CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((bufferSize), in, out);
+                    cBuff.startTransfer(new Long(-1));
+                } else {
+                    int read;
+                    byte[] copyBuffer = new byte[bufferSize];
+                    while ((read = in.read(copyBuffer, 0, copyBuffer.length)) != -1) {
+                        out.write(copyBuffer, 0, read);
+                    }
+                }
+
             }
             numOfTries = 0;
             sleepTime = 2;
@@ -431,18 +436,23 @@ public class WorkerServlet extends HttpServlet {
         Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "elapsedTransfer: {0}  msec ", (elapsedTransfer));
     }
 
-    private PDRIDesc selectBestPDRI(Set<PDRIDesc> pdris) throws URISyntaxException, UnknownHostException {
+    private PDRIDesc selectBestPDRI(Set<PDRIDesc> pdris) throws URISyntaxException, UnknownHostException, SocketException {
         if (pdris.size() == 1) {
             PDRIDesc p = pdris.iterator().next();
             URI uri = new URI(p.resourceUrl);
             String resourceIP = getIP(uri.getHost());
-            if (resourceIP != null && uri.getHost().equals(localAddrress)
-                    || uri.getHost().equals("localhost")
-                    || uri.getHost().equals("127.0.0.1")) {
-                String resURL = p.resourceUrl.replaceFirst(uri.getScheme(), "file");
-                p.resourceUrl = resURL;
+            List<String> ips = getAllIPs();
+            for (String i : ips) {
+                Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, "Checking IP: {0}", i);
+                if (resourceIP != null && resourceIP.equals(i)
+                        || uri.getHost().equals("localhost")
+                        || uri.getHost().equals("127.0.0.1")) {
+                    String resURL = p.resourceUrl.replaceFirst(uri.getScheme(), "file");
+                    p.resourceUrl = resURL;
+                }
+                return p;
             }
-            return p;
+
         }
 
         for (PDRIDesc p : pdris) {
@@ -450,13 +460,17 @@ public class WorkerServlet extends HttpServlet {
             if (uri.getScheme().equals("file")) {
                 return p;
             }
-            Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "PDRI_host: {0} localAddrress: {1}", new Object[]{uri.getHost(), localAddrress});
             String resourceIP = getIP(uri.getHost());
-            if (resourceIP.equals(localAddrress)) {
-                String resURL = p.resourceUrl.replaceFirst(uri.getScheme(), "file");
-                p.resourceUrl = resURL;
-                return p;
+            List<String> ips = getAllIPs();
+            for (String i : ips) {
+                Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, "Checking IP: {0}", i);
+                if (resourceIP.equals(i)) {
+                    String resURL = p.resourceUrl.replaceFirst(uri.getScheme(), "file");
+                    p.resourceUrl = resURL;
+                    return p;
+                }
             }
+
         }
         if (weightPDRIMap.isEmpty() || weightPDRIMap.size() < pdris.size()) {
             //Just return one at random;
@@ -513,6 +527,21 @@ public class WorkerServlet extends HttpServlet {
         } catch (UnknownHostException ex) {
             return hostName;
         }
+    }
+
+    private List<String> getAllIPs() throws UnknownHostException, SocketException {
+//        InetAddress localhost = InetAddress.getLocalHost();
+//        InetAddress[] allMyIps = InetAddress.getAllByName(localhost.getCanonicalHostName());
+        List<String> ips = new ArrayList<String>();
+        for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements();) {
+            NetworkInterface intf = en.nextElement();
+            Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "intf.getName(): " + intf.getName() + " intf.getDisplayName():" + intf.getDisplayName());
+            for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements();) {
+                InetAddress next = enumIpAddr.nextElement();
+                ips.add(next.getHostAddress());
+            }
+        }
+        return ips;
     }
 
     @XmlRootElement

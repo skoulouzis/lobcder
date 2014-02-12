@@ -9,6 +9,8 @@ import java.io.*;
 import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.nio.MappedByteBuffer;
+import java.nio.channels.FileChannel;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -72,6 +74,7 @@ public class WorkerVPDRI implements PDRI {
             this.resourceUrl = resourceUrl;
             String encoded = VRL.encode(fileName);
             vrl = new VRL(resourceUrl).appendPath(baseDir).append(encoded);
+
 //            vrl = new VRL(resourceUrl).appendPath(baseDir).append(URLEncoder.encode(fileName, "UTF-8").replace("+", "%20"));
             this.storageSiteId = storageSiteId;
             this.username = username;
@@ -81,8 +84,9 @@ public class WorkerVPDRI implements PDRI {
             this.doChunked = doChunkUpload;
 //            this.resourceUrl = resourceUrl;
             Logger.getLogger(WorkerVPDRI.class.getName()).log(Level.FINE, "fileName: {0}, storageSiteId: {1}, username: {2}, password: {3}, VRL: {4}", new Object[]{fileName, storageSiteId, username, password, vrl});
-            initVFS();
-
+            if (vrl.getScheme().equals("file")) {
+                initVFS();
+            }
 
             ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
             InputStream in = classLoader.getResourceAsStream("/lobcder-worker.properties");
@@ -290,8 +294,13 @@ public class WorkerVPDRI implements PDRI {
         InputStream in = null;
         VFile file;
         try {
-            file = (VFile) getVfsClient().openLocation(vrl);
-            in = file.getInputStream();
+            //skip v-let 
+            if (vrl.getScheme().equals("file")) {
+                in =  new FileInputStream(vrl.getPath());
+            } else {
+                file = (VFile) getVfsClient().openLocation(vrl);
+                in = file.getInputStream();
+            }
         } catch (Exception ex) {
             if (ex.getMessage().contains("Couldn't create new channel to") || ex instanceof nl.uva.vlet.exception.ResourceNotFoundException) {
                 throw new IOException(ex);
