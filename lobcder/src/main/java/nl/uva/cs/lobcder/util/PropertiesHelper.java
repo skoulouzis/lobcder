@@ -11,10 +11,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -108,9 +111,9 @@ public class PropertiesHelper {
         return Boolean.valueOf(getProperties().getProperty("get.redirect", "false"));
     }
 
-    public static boolean doRemoteAuth() throws IOException {
-        return Boolean.valueOf(getProperties().getProperty("auth.use.remote", "true"));
-    }
+//    public static boolean doRemoteAuth() throws IOException {
+//        return Boolean.valueOf(getProperties().getProperty("auth.use.remote", "true"));
+//    }
 
     public static String getMetadataReposetoryURL() throws IOException {
         return getProperties().getProperty("metadata.reposetory.url", "http://vphshare.atosresearch.eu/metadata-retrieval/rest/metadata");
@@ -120,9 +123,9 @@ public class PropertiesHelper {
         return Boolean.valueOf(getProperties().getProperty("use.metadata.repository", "true"));
     }
 
-    public static String getAuthRemoteURL() throws IOException {
-        return getProperties().getProperty("auth.remote.url", "https://jump.vph-share.eu/validatetkt/?ticket=");
-    }
+//    public static String getAuthRemoteURL() throws IOException {
+//        return getProperties().getProperty("auth.remote.url", "https://jump.vph-share.eu/validatetkt/?ticket=");
+//    }
 
     public static int getDefaultRowLimit() throws IOException {
         return Integer.valueOf(getProperties().getProperty("default.rowlimit", "500"));
@@ -162,5 +165,9 @@ public class PropertiesHelper {
 
     public static boolean doRequestLoging() throws IOException {
         return Boolean.valueOf(getProperties().getProperty("do.request.loging", "true"));
+    }
+
+    public static Set<String> getAllowedOrigins() throws IOException {
+        return new HashSet<>(Arrays.asList (getProperties().getProperty("allowed.origins").split(",")));
     }
 }
