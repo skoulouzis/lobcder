@@ -63,10 +63,10 @@ public class NewQoSPlannerClient {
         ClientResponse response = res.type("application/json")
                 .post(ClientResponse.class, input);
 
-        if (response.getStatus() != 201) {
-            throw new RuntimeException("Failed : HTTP error code : "
-                    + response.getStatus());
-        }
+//        if (response.getStatus() != 200) {
+//            throw new RuntimeException("Failed : HTTP error code : "
+//                    + response.getStatus());
+//        }
     }
 
 //    @Data
