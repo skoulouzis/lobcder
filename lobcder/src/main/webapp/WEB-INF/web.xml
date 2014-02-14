@@ -67,7 +67,7 @@
     </filter>
     
     
-    <filter>
+<!--    <filter>
         <filter-name>CorsFilter</filter-name>
         <filter-class>nl.uva.cs.lobcder.frontend.WebDavCompliantCorsFilter</filter-class>
         <init-param>
@@ -80,7 +80,7 @@
 
             <param-value>Content-Type,X-Requested-With,accept,Origin,Access-Control-Request-Method,Access-Control-Request-Headers,Authorization</param-value>
         </init-param>
-    </filter> 
+    </filter> -->
     
     
     <filter-mapping>
@@ -92,8 +92,8 @@
         <servlet-name>ProtectedREST</servlet-name>
     </filter-mapping>    
     
-    <filter-mapping>
+<!--    <filter-mapping>
         <filter-name>CorsFilter</filter-name>
-        <url-pattern>/dav/*</url-pattern>
-    </filter-mapping> 
+        <url-pattern>/*</url-pattern>
+    </filter-mapping> -->
 </web-app>

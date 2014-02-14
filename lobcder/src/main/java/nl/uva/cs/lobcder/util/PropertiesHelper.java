@@ -170,4 +170,36 @@ public class PropertiesHelper {
     public static Set<String> getAllowedOrigins() throws IOException {
         return new HashSet<>(Arrays.asList (getProperties().getProperty("allowed.origins").split(",")));
     }
+
+    public static String getFloodLightURL() throws IOException {
+        return getProperties().getProperty("floodlight.url");
+    }
+
+    public static HashMap<Integer, String> getPortWorkerMap() {
+         HashMap<Integer, String> ipMap = new HashMap<>();
+        BufferedReader br = null;
+        try {
+            ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+            InputStream in = classLoader.getResourceAsStream("/port-map");
+            br = new BufferedReader(new InputStreamReader(in));
+            String line;
+
+            while ((line = br.readLine()) != null) {
+                String[] keyValue = line.split(" ");
+                ipMap.put(Integer.valueOf(keyValue[0]), keyValue[1]);
+            }
+            br.close();
+            in.close();
+        } catch (IOException ex) {
+            Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            try {
+                br.close();
+
+            } catch (IOException ex) {
+                Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        return ipMap;
+    }
 }
