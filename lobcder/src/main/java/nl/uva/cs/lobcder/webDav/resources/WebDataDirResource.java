@@ -31,7 +31,6 @@ import nl.uva.cs.lobcder.auth.Permissions;
 import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
 import nl.uva.cs.lobcder.resources.LogicalData;
 import nl.uva.cs.lobcder.resources.PDRI;
-import nl.uva.cs.lobcder.resources.PDRIDescr;
 import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.cs.lobcder.util.SpeedLogger;
 import static org.rendersnake.HtmlAttributesFactory.*;
@@ -52,6 +51,13 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
         super(logicalData, path, catalogue, authList);
         WebDataDirResource.log.log(Level.FINE, "Init. WebDataDirResource:  {0}", getPath());
         mimeTypeMap.put("mp4", "video/mp4");
+        mimeTypeMap.put("pdf", "application/pdf");
+        mimeTypeMap.put("tex", "application/x-tex");
+        mimeTypeMap.put("log", "text/plain");
+        mimeTypeMap.put("png", "image/png");
+        mimeTypeMap.put("aux", "text/plain");
+        mimeTypeMap.put("bbl", "text/plain");
+        mimeTypeMap.put("blg", "text/plain");
     }
 
     @Override
@@ -194,7 +200,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
 //                Long uid = getCatalogue().getLogicalDataUidByParentRefAndName(getLogicalData().getUid(), newName, connection);
                 Path newPath = Path.path(getPath(), newName);
                 fileLogicalData = getCatalogue().getLogicalDataByPath(newPath, connection);
-                if (contentType == null) {
+                if (contentType == null || contentType.equals("application/octet-stream")) {
                     contentType = mimeTypeMap.get(Files.getFileExtension(newName));
                 }
                 if (fileLogicalData != null) {  // Resource exists, update
@@ -261,7 +267,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
             Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, ex);
         }
         WebDataDirResource.log.log(Level.INFO, msg);
-        SpeedLogger.logSpeed(msg);
+//        SpeedLogger.logSpeed(msg);
         return resource;
     }
 

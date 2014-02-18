@@ -4,11 +4,10 @@
  */
 package nl.uva.cs.lobcder.catalogue;
 
-import nl.uva.cs.lobcder.util.PropertiesHelper;
-
-import javax.sql.DataSource;
 import java.io.IOException;
 import java.util.TimerTask;
+import javax.sql.DataSource;
+import nl.uva.cs.lobcder.util.PropertiesHelper;
 
 /**
  *

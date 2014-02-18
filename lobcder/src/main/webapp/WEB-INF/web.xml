@@ -65,6 +65,24 @@
             <param-value>nl.uva.cs.lobcder.frontend.MyMiltonConfigurator</param-value>
         </init-param>
     </filter>
+    
+    
+<!--    <filter>
+        <filter-name>CorsFilter</filter-name>
+        <filter-class>nl.uva.cs.lobcder.frontend.WebDavCompliantCorsFilter</filter-class>
+        <init-param>
+            <param-name>cors.allowed.methods</param-name>
+
+            <param-value>GET,POST,HEAD,OPTIONS,PUT,PROPFIND,PROPPATCH,COPY,MOVE,LOCK,UNLOCK,MKCOL</param-value>
+        </init-param>
+        <init-param>
+            <param-name>cors.allowed.headers</param-name>
+
+            <param-value>Content-Type,X-Requested-With,accept,Origin,Access-Control-Request-Method,Access-Control-Request-Headers,Authorization</param-value>
+        </init-param>
+    </filter> -->
+    
+    
     <filter-mapping>
         <filter-name>MyFilter</filter-name>
         <url-pattern>/dav/*</url-pattern>
@@ -73,4 +91,9 @@
         <filter-name>BasicAuthFilter</filter-name>
         <servlet-name>ProtectedREST</servlet-name>
     </filter-mapping>    
+    
+<!--    <filter-mapping>
+        <filter-name>CorsFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping> -->
 </web-app>

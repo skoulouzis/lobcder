@@ -1,12 +1,11 @@
-This is pdfTeX, Version 3.1415926-2.4-1.40.13 (TeX Live 2012/Debian) (format=pdflatex 2013.2.11)  30 MAY 2013 17:31
+This is pdfTeX, Version 3.1415926-2.5-1.40.14 (TeX Live 2013/Debian) (format=pdflatex 2013.12.1)  20 JAN 2014 19:32
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
 **Config_Instructions.tex
 (./Config_Instructions.tex
 LaTeX2e <2011/06/27>
-Babel <v3.8m> and hyphenation patterns for english, dumylang, nohyphenation, lo
-aded.
+Babel <3.9f> and hyphenation patterns for 2 languages loaded.
 (/usr/share/texlive/texmf-dist/tex/latex/base/article.cls
 Document Class: article 2007/10/19 v1.4h Standard LaTeX document class
 (/usr/share/texlive/texmf-dist/tex/latex/base/size10.clo
@@ -260,15 +259,15 @@ Package: keyval 1999/03/16 v1.13 key=value parser (DPC)
 \lst@maxwidth=\dimen106
 
 (/usr/share/texlive/texmf-dist/tex/latex/listings/lstmisc.sty
-File: lstmisc.sty 2007/02/22 1.4 (Carsten Heinz)
+File: lstmisc.sty 2013/07/10 1.5 (Carsten Heinz)
 \c@lstnumber=\count93
 \lst@skipnumbers=\count94
 \lst@framebox=\box27
 )
 (/usr/share/texlive/texmf-dist/tex/latex/listings/listings.cfg
-File: listings.cfg 2007/02/22 1.4 listings configuration
+File: listings.cfg 2013/06/27 1.5pre1 listings configuration
 ))
-Package: listings 2007/02/22 1.4 (Carsten Heinz)
+Package: listings 2013/07/10 1.5 (Carsten Heinz)
 
 (./Config_Instructions.aux)
 \openout1 = `Config_Instructions.aux'.
@@ -311,80 +310,66 @@ File: omscmr.fd 1999/05/25 v2.5h Standard LaTeX font definitions
 LaTeX Font Info:    Font shape `OMS/cmr/m/n' in size <10> not available
 (Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 42.
 
-Overfull \hbox (21.00372pt too wide) in paragraph at lines 42--43
+Overfull \hbox (51.00403pt too wide) in paragraph at lines 42--43
 [][][][][][][][][][][][][][][][][][][][] 
- []
-
-
-Overfull \hbox (3.00354pt too wide) in paragraph at lines 58--59
-[][][][][][][][][][][][] 
  []
 
 [1
 
 {/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}]
-Overfull \hbox (33.00385pt too wide) in paragraph at lines 68--69
+Overfull \hbox (9.0036pt too wide) in paragraph at lines 68--69
 [][][][][][][][][][][][][] 
  []
 
 
-Overfull \hbox (51.00403pt too wide) in paragraph at lines 83--84
+Overfull \hbox (45.00397pt too wide) in paragraph at lines 91--92
+[][][][][][][][][][][][][][][][][][] 
+ []
+
+
+Overfull \hbox (69.00421pt too wide) in paragraph at lines 99--100
+[][][][][][][][][][][][][][][][][][] 
+ []
+
+
+Overfull \hbox (27.00378pt too wide) in paragraph at lines 107--108
+[][][][][][][][][][][][][][][][][][][][][] 
+ []
+
+
+Overfull \hbox (51.00403pt too wide) in paragraph at lines 116--117
 [][][][][][][][][][][][][][][][][][][][] 
  []
 
-
-Overfull \hbox (39.0039pt too wide) in paragraph at lines 92--93
-[][][][][][][][][][][][][] 
- []
-
-
-Overfull \hbox (7.563pt too wide) in paragraph at lines 106--106
-[]\OT1/cmr/bx/n/14.4 User Au-tho-riza-tion / Au-then-ti-ca-tion and Roles 
- []
-
-
-Overfull \hbox (33.00385pt too wide) in paragraph at lines 111--112
-[][][][][][][][][][][][][][][][][] 
- []
-
 [2]
-Overfull \hbox (99.00452pt too wide) in paragraph at lines 126--127
-[][][][][][][][][][][][][][][][][][][] 
- []
-
-
-Overfull \hbox (27.00378pt too wide) in paragraph at lines 134--135
-[][][][][][][][][][][][][][][][][][] 
- []
-
-
-Overfull \hbox (51.00403pt too wide) in paragraph at lines 142--143
-[][][][][][][][][][][][][][][][][][] 
+Overfull \hbox (7.563pt too wide) in paragraph at lines 144--144
+[]\OT1/cmr/bx/n/14.4 User Au-tho-riza-tion / Au-then-ti-ca-tion and Roles 
  []
 
 [3] (./Config_Instructions.aux) ) 
 Here is how much of TeX's memory you used:
- 2100 strings out of 495059
- 26413 string characters out of 3182030
- 92164 words of memory out of 3000000
- 5320 multiletter control sequences out of 15000+200000
- 7755 words of font info for 28 fonts, out of 3000000 for 9000
+ 2102 strings out of 495031
+ 26434 string characters out of 6181531
+ 91836 words of memory out of 5000000
+ 5345 multiletter control sequences out of 15000+600000
+ 8063 words of font info for 29 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
- 26i,8n,32p,175b,1524s stack positions out of 5000i,500n,10000p,200000b,50000s
+ 26i,8n,32p,180b,1524s stack positions out of 5000i,500n,10000p,200000b,80000s
 </usr/share/texlive/texmf-dist/fonts/type1/pub
-lic/amsfonts/cm/cmbx12.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/am
-sfonts/cm/cmmi10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts
-/cm/cmr10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr
-12.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr17.pfb>
-</usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr6.pfb></usr/sh
-are/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb></usr/share/texl
-ive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb></usr/share/texlive/texm
-f-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/share/texlive/texmf-dist
-/fonts/type1/public/amsfonts/cm/cmtt10.pfb>
-Output written on Config_Instructions.pdf (3 pages, 118220 bytes).
+lic/amsfonts/cm/cmbx10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/am
+sfonts/cm/cmbx12.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts
+/cm/cmmi10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cm
+r10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb
+></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr17.pfb></usr/
+share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr6.pfb></usr/share/te
+xlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb></usr/share/texlive/te
+xmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb></usr/share/texlive/texmf-dist
+/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/share/texlive/texmf-dist/fonts
+/type1/public/amsfonts/cm/cmtt10.pfb>
+Output written on Config_Instructions.pdf (3 pages, 129194 bytes).
 PDF statistics:
- 54 PDF objects out of 1000 (max. 8388607)
- 38 compressed objects within 1 object stream
+ 58 PDF objects out of 1000 (max. 8388607)
+ 41 compressed objects within 1 object stream
  0 named destinations out of 1000 (max. 500000)
  1 words of extra memory for PDF output out of 10000 (max. 10000000)
 

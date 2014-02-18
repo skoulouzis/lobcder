@@ -41,6 +41,10 @@ public class BasicAuthFilter implements Filter {
         final HttpServletResponse httpResponse = (HttpServletResponse) response;
 
         final String autheader = httpRequest.getHeader("Authorization");
+        
+        
+//        log.log(Level.INFO, "Auth for rest. autheader: "+autheader);
+        
         if (autheader != null) {
 
             final int index = autheader.indexOf(' ');
@@ -86,46 +90,48 @@ public class BasicAuthFilter implements Filter {
 //                        break;
 //                    }
 //                }
-
                 if (PropertiesHelper.doRedirectGets() && workers != null
                         && workers.size() > 0 && uname.startsWith("worker-")) {
                     if (authWorker == null) {
                         for (AuthI a : authList) {
+                            log.log(Level.INFO, "Init AuthWorker");
                             if (a instanceof AuthWorker) {
                                 authWorker = (AuthWorker) a;
                                 break;
                             }
                         }
                     }
-                    for (String s : workers) {
-                        try {
-                            String workerHost = new URI(s).getHost();
-                            String remoteHost = request.getRemoteHost();
-                            if (remoteHost.equals("localhost") || remoteHost.equals("127.0.0.1")) {
-//                                InetAddress.getLocalHost().getHostName();
-                                remoteHost = "localhost";
-                            }
-                            if (remoteHost.equals(workerHost)) {
-
-                                principal = authWorker.checkToken(token);
-                                if (principal != null) {
-                                    break;
-                                }
-                            }
-                        } catch (URISyntaxException ex) {
-                            principal = null;
-                            Logger.getLogger(BasicAuthFilter.class.getName()).log(Level.SEVERE, null, ex);
-                        }
-                    }
+                    principal = authWorker.checkToken(token);
+                    
+//                    for (String s : workers) {
+//                        try {
+//                            String workerHost = new URI(s).getHost();
+//                            String remoteHost = request.getRemoteHost();
+//                            if (remoteHost.equals("localhost") || remoteHost.equals("127.0.0.1")) {
+////                                InetAddress.getLocalHost().getHostName();
+//                                remoteHost = "localhost";
+//                            }
+//                            if (remoteHost.equals(workerHost)) {
+//
+//                                principal = authWorker.checkToken(token);
+//                                if (principal != null) {
+//                                    break;
+//                                }
+//                            }
+//                        } catch (URISyntaxException ex) {
+//                            principal = null;
+//                            Logger.getLogger(BasicAuthFilter.class.getName()).log(Level.SEVERE, null, ex);
+//                        }
+//                    }
                 } else {
                     for (AuthI a : authList) {
                         if (a instanceof AuthWorker) {
                             continue;
                         }
-                        if (!PropertiesHelper.doRemoteAuth()
-                                && a instanceof AuthTicket) {
-                            continue;
-                        }
+//                        if (!PropertiesHelper.doRemoteAuth()
+//                                && a instanceof AuthTicket) {
+//                            continue;
+//                        }
                         principal = a.checkToken(token);
                         if (principal != null) {
                             break;
