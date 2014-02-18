@@ -9,8 +9,6 @@ import java.io.*;
 import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.nio.MappedByteBuffer;
-import java.nio.channels.FileChannel;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -65,6 +63,7 @@ public class WorkerVPDRI implements PDRI {
     private boolean destroyCert;
     private String hostName;
     private final Integer bufferSize;
+    private int sleeTime = 5;
 
     public WorkerVPDRI(String fileName, Long storageSiteId, String resourceUrl,
             String username, String password, boolean encrypt, BigInteger keyInt,
@@ -170,43 +169,40 @@ public class WorkerVPDRI implements PDRI {
             doCopy(file, range, out, getEncrypted());
         } catch (Exception ex) {
             if (ex instanceof ResourceNotFoundException
-                    || (ex.getMessage() != null && ex.getMessage().contains("Couldn open location. Get NULL object for location:"))) {
+                    || ex.getMessage().contains("Couldn open location. Get NULL object for location:")) {
                 try {
 //                    VRL assimilationVRL = new VRL(resourceUrl).append(URLEncoder.encode(fileName, "UTF-8"));
                     VRL assimilationVRL = new VRL(resourceUrl).append(fileName);
                     file = (VFile) getVfsClient().openLocation(assimilationVRL);
                     doCopy(file, range, out, getEncrypted());
 
-                    sleepTime = 2;
-
-                } catch (Exception ex1) {
+                    sleeTime = 5;
+                } catch (InvalidAlgorithmParameterException | NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | IllegalBlockSizeException | BadPaddingException | VRLSyntaxException ex1) {
+                    throw new IOException(ex1);
+                } catch (VlException ex1) {
                     if (reconnectAttemts < Constants.RECONNECT_NTRY) {
                         try {
-                            sleepTime = sleepTime + 2;
-                            Thread.sleep(sleepTime);
+                            sleeTime = sleeTime + 5;
+                            Thread.sleep(sleeTime);
                             reconnect();
                             copyRange(range, out);
                         } catch (InterruptedException ex2) {
-                            Logger.getLogger(WorkerVPDRI.class.getName()).log(Level.SEVERE, null, ex);
-                            throw new IOException(ex2);
+                            throw new IOException(ex1);
                         }
                     } else {
-                        Logger.getLogger(WorkerVPDRI.class.getName()).log(Level.SEVERE, null, ex1);
                         throw new IOException(ex1);
                     }
                 }
             } else if (reconnectAttemts < Constants.RECONNECT_NTRY && !ex.getMessage().contains("does not support random reads")) {
                 try {
-                    sleepTime = sleepTime + 2;
-                    Thread.sleep(sleepTime);
+                    sleeTime = sleeTime + 5;
+                    Thread.sleep(sleeTime);
                     reconnect();
                     copyRange(range, out);
                 } catch (InterruptedException ex1) {
-                    Logger.getLogger(WorkerVPDRI.class.getName()).log(Level.SEVERE, null, ex1);
-                    throw new IOException(ex1);
+                    throw new IOException(ex);
                 }
             } else {
-                Logger.getLogger(WorkerVPDRI.class.getName()).log(Level.SEVERE, null, ex);
                 throw new IOException(ex);
             }
         } finally {
@@ -219,26 +215,24 @@ public class WorkerVPDRI implements PDRI {
         InputStream in = null;
         int buffSize;
         Long start = range.getStart();
-        if (len <= bufferSize) {
+        if (len <= Constants.BUF_SIZE) {
             buffSize = (int) len;
         } else {
-            buffSize = bufferSize;
+            buffSize = Constants.BUF_SIZE;
         }
         DesEncrypter en = null;
         if (decript) {
             en = new DesEncrypter(getKeyInt());
         }
-
         int read = 0;
         try {
             if (file instanceof VRandomReadable) {
                 VRandomReadable ra = (VRandomReadable) file;
-                len = range.getFinish() - range.getStart() + 1;
                 byte[] buff = new byte[buffSize];
                 int totalBytesRead = 0;
                 while (totalBytesRead < len || read != -1) {
                     read = ra.readBytes(start, buff, 0, buff.length);
-                    if (read == -1 || totalBytesRead >= len) {
+                    if (read == -1 || totalBytesRead == len) {
                         break;
                     }
                     totalBytesRead += read;
@@ -268,7 +262,10 @@ public class WorkerVPDRI implements PDRI {
                 }
 //                int totalBytesRead = 0;
 //                byte[] buff = new byte[buffSize];
-//                while (totalBytesRead < len) {
+//                while (totalBytesRead < len || read != -1) {
+//                     if (read == -1 || totalBytesRead == len) {
+//                        break;
+//                    }
 //                    read = in.read(buff, 0, buff.length);
 //                    totalBytesRead += read;
 //                    start += buff.length;
@@ -296,7 +293,7 @@ public class WorkerVPDRI implements PDRI {
         try {
             //skip v-let 
             if (vrl.getScheme().equals("file")) {
-                in =  new FileInputStream(vrl.getPath());
+                in = new FileInputStream(vrl.getPath());
             } else {
                 file = (VFile) getVfsClient().openLocation(vrl);
                 in = file.getInputStream();

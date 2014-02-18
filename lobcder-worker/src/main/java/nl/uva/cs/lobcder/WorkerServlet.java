@@ -143,6 +143,10 @@ public final class WorkerServlet extends HttpServlet {
                     range = Range.parse(rangeStr.split("=")[1]);
                 }
                 if (range != null) {
+                    if (range.getFinish() == null) {
+                        range = new Range(range.getStart(), (pdri.getLength() - 1));
+                    }
+                    Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "Start: {0} end: {1} range: {2}", new Object[]{range.getStart(), range.getFinish(), range.getRange()});
                     len = range.getFinish() - range.getStart() + 1;
                 } else {
                     len = size;
@@ -160,7 +164,7 @@ public final class WorkerServlet extends HttpServlet {
 
                     OutputStream out = response.getOutputStream();
                     if (range != null) {
-                        range = Range.parse(rangeStr.split("=")[1]);
+//                        range = Range.parse(rangeStr.split("=")[1]);
                         pdri.copyRange(range, out);
                         response.setStatus(HttpStatus.SC_PARTIAL_CONTENT);
                         return;
@@ -340,9 +344,9 @@ public final class WorkerServlet extends HttpServlet {
             sleepTime = 2;
             Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "Selected pdri: {0}", pdriDesc.resourceUrl);
             WorkerVPDRI w = new WorkerVPDRI(pdriDesc.name, pdriDesc.id, pdriDesc.resourceUrl, pdriDesc.username, pdriDesc.password, pdriDesc.encrypt, BigInteger.valueOf(Long.valueOf(pdriDesc.key)), false);
-//            w.setHostName(this.localAddrress);
-            //        return new WorkerVPDRI(pdriDesc.name , pdriDesc.id, pdriDesc.resourceUrl, pdriDesc.username, pdriDesc.password, pdriDesc.encrypt, BigInteger.ZERO, false);
-            return w;
+            w.setHostName(getAllIPs().get(0));
+            return new WorkerVPDRI(pdriDesc.name, pdriDesc.id, pdriDesc.resourceUrl, pdriDesc.username, pdriDesc.password, pdriDesc.encrypt, BigInteger.ZERO, false);
+//            return w;
         } catch (Exception ex) {
 //            Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, ex);
             if (ex.getMessage() != null
