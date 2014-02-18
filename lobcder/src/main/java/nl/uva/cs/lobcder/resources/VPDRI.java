@@ -21,7 +21,6 @@ import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.cs.lobcder.util.DesEncrypter;
 import nl.uva.cs.lobcder.util.GridHelper;
-import nl.uva.cs.lobcder.util.SpeedLogger;
 import nl.uva.vlet.data.StringUtil;
 import nl.uva.vlet.exception.ResourceNotFoundException;
 import nl.uva.vlet.exception.VRLSyntaxException;
@@ -249,7 +248,9 @@ public class VPDRI implements PDRI {
                 byte[] buff = new byte[buffSize];
                 int totalBytesRead = 0;
                 while (totalBytesRead < len || read != -1) {
+                    long startT = System.currentTimeMillis();
                     read = ra.readBytes(start, buff, 0, buff.length);
+                    VPDRI.log.log(Level.INFO, "speed: {0} kb/s", (read / 1024.0) / ((System.currentTimeMillis()-startT)/1000.0)); 
                     if (read == -1 || totalBytesRead == len) {
                         break;
                     }
@@ -529,7 +530,6 @@ public class VPDRI implements PDRI {
 
             String msg = "Source: " + source.getHost() + " Destination: " + vrl.getScheme() + "://" + getHost() + " Replication_Speed: " + speed + " Kbites/sec Repl_Size: " + (getLength()) + " bytes";
             VPDRI.log.log(Level.INFO, msg);
-            SpeedLogger.logSpeed(msg);
 
 
 //            getAsyncDelete(getVfsClient(), vrl).run();

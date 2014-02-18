@@ -240,7 +240,6 @@ public class WebDataFileResource extends WebDataResource implements
             pdri = PDRIFactory.getFactory().createInstance(pdriDescr, false);
             if (pdri != null) {
                 in = pdri.getData();
-                WebDataFileResource.log.log(Level.FINE, "sendContent() for {0}--------- {1}", new Object[]{getPath(), pdri.getFileName()});
                 if (!pdri.getEncrypted()) {
                     if (doCircularStreamBufferTransferer) {
                         CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((Constants.BUF_SIZE), in, out);
