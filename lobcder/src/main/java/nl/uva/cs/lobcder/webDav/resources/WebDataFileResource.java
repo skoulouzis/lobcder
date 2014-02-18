@@ -37,7 +37,6 @@ import nl.uva.cs.lobcder.auth.AuthWorker;
 import nl.uva.cs.lobcder.auth.Permissions;
 import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
 import nl.uva.cs.lobcder.optimization.NewQoSPlannerClient;
-import nl.uva.cs.lobcder.optimization.NewQoSPlannerClient.FloodlightStats;
 import nl.uva.cs.lobcder.resources.LogicalData;
 import nl.uva.cs.lobcder.resources.PDRI;
 import nl.uva.cs.lobcder.resources.PDRIDescr;
@@ -63,6 +62,7 @@ public class WebDataFileResource extends WebDataResource implements
     private static int workerIndex = 0;
     private static final Map<String, Double> weightPDRIMap = new HashMap<>();
     private static final Map<String, Integer> numOfGetsMap = new HashMap<>();
+    private static final Map<String, Integer> numOfWorkerTransfersMap = new HashMap<>();
     private NewQoSPlannerClient plannerClient;
 
     public WebDataFileResource(@Nonnull LogicalData logicalData, Path path, @Nonnull JDBCatalogue catalogue, @Nonnull List<AuthI> authList) {
@@ -360,7 +360,6 @@ public class WebDataFileResource extends WebDataResource implements
                 if (reconnect) {
                     pdri.reconnect();
                 }
-                WebDataFileResource.log.log(Level.FINE, "transfererRange() for {0}--------- {1}", new Object[]{getPath(), pdri.getFileName()});
                 pdri.copyRange(range, out);
 //                if (!) {
 //                    
@@ -516,34 +515,50 @@ public class WebDataFileResource extends WebDataResource implements
 
     private String getBestWorker() throws IOException {
         if (doRedirect) {
-            String uri = PropertiesHelper.getFloodLightURL();
-            if (uri != null) {
-                if (plannerClient == null) {
-                    plannerClient = new NewQoSPlannerClient(uri);
-                }
-                List<FloodlightStats> stats = plannerClient.getStats();
-                long min = Long.MAX_VALUE;
-                int portNum = -1;
-                for (FloodlightStats f : stats) {
-                    if (f.portNumber != 3 && f.portNumber != 2 && f.portNumber >= 0) {
-                        if ((f.receivePackets + f.transmitPackets) < min) {
-                            min = f.receivePackets + f.transmitPackets;
-                            portNum = f.portNumber;
-                        }
-                    }
-                }
-                HashMap<Integer, String> map = PropertiesHelper.getPortWorkerMap();
-                String worker = map.get(portNum);
-
-                plannerClient.pushFlow("00:00:c2:b3:aa:aa:2d:41", portNum, 3);
-                plannerClient.pushFlow("00:00:c2:b3:aa:aa:2d:41", 3, portNum);
-
-                WebDataFileResource.log.log(Level.INFO, "portNum: {0} min: {1} worker: {2}", new Object[]{portNum, min, worker});
-                String w = worker + "/" + getLogicalData().getUid();
-                String token = UUID.randomUUID().toString();
-                AuthWorker.setTicket(worker, token);
-                return w + "/" + token;
-            }
+//            String uri = PropertiesHelper.getFloodLightURL();
+//            if (uri != null) {
+//                if (plannerClient == null) {
+//                    plannerClient = new NewQoSPlannerClient(uri);
+//                }
+//                List<FloodlightStats> stats = plannerClient.getStats();
+//                long cost = Long.MAX_VALUE;
+//                int portNum = -1;
+//                HashMap<Integer, String> map = PropertiesHelper.getPortWorkerMap();
+//                String worker;
+//                for (FloodlightStats f : stats) {
+//                    if (f.portNumber != 3 && f.portNumber != 2 && f.portNumber >= 0) {
+//                        if ((f.receivePackets + f.transmitPackets) < cost) {
+////                            cost = f.receivePackets + f.transmitPackets + f.collisions
+////                                    + f.receiveCRCErrors + f.receiveDropped + f.receiveErrors
+////                                    + f.receiveFrameErrors + f.receiveOverrunErrors + f.transmitBytes
+////                                    + f.transmitDropped + f.transmitErrors;s
+//                            cost = f.receivePackets + f.transmitPackets;
+//                            portNum = f.portNumber;
+//                            worker = map.get(portNum);
+//                            if (numOfWorkerTransfersMap.containsKey(worker)) {
+//                                long weightedTras = numOfWorkerTransfersMap.get(worker) + (cost / 6);
+//                                cost += weightedTras;
+//                            }
+//                        }
+//                    }
+//                }
+//                worker = map.get(portNum);
+//                plannerClient.pushFlow("00:00:c2:b3:aa:aa:2d:41", portNum, 3);
+//                plannerClient.pushFlow("00:00:c2:b3:aa:aa:2d:41", 3, portNum);
+//
+//                WebDataFileResource.log.log(Level.INFO, "portNum: {0} min: {1} worker: {2}", new Object[]{portNum, cost, worker});
+//                String w = worker + "/" + getLogicalData().getUid();
+//                String token = UUID.randomUUID().toString();
+//                AuthWorker.setTicket(worker, token);
+//                int trans = 0;
+//                if (numOfWorkerTransfersMap.containsKey(worker)) {
+//                    trans = numOfWorkerTransfersMap.get(worker);
+//                }
+//                trans++;
+//                numOfWorkerTransfersMap.put(worker, trans);
+//                WebDataFileResource.log.log(Level.INFO, "worker: " + worker + " transfers: " + trans);
+//                return w + "/" + token;
+//            }
 
 
             workers = PropertiesHelper.getWorkers();
