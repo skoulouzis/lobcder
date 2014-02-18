@@ -209,6 +209,12 @@
             <classifier>classes</classifier>
             <version>2.3_jdk1.6</version>
         </dependency>  -->
+        <dependency>
+            <groupId>com.mycompany</groupId>
+            <artifactId>lobcder</artifactId>
+            <version>2.4</version>
+            <type>war</type>
+        </dependency>
     </dependencies>
     
     <repositories>

@@ -58,12 +58,7 @@ public class DesEncrypter {
 
         ecipher.init(Cipher.ENCRYPT_MODE, key, paramSpec);
         dcipher.init(Cipher.DECRYPT_MODE, key, paramSpec);
-
-        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-        InputStream in = classLoader.getResourceAsStream("/lobcder-worker.properties");
-        Properties prop = Util.getTestProperties(in);
-        in.close();
-        bufferSize = Integer.valueOf(prop.getProperty(("buffer.size"), "4194304"));
+        bufferSize = Util.getBufferSize();
     }
 
     public byte[] encrypt(byte[] data) throws IllegalBlockSizeException, BadPaddingException {
