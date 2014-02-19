@@ -12,31 +12,24 @@ import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.json.JSONConfiguration;
 import com.sun.jersey.client.urlconnection.HTTPSProperties;
 import io.milton.common.Path;
-import io.milton.http.Range;
-import java.io.BufferedInputStream;
 import java.io.Closeable;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.math.BigInteger;
 import java.net.InetAddress;
-import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
-import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Random;
 import java.util.Set;
 import java.util.logging.Level;
@@ -59,7 +52,6 @@ import lombok.extern.java.Log;
 import nl.uva.vlet.data.StringUtil;
 import nl.uva.vlet.exception.VlException;
 import nl.uva.vlet.io.CircularStreamBufferTransferer;
-import org.apache.http.HttpStatus;
 
 /**
  * A file servlet supporting resume of downloads and client-side caching and
@@ -144,8 +136,8 @@ public final class WorkerServlet extends HttpServlet {
         try {
             // Process request with content.
             processRequest(request, response, true);
-        } catch (IOException | InterruptedException | URISyntaxException | VlException ex) {
-            Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (Exception ex) {
+            handleError(ex, response);
         }
     }
 
@@ -649,14 +641,14 @@ public final class WorkerServlet extends HttpServlet {
             String resourceIP = Util.getIP(uri.getHost());
             List<String> ips = Util.getAllIPs();
             for (String i : ips) {
-
+//                Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "resourceIP: {0} localIP: {1}", new Object[]{resourceIP, i});
                 if (resourceIP != null && resourceIP.equals(i)
                         || uri.getHost().equals("localhost")
                         || uri.getHost().equals("127.0.0.1")) {
                     String resURL = p.resourceUrl.replaceFirst(uri.getScheme(), "file");
                     p.resourceUrl = resURL;
+                    return p;
                 }
-                return p;
             }
 
         }
@@ -725,6 +717,17 @@ public final class WorkerServlet extends HttpServlet {
         PDRIDesc[] array = pdris.toArray(new PDRIDesc[pdris.size()]);
         PDRIDesc res = array[index];
         return res;
+    }
+
+    private void handleError(java.lang.Exception ex, HttpServletResponse response) throws IOException {
+        if (ex instanceof IOException) {
+            if (ex.getMessage().contains("PDRIS from master is either empty or contains unreachable files")) {
+                response.sendError(HttpServletResponse.SC_MOVED_TEMPORARILY);
+                return;
+            }
+        }
+        response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        return;
     }
 
     @XmlRootElement

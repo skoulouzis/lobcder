@@ -14,11 +14,15 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import lombok.extern.java.Log;
 
 /**
  *
  * @author S. Koulouzis
  */
+@Log
 class Util {
 
     public static Properties getProperties()
@@ -49,7 +53,9 @@ class Util {
             NetworkInterface intf = en.nextElement();
             for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements();) {
                 InetAddress next = enumIpAddr.nextElement();
-                ips.add(next.getHostAddress());
+                String ip = next.getHostAddress();
+//                Logger.getLogger(Util.class.getName()).log(Level.FINE, "ip: {0}", ip);
+                ips.add(ip);
             }
         }
         return ips;
