@@ -14,8 +14,6 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Properties;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
@@ -46,10 +44,9 @@ class Util {
     public static List<String> getAllIPs() throws UnknownHostException, SocketException {
 //        InetAddress localhost = InetAddress.getLocalHost();
 //        InetAddress[] allMyIps = InetAddress.getAllByName(localhost.getCanonicalHostName());
-        List<String> ips = new ArrayList<String>();
+        List<String> ips = new ArrayList<>();
         for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements();) {
             NetworkInterface intf = en.nextElement();
-            Logger.getLogger(Util.class.getName()).log(Level.FINE, "intf.getName(): {0} intf.getDisplayName():{1}", new Object[]{intf.getName(), intf.getDisplayName()});
             for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements();) {
                 InetAddress next = enumIpAddr.nextElement();
                 ips.add(next.getHostAddress());

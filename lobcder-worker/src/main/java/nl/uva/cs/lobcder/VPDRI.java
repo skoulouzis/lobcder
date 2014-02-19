@@ -72,15 +72,16 @@ public class VPDRI implements PDRI {
             this.resourceUrl = resourceUrl;
             String encoded = VRL.encode(fileName);
             vrl = new VRL(resourceUrl).appendPath(baseDir).append(encoded);
-//            vrl = new VRL(resourceUrl).appendPath(baseDir).append(URLEncoder.encode(fileName, "UTF-8").replace("+", "%20"));
             this.storageSiteId = storageSiteId;
             this.username = username;
             this.password = password;
             this.encrypt = encrypt;
             this.keyInt = keyInt;
             this.doChunked = doChunkUpload;
-//            this.resourceUrl = resourceUrl;
             Logger.getLogger(VPDRI.class.getName()).log(Level.FINE, "fileName: {0}, storageSiteId: {1}, username: {2}, password: {3}, VRL: {4}", new Object[]{fileName, storageSiteId, username, password, vrl});
+            if(vrl.getScheme().equals("file")){
+                
+            }
             initVFS();
             bufferSize = Util.getBufferSize();
         } catch (Exception ex) {
