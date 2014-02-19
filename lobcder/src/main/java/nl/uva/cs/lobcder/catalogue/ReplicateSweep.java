@@ -162,6 +162,7 @@ class ReplicateSweep implements Runnable {
                         pdriId = rs.getLong(9);
                         PDRIDescr cd = new PDRIDescr(name, ssID, resourceURL, username, password, encrypt, key, pdriGroupRef, pdriId);
                         toReplicate.add(cd);
+                        
                     }
 
                 }
