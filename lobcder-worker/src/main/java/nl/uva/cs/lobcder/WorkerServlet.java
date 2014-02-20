@@ -543,8 +543,7 @@ public final class WorkerServlet extends HttpServlet {
 //                            sb.append("read: ").append(read).append(" speed: ").append(speed).append(" rateOfChange: ").append(rateOfChange).append("\n");
                             if (rateOfChange < lim) {
                                 Logger.getLogger(WorkerServlet.class.getName()).log(Level.WARNING, "We will not tolarate this !!!! Find a new worker");
-                                break;
-//                                throw new IOException("Low B/W");
+                                throw new IOException("Low B/W");
                             }
                         }
                         count++;
