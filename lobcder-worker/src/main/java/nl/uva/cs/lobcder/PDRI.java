@@ -45,7 +45,5 @@ public interface PDRI {
 
     public boolean getEncrypted();
 
-    public void copyRange(Range range, OutputStream out) throws IOException;
-
     public void copyRange(OutputStream output, long start, long length) throws IOException;
 }

@@ -80,4 +80,8 @@ class Util {
     static Boolean isCircularBuffer() throws IOException {
         return Boolean.valueOf(getProperties().getProperty(("use.circular.buffer"), "true"));
     }
+
+    static double getRateOfChangeLim() throws IOException {
+        return Double.valueOf(getProperties().getProperty(("rate.of.change"), "-5"));
+    }
 }

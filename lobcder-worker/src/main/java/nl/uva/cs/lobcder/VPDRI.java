@@ -4,7 +4,6 @@
  */
 package nl.uva.cs.lobcder;
 
-import io.milton.http.Range;
 import java.io.*;
 import java.math.BigInteger;
 import java.net.InetAddress;
@@ -14,8 +13,6 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import lombok.extern.java.Log;
 import nl.uva.vlet.data.StringUtil;
@@ -79,8 +76,7 @@ public class VPDRI implements PDRI {
             this.keyInt = keyInt;
             this.doChunked = doChunkUpload;
             Logger.getLogger(VPDRI.class.getName()).log(Level.FINE, "fileName: {0}, storageSiteId: {1}, username: {2}, password: {3}, VRL: {4}", new Object[]{fileName, storageSiteId, username, password, vrl});
-            if(vrl.getScheme().equals("file")){
-                
+            if (vrl.getScheme().equals("file")) {
             }
             initVFS();
             bufferSize = Util.getBufferSize();
@@ -175,128 +171,6 @@ public class VPDRI implements PDRI {
         //        //it's void so do it asynchronously
         //        Runnable asyncDel = getAsyncDelete(this.vfsClient, vrl);
         //        asyncDel.run();
-    }
-
-    @Override
-    public void copyRange(Range range, OutputStream out) throws IOException {
-        VFile file;
-        try {
-            file = (VFile) getVfsClient().openLocation(vrl);
-            doCopy(file, range, out, getEncrypted());
-        } catch (Exception ex) {
-            if (ex instanceof ResourceNotFoundException
-                    || ex.getMessage().contains("Couldn open location. Get NULL object for location:")) {
-                try {
-//                    VRL assimilationVRL = new VRL(resourceUrl).append(URLEncoder.encode(fileName, "UTF-8"));
-                    VRL assimilationVRL = new VRL(resourceUrl).append(fileName);
-                    file = (VFile) getVfsClient().openLocation(assimilationVRL);
-                    doCopy(file, range, out, getEncrypted());
-
-                    sleeTime = 5;
-                } catch (InvalidAlgorithmParameterException | NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | IllegalBlockSizeException | BadPaddingException | VRLSyntaxException ex1) {
-                    throw new IOException(ex1);
-                } catch (VlException ex1) {
-                    if (reconnectAttemts < Constants.RECONNECT_NTRY) {
-                        try {
-                            sleeTime = sleeTime + 5;
-                            Thread.sleep(sleeTime);
-                            reconnect();
-                            copyRange(range, out);
-                        } catch (InterruptedException ex2) {
-                            throw new IOException(ex1);
-                        }
-                    } else {
-                        throw new IOException(ex1);
-                    }
-                }
-            } else if (reconnectAttemts < Constants.RECONNECT_NTRY && !ex.getMessage().contains("does not support random reads")) {
-                try {
-                    sleeTime = sleeTime + 5;
-                    Thread.sleep(sleeTime);
-                    reconnect();
-                    copyRange(range, out);
-                } catch (InterruptedException ex1) {
-                    throw new IOException(ex);
-                }
-            } else {
-                throw new IOException(ex);
-            }
-        } finally {
-        }
-    }
-
-    private void doCopy(VFile file, Range range, OutputStream out, boolean decript) throws VlException, IOException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
-
-        long len = range.getFinish() - range.getStart() + 1;
-        InputStream in = null;
-        Long start = range.getStart();
-        DesEncrypter en = null;
-        if (decript) {
-            en = new DesEncrypter(getKeyInt());
-        }
-
-        int read = 0;
-        try {
-            if (file instanceof VRandomReadable) {
-                VRandomReadable ra = (VRandomReadable) file;
-                byte[] buff = new byte[bufferSize];
-                int totalBytesRead = 0;
-                while (totalBytesRead < len || read != -1) {
-                    long startT = System.currentTimeMillis();
-                    read = ra.readBytes(start, buff, 0, buff.length);
-                    Logger.getLogger(VPDRI.class.getName()).log(Level.INFO, "speed: {0} kb/s", (read / 1024.0) / ((System.currentTimeMillis() - startT) / 1000.0));
-                    if (read == -1 || totalBytesRead == len) {
-                        break;
-                    }
-                    totalBytesRead += read;
-                    start += buff.length;
-                    if (decript) {
-                        byte[] tmp = en.decrypt(buff);
-                        buff = tmp;
-                    }
-                    out.write(buff, 0, read);
-                }
-            } else {
-                if (start > 0) {
-                    throw new IOException("Backend at " + vrl.getScheme() + "://" + vrl.getHostname() + "does not support random reads");
-//                    long skiped = in.skip(start);
-//                    if (skiped != start) {
-//                        long n = start;
-//                        int buflen = (int) Math.min(Constants.BUF_SIZE, n);
-//                        byte data[] = new byte[buflen];
-//                        while (n > 0) {
-//                            int r = in.read(data, 0, (int) Math.min((long) buflen, n));
-//                            if (r < 0) {
-//                                break;
-//                            }
-//                            n -= r;
-//                        }
-//                    }
-                }
-//                int totalBytesRead = 0;
-//                byte[] buff = new byte[buffSize];
-//                while (totalBytesRead < len || read != -1) {
-//                     if (read == -1 || totalBytesRead == len) {
-//                        break;
-//                    }
-//                    read = in.read(buff, 0, buff.length);
-//                    totalBytesRead += read;
-//                    start += buff.length;
-//                    out.write(buff, 0, read);
-//                }
-                in = getData();
-                if (decript) {
-                    InputStream tmp = en.wrapInputStream(in);
-                    in = tmp;
-                }
-                CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer(bufferSize, in, out);
-                cBuff.startTransfer(len);
-            }
-        } finally {
-            if (in != null) {
-                in.close();
-            }
-        }
     }
 
     @Override
@@ -549,24 +423,6 @@ public class VPDRI implements PDRI {
         return this.encrypt;
     }
 
-//
-//    @Override
-//    public void replicate(PDRI source) throws IOException {
-//        try {
-//            VRL sourceVRL = new VRL(source.getURI());
-////            VRL destVRL = this.vrl.getParent();
-//            log.debug("replicate from "+sourceVRL+" to "+vrl);
-//            VFile sourceFile = this.vfsClient.openFile(sourceVRL);
-//            VFile destFile = this.vfsClient.createFile(vrl, true);
-//            if (destFile instanceof CloudFile) {
-//                ((CloudFile) destFile).uploadFrom(sourceFile);
-//            } else {
-//                putData(source.getData());
-//            }
-//        } catch (VlException ex) {
-//            throw new IOException(ex);
-//        }
-//    }
     @Override
     public String getURI() throws IOException {
         try {

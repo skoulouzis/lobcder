@@ -52,6 +52,8 @@ import lombok.extern.java.Log;
 import nl.uva.vlet.data.StringUtil;
 import nl.uva.vlet.exception.VlException;
 import nl.uva.vlet.io.CircularStreamBufferTransferer;
+import nl.uva.vlet.vfs.VFSTransfer;
+import nl.uva.vlet.vrl.VRL;
 
 /**
  * A file servlet supporting resume of downloads and client-side caching and
@@ -83,6 +85,8 @@ public final class WorkerServlet extends HttpServlet {
     private static final Map<String, Double> weightPDRIMap = new HashMap<>();
     private static final HashMap<String, Integer> numOfGetsMap = new HashMap<>();
     private InputStream in;
+    private int responseBufferSize;
+    private double lim = -5.0;
 
     // Actions ------------------------------------------------------------------------------------
     /**
@@ -99,6 +103,7 @@ public final class WorkerServlet extends HttpServlet {
 
             restURL = Util.getRestURL();
             token = Util.getRestPassword();
+            lim = Util.getRateOfChangeLim();
             //        uname = prop.getProperty(("rest.uname"));
             clientConfig = configureClient();
             clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
@@ -330,6 +335,7 @@ public final class WorkerServlet extends HttpServlet {
         if (setResponseBufferSize) {
             response.setBufferSize(bufferSize);
         }
+        responseBufferSize = response.getBufferSize();
         response.setHeader("Content-Disposition", disposition + ";filename=\"" + fileName + "\"");
         response.setHeader("Accept-Ranges", "bytes");
         response.setHeader("ETag", eTag);
@@ -512,12 +518,38 @@ public final class WorkerServlet extends HttpServlet {
 
                 if (useCircularBuffer) {
                     CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((bufferSize), in, output);
+                    cBuff.setMaxReadChunkSize(bufferSize);
+                    if (responseBufferSize > 0) {
+                        cBuff.setMaxWriteChunkSize(responseBufferSize);
+                    }
                     cBuff.startTransfer(new Long(-1));
                 } else {
+                    long startTime = System.currentTimeMillis();
                     int read;
+                    int count = 0;
+                    double speed;
+                    double rateOfChange = 0;
+                    double speedPrev = 0;
+                    StringBuilder sb = new StringBuilder();
                     while ((read = in.read(buffer)) > 0) {
                         output.write(buffer, 0, read);
+                        if (count % 100 == 0) {
+                            long elapsed = System.currentTimeMillis() - startTime;
+                            speed = read * 1.0 / (elapsed * 1.0);
+                            if (count > 50) {
+                                rateOfChange = (speed - speedPrev) / (elapsed);
+                            }
+                            speedPrev = speed;
+//                            sb.append("read: ").append(read).append(" speed: ").append(speed).append(" rateOfChange: ").append(rateOfChange).append("\n");
+                            if (rateOfChange < lim) {
+                                Logger.getLogger(WorkerServlet.class.getName()).log(Level.WARNING, "We will not tolarate this !!!! Find a new worker");
+                                throw new IOException("Low B/W");
+                            }
+                        }
+                        count++;
                     }
+                    Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, "lim: " + lim);
+//                    Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, sb.toString());
                 }
             } else {
                 input.copyRange(output, start, length);
@@ -723,6 +755,11 @@ public final class WorkerServlet extends HttpServlet {
         if (ex instanceof IOException) {
             if (ex.getMessage().contains("PDRIS from master is either empty or contains unreachable files")) {
                 response.sendError(HttpServletResponse.SC_MOVED_TEMPORARILY);
+                return;
+            }
+            if (ex.getMessage().contains("Low B/W")) {
+//                                response.sendError(HttpServletResponse.SC_EXPECTATION_FAILED);
+                response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
                 return;
             }
         }
