@@ -4,6 +4,9 @@
  */
 package nl.uva.cs.lobcder.auth;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.HashSet;
 import java.util.Set;
 
@@ -16,6 +19,7 @@ public class MyPrincipal {
     private String userId;
     private Set<String> roles;
     private boolean admin;
+    @Getter @Setter private Long validUntil;
 
     public MyPrincipal(String userId, Set<String> roles) {
         this.userId = userId;

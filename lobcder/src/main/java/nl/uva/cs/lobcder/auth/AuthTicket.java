@@ -4,6 +4,12 @@
  */
 package nl.uva.cs.lobcder.auth;
 
+import lombok.Setter;
+import lombok.extern.java.Log;
+import nl.uva.cs.lobcder.util.PropertiesHelper;
+import org.apache.commons.codec.binary.Base64;
+
+import javax.sql.DataSource;
 import java.io.InputStream;
 import java.security.KeyFactory;
 import java.security.PublicKey;
@@ -17,11 +23,6 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Properties;
 import java.util.logging.Level;
-import javax.sql.DataSource;
-import lombok.Setter;
-import lombok.extern.java.Log;
-import nl.uva.cs.lobcder.util.PropertiesHelper;
-import org.apache.commons.codec.binary.Base64;
 
 /**
  *
@@ -68,10 +69,12 @@ public class AuthTicket implements AuthI  {
                 res = new MyPrincipal(u.username, new HashSet(Arrays.asList(u.role)));
                 res.getRoles().add("other");
                 res.getRoles().add(u.username);
+                res.setValidUntil(u.validuntil);
+                if (principalCache != null) {
+                    principalCache.putPrincipal(token, res, u.validuntil * 1000);
+                }
             }
-            if (principalCache != null) {
-                principalCache.putPrincipal(token, res, u.validuntil * 1000);
-            }
+
         } catch (Exception e) {
         }
         return res;
@@ -155,5 +158,16 @@ public class AuthTicket implements AuthI  {
             return null;
         }
     }
+
+    public static void main(String[] args){
+        AuthI au = null;
+        try {
+            au = new AuthTicket();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        System.out.println(au.checkToken("dWlkPWR2YXN1bmluO3ZhbGlkdW50aWw9MTM4OTc3NjcxNjtjaXA9MC4wLjAuMDt0b2tlbnM9dGVzdCxkZXZlbG9wZXIsZnJpZW5kLGFkbWluLHZwaCxWUEg7dWRhdGE9ZHZhc3VuaW4sRG1pdHJ5IFZhc3l1bmluLGR2YXN1bmluQGdtYWlsLmNvbSwsTkVUSEVSTEFORFMsMTA5OFhIO3NpZz1NQzRDRlFEWjBnU3dEcnkyOTdzbXJlQUNJdXl5NzFuK2J3SVZBUGdOVEg0NEdPbTVUUWZlcDExOGtTNjNoQ3E2"));
+    }
+
 }
 

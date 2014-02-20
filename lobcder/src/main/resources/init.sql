@@ -383,3 +383,9 @@ CREATE TABLE IF NOT EXISTS tokens_table (
   exp_date DATETIME, INDEX(exp_date)
 ) ENGINE=InnoDB;
 
+CREATE EVENT IF NOT EXISTS e_tokens_sweep
+  ON SCHEDULE
+    EVERY 600 SECOND
+DO
+  DELETE FROM tokens_table WHERE exp_date < NOW();
+

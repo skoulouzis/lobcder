@@ -8,6 +8,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.sql.*;
 
 /**
@@ -34,11 +35,11 @@ public class Translator {
         return res;
     }
 
-    protected void setShortId(String id_short, String id_long, Connection cn) throws SQLException {
+    protected void setShortId(String id_short, String id_long, Long exp, Connection cn) throws SQLException {
         try(PreparedStatement ps = cn.prepareStatement("INSERT INTO tokens_table(short_tkt, long_tkt, exp_date) VALUES (?, ?, ?)")) {
             ps.setString(1, id_short);
             ps.setString(2, id_long);
-            ps.setTimestamp(3, new Timestamp(new java.util.Date().getTime() + 1000 * 3600 * 24 * 7)); //set exp date week after
+            ps.setTimestamp(3, new Timestamp(exp.longValue() * 1000));
             ps.executeUpdate();
         }
     }
@@ -46,14 +47,21 @@ public class Translator {
     @Path("{id}/")
     @Produces(MediaType.TEXT_PLAIN)
     @GET
-    public String getShortWeb(@PathParam("id") String longId) throws SQLException {
-        try (Connection cn = SingletonesHelper.getInstance().getDataSource().getConnection()) {
-            String shortId = getShortId(longId, cn);
-            if(shortId == null){
-                shortId = org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric(12);
-                setShortId(shortId, longId, cn);
+    public Response getShortWeb(@PathParam("id") String longId) throws SQLException {
+        try{
+            Long expDate = SingletonesHelper.getInstance().getTktAuth().checkToken(longId).getValidUntil();
+            try (Connection cn = SingletonesHelper.getInstance().getDataSource().getConnection()) {
+                String shortId = getShortId(longId, cn);
+                if(shortId == null){
+                    shortId = org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric(12);
+                    setShortId(shortId, longId, expDate, cn);
+                }
+                return Response.ok(shortId).build();
+            }  catch (SQLException e) {
+                return Response.serverError().entity(e).build();
             }
-            return shortId;
+        } catch (Throwable th) {
+            return Response.status(Response.Status.UNAUTHORIZED).entity("Ticket is not valid").build();
         }
     }
 }
