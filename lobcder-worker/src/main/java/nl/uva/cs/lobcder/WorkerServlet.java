@@ -542,8 +542,10 @@ public final class WorkerServlet extends HttpServlet {
                             speedPrev = speed;
 //                            sb.append("read: ").append(read).append(" speed: ").append(speed).append(" rateOfChange: ").append(rateOfChange).append("\n");
                             if (rateOfChange < lim) {
+                                //This works with export ec=18; while [ $ec -eq 18 ]; do curl -O -C - -L --request GET -u user:pass http://localhost:8080/lobcder/dav/large_file; export ec=$?; done
                                 Logger.getLogger(WorkerServlet.class.getName()).log(Level.WARNING, "We will not tolarate this !!!! Find a new worker");
-                                throw new IOException("Low B/W");
+                                break;
+//                                throw new IOException("Low B/W");
                             }
                         }
                         count++;
