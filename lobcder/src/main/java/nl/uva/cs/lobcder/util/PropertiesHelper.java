@@ -4,8 +4,6 @@
  */
 package nl.uva.cs.lobcder.util;
 
-import nl.uva.cs.lobcder.webDav.resources.WebDataFileResource;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -20,6 +18,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import nl.uva.cs.lobcder.webDav.resources.WebDataFileResource;
 
 /**
  *
@@ -201,5 +200,13 @@ public class PropertiesHelper {
             }
         }
         return ipMap;
+    }
+
+    public static String getSchedulingAlg() throws IOException {
+       return getProperties().getProperty("scheduling.algorithm");
+    }
+
+    public static String getPredictorAlgorithm() throws IOException {
+        return getProperties().getProperty("predictor.algorithm","FirstSuccessor");
     }
 }

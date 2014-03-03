@@ -38,6 +38,7 @@ public class GridHelper {
             Logger.getLogger(GridHelper.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
+
     public static void InitGlobalVFS() throws Exception {
         if (!GlobalConfig.isGlobalInitialized()) {
             copyVomsAndCerts();
@@ -59,13 +60,16 @@ public class GridHelper {
             GlobalConfig.setSystemProperty("grid.proxy.lifetime", "100");
 //        GlobalConfig.setUsePersistantUserConfiguration(false);
             GlobalConfig.setCACertificateLocations(Constants.CERT_LOCATION);
-            
+
             // user configuration 
 //        GlobalConfig.setUsePersistantUserConfiguration(false);
 //        GlobalConfig.setUserHomeLocation(new URL("file:////" + this.tmpVPHuserHome.getAbsolutePath()));
 //            Global.setDebug(true);
             if (VRS.getRegistry().getVRSFactoryClass(nl.uva.vlet.vfs.cloud.CloudFSFactory.class.getName()) == null) {
                 VRS.getRegistry().addVRSDriverClass(nl.uva.vlet.vfs.cloud.CloudFSFactory.class);
+            }
+            if (VRS.getRegistry().getVRSFactoryClass(nl.uva.vlet.vfs.webdavfs.WebdavFSFactory.class.getName()) == null) {
+                VRS.getRegistry().addVRSDriverClass(nl.uva.vlet.vfs.webdavfs.WebdavFSFactory.class);
             }
             Global.init();
         }

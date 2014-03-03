@@ -21,12 +21,12 @@ import nl.uva.cs.lobcder.util.MyDataSource;
  * @author S. Koulouzis
  */
 @Log
-public class FileAccessPredictor extends MyDataSource {
+public class PredictorOld extends MyDataSource {
 
     private Timer timer;
     private GraphPopulator graphPopulator;
 
-    public FileAccessPredictor() throws NamingException {
+    public PredictorOld() throws NamingException {
     }
 
     public void startGraphPopulation() {

@@ -4,6 +4,7 @@
  */
 package nl.uva.cs.lobcder.frontend;
 
+import nl.uva.cs.lobcder.optimization.FirstSuccessor;
 import io.milton.common.Path;
 import io.milton.http.Request;
 import io.milton.http.Request.Method;
@@ -25,11 +26,13 @@ import java.util.logging.Logger;
 import javax.naming.InitialContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
-import nl.uva.cs.lobcder.optimization.FileAccessPredictor;
+import nl.uva.cs.lobcder.optimization.PredictorOld;
 import nl.uva.cs.lobcder.optimization.LobState;
 import nl.uva.cs.lobcder.optimization.MyTask;
+import nl.uva.cs.lobcder.optimization.Predictor;
 import nl.uva.cs.lobcder.util.CatalogueHelper;
 import nl.uva.cs.lobcder.util.PropertiesHelper;
 import org.apache.commons.codec.binary.Base64;
@@ -42,14 +45,14 @@ import org.apache.commons.codec.binary.Base64;
 public class MyFilter extends MiltonFilter {
 
     private JDBCatalogue catalogue;
-    private static FileAccessPredictor fap;
+    private static Predictor predictor;
     private static LobState prevState;
     private static final BlockingQueue queue = new ArrayBlockingQueue(2500);
     private static RequestEventRecorder recorder;
     private Timer recordertimer;
 
     public MyFilter() throws Exception {
-//        getFileAccessPredictor();
+//        getPredictor();
     }
 
     @Override
@@ -59,10 +62,14 @@ public class MyFilter extends MiltonFilter {
         StringBuffer reqURL = ((HttpServletRequest) req).getRequestURL();
 
         if (PropertiesHelper.doPrediction()) {
-            long startPredict = System.currentTimeMillis();
-            predict(Request.Method.valueOf(method), reqURL.toString());
-            long elapsedPredict = System.currentTimeMillis() - startPredict;
-            log.log(Level.INFO, "elapsedPredict: {0}", elapsedPredict);
+            try {
+                long startPredict = System.currentTimeMillis();
+                predict(Request.Method.valueOf(method), reqURL.toString());
+                long elapsedPredict = System.currentTimeMillis() - startPredict;
+                log.log(Level.INFO, "elapsedPredict: {0}", elapsedPredict);
+            } catch (Exception ex) {
+                Logger.getLogger(MyFilter.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
 
 
@@ -160,30 +167,21 @@ public class MyFilter extends MiltonFilter {
         connection.commit();
     }
 
-    private FileAccessPredictor getFileAccessPredictor() throws Exception {
-        if (fap == null) {
-            String jndiName = "bean/Predictor";
-            javax.naming.Context ctx;
-            try {
-                ctx = new InitialContext();
-                if (ctx == null) {
-                    throw new Exception("JNDI could not create InitalContext ");
-                }
-                javax.naming.Context envContext = (javax.naming.Context) ctx.lookup("java:/comp/env");
-                fap = (FileAccessPredictor) envContext.lookup(jndiName);
-                fap.startGraphPopulation();
-            } catch (Exception ex) {
-                Logger.getLogger(CatalogueHelper.class.getName()).log(Level.SEVERE, null, ex);
+    private Predictor getPredictor() throws Exception {
+        if (predictor == null) {
+            String algorithm = PropertiesHelper.getPredictorAlgorithm();
+            if (algorithm.equals("FirstSuccessor")) {
+                predictor = new FirstSuccessor();
             }
         }
-        return fap;
+        return predictor;
     }
 
     @Override
     public void destroy() {
         super.destroy();
         try {
-            getFileAccessPredictor().stopGraphPopulation();
+            getPredictor().stop();
             if (recordertimer != null) {
                 if (recorder != null) {
                     recorder.comitToDB();
@@ -196,7 +194,7 @@ public class MyFilter extends MiltonFilter {
         }
     }
 
-    private void predict(Method method, String reqURL) {
+    private void predict(Method method, String reqURL) throws Exception {
         String strPath = null;
         try {
             strPath = new URL(reqURL).getPath();
@@ -213,23 +211,40 @@ public class MyFilter extends MiltonFilter {
 
         LobState currentState = new LobState(method, Path.path(resource).toString());
         LobState nextState = null;
-        try {
-            nextState = getFileAccessPredictor().predictNextState(currentState);
-            log.log(Level.INFO, "nextFile: {0}", nextState.getID());
-        } catch (Exception ex) {
-            Logger.getLogger(MyFilter.class.getName()).log(Level.SEVERE, null, ex);
-        }
+
+        nextState = getPredictor().getNextState(currentState);
         if (prevState != null) {
+            getPredictor().setPreviousStateForCurrent(prevState, currentState);
+
+
             if (currentState.getID().equals(prevState.getID())) {
                 log.log(Level.INFO, "Hit. currentState: {0} nextState: {1} prevState: {2}",
                         new Object[]{currentState.getID(), nextState.getID(), prevState.getID()});
             } else {
+                String nextID, prevID;
+                if (nextState != null) {
+                    nextID = nextState.getID();
+                } else {
+                    nextID = "NON";
+                }
+                if (prevState != null) {
+                    prevID = prevState.getID();
+                } else {
+                    prevID = "NON";
+                }
                 log.log(Level.INFO, "Miss. currentState: {0} nextState: {1} prevState: {2}",
-                        new Object[]{currentState.getID(), nextState.getID(), prevState.getID()});
+                        new Object[]{currentState.getID(), nextID, prevID});
             }
         }
+        if (nextState != null) {
+            log.log(Level.INFO, "nextFile: {0}", nextState.getID());
+            prevState = nextState;
+        } else {
+            prevState = currentState;
+        }
 
-        prevState = nextState;
+
+
     }
 
     private void startRecorder() {

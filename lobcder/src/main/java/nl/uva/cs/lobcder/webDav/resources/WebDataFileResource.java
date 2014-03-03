@@ -37,6 +37,7 @@ import nl.uva.cs.lobcder.auth.AuthWorker;
 import nl.uva.cs.lobcder.auth.Permissions;
 import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
 import nl.uva.cs.lobcder.optimization.NewQoSPlannerClient;
+import nl.uva.cs.lobcder.optimization.NewQoSPlannerClient.FloodlightStats;
 import nl.uva.cs.lobcder.resources.LogicalData;
 import nl.uva.cs.lobcder.resources.PDRI;
 import nl.uva.cs.lobcder.resources.PDRIDescr;
@@ -514,52 +515,19 @@ public class WebDataFileResource extends WebDataResource implements
 
     private String getBestWorker() throws IOException {
         if (doRedirect) {
-//            String uri = PropertiesHelper.getFloodLightURL();
-//            if (uri != null) {
-//                if (plannerClient == null) {
-//                    plannerClient = new NewQoSPlannerClient(uri);
-//                }
-//                List<FloodlightStats> stats = plannerClient.getStats();
-//                long cost = Long.MAX_VALUE;
-//                int portNum = -1;
-//                HashMap<Integer, String> map = PropertiesHelper.getPortWorkerMap();
-//                String worker;
-//                for (FloodlightStats f : stats) {
-//                    if (f.portNumber != 3 && f.portNumber != 2 && f.portNumber >= 0) {
-//                        if ((f.receivePackets + f.transmitPackets) < cost) {
-////                            cost = f.receivePackets + f.transmitPackets + f.collisions
-////                                    + f.receiveCRCErrors + f.receiveDropped + f.receiveErrors
-////                                    + f.receiveFrameErrors + f.receiveOverrunErrors + f.transmitBytes
-////                                    + f.transmitDropped + f.transmitErrors;s
-//                            cost = f.receivePackets + f.transmitPackets;
-//                            portNum = f.portNumber;
-//                            worker = map.get(portNum);
-//                            if (numOfWorkerTransfersMap.containsKey(worker)) {
-//                                long weightedTras = numOfWorkerTransfersMap.get(worker) + (cost / 6);
-//                                cost += weightedTras;
-//                            }
-//                        }
-//                    }
-//                }
-//                worker = map.get(portNum);
-//                plannerClient.pushFlow("00:00:c2:b3:aa:aa:2d:41", portNum, 3);
-//                plannerClient.pushFlow("00:00:c2:b3:aa:aa:2d:41", 3, portNum);
-//
-//                WebDataFileResource.log.log(Level.INFO, "portNum: {0} min: {1} worker: {2}", new Object[]{portNum, cost, worker});
-//                String w = worker + "/" + getLogicalData().getUid();
-//                String token = UUID.randomUUID().toString();
-//                AuthWorker.setTicket(worker, token);
-//                int trans = 0;
-//                if (numOfWorkerTransfersMap.containsKey(worker)) {
-//                    trans = numOfWorkerTransfersMap.get(worker);
-//                }
-//                trans++;
-//                numOfWorkerTransfersMap.put(worker, trans);
-//                WebDataFileResource.log.log(Level.INFO, "worker: " + worker + " transfers: " + trans);
-//                return w + "/" + token;
-//            }
-
-
+            String uri = PropertiesHelper.getFloodLightURL();
+            if (uri != null) {
+                if (PropertiesHelper.getSchedulingAlg().equals("traffic")) {
+                    return getWorkerWithLessTraffic(uri);
+                }
+                if (PropertiesHelper.getSchedulingAlg().equals("round-robin")) {
+                    return getWorkerRoundRobin(uri);
+                }
+                if (PropertiesHelper.getSchedulingAlg().equals("random")) {
+                    return getWorkerRandom(uri);
+                }
+            }
+            
             workers = PropertiesHelper.getWorkers();
             if (workerIndex >= workers.size()) {
                 workerIndex = 0;
@@ -620,7 +588,7 @@ public class WebDataFileResource extends WebDataResource implements
         if (userAgent == null || userAgent.length() <= 1) {
             return false;
         }
-        WebDataFileResource.log.log(Level.FINE, "userAgent: {0}", userAgent);
+//        WebDataFileResource.log.log(Level.FINE, "userAgent: {0}", userAgent);
         List<String> nonRedirectableUserAgents = PropertiesHelper.getNonRedirectableUserAgents();
         for (String s : nonRedirectableUserAgents) {
             if (userAgent.contains(s)) {
@@ -639,5 +607,116 @@ public class WebDataFileResource extends WebDataResource implements
             }
         }
         return false;
+    }
+
+    private String getWorkerWithLessTraffic(String uri) throws IOException {
+        if (plannerClient == null) {
+            plannerClient = new NewQoSPlannerClient(uri);
+        }
+        List<FloodlightStats> stats = plannerClient.getStats();
+        long cost = Long.MAX_VALUE;
+        int portNum = -1;
+        HashMap<Integer, String> map = PropertiesHelper.getPortWorkerMap();
+        String worker;
+        for (FloodlightStats f : stats) {
+            if (f.portNumber != 3 && f.portNumber != 2 && f.portNumber >= 0) {
+                long allStats = f.receivePackets + f.transmitPackets + f.collisions
+                        + f.receiveCRCErrors + f.receiveDropped + f.receiveErrors
+                        + f.receiveFrameErrors + f.receiveOverrunErrors + f.transmitBytes
+                        + f.transmitDropped + f.transmitErrors;
+                if (allStats < cost) {
+                    cost = allStats;
+                    portNum = f.portNumber;
+                    worker = map.get(portNum);
+                    if (numOfWorkerTransfersMap.containsKey(worker)) {
+                        long weightedTras = numOfWorkerTransfersMap.get(worker) + (cost / 6);
+                        cost += weightedTras;
+                    }
+                }
+            }
+        }
+        if (map.containsKey(portNum)) {
+            worker = map.get(portNum);
+        } else {
+            portNum = map.keySet().iterator().next();
+            worker = map.get(portNum);
+        }
+
+
+//        plannerClient.pushFlow("00:00:c2:b3:aa:aa:2d:41", portNum, 3);
+//        plannerClient.pushFlow("00:00:c2:b3:aa:aa:2d:41", 3, portNum);
+
+//        WebDataFileResource.log.log(Level.INFO, "portNum: {0} cost: {1} worker: {2}", new Object[]{portNum, cost, worker});
+        String w = worker + "/" + getLogicalData().getUid();
+        String token = UUID.randomUUID().toString();
+        AuthWorker.setTicket(worker, token);
+        int trans = 0;
+        if (numOfWorkerTransfersMap.containsKey(worker)) {
+            trans = numOfWorkerTransfersMap.get(worker);
+        }
+        trans++;
+        numOfWorkerTransfersMap.put(worker, trans);
+//        WebDataFileResource.log.log(Level.INFO, "worker: {0} cost: {1} transfers: {2}", new Object[]{worker, cost, trans});
+        return w + "/" + token;
+    }
+
+    private String getWorkerRoundRobin(String uri) throws IOException {
+        if (plannerClient == null) {
+            plannerClient = new NewQoSPlannerClient(uri);
+        }
+
+        HashMap<Integer, String> map = PropertiesHelper.getPortWorkerMap();
+
+        Integer[] keysArray = new Integer[map.keySet().size()];
+        keysArray = map.keySet().toArray(keysArray);
+
+        if (workerIndex >= keysArray.length) {
+            workerIndex = 0;
+        }
+        Integer portNum = keysArray[workerIndex++];
+        String worker = map.get(portNum);
+//        plannerClient.pushFlow("00:00:c2:b3:aa:aa:2d:41", portNum, 3);
+//        plannerClient.pushFlow("00:00:c2:b3:aa:aa:2d:41", 3, portNum);
+
+
+        String w = worker + "/" + getLogicalData().getUid();
+        String token = UUID.randomUUID().toString();
+        AuthWorker.setTicket(worker, token);
+        int trans = 0;
+        if (numOfWorkerTransfersMap.containsKey(worker)) {
+            trans = numOfWorkerTransfersMap.get(worker);
+        }
+        trans++;
+        numOfWorkerTransfersMap.put(worker, trans);
+        return w + "/" + token;
+    }
+
+    private String getWorkerRandom(String uri) throws IOException {
+        if (plannerClient == null) {
+            plannerClient = new NewQoSPlannerClient(uri);
+        }
+
+        HashMap<Integer, String> map = PropertiesHelper.getPortWorkerMap();
+
+        Integer[] keysArray = new Integer[map.keySet().size()];
+        keysArray = map.keySet().toArray(keysArray);
+        int index = 0 + (int) (Math.random() * ((keysArray.length - 0) + 1));
+
+        Integer portNum = keysArray[index];
+        String worker = map.get(portNum);
+//        plannerClient.pushFlow("00:00:c2:b3:aa:aa:2d:41", portNum, 3);
+//        plannerClient.pushFlow("00:00:c2:b3:aa:aa:2d:41", 3, portNum);
+
+
+        String w = worker + "/" + getLogicalData().getUid();
+        String token = UUID.randomUUID().toString();
+        AuthWorker.setTicket(worker, token);
+        int trans = 0;
+        if (numOfWorkerTransfersMap.containsKey(worker)) {
+            trans = numOfWorkerTransfersMap.get(worker);
+        }
+        trans++;
+        numOfWorkerTransfersMap.put(worker, trans);
+        return w + "/" + token;
     }
 }

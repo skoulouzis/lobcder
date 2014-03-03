@@ -21,7 +21,4 @@
                                 
     <Resource auth="Container" factory="org.apache.naming.factory.BeanFactory" 
             name="bean/JDBCatalog" type="nl.uva.cs.lobcder.catalogue.JDBCatalogue"/>
-
-    <Resource auth="Container" factory="org.apache.naming.factory.BeanFactory" 
-            name="bean/Predictor" type="nl.uva.cs.lobcder.optimization.FileAccessPredictor"/>
 </Context>
