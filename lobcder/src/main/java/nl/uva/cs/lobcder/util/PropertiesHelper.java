@@ -113,7 +113,6 @@ public class PropertiesHelper {
 //    public static boolean doRemoteAuth() throws IOException {
 //        return Boolean.valueOf(getProperties().getProperty("auth.use.remote", "true"));
 //    }
-
     public static String getMetadataReposetoryURL() throws IOException {
         return getProperties().getProperty("metadata.reposetory.url", "http://vphshare.atosresearch.eu/metadata-retrieval/rest/metadata");
     }
@@ -125,7 +124,6 @@ public class PropertiesHelper {
 //    public static String getAuthRemoteURL() throws IOException {
 //        return getProperties().getProperty("auth.remote.url", "https://jump.vph-share.eu/validatetkt/?ticket=");
 //    }
-
     public static int getDefaultRowLimit() throws IOException {
         return Integer.valueOf(getProperties().getProperty("default.rowlimit", "500"));
     }
@@ -167,7 +165,7 @@ public class PropertiesHelper {
     }
 
     public static Set<String> getAllowedOrigins() throws IOException {
-        return new HashSet<>(Arrays.asList (getProperties().getProperty("allowed.origins").split(",")));
+        return new HashSet<>(Arrays.asList(getProperties().getProperty("allowed.origins").split(",")));
     }
 
     public static String getFloodLightURL() throws IOException {
@@ -175,7 +173,7 @@ public class PropertiesHelper {
     }
 
     public static HashMap<Integer, String> getPortWorkerMap() {
-         HashMap<Integer, String> ipMap = new HashMap<>();
+        HashMap<Integer, String> ipMap = new HashMap<>();
         BufferedReader br = null;
         try {
             ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
@@ -203,10 +201,14 @@ public class PropertiesHelper {
     }
 
     public static String getSchedulingAlg() throws IOException {
-       return getProperties().getProperty("scheduling.algorithm");
+        return getProperties().getProperty("scheduling.algorithm");
     }
 
     public static String getPredictorAlgorithm() throws IOException {
-        return getProperties().getProperty("predictor.algorithm","FirstSuccessor");
+        return getProperties().getProperty("predictor.algorithm", "FirstSuccessor");
+    }
+
+    public static Integer getStableSuccessorN() throws IOException {
+        return Integer.valueOf(getProperties().getProperty("stable.successor.N", "3"));
     }
 }

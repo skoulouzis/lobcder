@@ -2,10 +2,13 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package nl.uva.cs.lobcder.optimization;
+package nl.uva.cs.lobcder.predictors;
 
 import java.util.HashMap;
 import java.util.Map;
+import javax.naming.NamingException;
+import nl.uva.cs.lobcder.optimization.LobState;
+import nl.uva.cs.lobcder.util.MyDataSource;
 
 /**
  * If the first observed successor of A is B, then B will be predicted as the
@@ -13,11 +16,11 @@ import java.util.Map;
  *
  * @author S. Koulouzis
  */
-public class FirstSuccessor implements Predictor {
+public class LastSuccessor extends MyDataSource implements Predictor {
 
-    Map<String, LobState> fos = new HashMap<>();
+    Map<String, LobState> lastS = new HashMap<>();
 
-    public FirstSuccessor() {
+    public LastSuccessor() throws NamingException {
     }
 
     @Override
@@ -27,16 +30,12 @@ public class FirstSuccessor implements Predictor {
 
     @Override
     public LobState getNextState(LobState currentState) {
-        LobState nextState = fos.get(currentState.getID());
-        if (nextState == null) {
-        }
+        LobState nextState = lastS.get(currentState.getID());
         return nextState;
     }
 
     @Override
     public void setPreviousStateForCurrent(LobState prevState, LobState currentState) {
-        if (!fos.containsKey(prevState.getID())) {
-            fos.put(prevState.getID(), currentState);
-        }
+        lastS.put(prevState.getID(), currentState);
     }
 }

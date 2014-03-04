@@ -90,6 +90,12 @@ CREATE TABLE requests_table (
  timeStamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
+
+-- CREATE TABLE successor_table (
+--  uid SERIAL PRIMARY KEY,
+--  methodName VARCHAR(255), INDEX(methodName),
+-- ) ENGINE=InnoDB;
+
 DELIMITER |
 
 DROP TRIGGER IF EXISTS on_ldata_delete |
