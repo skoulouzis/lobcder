@@ -1,3 +1,4 @@
+
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
@@ -64,7 +65,7 @@
             <type>jar</type>
         </dependency>
         
-      <dependency>
+        <dependency>
             <groupId>nl.uva.vlet</groupId>
             <artifactId>vlet-vrs.core</artifactId>
             <version>1.5.0-dev-1</version>
@@ -142,7 +143,7 @@
         <repository>
             <id>elab.lab.uvalight.net</id>
             <name>elab.lab.uvalight.net-releases</name>
-            <url>https://elab.lab.uvalight.net:8444/artifactory/repo</url>
+            <url>http://elab.lab.uvalight.net/artifactory/repo</url>
         </repository>
         
     </repositories>
