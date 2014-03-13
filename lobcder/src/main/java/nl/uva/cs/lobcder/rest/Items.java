@@ -81,7 +81,7 @@ public class Items extends CatalogueHelper {
                     if (mp.canRead(p) && uid != 1) {
                         LogicalData logicalData = new LogicalData();
                         logicalData.setUid(uid);
-                        logicalData.setParentRef(myData.getUid());
+                        logicalData.setParentRef(dir.getUid());
                         logicalData.setOwner(owner);
                         logicalData.setType(datatype);
                         logicalData.setName(ldName);
@@ -106,7 +106,7 @@ public class Items extends CatalogueHelper {
                         LogicalDataWrapped ldw = new LogicalDataWrapped();
                         ldw.setLogicalData(logicalData);
                         ldw.setPermissions(p);
-                        ldw.setPath(myData.getPath().concat("/").concat(logicalData.getName()));
+                        ldw.setPath(dir.getPath().concat("/").concat(logicalData.getName()));
                         if (!logicalData.isFolder() && mp.isAdmin()) {
                             List<PDRIDescr> pdriDescr = getCatalogue().getPdriDescrByGroupId(logicalData.getPdriGroupId(), cn);
                             for (PDRIDescr pdri : pdriDescr) {
