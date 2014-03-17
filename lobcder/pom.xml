@@ -22,8 +22,7 @@
             <groupId>javax.servlet</groupId>
             <artifactId>servlet-api</artifactId>
             <version>2.5</version>
-            <scope>provided</scope>   
-             <type>jar</type>         
+            <scope>provided</scope>            
         </dependency>
                
         <dependency>
@@ -244,7 +243,7 @@
             <version>2.3.15.1</version>
         </dependency>-->
         
-<!--        <dependency>
+        <!--        <dependency>
             <groupId>xerces</groupId>
             <artifactId>xercesImpl</artifactId>
             <version>2.7.1</version>
@@ -380,5 +379,19 @@
             <url>http://elab.lab.uvalight.net/artifactory/ext-release-local</url>
         </repository>
     </distributionManagement>
+    
+    
+    
+    
+    
+    <servers>
+        <server>
+            <id>elab.lab.uvalight.net</id>
+            <name>elab.lab.uvalight.net-releases</name>
+            <url>http://elab.lab.uvalight.net/artifactory/ext-release-local</url>
+            <username>reader</username>
+            <password>reader</password>
+        </server>
+    </servers>
 
 </project>
