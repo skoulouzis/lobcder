@@ -3,7 +3,7 @@
     
     <Resource auth="Container" driverClassName="com.mysql.jdbc.Driver"
             name="jdbc/lobcder" 
-            password="RoomC3156"
+            password="RoomC3136B"
             type="javax.sql.DataSource" 
             url="jdbc:mysql://localhost:3306/lobcderDB2" 
             username="lobcder"

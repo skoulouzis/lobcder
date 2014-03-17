@@ -160,11 +160,12 @@ SET @credRef = LAST_INSERT_ID();
 INSERT INTO storage_site_table(resourceUri, credentialRef, currentNum, currentSize, quotaNum, quotaSize, isCache)
             VALUES('file:///tmp/', @credRef, -1, -1, -1, -1, TRUE);
 SET @ssRef = LAST_INSERT_ID();
-INSERT INTO  credential_table(username, password) VALUES ('dvasunin', 'my-secretpwd');
-SET @credRef = LAST_INSERT_ID();
-INSERT INTO storage_site_table(resourceUri, credentialRef, currentNum, currentSize, quotaNum, quotaSize)
-            VALUES('sftp://dvasunin@elab.lab.uvalight.net/home/dvasunin/tmp/lobcder/', @credRef, -1, -1, -1, -1);
-SET @ssRef = LAST_INSERT_ID();
+
+-- INSERT INTO  credential_table(username, password) VALUES ('dvasunin', 'my-secretpwd');
+-- SET @credRef = LAST_INSERT_ID();
+-- INSERT INTO storage_site_table(resourceUri, credentialRef, currentNum, currentSize, quotaNum, quotaSize)
+--             VALUES('sftp://dvasunin@elab.lab.uvalight.net/home/dvasunin/tmp/lobcder/', @credRef, -1, -1, -1, -1);
+-- SET @ssRef = LAST_INSERT_ID();
 
 # Here we createtables for built-in user IDs/roles
 DROP TABLE IF EXISTS auth_roles_tables, auth_usernames_table;
@@ -178,17 +179,11 @@ CREATE TABLE auth_roles_tables (
     roleName VARCHAR(255), INDEX(roleName),
     unameRef BIGINT UNSIGNED, FOREIGN KEY(unameRef) REFERENCES auth_usernames_table(id) ON DELETE CASCADE
 );
-INSERT INTO auth_usernames_table(token, uname) VALUES ('secret0', 'token0');
+INSERT INTO auth_usernames_table(token, uname) VALUES ('admin', 'RoomC3156');
 SET @authUserNamesRef = LAST_INSERT_ID();
 INSERT INTO auth_roles_tables(roleName, unameRef) VALUES  ('admin',     @authUserNamesRef),
                                                           ('other',     @authUserNamesRef),
                                                           ('megarole',  @authUserNamesRef);
-INSERT INTO auth_usernames_table(token, uname) VALUES ('secret1', 'token1');
-SET @authUserNamesRef = LAST_INSERT_ID();
-INSERT INTO auth_roles_tables(roleName, unameRef) VALUES  ('other',     @authUserNamesRef);
-INSERT INTO auth_usernames_table(token, uname) VALUES ('secret2', 'token2');
-SET @authUserNamesRef = LAST_INSERT_ID();
-INSERT INTO auth_roles_tables(roleName, unameRef) VALUES  ('admin',     @authUserNamesRef);
 
 
 DROP FUNCTION IF EXISTS SPLIT_STR;
