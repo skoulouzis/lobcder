@@ -13,6 +13,8 @@ export DEBIAN_FRONTEND=noninteractive
 echo debconf shared/accepted-oracle-license-v1-1 select true | sudo debconf-set-selections
 echo debconf shared/accepted-oracle-license-v1-1 seen true | sudo debconf-set-selections
 apt-get -q -y install mysql-server mysql-client oracle-java7-installer subversion maven 
+wget http://elab.lab.uvalight.net/~lobcder/conf/settings.xml
+mv settings.xml ~/.m2/
 
 svn checkout --trust-server-cert --non-interactive --username anonsvn --password anonsvn https://gforge.cyfronet.pl/svn/lobcder/branches/dev/lobcder/
 

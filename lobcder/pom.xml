@@ -379,19 +379,5 @@
             <url>http://elab.lab.uvalight.net/artifactory/ext-release-local</url>
         </repository>
     </distributionManagement>
-    
-    
-    
-    
-    
-    <servers>
-        <server>
-            <id>elab.lab.uvalight.net</id>
-            <name>elab.lab.uvalight.net-releases</name>
-            <url>http://elab.lab.uvalight.net/artifactory/ext-release-local</url>
-            <username>reader</username>
-            <password>reader</password>
-        </server>
-    </servers>
 
 </project>
