@@ -267,16 +267,16 @@
     
     <repositories>
       
-        <repository>
+<!--        <repository>
             <id>repo2_maven_org</id>
             <url>http://repo2.maven.org/maven2</url>
-        </repository>
+        </repository>-->
         
-        <repository>
+<!--        <repository>
             <id>mvn-public</id>
             <name>MVNRepository</name>
             <url>http://mvnrepository.com</url>
-        </repository>
+        </repository>-->
 
 
         <repository>
