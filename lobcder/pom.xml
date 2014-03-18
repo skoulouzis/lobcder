@@ -376,7 +376,7 @@
         <repository>
             <id>elab.lab.uvalight.net</id>
             <name>elab.lab.uvalight.net-releases</name>
-            <url>http://elab.lab.uvalight.net/artifactory/ext-release-local</url>
+            <url>http://elab.lab.uvalight.net/artifactory/repo</url>
         </repository>
     </distributionManagement>
 
