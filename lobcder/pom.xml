@@ -372,7 +372,7 @@
     </reporting>
     
     
-    <distributionManagement>
+<!--    <distributionManagement>
         <repository>
             <id>elab.lab.uvalight.net</id>
             <name>elab.lab.uvalight.net-releases</name>
@@ -383,6 +383,6 @@
             <name>elab.lab.uvalight.net-snapshots</name>
             <url>http://elab.lab.uvalight.net/artifactory/local</url>
         </snapshotRepository>
-    </distributionManagement>
+    </distributionManagement>-->
 
 </project>
