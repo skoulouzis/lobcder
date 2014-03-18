@@ -150,11 +150,11 @@
 			<version>4.1.21</version>
 		</dependency>
 		
-		<dependency>
+		<!--		<dependency>
 			<groupId>io.milton</groupId>
 			<artifactId>milton-mail-api</artifactId>
 			<version>2.4.2.5</version>
-		</dependency>
+		</dependency>-->
 		
 		
 		<dependency>
@@ -162,8 +162,7 @@
 			<artifactId>milton-mail-server</artifactId>
 			<version>2.4.2.5</version>
 		</dependency>
-		
-		
+				
 		<dependency>
 			<groupId>io.milton</groupId>
 			<artifactId>milton-api</artifactId>
@@ -233,32 +232,28 @@
 		
 		<repository>
 			<id>milton-repo</id>
-			<url>http://milton.io/maven/</url>
-		</repository> 
+			<url>http://milton.io/maven</url>
+		</repository>
+		
+		<!--		<repository>
+			<id>elab.lab.uvalight.net</id>
+			<name>elab.lab.uvalight.net-releases</name>
+			<url>http://elab.lab.uvalight.net/artifactory/repo</url>
+		</repository>-->
 	</repositories>
 
 
-	<!--	<distributionManagement>
-		<repository>
-			<id>elab.lab.uvalight.net</id>
-			<name>elab.lab.uvalight.net-releases</name>
-			<url>https://elab.lab.uvalight.net:8444/artifactory/ext-snapshot-local</url>
-		</repository>
-		<snapshotRepository>
-			<id>elab.lab.uvalight.net</id>
-			<name>elab.lab.uvalight.net-snapshots</name>
-			<url>https://elab.lab.uvalight.net:8444/artifactory/ext-snapshot-local</url>
-		</snapshotRepository>
-	</distributionManagement>-->
-	
-	
-	
 	<distributionManagement>
 		<repository>
 			<id>elab.lab.uvalight.net</id>
 			<name>elab.lab.uvalight.net-releases</name>
-			<url>http://elab.lab.uvalight.net/artifactory/ext-release-local</url>
+			<url>http://elab.lab.uvalight.net/artifactory/local</url>
 		</repository>
+		<snapshotRepository>
+			<id>elab.lab.uvalight.net</id>
+			<name>elab.lab.uvalight.net-snapshots</name>
+			<url>http://elab.lab.uvalight.net/artifactory/local</url>
+		</snapshotRepository>
 	</distributionManagement>
 </project>
 
