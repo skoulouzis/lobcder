@@ -267,12 +267,12 @@
     
     <repositories>
       
-<!--        <repository>
+        <!--        <repository>
             <id>repo2_maven_org</id>
             <url>http://repo2.maven.org/maven2</url>
         </repository>-->
         
-<!--        <repository>
+        <!--        <repository>
             <id>mvn-public</id>
             <name>MVNRepository</name>
             <url>http://mvnrepository.com</url>
@@ -282,7 +282,7 @@
         <repository>
             <id>elab.lab.uvalight.net</id>
             <name>elab.lab.uvalight.net-releases</name>
-            <url>http://elab.lab.uvalight.net/artifactory/repo</url>
+            <url>>http://elab.lab.uvalight.net/artifactory/local</url>
         </repository>
         
         <repository>
@@ -376,8 +376,13 @@
         <repository>
             <id>elab.lab.uvalight.net</id>
             <name>elab.lab.uvalight.net-releases</name>
-            <url>http://elab.lab.uvalight.net/artifactory/repo</url>
+            <url>http://elab.lab.uvalight.net/artifactory/local</url>
         </repository>
+        <snapshotRepository>
+            <id>elab.lab.uvalight.net</id>
+            <name>elab.lab.uvalight.net-snapshots</name>
+            <url>http://elab.lab.uvalight.net/artifactory/local</url>
+        </snapshotRepository>
     </distributionManagement>
 
 </project>
