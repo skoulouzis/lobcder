@@ -23,7 +23,20 @@
 			<distribution>repo</distribution>
 			<comments>Permissive, business friendly license.</comments>
 		</license>
-	</licenses>	
+	</licenses>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>2.3.2</version>
+				<configuration>
+					<source>1.7</source>
+					<target>1.7</target>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
 	<properties>
 		<skipTests>true</skipTests>
 	</properties>
@@ -225,7 +238,7 @@
 	</repositories>
 
 
-	<distributionManagement>
+	<!--	<distributionManagement>
 		<repository>
 			<id>elab.lab.uvalight.net</id>
 			<name>elab.lab.uvalight.net-releases</name>
@@ -236,6 +249,16 @@
 			<name>elab.lab.uvalight.net-snapshots</name>
 			<url>https://elab.lab.uvalight.net:8444/artifactory/ext-snapshot-local</url>
 		</snapshotRepository>
+	</distributionManagement>-->
+	
+	
+	
+	<distributionManagement>
+		<repository>
+			<id>elab.lab.uvalight.net</id>
+			<name>elab.lab.uvalight.net-releases</name>
+			<url>http://elab.lab.uvalight.net/artifactory/ext-release-local</url>
+		</repository>
 	</distributionManagement>
 </project>
 
