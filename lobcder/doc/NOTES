@@ -13,10 +13,14 @@ export DEBIAN_FRONTEND=noninteractive
 echo debconf shared/accepted-oracle-license-v1-1 select true | sudo debconf-set-selections
 echo debconf shared/accepted-oracle-license-v1-1 seen true | sudo debconf-set-selections
 apt-get -q -y install mysql-server mysql-client oracle-java7-installer subversion maven 
+
+
+
+--------------------Skip that---------------------------------
 wget http://elab.lab.uvalight.net/~lobcder/conf/settings.xml
 mv settings.xml ~/.m2/
-
 svn checkout --trust-server-cert --non-interactive --username anonsvn --password anonsvn https://gforge.cyfronet.pl/svn/lobcder/branches/dev/lobcder/
+--------------------------------------------------------------
 
 
 wget http://elab.lab.uvalight.net/~lobcder/conf/initLOBDB.sql
@@ -25,3 +29,9 @@ mysql --user=root < initLOBDB.sql
 
 wget http://elab.lab.uvalight.net/~lobcder/conf/init.sql
 mysql --user=lobcder --password=RoomC3156 lobcderDB2 < init.sql
+
+
+
+wget http://elab.lab.uvalight.net/~lobcder/apache-tomcat-6.0.36.tar.gz
+tar -xzvf apache-tomcat-6.0.36.tar.gz
+./apache-tomcat-6.0.36/bin/startup.sh
