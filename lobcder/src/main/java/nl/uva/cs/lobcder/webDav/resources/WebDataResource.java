@@ -146,9 +146,10 @@ public class WebDataResource implements PropFindableResource, Resource,
                 case COPY:
                     return getPrincipal().canRead(getPermissions());
                 case MOVE:
-                    parentLD = getCatalogue().getLogicalDataByUid(logicalData.getParentRef());
-                    p = getCatalogue().getPermissions(parentLD.getUid(), parentLD.getOwner());
-                    return getPrincipal().canWrite(p);
+//                    parentLD = getCatalogue().getLogicalDataByUid(logicalData.getParentRef());
+//                    p = getCatalogue().getPermissions(parentLD.getUid(), parentLD.getOwner());
+//                    return getPrincipal().canWrite(p);
+                    return getPrincipal().canWrite(getPermissions());
                 case LOCK:
                     return getPrincipal().canWrite(getPermissions());
                 case UNLOCK:

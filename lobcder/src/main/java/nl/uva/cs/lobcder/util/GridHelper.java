@@ -51,7 +51,7 @@ public class GridHelper {
             GlobalConfig.setHasUI(false);
 //        GlobalConfig.setIsApplet(true);
             GlobalConfig.setPassiveMode(true);
-//        GlobalConfig.setIsService(true);
+            GlobalConfig.setIsService(true);
             GlobalConfig.setInitURLStreamFactory(false);
             GlobalConfig.setAllowUserInteraction(false);
             GlobalConfig.setUserHomeLocation(new URL("file:///" + System.getProperty("user.home")));

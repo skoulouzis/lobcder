@@ -463,7 +463,7 @@ public class WebDataFileResource extends WebDataResource implements
     public String processForm(Map<String, String> parameters,
             Map<String, FileItem> files) throws BadRequestException,
             NotAuthorizedException {
-//        Set<String> keys = parameters.keySet();
+        Set<String> keys = parameters.keySet();
 //        for (String s : keys) {
 //            WebDataFileResource.log.log(Level.INFO, "{0} : {1}", new Object[]{s, parameters.get(s)});
 //        }
