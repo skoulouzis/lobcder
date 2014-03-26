@@ -145,15 +145,9 @@ public class TestWebWAVFS {
         assertTrue(password1 != null);
 
 
-        username2 = prop.getProperty(("webdav.test.username2"), "");
-        if (username2 == null) {
-            username2 = "user2";
-        }
+        username2 = prop.getProperty(("webdav.test.username2"), "user2");
         assertTrue(username2 != null);
-        password2 = prop.getProperty(("webdav.test.password2"), "");
-        if (password2 == null) {
-            password2 = "passwd2";
-        }
+        password2 = prop.getProperty(("webdav.test.password2"), "passwd2");
         assertTrue(password2 != null);
 
 

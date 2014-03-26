@@ -122,11 +122,7 @@ public class WebDAVTest {
 
         Properties prop = TestSettings.getTestProperties(propBasePath);
 
-        String testURL = prop.getProperty("webdav.test.url");
-        //Some problem with the pom.xml. The properties are set but System.getProperty gets null
-        if (testURL == null) {
-            testURL = "http://localhost:8080/lobcder-1.0-SNAPSHOT/";
-        }
+        String testURL = prop.getProperty("webdav.test.url","http://localhost:8080/lobcder/dav");
         assertTrue(testURL != null);
         if (!testURL.endsWith("/")) {
             testURL = testURL + "/";
@@ -138,15 +134,9 @@ public class WebDAVTest {
             root += "/";
         }
 
-        username = prop.getProperty(("webdav.test.username1"), "");
-        if (username == null) {
-            username = "user";
-        }
+        username = prop.getProperty(("webdav.test.username1"), "user");
         assertTrue(username != null);
-        password = prop.getProperty(("webdav.test.password1"), "");
-        if (password == null) {
-            password = "token0";
-        }
+        password = prop.getProperty(("webdav.test.password1"), "token0");
         assertTrue(password != null);
 
         int port = uri.getPort();
@@ -175,7 +165,7 @@ public class WebDAVTest {
         clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
         restClient = Client.create(clientConfig);
         restClient.addFilter(new com.sun.jersey.api.client.filter.HTTPBasicAuthFilter(username, password));
-        restURL = prop.getProperty(("rest.test.url"), "http://localhost:8080/lobcder-2.0-SNAPSHOT/rest/");
+        restURL = prop.getProperty(("rest.test.url"), "http://localhost:8080/lobcder/dav/rest/");
 
     }
 

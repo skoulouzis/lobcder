@@ -1,7 +1,12 @@
 webdav.test.url=http://localhost:8080/lobcder/dav/
+rest.test.url=http://localhost:8080/lobcder/rest/
+translator.test.url=http://localhost:8080/lobcder/urest/
+
+
 webdav.test.username1=user
 webdav.test.password1=pass
 
+webdav.test.username2=user2
+webdav.test.password2=passwd2
 
-rest.test.url=http://localhost:8080/lobcder/rest/
-translator.test.url=http://localhost:8080/lobcder/urest/
+
