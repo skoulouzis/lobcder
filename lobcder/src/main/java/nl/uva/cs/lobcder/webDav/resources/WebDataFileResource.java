@@ -17,20 +17,6 @@ import io.milton.http.exceptions.NotFoundException;
 import io.milton.resource.BufferingControlResource;
 import io.milton.resource.CollectionResource;
 import io.milton.resource.FileResource;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
-import java.net.InetAddress;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.UnknownHostException;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.annotation.Nonnull;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.auth.AuthI;
 import nl.uva.cs.lobcder.auth.AuthWorker;
@@ -48,6 +34,21 @@ import nl.uva.cs.lobcder.util.PropertiesHelper;
 import nl.uva.vlet.data.StringUtil;
 import nl.uva.vlet.io.CircularStreamBufferTransferer;
 import org.apache.commons.codec.binary.Base64;
+
+import javax.annotation.Nonnull;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.InetAddress;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.UnknownHostException;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -128,7 +129,9 @@ public class WebDataFileResource extends WebDataResource implements
         try (Connection connection = getCatalogue().getConnection()) {
             try {
                 Permissions destPerm = getCatalogue().getPermissions(toWDDR.getLogicalData().getUid(), toWDDR.getLogicalData().getOwner(), connection);
-                if (!getPrincipal().canWrite(destPerm)) {
+                LogicalData parentLD = getCatalogue().getLogicalDataByUid(getLogicalData().getParentRef());
+                Permissions parentPerm = getCatalogue().getPermissions(parentLD.getUid(), parentLD.getOwner());
+                if (!(getPrincipal().canWrite(destPerm) && getPrincipal().canWrite(parentPerm))) {
                     throw new NotAuthorizedException(this);
                 }
                 getCatalogue().moveEntry(getLogicalData(), toWDDR.getLogicalData(), name, connection);

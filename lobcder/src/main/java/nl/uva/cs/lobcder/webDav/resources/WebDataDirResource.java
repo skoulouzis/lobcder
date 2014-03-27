@@ -453,8 +453,10 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
         WebDataDirResource.log.log(Level.FINE, "moveTo({0}, ''{1}'') for {2}", new Object[]{toWDDR.getPath(), name, getPath()});
         try (Connection connection = getCatalogue().getConnection()) {
             try {
-                Permissions newParentPerm = getCatalogue().getPermissions(toWDDR.getLogicalData().getUid(), toWDDR.getLogicalData().getOwner(), connection);
-                if (!getPrincipal().canWrite(newParentPerm)) {
+                Permissions destPerm = getCatalogue().getPermissions(toWDDR.getLogicalData().getUid(), toWDDR.getLogicalData().getOwner(), connection);
+                LogicalData parentLD = getCatalogue().getLogicalDataByUid(getLogicalData().getParentRef());
+                Permissions parentPerm = getCatalogue().getPermissions(parentLD.getUid(), parentLD.getOwner());
+                if (!(getPrincipal().canWrite(destPerm) && getPrincipal().canWrite(parentPerm))) {
                     throw new NotAuthorizedException(this);
                 }
                 getCatalogue().moveEntry(getLogicalData(), toWDDR.getLogicalData(), name, connection);

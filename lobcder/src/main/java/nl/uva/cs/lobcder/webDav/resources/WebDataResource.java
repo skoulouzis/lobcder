@@ -5,13 +5,7 @@
 package nl.uva.cs.lobcder.webDav.resources;
 
 import io.milton.common.Path;
-import io.milton.http.Auth;
-import io.milton.http.LockInfo;
-import io.milton.http.LockResult;
-import io.milton.http.LockTimeout;
-import io.milton.http.LockToken;
-import io.milton.http.Request;
-import io.milton.http.Response;
+import io.milton.http.*;
 import io.milton.http.exceptions.BadRequestException;
 import io.milton.http.exceptions.LockedException;
 import io.milton.http.exceptions.NotAuthorizedException;
@@ -20,19 +14,7 @@ import io.milton.http.values.HrefList;
 import io.milton.principal.DavPrincipals;
 import io.milton.principal.Principal;
 import io.milton.property.PropertySource;
-import io.milton.resource.AccessControlledResource;
-import io.milton.resource.LockableResource;
-import io.milton.resource.MultiNamespaceCustomPropertyResource;
-import io.milton.resource.PropFindableResource;
-import io.milton.resource.Resource;
-import java.io.IOException;
-import java.security.NoSuchAlgorithmException;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.*;
-import java.util.logging.Level;
-import javax.annotation.Nonnull;
-import javax.xml.namespace.QName;
+import io.milton.resource.*;
 import lombok.Getter;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.auth.AuthI;
@@ -42,6 +24,15 @@ import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
 import nl.uva.cs.lobcder.resources.*;
 import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.cs.lobcder.util.DesEncrypter;
+
+import javax.annotation.Nonnull;
+import javax.xml.namespace.QName;
+import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.*;
+import java.util.logging.Level;
 
 /**
  * @author S. Koulouzis
@@ -146,10 +137,7 @@ public class WebDataResource implements PropFindableResource, Resource,
                 case COPY:
                     return getPrincipal().canRead(getPermissions());
                 case MOVE:
-//                    parentLD = getCatalogue().getLogicalDataByUid(logicalData.getParentRef());
-//                    p = getCatalogue().getPermissions(parentLD.getUid(), parentLD.getOwner());
-//                    return getPrincipal().canWrite(p);
-                    return getPrincipal().canWrite(getPermissions());
+                    return true;
                 case LOCK:
                     return getPrincipal().canWrite(getPermissions());
                 case UNLOCK:
