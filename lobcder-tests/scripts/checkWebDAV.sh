@@ -5,11 +5,11 @@ pass=pass
 file=file
 dir=dir
 
-# host=localhost:8080
+#host=localhost:8080
 host=lobcder.vph.cyfronet.pl
-# url=http://$user:$pass@$host/lobcder/dav/dir
+#url=http://$user:$pass@$host/lobcder/dav/dir
 url=https://$user:$pass@$host/lobcder/dav/tester
-
+localdir=/tmp
 
 
 STATE_OK=0
@@ -20,14 +20,14 @@ STATE_UNKNOWN=3
 
 EXIT_STATE=$STATE_OK
 # ---------------------------PUT--------------------------
-echo "Test PUT"
-curl -k -X DELETE $url/$file 
-echo "Safe to delete" > $file 
-success=`curl -i -k -H "Content-Type:plain/text" -T $file $url/$file | grep "HTTP/1.[01] 20.."`
+#echo "Test PUT"
+curl -ks -X DELETE $url/$file > /dev/null
+echo "Safe to delete" > $localdir/$file 
+success=`curl -iks -H "Content-Type:plain/text" -T $localdir/$file $url/$file | grep "HTTP/1.[01] 20.." 2>&1`
 if [ -z "$success" ]
 then
   EXIT_STATE=$STATE_CRITICAL
-  echo "Critical: PUT request failed"
+  echo "CRITICAL: PUT request failed"
   exit $EXIT_STATE
 elif [ "$EXIT_STATE" -le "$STATE_OK" ]
 then
@@ -38,16 +38,16 @@ fi
 
 
 # ---------------------------GET--------------------------
-echo "Test GET"
-curl -k -X DELETE $url/$file
-echo "Safe to delete" > $file 
-curl -i -k -H "Content-Type:plain/text" -T $file $url/$file
+#echo "Test GET"
+curl -ks -X DELETE $url/$file > /dev/null
+echo "Safe to delete" > $localdir/$file 
+curl -iks -H "Content-Type:plain/text" -T $localdir/$file $url/$file > /dev/null
 
-success=`curl -ki  $url | grep "HTTP/1.[01] 20.."`
+success=`curl -iks  $url | grep "HTTP/1.[01] 20.." 2>&1`
 if [ -z "$success" ]
 then
   EXIT_STATE=$STATE_CRITICAL
-  echo "Critical: GET request failed"
+  echo "CRITICAL: GET request failed"
   exit $EXIT_STATE
 elif [ "$EXIT_STATE" -le "$STATE_OK" ]
 then
@@ -58,16 +58,16 @@ fi
 
 
 # ---------------------------DELETE--------------------------
-echo "Test DELETE"
-curl -k -X DELETE $url/$file
-echo "Safe to delete" > $file 
-curl -i -k -H "Content-Type:plain/text" -T $file $url/$file
+#echo "Test DELETE"
+curl -ks -X DELETE $url/$file > /dev/null
+echo "Safe to delete" > $localdir/$file > /dev/null
+curl -iks -H "Content-Type:plain/text" -T $localdir/$file $url/$file > /dev/null
 
-success=`curl -ki -X DELETE $url/$file | grep "HTTP/1.[01] 20.."`
+success=`curl -iks -X DELETE $url/$file | grep "HTTP/1.[01] 20.." 2>&1`
 if [ -z "$success" ]
 then
   EXIT_STATE=$STATE_CRITICAL
-  echo "Critical: DELETE request failed"
+  echo "CRITICAL: DELETE request failed"
   exit $EXIT_STATE
 elif [ "$EXIT_STATE" -le "$STATE_OK" ]
 then
@@ -78,13 +78,13 @@ fi
 
 
 # ---------------------------PROPFIND--------------------------
-echo "Test PROPFIND"
-success=`curl -ik -X PROPFIND $url | grep "HTTP/1.[01] 20.."`
+#echo "Test PROPFIND"
+success=`curl -iks -X PROPFIND $url | grep "HTTP/1.[01] 20.." 2>&1`
 
 if [ -z "$success" ]
 then
   EXIT_STATE=$STATE_CRITICAL
-  echo "Critical: PROPFIND request failed"
+  echo "CRITICAL: PROPFIND request failed"
   exit $EXIT_STATE
 elif [ "$EXIT_STATE" -le "$STATE_OK" ]
 then
@@ -95,13 +95,13 @@ fi
 
 
 # ---------------------------MKCOL--------------------------
-echo "Test MKCOL"
-curl -k -X DELETE $url/$dir
-success=`curl -ki -X MKCOL $url/$dir | grep "HTTP/1.[01] 20.."`
+#echo "Test MKCOL"
+curl -ks -X DELETE $url/$dir > /dev/null
+success=`curl -iks -X MKCOL $url/$dir | grep "HTTP/1.[01] 20.." 2>&1`
 if [ -z "$success" ]
 then
   EXIT_STATE=$STATE_WARNING
-  echo "Critical: MKCOL request failed"
+  echo "CRITICAL: MKCOL request failed"
 elif [ "$EXIT_STATE" -le "$STATE_OK" ]
 then
 #   echo "MKCOL Passed!"
@@ -111,55 +111,52 @@ fi
 
 
 # ---------------------------MOVE/RENAME--------------------------
-echo "Test MOVE"
-curl -k -X DELETE $url/$file
-curl -k -X DELETE $url/$file.move
-echo "Safe to delete" > $file 
-curl -i -k -H "Content-Type:plain/text" -T $file $url/$file
-success=`curl -ki -X MOVE --header "Destination: $url/$file.move" $url/$file | grep "HTTP/1.[01] 20.."`
+#echo "Test MOVE"
+curl -ks -X DELETE $url/$file > /dev/null
+curl -ks -X DELETE $url/$file.move > /dev/null
+echo "Safe to delete" > $localdir/$file 
+curl -iks -H "Content-Type:plain/text" -T $localdir/$file $url/$file > /dev/null
+success=`curl -iks -X MOVE --header "Destination: $url/$file.move" $url/$file | grep "HTTP/1.[01] 20.." 2>&1`
 
 if [ -z "$success" ]
 then
   EXIT_STATE=$STATE_WARNING
-  echo "Warning: MOVE file request failed"
+  echo "WARNING: MOVE file request failed"
 elif [ "$EXIT_STATE" -le "$STATE_OK" ]
 then
 #   echo "MOVE Passed!"
   EXIT_STATE=$STATE_OK
 fi
 
-curl -k -X DELETE $url/$dir
-curl -k -X DELETE $url/$dir.move
+curl -ks -X DELETE $url/$dir > /dev/null
+curl -ks -X DELETE $url/$dir.move > /dev/null
 
-curl -ki -X MKCOL $url/$dir
-success=`curl -ki -X MOVE --header "Destination: $url/$dir.move" $url/$dir | grep "HTTP/1.[01] 20.."`
+curl -iks -X MKCOL $url/$dir > /dev/null
+success=`curl -iks -X MOVE --header "Destination: $url/$dir.move" $url/$dir | grep "HTTP/1.[01] 20.." 2>&1`
 if [ -z "$success" ]
 then
   EXIT_STATE=$STATE_WARNING
-  echo "Warning: MOVE folder request failed"
+  echo "WARNING: MOVE folder request failed"
 elif [ "$EXIT_STATE" -le "$STATE_OK" ]
 then
 #   echo "MOVE Passed!"
   EXIT_STATE=$STATE_OK
 fi
---------------------------------------------------------
-
-
-
+#--------------------------------------------------------
 
 # ---------------------------COPY--------------------------
-echo "Test COPY"
-curl -k -X DELETE $url/$file
-curl -k -X DELETE $url/$file.copy
-echo "Safe to delete" > $file 
-curl -i -k -H "Content-Type:plain/text" -T $file $url/$file
+#echo "Test COPY"
+curl -ks -X DELETE $url/$file > /dev/null
+curl -ks -X DELETE $url/$file.copy > /dev/null
+echo "Safe to delete" > $localdir/$file 
+curl -iks -H "Content-Type:plain/text" -T $localdir/$file $url/$file > /dev/null
 
-success=`curl -ik -X COPY --header "Destination:$url/$file.copy" $url/$file | grep "HTTP/1.[01] 20.."`
+success=`curl -iks -X COPY --header "Destination:$url/$file.copy" $url/$file | grep "HTTP/1.[01] 20.." 2>&1`
 
 if [ -z "$success" ]
 then
   EXIT_STATE=$STATE_CRITICAL
-  echo "Critical: COPY request failed"
+  echo "CRITICAL: COPY request failed"
   EXIT_STATE=$STATE_WARNING
 elif [ "$EXIT_STATE" -le "$STATE_OK" ]
 then
@@ -173,7 +170,7 @@ fi
 # 
 # # ---------------------------HEAD--------------------------
 # # Takes too long 
-# # success=`curl -ki -X HEAD https://$user:$pass@$url/ | grep "HTTP/1.[01] 20.."`
+# # success=`curl -iks -X HEAD https://$user:$pass@$url/ | grep "HTTP/1.[01] 20.." 2>&1`
 # # if [ -z "$success" ]
 # # then
 # #   EXIT_STATE=$STATE_WARNING
@@ -187,15 +184,15 @@ fi
 
 case "$EXIT_STATE" in
 
-0)  echo "Passed!"
+0)  echo "OK: All tests passed"
     ;;
-1)  echo  "Warning! Some tests failed"
+1)  echo  "WARNING: Some tests failed"
     ;;
-2)  echo  "Critical! Important tests failed"
+2)  echo  "CRITICAL: Important tests failed"
     ;;
-3) echo  "Unknown! No idea what happend"
+3) echo  "UNKNOWN: No idea what happened"
    ;;
-*) echo "Unknown! No idea what happend"
+*) echo "UNKNOWN:  No idea what happened"
    ;;
 esac
 
