@@ -4,7 +4,6 @@
  */
 package nl.uva.cs.lobcder.rest;
 
-import com.google.common.io.Files;
 import java.io.IOException;
 import java.net.InetAddress;
 import nl.uva.cs.lobcder.rest.wrappers.WorkerStatus;
@@ -15,13 +14,11 @@ import java.net.UnknownHostException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.GET;

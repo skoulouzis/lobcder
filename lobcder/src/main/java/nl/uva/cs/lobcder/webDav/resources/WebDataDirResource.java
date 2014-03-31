@@ -4,7 +4,6 @@
  */
 package nl.uva.cs.lobcder.webDav.resources;
 
-import com.google.common.io.Files;
 import io.milton.common.Path;
 import io.milton.http.*;
 import io.milton.http.exceptions.BadRequestException;
@@ -32,7 +31,7 @@ import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
 import nl.uva.cs.lobcder.resources.LogicalData;
 import nl.uva.cs.lobcder.resources.PDRI;
 import nl.uva.cs.lobcder.util.Constants;
-import nl.uva.cs.lobcder.util.SpeedLogger;
+import org.apache.commons.io.FilenameUtils;
 import static org.rendersnake.HtmlAttributesFactory.*;
 import org.rendersnake.HtmlCanvas;
 
@@ -201,7 +200,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                 Path newPath = Path.path(getPath(), newName);
                 fileLogicalData = getCatalogue().getLogicalDataByPath(newPath, connection);
                 if (contentType == null || contentType.equals("application/octet-stream")) {
-                    contentType = mimeTypeMap.get(Files.getFileExtension(newName));
+                    contentType = mimeTypeMap.get(FilenameUtils.getExtension(newName));
                 }
                 if (fileLogicalData != null) {  // Resource exists, update
 //                    throw new ConflictException(this, newName);
@@ -212,7 +211,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                     fileLogicalData.setLength(length);
                     fileLogicalData.setModifiedDate(System.currentTimeMillis());
                     if (contentType == null) {
-                        contentType = mimeTypeMap.get(Files.getFileExtension(newName));
+                        contentType = mimeTypeMap.get(FilenameUtils.getExtension(newName));
                     }
                     fileLogicalData.addContentType(contentType);
 
