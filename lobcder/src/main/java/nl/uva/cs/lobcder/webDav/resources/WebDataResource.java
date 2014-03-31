@@ -329,12 +329,13 @@ public class WebDataResource implements PropFindableResource, Resource,
     protected PDRI createPDRI(long fileLength, String fileName, Connection connection) throws SQLException, NoSuchAlgorithmException, IOException {
 //        Collection<StorageSite> cacheSS = getCatalogue().getCacheStorageSites(connection);
         Collection<StorageSite> cacheSS = getCatalogue().getStorageSites(connection, Boolean.TRUE);
+        String nameWithoutSpace = fileName.replaceAll(" ", "_");
         if (cacheSS == null || cacheSS.isEmpty()) {
-            return new CachePDRI(UUID.randomUUID().toString() + "-" + fileName);
+            return new CachePDRI(UUID.randomUUID().toString() + "-" + nameWithoutSpace);
         } else {
             StorageSite ss = cacheSS.iterator().next();
             PDRIDescr pdriDescr = new PDRIDescr(
-                    UUID.randomUUID().toString() + "-" + fileName,
+                    UUID.randomUUID().toString() + "-" + nameWithoutSpace,
                     ss.getStorageSiteId(),
                     ss.getResourceURI(),
                     ss.getCredential().getStorageSiteUsername(),
