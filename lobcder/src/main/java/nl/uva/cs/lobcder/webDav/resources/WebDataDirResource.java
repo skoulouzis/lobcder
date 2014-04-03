@@ -217,6 +217,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
 
                     //Create new
                     pdri = createPDRI(fileLogicalData.getLength(), newName, connection);
+                    pdri.setLength(length);
                     pdri.putData(inputStream);
 
                     fileLogicalData = getCatalogue().updateLogicalDataAndPdri(fileLogicalData, pdri, connection);
@@ -235,6 +236,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                     fileLogicalData.setModifiedDate(System.currentTimeMillis());
                     fileLogicalData.addContentType(contentType);
                     pdri = createPDRI(length, newName, connection);
+                    pdri.setLength(length);
                     pdri.putData(inputStream);
                     //fileLogicalData.setChecksum(pdri.getChecksum());
                     fileLogicalData = getCatalogue().associateLogicalDataAndPdri(fileLogicalData, pdri, connection);

@@ -75,7 +75,7 @@
         <dependency>
             <groupId>nl.uva.vlet</groupId>
             <artifactId>vlet-vfs.cloud</artifactId>
-            <version>2.0</version>
+            <version>2.1</version>
         </dependency>
         
         
@@ -257,6 +257,14 @@
             <artifactId>rendersnake</artifactId>
             <version>1.7.2</version>
         </dependency>
+        
+        
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.3.1</version>
+        </dependency>
+        
         <dependency>
             <groupId>org.apache.tomcat.embed</groupId>
             <artifactId>tomcat-embed-core</artifactId>
@@ -372,7 +380,7 @@
     </reporting>
     
     
-<!--    <distributionManagement>
+    <!--    <distributionManagement>
         <repository>
             <id>elab.lab.uvalight.net</id>
             <name>elab.lab.uvalight.net-releases</name>

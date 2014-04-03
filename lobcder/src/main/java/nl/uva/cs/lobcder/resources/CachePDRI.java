@@ -186,4 +186,8 @@ public class CachePDRI implements PDRI {
     public void copyRange(Range range, OutputStream out) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
+
+    @Override
+    public void setLength(long length) {
+    }
 }

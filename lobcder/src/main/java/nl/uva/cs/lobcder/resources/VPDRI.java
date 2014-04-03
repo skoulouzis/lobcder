@@ -17,6 +17,7 @@ import java.util.logging.Logger;
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
+import lombok.Setter;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.cs.lobcder.util.DesEncrypter;
@@ -66,6 +67,7 @@ public class VPDRI implements PDRI {
     private int sleeTime = 5;
 //    private static final Map<String, GridProxy> proxyCache = new HashMap<>();
     private boolean destroyCert;
+    private long length = -1;
 
     public VPDRI(String fileName, Long storageSiteId, String resourceUrl,
             String username, String password, boolean encrypt, BigInteger keyInt,
@@ -252,7 +254,7 @@ public class VPDRI implements PDRI {
                 while (totalBytesRead < len || read != -1) {
                     long startT = System.currentTimeMillis();
                     read = ra.readBytes(start, buff, 0, buff.length);
-                    VPDRI.log.log(Level.INFO, "speed: {0} kb/s", (read / 1024.0) / ((System.currentTimeMillis()-startT)/1000.0)); 
+                    VPDRI.log.log(Level.INFO, "speed: {0} kb/s", (read / 1024.0) / ((System.currentTimeMillis() - startT) / 1000.0));
                     if (read == -1 || totalBytesRead == len) {
                         break;
                     }
@@ -451,6 +453,9 @@ public class VPDRI implements PDRI {
     @Override
     public long getLength() throws IOException {
         try {
+            if (length > -1) {
+                return length;
+            }
             return getVfsClient().getFile(vrl).getLength();
         } catch (Exception ex) {
             if (reconnectAttemts < Constants.RECONNECT_NTRY) {
@@ -591,5 +596,10 @@ public class VPDRI implements PDRI {
             reconnect();
         }
         return vfsClient;
+    }
+
+    @Override
+    public void setLength(long length) {
+        this.length = length;
     }
 }
