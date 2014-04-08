@@ -219,4 +219,8 @@ public class PropertiesHelper {
     public static Integer RecentPopularityK() throws IOException {
         return Integer.valueOf(getProperties().getProperty("recent.popularity.k", "3"));
     }
+
+    public static Integer PredecessorPositionLen() throws IOException {
+        return Integer.valueOf(getProperties().getProperty("predecessor.position.len", "3"));
+    }
 }
