@@ -22,7 +22,7 @@ public class StableSuccessor extends MyDataSource implements Predictor {
 
     Map<String, LobState> lastS = new HashMap<>();
     Map<String, Integer> observedMap = new HashMap<>();
-    Integer N;
+    static Integer N;
 
     public StableSuccessor() throws NamingException, IOException {
         N = PropertiesHelper.getStableSuccessorN();

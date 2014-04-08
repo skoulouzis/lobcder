@@ -32,6 +32,7 @@ import nl.uva.cs.lobcder.optimization.MyTask;
 import nl.uva.cs.lobcder.predictors.FirstSuccessor;
 import nl.uva.cs.lobcder.predictors.LastSuccessor;
 import nl.uva.cs.lobcder.predictors.Predictor;
+import nl.uva.cs.lobcder.predictors.RecentPopularity;
 import nl.uva.cs.lobcder.predictors.StableSuccessor;
 import nl.uva.cs.lobcder.util.CatalogueHelper;
 import nl.uva.cs.lobcder.util.PropertiesHelper;
@@ -179,6 +180,10 @@ public class MyFilter extends MiltonFilter {
             if (algorithm.equals("StableSuccessor")) {
                 predictor = new StableSuccessor();
             }
+            if (algorithm.equals("RecentPopularity")) {
+                predictor = new RecentPopularity();
+            }
+
         }
         return predictor;
     }

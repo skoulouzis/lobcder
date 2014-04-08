@@ -211,4 +211,12 @@ public class PropertiesHelper {
     public static Integer getStableSuccessorN() throws IOException {
         return Integer.valueOf(getProperties().getProperty("stable.successor.N", "3"));
     }
+
+    public static Integer RecentPopularityJ() throws IOException {
+        return Integer.valueOf(getProperties().getProperty("recent.popularity.j", "5"));
+    }
+
+    public static Integer RecentPopularityK() throws IOException {
+        return Integer.valueOf(getProperties().getProperty("recent.popularity.k", "3"));
+    }
 }

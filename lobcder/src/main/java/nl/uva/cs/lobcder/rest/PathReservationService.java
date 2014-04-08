@@ -114,6 +114,7 @@ public class PathReservationService extends CatalogueHelper {
                     }
                     //--------------------------------------------------------------
                     if (ldList == null || ldList.isEmpty()) {
+                        Response.status(Response.Status.NOT_FOUND);
                         return null;
                     }
                     //Should be only one
@@ -204,7 +205,7 @@ public class PathReservationService extends CatalogueHelper {
 
         URL workerURL = new URL(worker);
         String workerIP = getIP(workerURL.getHost());
-        worker = new URL(workerURL.getProtocol(), workerIP, workerURL.getFile()).toString();
+        worker =  new URL(workerURL.getProtocol(), workerIP, workerURL.getPort(), workerURL.getFile()).toString();
 
         if (!worker.endsWith("/")) {
             worker += "/";

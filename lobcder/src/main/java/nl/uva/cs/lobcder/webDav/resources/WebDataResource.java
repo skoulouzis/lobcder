@@ -24,6 +24,7 @@ import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
 import nl.uva.cs.lobcder.resources.*;
 import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.cs.lobcder.util.DesEncrypter;
+import org.apache.commons.codec.binary.Base64;
 
 import javax.annotation.Nonnull;
 import javax.xml.namespace.QName;
@@ -95,9 +96,9 @@ public class WebDataResource implements PropFindableResource, Resource,
 //        }
         if (principal != null) {
             principalHolder.set(principal);
-            WebDataResource.log.log(Level.FINE, "getUserId: {0}", principal.getUserId());
-            WebDataResource.log.log(Level.FINE, "getRolesStr: {0}", principal.getRolesStr());
-            String msg = "From: " + fromAddress + " user: " + principal.getUserId() + " password: " + password;
+//            WebDataResource.log.log(Level.FINE, "getUserId: {0}", principal.getUserId());
+//            WebDataResource.log.log(Level.FINE, "getRolesStr: {0}", principal.getRolesStr());
+            String msg = "From: " + fromAddress + " user: " + principal.getUserId() + " password: " + Base64.encodeBase64String(password.getBytes()) +" roles:"+principal.getRolesStr();
             WebDataResource.log.log(Level.INFO, msg);
         }
         return principal;

@@ -94,9 +94,11 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
     @Override
     public CollectionResource createCollection(String newName) throws NotAuthorizedException, ConflictException, BadRequestException {
         WebDataDirResource.log.log(Level.FINE, "createCollection {0} in {1}", new Object[]{newName, getPath()});
+
         try (Connection connection = getCatalogue().getConnection()) {
             try {
                 Path newCollectionPath = Path.path(getPath(), newName);
+
                 Long newFolderEntryId = getCatalogue().getLogicalDataUidByParentRefAndName(getLogicalData().getUid(), newName, connection);
                 if (newFolderEntryId != null) {
                     throw new ConflictException(this, newName);
@@ -116,7 +118,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                     return res;
                 }
             } catch (SQLException e) {
-                WebDataDirResource.log.log(Level.SEVERE, null, 1);
+                WebDataDirResource.log.log(Level.SEVERE, null, e);
                 connection.rollback();
                 throw new BadRequestException(this, e.getMessage());
             }

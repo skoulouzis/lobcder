@@ -34,7 +34,7 @@ public class Permissions {
 
     public Permissions(MyPrincipal mp, Permissions rootPermissions) {
         owner = mp.getUserId();
-        read.addAll(rootPermissions.getRead());
+        read.addAll(rootPermissions.getRead());       
         read.retainAll(mp.getRoles());
     }
 

@@ -1,7 +1,7 @@
 To clear up files not showing up in ldata_table: update pdrigroup_table set `refCount` = 0 where pdriGroupId not in (select pdriGroupRef from ldata_table where pdriGroupRef != 0)
 
 
-
+-------------------------------------------------------------------------------------------------------------------
 To install on a new machine (ubuntu 12)
 
 echo "deb http://ppa.launchpad.net/webupd8team/java/ubuntu precise main" | tee -a /etc/apt/sources.list
@@ -35,3 +35,11 @@ mysql --user=lobcder --password=RoomC3156 lobcderDB2 < init.sql
 wget http://elab.lab.uvalight.net/~lobcder/apache-tomcat-6.0.36.tar.gz
 tar -xzvf apache-tomcat-6.0.36.tar.gz
 ./apache-tomcat-6.0.36/bin/startup.sh
+
+
+
+
+
+-------------------------------------------------------------------------------------
+to slove the of type default using the available factories WagonRepositoryConnectorFactory 
+error when building go to http://elab.lab.uvalight.net/artifactory/webapp/mavensettings.html generate the settings and paste them to ~/m2/settings.xml
