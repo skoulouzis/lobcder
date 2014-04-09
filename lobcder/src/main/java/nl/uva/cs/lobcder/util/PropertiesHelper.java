@@ -223,4 +223,8 @@ public class PropertiesHelper {
     public static Integer PredecessorPositionLen() throws IOException {
         return Integer.valueOf(getProperties().getProperty("predecessor.position.len", "3"));
     }
+
+    public static Integer getFirstSuccessorrN() throws IOException {
+        return Integer.valueOf(getProperties().getProperty("first.successor.N", "1"));
+    }
 }
