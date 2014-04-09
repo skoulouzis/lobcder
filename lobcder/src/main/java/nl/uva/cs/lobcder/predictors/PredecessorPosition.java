@@ -7,8 +7,10 @@ package nl.uva.cs.lobcder.predictors;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import javax.naming.NamingException;
 import nl.uva.cs.lobcder.optimization.LobState;
 import nl.uva.cs.lobcder.util.MyDataSource;
@@ -23,7 +25,8 @@ import nl.uva.cs.lobcder.util.PropertiesHelper;
  */
 public class PredecessorPosition extends MyDataSource implements Predictor {
 
-    List<LobState> stateList1 = new ArrayList<>();
+    List<LobState> stateList = new ArrayList<>();
+    List<String> keyList = new ArrayList<>();
     Map<String, LobState> stateMap = new HashMap<>();
     static Integer len;
 
@@ -38,9 +41,13 @@ public class PredecessorPosition extends MyDataSource implements Predictor {
 
     @Override
     public LobState getNextState(LobState currentState) {
-        stateList1.add(currentState);
-        if (stateList1.size() >= len + 1) {
-            String key = stateList1.get(0).getID() + stateList1.get(1).getID();
+        stateList.add(currentState);
+        if (stateList.size() >= len) {
+            String key = "";
+            for (int i = 0; i < len; i++) {
+                key += stateList.get(i).getID();
+            }
+            stateList.remove(0);
             return stateMap.get(key);
         }
         return null;
@@ -48,11 +55,17 @@ public class PredecessorPosition extends MyDataSource implements Predictor {
 
     @Override
     public void setPreviousStateForCurrent(LobState prevState, LobState currentState) {
-        stateList1.add(0, prevState);
-        stateList1.add(1, currentState);
-        if (stateList1.size() >= len + 1) {
-            String key = stateList1.get(0).getID() + stateList1.get(1).getID();
-            stateMap.put(key, currentState);
+        keyList.add(prevState.getID());
+
+        if (keyList.size() >= len) {
+            String key = "";
+            for (int i = 0; i < len; i++) {
+                key += keyList.get(i);
+            }
+            if (!stateMap.containsKey(key)) {
+                stateMap.put(key, currentState);
+            }
+            keyList.remove(0);
         }
     }
 }
