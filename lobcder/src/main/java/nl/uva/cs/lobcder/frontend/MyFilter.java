@@ -31,6 +31,7 @@ import nl.uva.cs.lobcder.optimization.LobState;
 import nl.uva.cs.lobcder.optimization.MyTask;
 import nl.uva.cs.lobcder.predictors.FirstSuccessor;
 import nl.uva.cs.lobcder.predictors.LastSuccessor;
+import nl.uva.cs.lobcder.predictors.MarkovPredictor;
 import nl.uva.cs.lobcder.predictors.PredecessorPosition;
 import nl.uva.cs.lobcder.predictors.Predictor;
 import nl.uva.cs.lobcder.predictors.RecentPopularity;
@@ -170,6 +171,8 @@ public class MyFilter extends MiltonFilter {
     }
 
     private Predictor getPredictor() throws Exception {
+        
+        //TODO: Use class loader 
         if (predictor == null) {
             String algorithm = PropertiesHelper.getPredictorAlgorithm();
             if (algorithm.equals("FirstSuccessor")) {
@@ -188,8 +191,9 @@ public class MyFilter extends MiltonFilter {
                 predictor = new PredecessorPosition();
             }
 
-
-
+            if (algorithm.equals("MarkovPredictor")) {
+                predictor = new MarkovPredictor();
+            }
         }
         return predictor;
     }
@@ -237,6 +241,7 @@ public class MyFilter extends MiltonFilter {
         if (nextState != null) {
             nextID = nextState.getID();
         } else {
+            log.log(Level.INFO, "No prediction made");
             nextID = "NON";
         }
         if (prevState != null) {
