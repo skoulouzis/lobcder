@@ -3,32 +3,22 @@ package nl.uva.cs.lobcder.catalogue;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
-import java.net.UnknownHostException;
 import lombok.Data;
-import lombok.SneakyThrows;
 import lombok.extern.java.Log;
 import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
 
 import javax.sql.DataSource;
 import javax.ws.rs.core.MediaType;
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.adapters.XmlAdapter;
-import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathFactory;
+import java.net.UnknownHostException;
 import java.sql.*;
-import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import nl.uva.cs.lobcder.util.Constants;
 
 /**
  * User: dvasunin Date: 25.02.13 Time: 16:31 To change this template use File |
@@ -45,6 +35,7 @@ class WP4Sweep implements Runnable {
         this.connector = connector;
     }
 
+  /*
     public static class SqlTimestampAdapter extends XmlAdapter<java.util.Date, Timestamp> {
 
         @Override
@@ -87,6 +78,45 @@ class WP4Sweep implements Runnable {
         private String status;
         private String tags;
     }
+  */
+
+    @Data
+    public static class ResourceMetadata {
+      String author = "";
+      long localId = 0;
+      String globalId;
+      String name = "";
+      String type = "";
+      int views = 0;
+
+
+      public String getXml() {
+          String extension = "";
+          int i = name.lastIndexOf('.');
+          if (i > 0) {
+              extension = name.substring(i + 1);
+          }
+          return new StringBuilder("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>")
+                  .append("<resource_metadata>")
+                  .append("<file>")
+                  .append("<author>").append(author).append("</author>")
+                  .append("<category>General Metadata</category>")
+                  .append("<description>LOBCDER</description>")
+                  .append("<linkedTo/>")
+                  .append("<localID>").append(localId).append("</localID>")
+                  .append("<name>").append(name).append("</name>")
+                  .append("<rating>0</rating>")
+                  .append("<relatedResources/>")
+                  .append("<semanticAnnotations/>")
+                  .append("<status>active</status>")
+                  .append("<type>").append(type).append("</type>")
+                  .append("<views>").append(views).append("</views>")
+                  .append("<fileType>").append(extension).append("</fileType>")
+                  .append("<subjectID/>")
+                  .append("</file>")
+                  .append("</resource_metadata>").toString();
+      }
+    }
 
     public static interface WP4ConnectorI {
 
@@ -103,23 +133,28 @@ class WP4Sweep implements Runnable {
         private XPathExpression expression;
         private final String uri;
 
-        @SneakyThrows
+
         public WP4Connector(String uri) {
-            this.uri = uri;
-            client = Client.create();
-            XPathFactory xpf = XPathFactory.newInstance();
-            XPath xpath = xpf.newXPath();
-            expression = xpath.compile("/message/data[1]/_global_id[1]");
+            try {
+                this.uri = uri;
+                client = Client.create();
+                XPathFactory xpf = XPathFactory.newInstance();
+                XPath xpath = xpf.newXPath();
+                expression = xpath.compile("/message/data[1]/_global_id[1]");
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
         }
 
         @Override
         public String create(ResourceMetadata resourceMetadata) throws Exception {
             WebResource webResource = client.resource(uri);
-            ClientResponse response = webResource.type(MediaType.APPLICATION_XML).post(ClientResponse.class, resourceMetadata);
+            ClientResponse response = webResource.type(MediaType.APPLICATION_XML).post(ClientResponse.class, resourceMetadata.getXml());
             if (response.getClientResponseStatus() == ClientResponse.Status.OK) {
                 Node uidNode = (Node) expression.evaluate(new InputSource(response.getEntityInputStream()), XPathConstants.NODE);
-                log.log(Level.FINE, "Send metadata to uri: {0} author: {1} category: {2} description: {3} global_id: {4} licence: {5} name: {6} rating: {7} semantic_annotations: {8} status: {9} tags: {10} type: {11}", new Object[]{uri, resourceMetadata.author, resourceMetadata.category, resourceMetadata.description, resourceMetadata.global_id, resourceMetadata.licence, resourceMetadata.name, resourceMetadata.rating, resourceMetadata.semantic_annotations, resourceMetadata.status, resourceMetadata.tags, resourceMetadata.type});
-                return uidNode.getTextContent();
+                String result = uidNode.getTextContent();
+                log.log(Level.FINE, "Send metadata to uri: {0} author: {1} name: {2} type: {3} global_id: {4}", new Object[]{uri, resourceMetadata.author,resourceMetadata.name, resourceMetadata.type, result});
+                return result;
             } else {
                 throw new Exception(response.getClientResponseStatus().toString());
             }
@@ -128,11 +163,11 @@ class WP4Sweep implements Runnable {
         @Override
         public void update(ResourceMetadata resourceMetadata) throws Exception {
             WebResource webResource = client.resource(uri);
-            ClientResponse response = webResource.path(resourceMetadata.getGlobal_id()).type(MediaType.APPLICATION_XML).put(ClientResponse.class, resourceMetadata);
+            ClientResponse response = webResource.path(resourceMetadata.getGlobalId()).type(MediaType.APPLICATION_XML).put(ClientResponse.class, resourceMetadata.getXml());
             if (response.getClientResponseStatus() != ClientResponse.Status.OK) {
                 throw new Exception(response.getClientResponseStatus().toString());
             }
-            log.log(Level.FINE, "Send metadata to uri: {0} author: {1} category: {2} description: {3} global_id: {4} licence: {5} name: {6} rating: {7} semantic_annotations: {8} status: {9} tags: {10} type: {11}", new Object[]{uri, resourceMetadata.author, resourceMetadata.category, resourceMetadata.description, resourceMetadata.global_id, resourceMetadata.licence, resourceMetadata.name, resourceMetadata.rating, resourceMetadata.semantic_annotations, resourceMetadata.status, resourceMetadata.tags, resourceMetadata.type});
+            log.log(Level.FINE, "Send metadata to uri: {0} author: {1} name: {2} type: {3} global_id: {4}", new Object[]{uri, resourceMetadata.author, resourceMetadata.name, resourceMetadata.type, resourceMetadata.globalId});
         }
 
         @Override
@@ -143,37 +178,6 @@ class WP4Sweep implements Runnable {
         }
     }
 
-    public static class WP4ConnectorDebug implements WP4ConnectorI {
-
-        @Override
-        public String create(ResourceMetadata resourceMetadata) throws JAXBException {
-            System.err.println("CREATE WP4 METADATA");
-            JAXBContext context = JAXBContext.newInstance(ResourceMetadata.class);
-            Marshaller m = context.createMarshaller();
-            m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
-            m.marshal(resourceMetadata, System.err);
-            System.err.println("================================");
-            return UUID.randomUUID().toString();
-        }
-
-        @Override
-        public void update(ResourceMetadata resourceMetadata) throws JAXBException {
-            System.err.println("UPDATE WP4 METADATA");
-            JAXBContext context = JAXBContext.newInstance(ResourceMetadata.class);
-            Marshaller m = context.createMarshaller();
-            m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
-            m.marshal(resourceMetadata, System.err);
-            System.err.println("================================");
-        }
-
-        @Override
-        public void delete(String global_id) {
-            System.err.println("DELETE WP4 METADATA");
-            System.err.println(global_id);
-            System.err.println("================================");
-        }
-    }
-
     private void create(Connection connection, WP4ConnectorI wp4Connector) throws SQLException, UnknownHostException {
         try (Statement s1 = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY,
                         ResultSet.CONCUR_READ_ONLY)) {
@@ -181,17 +185,11 @@ class WP4Sweep implements Runnable {
                 ResultSet rs = s1.executeQuery("SELECT uid, ownerId, datatype, ldName, id FROM ldata_table JOIN wp4_table ON uid=local_id WHERE need_create=TRUE");
                 while (rs.next()) {
                     ResourceMetadata rm = new ResourceMetadata();
-                    rm.setLocal_id(Long.valueOf(rs.getLong(1)));
+                    rm.setLocalId(rs.getLong(1));
                     rm.setAuthor(rs.getString(2));
                     rm.setType(rs.getString(3));
                     rm.setName(rs.getString(4));
                     rm.setViews(0);
-                    rm.setCategory("");
-                    rm.setDescription("");
-                    rm.setLicence("");
-                    rm.setRating("");
-                    rm.setSemantic_annotations("");
-                    rm.setTags("LOBCDER");
                     try {
                         String res = wp4Connector.create(rm);
                         s2.setString(1, res);
@@ -218,7 +216,7 @@ class WP4Sweep implements Runnable {
                     ResourceMetadata rm = new ResourceMetadata();
                     rm.setAuthor(rs.getString(1));
                     rm.setName(rs.getString(2));
-                    rm.setGlobal_id(rs.getString(3));
+                    rm.setGlobalId(rs.getString(3));
                     rm.setViews(rs.getInt(4));
                     try {
                         wp4Connector.update(rm);
