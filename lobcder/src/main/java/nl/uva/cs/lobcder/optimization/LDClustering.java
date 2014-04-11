@@ -17,38 +17,85 @@ package nl.uva.cs.lobcder.optimization;
 
 import io.milton.common.Path;
 import java.sql.Connection;
+import java.sql.Driver;
+import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Nonnull;
+import javax.naming.Context;
+import javax.naming.InitialContext;
 import javax.naming.NamingException;
+import javax.sql.DataSource;
+import lombok.extern.java.Log;
+import net.sf.javaml.clustering.Clusterer;
+import net.sf.javaml.clustering.KMeans;
+import net.sf.javaml.core.Dataset;
 import net.sf.javaml.core.DefaultDataset;
 import net.sf.javaml.core.DenseInstance;
 import net.sf.javaml.core.Instance;
 import nl.uva.cs.lobcder.resources.LogicalData;
 import nl.uva.cs.lobcder.util.MyDataSource;
+import org.apache.commons.dbcp.BasicDataSource;
 
 /**
  *
  * @author S. Koulouzis
  */
-public class LDClustering extends MyDataSource implements Runnable {
+@Log
+public class LDClustering implements Runnable {
 
     private static DefaultDataset fileDataset;
+    private static Dataset[] fileClusters;
+    private final BasicDataSource dataSource;
 
-    public LDClustering() throws NamingException {
+    public LDClustering() throws NamingException, SQLException, ClassNotFoundException, InstantiationException, IllegalAccessException {
+        dataSource = new BasicDataSource();
+
+        dataSource.setDriverClassName("com.mysql.jdbc.Driver");
+        dataSource.setUsername("user");
+        dataSource.setPassword("pass");
+        String url = "jdbc:mysql://localhost:3306/DB";
+        dataSource.setUrl(url);
+        dataSource.setMaxActive(10);
+        dataSource.setMaxIdle(5);
+        dataSource.setInitialSize(5);
+        dataSource.setValidationQuery("SELECT 1");
+
+//        DriverManager.registerDriver((Driver) Class.forName("com.mysql.jdbc.Driver").newInstance());
+//        
+//        datasource2 = DriverManager.getConnection(url);
+//        datasource2.setAutoCommit(false);
+
         fileDataset = new DefaultDataset();
+    }
+
+    public Connection getConnection() throws SQLException {
+        Connection cn = dataSource.getConnection();
+        cn.setAutoCommit(false);
+        return cn;
+    }
+
+    public static void main(String args[]) throws Exception {
+
+
+
+        LDClustering c = new LDClustering();
+        c.run();
     }
 
     @Override
     public void run() {
         try {
             buildOrUpdateDataset();
+//            cluster();
+//            printClusters();
         } catch (SQLException ex) {
             Logger.getLogger(LDClustering.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -58,12 +105,10 @@ public class LDClustering extends MyDataSource implements Runnable {
         try (Connection connection = getConnection()) {
             LogicalData root = getLogicalDataByUid(Long.valueOf(1), connection);
             addFeatures(Path.root, root, connection, null);
-
         }
-
     }
 
-    public LogicalData getLogicalDataByUid(Long UID, @Nonnull Connection connection) throws SQLException {
+    private LogicalData getLogicalDataByUid(Long UID, @Nonnull Connection connection) throws SQLException {
 
         try (PreparedStatement ps = connection.prepareStatement("SELECT parentRef, ownerId, datatype, ldName, "
                 + "createDate, modifiedDate, ldLength, contentTypesStr, pdriGroupRef, "
@@ -103,27 +148,53 @@ public class LDClustering extends MyDataSource implements Runnable {
         }
     }
 
-    private void addFeatures(Path root, LogicalData node, Connection connection, Object object) throws SQLException {
+    private void addFeatures(Path p, LogicalData node, Connection connection, ArrayList<Path> nodes) throws SQLException {
         Collection<LogicalData> children = getChildrenByParentRef(node.getUid(), connection);
         for (LogicalData n : children) {
             ArrayList<Double> featuresList = new ArrayList<>();
-            
-            featuresList.add(Double.valueOf(n.getCreateDate()));
-            featuresList.add(Double.valueOf(n.getLastValidationDate()));
-            featuresList.add(Double.valueOf(n.getLength()));
-            featuresList.add(Double.valueOf(n.getLockTimeout()));
-            featuresList.add(Double.valueOf(n.getModifiedDate()));
+
+            Long cDate = n.getCreateDate();
+            if (cDate != null) {
+                featuresList.add(Double.valueOf(cDate));
+            }
+            Long vDate = n.getLastValidationDate();
+            if (vDate != null) {
+                featuresList.add(Double.valueOf(vDate));
+            }
+            Long len = n.getLength();
+            if (len != null) {
+                featuresList.add(Double.valueOf(len));
+            }
+            Long lTimeout = n.getLockTimeout();
+            if (lTimeout != null) {
+                featuresList.add(Double.valueOf(lTimeout));
+            }
+            Long mDate = n.getModifiedDate();
+            if (mDate != null) {
+                featuresList.add(Double.valueOf(mDate));
+            }
+
             featuresList.add(Double.valueOf(n.getParentRef()));
             featuresList.add(Double.valueOf(n.getPdriGroupId()));
             featuresList.add(Double.valueOf(n.getUid()));
-            
+
 
             double[] featuresArray = new double[featuresList.size()];
             for (int i = 0; i < featuresArray.length; i++) {
                 featuresArray[i] = featuresList.get(i);
             }
             Instance instance = new DenseInstance(featuresArray, node.getName());
+            log.log(Level.INFO, "Add instance: " + n.getName());
             fileDataset.add(instance);
+
+            if (n.getUid() != node.getUid()) {
+//                log.log(Level.INFO, "children: " + ld.getName());
+                Path nextPath = Path.path(p, n.getName());
+//                log.log(Level.INFO, "node: " + nextPath);
+                if (n.isFolder()) {
+                    addFeatures(nextPath, n, connection, nodes);
+                }
+            }
         }
     }
 
@@ -163,6 +234,39 @@ public class LDClustering extends MyDataSource implements Runnable {
                 res.add(element);
             }
             return res;
+        }
+    }
+
+    private static void cluster() {
+        Clusterer km = new KMeans();
+        fileClusters = km.cluster(fileDataset);
+    }
+
+    private static void printClusters() {
+        for (int i = 0; i < fileClusters.length; i++) {
+            System.out.println("Cluster" + i + ": ");
+            Dataset ds = fileClusters[i];
+            Iterator<Instance> iter = ds.iterator();
+
+            while (iter.hasNext()) {
+                Instance inst = iter.next();
+                int id = inst.getID();
+                System.out.println("------------------ ");
+                System.out.println("ID: " + id);
+                Object classValue = inst.classValue();
+                if (classValue != null) {
+                    System.out.println("classValue: " + classValue.getClass().getName());
+                    System.out.println("classValue: " + classValue);
+                }
+//                keys = inst.keySet();
+//                kIter = keys.iterator();
+//                while (kIter.hasNext()) {
+//                    Integer key = kIter.next();
+//                    Double val = inst.get(key);
+//                    System.out.println("key: " + key + " val: " + val);
+//                }
+                System.out.println("------------------ ");
+            }
         }
     }
 }

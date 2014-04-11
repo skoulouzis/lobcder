@@ -23,10 +23,12 @@ import java.util.concurrent.BlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.naming.InitialContext;
+import javax.naming.NamingException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
+import nl.uva.cs.lobcder.optimization.LDClustering;
 import nl.uva.cs.lobcder.optimization.LobState;
 import nl.uva.cs.lobcder.optimization.MyTask;
 import nl.uva.cs.lobcder.predictors.FirstSuccessor;
@@ -53,9 +55,10 @@ public class MyFilter extends MiltonFilter {
     private static final BlockingQueue queue = new ArrayBlockingQueue(2500);
     private static RequestEventRecorder recorder;
     private Timer recordertimer;
+    private Object clustering;
 
     public MyFilter() throws Exception {
-//        getPredictor();
+        
     }
 
     @Override
@@ -109,13 +112,7 @@ public class MyFilter extends MiltonFilter {
             startRecorder();
         }
 
-
         log.log(Level.INFO, "Req_Source: {0} Method: {1} Content_Len: {2} Content_Type: {3} Elapsed_Time: {4} sec EncodedUser: {5} UserAgent: {6}", new Object[]{from, method, contentLen, contentType, elapsed / 1000.0, userNpasswd, userAgent});
-//        try (Connection connection = getCatalogue().getConnection()) {
-//            recordEvent(connection, ((HttpServletRequest) req), elapsed);
-//        } catch (SQLException ex) {
-//            Logger.getLogger(MyFilter.class.getName()).log(Level.SEVERE, null, ex);
-//        }
     }
 
     private String getUserName(HttpServletRequest httpServletRequest) throws UnsupportedEncodingException {
@@ -171,7 +168,7 @@ public class MyFilter extends MiltonFilter {
     }
 
     private Predictor getPredictor() throws Exception {
-        
+
         //TODO: Use class loader 
         if (predictor == null) {
             String algorithm = PropertiesHelper.getPredictorAlgorithm();
@@ -280,7 +277,6 @@ public class MyFilter extends MiltonFilter {
             recordertimer = new Timer(true);
             recordertimer.schedule(gcTask, 900, 900);
         }
-
     }
 
     private static class RequestEventRecorder implements Runnable {
