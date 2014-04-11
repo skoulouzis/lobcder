@@ -271,6 +271,17 @@
             <version>7.0.40</version>
             <type>jar</type>
         </dependency>
+        
+        <dependency>
+            <groupId>nz.ac.waikato.cms.weka</groupId>
+            <artifactId>weka-stable</artifactId>
+            <version>3.6.9</version>
+        </dependency>
+        <dependency>
+            <groupId>net.sourceforge</groupId>
+            <artifactId>javaml</artifactId>
+            <version>0.1.5</version>
+        </dependency>
     </dependencies>
     
     <repositories>
@@ -293,7 +304,7 @@
             <url>>http://elab.lab.uvalight.net/artifactory/local</url>
         </repository>
         
-<!--        <repository>
+        <!--        <repository>
             <id>rendersnake-repo</id>
             <name>Repository for rendersnake</name>
             <url>http://rendersnake.googlecode.com/svn/repo</url>
@@ -380,7 +391,7 @@
     </reporting>
     
     
-        <distributionManagement>
+    <distributionManagement>
         <repository>
             <id>elab.lab.uvalight.net</id>
             <name>elab.lab.uvalight.net-releases</name>
