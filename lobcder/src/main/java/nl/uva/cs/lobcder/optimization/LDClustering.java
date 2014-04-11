@@ -40,9 +40,11 @@ import net.sf.javaml.core.Dataset;
 import net.sf.javaml.core.DefaultDataset;
 import net.sf.javaml.core.DenseInstance;
 import net.sf.javaml.core.Instance;
+import net.sf.javaml.tools.weka.WekaClusterer;
 import nl.uva.cs.lobcder.resources.LogicalData;
 import nl.uva.cs.lobcder.util.MyDataSource;
 import org.apache.commons.dbcp.BasicDataSource;
+import weka.clusterers.XMeans;
 
 /**
  *
@@ -60,7 +62,7 @@ public class LDClustering implements Runnable {
 
         dataSource.setDriverClassName("com.mysql.jdbc.Driver");
         dataSource.setUsername("user");
-        dataSource.setPassword("pass");
+        dataSource.setPassword("password");
         String url = "jdbc:mysql://localhost:3306/DB";
         dataSource.setUrl(url);
         dataSource.setMaxActive(10);
@@ -94,8 +96,8 @@ public class LDClustering implements Runnable {
     public void run() {
         try {
             buildOrUpdateDataset();
-//            cluster();
-//            printClusters();
+            cluster();
+            printClusters();
         } catch (SQLException ex) {
             Logger.getLogger(LDClustering.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -238,8 +240,12 @@ public class LDClustering implements Runnable {
     }
 
     private static void cluster() {
-        Clusterer km = new KMeans();
-        fileClusters = km.cluster(fileDataset);
+//        Clusterer clusterer = new KMeans();
+
+        XMeans xm = new XMeans();
+        /* Wrap Weka clusterer in bridge */
+        Clusterer clusterer = new WekaClusterer(xm);
+        fileClusters = clusterer.cluster(fileDataset);
     }
 
     private static void printClusters() {
