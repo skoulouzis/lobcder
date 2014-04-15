@@ -10,7 +10,6 @@ import org.xml.sax.InputSource;
 
 import javax.sql.DataSource;
 import javax.ws.rs.core.MediaType;
-import javax.xml.bind.annotation.adapters.XmlAdapter;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpression;
