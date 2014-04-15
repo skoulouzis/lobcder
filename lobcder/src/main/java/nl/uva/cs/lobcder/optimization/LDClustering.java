@@ -43,6 +43,9 @@ import net.sf.javaml.clustering.KMeans;
 import net.sf.javaml.clustering.KMedoids;
 import net.sf.javaml.clustering.OPTICS;
 import net.sf.javaml.clustering.SOM;
+import net.sf.javaml.clustering.evaluation.AICScore;
+import net.sf.javaml.clustering.evaluation.ClusterEvaluation;
+import net.sf.javaml.clustering.evaluation.SumOfSquaredErrors;
 import net.sf.javaml.core.Dataset;
 import net.sf.javaml.core.DefaultDataset;
 import net.sf.javaml.core.DenseInstance;
@@ -56,7 +59,16 @@ import net.sf.javaml.tools.InstanceTools;
 import net.sf.javaml.tools.weka.WekaClusterer;
 import nl.uva.cs.lobcder.resources.LogicalData;
 import org.apache.commons.dbcp.BasicDataSource;
+import weka.clusterers.CLOPE;
+import weka.clusterers.EM;
+import weka.clusterers.FilteredClusterer;
+import weka.clusterers.HierarchicalClusterer;
+import weka.clusterers.MakeDensityBasedClusterer;
+import weka.clusterers.RandomizableClusterer;
+import weka.clusterers.RandomizableDensityBasedClusterer;
+import weka.clusterers.SimpleKMeans;
 import weka.clusterers.XMeans;
+import weka.clusterers.sIB;
 import weka.filters.unsupervised.instance.Resample;
 
 /**
@@ -119,6 +131,7 @@ public class LDClustering implements Runnable {
 //            featureScoring();
             cluster();
             printClusters();
+            evaluateCluster();
         } catch (SQLException ex) {
             Logger.getLogger(LDClustering.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -350,14 +363,24 @@ public class LDClustering implements Runnable {
     private static void cluster() {
 //        Clusterer clusterer = new KMeans();
 //        Clusterer clusterer = new AQBC();
-//        Clusterer clusterer = new Cobweb();
+        Clusterer clusterer = new Cobweb();
 //        Clusterer clusterer = new DensityBasedSpatialClustering();
 //        Clusterer clusterer = new FarthestFirst();
-        Clusterer clusterer = new KMedoids();
+//        Clusterer clusterer = new KMedoids();
 //        Clusterer clusterer = new OPTICS();
 //        Clusterer clusterer = new SOM();
 
 //        XMeans xm = new XMeans();
+//        SimpleKMeans xm = new SimpleKMeans();
+//        CLOPE xm = new CLOPE();
+//        weka.clusterers.EM xm = new EM();
+//        weka.clusterers.FarthestFirst xm = new weka.clusterers.FarthestFirst();
+//        weka.clusterers.FilteredClusterer xm = new FilteredClusterer();
+//        weka.clusterers.HierarchicalClusterer xm = new HierarchicalClusterer();
+//        weka.clusterers.MakeDensityBasedClusterer xm = new MakeDensityBasedClusterer();
+//        weka.clusterers.sIB xm = new sIB();
+
+
         /* Wrap Weka clusterer in bridge */
 //        Clusterer clusterer = new WekaClusterer(xm);
         fileClusters = clusterer.cluster(fileDataset);
@@ -1245,5 +1268,20 @@ public class LDClustering implements Runnable {
 
     private void sample() {
         weka.filters.unsupervised.instance.Resample resample = new Resample();
+    }
+
+    private void evaluateCluster() {
+//        ClusterEvaluation sse = new AICScore();
+//        ClusterEvaluation sse =new net.sf.javaml.clustering.evaluation.BICScore();
+//        ClusterEvaluation sse =new net.sf.javaml.clustering.evaluation.HybridCentroidSimilarity();
+//        ClusterEvaluation sse =new net.sf.javaml.clustering.evaluation.HybridPairwiseSimilarities();
+//        ClusterEvaluation sse =new net.sf.javaml.clustering.evaluation.SumOfAveragePairwiseSimilarities();
+        ClusterEvaluation sse = new net.sf.javaml.clustering.evaluation.SumOfCentroidSimilarities();
+//        ClusterEvaluation sse =new net.sf.javaml.clustering.evaluation.SumOfSquaredErrors();
+//        ClusterEvaluation sse =new net.sf.javaml.clustering.evaluation.TraceScatterMatrix();
+
+        /* Measure the quality of the clustering */
+        double score = sse.score(fileClusters);
+        log.log(Level.INFO, "Cluster score: {0}", score);
     }
 }
