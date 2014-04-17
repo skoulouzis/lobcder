@@ -41,12 +41,12 @@ class SweeprsTimerTask extends TimerTask {
             wp4Sweep.run();
         }
     }
-    
+
     @Override
     public boolean cancel() {
         boolean res = super.cancel();
 //        replicateSweep.stop();
         return res;
-        
+
     }
 }
