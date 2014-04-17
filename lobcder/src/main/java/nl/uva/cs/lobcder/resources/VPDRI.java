@@ -74,9 +74,10 @@ public class VPDRI implements PDRI {
             boolean doChunkUpload) throws IOException {
         try {
             this.fileName = fileName;
-            this.resourceUrl = resourceUrl;
+            this.resourceUrl = resourceUrl.replaceAll(" ", "");
+            
             String encoded = VRL.encode(fileName);
-            vrl = new VRL(resourceUrl).appendPath(baseDir).append(encoded);
+            vrl = new VRL(this.resourceUrl).appendPath(baseDir).append(encoded);
 //            vrl = new VRL(resourceUrl).appendPath(baseDir).append(URLEncoder.encode(fileName, "UTF-8").replace("+", "%20"));
             this.storageSiteId = storageSiteId;
             this.username = username;
@@ -84,7 +85,6 @@ public class VPDRI implements PDRI {
             this.encrypt = encrypt;
             this.keyInt = keyInt;
             this.doChunked = doChunkUpload;
-//            this.resourceUrl = resourceUrl;
             VPDRI.log.log(Level.FINE, "fileName: {0}, storageSiteId: {1}, username: {2}, password: {3}, VRL: {4}", new Object[]{fileName, storageSiteId, username, password, vrl});
             initVFS();
         } catch (Exception ex) {

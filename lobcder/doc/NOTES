@@ -43,3 +43,9 @@ tar -xzvf apache-tomcat-6.0.36.tar.gz
 -------------------------------------------------------------------------------------
 to slove the of type default using the available factories WagonRepositoryConnectorFactory 
 error when building go to http://elab.lab.uvalight.net/artifactory/webapp/mavensettings.html generate the settings and paste them to ~/m2/settings.xml
+
+
+
+
+---------------------------------------------------------------------------------------
+To start events for to sweep short tokens: SET GLOBAL event_scheduler = ON;

@@ -15,6 +15,7 @@
  */
 package nl.uva.cs.lobcder.optimization;
 
+import be.abeel.util.Pair;
 import io.milton.common.Path;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -32,7 +33,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Nonnull;
 import javax.naming.NamingException;
+import libsvm.LibSVM;
 import lombok.extern.java.Log;
+import net.sf.javaml.classification.Classifier;
+import net.sf.javaml.classification.evaluation.EvaluateDataset;
 import net.sf.javaml.clustering.AQBC;
 import net.sf.javaml.clustering.Clusterer;
 import net.sf.javaml.clustering.Cobweb;
@@ -41,7 +45,6 @@ import net.sf.javaml.clustering.FarthestFirst;
 import net.sf.javaml.clustering.IterativeFarthestFirst;
 import net.sf.javaml.clustering.KMeans;
 import net.sf.javaml.clustering.KMedoids;
-import net.sf.javaml.clustering.OPTICS;
 import net.sf.javaml.clustering.SOM;
 import net.sf.javaml.clustering.evaluation.AICScore;
 import net.sf.javaml.clustering.evaluation.ClusterEvaluation;
@@ -55,6 +58,7 @@ import net.sf.javaml.featureselection.scoring.GainRatio;
 import net.sf.javaml.filter.normalize.InstanceNormalizeMidrange;
 import net.sf.javaml.filter.normalize.NormalizeMean;
 import net.sf.javaml.filter.normalize.NormalizeMidrange;
+import net.sf.javaml.sampling.Sampling;
 import net.sf.javaml.tools.InstanceTools;
 import net.sf.javaml.tools.weka.WekaClusterer;
 import nl.uva.cs.lobcder.resources.LogicalData;
@@ -69,6 +73,8 @@ import weka.clusterers.RandomizableDensityBasedClusterer;
 import weka.clusterers.SimpleKMeans;
 import weka.clusterers.XMeans;
 import weka.clusterers.sIB;
+import weka.core.Instances;
+import weka.filters.Filter;
 import weka.filters.unsupervised.instance.Resample;
 
 /**
@@ -78,7 +84,7 @@ import weka.filters.unsupervised.instance.Resample;
 @Log
 public class LDClustering implements Runnable {
 
-    private static DefaultDataset fileDataset;
+    private static Dataset fileDataset;
     private static Dataset[] fileClusters;
     private final BasicDataSource dataSource;
 
@@ -133,6 +139,8 @@ public class LDClustering implements Runnable {
             printClusters();
             evaluateCluster();
         } catch (SQLException ex) {
+            Logger.getLogger(LDClustering.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (Exception ex) {
             Logger.getLogger(LDClustering.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
@@ -307,8 +315,9 @@ public class LDClustering implements Runnable {
 //                log.log(Level.INFO, "featuresArray[{0}]: {1}", new Object[]{i, featuresArray[i]});
             }
             Instance instance = new DenseInstance(featuresArray, n.getName());
-            log.log(Level.INFO, "Add instance: {0}", n.getName());
-            fileDataset.addElement(instance);
+//            log.log(Level.INFO, "Add instance: {0}", n.getName());
+//            fileDataset.addElement(instance);
+            fileDataset.add(instance);
 
             if (n.getUid() != node.getUid()) {
 //                log.log(Level.INFO, "children: " + ld.getName());
@@ -382,34 +391,38 @@ public class LDClustering implements Runnable {
 
 
         /* Wrap Weka clusterer in bridge */
+
+
 //        Clusterer clusterer = new WekaClusterer(xm);
         fileClusters = clusterer.cluster(fileDataset);
+
     }
 
     private static void printClusters() {
         for (int i = 0; i < fileClusters.length; i++) {
             log.log(Level.INFO, "Cluster: {0}", i);
             Dataset ds = fileClusters[i];
-            Iterator<Instance> iter = ds.iterator();
 
-            while (iter.hasNext()) {
-                Instance inst = iter.next();
-                int id = inst.getID();
+//            Iterator<Instance> iter = ds.iterator();
+
+//            while (iter.hasNext()) {
+//                Instance inst = iter.next();
+//                int id = inst.getID();
 //                log.log(Level.INFO, "\t------------------ ");
 //                log.log(Level.INFO, "\tID: {0}", id);
-                Object classValue = inst.classValue();
+//                Object classValue = inst.classValue();
 //                if (classValue != null) {
 //                    log.log(Level.INFO, "\tclassValue: {0}", classValue);
 //                }
-//                keys = inst.keySet();
-//                kIter = keys.iterator();
+//                SortedSet<Integer> keys = inst.keySet();
+//                Iterator<Integer> kIter = keys.iterator();
 //                while (kIter.hasNext()) {
 //                    Integer key = kIter.next();
 //                    Double val = inst.get(key);
-//                    System.out.println("key: " + key + " val: " + val);
+//                    log.log(Level.INFO, "key: " + key + " val: " + val);
 //                }
 //                log.log(Level.INFO, "\t------------------ ");
-            }
+//            }
         }
     }
 
@@ -1248,26 +1261,29 @@ public class LDClustering implements Runnable {
 //        uidAttribute = new weka.core.Attribute("uid");
     }
 
-    private void printDataset() {
-        Enumeration<Instance> elem = fileDataset.elements();
-        while (elem.hasMoreElements()) {
-            Instance inst = elem.nextElement();
-//            log.log(Level.INFO, "ID: " + inst.getID());
-//            if (inst.classValue() != null) {
-//                log.log(Level.INFO, " classValue: " + inst.classValue() + " getClass().getName: " + inst.classValue().getClass().getName());
-//            }
-//            Set<Map.Entry<Integer, Double>> eSet = inst.entrySet();
-//            Iterator<Map.Entry<Integer, Double>> iter = eSet.iterator();
-//            while (iter.hasNext()) {
-//                Map.Entry<Integer, Double> e = iter.next();
-//                log.log(Level.INFO, e.getKey() + " : " + e.getValue());
-//            }
-            log.log(Level.INFO, "noAttributes: " + inst.noAttributes());
-        }
-    }
+    private void sample() throws Exception {
+        Sampling s = Sampling.SubSampling;
 
-    private void sample() {
-        weka.filters.unsupervised.instance.Resample resample = new Resample();
+        //http://www.foxgo.net/uploads/2/1/3/8/2138775/jml-manual.pdf
+        //The methods return a pair of data sets. The first part is the actual 
+        //sample, the second part of the pair is a data set containing the 
+        //out-of-bag samples
+//        for (int i = 0; i < 5; i++) {
+        Pair<Dataset, Dataset> datas = s.sample(fileDataset, (int) (fileDataset.size() * 0.8));
+//            Pair<Dataset, Dataset> datas = s.sample(fileDataset, (int) (fileDataset.size() * 0.8), 1);
+        fileDataset = datas.x();
+        System.out.println("x_size: " + datas.x().size() + " y_size: " + datas.y().size() + " fileDataset_size: " + fileDataset.size());
+        Classifier c = new LibSVM();
+        c.buildClassifier(datas.x());
+        //http://java-ml.sourceforge.net/api/0.1.3/net/sf/javaml/classification/evaluation/PerformanceMeasure.html
+        Map pm = EvaluateDataset.testDataset(c, datas.y());
+        System.out.println(pm);
+        for (Iterator it = pm.keySet().iterator(); it.hasNext();) {
+            String instanceName = (String) it.next();
+            net.sf.javaml.classification.evaluation.PerformanceMeasure m = (net.sf.javaml.classification.evaluation.PerformanceMeasure) pm.get(instanceName);
+            System.out.println(instanceName + " : " + m.getAccuracy());
+        }
+//        }
     }
 
     private void evaluateCluster() {
