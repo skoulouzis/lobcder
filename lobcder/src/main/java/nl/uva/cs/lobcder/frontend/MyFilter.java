@@ -41,6 +41,7 @@ import nl.uva.cs.lobcder.predictors.StableSuccessor;
 import nl.uva.cs.lobcder.util.CatalogueHelper;
 import nl.uva.cs.lobcder.util.PropertiesHelper;
 import org.apache.commons.codec.binary.Base64;
+import nl.uva.cs.lobcder.predictors.ClusterPredictor;
 
 /**
  *
@@ -58,7 +59,6 @@ public class MyFilter extends MiltonFilter {
     private Object clustering;
 
     public MyFilter() throws Exception {
-        
     }
 
     @Override
@@ -190,6 +190,9 @@ public class MyFilter extends MiltonFilter {
 
             if (algorithm.equals("MarkovPredictor")) {
                 predictor = new MarkovPredictor();
+            }
+            if (algorithm.equals("ClusterPredictor")) {
+                predictor = new ClusterPredictor();
             }
         }
         return predictor;

@@ -55,6 +55,7 @@ import net.sf.javaml.core.DefaultDataset;
 import net.sf.javaml.core.DenseInstance;
 import net.sf.javaml.core.Instance;
 import net.sf.javaml.core.SparseInstance;
+import net.sf.javaml.distance.DistanceMeasure;
 import net.sf.javaml.featureselection.scoring.GainRatio;
 import net.sf.javaml.filter.normalize.InstanceNormalizeMidrange;
 import net.sf.javaml.filter.normalize.NormalizeMean;
@@ -74,6 +75,7 @@ import weka.clusterers.RandomizableDensityBasedClusterer;
 import weka.clusterers.SimpleKMeans;
 import weka.clusterers.XMeans;
 import weka.clusterers.sIB;
+import weka.core.EuclideanDistance;
 import weka.core.Instances;
 import weka.filters.Filter;
 import weka.filters.unsupervised.instance.Resample;
@@ -136,9 +138,9 @@ public class LDClustering implements Runnable {
             sample();
             normalizeDataset();
 //            featureScoring();
-            cluster();
-            printClusters();
-            evaluateCluster();
+//            cluster();
+//            printClusters();
+//            evaluateCluster();
         } catch (SQLException ex) {
             Logger.getLogger(LDClustering.class.getName()).log(Level.SEVERE, null, ex);
         } catch (Exception ex) {
@@ -196,134 +198,22 @@ public class LDClustering implements Runnable {
     private void addFeatures(Path p, LogicalData node, Connection connection, ArrayList<Path> nodes) throws SQLException {
         Collection<LogicalData> children = getChildrenByParentRef(node.getUid(), connection);
         for (LogicalData n : children) {
-            ArrayList<Double> featuresList = new ArrayList<>();
+            Instance instance = getInstance(n);
 
-            Long cDate = n.getCreateDate();
-            featuresList.add(Double.valueOf(cDate));
-
-            Long vDate = n.getLastValidationDate();
-            if (vDate == null) {
-                vDate = Long.valueOf(0);
-            }
-
-            featuresList.add(Double.valueOf(vDate));
-            Long len = n.getLength();
-            if (len == null) {
-                len = Long.valueOf(0);
-            }
-            featuresList.add(Double.valueOf(len));
-
-
-            Long lTimeout = n.getLockTimeout();
-            if (lTimeout == null) {
-                lTimeout = Long.valueOf(0);
-            }
-            featuresList.add(Double.valueOf(lTimeout));
-
-
-            Long mDate = n.getModifiedDate();
-            if (mDate == null) {
-                mDate = Long.valueOf(0);
-            }
-            featuresList.add(Double.valueOf(mDate));
-
-            featuresList.add(Double.valueOf(n.getParentRef()));
-//            instance.setValue(parentRefAttribute, n.getParentRef());
-
-            featuresList.add(Double.valueOf(n.getPdriGroupId()));
-//            instance.setValue(pdriGroupIdAttribute, n.getPdriGroupId());
-
-            featuresList.add(Double.valueOf(n.getUid()));
-//            instance.setValue(uidAttribute, n.getUid());
-
-            String feature = n.getContentTypesAsString();
-            if (feature == null || feature.length() <= 0) {
-                feature = "NON";
-            }
-            featuresList.add(toAscii(feature));
-
-            feature = n.getDataLocationPreference();
-            if (feature == null || feature.length() <= 0) {
-                feature = "NON";
-            }
-            featuresList.add(toAscii(feature));
-
-            feature = n.getDescription();
-            if (feature == null || feature.length() <= 0) {
-                feature = "NON";
-            }
-            featuresList.add(toAscii(feature));
-
-            feature = n.getLockDepth();
-            if (feature == null || feature.length() <= 0) {
-                feature = "NON";
-            }
-            featuresList.add(toAscii(feature));
-
-            feature = n.getLockScope();
-            if (feature == null || feature.length() <= 0) {
-                feature = "NON";
-            }
-            featuresList.add(toAscii(feature));
-
-            feature = n.getLockTokenID();
-            if (feature == null || feature.length() <= 0) {
-                feature = "NON";
-            }
-            featuresList.add(toAscii(feature));
-
-            feature = n.getLockType();
-            if (feature == null || feature.length() <= 0) {
-                feature = "NON";
-            }
-            featuresList.add(toAscii(feature));
-
-            feature = n.getLockedByUser();
-            if (feature == null || feature.length() <= 0) {
-                feature = "NON";
-            }
-            featuresList.add(toAscii(feature));
-
-            String name = n.getName();
-            if (name.length() <= 0) {
-                name = "/";
-            }
-            featuresList.add(toAscii(name));
-
-
-            String owner = n.getOwner();
-            featuresList.add(toAscii(owner));
-
-            feature = n.getStatus();
-            if (feature == null || feature.length() <= 0) {
-                feature = "NON";
-            }
-
-            Boolean isSupervised = n.getSupervised();
-            if (isSupervised) {
-                featuresList.add(1.0);
-            } else {
-                featuresList.add(0.0);
-            }
-
-            String type = n.getType();
-            featuresList.add(toAscii(type));
-
-
-            double[] featuresArray = new double[featuresList.size()];
-            for (int i = 0; i < featuresArray.length; i++) {
-                featuresArray[i] = featuresList.get(i);
-//                log.log(Level.INFO, "featuresArray[{0}]: {1}", new Object[]{i, featuresArray[i]});
-            }
-            Path parent = null;
-            Request.Method[] verbs = Request.Method.values();
-
-            
-            Instance instance = new DenseInstance(featuresArray, n.getName());
-            
-//            log.log(Level.INFO, "Add instance: {0}", n.getName());
-//            fileDataset.addElement(instance);
             fileDataset.add(instance);
+
+//                log.log(Level.INFO, "Add instance: {0}", n.getName());
+//            }
+
+//            featuresList.add(toAscii(Request.Method.GET.name()));
+//            double[] featuresArray = new double[featuresList.size()];
+//            for (int i = 0; i < featuresArray.length; i++) {
+//                featuresArray[i] = featuresList.get(i);
+//            }
+//            instance = new DenseInstance(featuresArray, n.getName());
+//            fileDataset.add(instance);
+//            log.log(Level.INFO, "Add instance: {0}", n.getName());
+
 
             if (n.getUid() != node.getUid()) {
 //                log.log(Level.INFO, "children: " + ld.getName());
@@ -385,7 +275,8 @@ public class LDClustering implements Runnable {
 //        Clusterer clusterer = new OPTICS();
 //        Clusterer clusterer = new SOM();
 
-//        XMeans xm = new XMeans();
+        XMeans xm = new XMeans();
+
 //        SimpleKMeans xm = new SimpleKMeans();
 //        CLOPE xm = new CLOPE();
 //        weka.clusterers.EM xm = new EM();
@@ -401,7 +292,6 @@ public class LDClustering implements Runnable {
 
 //        Clusterer clusterer = new WekaClusterer(xm);
         fileClusters = clusterer.cluster(fileDataset);
-
     }
 
     private static void printClusters() {
@@ -480,7 +370,7 @@ public class LDClustering implements Runnable {
 //        NormalizeMean nmr = new NormalizeMean();
 //        nmr.build(fileDataset);
 //        nmr.filter(fileDataset);
-        InstanceNormalizeMidrange inm = new InstanceNormalizeMidrange(0.5, 1);
+        InstanceNormalizeMidrange inm = new InstanceNormalizeMidrange(-10, 10);
         inm.build(fileDataset);
         inm.filter(fileDataset);
 
@@ -511,8 +401,10 @@ public class LDClustering implements Runnable {
         //The methods return a pair of data sets. The first part is the actual 
         //sample, the second part of the pair is a data set containing the 
         //out-of-bag samples
-        Pair<Dataset, Dataset> datas = s.sample(fileDataset, (int) (fileDataset.size() * 0.3));
+        log.log(Level.INFO, "file set size: " + fileDataset.size());
+        Pair<Dataset, Dataset> datas = s.sample(fileDataset, (int) (fileDataset.size() * 0.8));
         fileDataset = datas.x();
+        log.log(Level.INFO, "file set size: " + fileDataset.size());
 //        Classifier c = new LibSVM();
 //        c.buildClassifier(datas.x());
         //http://java-ml.sourceforge.net/api/0.1.3/net/sf/javaml/classification/evaluation/PerformanceMeasure.html
@@ -532,5 +424,215 @@ public class LDClustering implements Runnable {
         /* Measure the quality of the clustering */
         double score = sse.score(fileClusters);
         log.log(Level.INFO, "Cluster score: {0}", score);
+    }
+
+    public LobState getNextState(LobState currentState) throws SQLException {
+        String rName = currentState.getResourceName();
+        LogicalData data = getLogicalDataByPath(Path.path(rName), this.getConnection());
+        Instance instance = getInstance(data);
+        DistanceMeasure dm = new net.sf.javaml.distance.EuclideanDistance();
+        Set<Instance> res = fileDataset.kNearest(3, instance, dm);
+        for (Instance i : res) {
+            log.log(Level.INFO, "kNearest: " + i.getID() + " " + i.classValue());
+        }
+
+//                  instance = new DenseInstance(featuresArray, n.getName());
+        return null;
+    }
+
+    public LogicalData getLogicalDataByPath(Path logicalResourceName, @Nonnull Connection connection) throws SQLException {
+        LogicalData res = null;
+        if (res != null) {
+            return res;
+        }
+        try (PreparedStatement preparedStatement = connection.prepareStatement(
+                "SELECT uid FROM ldata_table WHERE ldata_table.parentRef = ? AND ldata_table.ldName = ?")) {
+            long parent = 1;
+            String parts[] = logicalResourceName.getParts();
+            if (parts.length == 0) {
+                parts = new String[]{""};
+            }
+            for (int i = 0; i != parts.length; ++i) {
+                String p = parts[i];
+                if (i == (parts.length - 1)) {
+                    try (PreparedStatement preparedStatement1 = connection.prepareStatement(
+                            "SELECT uid, ownerId, datatype, createDate, modifiedDate, ldLength, "
+                            + "contentTypesStr, pdriGroupRef, isSupervised, checksum, lastValidationDate, "
+                            + "lockTokenID, lockScope, lockType, lockedByUser, lockDepth, lockTimeout, "
+                            + "description, locationPreference, status "
+                            + "FROM ldata_table WHERE ldata_table.parentRef = ? AND ldata_table.ldName = ?")) {
+                        preparedStatement1.setLong(1, parent);
+                        preparedStatement1.setString(2, p);
+                        ResultSet rs = preparedStatement1.executeQuery();
+                        if (rs.next()) {
+                            res = new LogicalData();
+                            res.setUid(rs.getLong(1));
+                            res.setParentRef(parent);
+                            res.setOwner(rs.getString(2));
+                            res.setType(rs.getString(3));
+                            res.setName(p);
+                            res.setCreateDate(rs.getTimestamp(4).getTime());
+                            res.setModifiedDate(rs.getTimestamp(5).getTime());
+                            res.setLength(rs.getLong(6));
+                            res.setContentTypesAsString(rs.getString(7));
+                            res.setPdriGroupId(rs.getLong(8));
+                            res.setSupervised(rs.getBoolean(9));
+                            res.setChecksum(rs.getString(10));
+                            res.setLastValidationDate(rs.getLong(11));
+                            res.setLockTokenID(rs.getString(12));
+                            res.setLockScope(rs.getString(13));
+                            res.setLockType(rs.getString(14));
+                            res.setLockedByUser(rs.getString(15));
+                            res.setLockDepth(rs.getString(16));
+                            res.setLockTimeout(rs.getLong(17));
+                            res.setDescription(rs.getString(18));
+                            res.setDataLocationPreference(rs.getString(19));
+                            res.setStatus(rs.getString(20));
+                            return res;
+                        } else {
+                            return null;
+                        }
+                    }
+                } else {
+                    preparedStatement.setLong(1, parent);
+                    preparedStatement.setString(2, p);
+                    ResultSet rs = preparedStatement.executeQuery();
+                    if (rs.next()) {
+                        parent = rs.getLong(1);
+                    } else {
+                        return null;
+                    }
+                }
+            }
+            return null;
+        }
+    }
+
+    private Instance getInstance(LogicalData n) {
+        ArrayList<Double> featuresList = new ArrayList<>();
+
+        Long cDate = n.getCreateDate();
+        featuresList.add(Double.valueOf(cDate));
+
+        Long vDate = n.getLastValidationDate();
+        if (vDate == null) {
+            vDate = Long.valueOf(0);
+        }
+
+        featuresList.add(Double.valueOf(vDate));
+        Long len = n.getLength();
+        if (len == null) {
+            len = Long.valueOf(0);
+        }
+        featuresList.add(Double.valueOf(len));
+
+
+        Long lTimeout = n.getLockTimeout();
+        if (lTimeout == null) {
+            lTimeout = Long.valueOf(0);
+        }
+        featuresList.add(Double.valueOf(lTimeout));
+
+
+        Long mDate = n.getModifiedDate();
+        if (mDate == null) {
+            mDate = Long.valueOf(0);
+        }
+        featuresList.add(Double.valueOf(mDate));
+
+        featuresList.add(Double.valueOf(n.getParentRef()));
+//            instance.setValue(parentRefAttribute, n.getParentRef());
+
+        featuresList.add(Double.valueOf(n.getPdriGroupId()));
+//            instance.setValue(pdriGroupIdAttribute, n.getPdriGroupId());
+
+        featuresList.add(Double.valueOf(n.getUid()));
+//            instance.setValue(uidAttribute, n.getUid());
+
+        String feature = n.getContentTypesAsString();
+        if (feature == null || feature.length() <= 0) {
+            feature = "NON";
+        }
+        featuresList.add(toAscii(feature));
+
+        feature = n.getDataLocationPreference();
+        if (feature == null || feature.length() <= 0) {
+            feature = "NON";
+        }
+        featuresList.add(toAscii(feature));
+
+        feature = n.getDescription();
+        if (feature == null || feature.length() <= 0) {
+            feature = "NON";
+        }
+        featuresList.add(toAscii(feature));
+
+        feature = n.getLockDepth();
+        if (feature == null || feature.length() <= 0) {
+            feature = "NON";
+        }
+        featuresList.add(toAscii(feature));
+
+        feature = n.getLockScope();
+        if (feature == null || feature.length() <= 0) {
+            feature = "NON";
+        }
+        featuresList.add(toAscii(feature));
+
+        feature = n.getLockTokenID();
+        if (feature == null || feature.length() <= 0) {
+            feature = "NON";
+        }
+        featuresList.add(toAscii(feature));
+
+        feature = n.getLockType();
+        if (feature == null || feature.length() <= 0) {
+            feature = "NON";
+        }
+        featuresList.add(toAscii(feature));
+
+        feature = n.getLockedByUser();
+        if (feature == null || feature.length() <= 0) {
+            feature = "NON";
+        }
+        featuresList.add(toAscii(feature));
+
+        String name = n.getName();
+        if (name.length() <= 0) {
+            name = "/";
+        }
+        featuresList.add(toAscii(name));
+
+
+        String owner = n.getOwner();
+        featuresList.add(toAscii(owner));
+
+        feature = n.getStatus();
+        if (feature == null || feature.length() <= 0) {
+            feature = "NON";
+        }
+
+        Boolean isSupervised = n.getSupervised();
+        if (isSupervised) {
+            featuresList.add(1.0);
+        } else {
+            featuresList.add(0.0);
+        }
+
+        String type = n.getType();
+        featuresList.add(toAscii(type));
+
+
+
+
+
+        Request.Method[] verbs = Request.Method.values();
+//            for (Request.Method m : verbs) {
+//                featuresList.add(toAscii(m.name()));
+        double[] featuresArray = new double[featuresList.size()];
+        for (int i = 0; i < featuresArray.length; i++) {
+            featuresArray[i] = featuresList.get(i);
+        }
+        return new DenseInstance(featuresArray, n.getName());
     }
 }
