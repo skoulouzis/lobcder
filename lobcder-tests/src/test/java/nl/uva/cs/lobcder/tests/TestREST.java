@@ -86,7 +86,7 @@ public class TestREST {
 
         Properties prop = TestSettings.getTestProperties(propBasePath);
 
-        String testURL = prop.getProperty("webdav.test.url","http://localhost:8080/lobcder/dav");
+        String testURL = prop.getProperty("webdav.test.url", "http://localhost:8080/lobcder/dav");
         assertTrue(testURL != null);
         if (!testURL.endsWith("/")) {
             testURL = testURL + "/";
@@ -528,6 +528,10 @@ public class TestREST {
         }
     }
 
+    @Test
+    public void testMetadataService() throws IOException {
+    }
+
     public static ClientConfig configureClient() {
         TrustManager[] certs = new TrustManager[]{
             new X509TrustManager() {
@@ -558,11 +562,11 @@ public class TestREST {
         try {
             config.getProperties().put(HTTPSProperties.PROPERTY_HTTPS_PROPERTIES, new HTTPSProperties(
                     new HostnameVerifier() {
-                        @Override
-                        public boolean verify(String hostname, SSLSession session) {
-                            return true;
-                        }
-                    },
+                @Override
+                public boolean verify(String hostname, SSLSession session) {
+                    return true;
+                }
+            },
                     ctx));
         } catch (Exception e) {
         }
