@@ -36,40 +36,40 @@ class WP4Sweep implements Runnable {
 
     @Data
     public static class ResourceMetadata {
-      String author = "";
-      long localId = 0;
-      String globalId;
-      String name = "";
-      String type = "";
-      int views = 0;
 
+        String author = "";
+        long localId = 0;
+        String globalId;
+        String name = "";
+        String type = "";
+        int views = 0;
 
-      public String getXml() {
-          String extension = "";
-          int i = name.lastIndexOf('.');
-          if (i > 0) {
-              extension = name.substring(i + 1);
-          }
-          return new StringBuilder("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>")
-                  .append("<resource_metadata>")
-                  .append("<file>")
-                  .append("<author>").append(author).append("</author>")
-                  .append("<category>General Metadata</category>")
-                  .append("<description>LOBCDER</description>")
-                  .append("<linkedTo/>")
-                  .append("<localID>").append(localId).append("</localID>")
-                  .append("<name>").append(name).append("</name>")
-                  .append("<rating>0</rating>")
-                  .append("<relatedResources/>")
-                  .append("<semanticAnnotations/>")
-                  .append("<status>active</status>")
-                  .append("<type>").append(type).append("</type>")
-                  .append("<views>").append(views).append("</views>")
-                  .append("<fileType>").append(extension).append("</fileType>")
-                  .append("<subjectID/>")
-                  .append("</file>")
-                  .append("</resource_metadata>").toString();
-      }
+        public String getXml() {
+            String extension = "";
+            int i = name.lastIndexOf('.');
+            if (i > 0) {
+                extension = name.substring(i + 1);
+            }
+            return new StringBuilder("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>")
+                    .append("<resource_metadata>")
+                    .append("<file>")
+                    .append("<author>").append(author).append("</author>")
+                    .append("<category>General Metadata</category>")
+                    .append("<description>LOBCDER</description>")
+                    .append("<linkedTo/>")
+                    .append("<localID>").append(localId).append("</localID>")
+                    .append("<name>").append(name).append("</name>")
+                    .append("<rating>0</rating>")
+                    .append("<relatedResources/>")
+                    .append("<semanticAnnotations/>")
+                    .append("<status>active</status>")
+                    .append("<type>").append(type).append("</type>")
+                    .append("<views>").append(views).append("</views>")
+                    .append("<fileType>").append(extension).append("</fileType>")
+                    .append("<subjectID/>")
+                    .append("</file>")
+                    .append("</resource_metadata>").toString();
+        }
     }
 
     public static interface WP4ConnectorI {
@@ -94,7 +94,6 @@ class WP4Sweep implements Runnable {
         private final String uri;
         private final String uri_dev;
 
-
         public WP4Connector(String uri, String uri_dev) {
             try {
                 this.uri = uri;
@@ -115,7 +114,7 @@ class WP4Sweep implements Runnable {
             if (response.getClientResponseStatus() == ClientResponse.Status.OK) {
                 Node uidNode = (Node) expression.evaluate(new InputSource(response.getEntityInputStream()), XPathConstants.NODE);
                 String result = uidNode.getTextContent();
-                log.log(Level.FINE, "Send metadata to uri: {0} author: {1} name: {2} type: {3} global_id: {4}", new Object[]{uri, resourceMetadata.author,resourceMetadata.name, resourceMetadata.type, result});
+                log.log(Level.FINE, "Send metadata to uri: {0} author: {1} name: {2} type: {3} global_id: {4}", new Object[]{uri, resourceMetadata.author, resourceMetadata.name, resourceMetadata.type, result});
                 return result;
             } else {
                 throw new Exception(response.getClientResponseStatus().toString());
@@ -129,7 +128,7 @@ class WP4Sweep implements Runnable {
             if (response.getClientResponseStatus() == ClientResponse.Status.OK) {
                 Node uidNode = (Node) expression.evaluate(new InputSource(response.getEntityInputStream()), XPathConstants.NODE);
                 String result = uidNode.getTextContent();
-                log.log(Level.FINE, "Send metadata to uri: {0} author: {1} name: {2} type: {3} global_id: {4}", new Object[]{uri_dev, resourceMetadata.author,resourceMetadata.name, resourceMetadata.type, result});
+                log.log(Level.FINE, "Send metadata to uri: {0} author: {1} name: {2} type: {3} global_id: {4}", new Object[]{uri_dev, resourceMetadata.author, resourceMetadata.name, resourceMetadata.type, result});
                 return result;
             } else {
                 throw new Exception(response.getClientResponseStatus().toString());
@@ -160,20 +159,20 @@ class WP4Sweep implements Runnable {
         public void delete(String global_id) throws Exception {
             WebResource webResource = client.resource(uri);
             webResource.path(global_id).type(MediaType.APPLICATION_XML).delete();
-            log.log(Level.FINE, "Deleting metadata. global_id: {0}", global_id);
+            log.log(Level.FINE, "Deleting metadata from: {0} global_id: {1}", new Object[]{uri, global_id});
         }
 
         @Override
         public void delete_dev(String global_id) throws Exception {
             WebResource webResource = client.resource(uri_dev);
             webResource.path(global_id).type(MediaType.APPLICATION_XML).delete();
-            log.log(Level.FINE, "Deleting metadata. global_id: {0}", global_id);
+            log.log(Level.FINE, "Deleting metadata from: {0} global_id: {1}", new Object[]{uri_dev, global_id});
         }
     }
 
     private void create(Connection connection, WP4ConnectorI wp4Connector) throws SQLException, UnknownHostException {
         try (Statement s1 = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY,
-                        ResultSet.CONCUR_READ_ONLY)) {
+                ResultSet.CONCUR_READ_ONLY)) {
             try (PreparedStatement s2 = connection.prepareStatement("UPDATE wp4_table SET need_create = FALSE, global_id = ?, global_id_dev = ? WHERE id = ?")) {
                 ResultSet rs = s1.executeQuery("SELECT uid, ownerId, datatype, ldName, id FROM ldata_table JOIN wp4_table ON uid=local_id WHERE need_create=TRUE");
                 while (rs.next()) {
@@ -204,7 +203,7 @@ class WP4Sweep implements Runnable {
 
     private void update(Connection connection, WP4ConnectorI wp4Connector) throws SQLException, UnknownHostException {
         try (Statement s1 = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY,
-                        ResultSet.CONCUR_READ_ONLY)) {
+                ResultSet.CONCUR_READ_ONLY)) {
             try (PreparedStatement s2 = connection.prepareStatement("UPDATE wp4_table SET need_update = FALSE WHERE id = ?")) {
                 ResultSet rs = s1.executeQuery("SELECT ownerId, ldName, global_id, views, id, global_id_dev FROM ldata_table JOIN wp4_table ON uid=local_id WHERE need_update=TRUE");
                 while (rs.next()) {
@@ -215,8 +214,11 @@ class WP4Sweep implements Runnable {
                     rm.setViews(rs.getInt(4));
                     try {
                         wp4Connector.update(rm);
-                        rm.setGlobalId(rs.getString(6));
-                        wp4Connector.update_dev(rm);
+                        String global_id_dev = rs.getString(6);
+                        if (global_id_dev != null && global_id_dev.length() >= 1) {
+                            rm.setGlobalId(global_id_dev);
+                            wp4Connector.update_dev(rm);
+                        }
                         s2.setLong(1, rs.getLong(5));
                         s2.executeUpdate();
                     } catch (Exception e) {
@@ -233,7 +235,7 @@ class WP4Sweep implements Runnable {
 
     private void delete(Connection connection, WP4ConnectorI wp4Connector) throws SQLException, UnknownHostException {
         try (Statement s1 = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY,
-                        ResultSet.CONCUR_UPDATABLE)) {
+                ResultSet.CONCUR_UPDATABLE)) {
             ResultSet rs = s1.executeQuery("SELECT global_id, id, global_id_dev FROM wp4_table WHERE local_id IS NULL");
             while (rs.next()) {
                 try {
@@ -242,7 +244,7 @@ class WP4Sweep implements Runnable {
                     if (global_id != null) {
                         wp4Connector.delete(global_id);
                     }
-                    if(global_id_dev != null) {
+                    if (global_id_dev != null) {
                         wp4Connector.delete(global_id_dev);
                     }
                     rs.deleteRow();

@@ -46,3 +46,19 @@ error when building go to http://elab.lab.uvalight.net/artifactory/webapp/mavens
 
 ---------------------------------------------------------------------------------------
 To start events for to sweep short tokens: SET GLOBAL event_scheduler = ON;
+
+----------------------------------------------------------------------------------------
+We have to keep two different global_id: one for MR and other for test MR. To do so I add a column to the wp4_table. Now DDL for wp4_table shall be:
+CREATE TABLE wp4_table (
+ id SERIAL PRIMARY KEY,
+ local_id BIGINT UNSIGNED, FOREIGN KEY(local_id) REFERENCES ldata_table(uid) ON DELETE SET NULL ,
+ global_id VARCHAR(255),
+ global_id_dev VARCHAR(255),
+ views INT UNSIGNED NOT NULL DEFAULT 0,
+ need_update BOOLEAN NOT NULL DEFAULT FALSE, INDEX(need_update),
+ need_create BOOLEAN NOT NULL DEFAULT TRUE, INDEX(need_create)
+) ENGINE=InnoDB;
+
+To modify existing table we can use this:
+
+ALTER TABLE wp4_table ADD global_id_dev VARCHAR(255) AFTER global_id;
