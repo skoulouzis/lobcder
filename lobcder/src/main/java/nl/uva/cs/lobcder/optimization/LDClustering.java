@@ -89,10 +89,28 @@ public class LDClustering implements Runnable {
 
     private static Dataset fileDataset;
     private static Dataset[] fileClusters;
-    private final BasicDataSource dataSource;
+    private final Connection connection;
 
-    public LDClustering() throws NamingException, SQLException, ClassNotFoundException, InstantiationException, IllegalAccessException {
-        dataSource = new BasicDataSource();
+    public LDClustering(Connection connection) throws NamingException, SQLException, ClassNotFoundException, InstantiationException, IllegalAccessException {
+        this.connection = connection;
+
+
+
+        fileDataset = new DefaultDataset();
+
+
+//        initAttributes();
+
+
+
+    }
+
+    public Connection getConnection() throws SQLException {
+        return connection;
+    }
+
+    public static void main(String args[]) throws Exception {
+        BasicDataSource dataSource = new BasicDataSource();
 
         dataSource.setDriverClassName("com.mysql.jdbc.Driver");
         dataSource.setUsername("lobcder");
@@ -109,23 +127,7 @@ public class LDClustering implements Runnable {
 //        datasource2 = DriverManager.getConnection(url);
 //        datasource2.setAutoCommit(false);
 
-        fileDataset = new DefaultDataset();
-
-
-//        initAttributes();
-
-
-
-    }
-
-    public Connection getConnection() throws SQLException {
-        Connection cn = dataSource.getConnection();
-        cn.setAutoCommit(false);
-        return cn;
-    }
-
-    public static void main(String args[]) throws Exception {
-        LDClustering c = new LDClustering();
+        LDClustering c = new LDClustering(dataSource.getConnection());
         c.run();
     }
 

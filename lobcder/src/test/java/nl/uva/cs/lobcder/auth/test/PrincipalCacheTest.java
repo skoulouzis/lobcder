@@ -20,7 +20,7 @@ import static org.junit.Assert.assertNull;
  * @author dvasunin
  */
 public class PrincipalCacheTest {
-    
+
     @Test
     public void testCache() throws InterruptedException {
         System.out.println("testCache");
@@ -30,7 +30,7 @@ public class PrincipalCacheTest {
         instance.putPrincipal(token, principal, new Date().getTime() + 1000);
         Thread.sleep(500);
         MyPrincipal result = instance.getPrincipal(token);
-        assertNotNull(result);        
+        assertNotNull(result);
     }
 
     @Test
@@ -42,12 +42,12 @@ public class PrincipalCacheTest {
         instance.putPrincipal(token, principal, new Date().getTime() + 1000);
         Thread.sleep(1500);
         MyPrincipal result = instance.getPrincipal(token);
-        assertNull(result);        
+        assertNull(result);
     }
 
-    public MyPrincipal getPrincipal(String uname) {
+    public MyPrincipal getPrincipal(String token) {
         String[] roles = {"role1", "role2", "role3", "role4"};
-        MyPrincipal mp = new MyPrincipal(uname, new HashSet<String>(Arrays.asList(roles)));
+        MyPrincipal mp = new MyPrincipal("id", new HashSet<>(Arrays.asList(roles)), token);
         return mp;
     }
 }

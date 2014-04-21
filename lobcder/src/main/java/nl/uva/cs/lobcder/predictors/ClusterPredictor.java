@@ -21,23 +21,23 @@ import java.util.logging.Logger;
 import javax.naming.NamingException;
 import nl.uva.cs.lobcder.optimization.LDClustering;
 import nl.uva.cs.lobcder.optimization.LobState;
-
+import nl.uva.cs.lobcder.util.MyDataSource;
 
 /**
  *
  * @author S. Koulouzis
  */
-public class ClusterPredictor implements Predictor {
+public class ClusterPredictor extends MyDataSource implements Predictor {
+
     private final LDClustering ldc;
 
     public ClusterPredictor() throws NamingException, SQLException, ClassNotFoundException, InstantiationException, IllegalAccessException {
-        ldc = new LDClustering();
+        ldc = new LDClustering(getConnection());
         ldc.run();
     }
 
     @Override
     public void stop() {
-//        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
@@ -54,5 +54,4 @@ public class ClusterPredictor implements Predictor {
     public void setPreviousStateForCurrent(LobState prevState, LobState currentState) {
         //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
-    
 }

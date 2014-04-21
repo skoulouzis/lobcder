@@ -129,7 +129,7 @@ class WP4Sweep implements Runnable {
             if (response.getClientResponseStatus() == ClientResponse.Status.OK) {
                 Node uidNode = (Node) expression.evaluate(new InputSource(response.getEntityInputStream()), XPathConstants.NODE);
                 String result = uidNode.getTextContent();
-                log.log(Level.FINE, "Send metadata to uri: {0} author: {1} name: {2} type: {3} global_id: {4}", new Object[]{uri, resourceMetadata.author,resourceMetadata.name, resourceMetadata.type, result});
+                log.log(Level.FINE, "Send metadata to uri: {0} author: {1} name: {2} type: {3} global_id: {4}", new Object[]{uri_dev, resourceMetadata.author,resourceMetadata.name, resourceMetadata.type, result});
                 return result;
             } else {
                 throw new Exception(response.getClientResponseStatus().toString());
@@ -153,7 +153,7 @@ class WP4Sweep implements Runnable {
             if (response.getClientResponseStatus() != ClientResponse.Status.OK) {
                 throw new Exception(response.getClientResponseStatus().toString());
             }
-            log.log(Level.FINE, "Send metadata to uri: {0} author: {1} name: {2} type: {3} global_id: {4}", new Object[]{uri, resourceMetadata.author, resourceMetadata.name, resourceMetadata.type, resourceMetadata.globalId});
+            log.log(Level.FINE, "Send metadata to uri: {0} author: {1} name: {2} type: {3} global_id: {4}", new Object[]{uri_dev, resourceMetadata.author, resourceMetadata.name, resourceMetadata.type, resourceMetadata.globalId});
         }
 
         @Override

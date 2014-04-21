@@ -168,33 +168,35 @@ public class MyFilter extends MiltonFilter {
     }
 
     private Predictor getPredictor() throws Exception {
+        if (PropertiesHelper.doPrediction()) {
+            //TODO: Use class loader 
+            if (predictor == null) {
+                String algorithm = PropertiesHelper.getPredictorAlgorithm();
+                if (algorithm.equals("FirstSuccessor")) {
+                    predictor = new FirstSuccessor();
+                }
+                if (algorithm.equals("LastSuccessor")) {
+                    predictor = new LastSuccessor();
+                }
+                if (algorithm.equals("StableSuccessor")) {
+                    predictor = new StableSuccessor();
+                }
+                if (algorithm.equals("RecentPopularity")) {
+                    predictor = new RecentPopularity();
+                }
+                if (algorithm.equals("PredecessorPosition")) {
+                    predictor = new PredecessorPosition();
+                }
 
-        //TODO: Use class loader 
-        if (predictor == null) {
-            String algorithm = PropertiesHelper.getPredictorAlgorithm();
-            if (algorithm.equals("FirstSuccessor")) {
-                predictor = new FirstSuccessor();
-            }
-            if (algorithm.equals("LastSuccessor")) {
-                predictor = new LastSuccessor();
-            }
-            if (algorithm.equals("StableSuccessor")) {
-                predictor = new StableSuccessor();
-            }
-            if (algorithm.equals("RecentPopularity")) {
-                predictor = new RecentPopularity();
-            }
-            if (algorithm.equals("PredecessorPosition")) {
-                predictor = new PredecessorPosition();
-            }
-
-            if (algorithm.equals("MarkovPredictor")) {
-                predictor = new MarkovPredictor();
-            }
-            if (algorithm.equals("ClusterPredictor")) {
-                predictor = new ClusterPredictor();
+                if (algorithm.equals("MarkovPredictor")) {
+                    predictor = new MarkovPredictor();
+                }
+                if (algorithm.equals("ClusterPredictor")) {
+                    predictor = new ClusterPredictor();
+                }
             }
         }
+
         return predictor;
     }
 
