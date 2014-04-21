@@ -24,11 +24,12 @@ class SweeprsTimerTask extends TimerTask {
     SweeprsTimerTask(DataSource datasource) throws IOException {
         deleteSweep = new DeleteSweep(datasource);
         replicateSweep = new ReplicateSweep(datasource);
-        useRepo = PropertiesHelper.useMetadataReposetory();
+        useRepo = PropertiesHelper.useMetadataRepository();
         if (useRepo) {
-            String metadataReposetory = PropertiesHelper.getMetadataReposetoryURL();
+            String metadataRepository = PropertiesHelper.getMetadataRepositoryURL();
+            String metadataRepositoryDev = PropertiesHelper.getMetadataRepositoryDevURL();
             wp4Sweep = new WP4Sweep(datasource,
-                    new WP4Sweep.WP4Connector(metadataReposetory));
+                    new WP4Sweep.WP4Connector(metadataRepository, metadataRepositoryDev));
         }
 
     }

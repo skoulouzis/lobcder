@@ -66,7 +66,7 @@ public class AuthTicket implements AuthI  {
             User u = null;
             if (res == null) {
                 u = validateTicket(token);
-                res = new MyPrincipal(u.username, new HashSet(Arrays.asList(u.role)));
+                res = new MyPrincipal(u.username, new HashSet(Arrays.asList(u.role)), token);
                 res.getRoles().add("other");
                 res.getRoles().add(u.username);
                 res.setValidUntil(u.validuntil);

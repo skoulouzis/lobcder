@@ -16,23 +16,19 @@ import java.util.Set;
  */
 public class MyPrincipal {
 
-    private String userId;
-    private Set<String> roles;
-    private boolean admin;
+    @Getter private final String token;
+    @Getter private final String userId;
+    @Getter private final Set<String> roles;
+    @Getter private final boolean admin;
     @Getter @Setter private Long validUntil;
 
-    public MyPrincipal(String userId, Set<String> roles) {
+    public MyPrincipal(String userId, Set<String> roles, String token) {
         this.userId = userId;
         this.roles = roles;
         admin = roles.contains("admin");
-    }
-
-    public String getUserId() {
-        return userId;
-    }
-
-    public Set<String> getRoles() {
-        return roles;
+        this.token = token;
+        roles.add(userId);
+        roles.add(userId + "_dev");
     }
 
     public String getRolesStr() {
@@ -71,9 +67,5 @@ public class MyPrincipal {
         Set<String> r1 = new HashSet<String>(roles);
         r1.retainAll(p.getWrite());
         return !r1.isEmpty();
-    }
-
-    public boolean isAdmin() {
-        return admin;
     }
 }

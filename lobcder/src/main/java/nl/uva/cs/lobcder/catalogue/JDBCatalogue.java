@@ -572,6 +572,7 @@ public class JDBCatalogue extends MyDataSource {
     public void setPermissions(Long UID, Permissions perm, @Nonnull Connection connection) throws SQLException {
         try (Statement s = connection.createStatement(java.sql.ResultSet.TYPE_FORWARD_ONLY,
                         java.sql.ResultSet.CONCUR_UPDATABLE)) {
+
             s.addBatch("DELETE FROM permission_table WHERE permission_table.ldUidRef = " + UID);
             for (String cr : perm.getRead()) {
                 s.addBatch("INSERT INTO permission_table (permType, ldUidRef, roleName) VALUES ('read', " + UID + " , '" + cr + "')");
@@ -614,6 +615,7 @@ public class JDBCatalogue extends MyDataSource {
             p.setRead(canRead);
             p.setWrite(canWrite);
             p.setOwner(owner);
+            p.setLocalId(UID);
             putToPermissionsCache(UID, p);
             return p;
         }
@@ -693,68 +695,75 @@ public class JDBCatalogue extends MyDataSource {
         removeFromLDataCache(toMove, null);
     }
 
-    @SneakyThrows(CloneNotSupportedException.class)
+
     public void copyFolder(LogicalData toCopy, LogicalData newParent, String newName, MyPrincipal principal, Connection connection) throws SQLException {
-        Permissions toCopyPerm = getPermissions(toCopy.getUid(), toCopy.getOwner(), connection);
-        Permissions newParentPerm = getPermissions(newParent.getUid(), newParent.getOwner(), connection);
-        Permissions permissionsForNew = new Permissions(principal, newParentPerm);
-        if (toCopy.isFolder() && principal.canWrite(newParentPerm)) {
-            // ignore folder if there is a problem
-            LogicalData newFolderEntry = toCopy.clone();
-            newFolderEntry.setName(newName);
-            newFolderEntry.setParentRef(newParent.getUid());
-            newFolderEntry.setType(Constants.LOGICAL_FOLDER);
-            newFolderEntry.setCreateDate(System.currentTimeMillis());
-            newFolderEntry.setModifiedDate(System.currentTimeMillis());
-            newFolderEntry.setOwner(principal.getUserId());
-            newFolderEntry = registerDirLogicalData(newFolderEntry, connection);
-            setPermissions(newFolderEntry.getUid(), permissionsForNew, connection);
-            if (principal.canRead(toCopyPerm)) {
-                try (CallableStatement cs = connection.prepareCall("{CALL copyFolderContentProc(?, ?, ?, ?, ?, ?)}")) {
-                    cs.setString(1, principal.getUserId());
-                    cs.setString(2, principal.getRolesStr());
-                    cs.setString(3, permissionsForNew.getReadStr());
-                    cs.setString(4, permissionsForNew.getWriteStr());
-                    cs.setLong(5, toCopy.getUid());
-                    cs.setLong(6, newFolderEntry.getUid());
-                    cs.execute();
-                    try (PreparedStatement ps1 = connection.prepareStatement(
-                                    "SELECT uid, ownerId, ldName FROM ldata_table WHERE datatype='logical.folder' AND parentRef = ?")) {
-                        ps1.setLong(1, toCopy.getUid());
-                        ResultSet rs = ps1.executeQuery();
-                        while (rs.next()) {
-                            LogicalData element = new LogicalData();
-                            element.setUid(rs.getLong(1));
-                            element.setOwner(rs.getString(2));
-                            element.setType("logical.folder");
-                            element.setName(rs.getString(3));
-                            element.setParentRef(toCopy.getUid());
-                            copyFolder(element, newFolderEntry, element.getName(), principal, connection);
+        try {
+            Permissions toCopyPerm = getPermissions(toCopy.getUid(), toCopy.getOwner(), connection);
+            Permissions newParentPerm = getPermissions(newParent.getUid(), newParent.getOwner(), connection);
+            Permissions permissionsForNew = new Permissions(principal, newParentPerm);
+            if (toCopy.isFolder() && principal.canWrite(newParentPerm)) {
+                // ignore folder if there is a problem
+                LogicalData newFolderEntry = toCopy.clone();
+                newFolderEntry.setName(newName);
+                newFolderEntry.setParentRef(newParent.getUid());
+                newFolderEntry.setType(Constants.LOGICAL_FOLDER);
+                newFolderEntry.setCreateDate(System.currentTimeMillis());
+                newFolderEntry.setModifiedDate(System.currentTimeMillis());
+                newFolderEntry.setOwner(principal.getUserId());
+                newFolderEntry = registerDirLogicalData(newFolderEntry, connection);
+                setPermissions(newFolderEntry.getUid(), permissionsForNew, connection);
+                if (principal.canRead(toCopyPerm)) {
+                    try (CallableStatement cs = connection.prepareCall("{CALL copyFolderContentProc(?, ?, ?, ?, ?, ?)}")) {
+                        cs.setString(1, principal.getUserId());
+                        cs.setString(2, principal.getRolesStr());
+                        cs.setString(3, permissionsForNew.getReadStr());
+                        cs.setString(4, permissionsForNew.getWriteStr());
+                        cs.setLong(5, toCopy.getUid());
+                        cs.setLong(6, newFolderEntry.getUid());
+                        cs.execute();
+                        try (PreparedStatement ps1 = connection.prepareStatement(
+                                "SELECT uid, ownerId, ldName FROM ldata_table WHERE datatype='logical.folder' AND parentRef = ?")) {
+                            ps1.setLong(1, toCopy.getUid());
+                            ResultSet rs = ps1.executeQuery();
+                            while (rs.next()) {
+                                LogicalData element = new LogicalData();
+                                element.setUid(rs.getLong(1));
+                                element.setOwner(rs.getString(2));
+                                element.setType("logical.folder");
+                                element.setName(rs.getString(3));
+                                element.setParentRef(toCopy.getUid());
+                                copyFolder(element, newFolderEntry, element.getName(), principal, connection);
+                            }
                         }
                     }
                 }
             }
+        } catch (CloneNotSupportedException e) {
+            throw  new RuntimeException(e);
         }
     }
 
-    @SneakyThrows(CloneNotSupportedException.class)
     public void copyFile(LogicalData toCopy, LogicalData newParent, String newName, MyPrincipal principal, Connection connection) throws SQLException {
-        Permissions toCopyPerm = getPermissions(toCopy.getUid(), toCopy.getOwner(), connection);
-        Permissions newParentPerm = getPermissions(newParent.getUid(), newParent.getOwner(), connection);
-        Permissions permissionsForNew = new Permissions(principal, newParentPerm);
-        if (!toCopy.isFolder() && principal.canRead(toCopyPerm) && principal.canWrite(newParentPerm)) {
-            LogicalData newFileEntry = toCopy.clone();
-            newFileEntry.setUid(Long.valueOf(0));
-            newFileEntry.setOwner(principal.getUserId());
-            newFileEntry.setName(newName);
-            newFileEntry.setParentRef(newParent.getUid());
-            newFileEntry.setCreateDate(System.currentTimeMillis());
-            newFileEntry.setModifiedDate(System.currentTimeMillis());
-            newFileEntry = registerLogicalData(newFileEntry, connection);
-            setPermissions(newFileEntry.getUid(), permissionsForNew, connection);
-            try (Statement s = connection.createStatement()) {
-                s.executeUpdate("UPDATE pdrigroup_table SET refCount=refCount+1 WHERE pdriGroupId = " + newFileEntry.getPdriGroupId());
+        try {
+            Permissions toCopyPerm = getPermissions(toCopy.getUid(), toCopy.getOwner(), connection);
+            Permissions newParentPerm = getPermissions(newParent.getUid(), newParent.getOwner(), connection);
+            Permissions permissionsForNew = new Permissions(principal, newParentPerm);
+            if (!toCopy.isFolder() && principal.canRead(toCopyPerm) && principal.canWrite(newParentPerm)) {
+                LogicalData newFileEntry = toCopy.clone();
+                newFileEntry.setUid(Long.valueOf(0));
+                newFileEntry.setOwner(principal.getUserId());
+                newFileEntry.setName(newName);
+                newFileEntry.setParentRef(newParent.getUid());
+                newFileEntry.setCreateDate(System.currentTimeMillis());
+                newFileEntry.setModifiedDate(System.currentTimeMillis());
+                newFileEntry = registerLogicalData(newFileEntry, connection);
+                setPermissions(newFileEntry.getUid(), permissionsForNew, connection);
+                try (Statement s = connection.createStatement()) {
+                    s.executeUpdate("UPDATE pdrigroup_table SET refCount=refCount+1 WHERE pdriGroupId = " + newFileEntry.getPdriGroupId());
+                }
             }
+        } catch (CloneNotSupportedException cns) {
+            throw new RuntimeException(cns);
         }
     }
 
@@ -1283,15 +1292,15 @@ public class JDBCatalogue extends MyDataSource {
 //                    Long id = es.getStorageSiteId();
                     try (PreparedStatement preparedStatement = connection.prepareStatement(
                                     "UPDATE storage_site_table SET "
-                                    + "`resourceUri` = ?, "
-                                    + "`credentialRef` = ?, "
-                                    + "`currentNum` = ?, "
-                                    + "`currentSize` = ?, "
-                                    + "`quotaNum` = ?, "
-                                    + "`quotaSize` = ?, "
-                                    + "`isCache` = ?, "
-                                    + "`encrypt` = ? "
-                                    + "WHERE storageSiteId = ?;")) {
+                                    + "resourceUri = ?, "
+                                    + "credentialRef = ?, "
+                                    + "currentNum = ?, "
+                                    + "currentSize = ?, "
+                                    + "quotaNum = ?, "
+                                    + "quotaSize = ?, "
+                                    + "isCache = ?, "
+                                    + "encrypt = ? "
+                                    + "WHERE storageSiteId = ?")) {
                         preparedStatement.setString(1, s.getResourceURI());
                         preparedStatement.setLong(2, credentialID);
                         preparedStatement.setLong(3, s.getCurrentNum());

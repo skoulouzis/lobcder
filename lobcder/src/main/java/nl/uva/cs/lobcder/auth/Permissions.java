@@ -6,7 +6,8 @@ package nl.uva.cs.lobcder.auth;
 
 import lombok.Data;
 
-import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.*;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -18,8 +19,11 @@ import lombok.Data;
  */
 @Data
 @XmlRootElement
+@XmlAccessorType(XmlAccessType.FIELD)
 public class Permissions {
 
+    @XmlTransient
+    private Long localId;
     private Set<String> read = new HashSet<>();
     private Set<String> write = new HashSet<>();
     private String owner = "";
@@ -32,9 +36,9 @@ public class Permissions {
 //        read.addAll(mp.getRoles());
 //    }
 
-    public Permissions(MyPrincipal mp, Permissions rootPermissions) {
+    public Permissions(MyPrincipal mp, Permissions parentPermissions) {
         owner = mp.getUserId();
-        read.addAll(rootPermissions.getRead());       
+        read.addAll(parentPermissions.getRead());
         read.retainAll(mp.getRoles());
     }
 

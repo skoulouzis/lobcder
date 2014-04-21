@@ -42,7 +42,7 @@ public class AuthWorker implements AuthI {
             if (theToken.equals(token)) {
                 HashSet<String> roles = new HashSet<>();
                 roles.add("admin");
-                principal = new MyPrincipal("worker-", roles);
+                principal = new MyPrincipal("worker-", roles, token);
             }
             return principal;
         } catch (Exception ex) {

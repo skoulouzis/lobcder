@@ -113,11 +113,15 @@ public class PropertiesHelper {
 //    public static boolean doRemoteAuth() throws IOException {
 //        return Boolean.valueOf(getProperties().getProperty("auth.use.remote", "true"));
 //    }
-    public static String getMetadataReposetoryURL() throws IOException {
-        return getProperties().getProperty("metadata.reposetory.url", "http://vphshare.atosresearch.eu/metadata-retrieval/rest/metadata");
+    public static String getMetadataRepositoryURL() throws IOException {
+        return getProperties().getProperty("metadata.repository.url", "http://vphshare.atosresearch.eu/metadata-extended/rest/metadata");
     }
 
-    public static Boolean useMetadataReposetory() throws IOException {
+    public static String getMetadataRepositoryDevURL() throws IOException {
+        return getProperties().getProperty("metadata.repository.test.url", "http://vphshare.atosresearch.eu/metadata-extended-test/rest/metadata");
+    }
+
+    public static Boolean useMetadataRepository() throws IOException {
         return Boolean.valueOf(getProperties().getProperty("use.metadata.repository", "true"));
     }
 
