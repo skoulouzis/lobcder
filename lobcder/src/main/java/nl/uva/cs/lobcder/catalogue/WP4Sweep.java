@@ -179,7 +179,7 @@ class WP4Sweep implements Runnable {
                     ResourceMetadata rm = new ResourceMetadata();
                     rm.setLocalId(rs.getLong(1));
                     rm.setAuthor(rs.getString(2));
-                    rm.setType(rs.getString(3));
+                    rm.setType(rs.getString(3).equals("logical.file") ? "File" : "Folder");
                     rm.setName(rs.getString(4));
                     rm.setViews(0);
                     try {
