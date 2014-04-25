@@ -33,7 +33,10 @@ import java.util.SortedSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Nonnull;
+import javax.naming.Context;
+import javax.naming.InitialContext;
 import javax.naming.NamingException;
+import javax.sql.DataSource;
 import libsvm.LibSVM;
 import lombok.extern.java.Log;
 import net.sf.javaml.classification.Classifier;
@@ -89,46 +92,40 @@ public class LDClustering implements Runnable {
 
     private static Dataset fileDataset;
     private static Dataset[] fileClusters;
-    private final Connection connection;
+//    private Connection connection;
+    private DataSource datasource;
 
-    public LDClustering(Connection connection) throws NamingException, SQLException, ClassNotFoundException, InstantiationException, IllegalAccessException {
-        this.connection = connection;
+    public LDClustering() throws NamingException, SQLException, ClassNotFoundException, InstantiationException, IllegalAccessException {
 
+//        String jndiName = "jdbc/lobcder";
+//        Context ctx = new InitialContext();
+//        Context envContext = (Context) ctx.lookup("java:/comp/env");
+//        datasource = (DataSource) envContext.lookup(jndiName);
 
 
         fileDataset = new DefaultDataset();
-
-
 //        initAttributes();
-
-
-
     }
 
     public Connection getConnection() throws SQLException {
-        return connection;
+        Connection cn = datasource.getConnection();
+        cn.setAutoCommit(false);
+        return cn;
     }
 
     public static void main(String args[]) throws Exception {
-        BasicDataSource dataSource = new BasicDataSource();
 
-        dataSource.setDriverClassName("com.mysql.jdbc.Driver");
-        dataSource.setUsername("lobcder");
-        dataSource.setPassword("RoomC3156");
-        String url = "jdbc:mysql://localhost:3306/lobcderDB2?zeroDateTimeBehavior=convertToNull";
-        dataSource.setUrl(url);
-        dataSource.setMaxActive(10);
-        dataSource.setMaxIdle(5);
-        dataSource.setInitialSize(5);
-        dataSource.setValidationQuery("SELECT 1");
 
 //        DriverManager.registerDriver((Driver) Class.forName("com.mysql.jdbc.Driver").newInstance());
 //        
 //        datasource2 = DriverManager.getConnection(url);
 //        datasource2.setAutoCommit(false);
 
-        LDClustering c = new LDClustering(dataSource.getConnection());
+        LDClustering c = new LDClustering();
+ 
         c.run();
+
+        c.getNextState(new LobState(Request.Method.GET, "/DSS2IR/DSS2IR_area.fits"));
     }
 
     @Override
@@ -137,11 +134,12 @@ public class LDClustering implements Runnable {
             buildOrUpdateDataset();
 //            printDataset();
 //            featureScoring();
-            sample();
+//            sample();
             normalizeDataset();
+            printDataset();
 //            featureScoring();
-//            cluster();
-//            printClusters();
+            cluster();
+            printClusters();
 //            evaluateCluster();
         } catch (SQLException ex) {
             Logger.getLogger(LDClustering.class.getName()).log(Level.SEVERE, null, ex);
@@ -153,7 +151,7 @@ public class LDClustering implements Runnable {
     private void buildOrUpdateDataset() throws SQLException {
         try (Connection connection = getConnection()) {
             LogicalData root = getLogicalDataByUid(Long.valueOf(1), connection);
-            addFeatures(Path.root, root, connection, null);
+            addFeatures(Path.root, root, connection);
         }
     }
 
@@ -197,33 +195,20 @@ public class LDClustering implements Runnable {
         }
     }
 
-    private void addFeatures(Path p, LogicalData node, Connection connection, ArrayList<Path> nodes) throws SQLException {
+    private void addFeatures(Path p, LogicalData node, Connection connection) throws SQLException {
+
+        ArrayList instances = getInstances(p, node, null);
+
+        fileDataset.addAll(instances);
+
+
         Collection<LogicalData> children = getChildrenByParentRef(node.getUid(), connection);
         for (LogicalData n : children) {
-            Instance instance = getInstance(n);
-
-            fileDataset.add(instance);
-
-//                log.log(Level.INFO, "Add instance: {0}", n.getName());
-//            }
-
-//            featuresList.add(toAscii(Request.Method.GET.name()));
-//            double[] featuresArray = new double[featuresList.size()];
-//            for (int i = 0; i < featuresArray.length; i++) {
-//                featuresArray[i] = featuresList.get(i);
-//            }
-//            instance = new DenseInstance(featuresArray, n.getName());
-//            fileDataset.add(instance);
-//            log.log(Level.INFO, "Add instance: {0}", n.getName());
-
-
             if (n.getUid() != node.getUid()) {
 //                log.log(Level.INFO, "children: " + ld.getName());
                 Path nextPath = Path.path(p, n.getName());
 //                log.log(Level.INFO, "node: " + nextPath);
-                if (n.isFolder()) {
-                    addFeatures(nextPath, n, connection, nodes);
-                }
+                addFeatures(nextPath, n, connection);
             }
         }
     }
@@ -277,7 +262,7 @@ public class LDClustering implements Runnable {
 //        Clusterer clusterer = new OPTICS();
 //        Clusterer clusterer = new SOM();
 
-        XMeans xm = new XMeans();
+//        XMeans xm = new XMeans();
 
 //        SimpleKMeans xm = new SimpleKMeans();
 //        CLOPE xm = new CLOPE();
@@ -299,27 +284,14 @@ public class LDClustering implements Runnable {
     private static void printClusters() {
         for (int i = 0; i < fileClusters.length; i++) {
             log.log(Level.INFO, "Cluster: {0}", i);
-            Dataset ds = fileClusters[i];
-
+//            Dataset ds = fileClusters[i];
+//
 //            Iterator<Instance> iter = ds.iterator();
-
+//
 //            while (iter.hasNext()) {
 //                Instance inst = iter.next();
-//                int id = inst.getID();
-//                log.log(Level.INFO, "\t------------------ ");
-//                log.log(Level.INFO, "\tID: {0}", id);
-//                Object classValue = inst.classValue();
-//                if (classValue != null) {
-//                    log.log(Level.INFO, "\tclassValue: {0}", classValue);
-//                }
-//                SortedSet<Integer> keys = inst.keySet();
-//                Iterator<Integer> kIter = keys.iterator();
-//                while (kIter.hasNext()) {
-//                    Integer key = kIter.next();
-//                    Double val = inst.get(key);
-//                    log.log(Level.INFO, "key: " + key + " val: " + val);
-//                }
-//                log.log(Level.INFO, "\t------------------ ");
+//                String ids = i + " ------------------\nID:" + inst.getID() + " " + inst.classValue() + "\n------------------";
+//                log.log(Level.INFO, ids);
 //            }
         }
     }
@@ -351,49 +323,49 @@ public class LDClustering implements Runnable {
     private static void normalizeDataset() {
 
 
-        Instance rgB = fileDataset.get(10);
-        int id = rgB.getID();
-        System.out.println("------------------ ");
-        System.out.println("ID: " + id);
-        Object classValue = rgB.classValue();
-        if (classValue != null) {
-            System.out.println("classValue: " + classValue.getClass().getName());
-            System.out.println("classValue: " + classValue);
-        }
-        SortedSet<Integer> keys = rgB.keySet();
-        Iterator<Integer> kIter = keys.iterator();
-        while (kIter.hasNext()) {
-            Integer key = kIter.next();
-            Double val = rgB.get(key);
-            System.out.println("key: " + key + " val: " + val);
-        }
-        System.out.println("------------------ ");
+        Instance rgB = fileDataset.get(0);
+//        int id = rgB.getID();
+//        System.out.println("------------------ ");
+//        System.out.println("ID: " + id);
+//        Object classValue = rgB.classValue();
+//        if (classValue != null) {
+//            System.out.println("classValue: " + classValue.getClass().getName());
+//            System.out.println("classValue: " + classValue);
+//        }
+//        SortedSet<Integer> keys = rgB.keySet();
+//        Iterator<Integer> kIter = keys.iterator();
+//        while (kIter.hasNext()) {
+//            Integer key = kIter.next();
+//            Double val = rgB.get(key);
+//            System.out.println("key: " + key + " val: " + val);
+//        }
+//        System.out.println("------------------ ");
 
-//        NormalizeMean nmr = new NormalizeMean();
-//        nmr.build(fileDataset);
-//        nmr.filter(fileDataset);
-        InstanceNormalizeMidrange inm = new InstanceNormalizeMidrange(-10, 10);
-        inm.build(fileDataset);
-        inm.filter(fileDataset);
+        NormalizeMean nmr = new NormalizeMean();
+        nmr.build(fileDataset);
+        nmr.filter(fileDataset);
+//        InstanceNormalizeMidrange inm = new InstanceNormalizeMidrange(-9999, 9999);
+//        inm.build(fileDataset);
+//        inm.filter(fileDataset);
 
 
-        rgB = fileDataset.get(10);
-        id = rgB.getID();
-        System.out.println("------------------ ");
-        System.out.println("ID: " + id);
-        classValue = rgB.classValue();
-        if (classValue != null) {
-            System.out.println("classValue: " + classValue.getClass().getName());
-            System.out.println("classValue: " + classValue);
-        }
-        keys = rgB.keySet();
-        kIter = keys.iterator();
-        while (kIter.hasNext()) {
-            Integer key = kIter.next();
-            Double val = rgB.get(key);
-            System.out.println("key: " + key + " val: " + val);
-        }
-        System.out.println("------------------ ");
+//        rgB = fileDataset.get(0);
+//        id = rgB.getID();
+//        System.out.println("------------------ ");
+//        System.out.println("ID: " + id);
+//        classValue = rgB.classValue();
+//        if (classValue != null) {
+//            System.out.println("classValue: " + classValue.getClass().getName());
+//            System.out.println("classValue: " + classValue);
+//        }
+//        keys = rgB.keySet();
+//        kIter = keys.iterator();
+//        while (kIter.hasNext()) {
+//            Integer key = kIter.next();
+//            Double val = rgB.get(key);
+//            System.out.println("key: " + key + " val: " + val);
+//        }
+//        System.out.println("------------------ ");
     }
 
     private void sample() throws Exception {
@@ -431,12 +403,49 @@ public class LDClustering implements Runnable {
     public LobState getNextState(LobState currentState) throws SQLException {
         String rName = currentState.getResourceName();
         LogicalData data = getLogicalDataByPath(Path.path(rName), this.getConnection());
-        Instance instance = getInstance(data);
+        Instance instance = getInstances(Path.path(rName), data, currentState.getMethod()).get(0);
         DistanceMeasure dm = new net.sf.javaml.distance.EuclideanDistance();
-        Set<Instance> res = fileDataset.kNearest(3, instance, dm);
-        for (Instance i : res) {
-            log.log(Level.INFO, "kNearest: " + i.getID() + " " + i.classValue());
+        Set<Instance> res = fileDataset.kNearest(5, instance, dm);
+        for (Instance i : fileDataset) {
+            double dist = dm.measure(instance, i);
+            log.log(Level.INFO, "EuclideanDistance" + instance.classValue() + "->" + i.classValue() + "\t\t=" + dist);
         }
+
+//        dm = new net.sf.javaml.distance.AngularDistance();
+//        for (Instance i : fileDataset) {
+//            double dist = dm.measure(instance, i);
+//            log.log(Level.INFO, "AngularDistance" + instance.classValue() + "->" + i.classValue() + "\t\t=" + dist);
+//        }
+
+        dm = new net.sf.javaml.distance.ChebychevDistance();
+        for (Instance i : fileDataset) {
+            double dist = dm.measure(instance, i);
+            log.log(Level.INFO, "ChebychevDistance" + instance.classValue() + "->" + i.classValue() + "\t\t=" + dist);
+        }
+
+        dm = new net.sf.javaml.distance.ConsistencyIndex(3);
+        for (Instance i : fileDataset) {
+            double dist = dm.measure(instance, i);
+            log.log(Level.INFO, "ConsistencyIndex" + instance.classValue() + "->" + i.classValue() + "\t\t=" + dist);
+        }
+
+        dm = new net.sf.javaml.distance.CosineDistance();
+        for (Instance i : fileDataset) {
+            double dist = dm.measure(instance, i);
+            log.log(Level.INFO, "CosineDistance" + instance.classValue() + "->" + i.classValue() + "\t\t=" + dist);
+        }
+
+        for (Instance i : res) {
+            log.log(Level.INFO, "kNearest: {0} {1}", new Object[]{i.getID(), i.classValue()});
+            String[] stateID = ((String) i.classValue()).split(",");
+            if (stateID.length == 1) {
+//                return new LobState(Request.Method.valueOf(stateID[0]), "/");
+            } else {
+//                return new LobState(Request.Method.valueOf(stateID[0]), stateID[1]);
+            }
+
+        }
+
 
 //                  instance = new DenseInstance(featuresArray, n.getName());
         return null;
@@ -510,18 +519,20 @@ public class LDClustering implements Runnable {
         }
     }
 
-    private Instance getInstance(LogicalData n) {
+    private ArrayList<Instance> getInstances(Path p, LogicalData n, Request.Method method) {
+
         ArrayList<Double> featuresList = new ArrayList<>();
 
         Long cDate = n.getCreateDate();
-        featuresList.add(Double.valueOf(cDate));
+        Double featureCDate = Double.valueOf(cDate);
+        featuresList.add(featureCDate);
 
         Long vDate = n.getLastValidationDate();
         if (vDate == null) {
             vDate = Long.valueOf(0);
         }
+//        featuresList.add(Double.valueOf(vDate));
 
-        featuresList.add(Double.valueOf(vDate));
         Long len = n.getLength();
         if (len == null) {
             len = Long.valueOf(0);
@@ -533,7 +544,7 @@ public class LDClustering implements Runnable {
         if (lTimeout == null) {
             lTimeout = Long.valueOf(0);
         }
-        featuresList.add(Double.valueOf(lTimeout));
+//        featuresList.add(Double.valueOf(lTimeout));
 
 
         Long mDate = n.getModifiedDate();
@@ -543,98 +554,133 @@ public class LDClustering implements Runnable {
         featuresList.add(Double.valueOf(mDate));
 
         featuresList.add(Double.valueOf(n.getParentRef()));
-//            instance.setValue(parentRefAttribute, n.getParentRef());
 
-        featuresList.add(Double.valueOf(n.getPdriGroupId()));
-//            instance.setValue(pdriGroupIdAttribute, n.getPdriGroupId());
 
-        featuresList.add(Double.valueOf(n.getUid()));
-//            instance.setValue(uidAttribute, n.getUid());
+//        featuresList.add(Double.valueOf(n.getPdriGroupId()));
+
+
+//        featuresList.add(Double.valueOf(n.getUid()));
+
 
         String feature = n.getContentTypesAsString();
         if (feature == null || feature.length() <= 0) {
             feature = "NON";
         }
-        featuresList.add(toAscii(feature));
+//        featuresList.add(toAscii(feature));
 
         feature = n.getDataLocationPreference();
         if (feature == null || feature.length() <= 0) {
             feature = "NON";
         }
-        featuresList.add(toAscii(feature));
+//        featuresList.add(toAscii(feature));
 
         feature = n.getDescription();
         if (feature == null || feature.length() <= 0) {
             feature = "NON";
         }
-        featuresList.add(toAscii(feature));
+//        featuresList.add(toAscii(feature));
 
         feature = n.getLockDepth();
         if (feature == null || feature.length() <= 0) {
             feature = "NON";
         }
-        featuresList.add(toAscii(feature));
+//        featuresList.add(toAscii(feature));
 
         feature = n.getLockScope();
         if (feature == null || feature.length() <= 0) {
             feature = "NON";
         }
-        featuresList.add(toAscii(feature));
+//        featuresList.add(toAscii(feature));
 
         feature = n.getLockTokenID();
         if (feature == null || feature.length() <= 0) {
             feature = "NON";
         }
-        featuresList.add(toAscii(feature));
+//        featuresList.add(toAscii(feature));
 
         feature = n.getLockType();
         if (feature == null || feature.length() <= 0) {
             feature = "NON";
         }
-        featuresList.add(toAscii(feature));
+//        featuresList.add(toAscii(feature));
 
         feature = n.getLockedByUser();
         if (feature == null || feature.length() <= 0) {
             feature = "NON";
         }
-        featuresList.add(toAscii(feature));
+//        featuresList.add(toAscii(feature));
 
         String name = n.getName();
         if (name.length() <= 0) {
             name = "/";
         }
-        featuresList.add(toAscii(name));
+//        featuresList.add(toAscii(name));
 
 
         String owner = n.getOwner();
-        featuresList.add(toAscii(owner));
+//        featuresList.add(toAscii(owner));
 
         feature = n.getStatus();
         if (feature == null || feature.length() <= 0) {
             feature = "NON";
         }
+//        featuresList.add(toAscii(feature));
 
         Boolean isSupervised = n.getSupervised();
-        if (isSupervised) {
-            featuresList.add(1.0);
-        } else {
-            featuresList.add(0.0);
-        }
+//        if (isSupervised) {
+//            featuresList.add(1.0);
+//        } else {
+//            featuresList.add(0.0);
+//        }
 
         String type = n.getType();
-        featuresList.add(toAscii(type));
+//        featuresList.add(toAscii(type));
 
+        ArrayList<Instance> instances = new ArrayList<>();
+        if (method == null) {
+            for (Request.Method m : Request.Method.values()) {
 
+                featuresList.add(getMethodFeature(m));
 
+                double[] featuresArray = new double[featuresList.size()];
+                for (int i = 0; i < featuresArray.length; i++) {
+                    featuresArray[i] = featuresList.get(i);
+                }
+                instances.add(new DenseInstance(featuresArray, m + "," + p));
+            }
 
-
-        Request.Method[] verbs = Request.Method.values();
-//            for (Request.Method m : verbs) {
-//                featuresList.add(toAscii(m.name()));
-        double[] featuresArray = new double[featuresList.size()];
-        for (int i = 0; i < featuresArray.length; i++) {
-            featuresArray[i] = featuresList.get(i);
+        } else {
+//            featuresList.add(toAscii(method.code));
+            double[] featuresArray = new double[featuresList.size()];
+            for (int i = 0; i < featuresArray.length; i++) {
+                featuresArray[i] = featuresList.get(i);
+            }
+            instances.add(new DenseInstance(featuresArray, method + "," + p));
         }
-        return new DenseInstance(featuresArray, n.getName());
+        return instances;
+    }
+
+    private void printDataset() {
+        Iterator<Instance> iter = fileDataset.iterator();
+
+        while (iter.hasNext()) {
+            Instance inst = iter.next();
+            String ids = "------------------\nID:" + inst.getID() + " " + inst.classValue() + "\n------------------";
+            SortedSet<Integer> key = inst.keySet();
+            for (Integer in : key) {
+                Double feature = inst.get(in);
+                ids += "\n " + in + ":" + feature;
+            }
+            log.log(Level.INFO, ids);
+        }
+    }
+
+    private void setDatasource(BasicDataSource datasource) {
+        this.datasource = datasource;
+    }
+
+    private Double getMethodFeature(Request.Method m) {
+        
+        return Double.valueOf(0);
     }
 }

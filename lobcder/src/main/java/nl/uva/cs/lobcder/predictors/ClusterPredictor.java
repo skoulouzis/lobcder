@@ -27,13 +27,16 @@ import nl.uva.cs.lobcder.util.MyDataSource;
  *
  * @author S. Koulouzis
  */
-public class ClusterPredictor extends MyDataSource implements Predictor {
+public class ClusterPredictor implements Predictor {
 
-    private final LDClustering ldc;
+    private LDClustering ldc;
 
     public ClusterPredictor() throws NamingException, SQLException, ClassNotFoundException, InstantiationException, IllegalAccessException {
-        ldc = new LDClustering(getConnection());
-        ldc.run();
+        super();
+        if (ldc == null) {
+            ldc = new LDClustering();
+            ldc.run();
+        }
     }
 
     @Override
