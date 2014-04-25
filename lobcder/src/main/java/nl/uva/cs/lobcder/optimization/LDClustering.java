@@ -366,19 +366,19 @@ public class LDClustering implements Runnable {
 //        NormalizableDistance dist = new EuclideanDistance(dataset);
 //        NormalizableDistance dist = new ChebyshevDistance(dataset);
 //        NormalizableDistance dist = new EditDistance(dataset);
-//        NormalizableDistance dist = new ManhattanDistance(dataset);
-//        for (int i = 0; i < dataset.numInstances(); i++) {
-//            Instance di = dataset.instance(i);
-//            double res = dist.distance(instance, di);
-//            System.err.println(di + dist.getClass().getSimpleName() + " : " + res);
-//        }
-        NearestNeighbourSearch nns = new BallTree(dataset);
-        Instances res = nns.kNearestNeighbours(instance, 2);
-        Enumeration<Instance> en = res.enumerateInstances();
-        while (en.hasMoreElements()) {
-            Instance in = en.nextElement();
-            log.log(Level.INFO, in.attribute(8).toString());
+        NormalizableDistance dist = new ManhattanDistance(dataset);
+        for (int i = 0; i < dataset.numInstances(); i++) {
+            Instance di = dataset.instance(i);
+            double res = dist.distance(instance, di);
+            System.err.println(di + dist.getClass().getSimpleName() + " : " + res);
         }
+//        NearestNeighbourSearch nns = new BallTree(dataset);
+//        Instances res = nns.kNearestNeighbours(instance, 2);
+//        Enumeration<Instance> en = res.enumerateInstances();
+//        while (en.hasMoreElements()) {
+//            Instance in = en.nextElement();
+//            log.log(Level.INFO, in.attribute(8).toString());
+//        }
         return null;
     }
 
@@ -453,8 +453,35 @@ public class LDClustering implements Runnable {
     private ArrayList<Instance> getInstances(Path p, LogicalData n, Request.Method method) {
 
         ArrayList<Instance> instances = new ArrayList<>();
+        if (method == null) {
+            for (Request.Method m : Request.Method.values()) {
+                Instance instance = new Instance(metdataAttributes.size());
+                String att = n.getChecksum();
+                instance.setValue((Attribute) metdataAttributes.elementAt(0), (att != null) ? att : "NON");
+                att = n.getContentTypesAsString();
+                instance.setValue((Attribute) metdataAttributes.elementAt(1), (att != null) ? att : "NON");
+                instance.setValue((Attribute) metdataAttributes.elementAt(2), n.getCreateDate());
+                att = n.getDataLocationPreference();
+                instance.setValue((Attribute) metdataAttributes.elementAt(3), (att != null) ? att : "NON");
+                att = n.getDescription();
+                instance.setValue((Attribute) metdataAttributes.elementAt(4), (att != null) ? att : "NON");
+                instance.setValue((Attribute) metdataAttributes.elementAt(5), n.getLastValidationDate());
+                instance.setValue((Attribute) metdataAttributes.elementAt(6), n.getLength());
+                instance.setValue((Attribute) metdataAttributes.elementAt(7), n.getModifiedDate());
+                instance.setValue((Attribute) metdataAttributes.elementAt(8), p.toString());
+                instance.setValue((Attribute) metdataAttributes.elementAt(9), n.getParentRef());
+                att = n.getStatus();
+                instance.setValue((Attribute) metdataAttributes.elementAt(10), (att != null) ? att : "NON");
+                instance.setValue((Attribute) metdataAttributes.elementAt(11), n.getType());
 
-        for (Request.Method m : Request.Method.values()) {
+                instance.setValue((Attribute) metdataAttributes.elementAt(12), String.valueOf(n.getSupervised()));
+                instance.setValue((Attribute) metdataAttributes.elementAt(13), n.getUid());
+                instance.setValue((Attribute) metdataAttributes.elementAt(14), m.code);
+                instance.setValue((Attribute) metdataAttributes.elementAt(15), n.getOwner());
+
+                instances.add(instance);
+            }
+        } else {
             Instance instance = new Instance(metdataAttributes.size());
             String att = n.getChecksum();
             instance.setValue((Attribute) metdataAttributes.elementAt(0), (att != null) ? att : "NON");
@@ -476,11 +503,12 @@ public class LDClustering implements Runnable {
 
             instance.setValue((Attribute) metdataAttributes.elementAt(12), String.valueOf(n.getSupervised()));
             instance.setValue((Attribute) metdataAttributes.elementAt(13), n.getUid());
-            instance.setValue((Attribute) metdataAttributes.elementAt(14), m.code);
+            instance.setValue((Attribute) metdataAttributes.elementAt(14), method.code);
             instance.setValue((Attribute) metdataAttributes.elementAt(15), n.getOwner());
 
             instances.add(instance);
         }
+
 
         return instances;
     }
