@@ -5,6 +5,7 @@ import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import lombok.Data;
 import lombok.extern.java.Log;
+import nl.uva.cs.lobcder.util.PropertiesHelper;
 import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
 
@@ -14,6 +15,7 @@ import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathFactory;
+import java.io.IOException;
 import java.net.UnknownHostException;
 import java.sql.*;
 import java.util.logging.Level;
@@ -27,11 +29,13 @@ import java.util.logging.Logger;
 class WP4Sweep implements Runnable {
 
     private final DataSource datasource;
-    private final WP4ConnectorI connector;
+    private final String metadataRepository;
+    private final String metadataRepositoryDev;
 
-    public WP4Sweep(DataSource datasource, WP4ConnectorI connector) {
+    public WP4Sweep(DataSource datasource) throws IOException {
         this.datasource = datasource;
-        this.connector = connector;
+        metadataRepository = PropertiesHelper.getMetadataRepositoryURL();
+        metadataRepositoryDev = PropertiesHelper.getMetadataRepositoryDevURL();
     }
 
     @Data
@@ -264,6 +268,7 @@ class WP4Sweep implements Runnable {
 
         try (Connection connection = datasource.getConnection()) {
             connection.setAutoCommit(true);
+            WP4ConnectorI connector = new WP4Sweep.WP4Connector(metadataRepository, metadataRepositoryDev);
             create(connection, connector);
             update(connection, connector);
             delete(connection, connector);

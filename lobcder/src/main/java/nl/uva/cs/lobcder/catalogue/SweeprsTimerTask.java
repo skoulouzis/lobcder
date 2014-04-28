@@ -26,12 +26,8 @@ class SweeprsTimerTask extends TimerTask {
         replicateSweep = new ReplicateSweep(datasource);
         useRepo = PropertiesHelper.useMetadataRepository();
         if (useRepo) {
-            String metadataRepository = PropertiesHelper.getMetadataRepositoryURL();
-            String metadataRepositoryDev = PropertiesHelper.getMetadataRepositoryDevURL();
-            wp4Sweep = new WP4Sweep(datasource,
-                    new WP4Sweep.WP4Connector(metadataRepository, metadataRepositoryDev));
+            wp4Sweep = new WP4Sweep(datasource);
         }
-
     }
 
     @Override
