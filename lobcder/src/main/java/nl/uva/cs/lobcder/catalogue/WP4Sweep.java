@@ -49,11 +49,6 @@ class WP4Sweep implements Runnable {
         int views = 0;
 
         public String getXml() {
-            String extension = "";
-            int i = name.lastIndexOf('.');
-            if (i > 0) {
-                extension = name.substring(i + 1);
-            }
             return new StringBuilder("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>")
                     .append("<resource_metadata>")
                     .append("<file>")
@@ -67,9 +62,9 @@ class WP4Sweep implements Runnable {
                     .append("<relatedResources/>")
                     .append("<semanticAnnotations/>")
                     .append("<status>active</status>")
-                    .append("<type>").append(type).append("</type>")
+                    .append("<type>File</type>")
                     .append("<views>").append(views).append("</views>")
-                    .append("<fileType>").append(extension).append("</fileType>")
+                    .append("<fileType>").append(type).append("</fileType>")
                     .append("<subjectID/>")
                     .append("</file>")
                     .append("</resource_metadata>").toString();
