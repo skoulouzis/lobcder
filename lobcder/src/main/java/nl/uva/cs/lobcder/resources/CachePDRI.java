@@ -18,6 +18,8 @@ import java.security.NoSuchAlgorithmException;
 import javax.crypto.NoSuchPaddingException;
 import nl.uva.cs.lobcder.util.DesEncrypter;
 import nl.uva.vlet.exception.VlException;
+import nl.uva.vlet.vfs.VChecksum;
+import nl.uva.vlet.vfs.VFile;
 
 /**
  *
@@ -189,5 +191,10 @@ public class CachePDRI implements PDRI {
 
     @Override
     public void setLength(long length) {
+    }
+
+    @Override
+    public String getStringChecksum() throws IOException {
+        return null;
     }
 }

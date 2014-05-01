@@ -98,7 +98,7 @@ public class WebDataResource implements PropFindableResource, Resource,
             principalHolder.set(principal);
 //            WebDataResource.log.log(Level.FINE, "getUserId: {0}", principal.getUserId());
 //            WebDataResource.log.log(Level.FINE, "getRolesStr: {0}", principal.getRolesStr());
-            String msg = "From: " + fromAddress + " user: " + principal.getUserId() + " password: " + Base64.encodeBase64String(password.getBytes()) +" roles:"+principal.getRolesStr();
+            String msg = "From: " + fromAddress + " user: " + principal.getUserId() + " password: " + Base64.encodeBase64String(password.getBytes()) + " roles:" + principal.getRolesStr();
             WebDataResource.log.log(Level.INFO, msg);
         }
         return principal;
@@ -548,6 +548,9 @@ public class WebDataResource implements PropFindableResource, Resource,
     @Override
     public PropertySource.PropertyMetaData getPropertyMetaData(QName qname) {
         if (qname.equals(Constants.DATA_DIST_PROP_NAME)) {
+            return new PropertySource.PropertyMetaData(PropertySource.PropertyAccessibility.READ_ONLY, String.class);
+        }
+        if (qname.equals(Constants.DRI_CHECKSUM_PROP_NAME)) {
             return new PropertySource.PropertyMetaData(PropertySource.PropertyAccessibility.READ_ONLY, String.class);
         }
         for (QName n : Constants.PROP_NAMES) {

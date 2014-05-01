@@ -34,6 +34,8 @@ public interface PDRI {
     public void reconnect() throws IOException;
 
     public Long getChecksum() throws IOException;
+    
+    public String getStringChecksum() throws IOException;
 
     public void replicate(PDRI source) throws IOException;
 

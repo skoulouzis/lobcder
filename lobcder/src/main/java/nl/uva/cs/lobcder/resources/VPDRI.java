@@ -75,7 +75,7 @@ public class VPDRI implements PDRI {
         try {
             this.fileName = fileName;
             this.resourceUrl = resourceUrl.replaceAll(" ", "");
-            
+
             String encoded = VRL.encode(fileName);
             vrl = new VRL(this.resourceUrl).appendPath(baseDir).append(encoded);
 //            vrl = new VRL(resourceUrl).appendPath(baseDir).append(URLEncoder.encode(fileName, "UTF-8").replace("+", "%20"));
@@ -489,6 +489,20 @@ public class VPDRI implements PDRI {
             if (physicalFile instanceof VChecksum) {
                 BigInteger bi = new BigInteger(((VChecksum) physicalFile).getChecksum("MD5"), 16);
                 return bi.longValue();
+            }
+        } catch (VlException ex) {
+            throw new IOException(ex);
+        } finally {
+        }
+        return null;
+    }
+
+    @Override
+    public String getStringChecksum() throws IOException {
+        try {
+            VFile physicalFile = getVfsClient().getFile(vrl);
+            if (physicalFile instanceof VChecksum) {
+                return ((VChecksum) physicalFile).getChecksum("MD5");
             }
         } catch (VlException ex) {
             throw new IOException(ex);

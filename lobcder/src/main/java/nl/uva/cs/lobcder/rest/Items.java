@@ -27,6 +27,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.*;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -43,32 +44,33 @@ import java.util.logging.Level;
 @Log
 @Path("items/")
 public class Items extends CatalogueHelper {
-
+    
     private int defaultRowLimit;
-
     @Context
     UriInfo info;
     @Context
     HttpServletRequest request;
     @Context
     HttpServletResponse servletResponse;
-
+    
     public Items() throws NamingException, IOException {
         defaultRowLimit = PropertiesHelper.getDefaultRowLimit();
     }
-
+    
     @Data
     @AllArgsConstructor
     class MyData {
+        
         Long uid;
         String path;
     }
+    
     private List<LogicalDataWrapped> queryLogicalData(MyData myData, int limit, PreparedStatement ps1, PreparedStatement ps2, MyPrincipal mp, Connection cn) throws Exception {
         List<LogicalDataWrapped> ldwl = new LinkedList<>();
         Queue<MyData> dirs = new LinkedList<>();
         dirs.offer(myData);
         MyData dir;
-        while((dir = dirs.poll()) != null) {
+        while ((dir = dirs.poll()) != null) {
             ps1.setLong(1, dir.getUid());
             ps1.setInt(20, limit + 1);
             try (ResultSet resultSet = ps1.executeQuery()) {
@@ -102,7 +104,7 @@ public class Items extends CatalogueHelper {
                         logicalData.setDescription(resultSet.getString(20));
                         logicalData.setDataLocationPreference(resultSet.getString(21));
                         logicalData.setStatus(resultSet.getString(22));
-
+                        
                         LogicalDataWrapped ldw = new LogicalDataWrapped();
                         ldw.setLogicalData(logicalData);
                         ldw.setPermissions(p);
@@ -124,13 +126,14 @@ public class Items extends CatalogueHelper {
                         ldwl.add(ldw);
                         limit--;
                     }
-                    if(limit == 0)
+                    if (limit == 0) {
                         break;
+                    }
                 }
             }
-            if(limit != 0) {
+            if (limit != 0) {
                 ps2.setLong(1, dir.getUid());
-                try(ResultSet resultSet = ps2.executeQuery()){
+                try (ResultSet resultSet = ps2.executeQuery()) {
                     while (resultSet.next()) {
                         Long myUid = resultSet.getLong(1);
                         String myOwner = resultSet.getString(2);
@@ -147,10 +150,8 @@ public class Items extends CatalogueHelper {
         }
         return ldwl;
     }
-
-
-    private List<LogicalDataWrapped> queryLogicalData(@Nonnull MyPrincipal mp, @Nonnull Connection cn) throws Exception
-        {
+    
+    private List<LogicalDataWrapped> queryLogicalData(@Nonnull MyPrincipal mp, @Nonnull Connection cn) throws Exception {
         MultivaluedMap<String, String> queryParameters = info.getQueryParameters();
         boolean addFlag = true;
         String rootPath = (queryParameters.containsKey("path") && queryParameters.get("path").iterator().hasNext())
@@ -158,11 +159,11 @@ public class Items extends CatalogueHelper {
         if (!rootPath.equals("/") && rootPath.endsWith("/")) {
             rootPath = rootPath.substring(0, rootPath.length() - 1);
         }
-
+        
         int rowLimit;
         try {
             rowLimit = (queryParameters.containsKey("limit") && queryParameters.get("limit").iterator().hasNext())
-                ? Integer.valueOf(queryParameters.get("limit").iterator().next()).intValue() : defaultRowLimit;
+                    ? Integer.valueOf(queryParameters.get("limit").iterator().next()).intValue() : defaultRowLimit;
         } catch (Throwable th) {
             rowLimit = defaultRowLimit;
         }
@@ -171,26 +172,26 @@ public class Items extends CatalogueHelper {
         if (ld == null || rowLimit < 1) {
             return logicalDataWrappedList;
         }
-
+        
         Permissions p = getCatalogue().getPermissions(ld.getUid(), ld.getOwner(), cn);
         if (mp.canRead(p)) {
             try (PreparedStatement ps1 = cn.prepareStatement("SELECT uid, parentRef, "
-                            + "ownerId, datatype, ldName, createDate, modifiedDate, ldLength, "
-                            + "contentTypesStr, pdriGroupRef, isSupervised, checksum, lastValidationDate, "
-                            + "lockTokenID, lockScope, lockType, lockedByUser, lockDepth, lockTimeout, "
-                            + "description, locationPreference, status "
-                            + "FROM ldata_table WHERE (parentRef = ?) "
-                            + "AND (? OR (isSupervised = ?)) "
-                            + "AND (? OR (createDate BETWEEN FROM_UNIXTIME(?) AND FROM_UNIXTIME(?))) "
-                            + "AND (? OR (createDate >= FROM_UNIXTIME(?))) "
-                            + "AND (? OR (createDate <= FROM_UNIXTIME(?))) "
-                            + "AND (? OR (modifiedDate BETWEEN FROM_UNIXTIME(?) AND FROM_UNIXTIME(?))) "
-                            + "AND (? OR (modifiedDate >= FROM_UNIXTIME(?))) "
-                            + "AND (? OR (modifiedDate <= FROM_UNIXTIME(?))) "
-                            + "AND (? OR (ldName LIKE CONCAT('%', ? , '%')))"
-                            + "LIMIT ?");
+                    + "ownerId, datatype, ldName, createDate, modifiedDate, ldLength, "
+                    + "contentTypesStr, pdriGroupRef, isSupervised, checksum, lastValidationDate, "
+                    + "lockTokenID, lockScope, lockType, lockedByUser, lockDepth, lockTimeout, "
+                    + "description, locationPreference, status "
+                    + "FROM ldata_table WHERE (parentRef = ?) "
+                    + "AND (? OR (isSupervised = ?)) "
+                    + "AND (? OR (createDate BETWEEN FROM_UNIXTIME(?) AND FROM_UNIXTIME(?))) "
+                    + "AND (? OR (createDate >= FROM_UNIXTIME(?))) "
+                    + "AND (? OR (createDate <= FROM_UNIXTIME(?))) "
+                    + "AND (? OR (modifiedDate BETWEEN FROM_UNIXTIME(?) AND FROM_UNIXTIME(?))) "
+                    + "AND (? OR (modifiedDate >= FROM_UNIXTIME(?))) "
+                    + "AND (? OR (modifiedDate <= FROM_UNIXTIME(?))) "
+                    + "AND (? OR (ldName LIKE CONCAT('%', ? , '%')))"
+                    + "LIMIT ?");
                     PreparedStatement ps2 = cn.prepareStatement("SELECT uid, ownerId, "
-                            + "ldName FROM ldata_table WHERE parentRef = ? AND datatype = '" + Constants.LOGICAL_FOLDER + "'")) {
+                    + "ldName FROM ldata_table WHERE parentRef = ? AND datatype = '" + Constants.LOGICAL_FOLDER + "'")) {
                 {
                     if (queryParameters.containsKey("name") && queryParameters.get("name").iterator().hasNext()) {
                         String name = queryParameters.get("name").iterator().next();
@@ -201,7 +202,7 @@ public class Items extends CatalogueHelper {
                         ps1.setBoolean(18, true);
                         ps1.setString(19, "");
                     }
-
+                    
                     if (queryParameters.containsKey("cStartDate") && queryParameters.get("cStartDate").iterator().hasNext()
                             && queryParameters.containsKey("cEndDate") && queryParameters.get("cEndDate").iterator().hasNext()) {
                         long cStartDate = Long.valueOf(queryParameters.get("cStartDate").iterator().next());
@@ -243,7 +244,7 @@ public class Items extends CatalogueHelper {
                         ps1.setLong(8, 0);
                         ps1.setLong(10, 0);
                     }
-
+                    
                     if (queryParameters.containsKey("mStartDate") && queryParameters.get("mStartDate").iterator().hasNext()
                             && queryParameters.containsKey("mEndDate") && queryParameters.get("mEndDate").iterator().hasNext()) {
                         long mStartDate = Long.valueOf(queryParameters.get("mStartDate").iterator().next());
@@ -285,7 +286,7 @@ public class Items extends CatalogueHelper {
                         ps1.setLong(15, 0);
                         ps1.setLong(17, 0);
                     }
-
+                    
                     if (queryParameters.containsKey("isSupervised") && queryParameters.get("isSupervised").iterator().hasNext()) {
                         boolean isSupervised = Boolean.valueOf(queryParameters.get("isSupervised").iterator().next());
                         ps1.setBoolean(2, false);
@@ -300,8 +301,8 @@ public class Items extends CatalogueHelper {
                         ldw.setLogicalData(ld);
                         ldw.setPath(rootPath);
                         ldw.setPermissions(p);
+                        List<PDRIDescr> pdriDescr = getCatalogue().getPdriDescrByGroupId(ld.getPdriGroupId(), cn);
                         if (mp.isAdmin()) {
-                            List<PDRIDescr> pdriDescr = getCatalogue().getPdriDescrByGroupId(ld.getPdriGroupId(), cn);
                             for (PDRIDescr pdri : pdriDescr) {
                                 if (pdri.getResourceUrl().startsWith("lfc")
                                         || pdri.getResourceUrl().startsWith("srm")
@@ -312,12 +313,23 @@ public class Items extends CatalogueHelper {
                                     pdriDescr.add(pdri);
                                 }
                             }
-                            ldw.setPdriList(pdriDescr);
+                        } else {
+                            for (PDRIDescr pdri : pdriDescr) {
+                                pdriDescr.remove(pdri);
+                                pdri.setPassword(null);
+                                pdri.setUsername(null);
+                                pdri.setKey(null);
+                                pdri.setId(null);
+                                pdri.setPdriGroupRef(null);
+                                pdri.setStorageSiteId(null);
+                                pdriDescr.add(pdri);
+                            }
                         }
+                        ldw.setPdriList(pdriDescr);
                         logicalDataWrappedList.add(ldw);
                         rowLimit--;
                     }
-                    if(rowLimit != 0) {
+                    if (rowLimit != 0) {
                         logicalDataWrappedList.addAll(queryLogicalData(new MyData(ld.getUid(), rootPath.equals("/") ? "" : rootPath), rowLimit, ps1, ps2, mp, cn));
                     }
                 }
@@ -325,7 +337,7 @@ public class Items extends CatalogueHelper {
         }
         return logicalDataWrappedList;
     }
-
+    
     @Path("query/")
     @GET
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
@@ -339,12 +351,12 @@ public class Items extends CatalogueHelper {
             throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
-
+    
     @Path("dri/")
     public DRItemsResource getDRI() {
         return new DRItemsResource(getCatalogue(), request, servletResponse, info);
     }
-
+    
     @Path("permissions/")
     public SetBulkPermissionsResource getPermissions() {
         return new SetBulkPermissionsResource(getCatalogue(), request);

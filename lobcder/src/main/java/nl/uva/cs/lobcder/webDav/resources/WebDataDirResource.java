@@ -221,9 +221,12 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                     pdri = createPDRI(fileLogicalData.getLength(), newName, connection);
                     pdri.setLength(length);
                     pdri.putData(inputStream);
-
                     fileLogicalData = getCatalogue().updateLogicalDataAndPdri(fileLogicalData, pdri, connection);
                     connection.commit();
+//                    String md5 = pdri.getStringChecksum();
+//                    if (md5 != null) {
+//                        fileLogicalData.setChecksum(md5);
+//                    }
                     resource = new WebDataFileResource(fileLogicalData, Path.path(getPath(), newName), getCatalogue(), authList);
 //                    return new WebDataFileResource(fileLogicalData, Path.path(getPath(), newName), getCatalogue(), authList);
                 } else { // Resource does not exists, create a new one
@@ -240,7 +243,10 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                     pdri = createPDRI(length, newName, connection);
                     pdri.setLength(length);
                     pdri.putData(inputStream);
-                    //fileLogicalData.setChecksum(pdri.getChecksum());
+//                    String md5 = pdri.getStringChecksum();
+//                    if (md5 != null) {
+//                        fileLogicalData.setChecksum(md5);
+//                    }
                     fileLogicalData = getCatalogue().associateLogicalDataAndPdri(fileLogicalData, pdri, connection);
                     getCatalogue().setPermissions(fileLogicalData.getUid(), new Permissions(getPrincipal(), getPermissions()), connection);
                     connection.commit();

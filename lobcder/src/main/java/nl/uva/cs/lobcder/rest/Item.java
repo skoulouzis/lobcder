@@ -6,6 +6,7 @@ package nl.uva.cs.lobcder.rest;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.sql.SQLException;
@@ -63,15 +64,28 @@ public class Item extends CatalogueHelper {
             res.setLogicalData(resLD);
             res.setPermissions(p);
             res.setPath(getCatalogue().getPathforLogicalData(resLD));
-            if (!resLD.isFolder() && mp.isAdmin()) {
+            if (!resLD.isFolder()) {
                 List<PDRIDescr> pdriDescr = getCatalogue().getPdriDescrByGroupId(resLD.getPdriGroupId());
-                for (PDRIDescr pdri : pdriDescr) {
-                    if (pdri.getResourceUrl().startsWith("lfc")
-                            || pdri.getResourceUrl().startsWith("srm")
-                            || pdri.getResourceUrl().startsWith("gftp")) {
+                if (mp.isAdmin()) {
+                    for (PDRIDescr pdri : pdriDescr) {
+                        if (pdri.getResourceUrl().startsWith("lfc")
+                                || pdri.getResourceUrl().startsWith("srm")
+                                || pdri.getResourceUrl().startsWith("gftp")) {
+                            pdriDescr.remove(pdri);
+                            GridHelper.initGridProxy(pdri.getUsername(), pdri.getPassword(), null, false);
+                            pdri.setPassword(GridHelper.getProxyAsBase64String());
+                            pdriDescr.add(pdri);
+                        }
+                    }
+                } else {
+                    for (PDRIDescr pdri : pdriDescr) {
                         pdriDescr.remove(pdri);
-                        GridHelper.initGridProxy(pdri.getUsername(), pdri.getPassword(), null, false);
-                        pdri.setPassword(GridHelper.getProxyAsBase64String());
+                        pdri.setPassword(null);
+                        pdri.setUsername(null);
+                        pdri.setKey(null);
+                        pdri.setId(null);
+                        pdri.setPdriGroupRef(null);
+                        pdri.setStorageSiteId(null);
                         pdriDescr.add(pdri);
                     }
                 }
