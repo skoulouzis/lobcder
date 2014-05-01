@@ -47,7 +47,7 @@ public class ClusterPredictor implements Predictor {
     public LobState getNextState(LobState currentState) {
         try {
             return ldc.getNextState(currentState);
-        } catch (SQLException ex) {
+        } catch (Exception ex) {
             Logger.getLogger(ClusterPredictor.class.getName()).log(Level.SEVERE, null, ex);
         }
         return null;

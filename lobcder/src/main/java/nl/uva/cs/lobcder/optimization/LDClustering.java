@@ -40,6 +40,8 @@ import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Nonnull;
+import javax.naming.Context;
+import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.sql.DataSource;
 import lombok.extern.java.Log;
@@ -104,10 +106,10 @@ public class LDClustering implements Runnable {
 
     public LDClustering() throws NamingException, SQLException, ClassNotFoundException, InstantiationException, IllegalAccessException {
         try {
-            //        String jndiName = "jdbc/lobcder";
-            //        Context ctx = new InitialContext();
-            //        Context envContext = (Context) ctx.lookup("java:/comp/env");
-            //        datasource = (DataSource) envContext.lookup(jndiName);
+            String jndiName = "jdbc/lobcder";
+            Context ctx = new InitialContext();
+            Context envContext = (Context) ctx.lookup("java:/comp/env");
+            datasource = (DataSource) envContext.lookup(jndiName);
 
 
 
@@ -478,7 +480,7 @@ public class LDClustering implements Runnable {
                 instance.setValue((Attribute) metdataAttributes.elementAt(13), n.getUid());
                 instance.setValue((Attribute) metdataAttributes.elementAt(14), m.code);
                 instance.setValue((Attribute) metdataAttributes.elementAt(15), n.getOwner());
-
+//                instance.setID(m + "," + p);
                 instances.add(instance);
             }
         } else {
@@ -505,7 +507,7 @@ public class LDClustering implements Runnable {
             instance.setValue((Attribute) metdataAttributes.elementAt(13), n.getUid());
             instance.setValue((Attribute) metdataAttributes.elementAt(14), method.code);
             instance.setValue((Attribute) metdataAttributes.elementAt(15), n.getOwner());
-
+//            instance.setID(method + "," + p);
             instances.add(instance);
         }
 

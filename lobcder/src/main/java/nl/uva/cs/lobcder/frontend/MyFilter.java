@@ -53,10 +53,9 @@ public class MyFilter extends MiltonFilter {
     private JDBCatalogue catalogue;
     private static Predictor predictor;
     private static LobState prevState;
-    private static final BlockingQueue queue = new ArrayBlockingQueue(2500);
+    private static final BlockingQueue queue = new ArrayBlockingQueue(3500);
     private static RequestEventRecorder recorder;
     private Timer recordertimer;
-    private Object clustering;
 
     public MyFilter() throws Exception {
     }
@@ -280,7 +279,7 @@ public class MyFilter extends MiltonFilter {
             TimerTask gcTask = new MyTask(recorder);
 
             recordertimer = new Timer(true);
-            recordertimer.schedule(gcTask, 900, 900);
+            recordertimer.schedule(gcTask, 400, 400);
         }
     }
 

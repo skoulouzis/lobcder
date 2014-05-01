@@ -362,7 +362,7 @@ public class WebDataResource implements PropFindableResource, Resource,
                                     sb.append("'").append(r.getName()).append("' : [");
                                     Collection<PDRIDescr> pdris = getCatalogue().getPdriDescrByGroupId(r.getLogicalData().getPdriGroupId(), connection);
                                     for (PDRIDescr p : pdris) {
-                                        sb.append("'").append(p.getResourceUrl()).append("',");
+                                        sb.append("'").append(p.getResourceUrl()).append("/").append(p.getName()).append("',");
                                     }
                                     sb.replace(sb.lastIndexOf(","), sb.length(), "").append("],");
                                 }
@@ -371,7 +371,7 @@ public class WebDataResource implements PropFindableResource, Resource,
                             Collection<PDRIDescr> pdris = getCatalogue().getPdriDescrByGroupId(getLogicalData().getPdriGroupId(), connection);
                             sb.append("[");
                             for (PDRIDescr p : pdris) {
-                                sb.append("'").append(p.getResourceUrl()).append("'");
+                                sb.append("'").append(p.getResourceUrl()).append("/").append(p.getName()).append("'");
                                 sb.append(",");
                             }
                         }
@@ -415,7 +415,7 @@ public class WebDataResource implements PropFindableResource, Resource,
                                 Collection<PDRIDescr> pdris = getCatalogue().getPdriDescrByGroupId(r.getLogicalData().getPdriGroupId(), connection);
                                 for (PDRIDescr p : pdris) {
                                     sb.append("[");
-                                    sb.append(p.getResourceUrl());
+                                    sb.append(p.getResourceUrl()).append(",");
                                     sb.append(p.getEncrypt());
                                     sb.append("],");
                                 }
@@ -568,7 +568,6 @@ public class WebDataResource implements PropFindableResource, Resource,
         if (getCurrentLock() != null) {
             throw new LockedException(this);
         }
-
         LockToken lockToken = new LockToken(UUID.randomUUID().toString(), lockInfo, timeout);
         Long lockTimeout;
         try (Connection connection = getCatalogue().getConnection()) {
