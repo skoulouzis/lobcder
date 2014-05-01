@@ -244,7 +244,7 @@ class WP4Sweep implements Runnable {
                         wp4Connector.delete(global_id);
                     }
                     if (global_id_dev != null) {
-                        wp4Connector.delete(global_id_dev);
+                        wp4Connector.delete_dev(global_id_dev);
                     }
                     rs.deleteRow();
                 } catch (Exception e) {
