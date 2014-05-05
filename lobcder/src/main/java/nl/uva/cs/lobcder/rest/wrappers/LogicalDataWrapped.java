@@ -17,6 +17,7 @@ import java.util.List;
 @XmlRootElement
 @Data
 public class LogicalDataWrapped {
+    private String globalID;
     private LogicalData logicalData;
     private String path;
     private Permissions permissions;

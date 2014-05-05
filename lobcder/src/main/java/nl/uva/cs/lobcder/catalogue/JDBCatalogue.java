@@ -1562,4 +1562,23 @@ public class JDBCatalogue extends MyDataSource {
             log.log(Level.SEVERE, null, e);
         }
     }
+
+    public String getGlobalID(Long uid, Connection connection) throws SQLException {
+        String res = null;
+        try (PreparedStatement ps = connection.prepareStatement("SELECT global_id FROM wp4_table WHERE local_id = ?")) {
+            ps.setLong(1, uid);
+            ResultSet rs = ps.executeQuery();
+            if(rs.next()) {
+                res = rs.getString(1);
+            }
+            return res;
+        }
+
+    }
+
+    public String getGlobalID(Long uid) throws SQLException {
+        try (Connection connection = getConnection()) {
+            return getGlobalID(uid, connection);
+        }
+    }
 }

@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.logging.Level;
@@ -61,6 +62,7 @@ public class Item extends CatalogueHelper {
                 throw new WebApplicationException(Response.Status.UNAUTHORIZED);
             }
             LogicalDataWrapped res = new LogicalDataWrapped();
+            res.setGlobalID(getCatalogue().getGlobalID(uid));
             res.setLogicalData(resLD);
             res.setPermissions(p);
             res.setPath(getCatalogue().getPathforLogicalData(resLD));
