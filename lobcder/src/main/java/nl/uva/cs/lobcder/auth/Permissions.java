@@ -4,17 +4,15 @@
  */
 package nl.uva.cs.lobcder.auth;
 
-import lombok.Data;
 
 import javax.xml.bind.annotation.*;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import javax.xml.bind.annotation.XmlRootElement;
 import lombok.Data;
 
 /**
- *
+ * The permissions for a resource. 
  * @author dvasunin
  */
 @Data

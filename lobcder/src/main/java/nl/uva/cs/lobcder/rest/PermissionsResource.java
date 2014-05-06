@@ -20,7 +20,7 @@ import java.sql.SQLException;
 import java.util.logging.Level;
 
 /**
- *
+ * Sets and gets permissions for a resource 
  * @author dvasunin
  */
 @Log
@@ -34,6 +34,12 @@ public class PermissionsResource {
         this.request = request;
     }
 
+    /**
+     * Gets the resource's permissions: owner, read, write
+     *
+     * @param uid the id of the resource
+     * @return the resource's permissions: owner, read, write
+     */
     @Path("{uid}/")
     @GET
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
@@ -55,6 +61,12 @@ public class PermissionsResource {
         }
     }
 
+    /**
+     * Sets the resource's permissions: owner, read, write
+     *
+     * @param uid the id of the resource
+     * @param jbPermissions the permissions: owner, read, write
+     */
     @Path("{uid}/")
     @PUT
     @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})

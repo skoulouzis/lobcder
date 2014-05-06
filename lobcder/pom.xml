@@ -219,7 +219,7 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-log4j12</artifactId>
-            <version>1.5.8</version>
+            <version>1.6.4</version>
         </dependency>
         
         <dependency>
@@ -302,6 +302,12 @@
             <artifactId>commons-math</artifactId>
             <version>2.2</version>
         </dependency>
+        
+        <dependency> 
+            <groupId>org.codehaus.enunciate</groupId> 
+            <artifactId>enunciate-rt</artifactId> 
+            <version>1.28</version> 
+        </dependency>
 
     </dependencies>
     
@@ -345,6 +351,7 @@
         </repository>-->
     </repositories>
 
+
     <build>
         <plugins>
             <plugin>
@@ -367,8 +374,27 @@
                 <!--If the version is not set to 2.1.1 we get the error: 'com.thoughtworks.xstream.converters.ConversionException: Cannot construct org.apache.maven.plugin.war.util.WebappStructure as it does not have a no-args constructor'-->
                 <version>2.3</version>
             </plugin>
+            <plugin> 
+                <groupId>org.codehaus.enunciate</groupId> 
+                <artifactId>maven-enunciate-plugin</artifactId> 
+                <configuration> 
+                    <configFile>enunciate.xml</configFile> 
+                    <exports> 
+                        <jaxws.client.library.binaries>client.jar</jaxws.client.library.binaries> 
+                    </exports> 
+                </configuration> 
+                <executions> 
+                    <execution> 
+                        <goals> 
+                            <goal>assemble</goal> 
+                        </goals> 
+                    </execution> 
+                </executions> 
+            </plugin>
 
         </plugins>
+
+       
 
     </build>
     

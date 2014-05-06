@@ -23,7 +23,7 @@ import java.util.Stack;
 import java.util.logging.Level;
 
 /**
- *
+ * Sets permissions for folder and subtree 
  * @author dvasunin
  */
 @Log
@@ -135,6 +135,12 @@ public class SetBulkPermissionsResource {
         }
     }
 
+    
+    /**
+     * Sets permissions for folder and subtree
+     * @param path the folder's path 
+     * @param jbPermissions the permissions: owner, read, write
+     */
     @PUT
     @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public void setPermissions2(@QueryParam("path") String path, JAXBElement<Permissions> jbPermissions) {

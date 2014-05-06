@@ -6,10 +6,8 @@ package nl.uva.cs.lobcder.rest;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.math.BigInteger;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.logging.Level;
@@ -30,19 +28,28 @@ import nl.uva.cs.lobcder.util.GridHelper;
 import nl.uva.vlet.exception.VlException;
 
 /**
- *
+ * Gets resource properties like length owner physical location etc.
  * @author dvasunin
  */
 @Log
 @Path("item/")
 public class Item extends CatalogueHelper {
-
-//    private Map<Long, LogicalDataWrapped> logicalDataCache = new HashMap<>();
     @Context
     HttpServletRequest request;
     @Context
     UriInfo info;
 
+    /**
+     * Gets the resource's properties (length, owner, permitions etc.) 
+     * @param uid the id of the resource
+     * @return the resource's properties
+     * @throws FileNotFoundException
+     * @throws IOException
+     * @throws VlException
+     * @throws URISyntaxException
+     * @throws MalformedURLException
+     * @throws Exception
+     */
     @Path("query/{uid}")
     @GET
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
@@ -62,7 +69,6 @@ public class Item extends CatalogueHelper {
                 throw new WebApplicationException(Response.Status.UNAUTHORIZED);
             }
             LogicalDataWrapped res = new LogicalDataWrapped();
-            res.setGlobalID(getCatalogue().getGlobalID(uid));
             res.setLogicalData(resLD);
             res.setPermissions(p);
             res.setPath(getCatalogue().getPathforLogicalData(resLD));
@@ -122,10 +128,14 @@ public class Item extends CatalogueHelper {
 //            throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
 //        }
 //    }
+    
+    
+
     @Path("dri/")
     public DRIDataResource getDRI() {
         return new DRIDataResource(getCatalogue(), request);
     }
+
 
     @Path("permissions/")
     public PermissionsResource getPermissions() {

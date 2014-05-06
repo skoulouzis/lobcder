@@ -53,6 +53,7 @@ public class ClusterPredictor implements Predictor {
         return null;
     }
 
+    
     @Override
     public void setPreviousStateForCurrent(LobState prevState, LobState currentState) {
         //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.

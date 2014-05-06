@@ -27,7 +27,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.*;
 import java.io.IOException;
-import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -39,12 +38,14 @@ import java.util.Queue;
 import java.util.logging.Level;
 
 /**
+ * Gets resource properties like length owner physical location etc.
+ *
  * @author dvasunin
  */
 @Log
 @Path("items/")
 public class Items extends CatalogueHelper {
-    
+
     private int defaultRowLimit;
     @Context
     UriInfo info;
@@ -52,19 +53,19 @@ public class Items extends CatalogueHelper {
     HttpServletRequest request;
     @Context
     HttpServletResponse servletResponse;
-    
+
     public Items() throws NamingException, IOException {
         defaultRowLimit = PropertiesHelper.getDefaultRowLimit();
     }
-    
+
     @Data
     @AllArgsConstructor
     class MyData {
-        
+
         Long uid;
         String path;
     }
-    
+
     private List<LogicalDataWrapped> queryLogicalData(MyData myData, int limit, PreparedStatement ps1, PreparedStatement ps2, MyPrincipal mp, Connection cn) throws Exception {
         List<LogicalDataWrapped> ldwl = new LinkedList<>();
         Queue<MyData> dirs = new LinkedList<>();
@@ -104,9 +105,8 @@ public class Items extends CatalogueHelper {
                         logicalData.setDescription(resultSet.getString(20));
                         logicalData.setDataLocationPreference(resultSet.getString(21));
                         logicalData.setStatus(resultSet.getString(22));
-                        
+
                         LogicalDataWrapped ldw = new LogicalDataWrapped();
-                        ldw.setGlobalID(getCatalogue().getGlobalID(uid, cn));
                         ldw.setLogicalData(logicalData);
                         ldw.setPermissions(p);
                         ldw.setPath(dir.getPath().concat("/").concat(logicalData.getName()));
@@ -151,7 +151,7 @@ public class Items extends CatalogueHelper {
         }
         return ldwl;
     }
-    
+
     private List<LogicalDataWrapped> queryLogicalData(@Nonnull MyPrincipal mp, @Nonnull Connection cn) throws Exception {
         MultivaluedMap<String, String> queryParameters = info.getQueryParameters();
         boolean addFlag = true;
@@ -160,7 +160,7 @@ public class Items extends CatalogueHelper {
         if (!rootPath.equals("/") && rootPath.endsWith("/")) {
             rootPath = rootPath.substring(0, rootPath.length() - 1);
         }
-        
+
         int rowLimit;
         try {
             rowLimit = (queryParameters.containsKey("limit") && queryParameters.get("limit").iterator().hasNext())
@@ -173,7 +173,7 @@ public class Items extends CatalogueHelper {
         if (ld == null || rowLimit < 1) {
             return logicalDataWrappedList;
         }
-        
+
         Permissions p = getCatalogue().getPermissions(ld.getUid(), ld.getOwner(), cn);
         if (mp.canRead(p)) {
             try (PreparedStatement ps1 = cn.prepareStatement("SELECT uid, parentRef, "
@@ -203,7 +203,7 @@ public class Items extends CatalogueHelper {
                         ps1.setBoolean(18, true);
                         ps1.setString(19, "");
                     }
-                    
+
                     if (queryParameters.containsKey("cStartDate") && queryParameters.get("cStartDate").iterator().hasNext()
                             && queryParameters.containsKey("cEndDate") && queryParameters.get("cEndDate").iterator().hasNext()) {
                         long cStartDate = Long.valueOf(queryParameters.get("cStartDate").iterator().next());
@@ -245,7 +245,7 @@ public class Items extends CatalogueHelper {
                         ps1.setLong(8, 0);
                         ps1.setLong(10, 0);
                     }
-                    
+
                     if (queryParameters.containsKey("mStartDate") && queryParameters.get("mStartDate").iterator().hasNext()
                             && queryParameters.containsKey("mEndDate") && queryParameters.get("mEndDate").iterator().hasNext()) {
                         long mStartDate = Long.valueOf(queryParameters.get("mStartDate").iterator().next());
@@ -287,7 +287,7 @@ public class Items extends CatalogueHelper {
                         ps1.setLong(15, 0);
                         ps1.setLong(17, 0);
                     }
-                    
+
                     if (queryParameters.containsKey("isSupervised") && queryParameters.get("isSupervised").iterator().hasNext()) {
                         boolean isSupervised = Boolean.valueOf(queryParameters.get("isSupervised").iterator().next());
                         ps1.setBoolean(2, false);
@@ -299,7 +299,6 @@ public class Items extends CatalogueHelper {
                     }
                     if (addFlag) {
                         LogicalDataWrapped ldw = new LogicalDataWrapped();
-                        ldw.setGlobalID(getCatalogue().getGlobalID(ld.getUid(), cn));
                         ldw.setLogicalData(ld);
                         ldw.setPath(rootPath);
                         ldw.setPermissions(p);
@@ -339,7 +338,13 @@ public class Items extends CatalogueHelper {
         }
         return logicalDataWrappedList;
     }
-    
+
+    /**
+     * Gets the resource's properties (length, owner, permitions etc.)
+     *
+     * @return the resource's properties
+     * @throws Exception
+     */
     @Path("query/")
     @GET
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
@@ -353,12 +358,12 @@ public class Items extends CatalogueHelper {
             throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
-    
+
     @Path("dri/")
     public DRItemsResource getDRI() {
         return new DRItemsResource(getCatalogue(), request, servletResponse, info);
     }
-    
+
     @Path("permissions/")
     public SetBulkPermissionsResource getPermissions() {
         return new SetBulkPermissionsResource(getCatalogue(), request);

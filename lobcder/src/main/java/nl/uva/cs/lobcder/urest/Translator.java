@@ -12,10 +12,8 @@ import javax.ws.rs.core.Response;
 import java.sql.*;
 
 /**
- * User: dvasunin
- * Date: 18.11.13
- * Time: 11:39
- * To change this template use File | Settings | File Templates.
+ * This service translates long authentication tokens to short so they can be used by WebDAV clients 
+ * @author dvasunin
  */
 
 @Log
@@ -44,17 +42,25 @@ public class Translator {
         }
     }
 
-    @Path("{id}/")
+    
+
+    /**
+     * Gets short token 
+     * @param longTocken the long token 
+     * @return the short token 
+     * @throws SQLException 
+     */
+    @Path("{longTocken}/")
     @Produces(MediaType.TEXT_PLAIN)
     @GET
-    public Response getShortWeb(@PathParam("id") String longId) throws SQLException {
+    public Response getShortWeb(@PathParam("longTocken") String longTocken) throws SQLException {
         try{
-            Long expDate = SingletonesHelper.getInstance().getTktAuth().checkToken(longId).getValidUntil();
+            Long expDate = SingletonesHelper.getInstance().getTktAuth().checkToken(longTocken).getValidUntil();
             try (Connection cn = SingletonesHelper.getInstance().getDataSource().getConnection()) {
-                String shortId = getShortId(longId, cn);
+                String shortId = getShortId(longTocken, cn);
                 if(shortId == null){
                     shortId = org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric(12);
-                    setShortId(shortId, longId, expDate, cn);
+                    setShortId(shortId, longTocken, expDate, cn);
                 }
                 return Response.ok(shortId).build();
             }  catch (SQLException e) {
