@@ -1,6 +1,6 @@
  <enunciate xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
             xsi:noNamespaceSchemaLocation="http://enunciate.codehaus.org/schemas/enunciate-1.26.xsd" 
-            label="Alis Documentation">
+            label="LOBCDER Documentation">
      
 <!--    <api-import pattern="nl.uva.cs.lobcder.rest.Item" />
     <api-import pattern="nl.uva.cs.lobcder.rest.Item" />-->
@@ -54,5 +54,5 @@
         </spring-app>
 
     </modules>
-
+    
 </enunciate>

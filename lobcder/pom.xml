@@ -381,7 +381,7 @@
                     <configFile>enunciate.xml</configFile> 
                     <exports> 
                         <jaxws.client.library.binaries>client.jar</jaxws.client.library.binaries> 
-                    </exports> 
+                    </exports>
                 </configuration> 
                 <executions> 
                     <execution> 

@@ -35,16 +35,25 @@
                             <li class="active" id="navhome">
                                 <a href="index.jsp">Home</a>
                             </li>
-                            <li class="list-parent">
+<!--                            <li class="list-parent">
                                 <a href="web/statistics.jsp">
                                     <i class="icon-globe icon-white">
                                     </i>
                                     Statistics
                                 </a>
-                            </li>
-
+                            </li>-->
+<!--
                             <li class="list-parent">
                                 <a href="manager.jsp">LOBCDER Manager</a>
+                            </li>-->
+
+
+                            <li class="list-parent">
+                                <a href="docs/api/">
+                                    <i class="icon-globe icon-white">
+                                    </i>
+                                    REST API 
+                                </a>
                             </li>
 
                         </ul>
