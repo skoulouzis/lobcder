@@ -107,6 +107,7 @@ public class Items extends CatalogueHelper {
                         logicalData.setStatus(resultSet.getString(22));
 
                         LogicalDataWrapped ldw = new LogicalDataWrapped();
+                        ldw.setGlobalID(getCatalogue().getGlobalID(uid, cn));
                         ldw.setLogicalData(logicalData);
                         ldw.setPermissions(p);
                         ldw.setPath(dir.getPath().concat("/").concat(logicalData.getName()));
@@ -299,6 +300,7 @@ public class Items extends CatalogueHelper {
                     }
                     if (addFlag) {
                         LogicalDataWrapped ldw = new LogicalDataWrapped();
+                        ldw.setGlobalID(getCatalogue().getGlobalID(ld.getUid(), cn));
                         ldw.setLogicalData(ld);
                         ldw.setPath(rootPath);
                         ldw.setPermissions(p);

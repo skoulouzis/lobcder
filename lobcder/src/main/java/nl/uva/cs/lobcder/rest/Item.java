@@ -29,18 +29,21 @@ import nl.uva.vlet.exception.VlException;
 
 /**
  * Gets resource properties like length owner physical location etc.
+ *
  * @author dvasunin
  */
 @Log
 @Path("item/")
 public class Item extends CatalogueHelper {
+
     @Context
     HttpServletRequest request;
     @Context
     UriInfo info;
 
     /**
-     * Gets the resource's properties (length, owner, permitions etc.) 
+     * Gets the resource's properties (length, owner, permitions etc.)
+     *
      * @param uid the id of the resource
      * @return the resource's properties
      * @throws FileNotFoundException
@@ -69,6 +72,7 @@ public class Item extends CatalogueHelper {
                 throw new WebApplicationException(Response.Status.UNAUTHORIZED);
             }
             LogicalDataWrapped res = new LogicalDataWrapped();
+            res.setGlobalID(getCatalogue().getGlobalID(uid));
             res.setLogicalData(resLD);
             res.setPermissions(p);
             res.setPath(getCatalogue().getPathforLogicalData(resLD));
@@ -128,14 +132,10 @@ public class Item extends CatalogueHelper {
 //            throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
 //        }
 //    }
-    
-    
-
     @Path("dri/")
     public DRIDataResource getDRI() {
         return new DRIDataResource(getCatalogue(), request);
     }
-
 
     @Path("permissions/")
     public PermissionsResource getPermissions() {

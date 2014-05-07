@@ -550,9 +550,9 @@ public class WebDataResource implements PropFindableResource, Resource,
         if (qname.equals(Constants.DATA_DIST_PROP_NAME)) {
             return new PropertySource.PropertyMetaData(PropertySource.PropertyAccessibility.READ_ONLY, String.class);
         }
-        if (qname.equals(Constants.DRI_CHECKSUM_PROP_NAME)) {
-            return new PropertySource.PropertyMetaData(PropertySource.PropertyAccessibility.READ_ONLY, String.class);
-        }
+//        if (qname.equals(Constants.DRI_CHECKSUM_PROP_NAME)) {
+//            return new PropertySource.PropertyMetaData(PropertySource.PropertyAccessibility.READ_ONLY, String.class);
+//        }
         for (QName n : Constants.PROP_NAMES) {
             if (n.equals(qname) && !n.equals(Constants.DATA_DIST_PROP_NAME)) {
                 return new PropertySource.PropertyMetaData(PropertySource.PropertyAccessibility.WRITABLE, String.class);

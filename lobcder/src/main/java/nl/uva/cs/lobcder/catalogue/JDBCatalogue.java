@@ -71,10 +71,10 @@ public class JDBCatalogue extends MyDataSource {
     public Collection<StorageSite> getStorageSites(Connection connection, Boolean isCache) throws SQLException {
         try (Statement s = connection.createStatement()) {
             try (ResultSet rs = s.executeQuery("SELECT storageSiteId, resourceURI, "
-                            + "currentNum, currentSize, quotaNum, quotaSize, username, "
-                            + "password, encrypt FROM storage_site_table "
-                            + "JOIN credential_table ON credentialRef = credintialId "
-                            + "WHERE isCache = " + isCache)) {
+                    + "currentNum, currentSize, quotaNum, quotaSize, username, "
+                    + "password, encrypt FROM storage_site_table "
+                    + "JOIN credential_table ON credentialRef = credintialId "
+                    + "WHERE isCache = " + isCache)) {
 
                 ArrayList<StorageSite> res = new ArrayList<>();
                 while (rs.next()) {
@@ -127,8 +127,8 @@ public class JDBCatalogue extends MyDataSource {
 //    }
     public LogicalData registerDirLogicalData(LogicalData entry, @Nonnull Connection connection) throws SQLException {
         try (PreparedStatement preparedStatement = connection.prepareStatement(
-                        "INSERT INTO ldata_table(parentRef, ownerId, datatype, ldName, createDate, modifiedDate)"
-                        + " VALUES (?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS)) {
+                "INSERT INTO ldata_table(parentRef, ownerId, datatype, ldName, createDate, modifiedDate)"
+                + " VALUES (?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS)) {
             preparedStatement.setLong(1, entry.getParentRef());
             preparedStatement.setString(2, entry.getOwner());
             preparedStatement.setString(3, Constants.LOGICAL_FOLDER);
@@ -149,15 +149,15 @@ public class JDBCatalogue extends MyDataSource {
 
     public LogicalData registerLogicalData(LogicalData entry, @Nonnull Connection connection) throws SQLException {
         try (PreparedStatement preparedStatement = connection.prepareStatement(
-                        "INSERT INTO ldata_table(parentRef, ownerId, datatype, "
-                        + "createDate, modifiedDate, ldLength, "
-                        + "contentTypesStr, pdriGroupRef, isSupervised, "
-                        + "checksum, lastValidationDate, lockTokenId, "
-                        + "lockScope, lockType, lockedByUser, lockDepth, "
-                        + "lockTimeout, description, locationPreference, "
-                        + "ldName) "
-                        + "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, "
-                        + "?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS)) {
+                "INSERT INTO ldata_table(parentRef, ownerId, datatype, "
+                + "createDate, modifiedDate, ldLength, "
+                + "contentTypesStr, pdriGroupRef, isSupervised, "
+                + "checksum, lastValidationDate, lockTokenId, "
+                + "lockScope, lockType, lockedByUser, lockDepth, "
+                + "lockTimeout, description, locationPreference, "
+                + "ldName) "
+                + "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, "
+                + "?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS)) {
             preparedStatement.setLong(1, entry.getParentRef());
             preparedStatement.setString(2, entry.getOwner());
             preparedStatement.setString(3, entry.getType());
@@ -191,10 +191,10 @@ public class JDBCatalogue extends MyDataSource {
     public LogicalData updateLogicalData(LogicalData entry, @Nonnull Connection connection) throws SQLException {
 //        "UPDATE lobcder.ldata_table SET ldName = testFileName1.txtsdsdsdd, ldLength = 23231 WHERE uid = 44"
         try (PreparedStatement ps = connection.prepareStatement("UPDATE ldata_table SET modifiedDate = ?, "
-                        + "ldLength = ?, "
-                        + "contentTypesStr = ?, "
-                        + "pdriGroupRef = ? "
-                        + "WHERE uid = ?")) {
+                + "ldLength = ?, "
+                + "contentTypesStr = ?, "
+                + "pdriGroupRef = ? "
+                + "WHERE uid = ?")) {
             ps.setTimestamp(1, new Timestamp(entry.getModifiedDate()));
             ps.setLong(2, entry.getLength());
             ps.setString(3, entry.getContentTypesAsString());
@@ -272,12 +272,12 @@ public class JDBCatalogue extends MyDataSource {
         ArrayList<PDRIDescr> res = new ArrayList<>();
         long pdriId;
         try (PreparedStatement ps = connection.prepareStatement(""
-                        + "SELECT fileName, storageSiteRef, storage_site_table.resourceUri, "
-                        + "username, password, isEncrypted, encryptionKey, pdri_table.pdriId, pdriGroupRef "
-                        + "FROM pdri_table "
-                        + "JOIN storage_site_table ON storageSiteRef = storageSiteId "
-                        + "JOIN credential_table ON credentialRef = credintialId "
-                        + "WHERE storageSiteRef = ? ")) {
+                + "SELECT fileName, storageSiteRef, storage_site_table.resourceUri, "
+                + "username, password, isEncrypted, encryptionKey, pdri_table.pdriId, pdriGroupRef "
+                + "FROM pdri_table "
+                + "JOIN storage_site_table ON storageSiteRef = storageSiteId "
+                + "JOIN credential_table ON credentialRef = credintialId "
+                + "WHERE storageSiteRef = ? ")) {
             ps.setLong(1, StorageSiteId);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -315,11 +315,11 @@ public class JDBCatalogue extends MyDataSource {
         long pdriGroupRef;
         long pdriId;
         try (PreparedStatement ps = connection.prepareStatement("SELECT fileName, storageSiteRef, storage_site_table.resourceUri, "
-                        + "username, password, isEncrypted, encryptionKey, pdri_table.pdriId  "
-                        + "FROM pdri_table "
-                        + "JOIN storage_site_table ON storageSiteRef = storageSiteId "
-                        + "JOIN credential_table ON credentialRef = credintialId "
-                        + "WHERE pdri_table.pdriGroupRef = ? ")) {
+                + "username, password, isEncrypted, encryptionKey, pdri_table.pdriId  "
+                + "FROM pdri_table "
+                + "JOIN storage_site_table ON storageSiteRef = storageSiteId "
+                + "JOIN credential_table ON credentialRef = credintialId "
+                + "WHERE pdri_table.pdriGroupRef = ? ")) {
             ps.setLong(1, groupId);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -361,7 +361,7 @@ public class JDBCatalogue extends MyDataSource {
 
     public Long getLogicalDataUidByPath(Path logicalResourceName, @Nonnull Connection connection) throws SQLException {
         try (PreparedStatement preparedStatement = connection.prepareStatement(
-                        "SELECT uid FROM ldata_table WHERE ldata_table.parentRef = ? AND ldata_table.ldName = ?")) {
+                "SELECT uid FROM ldata_table WHERE ldata_table.parentRef = ? AND ldata_table.ldName = ?")) {
             long parent = 0;
             for (String p : logicalResourceName.getParts()) {
                 preparedStatement.setLong(1, parent);
@@ -379,7 +379,7 @@ public class JDBCatalogue extends MyDataSource {
 
     public Long getLogicalDataUidByParentRefAndName(Long parentRef, String name, @Nonnull Connection connection) throws SQLException {
         try (PreparedStatement preparedStatement = connection.prepareStatement(
-                        "SELECT uid FROM ldata_table WHERE ldata_table.parentRef = ? AND ldata_table.ldName = ?")) {
+                "SELECT uid FROM ldata_table WHERE ldata_table.parentRef = ? AND ldata_table.ldName = ?")) {
             preparedStatement.setLong(1, parentRef);
             preparedStatement.setString(2, name);
             ResultSet rs = preparedStatement.executeQuery();
@@ -393,11 +393,11 @@ public class JDBCatalogue extends MyDataSource {
 
     public LogicalData getLogicalDataByParentRefAndName(Long parentRef, String name, @Nonnull Connection connection) throws SQLException {
         try (PreparedStatement preparedStatement = connection.prepareStatement(
-                        "SELECT uid, ownerId, datatype, createDate, modifiedDate, ldLength, "
-                        + "contentTypesStr, pdriGroupRef, isSupervised, checksum, lastValidationDate, "
-                        + "lockTokenID, lockScope, lockType, lockedByUser, lockDepth, lockTimeout, "
-                        + "description, locationPreference "
-                        + "FROM ldata_table WHERE ldata_table.parentRef = ? AND ldata_table.ldName = ?")) {
+                "SELECT uid, ownerId, datatype, createDate, modifiedDate, ldLength, "
+                + "contentTypesStr, pdriGroupRef, isSupervised, checksum, lastValidationDate, "
+                + "lockTokenID, lockScope, lockType, lockedByUser, lockDepth, lockTimeout, "
+                + "description, locationPreference "
+                + "FROM ldata_table WHERE ldata_table.parentRef = ? AND ldata_table.ldName = ?")) {
             preparedStatement.setLong(1, parentRef);
             preparedStatement.setString(2, name);
             ResultSet rs = preparedStatement.executeQuery();
@@ -438,7 +438,7 @@ public class JDBCatalogue extends MyDataSource {
             return res;
         }
         try (PreparedStatement preparedStatement = connection.prepareStatement(
-                        "SELECT uid FROM ldata_table WHERE ldata_table.parentRef = ? AND ldata_table.ldName = ?")) {
+                "SELECT uid FROM ldata_table WHERE ldata_table.parentRef = ? AND ldata_table.ldName = ?")) {
             long parent = 1;
             String parts[] = logicalResourceName.getParts();
             if (parts.length == 0) {
@@ -448,11 +448,11 @@ public class JDBCatalogue extends MyDataSource {
                 String p = parts[i];
                 if (i == (parts.length - 1)) {
                     try (PreparedStatement preparedStatement1 = connection.prepareStatement(
-                                    "SELECT uid, ownerId, datatype, createDate, modifiedDate, ldLength, "
-                                    + "contentTypesStr, pdriGroupRef, isSupervised, checksum, lastValidationDate, "
-                                    + "lockTokenID, lockScope, lockType, lockedByUser, lockDepth, lockTimeout, "
-                                    + "description, locationPreference, status "
-                                    + "FROM ldata_table WHERE ldata_table.parentRef = ? AND ldata_table.ldName = ?")) {
+                            "SELECT uid, ownerId, datatype, createDate, modifiedDate, ldLength, "
+                            + "contentTypesStr, pdriGroupRef, isSupervised, checksum, lastValidationDate, "
+                            + "lockTokenID, lockScope, lockType, lockedByUser, lockDepth, lockTimeout, "
+                            + "description, locationPreference, status "
+                            + "FROM ldata_table WHERE ldata_table.parentRef = ? AND ldata_table.ldName = ?")) {
                         preparedStatement1.setLong(1, parent);
                         preparedStatement1.setString(2, p);
                         ResultSet rs = preparedStatement1.executeQuery();
@@ -518,10 +518,10 @@ public class JDBCatalogue extends MyDataSource {
             return res;
         }
         try (PreparedStatement ps = connection.prepareStatement("SELECT parentRef, ownerId, datatype, ldName, "
-                        + "createDate, modifiedDate, ldLength, contentTypesStr, pdriGroupRef, "
-                        + "isSupervised, checksum, lastValidationDate, lockTokenID, lockScope, "
-                        + "lockType, lockedByUser, lockDepth, lockTimeout, description, locationPreference, status "
-                        + "FROM ldata_table WHERE ldata_table.uid = ?")) {
+                + "createDate, modifiedDate, ldLength, contentTypesStr, pdriGroupRef, "
+                + "isSupervised, checksum, lastValidationDate, lockTokenID, lockScope, "
+                + "lockType, lockedByUser, lockDepth, lockTimeout, description, locationPreference, status "
+                + "FROM ldata_table WHERE ldata_table.uid = ?")) {
             ps.setLong(1, UID);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
@@ -571,7 +571,7 @@ public class JDBCatalogue extends MyDataSource {
 
     public void setPermissions(Long UID, Permissions perm, @Nonnull Connection connection) throws SQLException {
         try (Statement s = connection.createStatement(java.sql.ResultSet.TYPE_FORWARD_ONLY,
-                        java.sql.ResultSet.CONCUR_UPDATABLE)) {
+                java.sql.ResultSet.CONCUR_UPDATABLE)) {
 
             s.addBatch("DELETE FROM permission_table WHERE permission_table.ldUidRef = " + UID);
             for (String cr : perm.getRead()) {
@@ -636,11 +636,11 @@ public class JDBCatalogue extends MyDataSource {
 
     public Collection<LogicalData> getChildrenByParentRef(Long parentRef, @Nonnull Connection connection) throws SQLException {
         try (PreparedStatement preparedStatement = connection.prepareStatement(
-                        "SELECT uid, ownerId, datatype, ldName, createDate, modifiedDate, ldLength, "
-                        + "contentTypesStr, pdriGroupRef, isSupervised, checksum, lastValidationDate, "
-                        + "lockTokenID, lockScope, lockType, lockedByUser, lockDepth, lockTimeout, "
-                        + "description, locationPreference "
-                        + "FROM ldata_table WHERE ldata_table.parentRef = ?")) {
+                "SELECT uid, ownerId, datatype, ldName, createDate, modifiedDate, ldLength, "
+                + "contentTypesStr, pdriGroupRef, isSupervised, checksum, lastValidationDate, "
+                + "lockTokenID, lockScope, lockType, lockedByUser, lockDepth, lockTimeout, "
+                + "description, locationPreference "
+                + "FROM ldata_table WHERE ldata_table.parentRef = ?")) {
             preparedStatement.setLong(1, parentRef);
             ResultSet rs = preparedStatement.executeQuery();
             LinkedList<LogicalData> res = new LinkedList<>();
@@ -695,7 +695,6 @@ public class JDBCatalogue extends MyDataSource {
         removeFromLDataCache(toMove, null);
     }
 
-
     public void copyFolder(LogicalData toCopy, LogicalData newParent, String newName, MyPrincipal principal, Connection connection) throws SQLException {
         try {
             Permissions toCopyPerm = getPermissions(toCopy.getUid(), toCopy.getOwner(), connection);
@@ -739,7 +738,7 @@ public class JDBCatalogue extends MyDataSource {
                 }
             }
         } catch (CloneNotSupportedException e) {
-            throw  new RuntimeException(e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -1220,9 +1219,9 @@ public class JDBCatalogue extends MyDataSource {
 
     public void recordRequest(Connection connection, HttpServletRequest httpServletRequest, double elapsed) throws SQLException, UnsupportedEncodingException {
         try (PreparedStatement preparedStatement = connection.prepareStatement(
-                        "INSERT INTO requests_table (methodName, requestURL, "
-                        + "remoteAddr, contentLen, contentType, elapsedTime,userName, userAgent) "
-                        + "VALUES(?, ?, ?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS)) {
+                "INSERT INTO requests_table (methodName, requestURL, "
+                + "remoteAddr, contentLen, contentType, elapsedTime,userName, userAgent) "
+                + "VALUES(?, ?, ?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS)) {
             preparedStatement.setString(1, httpServletRequest.getMethod());
             preparedStatement.setString(2, httpServletRequest.getRequestURL().toString());
             preparedStatement.setString(3, httpServletRequest.getRemoteAddr());
@@ -1273,8 +1272,8 @@ public class JDBCatalogue extends MyDataSource {
 
             if (credentialID == -1) {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(
-                                "INSERT INTO credential_table (username, "
-                                + "password) VALUES (?, ?)", Statement.RETURN_GENERATED_KEYS)) {
+                        "INSERT INTO credential_table (username, "
+                        + "password) VALUES (?, ?)", Statement.RETURN_GENERATED_KEYS)) {
                     preparedStatement.setString(1, s.getCredential().getStorageSiteUsername());
                     preparedStatement.setString(2, s.getCredential().getStorageSitePassword());
                     preparedStatement.executeUpdate();
@@ -1291,16 +1290,16 @@ public class JDBCatalogue extends MyDataSource {
                 if (es.getResourceURI().equals(s.getResourceURI())) {
 //                    Long id = es.getStorageSiteId();
                     try (PreparedStatement preparedStatement = connection.prepareStatement(
-                                    "UPDATE storage_site_table SET "
-                                    + "resourceUri = ?, "
-                                    + "credentialRef = ?, "
-                                    + "currentNum = ?, "
-                                    + "currentSize = ?, "
-                                    + "quotaNum = ?, "
-                                    + "quotaSize = ?, "
-                                    + "isCache = ?, "
-                                    + "encrypt = ? "
-                                    + "WHERE storageSiteId = ?")) {
+                            "UPDATE storage_site_table SET "
+                            + "resourceUri = ?, "
+                            + "credentialRef = ?, "
+                            + "currentNum = ?, "
+                            + "currentSize = ?, "
+                            + "quotaNum = ?, "
+                            + "quotaSize = ?, "
+                            + "isCache = ?, "
+                            + "encrypt = ? "
+                            + "WHERE storageSiteId = ?")) {
                         preparedStatement.setString(1, s.getResourceURI());
                         preparedStatement.setLong(2, credentialID);
                         preparedStatement.setLong(3, s.getCurrentNum());
@@ -1317,11 +1316,11 @@ public class JDBCatalogue extends MyDataSource {
             }
             if (!updatedSites.contains(s.getResourceURI())) {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(
-                                "INSERT INTO storage_site_table "
-                                + "(resourceUri, credentialRef, currentNum, "
-                                + "currentSize, quotaNum, quotaSize, isCache, extra, "
-                                + "encrypt) "
-                                + "VALUES (?, ?, ?, ?, ?, ?, ?, NULL, ?)", Statement.RETURN_GENERATED_KEYS)) {
+                        "INSERT INTO storage_site_table "
+                        + "(resourceUri, credentialRef, currentNum, "
+                        + "currentSize, quotaNum, quotaSize, isCache, extra, "
+                        + "encrypt) "
+                        + "VALUES (?, ?, ?, ?, ?, ?, ?, NULL, ?)", Statement.RETURN_GENERATED_KEYS)) {
                     preparedStatement.setString(1, s.getResourceURI());
                     preparedStatement.setLong(2, credentialID);
                     preparedStatement.setLong(3, s.getCurrentNum());
@@ -1345,7 +1344,7 @@ public class JDBCatalogue extends MyDataSource {
         if (ids != null && ids.size() > 0) {
             for (Long id : ids) {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(
-                                "DELETE FROM storage_site_table WHERE storageSiteId = ?")) {
+                        "DELETE FROM storage_site_table WHERE storageSiteId = ?")) {
                     preparedStatement.setLong(1, id);
                     preparedStatement.executeUpdate();
                 }
@@ -1355,7 +1354,7 @@ public class JDBCatalogue extends MyDataSource {
 
     private Collection<Credential> getCredentials(Connection connection) throws SQLException {
         try (PreparedStatement preparedStatement = connection.prepareStatement(
-                        "select * from credential_table")) {
+                "select * from credential_table")) {
 
             ResultSet rs = preparedStatement.executeQuery();
             Collection<Credential> res = new ArrayList<>();
@@ -1373,7 +1372,7 @@ public class JDBCatalogue extends MyDataSource {
     public List<UsersWrapper> getUsers(Connection connection) throws SQLException {
         List<UsersWrapper> users = new ArrayList<>();
         try (PreparedStatement preparedStatement = connection.prepareStatement(
-                        "select * from auth_usernames_table")) {
+                "select * from auth_usernames_table")) {
             ResultSet rs = preparedStatement.executeQuery();
             while (rs.next()) {
                 UsersWrapper uw = new UsersWrapper();
@@ -1386,7 +1385,7 @@ public class JDBCatalogue extends MyDataSource {
 
                 List<String> roles = new ArrayList<>();
                 try (PreparedStatement preparedStatement2 = connection.prepareStatement(
-                                "SELECT roleName FROM auth_roles_tables WHERE unameRef = " + id)) {
+                        "SELECT roleName FROM auth_roles_tables WHERE unameRef = " + id)) {
                     ResultSet rs2 = preparedStatement2.executeQuery();
                     while (rs2.next()) {
                         roles.add(rs2.getString(1));
@@ -1401,12 +1400,12 @@ public class JDBCatalogue extends MyDataSource {
 
     public List<LogicalData> getLogicalDataByName(Path fileName, Connection connection) throws SQLException {
         try (PreparedStatement ps = connection.prepareStatement("SELECT uid, parentRef, "
-                        + "ownerId, datatype, ldName, createDate, modifiedDate, ldLength, "
-                        + "contentTypesStr, pdriGroupRef, isSupervised, checksum, "
-                        + "lastValidationDate, lockTokenID, lockScope, lockType, "
-                        + "lockedByUser, lockDepth, lockTimeout, description, "
-                        + "locationPreference, status "
-                        + "FROM ldata_table WHERE ldata_table.ldName = ?")) {
+                + "ownerId, datatype, ldName, createDate, modifiedDate, ldLength, "
+                + "contentTypesStr, pdriGroupRef, isSupervised, checksum, "
+                + "lastValidationDate, lockTokenID, lockScope, lockType, "
+                + "lockedByUser, lockDepth, lockTimeout, description, "
+                + "locationPreference, status "
+                + "FROM ldata_table WHERE ldata_table.ldName = ?")) {
             ps.setString(1, fileName.toString());
             ResultSet rs = ps.executeQuery();
             List<LogicalData> results = new ArrayList<>();
@@ -1510,7 +1509,7 @@ public class JDBCatalogue extends MyDataSource {
             return res;
         }
         try (PreparedStatement ps = connection.prepareStatement(
-                        "SELECT ldName, parentRef FROM ldata_table WHERE uid = ?")) {
+                "SELECT ldName, parentRef FROM ldata_table WHERE uid = ?")) {
             PathInfo pi = new PathInfo(ld.getName(), ld.getParentRef());
             List<PathInfo> pil = new ArrayList<>();
             getPathforLogicalData(pi, pil, ps);
@@ -1560,6 +1559,25 @@ public class JDBCatalogue extends MyDataSource {
             }
         } catch (Exception e) {
             log.log(Level.SEVERE, null, e);
+        }
+    }
+
+    public String getGlobalID(Long uid, Connection connection) throws SQLException {
+        String res = null;
+        try (PreparedStatement ps = connection.prepareStatement("SELECT global_id FROM wp4_table WHERE local_id = ?")) {
+            ps.setLong(1, uid);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                res = rs.getString(1);
+            }
+            return res;
+        }
+
+    }
+
+    public String getGlobalID(Long uid) throws SQLException {
+        try (Connection connection = getConnection()) {
+            return getGlobalID(uid, connection);
         }
     }
 }
