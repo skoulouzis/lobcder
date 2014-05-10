@@ -216,11 +216,11 @@
             <version>1.14</version>
         </dependency>
 
-        <dependency>
+        <!--        <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-log4j12</artifactId>
             <version>1.6.4</version>
-        </dependency>
+        </dependency>-->
         
         <dependency>
             <groupId>mysql</groupId>
@@ -308,29 +308,36 @@
             <artifactId>enunciate-rt</artifactId> 
             <version>1.28</version> 
         </dependency>
+        
+        
+        <dependency>
+            <groupId>jcs</groupId>
+            <artifactId>jcs</artifactId>
+            <version>20030822.182132</version>
+        </dependency>
 
     </dependencies>
     
     <repositories>
       
-        <!--        <repository>
+        <repository>
             <id>repo2_maven_org</id>
             <url>http://repo2.maven.org/maven2</url>
-        </repository>-->
+        </repository>
         
-        <!--        <repository>
+        <repository>
             <id>mvn-public</id>
             <name>MVNRepository</name>
             <url>http://mvnrepository.com</url>
-        </repository>-->
+        </repository>
 
-
+        <!--
         <repository>
             <id>elab.lab.uvalight.net</id>
             <name>elab.lab.uvalight.net-releases</name>
             <url>>http://elab.lab.uvalight.net/artifactory/local</url>
         </repository>
-        
+        -->
         <!--        <repository>
             <id>rendersnake-repo</id>
             <name>Repository for rendersnake</name>
@@ -353,7 +360,10 @@
 
 
     <build>
+        
+        
         <plugins>
+  
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -374,6 +384,7 @@
                 <!--If the version is not set to 2.1.1 we get the error: 'com.thoughtworks.xstream.converters.ConversionException: Cannot construct org.apache.maven.plugin.war.util.WebappStructure as it does not have a no-args constructor'-->
                 <version>2.3</version>
             </plugin>
+            
             <plugin> 
                 <groupId>org.codehaus.enunciate</groupId> 
                 <artifactId>maven-enunciate-plugin</artifactId> 
@@ -389,7 +400,8 @@
                             <goal>assemble</goal> 
                         </goals> 
                     </execution> 
-                </executions> 
+                </executions>
+                <version>1.28</version>
             </plugin>
 
         </plugins>
