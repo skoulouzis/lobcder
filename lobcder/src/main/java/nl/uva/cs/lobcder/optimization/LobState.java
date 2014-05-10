@@ -11,7 +11,7 @@ import io.milton.http.Request.Method;
  *
  * @author S. Koulouzis
  */
-public class LobState {
+public class LobState implements java.io.Serializable{
 
     private final String resource;
     private final Method method;

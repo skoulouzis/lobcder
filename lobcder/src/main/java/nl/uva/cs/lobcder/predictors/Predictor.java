@@ -11,7 +11,7 @@ import nl.uva.cs.lobcder.optimization.LobState;
  * @author S. Koulouzis
  */
 public interface Predictor {
-
+    
     public void stop();
 
     public LobState getNextState(LobState currentState);

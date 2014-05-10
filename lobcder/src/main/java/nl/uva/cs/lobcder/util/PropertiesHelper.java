@@ -27,6 +27,7 @@ import nl.uva.cs.lobcder.webDav.resources.WebDataFileResource;
 public class PropertiesHelper {
 
     public static final String propertiesPath = "lobcder.properties";
+    public static final String cachePropertiesPath = "jcsCache.properties";
 
     private static Properties getProperties() throws IOException {
         InputStream in = null;
@@ -230,5 +231,24 @@ public class PropertiesHelper {
 
     public static Integer getFirstSuccessorrN() throws IOException {
         return Integer.valueOf(getProperties().getProperty("first.successor.N", "1"));
+    }
+
+    public static Properties getCacheProperties() throws IOException {
+        InputStream in = null;
+        try {
+            ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+            in = classLoader.getResourceAsStream(cachePropertiesPath);
+            Properties properties = new Properties();
+            properties.load(in);
+
+            return properties;
+        } catch (IOException ex) {
+            Logger.getLogger(PropertiesHelper.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            if (in != null) {
+                in.close();
+            }
+        }
+        return null;
     }
 }
