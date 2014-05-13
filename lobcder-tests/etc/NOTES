@@ -1,0 +1,1 @@
+In mongoDB to get the sum of rx_size field: db.lobcderCollection.aggregate({ $match: { rx_size: {$gte:0}} } , { $group: { _id : null, sum : { $sum: "$rx_size" } } });
