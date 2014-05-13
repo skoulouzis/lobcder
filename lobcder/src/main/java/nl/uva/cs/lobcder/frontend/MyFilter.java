@@ -56,6 +56,7 @@ public class MyFilter extends MiltonFilter {
     private static final BlockingQueue queue = new ArrayBlockingQueue(3500);
     private static RequestEventRecorder recorder;
     private Timer recordertimer;
+    private LobState prevPrediction;
 
     public MyFilter() throws Exception {
     }
@@ -165,7 +166,6 @@ public class MyFilter extends MiltonFilter {
 //        getCatalogue().recordRequest(connection, httpServletRequest, elapsed);
 //        connection.commit();
 //    }
-
     private Predictor getPredictor() throws Exception {
         if (PropertiesHelper.doPrediction()) {
             //TODO: Use class loader 
@@ -238,39 +238,22 @@ public class MyFilter extends MiltonFilter {
         LobState nextState = null;
 
         nextState = getPredictor().getNextState(currentState);
-        String nextID, prevID;
-        if (nextState != null) {
-            nextID = nextState.getID();
-        } else {
-            log.log(Level.INFO, "No prediction made");
-            nextID = "NON";
-        }
+
         if (prevState != null) {
             getPredictor().setPreviousStateForCurrent(prevState, currentState);
-
-
-            if (currentState.getID().equals(prevState.getID())) {
-                log.log(Level.INFO, "Hit. currentState: {0} nextState: {1} prevState: {2}",
-                        new Object[]{currentState.getID(), nextID, prevState.getID()});
+        }
+        if (prevPrediction != null) {
+            if (currentState.getID().equals(prevPrediction.getID())) {
+                log.log(Level.INFO, "Prediction Result: Hit");
             } else {
-                if (prevState != null) {
-                    prevID = prevState.getID();
-                } else {
-                    prevID = "NON";
-                }
-                log.log(Level.INFO, "Miss. currentState: {0} nextState: {1} prevState: {2}",
-                        new Object[]{currentState.getID(), nextID, prevID});
+                log.log(Level.INFO, "Prediction Result: Miss");
             }
-        }
-        if (nextState != null) {
-            log.log(Level.INFO, "nextFile: {0}", nextState.getID());
-            prevState = nextState;
         } else {
-            prevState = currentState;
+            log.log(Level.INFO, "Prediction Result: Non");
         }
 
-
-
+        prevState = currentState;
+        prevPrediction = nextState;
     }
 
     private void startRecorder() {
