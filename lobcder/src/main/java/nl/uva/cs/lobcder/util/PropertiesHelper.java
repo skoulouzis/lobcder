@@ -27,6 +27,7 @@ import nl.uva.cs.lobcder.webDav.resources.WebDataFileResource;
 public class PropertiesHelper {
 
     public static final String propertiesPath = "lobcder.properties";
+    public static final String cachePropertiesPath = "cache.properties";
 
     private static Properties getProperties() throws IOException {
         InputStream in = null;

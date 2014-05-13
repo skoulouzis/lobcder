@@ -91,10 +91,20 @@ CREATE TABLE requests_table (
 ) ENGINE=InnoDB;
 
 
--- CREATE TABLE successor_table (
---  uid SERIAL PRIMARY KEY,
---  methodName VARCHAR(255), INDEX(methodName),
--- ) ENGINE=InnoDB;
+CREATE TABLE successor_table (
+ uid SERIAL PRIMARY KEY,
+ keyVal VARCHAR(1024), INDEX(keyVal),
+ lobStateID VARCHAR(1024)
+) ENGINE=InnoDB;
+
+CREATE TABLE occurrences_table (
+ uid SERIAL PRIMARY KEY,
+ keyVal VARCHAR(1024), INDEX(keyVal),
+ occurrences BIGINT
+) ENGINE=InnoDB;
+
+
+
 
 DELIMITER |
 

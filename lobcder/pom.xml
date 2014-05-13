@@ -310,10 +310,31 @@
         </dependency>
         
         
+        <!-- javamelody-core -->
         <dependency>
-            <groupId>jcs</groupId>
-            <artifactId>jcs</artifactId>
-            <version>20030822.182132</version>
+            <groupId>net.bull.javamelody</groupId>
+            <artifactId>javamelody-core</artifactId>
+            <version>1.50.0</version>
+        </dependency>
+        <!-- itext, option to add PDF export -->
+        <dependency>
+            <groupId>com.lowagie</groupId>
+            <artifactId>itext</artifactId>
+            <version>2.1.7</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>bcmail-jdk14</artifactId>
+                    <groupId>bouncycastle</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>bcprov-jdk14</artifactId>
+                    <groupId>bouncycastle</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>bctsp-jdk14</artifactId>
+                    <groupId>bouncycastle</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
     </dependencies>
@@ -331,13 +352,13 @@
             <url>http://mvnrepository.com</url>
         </repository>
 
-        <!--
+        
         <repository>
             <id>elab.lab.uvalight.net</id>
             <name>elab.lab.uvalight.net-releases</name>
             <url>>http://elab.lab.uvalight.net/artifactory/local</url>
         </repository>
-        -->
+        
         <!--        <repository>
             <id>rendersnake-repo</id>
             <name>Repository for rendersnake</name>
@@ -356,6 +377,7 @@
             <layout>default</layout>
             <name>Repository for library Library[restapi]</name>
         </repository>-->
+      
     </repositories>
 
 

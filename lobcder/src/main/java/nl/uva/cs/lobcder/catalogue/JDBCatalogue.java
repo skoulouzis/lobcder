@@ -12,14 +12,12 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.*;
 import java.util.*;
-import java.util.Map.Entry;
 import java.util.logging.Level;
 import javax.annotation.Nonnull;
 import javax.naming.NamingException;
 import javax.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.SneakyThrows;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.auth.MyPrincipal;
 import nl.uva.cs.lobcder.auth.Permissions;
@@ -32,7 +30,6 @@ import nl.uva.cs.lobcder.resources.StorageSite;
 import nl.uva.cs.lobcder.rest.wrappers.UsersWrapper;
 import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.cs.lobcder.util.MyDataSource;
-import nl.uva.cs.lobcder.util.PropertiesHelper;
 import org.apache.commons.codec.binary.Base64;
 
 /**
@@ -1217,26 +1214,26 @@ public class JDBCatalogue extends MyDataSource {
 //        pathCache.put(uid, res);
     }
 
-    public void recordRequest(Connection connection, HttpServletRequest httpServletRequest, double elapsed) throws SQLException, UnsupportedEncodingException {
-        try (PreparedStatement preparedStatement = connection.prepareStatement(
-                "INSERT INTO requests_table (methodName, requestURL, "
-                + "remoteAddr, contentLen, contentType, elapsedTime,userName, userAgent) "
-                + "VALUES(?, ?, ?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS)) {
-            preparedStatement.setString(1, httpServletRequest.getMethod());
-            preparedStatement.setString(2, httpServletRequest.getRequestURL().toString());
-            preparedStatement.setString(3, httpServletRequest.getRemoteAddr());
-            preparedStatement.setInt(4, httpServletRequest.getContentLength());
-            preparedStatement.setString(5, httpServletRequest.getContentType());
-            preparedStatement.setDouble(6, elapsed);
-
-
-            String userNpasswd = getUserName(httpServletRequest);
-            preparedStatement.setString(7, userNpasswd);
-            preparedStatement.setString(8, httpServletRequest.getHeader("User-Agent"));
-            preparedStatement.executeUpdate();
-            ResultSet rs = preparedStatement.getGeneratedKeys();
-        }
-    }
+//    public void recordRequest(Connection connection, HttpServletRequest httpServletRequest, double elapsed) throws SQLException, UnsupportedEncodingException {
+//        try (PreparedStatement preparedStatement = connection.prepareStatement(
+//                "INSERT INTO requests_table (methodName, requestURL, "
+//                + "remoteAddr, contentLen, contentType, elapsedTime,userName, userAgent) "
+//                + "VALUES(?, ?, ?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS)) {
+//            preparedStatement.setString(1, httpServletRequest.getMethod());
+//            preparedStatement.setString(2, httpServletRequest.getRequestURL().toString());
+//            preparedStatement.setString(3, httpServletRequest.getRemoteAddr());
+//            preparedStatement.setInt(4, httpServletRequest.getContentLength());
+//            preparedStatement.setString(5, httpServletRequest.getContentType());
+//            preparedStatement.setDouble(6, elapsed);
+//
+//
+//            String userNpasswd = getUserName(httpServletRequest);
+//            preparedStatement.setString(7, userNpasswd);
+//            preparedStatement.setString(8, httpServletRequest.getHeader("User-Agent"));
+//            preparedStatement.executeUpdate();
+//            ResultSet rs = preparedStatement.getGeneratedKeys();
+//        }
+//    }
 
     public void recordRequests(Connection connection, List<RequestWapper> requestEvents) throws SQLException, UnsupportedEncodingException {
         try (Statement s = connection.createStatement()) {

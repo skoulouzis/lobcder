@@ -588,7 +588,7 @@ public class WebDataResource implements PropFindableResource, Resource,
                 getCatalogue().setLockDepth(getLogicalData().getUid(), getLogicalData().getLockDepth(), connection);
                 lockTimeout = lockToken.timeout.getSeconds();
                 if (lockTimeout == null) {
-                    lockTimeout = Long.valueOf(12000);
+                    lockTimeout = Long.valueOf(1200);
                 }
                 getLogicalData().setLockTimeout(lockTimeout);
 
@@ -642,10 +642,21 @@ public class WebDataResource implements PropFindableResource, Resource,
     public void unlock(String token) throws NotAuthorizedException, PreConditionFailedException {
         try (Connection connection = getCatalogue().getConnection()) {
             try {
-                if (getLogicalData().getLockTokenID() == null) {
+                String tokenID = getLogicalData().getLockTokenID();
+                if (tokenID == null || tokenID.length() <= 0) {
                     return;
                 } else {
-                    if (!getLogicalData().getLockTokenID().equals(token)) {
+                    if (tokenID.startsWith("<") && tokenID.endsWith(">") && !token.startsWith("<") && !token.endsWith(">")) {
+                        StringBuilder sb = new StringBuilder();
+                        sb.append("<").append(token).append(">");
+                        token = sb.toString();
+                    }
+                    if (!tokenID.startsWith("<") && !tokenID.endsWith(">") && token.startsWith("<") && token.endsWith(">")) {
+                        token = token.replaceFirst("<", "");
+                        token = token.replaceFirst(">", "");
+                    }
+
+                    if (!tokenID.equals(token)) {
                         throw new PreConditionFailedException(this);
                     }
                 }

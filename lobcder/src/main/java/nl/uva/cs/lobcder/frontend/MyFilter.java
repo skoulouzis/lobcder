@@ -161,10 +161,10 @@ public class MyFilter extends MiltonFilter {
         return catalogue;
     }
 
-    private void recordEvent(Connection connection, HttpServletRequest httpServletRequest, double elapsed) throws SQLException, UnsupportedEncodingException {
-        getCatalogue().recordRequest(connection, httpServletRequest, elapsed);
-        connection.commit();
-    }
+//    private void recordEvent(Connection connection, HttpServletRequest httpServletRequest, double elapsed) throws SQLException, UnsupportedEncodingException {
+//        getCatalogue().recordRequest(connection, httpServletRequest, elapsed);
+//        connection.commit();
+//    }
 
     private Predictor getPredictor() throws Exception {
         if (PropertiesHelper.doPrediction()) {
@@ -203,9 +203,9 @@ public class MyFilter extends MiltonFilter {
     public void destroy() {
         super.destroy();
         try {
-            if (getPredictor() != null) {
-                getPredictor().stop();
-            }
+//            if (getPredictor() != null) {
+//                getPredictor().stop();
+//            }
 
             if (recordertimer != null) {
                 if (recorder != null) {
@@ -299,7 +299,6 @@ public class MyFilter extends MiltonFilter {
             try {
                 RequestWapper rw = (RequestWapper) queue.take();
 //                log.log(Level.FINE, "RequestWapper: {0} {1} {2} {3} {4} {5} {6} {7} {8}", new Object[]{rw.contentType, rw.method, rw.remoteAddr, rw.requestURL, rw.userAgent, rw.userNpasswd, rw.contentLength, rw.date, rw.elapsed});
-
                 req.add(rw);
                 if (req.size() >= 50) {
                     try {

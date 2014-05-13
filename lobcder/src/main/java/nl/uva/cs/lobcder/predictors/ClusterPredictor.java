@@ -21,7 +21,6 @@ import java.util.logging.Logger;
 import javax.naming.NamingException;
 import nl.uva.cs.lobcder.optimization.LDClustering;
 import nl.uva.cs.lobcder.optimization.LobState;
-import nl.uva.cs.lobcder.util.MyDataSource;
 
 /**
  *

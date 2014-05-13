@@ -5,29 +5,40 @@
 package nl.uva.cs.lobcder.predictors;
 
 import java.io.IOException;
+import java.net.UnknownHostException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.annotation.Nonnull;
 import javax.naming.NamingException;
 import nl.uva.cs.lobcder.optimization.LobState;
-import static nl.uva.cs.lobcder.predictors.StableSuccessor.N;
+import nl.uva.cs.lobcder.resources.LogicalData;
+import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.cs.lobcder.util.MyDataSource;
 import nl.uva.cs.lobcder.util.PropertiesHelper;
 
 /**
  * If the first observed successor of A is B, then B will be predicted as the
  * successor every time A is observed.
- * 
- * First Stable Successor (FSS): Extension to the FS algorithm. FSS does not 
- * make any predictions until N consecutive occurrences of a successor to a file 
- * are observed, after which that successor is always predicted as a successor 
+ *
+ * First Stable Successor (FSS): Extension to the FS algorithm. FSS does not
+ * make any predictions until N consecutive occurrences of a successor to a file
+ * are observed, after which that successor is always predicted as a successor
  * to that file
  *
  * @author S. Koulouzis
  */
-public class FirstSuccessor extends MyDataSource implements Predictor {
+public class FirstSuccessor extends DBMapPredictor {
 
-    Map<String, LobState> fos = new HashMap<>();
-    Map<String, Integer> observedMap = new HashMap<>();
+//    Map<String, LobState> fos = new HashMap<>();
+//    Map<String, Integer> observedMap = new HashMap<>();
     static Integer N;
 
     public FirstSuccessor() throws NamingException, IOException {
@@ -36,28 +47,41 @@ public class FirstSuccessor extends MyDataSource implements Predictor {
 
     @Override
     public void stop() {
-        //Nothing to stop
     }
 
     @Override
     public LobState getNextState(LobState currentState) {
-        LobState nextState = fos.get(currentState.getID());
-        return nextState;
+        try {
+            //        LobState nextState = fos.get(currentState.getID());
+            LobState nextState = getSuccessor(currentState.getID());
+            return nextState;
+        } catch (SQLException ex) {
+            Logger.getLogger(FirstSuccessor.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return null;
     }
 
     @Override
     public void setPreviousStateForCurrent(LobState prevState, LobState currentState) {
-        Integer occurrences = observedMap.get(prevState.getID() + currentState.getID());
-        if (occurrences == null) {
-            occurrences = 1;
-        } else {
-            occurrences++;
-        }
+        try {
+            Integer occurrences = getOoccurrences(prevState.getID() + currentState.getID());
+            //        Integer occurrences = observedMap.get(prevState.getID() + currentState.getID());
+            if (occurrences == null) {
+                occurrences = 1;
+            } else {
+                occurrences++;
+            }
 
-        if (!fos.containsKey(prevState.getID()) && occurrences >= N) {
-            fos.put(prevState.getID(), currentState);
+            if (occurrences >= N) {
+                putSuccessor(prevState.getID(), currentState, false);
+            }
+//            if (!fos.containsKey(prevState.getID()) && occurrences >= N) {
+//                fos.put(prevState.getID(), currentState);
+//            }
+//            observedMap.put(prevState.getID() + currentState.getID(), occurrences);
+            putOoccurrences(prevState.getID() + currentState.getID(), occurrences);
+        } catch (SQLException | UnknownHostException ex) {
+            Logger.getLogger(FirstSuccessor.class.getName()).log(Level.SEVERE, null, ex);
         }
-
-        observedMap.put(prevState.getID() + currentState.getID(), occurrences);
     }
 }
