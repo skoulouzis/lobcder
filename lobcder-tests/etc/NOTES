@@ -1,1 +1,5 @@
-In mongoDB to get the sum of rx_size field: db.lobcderCollection.aggregate({ $match: { rx_size: {$gte:0}} } , { $group: { _id : null, sum : { $sum: "$rx_size" } } });
+In mongoDB to get the sum,min,max,average of rx_size field: 
+db.lobcderCollection.aggregate({ $match: { rx_size: {$gte:0}} } , { $group: { _id : null, sum : { $sum: "$rx_size" } } });
+db.lobcderCollection.aggregate({ $match: { rx_size: {$gte:0}} } , { $group: { _id : null, max : { $max: "$rx_size" } } });
+db.lobcderCollection.aggregate({ $match: { rx_size: {$gte:0}} } , { $group: { _id : null, min : { $min: "$rx_size" } } });
+db.lobcderCollection.aggregate({ $match: { rx_size: {$gte:0}} } , { $group: { _id : null, avg : { $avg: "$rx_size" } } });
