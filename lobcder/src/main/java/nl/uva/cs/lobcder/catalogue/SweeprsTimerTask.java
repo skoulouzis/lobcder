@@ -9,11 +9,14 @@ import nl.uva.cs.lobcder.util.PropertiesHelper;
 import javax.sql.DataSource;
 import java.io.IOException;
 import java.util.TimerTask;
+import java.util.logging.Level;
+import lombok.extern.java.Log;
 
 /**
  *
  * @author S. Koulouzis
  */
+@Log
 class SweeprsTimerTask extends TimerTask {
 
     private final DeleteSweep deleteSweep;
@@ -32,10 +35,14 @@ class SweeprsTimerTask extends TimerTask {
 
     @Override
     public void run() {
+        try{
         deleteSweep.run();
         replicateSweep.run();
         if (wp4Sweep != null) {
             wp4Sweep.run();
+        }
+        }catch(Throwable th){
+            log.log(Level.SEVERE,"One of the sweepers encountered and error.", th);
         }
     }
 

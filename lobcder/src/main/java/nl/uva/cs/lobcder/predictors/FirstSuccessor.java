@@ -6,22 +6,11 @@ package nl.uva.cs.lobcder.predictors;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
-import java.sql.Timestamp;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.annotation.Nonnull;
 import javax.naming.NamingException;
 import nl.uva.cs.lobcder.optimization.LobState;
-import nl.uva.cs.lobcder.resources.LogicalData;
-import nl.uva.cs.lobcder.util.Constants;
-import nl.uva.cs.lobcder.util.MyDataSource;
 import nl.uva.cs.lobcder.util.PropertiesHelper;
 
 /**
@@ -41,8 +30,10 @@ public class FirstSuccessor extends DBMapPredictor {
 //    Map<String, Integer> observedMap = new HashMap<>();
     static Integer N;
 
-    public FirstSuccessor() throws NamingException, IOException {
+    public FirstSuccessor() throws NamingException, IOException, SQLException {
         N = PropertiesHelper.getFirstSuccessorrN();
+        
+        deleteAll();
     }
 
     @Override
@@ -84,4 +75,6 @@ public class FirstSuccessor extends DBMapPredictor {
             Logger.getLogger(FirstSuccessor.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
+
+
 }

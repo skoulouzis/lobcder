@@ -58,8 +58,8 @@ public class DBMapPredictor extends MyDataSource implements Predictor {
                     preparedStatement.execute();
                     ResultSet rs = preparedStatement.getGeneratedKeys();
                     rs.next();
-                }catch(Exception ex){
-                    if(ex.getMessage().contains("Duplicate column name")){
+                } catch (Exception ex) {
+                    if (ex.getMessage().contains("Duplicate column name")) {
                         connection.rollback();
                     }
                 }
@@ -128,6 +128,19 @@ public class DBMapPredictor extends MyDataSource implements Predictor {
             connection.commit();
         }
         return ls;
+    }
+
+    protected void deleteAll() throws SQLException {
+        try (Connection connection = getConnection()) {
+            try (PreparedStatement ps = connection.prepareStatement("DELETE FROM successor_table")) {
+                ps.executeUpdate();
+            }
+            try (PreparedStatement ps = connection.prepareStatement("DELETE FROM occurrences_table")) {
+                ps.executeUpdate();
+            }
+
+            connection.commit();
+        }
     }
 
     @Override
