@@ -6,8 +6,6 @@ package nl.uva.cs.lobcder.predictors;
 
 import java.net.UnknownHostException;
 import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.naming.NamingException;
@@ -19,10 +17,9 @@ import nl.uva.cs.lobcder.optimization.LobState;
  *
  * @author S. Koulouzis
  */
-public class LastSuccessor  extends DBMapPredictor {
+public class LastSuccessor extends DBMapPredictor {
 
 //    Map<String, LobState> lastS = new HashMap<>();
-
     public LastSuccessor() throws NamingException, SQLException {
         deleteAll();
     }
@@ -34,9 +31,14 @@ public class LastSuccessor  extends DBMapPredictor {
 
     @Override
     public LobState getNextState(LobState currentState) {
-//        LobState nextState = lastS.get(currentState.getID());
-        LobState nextState = getNextState(currentState);
-        return nextState;
+        try {
+            //        LobState nextState = lastS.get(currentState.getID());
+            LobState nextState = getSuccessor(currentState.getID());
+            return nextState;
+        } catch (SQLException ex) {
+            Logger.getLogger(LastSuccessor.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return null;
     }
 
     @Override
