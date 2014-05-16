@@ -35,14 +35,14 @@ class SweeprsTimerTask extends TimerTask {
 
     @Override
     public void run() {
-        try{
-        deleteSweep.run();
-        replicateSweep.run();
-        if (wp4Sweep != null) {
-            wp4Sweep.run();
-        }
-        }catch(Throwable th){
-            log.log(Level.SEVERE,"One of the sweepers encountered and error.", th);
+        try {
+            deleteSweep.run();
+            replicateSweep.run();
+            if (wp4Sweep != null) {
+                wp4Sweep.run();
+            }
+        } catch (Throwable th) {
+            log.log(Level.SEVERE, "One of the sweepers encountered and error.", th);
         }
     }
 

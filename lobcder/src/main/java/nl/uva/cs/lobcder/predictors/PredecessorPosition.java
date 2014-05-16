@@ -5,10 +5,14 @@
 package nl.uva.cs.lobcder.predictors;
 
 import java.io.IOException;
+import java.net.UnknownHostException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.naming.NamingException;
 import nl.uva.cs.lobcder.optimization.LobState;
 import nl.uva.cs.lobcder.util.MyDataSource;
@@ -21,14 +25,15 @@ import nl.uva.cs.lobcder.util.PropertiesHelper;
  *
  * @author S. Koulouzis
  */
-public class PredecessorPosition extends MyDataSource implements Predictor {
+public class PredecessorPosition extends DBMapPredictor {
 
     List<LobState> stateList = new ArrayList<>();
     List<String> keyList = new ArrayList<>();
-    Map<String, LobState> stateMap = new HashMap<>();
+//    Map<String, LobState> stateMap = new HashMap<>();
     static Integer len;
 
-    public PredecessorPosition() throws NamingException, IOException {
+    public PredecessorPosition() throws NamingException, IOException, SQLException {
+        deleteAll();
         len = PropertiesHelper.PredecessorPositionLen();
     }
 
@@ -41,12 +46,17 @@ public class PredecessorPosition extends MyDataSource implements Predictor {
     public LobState getNextState(LobState currentState) {
         stateList.add(currentState);
         if (stateList.size() >= len) {
-            String key = "";
-            for (int i = 0; i < len; i++) {
-                key += stateList.get(i).getID();
+            try {
+                String key = "";
+                for (int i = 0; i < len; i++) {
+                    key += stateList.get(i).getID();
+                }
+                stateList.remove(0);
+                return getSuccessor(key);
+                //            return stateMap.get(key);
+            } catch (SQLException ex) {
+                Logger.getLogger(PredecessorPosition.class.getName()).log(Level.SEVERE, null, ex);
             }
-            stateList.remove(0);
-            return stateMap.get(key);
         }
         return null;
     }
@@ -56,14 +66,21 @@ public class PredecessorPosition extends MyDataSource implements Predictor {
         keyList.add(prevState.getID());
 
         if (keyList.size() >= len) {
-            String key = "";
-            for (int i = 0; i < len; i++) {
-                key += keyList.get(i);
+            try {
+                String key = "";
+                for (int i = 0; i < len; i++) {
+                    key += keyList.get(i);
+                }
+                putSuccessor(key, currentState, false);
+                //            if (!stateMap.containsKey(key)) {
+                //                stateMap.put(key, currentState);
+                //            }
+                keyList.remove(0);
+            } catch (SQLException ex) {
+                Logger.getLogger(PredecessorPosition.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (UnknownHostException ex) {
+                Logger.getLogger(PredecessorPosition.class.getName()).log(Level.SEVERE, null, ex);
             }
-            if (!stateMap.containsKey(key)) {
-                stateMap.put(key, currentState);
-            }
-            keyList.remove(0);
         }
     }
 }

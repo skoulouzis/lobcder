@@ -5,13 +5,13 @@
 package nl.uva.cs.lobcder.predictors;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.naming.NamingException;
 import nl.uva.cs.lobcder.optimization.LobState;
-import nl.uva.cs.lobcder.util.MyDataSource;
 import nl.uva.cs.lobcder.util.PropertiesHelper;
 
 /**
@@ -23,15 +23,16 @@ import nl.uva.cs.lobcder.util.PropertiesHelper;
  *
  * @author S. Koulouzis
  */
-public class RecentPopularity extends MyDataSource implements Predictor {
+public class RecentPopularity extends DBMapPredictor {
 
     Map<String, List<LobState>> lastObservedK = new HashMap<>();
     static Integer j;
     static Integer k;
 
-    public RecentPopularity() throws NamingException, IOException {
+    public RecentPopularity() throws NamingException, IOException, SQLException {
         j = PropertiesHelper.RecentPopularityJ();
         k = PropertiesHelper.RecentPopularityK();
+        deleteAll();
     }
 
     @Override

@@ -189,11 +189,11 @@ class WP4Sweep implements Runnable {
                         s2.setLong(3, rs.getLong(5));
                         s2.executeUpdate();
                     } catch (Exception e) {
-                        if (e instanceof com.sun.jersey.api.client.ClientHandlerException && e.getMessage().contains("java.net.UnknownHostException")) {
-                            throw new java.net.UnknownHostException(e.getMessage());
-                        } else {
-                            WP4Sweep.log.log(Level.SEVERE, null, e);
-                        }
+//                        if (e instanceof com.sun.jersey.api.client.ClientHandlerException && e.getMessage().contains("java.net.UnknownHostException")) {
+//                            throw new java.net.UnknownHostException(e.getMessage());
+//                        } else {
+                        WP4Sweep.log.log(Level.SEVERE, null, e);
+//                        }
                     }
                 }
             }
@@ -221,11 +221,11 @@ class WP4Sweep implements Runnable {
                         s2.setLong(1, rs.getLong(5));
                         s2.executeUpdate();
                     } catch (Exception e) {
-                        if (e instanceof com.sun.jersey.api.client.ClientHandlerException && e.getMessage().contains("java.net.UnknownHostException")) {
-                            throw new java.net.UnknownHostException(e.getMessage());
-                        } else {
-                            WP4Sweep.log.log(Level.SEVERE, null, e);
-                        }
+//                        if (e instanceof com.sun.jersey.api.client.ClientHandlerException && e.getMessage().contains("java.net.UnknownHostException")) {
+//                            throw new java.net.UnknownHostException(e.getMessage());
+//                        } else {
+                        WP4Sweep.log.log(Level.SEVERE, null, e);
+//                        }
                     }
                 }
             }
@@ -248,11 +248,11 @@ class WP4Sweep implements Runnable {
                     }
                     rs.deleteRow();
                 } catch (Exception e) {
-                    if (e instanceof com.sun.jersey.api.client.ClientHandlerException && e.getMessage().contains("java.net.UnknownHostException")) {
-                        throw new java.net.UnknownHostException(e.getMessage());
-                    } else {
-                        WP4Sweep.log.log(Level.SEVERE, null, e);
-                    }
+//                    if (e instanceof com.sun.jersey.api.client.ClientHandlerException && e.getMessage().contains("java.net.UnknownHostException")) {
+//                        throw new java.net.UnknownHostException(e.getMessage());
+//                    } else {
+                    WP4Sweep.log.log(Level.SEVERE, null, e);
+//                    }
                 }
             }
         }
@@ -268,14 +268,14 @@ class WP4Sweep implements Runnable {
             update(connection, connector);
             delete(connection, connector);
         } catch (Exception ex) {
-            if (ex instanceof UnknownHostException) {
+//            if (ex instanceof UnknownHostException) {
 //                    unknownHostExceptionCounter++;
 //                    if (unknownHostExceptionCounter >= Constants.RECONNECT_NTRY) {
 //                        runSweeper = false;
 //                    }
-            } else {
-                Logger.getLogger(WP4Sweep.class.getName()).log(Level.SEVERE, null, ex);
-            }
+//            } else {
+            Logger.getLogger(WP4Sweep.class.getName()).log(Level.SEVERE, null, ex);
+//            }
         }
 
 
