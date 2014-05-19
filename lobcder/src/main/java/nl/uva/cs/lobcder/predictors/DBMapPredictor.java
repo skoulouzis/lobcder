@@ -15,7 +15,6 @@
  */
 package nl.uva.cs.lobcder.predictors;
 
-import com.mysql.jdbc.exceptions.MySQLSyntaxErrorException;
 import io.milton.http.Request;
 import java.net.UnknownHostException;
 import java.sql.Connection;
@@ -23,17 +22,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.sql.Timestamp;
-import java.util.logging.Level;
-import javax.annotation.Nonnull;
-import javax.naming.Context;
-import javax.naming.InitialContext;
 import javax.naming.NamingException;
-import javax.sql.DataSource;
 import nl.uva.cs.lobcder.optimization.LobState;
 import nl.uva.cs.lobcder.util.MyDataSource;
 import lombok.extern.java.Log;
-import nl.uva.cs.lobcder.frontend.RequestWapper;
 
 /**
  *

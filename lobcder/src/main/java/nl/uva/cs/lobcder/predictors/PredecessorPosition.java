@@ -76,9 +76,7 @@ public class PredecessorPosition extends DBMapPredictor {
                 //                stateMap.put(key, currentState);
                 //            }
                 keyList.remove(0);
-            } catch (SQLException ex) {
-                Logger.getLogger(PredecessorPosition.class.getName()).log(Level.SEVERE, null, ex);
-            } catch (UnknownHostException ex) {
+            } catch (    SQLException | UnknownHostException ex) {
                 Logger.getLogger(PredecessorPosition.class.getName()).log(Level.SEVERE, null, ex);
             }
         }

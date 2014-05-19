@@ -15,11 +15,15 @@
  */
 package nl.uva.cs.lobcder.predictors;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import io.milton.http.Request;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import nl.uva.cs.lobcder.optimization.LobState;
-import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.naming.NamingException;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.util.MyDataSource;
@@ -42,145 +46,87 @@ public class MarkovPredictor extends MyDataSource implements Predictor {
 
     @Override
     public LobState getNextState(LobState currentState) {
-        return predictNextState(currentState);
+        try {
+            return predictNextState(currentState);
+        } catch (SQLException ex) {
+            Logger.getLogger(MarkovPredictor.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return null;
     }
 
     @Override
     public void setPreviousStateForCurrent(LobState prevState, LobState currentState) {
-        if (!graph.containsState(prevState)) {
-            graph.addVertex(prevState);
+        try {
+            graph.addTransision(prevState, currentState);
+        } catch (SQLException ex) {
+            Logger.getLogger(MarkovPredictor.class.getName()).log(Level.SEVERE, null, ex);
         }
-        if (!graph.containsState(currentState)) {
-            graph.addVertex(currentState);
-        }
-        double wheight = graph.getWeight(prevState, currentState);
-        Edge edge = new Edge(prevState, currentState, ++wheight);
-        graph.setEdgeWeight(edge);
     }
 
-    private LobState predictNextState(LobState state) {
-
-        List<LobState> set = graph.vertexSet();
-
-        if (set.isEmpty()) {
-            return null;
-        }
-        // Compute the total weight of all items together
-        double totalWeight = 0.0d;
-        for (LobState i : set) {
-            totalWeight += graph.getWeight(state, i);
-        }
-
-        // Now choose a random item
-        int randomIndex = -1;
-        double random = Math.random() * totalWeight;
-
-        LobState[] vertexArray = new LobState[set.size()];
-        vertexArray = set.toArray(vertexArray);
-        for (int i = 0; i < vertexArray.length; ++i) {
-
-            random -= graph.getWeight(state, vertexArray[i]);
-            if (random <= 0.0d) {
-                randomIndex = i;
-                break;
-            }
-        }
-        LobState myRandomItem = vertexArray[randomIndex];
-        return myRandomItem;
+    private LobState predictNextState(LobState state) throws SQLException {
+        return graph.getWeightedRandomState(state);
     }
 
-    class Graph {
+    class Graph extends MyDataSource {
 
-        private List<LobState> vertices = new ArrayList<>();
-        private Map<String, Edge> edges = new HashMap<>();
-
-        public Graph() {
+        public Graph() throws NamingException {
         }
 
-        boolean containsState(LobState vertex) {
-            for (LobState v : vertices) {
-                if (v.getResourceName().equals(vertex.getResourceName())
-                        && v.getMethod().toString().equals(vertex.getMethod().toString())) {
-                    return true;
+        void addTransision(LobState from, LobState to) throws SQLException {
+            double getWeight = -1;
+            int uid = -1;
+            try (Connection connection = getConnection()) {
+                try (PreparedStatement ps = connection.prepareStatement("select uid, weight from "
+                        + "successor_table where keyVal = ? ")) {
+                    ps.setString(1, from.getID());
+                    ps.setString(1, to.getID());
+                    ResultSet rs = ps.executeQuery();
+                    if (rs.next()) {
+                        uid = rs.getInt(1);
+                        getWeight = rs.getDouble(2);
+                    }
                 }
+                if (getWeight > -1) {
+                    getWeight++;
+                    try (PreparedStatement preparedStatement = connection.prepareStatement(
+                            " UPDATE graph_table SET keyVal = ?, lobStateID = ? , weight = ? , WHERE uid = ?", Statement.RETURN_GENERATED_KEYS)) {
+                        preparedStatement.setInt(1, uid);
+                        preparedStatement.executeUpdate();
+                        ResultSet rs = preparedStatement.getGeneratedKeys();
+                        rs.next();
+                    }
+                } else {
+                    getWeight = 1;
+                    try (PreparedStatement preparedStatement = connection.prepareStatement(
+                            "INSERT INTO graph_table(keyVal, lobStateID , weight)"
+                            + " VALUES (?, ?, ? )", Statement.RETURN_GENERATED_KEYS)) {
+                        preparedStatement.setString(1, from.getID());
+                        preparedStatement.setString(1, to.getID());
+                        preparedStatement.setDouble(3, getWeight);
+                        preparedStatement.executeUpdate();
+                        ResultSet rs = preparedStatement.getGeneratedKeys();
+                        rs.next();
+                    }
+                }
+                connection.commit();
             }
-            return false;
         }
 
-        void addVertex(LobState v) {
-            vertices.add(v);
-        }
-
-        boolean containsEdge(Edge edge) {
-            return edges.containsKey(edge.getID());
-//        for (Edge e : edges) {
-//            if (e.getVertex1().getID().equals(edge.getVertex1().getID()) && e.getVertex2().getID().equals(edge.getVertex2().getID())) {
-//                return true;
-//            }
-//        }
-//        return false;
-//        return edges.contains(edge);
-        }
-
-        double getWeight(LobState v1, LobState v2) {
-//        for (Edge e : edges) {
-//            if (e.getVertex1().getID().equals(v1.getID()) && e.getVertex2().getID().equals(v2.getID())) {
-//                return e.getWeight();
-//            }
-//        }
-//        return -1;
-            String id = getEdgeID(v1, v2);
-            Edge e = edges.get(id);
-            if (e != null) {
-                return edges.get(id).getWeight();
+        private LobState getWeightedRandomState(LobState from) throws SQLException {
+            LobState nextState = null;
+            try (Connection connection = getConnection()) {
+                try (PreparedStatement ps = connection.prepareStatement("select lobStateID from successor_table where keyVal = ? order by weight*rand() desc limit 1")) {
+                    ps.setString(1, from.getID());
+                    ResultSet rs = ps.executeQuery();
+                    if (rs.next()) {
+                        String nextID = rs.getString(1);
+                        String[] methodNRes = nextID.split(",");
+                        nextState = new LobState(Request.Method.valueOf(methodNRes[0]), methodNRes[1]);
+                    }
+                }
+                connection.commit();
             }
-            return 0;
-        }
-
-        void setEdgeWeight(Edge edge) {
-            this.edges.put(edge.getID(), edge);
-        }
-
-        private String getEdgeID(LobState v1, LobState v2) {
-            return v1.getMethod() + "," + v1.getResourceName() + ":" + v2.getMethod() + "," + v2.getResourceName();
-        }
-
-        List<LobState> vertexSet() {
-            return this.vertices;
-        }
-    }
-
-    class Edge {
-
-        private LobState v1;
-        private LobState v2;
-        private double wheight;
-
-        public Edge(LobState v1, LobState v2, double wheight) {
-            this.v1 = v1;
-            this.v2 = v2;
-            this.wheight = wheight;
-        }
-
-        Edge(LobState v1, LobState v2) {
-            this.v1 = v1;
-            this.v2 = v2;
-        }
-
-        LobState getVertex1() {
-            return v1;
-        }
-
-        LobState getVertex2() {
-            return v2;
-        }
-
-        double getWeight() {
-            return wheight;
-        }
-
-        String getID() {
-            return v1.getMethod() + "," + v1.getResourceName() + ":" + v2.getMethod() + "," + v2.getResourceName();
+            return nextState;
         }
     }
 }
