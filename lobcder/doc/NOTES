@@ -62,3 +62,33 @@ CREATE TABLE wp4_table (
 To modify existing table we can use this:
 
 ALTER TABLE wp4_table ADD global_id_dev VARCHAR(255) AFTER global_id;
+
+
+
+-----------------------Build state graph from request table--------------------
+SELECT 
+-- *
+keyval, 
+lobstateId, 
+sum(count) AS weight
+FROM (
+select 
+    rt.uid,
+    CONCAT(rt.methodname, ', ', rt.requestUrl) AS keyval,
+    rtn.lobStateId,
+    rtn.previousuid,
+    1 AS count
+FROM requests_table AS rt
+JOIN
+(
+select uid, uid-1 AS previousuid, CONCAT(methodname, ', ', requestUrl) AS lobstateId from requests_table AS rt
+) AS rtn
+ON rt.uid = rtn.previousuid
+) AS bla
+GROUP BY 
+keyval, 
+lobstateId
+ORDER BY weight DESC
+;
+-- SELECT * FROM requests_table;
+---------------------------------------------------------

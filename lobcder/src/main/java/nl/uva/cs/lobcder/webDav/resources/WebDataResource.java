@@ -588,7 +588,7 @@ public class WebDataResource implements PropFindableResource, Resource,
                 getCatalogue().setLockDepth(getLogicalData().getUid(), getLogicalData().getLockDepth(), connection);
                 lockTimeout = lockToken.timeout.getSeconds();
                 if (lockTimeout == null) {
-                    lockTimeout = Long.valueOf(1200);
+                    lockTimeout = Long.valueOf(System.currentTimeMillis() + Constants.LOCK_TIME);
                 }
                 getLogicalData().setLockTimeout(lockTimeout);
 
@@ -619,6 +619,7 @@ public class WebDataResource implements PropFindableResource, Resource,
                     }
                 }
                 getLogicalData().setLockTimeout(System.currentTimeMillis() + Constants.LOCK_TIME);
+                
                 getCatalogue().setLockTimeout(getLogicalData().getUid(), getLogicalData().getLockTimeout(), connection);
                 LockInfo lockInfo = new LockInfo(LockInfo.LockScope.valueOf(getLogicalData().getLockScope()),
                         LockInfo.LockType.valueOf(getLogicalData().getLockType()), getLogicalData().getLockedByUser(),
