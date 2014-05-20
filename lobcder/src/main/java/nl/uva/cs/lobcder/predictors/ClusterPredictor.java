@@ -16,6 +16,7 @@
 package nl.uva.cs.lobcder.predictors;
 
 import java.sql.SQLException;
+import java.text.ParseException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.naming.NamingException;
@@ -30,7 +31,7 @@ public class ClusterPredictor implements Predictor {
 
     private LDClustering ldc;
 
-    public ClusterPredictor() throws NamingException, SQLException, ClassNotFoundException, InstantiationException, IllegalAccessException {
+    public ClusterPredictor() throws NamingException, SQLException, ClassNotFoundException, InstantiationException, IllegalAccessException, ParseException, Exception {
         super();
         if (ldc == null) {
             ldc = new LDClustering();
