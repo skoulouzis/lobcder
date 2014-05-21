@@ -22,12 +22,15 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Timestamp;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import javax.annotation.Nonnull;
 import javax.naming.NamingException;
 import lombok.extern.java.Log;
+import nl.uva.cs.lobcder.frontend.RequestWapper;
 import nl.uva.cs.lobcder.resources.LogicalData;
 import nl.uva.cs.lobcder.util.MyDataSource;
 import weka.core.Attribute;
@@ -52,6 +55,14 @@ public class LDClustering extends MyDataSource implements Runnable {
 
     private void initAttributes() throws ParseException, Exception {
         int index = 0;
+        Attribute uidAttribute = new Attribute("uid", index++);
+        // Declare a nominal attribute along with its values
+        FastVector verbVector = new FastVector(Request.Method.values().length);
+        for (Request.Method m : Request.Method.values()) {
+            verbVector.addElement(m.code);
+        }
+
+        Attribute verbAttribute = new Attribute("verb", verbVector, index++);
         Attribute checksumAttribute = new Attribute("checksum", (FastVector) null, index++);
 
         Attribute contentTypeAttribute = new Attribute("contentType", (FastVector) null, index++);
@@ -77,34 +88,26 @@ public class LDClustering extends MyDataSource implements Runnable {
         supervisedVector.addElement("true");
         supervisedVector.addElement("false");
         Attribute supervisedAttribute = new Attribute("supervised", supervisedVector, index++);
-
-        Attribute uidAttribute = new Attribute("uid", index++);
-
-
-        // Declare a nominal attribute along with its values
-        FastVector verbVector = new FastVector(Request.Method.values().length);
-        for (Request.Method m : Request.Method.values()) {
-            verbVector.addElement(m.code);
-        }
-        Attribute verbAttribute = new Attribute("verb", verbVector, index++);
         Attribute ownerAttribute = new Attribute("owner", (FastVector) null, index++);
+
+
         // Declare the feature vector
         metdataAttributes = new FastVector();
-        metdataAttributes.addElement(checksumAttribute);//0
-        metdataAttributes.addElement(contentTypeAttribute);//1
-        metdataAttributes.addElement(createDateAttribute);//2
-        metdataAttributes.addElement(locationPreferenceAttribute);//3
-        metdataAttributes.addElement(descriptionAttribute);//4
-        metdataAttributes.addElement(validationDateAttribute);//5
-        metdataAttributes.addElement(lengthAttribute);//6
-        metdataAttributes.addElement(modifiedDateAttribute);//7
-        metdataAttributes.addElement(pathAttribute);//8
-        metdataAttributes.addElement(parentRefAttribute);//9
-        metdataAttributes.addElement(statusAttribute);//10
-        metdataAttributes.addElement(typeAttribute);//11
-        metdataAttributes.addElement(supervisedAttribute);//12
-        metdataAttributes.addElement(uidAttribute);//13
-        metdataAttributes.addElement(verbAttribute);//14
+        metdataAttributes.addElement(uidAttribute);//0
+        metdataAttributes.addElement(verbAttribute);//1
+        metdataAttributes.addElement(checksumAttribute);//2
+        metdataAttributes.addElement(contentTypeAttribute);//3
+        metdataAttributes.addElement(createDateAttribute);//4
+        metdataAttributes.addElement(locationPreferenceAttribute);//5
+        metdataAttributes.addElement(descriptionAttribute);//6
+        metdataAttributes.addElement(validationDateAttribute);//7
+        metdataAttributes.addElement(lengthAttribute);//8
+        metdataAttributes.addElement(modifiedDateAttribute);//9
+        metdataAttributes.addElement(pathAttribute);//10
+        metdataAttributes.addElement(parentRefAttribute);//11
+        metdataAttributes.addElement(statusAttribute);//12
+        metdataAttributes.addElement(typeAttribute);//13
+        metdataAttributes.addElement(supervisedAttribute);//14
         metdataAttributes.addElement(ownerAttribute);//15
     }
 
@@ -140,10 +143,10 @@ public class LDClustering extends MyDataSource implements Runnable {
                     res.setDescription(rs.getString(20));
                     res.setDataLocationPreference(rs.getString(21));
                     res.setStatus(rs.getString(22));
-                    ArrayList<Instance> ins = getInstance(res, null);
-//                    for (Instance i : ins) {
-                    addFeatures(connection, ins.get(0), res.getUid());
-//                    }
+                    ArrayList<MyInstance> ins = getInstances(res, null);
+                    for (MyInstance i : ins) {
+                        addFeatures(connection, i, res.getUid());
+                    }
                 }
             }
         }
@@ -155,15 +158,18 @@ public class LDClustering extends MyDataSource implements Runnable {
     }
 
     public LobState getNextState(LobState currentState) throws SQLException {
-        ArrayList<Long> uids = new ArrayList<>();
+        ArrayList<LobState> states = new ArrayList<>();
         String rName = currentState.getResourceName();
+        if (!rName.endsWith("/")) {
+            rName += "/";
+        }
         rName = rName.replaceFirst("/lobcder/dav/", "");
         try (Connection connection = getConnection()) {
             LogicalData data = getLogicalDataByPath(Path.path(rName), connection);
-            Instance instance = getInstance(data, currentState.getMethod()).get(0);
+            Instance instance = getInstances(data, currentState.getMethod()).get(0);
             double[] features = instance.toDoubleArray();
             try (PreparedStatement preparedStatement = connection.prepareStatement(
-                    "SELECT uid, "
+                    "SELECT ldataRef, methodName, "
                     + "POW((f1 - ?), 2) + POW((f2 - ?), 2) + POW((f3 - ?), 2) + "
                     + "POW((f4 - ?), 2) + POW((f5 - ?), 2) + POW((f6 - ?), 2) + "
                     + "POW((f7 - ?), 2)+ POW((f8 - ?), 2)+ POW((f9 - ?), 2)+ "
@@ -172,103 +178,105 @@ public class LDClustering extends MyDataSource implements Runnable {
                     + "POW((f16 - ?), 2)"
                     + "AS dist FROM features_table  ORDER BY dist ASC LIMIT ?")) {
                 for (int i = 0; i < features.length; i++) {
-                    preparedStatement.setDouble(++i, features[i]);
+                    int index = i + 1;
+                    preparedStatement.setDouble(index, features[i]);
                 }
-                preparedStatement.setInt(features.length, k);
+                preparedStatement.setInt(features.length + 1, k);
                 ResultSet rs = preparedStatement.executeQuery();
                 while (rs.next()) {
-                    uids.add(rs.getLong(1));
+                     LogicalData ld = getLogicalDataByUid(rs.getLong(1), connection);
+                    new LobState(Method.valueOf(rs.getString(2)), ld.getName());
                 }
             }
-
-            for (Long uid : uids) {
-                LogicalData ld = getLogicalDataByUid(uid, connection);
-                log.log(Level.INFO, "Close data: {0}", ld.getName());
-            }
-
-
         }
-
-
         return null;
     }
 
-    private void addFeatures(Connection connection, Instance rs, Long uid) throws SQLException {
-        try (PreparedStatement ps = connection.prepareStatement("INSERT INTO features_table "
-                + "(uid, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
-            ps.setLong(1, uid);
-            double[] features = rs.toDoubleArray();
-            for (int i = 0; i < features.length; i++) {
-                int index = i + 2;
-                ps.setDouble(index, features[i]);
-            }
-
-            ps.executeUpdate();
-            connection.commit();
-        } catch (Exception ex) {
-            connection.rollback();
-            if (ex.getMessage().contains("Duplicate entry")) {
-                //No worries 
-            } else {
-                throw ex;
+    private void addFeatures(Connection connection, MyInstance inst, Long uid) throws SQLException {
+        boolean exists = false;
+        try (PreparedStatement ps = connection.prepareStatement("select uid "
+                + "from features_table WHERE methodName = ? AND ldataRef = ?")) {
+            ps.setString(1, inst.getMethod().code);
+            ps.setLong(2, uid);
+            ResultSet rs = ps.executeQuery();
+            exists = rs.next();
+        }
+        if (!exists) {
+            try (PreparedStatement ps = connection.prepareStatement("INSERT INTO "
+                    + "features_table (methodName, ldataRef, f1, f2, f3, f4, f5, "
+                    + "f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16) "
+                    + "VALUES (?, ?, ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")) {
+                ps.setString(1, inst.getMethod().name());
+                ps.setLong(2, uid);
+                double[] features = inst.toDoubleArray();
+                for (int i = 0; i < features.length; i++) {
+                    int index = i + 3;
+                    ps.setDouble(index, features[i]);
+                }
+                ps.executeUpdate();
+                connection.commit();
             }
         }
     }
 
-    private ArrayList<Instance> getInstance(LogicalData n, Method method) {
-        ArrayList<Instance> inst = new ArrayList<>();
+    private ArrayList<MyInstance> getInstances(LogicalData n, Method method) {
+        ArrayList<MyInstance> inst = new ArrayList<>();
+
         if (method == null) {
             for (Request.Method m : Request.Method.values()) {
-                Instance instance = new Instance(metdataAttributes.size());
+                int index = 0;
+                MyInstance instance = new MyInstance(metdataAttributes.size());
+                instance.setValue((Attribute) metdataAttributes.elementAt(index++), n.getUid());
+                instance.setValue((Attribute) metdataAttributes.elementAt(index++), m.code);
+                instance.setMethod(m);
                 String att = n.getChecksum();
-                instance.setValue((Attribute) metdataAttributes.elementAt(0), (att != null) ? att : "NON");
+                instance.setValue((Attribute) metdataAttributes.elementAt(index++), (att != null) ? att : "NON");
                 att = n.getContentTypesAsString();
-                instance.setValue((Attribute) metdataAttributes.elementAt(1), (att != null) ? att : "NON");
-                instance.setValue((Attribute) metdataAttributes.elementAt(2), n.getCreateDate());
+                instance.setValue((Attribute) metdataAttributes.elementAt(index++), (att != null) ? att : "NON");
+                instance.setValue((Attribute) metdataAttributes.elementAt(index++), n.getCreateDate());
                 att = n.getDataLocationPreference();
-                instance.setValue((Attribute) metdataAttributes.elementAt(3), (att != null) ? att : "NON");
+                instance.setValue((Attribute) metdataAttributes.elementAt(index++), (att != null) ? att : "NON");
                 att = n.getDescription();
-                instance.setValue((Attribute) metdataAttributes.elementAt(4), (att != null) ? att : "NON");
-                instance.setValue((Attribute) metdataAttributes.elementAt(5), n.getLastValidationDate());
-                instance.setValue((Attribute) metdataAttributes.elementAt(6), n.getLength());
-                instance.setValue((Attribute) metdataAttributes.elementAt(7), n.getModifiedDate());
-                instance.setValue((Attribute) metdataAttributes.elementAt(8), "NON");
-                instance.setValue((Attribute) metdataAttributes.elementAt(9), n.getParentRef());
+                instance.setValue((Attribute) metdataAttributes.elementAt(index++), (att != null) ? att : "NON");
+                instance.setValue((Attribute) metdataAttributes.elementAt(index++), n.getLastValidationDate());
+                instance.setValue((Attribute) metdataAttributes.elementAt(index++), n.getLength());
+                instance.setValue((Attribute) metdataAttributes.elementAt(index++), n.getModifiedDate());
+                instance.setValue((Attribute) metdataAttributes.elementAt(index++), "NON");
+                instance.setValue((Attribute) metdataAttributes.elementAt(index++), n.getParentRef());
                 att = n.getStatus();
-                instance.setValue((Attribute) metdataAttributes.elementAt(10), (att != null) ? att : "NON");
-                instance.setValue((Attribute) metdataAttributes.elementAt(11), n.getType());
+                instance.setValue((Attribute) metdataAttributes.elementAt(index++), (att != null) ? att : "NON");
+                instance.setValue((Attribute) metdataAttributes.elementAt(index++), n.getType());
 
-                instance.setValue((Attribute) metdataAttributes.elementAt(12), String.valueOf(n.getSupervised()));
-                instance.setValue((Attribute) metdataAttributes.elementAt(13), n.getUid());
-                instance.setValue((Attribute) metdataAttributes.elementAt(14), m.code);
-                instance.setValue((Attribute) metdataAttributes.elementAt(15), n.getOwner());
+                instance.setValue((Attribute) metdataAttributes.elementAt(index++), String.valueOf(n.getSupervised()));
+                instance.setValue((Attribute) metdataAttributes.elementAt(index++), n.getOwner());
                 inst.add(instance);
             }
         } else {
-            Instance instance = new Instance(metdataAttributes.size());
+            int index = 0;
+            MyInstance instance = new MyInstance(metdataAttributes.size());
+            instance.setValue((Attribute) metdataAttributes.elementAt(index++), n.getUid());
+            instance.setValue((Attribute) metdataAttributes.elementAt(index++), method.code);
+            instance.setMethod(method);
             String att = n.getChecksum();
-            instance.setValue((Attribute) metdataAttributes.elementAt(0), (att != null) ? att : "NON");
+            instance.setValue((Attribute) metdataAttributes.elementAt(index++), (att != null) ? att : "NON");
             att = n.getContentTypesAsString();
-            instance.setValue((Attribute) metdataAttributes.elementAt(1), (att != null) ? att : "NON");
-            instance.setValue((Attribute) metdataAttributes.elementAt(2), n.getCreateDate());
+            instance.setValue((Attribute) metdataAttributes.elementAt(index++), (att != null) ? att : "NON");
+            instance.setValue((Attribute) metdataAttributes.elementAt(index++), n.getCreateDate());
             att = n.getDataLocationPreference();
-            instance.setValue((Attribute) metdataAttributes.elementAt(3), (att != null) ? att : "NON");
+            instance.setValue((Attribute) metdataAttributes.elementAt(index++), (att != null) ? att : "NON");
             att = n.getDescription();
-            instance.setValue((Attribute) metdataAttributes.elementAt(4), (att != null) ? att : "NON");
-            instance.setValue((Attribute) metdataAttributes.elementAt(5), n.getLastValidationDate());
-            instance.setValue((Attribute) metdataAttributes.elementAt(6), n.getLength());
-            instance.setValue((Attribute) metdataAttributes.elementAt(7), n.getModifiedDate());
-            instance.setValue((Attribute) metdataAttributes.elementAt(8), "NON");
-            instance.setValue((Attribute) metdataAttributes.elementAt(9), n.getParentRef());
+            instance.setValue((Attribute) metdataAttributes.elementAt(index++), (att != null) ? att : "NON");
+            instance.setValue((Attribute) metdataAttributes.elementAt(index++), n.getLastValidationDate());
+            instance.setValue((Attribute) metdataAttributes.elementAt(index++), n.getLength());
+            instance.setValue((Attribute) metdataAttributes.elementAt(index++), n.getModifiedDate());
+            instance.setValue((Attribute) metdataAttributes.elementAt(index++), "NON");
+            instance.setValue((Attribute) metdataAttributes.elementAt(index++), n.getParentRef());
             att = n.getStatus();
-            instance.setValue((Attribute) metdataAttributes.elementAt(10), (att != null) ? att : "NON");
-            instance.setValue((Attribute) metdataAttributes.elementAt(11), n.getType());
+            instance.setValue((Attribute) metdataAttributes.elementAt(index++), (att != null) ? att : "NON");
+            instance.setValue((Attribute) metdataAttributes.elementAt(index++), n.getType());
 
-            instance.setValue((Attribute) metdataAttributes.elementAt(12), String.valueOf(n.getSupervised()));
-            instance.setValue((Attribute) metdataAttributes.elementAt(13), n.getUid());
-            instance.setValue((Attribute) metdataAttributes.elementAt(14), method.code);
-            instance.setValue((Attribute) metdataAttributes.elementAt(15), n.getOwner());
+            instance.setValue((Attribute) metdataAttributes.elementAt(index++), String.valueOf(n.getSupervised()));
+            instance.setValue((Attribute) metdataAttributes.elementAt(index++), n.getOwner());
             inst.add(instance);
         }
         return inst;
@@ -382,6 +390,23 @@ public class LDClustering extends MyDataSource implements Runnable {
             } else {
                 return null;
             }
+        }
+    }
+
+    private class MyInstance extends Instance {
+
+        private Method method;
+
+        private MyInstance(int size) {
+            super(size);
+        }
+
+        public void setMethod(Method method) {
+            this.method = method;
+        }
+
+        public Method getMethod() {
+            return this.method;
         }
     }
 }
