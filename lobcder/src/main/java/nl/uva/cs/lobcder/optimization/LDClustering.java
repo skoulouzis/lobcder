@@ -22,8 +22,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
-import java.sql.Timestamp;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -34,10 +32,9 @@ import javax.naming.NamingException;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.java.Log;
-import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
-import nl.uva.cs.lobcder.frontend.RequestWapper;
 import nl.uva.cs.lobcder.resources.LogicalData;
 import nl.uva.cs.lobcder.util.MyDataSource;
+import nl.uva.cs.lobcder.util.PropertiesHelper;
 import weka.core.Attribute;
 import weka.core.FastVector;
 import weka.core.Instance;
@@ -54,7 +51,7 @@ public class LDClustering extends MyDataSource implements Runnable {
 
     public LDClustering() throws NamingException, ParseException, Exception {
         initAttributes();
-        k = 50;
+        k = PropertiesHelper.KNN();
 //        buildOrUpdateDataset();
     }
 

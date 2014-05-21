@@ -232,4 +232,8 @@ public class PropertiesHelper {
     public static Integer getFirstSuccessorrN() throws IOException {
         return Integer.valueOf(getProperties().getProperty("first.successor.N", "1"));
     }
+
+    public static int KNN() throws IOException {
+         return Integer.valueOf(getProperties().getProperty("knn", "10"));
+    }
 }
