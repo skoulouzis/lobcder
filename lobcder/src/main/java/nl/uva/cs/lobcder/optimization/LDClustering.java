@@ -26,10 +26,15 @@ import java.sql.Statement;
 import java.sql.Timestamp;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.logging.Level;
 import javax.annotation.Nonnull;
 import javax.naming.NamingException;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.extern.java.Log;
+import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
 import nl.uva.cs.lobcder.frontend.RequestWapper;
 import nl.uva.cs.lobcder.resources.LogicalData;
 import nl.uva.cs.lobcder.util.MyDataSource;
@@ -49,8 +54,8 @@ public class LDClustering extends MyDataSource implements Runnable {
 
     public LDClustering() throws NamingException, ParseException, Exception {
         initAttributes();
-        k = 5;
-        buildOrUpdateDataset();
+        k = 50;
+//        buildOrUpdateDataset();
     }
 
     private void initAttributes() throws ParseException, Exception {
@@ -184,8 +189,9 @@ public class LDClustering extends MyDataSource implements Runnable {
                 preparedStatement.setInt(features.length + 1, k);
                 ResultSet rs = preparedStatement.executeQuery();
                 while (rs.next()) {
-                     LogicalData ld = getLogicalDataByUid(rs.getLong(1), connection);
-                    new LobState(Method.valueOf(rs.getString(2)), ld.getName());
+                    String path = getPathforLogicalData(getLogicalDataByUid(rs.getLong(1), connection), connection);
+                    LobState state = new LobState(Method.valueOf(rs.getString(2)), path);
+                    log.log(Level.INFO, "State: {0}", state.getID());
                 }
             }
         }
@@ -350,7 +356,7 @@ public class LDClustering extends MyDataSource implements Runnable {
         }
     }
 
-    public LogicalData getLogicalDataByUid(Long UID, @Nonnull Connection connection) throws SQLException {
+    private LogicalData getLogicalDataByUid(Long UID, @Nonnull Connection connection) throws SQLException {
         LogicalData res = null;
         if (res != null) {
             return res;
@@ -393,6 +399,35 @@ public class LDClustering extends MyDataSource implements Runnable {
         }
     }
 
+    private String getPathforLogicalData(LogicalData ld, @Nonnull Connection connection) throws SQLException {
+        String res = null;
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT ldName, parentRef FROM ldata_table WHERE uid = ?")) {
+            PathInfo pi = new PathInfo(ld.getName(), ld.getParentRef());
+            List<PathInfo> pil = new ArrayList<>();
+            getPathforLogicalData(pi, pil, ps);
+            res = "";
+            Collections.reverse(pil);
+            for (PathInfo pi1 : pil) {
+                res = res + "/" + pi1.getName();
+            }
+            return res;
+        }
+    }
+
+    private void getPathforLogicalData(PathInfo pi, List<PathInfo> pil, PreparedStatement ps) throws SQLException {
+        pil.add(pi);
+        if (pi != null && pi.getParentRef() != 1) {
+            ps.setLong(1, pi.getParentRef());
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    pi = new PathInfo(rs.getString(1), rs.getLong(2));
+                    getPathforLogicalData(pi, pil, ps);
+                }
+            }
+        }
+    }
+
     private class MyInstance extends Instance {
 
         private Method method;
@@ -408,5 +443,13 @@ public class LDClustering extends MyDataSource implements Runnable {
         public Method getMethod() {
             return this.method;
         }
+    }
+
+    @Data
+    @AllArgsConstructor
+    public class PathInfo {
+
+        private String name;
+        private Long parentRef;
     }
 }
