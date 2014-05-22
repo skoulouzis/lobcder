@@ -23,12 +23,10 @@ import java.util.concurrent.BlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.naming.InitialContext;
-import javax.naming.NamingException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
-import nl.uva.cs.lobcder.optimization.LDClustering;
 import nl.uva.cs.lobcder.optimization.LobState;
 import nl.uva.cs.lobcder.optimization.MyTask;
 import nl.uva.cs.lobcder.predictors.FirstSuccessor;
@@ -42,6 +40,7 @@ import nl.uva.cs.lobcder.util.CatalogueHelper;
 import nl.uva.cs.lobcder.util.PropertiesHelper;
 import org.apache.commons.codec.binary.Base64;
 import nl.uva.cs.lobcder.predictors.ClusterPredictor;
+import nl.uva.cs.lobcder.predictors.RandomPredictor;
 
 /**
  *
@@ -193,6 +192,10 @@ public class MyFilter extends MiltonFilter {
                 if (algorithm.equals("ClusterPredictor")) {
                     predictor = new ClusterPredictor();
                 }
+                if (algorithm.equals("RandomPredictor")) {
+                    predictor = new RandomPredictor();
+                }
+
             }
         }
 
@@ -238,7 +241,7 @@ public class MyFilter extends MiltonFilter {
         LobState nextState = null;
 
         nextState = getPredictor().getNextState(currentState);
-
+        log.log(Level.INFO, "Predictior: {0}", getPredictor().getClass().getName());
         if (prevState != null) {
             getPredictor().setPreviousStateForCurrent(prevState, currentState);
         }

@@ -66,10 +66,11 @@ ALTER TABLE wp4_table ADD global_id_dev VARCHAR(255) AFTER global_id;
 
 
 -----------------------Build state graph from request table--------------------
+insert into successor_table (keyVal,lobStateID,weight) 
+
 SELECT 
--- *
-keyval, 
-lobstateId, 
+keyVal, 
+lobStateID, 
 sum(count) AS weight
 FROM (
 select 
@@ -88,7 +89,12 @@ ON rt.uid = rtn.previousuid
 GROUP BY 
 keyval, 
 lobstateId
-ORDER BY weight DESC
-;
--- SELECT * FROM requests_table;
+ORDER BY weight DESC;
+
+
+
+select count, prob, cumulativeSum(prob) from
+(select count, (count(*)/(select count(*) from graph_table)) as prob from graph_table group by count order by count) 
+as countProb
+
 ---------------------------------------------------------

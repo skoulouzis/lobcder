@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 alogo.
+ * Copyright 2014 S. Koulouzis.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package nl.uva.cs.lobcder.predictors;
 
+import io.milton.common.Path;
 import io.milton.http.Request;
 import java.net.UnknownHostException;
 import java.sql.Connection;
@@ -22,10 +23,18 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import javax.annotation.Nonnull;
 import javax.naming.NamingException;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import nl.uva.cs.lobcder.optimization.LobState;
 import nl.uva.cs.lobcder.util.MyDataSource;
 import lombok.extern.java.Log;
+import nl.uva.cs.lobcder.optimization.LDClustering;
+import nl.uva.cs.lobcder.resources.LogicalData;
 
 /**
  *
@@ -135,6 +144,146 @@ public class DBMapPredictor extends MyDataSource implements Predictor {
         }
     }
 
+    public LogicalData getLogicalDataByPath(Path logicalResourceName, @Nonnull Connection connection) throws SQLException {
+        LogicalData res = null;
+        if (res != null) {
+            return res;
+        }
+        try (PreparedStatement preparedStatement = connection.prepareStatement(
+                "SELECT uid FROM ldata_table WHERE ldata_table.parentRef = ? AND ldata_table.ldName = ?")) {
+            long parent = 1;
+            String parts[] = logicalResourceName.getParts();
+            if (parts.length == 0) {
+                parts = new String[]{""};
+            }
+            for (int i = 0; i != parts.length; ++i) {
+                String p = parts[i];
+                if (i == (parts.length - 1)) {
+                    try (PreparedStatement preparedStatement1 = connection.prepareStatement(
+                            "SELECT uid, ownerId, datatype, createDate, modifiedDate, ldLength, "
+                            + "contentTypesStr, pdriGroupRef, isSupervised, checksum, lastValidationDate, "
+                            + "lockTokenID, lockScope, lockType, lockedByUser, lockDepth, lockTimeout, "
+                            + "description, locationPreference, status "
+                            + "FROM ldata_table WHERE ldata_table.parentRef = ? AND ldata_table.ldName = ?")) {
+                        preparedStatement1.setLong(1, parent);
+                        preparedStatement1.setString(2, p);
+                        ResultSet rs = preparedStatement1.executeQuery();
+                        if (rs.next()) {
+                            res = new LogicalData();
+                            res.setUid(rs.getLong(1));
+                            res.setParentRef(parent);
+                            res.setOwner(rs.getString(2));
+                            res.setType(rs.getString(3));
+                            res.setName(p);
+                            res.setCreateDate(rs.getTimestamp(4).getTime());
+                            res.setModifiedDate(rs.getTimestamp(5).getTime());
+                            res.setLength(rs.getLong(6));
+                            res.setContentTypesAsString(rs.getString(7));
+                            res.setPdriGroupId(rs.getLong(8));
+                            res.setSupervised(rs.getBoolean(9));
+                            res.setChecksum(rs.getString(10));
+                            res.setLastValidationDate(rs.getLong(11));
+                            res.setLockTokenID(rs.getString(12));
+                            res.setLockScope(rs.getString(13));
+                            res.setLockType(rs.getString(14));
+                            res.setLockedByUser(rs.getString(15));
+                            res.setLockDepth(rs.getString(16));
+                            res.setLockTimeout(rs.getLong(17));
+                            res.setDescription(rs.getString(18));
+                            res.setDataLocationPreference(rs.getString(19));
+                            res.setStatus(rs.getString(20));
+                            return res;
+                        } else {
+                            return null;
+                        }
+                    }
+                } else {
+                    preparedStatement.setLong(1, parent);
+                    preparedStatement.setString(2, p);
+                    ResultSet rs = preparedStatement.executeQuery();
+                    if (rs.next()) {
+                        parent = rs.getLong(1);
+                    } else {
+                        return null;
+                    }
+                }
+            }
+            return null;
+        }
+    }
+
+    public LogicalData getLogicalDataByUid(Long UID, @Nonnull Connection connection) throws SQLException {
+        LogicalData res = null;
+        if (res != null) {
+            return res;
+        }
+        try (PreparedStatement ps = connection.prepareStatement("SELECT parentRef, ownerId, datatype, ldName, "
+                + "createDate, modifiedDate, ldLength, contentTypesStr, pdriGroupRef, "
+                + "isSupervised, checksum, lastValidationDate, lockTokenID, lockScope, "
+                + "lockType, lockedByUser, lockDepth, lockTimeout, description, locationPreference, status "
+                + "FROM ldata_table WHERE ldata_table.uid = ?")) {
+            ps.setLong(1, UID);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                res = new LogicalData();
+                res.setUid(UID);
+                res.setParentRef(rs.getLong(1));
+                res.setOwner(rs.getString(2));
+                res.setType(rs.getString(3));
+                res.setName(rs.getString(4));
+                res.setCreateDate(rs.getTimestamp(5).getTime());
+                res.setModifiedDate(rs.getTimestamp(6).getTime());
+                res.setLength(rs.getLong(7));
+                res.setContentTypesAsString(rs.getString(8));
+                res.setPdriGroupId(rs.getLong(9));
+                res.setSupervised(rs.getBoolean(10));
+                res.setChecksum(rs.getString(11));
+                res.setLastValidationDate(rs.getLong(12));
+                res.setLockTokenID(rs.getString(13));
+                res.setLockScope(rs.getString(14));
+                res.setLockType(rs.getString(15));
+                res.setLockedByUser(rs.getString(16));
+                res.setLockDepth(rs.getString(17));
+                res.setLockTimeout(rs.getLong(18));
+                res.setDescription(rs.getString(19));
+                res.setDataLocationPreference(rs.getString(20));
+                res.setStatus(rs.getString(21));
+                return res;
+            } else {
+                return null;
+            }
+        }
+    }
+
+    public String getPathforLogicalData(LogicalData ld, @Nonnull Connection connection) throws SQLException {
+        String res = null;
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT ldName, parentRef FROM ldata_table WHERE uid = ?")) {
+            PathInfo pi = new PathInfo(ld.getName(), ld.getParentRef());
+            List<PathInfo> pil = new ArrayList<>();
+            getPathforLogicalData(pi, pil, ps);
+            res = "";
+            Collections.reverse(pil);
+            for (PathInfo pi1 : pil) {
+                res = res + "/" + pi1.getName();
+            }
+            return res;
+        }
+    }
+
+    private void getPathforLogicalData(PathInfo pi, List<PathInfo> pil, PreparedStatement ps) throws SQLException {
+        pil.add(pi);
+        if (pi != null && pi.getParentRef() != 1) {
+            ps.setLong(1, pi.getParentRef());
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    pi = new PathInfo(rs.getString(1), rs.getLong(2));
+                    getPathforLogicalData(pi, pil, ps);
+                }
+            }
+        }
+    }
+
     @Override
     public void stop() {
     }
@@ -146,5 +295,13 @@ public class DBMapPredictor extends MyDataSource implements Predictor {
 
     @Override
     public void setPreviousStateForCurrent(LobState prevState, LobState currentState) {
+    }
+
+    @Data
+    @AllArgsConstructor
+    public class PathInfo {
+
+        private String name;
+        private Long parentRef;
     }
 }

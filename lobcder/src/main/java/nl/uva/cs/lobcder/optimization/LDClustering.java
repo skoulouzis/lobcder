@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 alogo.
+ * Copyright 2014 S. Koulouzis.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,25 +26,26 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.logging.Level;
 import javax.annotation.Nonnull;
 import javax.naming.NamingException;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.java.Log;
+import nl.uva.cs.lobcder.predictors.DBMapPredictor;
 import nl.uva.cs.lobcder.resources.LogicalData;
-import nl.uva.cs.lobcder.util.MyDataSource;
 import nl.uva.cs.lobcder.util.PropertiesHelper;
 import weka.core.Attribute;
 import weka.core.FastVector;
 import weka.core.Instance;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
  * @author S. Koulouzis
  */
 @Log
-public class LDClustering extends MyDataSource implements Runnable {
+public class LDClustering extends DBMapPredictor implements Runnable {
 
     private FastVector metdataAttributes;
     private int k;
@@ -159,7 +160,8 @@ public class LDClustering extends MyDataSource implements Runnable {
 //        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
-    public LobState getNextState(LobState currentState) throws SQLException {
+    @Override
+    public LobState getNextState(LobState currentState) {
         ArrayList<LobState> states = new ArrayList<>();
         String rName = currentState.getResourceName();
         if (!rName.endsWith("/")) {
@@ -170,20 +172,23 @@ public class LDClustering extends MyDataSource implements Runnable {
             LogicalData data = getLogicalDataByPath(Path.path(rName), connection);
             Instance instance = getInstances(data, currentState.getMethod()).get(0);
             double[] features = instance.toDoubleArray();
-            try (PreparedStatement preparedStatement = connection.prepareStatement(
-                    "SELECT ldataRef, methodName, "
+            String queryAllFeatures = "SELECT ldataRef, methodName, "
                     + "POW((f1 - ?), 2) + POW((f2 - ?), 2) + POW((f3 - ?), 2) + "
                     + "POW((f4 - ?), 2) + POW((f5 - ?), 2) + POW((f6 - ?), 2) + "
                     + "POW((f7 - ?), 2)+ POW((f8 - ?), 2)+ POW((f9 - ?), 2)+ "
                     + "POW((f10 - ?), 2)+ POW((f11 - ?), 2)+ POW((f12 - ?), 2)+ "
                     + "POW((f13 - ?), 2)+ POW((f14 - ?), 2)+ POW((f15 - ?), 2)+ "
                     + "POW((f16 - ?), 2)"
-                    + "AS dist FROM features_table  ORDER BY dist ASC LIMIT ?")) {
-                for (int i = 0; i < features.length; i++) {
-                    int index = i + 1;
-                    preparedStatement.setDouble(index, features[i]);
+                    + "AS dist FROM features_table  ORDER BY dist ASC LIMIT ?";
+
+            try (PreparedStatement preparedStatement = connection.prepareStatement(
+                    queryAllFeatures)) {
+                int index = 1;
+                for (int i = 1; i < features.length; i++) {
+                    preparedStatement.setDouble(index++, features[i]);
                 }
-                preparedStatement.setInt(features.length + 1, k);
+
+                preparedStatement.setInt(features.length, k);
                 ResultSet rs = preparedStatement.executeQuery();
                 while (rs.next()) {
                     String path = getPathforLogicalData(getLogicalDataByUid(rs.getLong(1), connection), connection);
@@ -191,6 +196,8 @@ public class LDClustering extends MyDataSource implements Runnable {
                     log.log(Level.INFO, "State: {0}", state.getID());
                 }
             }
+        } catch (SQLException ex) {
+            Logger.getLogger(LDClustering.class.getName()).log(Level.SEVERE, null, ex);
         }
         return null;
     }
@@ -285,146 +292,6 @@ public class LDClustering extends MyDataSource implements Runnable {
         return inst;
     }
 
-    private LogicalData getLogicalDataByPath(Path logicalResourceName, @Nonnull Connection connection) throws SQLException {
-        LogicalData res = null;
-        if (res != null) {
-            return res;
-        }
-        try (PreparedStatement preparedStatement = connection.prepareStatement(
-                "SELECT uid FROM ldata_table WHERE ldata_table.parentRef = ? AND ldata_table.ldName = ?")) {
-            long parent = 1;
-            String parts[] = logicalResourceName.getParts();
-            if (parts.length == 0) {
-                parts = new String[]{""};
-            }
-            for (int i = 0; i != parts.length; ++i) {
-                String p = parts[i];
-                if (i == (parts.length - 1)) {
-                    try (PreparedStatement preparedStatement1 = connection.prepareStatement(
-                            "SELECT uid, ownerId, datatype, createDate, modifiedDate, ldLength, "
-                            + "contentTypesStr, pdriGroupRef, isSupervised, checksum, lastValidationDate, "
-                            + "lockTokenID, lockScope, lockType, lockedByUser, lockDepth, lockTimeout, "
-                            + "description, locationPreference, status "
-                            + "FROM ldata_table WHERE ldata_table.parentRef = ? AND ldata_table.ldName = ?")) {
-                        preparedStatement1.setLong(1, parent);
-                        preparedStatement1.setString(2, p);
-                        ResultSet rs = preparedStatement1.executeQuery();
-                        if (rs.next()) {
-                            res = new LogicalData();
-                            res.setUid(rs.getLong(1));
-                            res.setParentRef(parent);
-                            res.setOwner(rs.getString(2));
-                            res.setType(rs.getString(3));
-                            res.setName(p);
-                            res.setCreateDate(rs.getTimestamp(4).getTime());
-                            res.setModifiedDate(rs.getTimestamp(5).getTime());
-                            res.setLength(rs.getLong(6));
-                            res.setContentTypesAsString(rs.getString(7));
-                            res.setPdriGroupId(rs.getLong(8));
-                            res.setSupervised(rs.getBoolean(9));
-                            res.setChecksum(rs.getString(10));
-                            res.setLastValidationDate(rs.getLong(11));
-                            res.setLockTokenID(rs.getString(12));
-                            res.setLockScope(rs.getString(13));
-                            res.setLockType(rs.getString(14));
-                            res.setLockedByUser(rs.getString(15));
-                            res.setLockDepth(rs.getString(16));
-                            res.setLockTimeout(rs.getLong(17));
-                            res.setDescription(rs.getString(18));
-                            res.setDataLocationPreference(rs.getString(19));
-                            res.setStatus(rs.getString(20));
-                            return res;
-                        } else {
-                            return null;
-                        }
-                    }
-                } else {
-                    preparedStatement.setLong(1, parent);
-                    preparedStatement.setString(2, p);
-                    ResultSet rs = preparedStatement.executeQuery();
-                    if (rs.next()) {
-                        parent = rs.getLong(1);
-                    } else {
-                        return null;
-                    }
-                }
-            }
-            return null;
-        }
-    }
-
-    private LogicalData getLogicalDataByUid(Long UID, @Nonnull Connection connection) throws SQLException {
-        LogicalData res = null;
-        if (res != null) {
-            return res;
-        }
-        try (PreparedStatement ps = connection.prepareStatement("SELECT parentRef, ownerId, datatype, ldName, "
-                + "createDate, modifiedDate, ldLength, contentTypesStr, pdriGroupRef, "
-                + "isSupervised, checksum, lastValidationDate, lockTokenID, lockScope, "
-                + "lockType, lockedByUser, lockDepth, lockTimeout, description, locationPreference, status "
-                + "FROM ldata_table WHERE ldata_table.uid = ?")) {
-            ps.setLong(1, UID);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                res = new LogicalData();
-                res.setUid(UID);
-                res.setParentRef(rs.getLong(1));
-                res.setOwner(rs.getString(2));
-                res.setType(rs.getString(3));
-                res.setName(rs.getString(4));
-                res.setCreateDate(rs.getTimestamp(5).getTime());
-                res.setModifiedDate(rs.getTimestamp(6).getTime());
-                res.setLength(rs.getLong(7));
-                res.setContentTypesAsString(rs.getString(8));
-                res.setPdriGroupId(rs.getLong(9));
-                res.setSupervised(rs.getBoolean(10));
-                res.setChecksum(rs.getString(11));
-                res.setLastValidationDate(rs.getLong(12));
-                res.setLockTokenID(rs.getString(13));
-                res.setLockScope(rs.getString(14));
-                res.setLockType(rs.getString(15));
-                res.setLockedByUser(rs.getString(16));
-                res.setLockDepth(rs.getString(17));
-                res.setLockTimeout(rs.getLong(18));
-                res.setDescription(rs.getString(19));
-                res.setDataLocationPreference(rs.getString(20));
-                res.setStatus(rs.getString(21));
-                return res;
-            } else {
-                return null;
-            }
-        }
-    }
-
-    private String getPathforLogicalData(LogicalData ld, @Nonnull Connection connection) throws SQLException {
-        String res = null;
-        try (PreparedStatement ps = connection.prepareStatement(
-                "SELECT ldName, parentRef FROM ldata_table WHERE uid = ?")) {
-            PathInfo pi = new PathInfo(ld.getName(), ld.getParentRef());
-            List<PathInfo> pil = new ArrayList<>();
-            getPathforLogicalData(pi, pil, ps);
-            res = "";
-            Collections.reverse(pil);
-            for (PathInfo pi1 : pil) {
-                res = res + "/" + pi1.getName();
-            }
-            return res;
-        }
-    }
-
-    private void getPathforLogicalData(PathInfo pi, List<PathInfo> pil, PreparedStatement ps) throws SQLException {
-        pil.add(pi);
-        if (pi != null && pi.getParentRef() != 1) {
-            ps.setLong(1, pi.getParentRef());
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    pi = new PathInfo(rs.getString(1), rs.getLong(2));
-                    getPathforLogicalData(pi, pil, ps);
-                }
-            }
-        }
-    }
-
     private class MyInstance extends Instance {
 
         private Method method;
@@ -440,13 +307,5 @@ public class LDClustering extends MyDataSource implements Runnable {
         public Method getMethod() {
             return this.method;
         }
-    }
-
-    @Data
-    @AllArgsConstructor
-    public class PathInfo {
-
-        private String name;
-        private Long parentRef;
     }
 }
