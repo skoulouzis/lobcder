@@ -40,7 +40,11 @@ import nl.uva.cs.lobcder.util.CatalogueHelper;
 import nl.uva.cs.lobcder.util.PropertiesHelper;
 import org.apache.commons.codec.binary.Base64;
 import nl.uva.cs.lobcder.predictors.ClusterPredictor;
+import static nl.uva.cs.lobcder.predictors.DBMapPredictor.type;
 import nl.uva.cs.lobcder.predictors.RandomPredictor;
+import static nl.uva.cs.lobcder.util.PropertiesHelper.PREDICTION_TYPE.method;
+import static nl.uva.cs.lobcder.util.PropertiesHelper.PREDICTION_TYPE.resource;
+import static nl.uva.cs.lobcder.util.PropertiesHelper.PREDICTION_TYPE.state;
 
 /**
  *
@@ -58,6 +62,7 @@ public class MyFilter extends MiltonFilter {
     private LobState prevPrediction;
 
     public MyFilter() throws Exception {
+        type = PropertiesHelper.getPredictionType();
     }
 
     @Override
@@ -161,10 +166,6 @@ public class MyFilter extends MiltonFilter {
         return catalogue;
     }
 
-//    private void recordEvent(Connection connection, HttpServletRequest httpServletRequest, double elapsed) throws SQLException, UnsupportedEncodingException {
-//        getCatalogue().recordRequest(connection, httpServletRequest, elapsed);
-//        connection.commit();
-//    }
     private Predictor getPredictor() throws Exception {
         if (PropertiesHelper.doPrediction()) {
             //TODO: Use class loader 
@@ -195,7 +196,6 @@ public class MyFilter extends MiltonFilter {
                 if (algorithm.equals("RandomPredictor")) {
                     predictor = new RandomPredictor();
                 }
-
             }
         }
 
@@ -235,6 +235,19 @@ public class MyFilter extends MiltonFilter {
             resource = parts[1];
         } else {
             resource = strPath;
+        }
+
+        switch (type) {
+            case state:
+                break;
+            case resource:
+                method = null;
+                break;
+            case method:
+                resource = "";
+                break;
+            default:
+                break;
         }
 
         LobState currentState = new LobState(method, Path.path(resource).toString());

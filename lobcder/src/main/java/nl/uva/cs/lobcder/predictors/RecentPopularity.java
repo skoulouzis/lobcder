@@ -12,7 +12,11 @@ import java.util.List;
 import java.util.Map;
 import javax.naming.NamingException;
 import nl.uva.cs.lobcder.optimization.LobState;
+import static nl.uva.cs.lobcder.predictors.DBMapPredictor.type;
 import nl.uva.cs.lobcder.util.PropertiesHelper;
+import static nl.uva.cs.lobcder.util.PropertiesHelper.PREDICTION_TYPE.method;
+import static nl.uva.cs.lobcder.util.PropertiesHelper.PREDICTION_TYPE.resource;
+import static nl.uva.cs.lobcder.util.PropertiesHelper.PREDICTION_TYPE.state;
 
 /**
  * The RP, or j-out-of-k predictor is an extension of SS. It predicts the most
@@ -30,6 +34,7 @@ public class RecentPopularity extends DBMapPredictor {
     static Integer k;
 
     public RecentPopularity() throws NamingException, IOException, SQLException {
+        super();
         j = PropertiesHelper.RecentPopularityJ();
         k = PropertiesHelper.RecentPopularityK();
         deleteAll();
@@ -42,7 +47,23 @@ public class RecentPopularity extends DBMapPredictor {
 
     @Override
     public LobState getNextState(LobState currentState) {
-        List<LobState> listOfKSuccessors = lastObservedK.get(currentState.getID());
+
+        String currentID;
+        switch (type) {
+            case state:
+                currentID = currentState.getID();
+                break;
+            case resource:
+                currentID = currentState.getResourceName();
+                break;
+            case method:
+                currentID = currentState.getMethod().code;
+                break;
+            default:
+                currentID = currentState.getID();
+                break;
+        }
+        List<LobState> listOfKSuccessors = lastObservedK.get(currentID);
         if (listOfKSuccessors != null && listOfKSuccessors.size() >= k) {
             return getPopularState(listOfKSuccessors);
         }
@@ -51,7 +72,28 @@ public class RecentPopularity extends DBMapPredictor {
 
     @Override
     public void setPreviousStateForCurrent(LobState prevState, LobState currentState) {
-        List<LobState> listOfKSuccessors = lastObservedK.get(prevState.getID());
+        String prevID = null;
+        String currentID = null;
+        switch (type) {
+            case state:
+                prevID = prevState.getID();
+                currentID = currentState.getID();
+                break;
+            case resource:
+                prevID = prevState.getResourceName();
+                currentID = currentState.getResourceName();
+                break;
+            case method:
+                prevID = prevState.getMethod().code;
+                currentID = currentState.getMethod().code;
+                break;
+            default:
+                prevID = prevState.getID();
+                currentID = currentState.getID();
+                break;
+        }
+
+        List<LobState> listOfKSuccessors = lastObservedK.get(prevID);
         if (listOfKSuccessors == null) {
             listOfKSuccessors = new ArrayList<>();
         }
@@ -59,7 +101,7 @@ public class RecentPopularity extends DBMapPredictor {
             listOfKSuccessors.remove(0);
         }
         listOfKSuccessors.add(prevState);
-        lastObservedK.put(prevState.getID(), listOfKSuccessors);
+        lastObservedK.put(prevID, listOfKSuccessors);
     }
 
     private LobState getPopularState(List<LobState> listOfKSuccessors) {

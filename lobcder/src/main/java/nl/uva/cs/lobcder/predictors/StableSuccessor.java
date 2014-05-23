@@ -13,7 +13,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.naming.NamingException;
 import nl.uva.cs.lobcder.optimization.LobState;
+import static nl.uva.cs.lobcder.predictors.DBMapPredictor.type;
 import nl.uva.cs.lobcder.util.PropertiesHelper;
+import static nl.uva.cs.lobcder.util.PropertiesHelper.PREDICTION_TYPE.method;
+import static nl.uva.cs.lobcder.util.PropertiesHelper.PREDICTION_TYPE.resource;
+import static nl.uva.cs.lobcder.util.PropertiesHelper.PREDICTION_TYPE.state;
 
 /**
  * Predicts the LS which was observed at least N times in a row. If no successor
@@ -28,6 +32,7 @@ public class StableSuccessor extends DBMapPredictor {
     static Integer N;
 
     public StableSuccessor() throws NamingException, IOException, SQLException {
+        super();
         N = PropertiesHelper.getStableSuccessorN();
         deleteAll();
     }
@@ -40,7 +45,23 @@ public class StableSuccessor extends DBMapPredictor {
     @Override
     public LobState getNextState(LobState currentState) {
         try {
-            LobState nextState = getSuccessor(currentState.getID());
+            String currentID;
+            switch (type) {
+                case state:
+                    currentID = currentState.getID();
+                    break;
+                case resource:
+                    currentID = currentState.getResourceName();
+                    break;
+                case method:
+                    currentID = currentState.getMethod().code;
+                    break;
+                default:
+                    currentID = currentState.getID();
+                    break;
+            }
+
+            LobState nextState = getSuccessor(currentID);
             //            if (lastS.containsKey(currentState.getID())) {
             //                nextState = lastS.get(currentState.getID());
             //            }
@@ -49,7 +70,7 @@ public class StableSuccessor extends DBMapPredictor {
 //                occurrences = observedMap.get(currentState.getID() + nextState.getID());
 //            }
             if (nextState != null) {
-                occurrences = getOoccurrences(currentState.getID() + nextState.getID());
+                occurrences = getOoccurrences(currentID + nextState.getID());
             }
             if (occurrences != null && occurrences >= N) {
                 return nextState;
@@ -64,8 +85,28 @@ public class StableSuccessor extends DBMapPredictor {
     @Override
     public void setPreviousStateForCurrent(LobState prevState, LobState currentState) {
         try {
+            String prevID = null;
+            String currentID = null;
+            switch (type) {
+                case state:
+                    prevID = prevState.getID();
+                    currentID = currentState.getID();
+                    break;
+                case resource:
+                    prevID = prevState.getResourceName();
+                    currentID = currentState.getResourceName();
+                    break;
+                case method:
+                    prevID = prevState.getMethod().code;
+                    currentID = currentState.getMethod().code;
+                    break;
+                default:
+                    prevID = prevState.getID();
+                    currentID = currentState.getID();
+                    break;
+            }
 //            lastS.put(prevState.getID(), currentState);
-            putSuccessor(prevState.getID(), currentState, true);
+            putSuccessor(prevID, currentID, true);
 
 //            Integer occurrences = observedMap.get(prevState.getID() + currentState.getID());
             Integer occurrences = getOoccurrences(prevState.getID() + currentState.getID());

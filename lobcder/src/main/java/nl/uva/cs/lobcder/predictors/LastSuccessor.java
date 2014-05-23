@@ -4,12 +4,17 @@
  */
 package nl.uva.cs.lobcder.predictors;
 
+import java.io.IOException;
 import java.net.UnknownHostException;
 import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.naming.NamingException;
 import nl.uva.cs.lobcder.optimization.LobState;
+import static nl.uva.cs.lobcder.predictors.DBMapPredictor.type;
+import static nl.uva.cs.lobcder.util.PropertiesHelper.PREDICTION_TYPE.method;
+import static nl.uva.cs.lobcder.util.PropertiesHelper.PREDICTION_TYPE.resource;
+import static nl.uva.cs.lobcder.util.PropertiesHelper.PREDICTION_TYPE.state;
 
 /**
  * If the last observed successor of A is B, then B will be predicted as the
@@ -20,7 +25,8 @@ import nl.uva.cs.lobcder.optimization.LobState;
 public class LastSuccessor extends DBMapPredictor {
 
 //    Map<String, LobState> lastS = new HashMap<>();
-    public LastSuccessor() throws NamingException, SQLException {
+    public LastSuccessor() throws NamingException, SQLException, IOException {
+        super();
         deleteAll();
     }
 
@@ -32,8 +38,23 @@ public class LastSuccessor extends DBMapPredictor {
     @Override
     public LobState getNextState(LobState currentState) {
         try {
+            String currentID;
+            switch (type) {
+                case state:
+                    currentID = currentState.getID();
+                    break;
+                case resource:
+                    currentID = currentState.getResourceName();
+                    break;
+                case method:
+                    currentID = currentState.getMethod().code;
+                    break;
+                default:
+                    currentID = currentState.getID();
+                    break;
+            }
             //        LobState nextState = lastS.get(currentState.getID());
-            LobState nextState = getSuccessor(currentState.getID());
+            LobState nextState = getSuccessor(currentID);
             return nextState;
         } catch (SQLException ex) {
             Logger.getLogger(LastSuccessor.class.getName()).log(Level.SEVERE, null, ex);
@@ -44,8 +65,30 @@ public class LastSuccessor extends DBMapPredictor {
     @Override
     public void setPreviousStateForCurrent(LobState prevState, LobState currentState) {
         try {
-//            lastS.put(prevState.getID(), currentState);
-            putSuccessor(prevState.getID(), currentState, true);
+
+            String prevID = null;
+            String currentID = null;
+            switch (type) {
+                case state:
+                    prevID = prevState.getID();
+                    currentID = currentState.getID();
+                    break;
+                case resource:
+                    prevID = prevState.getResourceName();
+                    currentID = currentState.getResourceName();
+                    break;
+                case method:
+                    prevID = prevState.getMethod().code;
+                    currentID = currentState.getMethod().code;
+                    break;
+                default:
+                    prevID = prevState.getID();
+                    currentID = currentState.getID();
+                    break;
+            }
+            //            lastS.put(prevState.getID(), currentState);
+            putSuccessor(prevID, currentID, true);
+
         } catch (SQLException | UnknownHostException ex) {
             Logger.getLogger(LastSuccessor.class.getName()).log(Level.SEVERE, null, ex);
         }

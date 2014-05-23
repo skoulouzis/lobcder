@@ -17,6 +17,7 @@ package nl.uva.cs.lobcder.predictors;
 
 import io.milton.common.Path;
 import io.milton.http.Request;
+import java.io.IOException;
 import java.net.UnknownHostException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -30,11 +31,16 @@ import javax.annotation.Nonnull;
 import javax.naming.NamingException;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Getter;
 import nl.uva.cs.lobcder.optimization.LobState;
 import nl.uva.cs.lobcder.util.MyDataSource;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.optimization.LDClustering;
 import nl.uva.cs.lobcder.resources.LogicalData;
+import nl.uva.cs.lobcder.util.PropertiesHelper;
+import static nl.uva.cs.lobcder.util.PropertiesHelper.PREDICTION_TYPE.method;
+import static nl.uva.cs.lobcder.util.PropertiesHelper.PREDICTION_TYPE.resource;
+import static nl.uva.cs.lobcder.util.PropertiesHelper.PREDICTION_TYPE.state;
 
 /**
  *
@@ -45,31 +51,39 @@ import nl.uva.cs.lobcder.resources.LogicalData;
 @Log
 public class DBMapPredictor extends MyDataSource implements Predictor {
 
-    public DBMapPredictor() throws NamingException {
+    public static PropertiesHelper.PREDICTION_TYPE type;
+
+    public DBMapPredictor() throws NamingException, IOException {
+        type = PropertiesHelper.getPredictionType();
     }
 
-    protected void putSuccessor(String key, LobState currentState, boolean replace) throws SQLException, UnknownHostException {
+    protected void putSuccessor(String key, String ID, boolean replace) throws SQLException, UnknownHostException {
         try (Connection connection = getConnection()) {
-            if (!replace) {
-                String query = "INSERT INTO successor_table (keyVal, lobStateID) "
-                        + "SELECT * FROM (SELECT '" + key + "', '" + currentState.getID() + "') AS tmp WHERE NOT EXISTS "
-                        + "(SELECT keyVal FROM successor_table WHERE keyVal = '" + key + "') LIMIT 1";
+            Long uid = null;
+            try (PreparedStatement ps = connection.prepareStatement("select uid "
+                    + "from successor_table where keyVal = ?", Statement.RETURN_GENERATED_KEYS)) {
+                ps.setString(1, key);
+                ResultSet rs = ps.executeQuery();
+                if (rs.next()) {
+                    uid = rs.getLong(1);
+                }
+            }
+
+            if (replace && uid != null) {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(
-                        query, Statement.RETURN_GENERATED_KEYS)) {
+                        "UPDATE successor_table SET `lobStateID` = ? WHERE uid = ?", Statement.RETURN_GENERATED_KEYS)) {
+                    preparedStatement.setString(1, ID);
+                    preparedStatement.setLong(2, uid);
                     preparedStatement.execute();
                     ResultSet rs = preparedStatement.getGeneratedKeys();
                     rs.next();
-                } catch (Exception ex) {
-                    if (ex.getMessage().contains("Duplicate column name")) {
-                        connection.rollback();
-                    }
                 }
-            } else {
+            } else if (uid == null) {
+                String query = "INSERT INTO successor_table (keyVal, lobStateID) VALUES (?, ?)";
                 try (PreparedStatement preparedStatement = connection.prepareStatement(
-                        "INSERT INTO successor_table(keyVal, lobStateID)"
-                        + " VALUES (?, ?)", Statement.RETURN_GENERATED_KEYS)) {
+                        query, Statement.RETURN_GENERATED_KEYS)) {
                     preparedStatement.setString(1, key);
-                    preparedStatement.setString(2, currentState.getID());
+                    preparedStatement.setString(2, ID);
                     preparedStatement.execute();
                     ResultSet rs = preparedStatement.getGeneratedKeys();
                     rs.next();
@@ -98,15 +112,39 @@ public class DBMapPredictor extends MyDataSource implements Predictor {
 
     protected void putOoccurrences(String key, Integer occurrences) throws SQLException {
         try (Connection connection = getConnection()) {
-            try (PreparedStatement preparedStatement = connection.prepareStatement(
-                    "INSERT INTO occurrences_table(keyVal, occurrences)"
-                    + " VALUES (?, ? )", Statement.RETURN_GENERATED_KEYS)) {
-                preparedStatement.setString(1, key);
-                preparedStatement.setInt(2, occurrences);
-                preparedStatement.executeUpdate();
-                ResultSet rs = preparedStatement.getGeneratedKeys();
-                rs.next();
+            Integer value = null;
+            Long uid = null;
+            try (PreparedStatement ps = connection.prepareStatement("select uid,occurrences from "
+                    + "occurrences_table where keyVal= ? ")) {
+                ps.setString(1, key);
+                ResultSet rs = ps.executeQuery();
+                if (rs.next()) {
+                    uid = rs.getLong(1);
+                    value = rs.getInt(2);
+                }
             }
+            if (value == null) {
+                try (PreparedStatement preparedStatement = connection.prepareStatement(
+                        "INSERT INTO occurrences_table(keyVal, occurrences)"
+                        + " VALUES (?, ? )", Statement.RETURN_GENERATED_KEYS)) {
+                    preparedStatement.setString(1, key);
+                    preparedStatement.setInt(2, occurrences);
+                    preparedStatement.executeUpdate();
+                    ResultSet rs = preparedStatement.getGeneratedKeys();
+                    rs.next();
+                }
+            } else {
+                try (PreparedStatement preparedStatement = connection.prepareStatement(
+                        "UPDATE lobcderDB2.occurrences_table SET `occurrences` = ? WHERE uid = ?",
+                        Statement.RETURN_GENERATED_KEYS)) {
+                    preparedStatement.setInt(1, occurrences);
+                    preparedStatement.setLong(2, uid);
+                    preparedStatement.executeUpdate();
+                    ResultSet rs = preparedStatement.getGeneratedKeys();
+                    rs.next();
+                }
+            }
+
             connection.commit();
         }
 
@@ -121,9 +159,27 @@ public class DBMapPredictor extends MyDataSource implements Predictor {
                 ResultSet rs = ps.executeQuery();
                 if (rs.next()) {
                     String id = rs.getString(1);
-                    String method = id.split(",")[0];
-                    String resource = id.split(",")[1];
-                    ls = new LobState(Request.Method.valueOf(method), resource);
+                    Request.Method method;
+                    String resource;
+                    switch (type) {
+                        case state:
+                            method = Request.Method.valueOf(id.split(",")[0]);
+                            resource = id.split(",")[1];
+                            break;
+                        case resource:
+                            resource = id;
+                            method = null;
+                            break;
+                        case method:
+                            resource = "";
+                            method = Request.Method.valueOf(id);
+                            break;
+                        default:
+                            method = Request.Method.valueOf(id.split(",")[0]);
+                            resource = id.split(",")[1];
+                            break;
+                    }
+                    ls = new LobState(method, resource);
                 }
             }
             connection.commit();

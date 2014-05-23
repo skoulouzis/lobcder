@@ -28,6 +28,13 @@ public class PropertiesHelper {
 
     public static final String propertiesPath = "lobcder.properties";
     public static final String cachePropertiesPath = "cache.properties";
+    
+    
+    public static enum PREDICTION_TYPE {
+        method,
+        resource,
+        state
+    }
 
     private static Properties getProperties() throws IOException {
         InputStream in = null;
@@ -235,5 +242,9 @@ public class PropertiesHelper {
 
     public static int KNN() throws IOException {
          return Integer.valueOf(getProperties().getProperty("knn", "10"));
+    }
+
+    public static PREDICTION_TYPE getPredictionType() throws IOException {
+        return PREDICTION_TYPE.valueOf(getProperties().getProperty("predictor.type", "state"));
     }
 }

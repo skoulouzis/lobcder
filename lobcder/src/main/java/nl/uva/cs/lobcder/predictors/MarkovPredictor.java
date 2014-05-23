@@ -16,6 +16,7 @@
 package nl.uva.cs.lobcder.predictors;
 
 import io.milton.http.Request;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -26,7 +27,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.naming.NamingException;
 import lombok.extern.java.Log;
+import static nl.uva.cs.lobcder.predictors.DBMapPredictor.type;
 import nl.uva.cs.lobcder.util.MyDataSource;
+import nl.uva.cs.lobcder.util.PropertiesHelper;
 
 /**
  *
@@ -37,7 +40,7 @@ public class MarkovPredictor extends MyDataSource implements Predictor {
 
     Graph graph = null;
 
-    public MarkovPredictor() throws NamingException, SQLException {
+    public MarkovPredictor() throws NamingException, SQLException, IOException {
         graph = new Graph();
     }
 
@@ -70,7 +73,8 @@ public class MarkovPredictor extends MyDataSource implements Predictor {
 
     class Graph extends MyDataSource {
 
-        public Graph() throws NamingException, SQLException {
+        public Graph() throws NamingException, SQLException, IOException {
+            type = PropertiesHelper.getPredictionType();
             deleteAll();
         }
 

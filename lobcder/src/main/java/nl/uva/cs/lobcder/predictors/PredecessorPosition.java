@@ -8,15 +8,16 @@ import java.io.IOException;
 import java.net.UnknownHostException;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.naming.NamingException;
 import nl.uva.cs.lobcder.optimization.LobState;
-import nl.uva.cs.lobcder.util.MyDataSource;
+import static nl.uva.cs.lobcder.predictors.DBMapPredictor.type;
 import nl.uva.cs.lobcder.util.PropertiesHelper;
+import static nl.uva.cs.lobcder.util.PropertiesHelper.PREDICTION_TYPE.method;
+import static nl.uva.cs.lobcder.util.PropertiesHelper.PREDICTION_TYPE.resource;
+import static nl.uva.cs.lobcder.util.PropertiesHelper.PREDICTION_TYPE.state;
 
 /**
  * PP is a simple predictor which predicts successors to pairs of files. For
@@ -27,12 +28,13 @@ import nl.uva.cs.lobcder.util.PropertiesHelper;
  */
 public class PredecessorPosition extends DBMapPredictor {
 
-    List<LobState> stateList = new ArrayList<>();
+    List<String> stateList = new ArrayList<>();
     List<String> keyList = new ArrayList<>();
 //    Map<String, LobState> stateMap = new HashMap<>();
     static Integer len;
 
     public PredecessorPosition() throws NamingException, IOException, SQLException {
+        super();
         deleteAll();
         len = PropertiesHelper.PredecessorPositionLen();
     }
@@ -44,12 +46,29 @@ public class PredecessorPosition extends DBMapPredictor {
 
     @Override
     public LobState getNextState(LobState currentState) {
-        stateList.add(currentState);
+
+        String currentID;
+        switch (type) {
+            case state:
+                currentID = currentState.getID();
+                break;
+            case resource:
+                currentID = currentState.getResourceName();
+                break;
+            case method:
+                currentID = currentState.getMethod().code;
+                break;
+            default:
+                currentID = currentState.getID();
+                break;
+        }
+
+        stateList.add(currentID);
         if (stateList.size() >= len) {
             try {
                 String key = "";
                 for (int i = 0; i < len; i++) {
-                    key += stateList.get(i).getID();
+                    key += stateList.get(i);
                 }
                 stateList.remove(0);
                 return getSuccessor(key);
@@ -63,20 +82,40 @@ public class PredecessorPosition extends DBMapPredictor {
 
     @Override
     public void setPreviousStateForCurrent(LobState prevState, LobState currentState) {
-        keyList.add(prevState.getID());
 
+        String prevID = null;
+        String currentID = null;
+        switch (type) {
+            case state:
+                prevID = prevState.getID();
+                currentID = currentState.getID();
+                break;
+            case resource:
+                prevID = prevState.getResourceName();
+                currentID = currentState.getResourceName();
+                break;
+            case method:
+                prevID = prevState.getMethod().code;
+                currentID = currentState.getMethod().code;
+                break;
+            default:
+                prevID = prevState.getID();
+                currentID = currentState.getID();
+                break;
+        }
+        keyList.add(prevID);
         if (keyList.size() >= len) {
             try {
                 String key = "";
                 for (int i = 0; i < len; i++) {
                     key += keyList.get(i);
                 }
-                putSuccessor(key, currentState, false);
+                putSuccessor(key, currentID, false);
                 //            if (!stateMap.containsKey(key)) {
                 //                stateMap.put(key, currentState);
                 //            }
                 keyList.remove(0);
-            } catch (    SQLException | UnknownHostException ex) {
+            } catch (SQLException | UnknownHostException ex) {
                 Logger.getLogger(PredecessorPosition.class.getName()).log(Level.SEVERE, null, ex);
             }
         }

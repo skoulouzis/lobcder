@@ -16,6 +16,7 @@
 package nl.uva.cs.lobcder.predictors;
 
 import io.milton.http.Request.Method;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -34,7 +35,8 @@ import nl.uva.cs.lobcder.resources.LogicalData;
  */
 public class RandomPredictor extends DBMapPredictor {
 
-    public RandomPredictor() throws NamingException {
+    public RandomPredictor() throws NamingException, IOException {
+        super();
     }
 
     @Override
