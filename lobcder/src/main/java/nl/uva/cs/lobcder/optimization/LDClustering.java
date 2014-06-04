@@ -24,12 +24,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import javax.annotation.Nonnull;
 import javax.naming.NamingException;
-import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.predictors.DBMapPredictor;
 import nl.uva.cs.lobcder.resources.LogicalData;
@@ -39,6 +34,10 @@ import weka.core.FastVector;
 import weka.core.Instance;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import static nl.uva.cs.lobcder.predictors.DBMapPredictor.type;
+import static nl.uva.cs.lobcder.util.PropertiesHelper.PREDICTION_TYPE.method;
+import static nl.uva.cs.lobcder.util.PropertiesHelper.PREDICTION_TYPE.resource;
+import static nl.uva.cs.lobcder.util.PropertiesHelper.PREDICTION_TYPE.state;
 
 /**
  *
@@ -53,7 +52,8 @@ public class LDClustering extends DBMapPredictor implements Runnable {
     public LDClustering() throws NamingException, ParseException, Exception {
         initAttributes();
         k = PropertiesHelper.KNN();
-//        buildOrUpdateDataset();
+        type = PropertiesHelper.getPredictionType();
+        buildOrUpdateDataset();
     }
 
     private void initAttributes() throws ParseException, Exception {
@@ -64,7 +64,6 @@ public class LDClustering extends DBMapPredictor implements Runnable {
         for (Request.Method m : Request.Method.values()) {
             verbVector.addElement(m.code);
         }
-
         Attribute verbAttribute = new Attribute("verb", verbVector, index++);
         Attribute checksumAttribute = new Attribute("checksum", (FastVector) null, index++);
 
@@ -115,44 +114,50 @@ public class LDClustering extends DBMapPredictor implements Runnable {
     }
 
     private void buildOrUpdateDataset() throws SQLException, Exception {
-        try (Connection connection = getConnection()) {
-            try (PreparedStatement ps = connection.prepareStatement("SELECT uid, parentRef, ownerId, datatype, ldName, "
-                    + "createDate, modifiedDate, ldLength, contentTypesStr, pdriGroupRef, "
-                    + "isSupervised, checksum, lastValidationDate, lockTokenID, lockScope, "
-                    + "lockType, lockedByUser, lockDepth, lockTimeout, description, locationPreference, status "
-                    + "FROM ldata_table")) {
-                ResultSet rs = ps.executeQuery();
-                while (rs.next()) {
-                    LogicalData res = new LogicalData();
-                    res.setUid(rs.getLong(1));
-                    res.setParentRef(rs.getLong(2));
-                    res.setOwner(rs.getString(3));
-                    res.setType(rs.getString(4));
-                    res.setName(rs.getString(5));
-                    res.setCreateDate(rs.getTimestamp(6).getTime());
-                    res.setModifiedDate(rs.getTimestamp(7).getTime());
-                    res.setLength(rs.getLong(8));
-                    res.setContentTypesAsString(rs.getString(9));
-                    res.setPdriGroupId(rs.getLong(10));
-                    res.setSupervised(rs.getBoolean(11));
-                    res.setChecksum(rs.getString(12));
-                    res.setLastValidationDate(rs.getLong(13));
-                    res.setLockTokenID(rs.getString(14));
-                    res.setLockScope(rs.getString(15));
-                    res.setLockType(rs.getString(16));
-                    res.setLockedByUser(rs.getString(17));
-                    res.setLockDepth(rs.getString(18));
-                    res.setLockTimeout(rs.getLong(19));
-                    res.setDescription(rs.getString(20));
-                    res.setDataLocationPreference(rs.getString(21));
-                    res.setStatus(rs.getString(22));
-                    ArrayList<MyInstance> ins = getInstances(res, null);
-                    for (MyInstance i : ins) {
-                        addFeatures(connection, i, res.getUid());
+        if (type.equals(method)) {
+            getMethodInstances(Method.HEAD);
+//             addFeatures(connection, i, res.getUid());
+        } else {
+            try (Connection connection = getConnection()) {
+                try (PreparedStatement ps = connection.prepareStatement("SELECT uid, parentRef, ownerId, datatype, ldName, "
+                        + "createDate, modifiedDate, ldLength, contentTypesStr, pdriGroupRef, "
+                        + "isSupervised, checksum, lastValidationDate, lockTokenID, lockScope, "
+                        + "lockType, lockedByUser, lockDepth, lockTimeout, description, locationPreference, status "
+                        + "FROM ldata_table")) {
+                    ResultSet rs = ps.executeQuery();
+                    while (rs.next()) {
+                        LogicalData res = new LogicalData();
+                        res.setUid(rs.getLong(1));
+                        res.setParentRef(rs.getLong(2));
+                        res.setOwner(rs.getString(3));
+                        res.setType(rs.getString(4));
+                        res.setName(rs.getString(5));
+                        res.setCreateDate(rs.getTimestamp(6).getTime());
+                        res.setModifiedDate(rs.getTimestamp(7).getTime());
+                        res.setLength(rs.getLong(8));
+                        res.setContentTypesAsString(rs.getString(9));
+                        res.setPdriGroupId(rs.getLong(10));
+                        res.setSupervised(rs.getBoolean(11));
+                        res.setChecksum(rs.getString(12));
+                        res.setLastValidationDate(rs.getLong(13));
+                        res.setLockTokenID(rs.getString(14));
+                        res.setLockScope(rs.getString(15));
+                        res.setLockType(rs.getString(16));
+                        res.setLockedByUser(rs.getString(17));
+                        res.setLockDepth(rs.getString(18));
+                        res.setLockTimeout(rs.getLong(19));
+                        res.setDescription(rs.getString(20));
+                        res.setDataLocationPreference(rs.getString(21));
+                        res.setStatus(rs.getString(22));
+                        ArrayList<MyInstance> ins = getInstances(res, null);
+                        for (MyInstance i : ins) {
+                            addFeatures(connection, i, res.getUid());
+                        }
                     }
                 }
             }
         }
+
     }
 
     @Override
@@ -162,6 +167,7 @@ public class LDClustering extends DBMapPredictor implements Runnable {
 
     @Override
     public LobState getNextState(LobState currentState) {
+
         ArrayList<LobState> states = new ArrayList<>();
         String rName = currentState.getResourceName();
         if (!rName.endsWith("/")) {
@@ -172,30 +178,18 @@ public class LDClustering extends DBMapPredictor implements Runnable {
             LogicalData data = getLogicalDataByPath(Path.path(rName), connection);
             Instance instance = getInstances(data, currentState.getMethod()).get(0);
             double[] features = instance.toDoubleArray();
-            String queryAllFeatures = "SELECT ldataRef, methodName, "
-                    + "POW((f1 - ?), 2) + POW((f2 - ?), 2) + POW((f3 - ?), 2) + "
-                    + "POW((f4 - ?), 2) + POW((f5 - ?), 2) + POW((f6 - ?), 2) + "
-                    + "POW((f7 - ?), 2)+ POW((f8 - ?), 2)+ POW((f9 - ?), 2)+ "
-                    + "POW((f10 - ?), 2)+ POW((f11 - ?), 2)+ POW((f12 - ?), 2)+ "
-                    + "POW((f13 - ?), 2)+ POW((f14 - ?), 2)+ POW((f15 - ?), 2)+ "
-                    + "POW((f16 - ?), 2)"
-                    + "AS dist FROM features_table  ORDER BY dist ASC LIMIT ?";
 
-            try (PreparedStatement preparedStatement = connection.prepareStatement(
-                    queryAllFeatures)) {
-                int index = 1;
-                for (int i = 1; i < features.length; i++) {
-                    preparedStatement.setDouble(index++, features[i]);
-                }
-
-                preparedStatement.setInt(features.length, k);
-                ResultSet rs = preparedStatement.executeQuery();
-                while (rs.next()) {
-                    String path = getPathforLogicalData(getLogicalDataByUid(rs.getLong(1), connection), connection);
-                    LobState state = new LobState(Method.valueOf(rs.getString(2)), path);
-                    log.log(Level.INFO, "State: {0}", state.getID());
-                }
+            switch (type) {
+                case state:
+                    return getNextLobState(connection, features);
+                case resource:
+                    return getNextResourceState(connection, features);
+                case method:
+                    return getNextMethodState(connection, features);
+                default:
+                    return getNextLobState(connection, features);
             }
+
         } catch (SQLException ex) {
             Logger.getLogger(LDClustering.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -206,32 +200,51 @@ public class LDClustering extends DBMapPredictor implements Runnable {
         boolean exists = false;
         try (PreparedStatement ps = connection.prepareStatement("select uid "
                 + "from features_table WHERE methodName = ? AND ldataRef = ?")) {
-            ps.setString(1, inst.getMethod().code);
+            Method requestMethod = inst.getMethod();
+            if (requestMethod != null) {
+                ps.setString(1, requestMethod.code);
+            } else {
+                ps.setString(1, null);
+            }
             ps.setLong(2, uid);
             ResultSet rs = ps.executeQuery();
             exists = rs.next();
         }
         if (!exists) {
-            try (PreparedStatement ps = connection.prepareStatement("INSERT INTO "
-                    + "features_table (methodName, ldataRef, f1, f2, f3, f4, f5, "
-                    + "f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16) "
-                    + "VALUES (?, ?, ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")) {
-                ps.setString(1, inst.getMethod().name());
-                ps.setLong(2, uid);
-                double[] features = inst.toDoubleArray();
-                for (int i = 0; i < features.length; i++) {
-                    int index = i + 3;
-                    ps.setDouble(index, features[i]);
-                }
-                ps.executeUpdate();
-                connection.commit();
-            }
+            addLobStateFeatures(connection, inst, uid);
+//            switch (type) {
+//                case state:
+//                    addLobStateFeatures(connection, inst, uid);
+//                    break;
+//                case resource:
+//                    addResourceFeatures(connection, inst, uid);
+//                    break;
+//                case method:
+//                    addMethodFeatures(connection, inst, uid);
+//                    break;
+//                default:
+//                    addLobStateFeatures(connection, inst, uid);
+//                    break;
+//            }
         }
     }
 
     private ArrayList<MyInstance> getInstances(LogicalData n, Method method) {
-        ArrayList<MyInstance> inst = new ArrayList<>();
+        switch (type) {
+            case state:
+                return getlobStateInstances(n, method);
+            case resource:
+                return getResourceInstances(n);
+            case method:
+                return getMethodInstances(method);
+            default:
+                return getlobStateInstances(n, method);
+        }
+//        return getlobStateInstances(n, method);
+    }
 
+    private ArrayList<MyInstance> getlobStateInstances(LogicalData n, Method method) {
+        ArrayList<MyInstance> inst = new ArrayList<>();
         if (method == null) {
             for (Request.Method m : Request.Method.values()) {
                 int index = 0;
@@ -290,6 +303,238 @@ public class LDClustering extends DBMapPredictor implements Runnable {
             inst.add(instance);
         }
         return inst;
+    }
+
+    private ArrayList<MyInstance> getMethodInstances(Method method) {
+        ArrayList<MyInstance> inst = new ArrayList<>();
+        if (method == null) {
+            for (Request.Method m : Request.Method.values()) {
+                int index = 0;
+                MyInstance instance = new MyInstance(metdataAttributes.size());
+                index++;
+                instance.setValue((Attribute) metdataAttributes.elementAt(index++), m.code);
+                instance.setMethod(m);
+                inst.add(instance);
+            }
+        } else {
+            int index = 0;
+            MyInstance instance = new MyInstance(metdataAttributes.size());
+            index++;
+            instance.setValue((Attribute) metdataAttributes.elementAt(index++), method.code);
+            instance.setMethod(method);
+            inst.add(instance);
+        }
+        return inst;
+    }
+
+    private ArrayList<MyInstance> getResourceInstances(LogicalData n) {
+        ArrayList<MyInstance> inst = new ArrayList<>();
+        int index = 0;
+        MyInstance instance = new MyInstance(metdataAttributes.size());
+        instance.setValue((Attribute) metdataAttributes.elementAt(index++), n.getUid());
+        instance.setValue((Attribute) metdataAttributes.elementAt(index++), Method.ACL.code);
+        instance.setMethod(null);
+        String att = n.getChecksum();
+        instance.setValue((Attribute) metdataAttributes.elementAt(index++), (att != null) ? att : "NON");
+        att = n.getContentTypesAsString();
+        instance.setValue((Attribute) metdataAttributes.elementAt(index++), (att != null) ? att : "NON");
+        instance.setValue((Attribute) metdataAttributes.elementAt(index++), n.getCreateDate());
+        att = n.getDataLocationPreference();
+        instance.setValue((Attribute) metdataAttributes.elementAt(index++), (att != null) ? att : "NON");
+        att = n.getDescription();
+        instance.setValue((Attribute) metdataAttributes.elementAt(index++), (att != null) ? att : "NON");
+        instance.setValue((Attribute) metdataAttributes.elementAt(index++), n.getLastValidationDate());
+        instance.setValue((Attribute) metdataAttributes.elementAt(index++), n.getLength());
+        instance.setValue((Attribute) metdataAttributes.elementAt(index++), n.getModifiedDate());
+        instance.setValue((Attribute) metdataAttributes.elementAt(index++), "NON");
+        instance.setValue((Attribute) metdataAttributes.elementAt(index++), n.getParentRef());
+        att = n.getStatus();
+        instance.setValue((Attribute) metdataAttributes.elementAt(index++), (att != null) ? att : "NON");
+        instance.setValue((Attribute) metdataAttributes.elementAt(index++), n.getType());
+
+        instance.setValue((Attribute) metdataAttributes.elementAt(index++), String.valueOf(n.getSupervised()));
+        instance.setValue((Attribute) metdataAttributes.elementAt(index++), n.getOwner());
+        inst.add(instance);
+        return inst;
+    }
+
+    private LobState getNextLobState(Connection connection, double[] features) throws SQLException {
+        String query = "SELECT ldataRef, methodName, "
+                + "POW((f1 - ?), 2) + POW((f2 - ?), 2) + POW((f3 - ?), 2) + "
+                + "POW((f4 - ?), 2) + POW((f5 - ?), 2) + POW((f6 - ?), 2) + "
+                + "POW((f7 - ?), 2)+ POW((f8 - ?), 2)+ POW((f9 - ?), 2)+ "
+                + "POW((f10 - ?), 2)+ POW((f11 - ?), 2)+ POW((f12 - ?), 2)+ "
+                + "POW((f13 - ?), 2)+ POW((f14 - ?), 2)+ POW((f15 - ?), 2)+ "
+                + "POW((f16 - ?), 2)"
+                + "AS dist FROM features_table  ORDER BY dist ASC LIMIT ?";
+
+        try (PreparedStatement preparedStatement = connection.prepareStatement(
+                query)) {
+            int index = 1;
+            for (int i = 1; i < features.length; i++) {
+                preparedStatement.setDouble(index++, features[i]);
+            }
+
+            preparedStatement.setInt(features.length, k);
+
+            ResultSet rs = preparedStatement.executeQuery();
+            while (rs.next()) {
+                String path = getPathforLogicalData(getLogicalDataByUid(rs.getLong(1), connection), connection);
+                LobState state = new LobState(Method.valueOf(rs.getString(2)), path);
+                log.log(Level.INFO, "State: {0}", state.getID());
+            }
+        }
+        return null;
+    }
+
+    private LobState getNextMethodState(Connection connection, double[] features) throws SQLException {
+        String query = "SELECT ldataRef, methodName, "
+                + "POW((f2 - ?), 2)"
+                + "AS dist FROM features_table  ORDER BY dist ASC LIMIT ?";
+
+        try (PreparedStatement preparedStatement = connection.prepareStatement(
+                query)) {
+            preparedStatement.setDouble(1, features[1]);
+            preparedStatement.setInt(2, k);
+
+            ResultSet rs = preparedStatement.executeQuery();
+            while (rs.next()) {
+                String path = getPathforLogicalData(getLogicalDataByUid(rs.getLong(1), connection), connection);
+                LobState state = new LobState(Method.valueOf(rs.getString(2)), path);
+                log.log(Level.INFO, "State: {0}", state.getID());
+            }
+        }
+        return null;
+    }
+
+    private LobState getNextResourceState(Connection connection, double[] features) throws SQLException {
+        String query = "SELECT ldataRef, "
+                + "methodName, "
+                + "POW((f1 - ?), 2) + "
+                + "POW((f3 - ?), 2) + "
+                + "POW((f4 - ?), 2) + "
+                + "POW((f5 - ?), 2) + "
+                + "POW((f6 - ?), 2) + "
+                + "POW((f7 - ?), 2)+ "
+                + "POW((f8 - ?), 2)+ "
+                + "POW((f9 - ?), 2)+ "
+                + "POW((f10 - ?), 2)+ "
+                + "POW((f11 - ?), 2)+ "
+                + "POW((f12 - ?), 2)+ "
+                + "POW((f13 - ?), 2)+ "
+                + "POW((f14 - ?), 2)+ "
+                + "POW((f15 - ?), 2)+ "
+                + "POW((f16 - ?), 2)"
+                + "AS dist FROM features_table  ORDER BY dist ASC LIMIT ?";
+
+        try (PreparedStatement preparedStatement = connection.prepareStatement(
+                query)) {
+            int index = 0;
+            for (int i = 0; i < features.length; i++) {
+                if (i != 1) {
+                    index++;
+                    preparedStatement.setDouble(index, features[i]);
+                }
+            }
+            index++;
+            preparedStatement.setInt(index, k);
+
+            ResultSet rs = preparedStatement.executeQuery();
+            while (rs.next()) {
+                String path = getPathforLogicalData(getLogicalDataByUid(rs.getLong(1), connection), connection);
+                Method rquestMethod;
+                switch (type) {
+                    case resource:
+                        rquestMethod = null;
+                        break;
+                    default:
+                        rquestMethod = Method.valueOf(rs.getString(2));
+                        break;
+                }
+                LobState state = new LobState(rquestMethod, path);
+                log.log(Level.INFO, "State: {0}", state.getID());
+            }
+        }
+        return null;
+    }
+
+    private void addLobStateFeatures(Connection connection, MyInstance inst, Long uid) throws SQLException {
+        try (PreparedStatement ps = connection.prepareStatement("INSERT INTO "
+                + "features_table (methodName, ldataRef, f1, f2, f3, f4, f5, "
+                + "f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16) "
+                + "VALUES (?, ?, ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")) {
+            Method requestMethod = inst.getMethod();
+            if (requestMethod != null) {
+                ps.setString(1, requestMethod.code);
+            } else {
+                ps.setString(1, null);
+            }
+            ps.setLong(2, uid);
+            double[] features = inst.toDoubleArray();
+            if (type.equals(method)) {
+                for (int i = 0; i < features.length; i++) {
+                    int index = i + 3;
+                    if (i == 1) {
+                        ps.setDouble(index, features[i]);
+                    } else {
+                        ps.setDouble(index, 0.0);
+                    }
+                }
+            } else {
+                for (int i = 0; i < features.length; i++) {
+                    int index = i + 3;
+                    ps.setDouble(index, features[i]);
+                }
+            }
+
+            ps.executeUpdate();
+            connection.commit();
+        }
+    }
+
+    private void addResourceFeatures(Connection connection, MyInstance inst, Long uid) throws SQLException {
+        try (PreparedStatement ps = connection.prepareStatement("INSERT INTO "
+                + "features_table (methodName, ldataRef, f1,f3, f4, f5, "
+                + "f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16) "
+                + "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")) {
+            Method requestMethod = inst.getMethod();
+            if (requestMethod != null) {
+                ps.setString(1, requestMethod.code);
+            } else {
+                ps.setString(1, null);
+            }
+            ps.setLong(2, uid);
+            double[] features = inst.toDoubleArray();
+            for (int i = 0; i < features.length; i++) {
+                int index = i + 3;
+                if (i == 1) {
+                    ps.setDouble(index, 0);
+                } else {
+                    ps.setDouble(index, features[i]);
+                }
+            }
+            ps.executeUpdate();
+            connection.commit();
+        }
+    }
+
+    private void addMethodFeatures(Connection connection, MyInstance inst, Long uid) throws SQLException {
+        try (PreparedStatement ps = connection.prepareStatement("INSERT INTO "
+                + "features_table (methodName, ldataRef, f1, f2, f3, f4, f5, "
+                + "f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16) "
+                + "VALUES (?, ?, ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")) {
+            Method requestMethod = inst.getMethod();
+            if (requestMethod != null) {
+                ps.setString(1, requestMethod.code);
+            } else {
+                ps.setString(1, null);
+            }
+            ps.setLong(2, uid);
+            double[] features = inst.toDoubleArray();
+            ps.setDouble(3, features[1]);
+            ps.executeUpdate();
+            connection.commit();
+        }
     }
 
     private class MyInstance extends Instance {

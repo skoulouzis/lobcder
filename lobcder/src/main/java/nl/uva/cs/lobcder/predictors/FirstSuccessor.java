@@ -4,7 +4,6 @@
  */
 package nl.uva.cs.lobcder.predictors;
 
-import io.milton.http.Request;
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.sql.SQLException;
@@ -46,7 +45,6 @@ public class FirstSuccessor extends DBMapPredictor {
     @Override
     public LobState getNextState(LobState currentState) {
         try {
-            String prevID = null;
             String currentID = null;
             switch (type) {
                 case state:

@@ -109,7 +109,7 @@ CREATE TABLE occurrences_table (
 CREATE TABLE features_table (
  uid SERIAL PRIMARY KEY,
  methodName VARCHAR(255),
- ldataRef BIGINT UNSIGNED, FOREIGN KEY(ldataRef) REFERENCES ldata_table(uid),
+ ldataRef BIGINT UNSIGNED,
  f1 DOUBLE, 
  f2 DOUBLE,
  f3 DOUBLE,

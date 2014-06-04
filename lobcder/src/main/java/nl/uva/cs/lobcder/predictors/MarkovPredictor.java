@@ -30,6 +30,9 @@ import lombok.extern.java.Log;
 import static nl.uva.cs.lobcder.predictors.DBMapPredictor.type;
 import nl.uva.cs.lobcder.util.MyDataSource;
 import nl.uva.cs.lobcder.util.PropertiesHelper;
+import static nl.uva.cs.lobcder.util.PropertiesHelper.PREDICTION_TYPE.method;
+import static nl.uva.cs.lobcder.util.PropertiesHelper.PREDICTION_TYPE.resource;
+import static nl.uva.cs.lobcder.util.PropertiesHelper.PREDICTION_TYPE.state;
 
 /**
  *
@@ -91,13 +94,36 @@ public class MarkovPredictor extends MyDataSource implements Predictor {
         }
 
         void addTransision(LobState from, LobState to) throws SQLException {
+
+
+            String toID = null;
+            String fromID = null;
+            switch (type) {
+                case state:
+                    toID = to.getID();
+                    fromID = from.getID();
+                    break;
+                case resource:
+                    toID = to.getResourceName();
+                    fromID = from.getResourceName();
+                    break;
+                case method:
+                    toID = to.getMethod().code;
+                    fromID = from.getMethod().code;
+                    break;
+                default:
+                    toID = to.getID();
+                    fromID = from.getID();
+                    break;
+            }
+
             double weight = -1;
             int uid = -1;
             try (Connection connection = getConnection()) {
                 try (PreparedStatement ps = connection.prepareStatement("select uid, weight from "
                         + "successor_table where keyVal = ? and lobStateID = ?")) {
-                    ps.setString(1, from.getID());
-                    ps.setString(2, to.getID());
+                    ps.setString(1, fromID);
+                    ps.setString(2, toID);
                     ResultSet rs = ps.executeQuery();
                     if (rs.next()) {
                         uid = rs.getInt(1);
@@ -119,8 +145,8 @@ public class MarkovPredictor extends MyDataSource implements Predictor {
                     try (PreparedStatement preparedStatement = connection.prepareStatement(
                             "INSERT INTO successor_table(keyVal, lobStateID , weight)"
                             + " VALUES (?, ?, ? )", Statement.RETURN_GENERATED_KEYS)) {
-                        preparedStatement.setString(1, from.getID());
-                        preparedStatement.setString(2, to.getID());
+                        preparedStatement.setString(1, fromID);
+                        preparedStatement.setString(2, toID);
                         preparedStatement.setDouble(3, weight);
                         preparedStatement.executeUpdate();
                         ResultSet rs = preparedStatement.getGeneratedKeys();
@@ -132,21 +158,61 @@ public class MarkovPredictor extends MyDataSource implements Predictor {
         }
 
         private LobState getWeightedRandomState(LobState from) throws SQLException {
+            String fromID;
+            switch (type) {
+                case state:
+                    fromID = from.getID();
+                    break;
+                case resource:
+                    fromID = from.getResourceName();
+                    break;
+                case method:
+                    fromID = from.getMethod().code;
+                    break;
+                default:
+                    fromID = from.getID();
+                    break;
+            }
+
             LobState nextState = null;
             try (Connection connection = getConnection()) {
                 try (PreparedStatement ps = connection.prepareStatement("select lobStateID from successor_table where keyVal = ? order by weight*rand() desc limit 1")) {
-                    ps.setString(1, from.getID());
+                    ps.setString(1, fromID);
                     ResultSet rs = ps.executeQuery();
                     if (rs.next()) {
                         String nextID = rs.getString(1);
-                        String[] methodNRes = nextID.split(",");
-                        String resource;
-                        if (methodNRes.length <= 1) {
-                            resource = "/";
-                        } else {
-                            resource = methodNRes[1];
+                        Request.Method requestMethod = null;
+                        String requestResource = null;
+
+                        switch (type) {
+                            case state:
+                                String[] methodNRes = nextID.split(",");
+                                requestMethod = Request.Method.valueOf(methodNRes[0]);
+                                if (methodNRes.length <= 1) {
+                                    requestResource = "/";
+                                } else {
+                                    requestResource = methodNRes[1];
+                                }
+                                break;
+                            case resource:
+                                requestResource = nextID;
+                                requestMethod = null;
+                                break;
+                            case method:
+                                requestResource = null;
+                                requestMethod = Request.Method.valueOf(nextID);
+                                break;
+                            default:
+                                methodNRes = nextID.split(",");
+                                requestMethod = Request.Method.valueOf(methodNRes[0]);
+                                if (methodNRes.length <= 1) {
+                                    requestResource = "/";
+                                } else {
+                                    requestResource = methodNRes[1];
+                                }
+                                break;
                         }
-                        nextState = new LobState(Request.Method.valueOf(methodNRes[0]), resource);
+                        nextState = new LobState(requestMethod, requestResource);
                     }
                 }
                 connection.commit();
