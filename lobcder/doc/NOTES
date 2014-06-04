@@ -12,7 +12,7 @@ apt-get update
 export DEBIAN_FRONTEND=noninteractive
 echo debconf shared/accepted-oracle-license-v1-1 select true | sudo debconf-set-selections
 echo debconf shared/accepted-oracle-license-v1-1 seen true | sudo debconf-set-selections
-apt-get -q -y install mysql-server mysql-client oracle-java7-installer subversion maven2 erlang wget makepasswd nmap
+apt-get -q -y --force-yes  install mysql-server mysql-client oracle-java7-installer subversion maven2 erlang wget makepasswd nmap
 
 password="pass"
 pass=$(perl -e 'print crypt($ARGV[0], "password")' $password)
@@ -28,10 +28,7 @@ cd lobcder
 mvn install
 --------------------------------------------------------------
 
-
-wget http://elab.lab.uvalight.net/~lobcder/conf/initLOBDB.sql
-mysql --user=root < initLOBDB.sql
-
+ mysql --user=root < /root/lobcder/src/main/resources/initLOBDB.sql
 
 wget http://elab.lab.uvalight.net/~lobcder/conf/init.sql
 mysql --user=lobcder --password=RoomC3156 lobcderDB2 < init.sql
