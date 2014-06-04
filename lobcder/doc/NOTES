@@ -2,7 +2,7 @@ To clear up files not showing up in ldata_table: update pdrigroup_table set `ref
 
 
 -------------------------------------------------------------------------------------------------------------------
-To install on a new machine (ubuntu 12)
+To install on a new machine (ubuntu 12, debian)
 
 echo "deb http://ppa.launchpad.net/webupd8team/java/ubuntu precise main" | tee -a /etc/apt/sources.list
 echo "deb-src http://ppa.launchpad.net/webupd8team/java/ubuntu precise main" | tee -a /etc/apt/sources.list
@@ -12,14 +12,20 @@ apt-get update
 export DEBIAN_FRONTEND=noninteractive
 echo debconf shared/accepted-oracle-license-v1-1 select true | sudo debconf-set-selections
 echo debconf shared/accepted-oracle-license-v1-1 seen true | sudo debconf-set-selections
-apt-get -q -y install mysql-server mysql-client oracle-java7-installer subversion maven erlang wget
+apt-get -q -y install mysql-server mysql-client oracle-java7-installer subversion maven2 erlang wget makepasswd nmap
 
+password="pass"
+pass=$(perl -e 'print crypt($ARGV[0], "password")' $password)
+useradd w -m -p $pass
 
 
 --------------------Skip that---------------------------------
 wget http://elab.lab.uvalight.net/~lobcder/conf/settings.xml
-mv settings.xml ~/.m2/
+mkdir /root/.m2/
+mv settings.xml /root/.m2/
 svn checkout --trust-server-cert --non-interactive --username anonsvn --password anonsvn https://gforge.cyfronet.pl/svn/lobcder/branches/dev/lobcder/
+cd lobcder
+mvn install
 --------------------------------------------------------------
 
 
