@@ -438,14 +438,21 @@ public class VPDRI implements PDRI {
 
     @Override
     public String getHost() throws UnknownHostException {
-        VPDRI.log.log(Level.FINE, "getHostName: {0}", InetAddress.getLocalHost().getHostName());
         if (vrl.getScheme().equals("file")
                 || StringUtil.isEmpty(vrl.getHostname())
                 || vrl.getHostname().equals("localhost")
                 || vrl.getHostname().equals("127.0.0.1")) {
-            return InetAddress.getLocalHost().getHostName();
+            return getIP("localhost");
         } else {
             return vrl.getHostname();
+        }
+    }
+
+    private String getIP(String hostName) {
+        try {
+            return InetAddress.getByName(hostName).getHostAddress();
+        } catch (UnknownHostException ex) {
+            return hostName;
         }
     }
 
