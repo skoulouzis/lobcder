@@ -13,13 +13,18 @@ apt-get update
 export DEBIAN_FRONTEND=noninteractive
 echo debconf shared/accepted-oracle-license-v1-1 select true | sudo debconf-set-selections
 echo debconf shared/accepted-oracle-license-v1-1 seen true | sudo debconf-set-selections
+
 apt-get -q -y --force-yes  install mysql-server mysql-client oracle-java7-installer subversion maven2 erlang wget makepasswd nmap
+
+
+
+
+cd /root
 
 mysql --user=root < /root/lobcder/src/main/resources/initLOBDB.sql
 wget http://elab.lab.uvalight.net/~lobcder/conf/init.sql
 mysql --user=lobcder --password=RoomC3156 lobcderDB2 < init.sql
 
-cd /root
 wget http://elab.lab.uvalight.net/~lobcder/conf/settings.xml
 mkdir /root/.m2/
 mv settings.xml /root/.m2/
@@ -28,7 +33,7 @@ cd lobcder
 mvn install 
 rm -r target/lobcder
 mv target/lobcder-2.4 target/lobcder
-cd
+cd /root
 
 wget http://elab.lab.uvalight.net/~lobcder/apache-tomcat-6.0.36.tar.gz
 tar -xzvf apache-tomcat-6.0.36.tar.gz
