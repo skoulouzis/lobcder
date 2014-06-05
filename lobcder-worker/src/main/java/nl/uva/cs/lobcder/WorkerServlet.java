@@ -142,6 +142,7 @@ public final class WorkerServlet extends HttpServlet {
             // Process request with content.
             processRequest(request, response, true);
         } catch (Exception ex) {
+            Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, ex);
             handleError(ex, response);
         }
     }
