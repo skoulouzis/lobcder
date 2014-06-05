@@ -131,3 +131,6 @@ select count, prob, cumulativeSum(prob) from
 as countProb
 
 ---------------------------------------------------------
+
+follow redirects and resume downloads 
+curl -u user:pass -C - -O -L http://192.168.100.2:8080/lobcder/dav/file
