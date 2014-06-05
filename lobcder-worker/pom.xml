@@ -55,7 +55,7 @@
             <groupId>io.milton</groupId>
             <artifactId>milton-server-ce</artifactId>
             <version>2.4.2-SNAPSHOT</version>
-        </dependency>     
+        </dependency>   
         
 
         <dependency>
@@ -65,7 +65,7 @@
         </dependency>
         
 
-        <dependency>
+      <dependency>
             <groupId>nl.uva.vlet</groupId>
             <artifactId>vlet-vrs.core</artifactId>
             <version>1.5.0-dev-1</version>
@@ -93,7 +93,26 @@
             <scope>runtime</scope>
         </dependency>       
         
+        <dependency>
+            <groupId>nl.uva.vlet</groupId>
+            <artifactId>vlet-vfs.webdav</artifactId>
+            <version>2.0</version>
+        </dependency>   
         
+        <dependency>
+            <groupId>xerces</groupId>
+            <artifactId>xercesImpl</artifactId>
+            <version>2.11.0</version>
+            <scope>runtime</scope>
+        </dependency>
+         
+        <dependency>
+            <groupId>org.apache.jackrabbit</groupId>
+            <artifactId>jackrabbit-webdav</artifactId>
+             <version>2.2.0</version>
+            <scope>runtime</scope>
+        </dependency>
+
         <dependency>
             <groupId>com.claymoresystems</groupId>
             <artifactId>puretls</artifactId>
@@ -143,7 +162,6 @@
             <groupId>org.globus</groupId>
             <artifactId>cog-url</artifactId>
             <version>1.4</version>
-            
         </dependency>
         
         
@@ -158,8 +176,8 @@
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcprov-jdk15</artifactId>
             <version>1.43</version>
-        </dependency>
-            -->
+        </dependency>-->
+            
                 
         <dependency>
             <groupId>nl.uva.vlet</groupId>
@@ -209,19 +227,19 @@
             <classifier>classes</classifier>
             <version>2.3_jdk1.6</version>
         </dependency>  -->
-        <dependency>
+        <!--        <dependency>
             <groupId>com.mycompany</groupId>
             <artifactId>lobcder</artifactId>
             <version>2.4</version>
             <type>war</type>
-        </dependency>
+        </dependency>-->
     </dependencies>
     
     <repositories>
         <repository>
             <id>elab.lab.uvalight.net</id>
             <name>elab.lab.uvalight.net-releases</name>
-            <url>https://elab.lab.uvalight.net:8444/artifactory/repo</url>
+            <url>>http://elab.lab.uvalight.net/artifactory/local</url>
         </repository>
     </repositories>
 
