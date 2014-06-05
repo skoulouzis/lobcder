@@ -766,7 +766,7 @@ public final class WorkerServlet extends HttpServlet {
             }
         }
         response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-        return;
+        Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, ex);
     }
 
     @XmlRootElement
