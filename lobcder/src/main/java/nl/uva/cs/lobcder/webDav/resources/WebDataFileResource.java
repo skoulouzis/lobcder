@@ -530,7 +530,7 @@ public class WebDataFileResource extends WebDataResource implements
                     return getWorkerRandom(uri);
                 }
             }
-            
+
             workers = PropertiesHelper.getWorkers();
             if (workerIndex >= workers.size()) {
                 workerIndex = 0;
@@ -664,62 +664,24 @@ public class WebDataFileResource extends WebDataResource implements
     }
 
     private String getWorkerRoundRobin(String uri) throws IOException {
-        if (plannerClient == null) {
-            plannerClient = new NewQoSPlannerClient(uri);
-        }
-
-        HashMap<Integer, String> map = PropertiesHelper.getPortWorkerMap();
-
-        Integer[] keysArray = new Integer[map.keySet().size()];
-        keysArray = map.keySet().toArray(keysArray);
-
-        if (workerIndex >= keysArray.length) {
+        workers = PropertiesHelper.getWorkers();
+        if (workerIndex >= workers.size()) {
             workerIndex = 0;
         }
-        Integer portNum = keysArray[workerIndex++];
-        String worker = map.get(portNum);
-//        plannerClient.pushFlow("00:00:c2:b3:aa:aa:2d:41", portNum, 3);
-//        plannerClient.pushFlow("00:00:c2:b3:aa:aa:2d:41", 3, portNum);
-
-
+        String worker = workers.get(workerIndex++);
         String w = worker + "/" + getLogicalData().getUid();
         String token = UUID.randomUUID().toString();
         AuthWorker.setTicket(worker, token);
-        int trans = 0;
-        if (numOfWorkerTransfersMap.containsKey(worker)) {
-            trans = numOfWorkerTransfersMap.get(worker);
-        }
-        trans++;
-        numOfWorkerTransfersMap.put(worker, trans);
         return w + "/" + token;
     }
 
     private String getWorkerRandom(String uri) throws IOException {
-        if (plannerClient == null) {
-            plannerClient = new NewQoSPlannerClient(uri);
-        }
-
-        HashMap<Integer, String> map = PropertiesHelper.getPortWorkerMap();
-
-        Integer[] keysArray = new Integer[map.keySet().size()];
-        keysArray = map.keySet().toArray(keysArray);
-        int index = 0 + (int) (Math.random() * ((keysArray.length - 0) + 1));
-
-        Integer portNum = keysArray[index];
-        String worker = map.get(portNum);
-//        plannerClient.pushFlow("00:00:c2:b3:aa:aa:2d:41", portNum, 3);
-//        plannerClient.pushFlow("00:00:c2:b3:aa:aa:2d:41", 3, portNum);
-
-
+        workers = PropertiesHelper.getWorkers();
+        int randomIndex = new Random().nextInt((workers.size() - 1 - 0) + 1) + 0;
+        String worker = workers.get(randomIndex);
         String w = worker + "/" + getLogicalData().getUid();
         String token = UUID.randomUUID().toString();
         AuthWorker.setTicket(worker, token);
-        int trans = 0;
-        if (numOfWorkerTransfersMap.containsKey(worker)) {
-            trans = numOfWorkerTransfersMap.get(worker);
-        }
-        trans++;
-        numOfWorkerTransfersMap.put(worker, trans);
         return w + "/" + token;
     }
 }
