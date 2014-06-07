@@ -73,6 +73,10 @@ cp -r lobcder-worker/target/lobcder-worker apache-tomcat-6.0.36/webapps/
 ./apache-tomcat-6.0.36/bin/startup.sh
 
 
+sleep 70 
+for i in {1..6}; do ping -c 1 192.168.100.$i; done
+
+
 -------------------------------------------------------------------------------------
 to solve the of type default using the available factories WagonRepositoryConnectorFactory 
 error when building go to http://elab.lab.uvalight.net/artifactory/webapp/mavensettings.html generate the settings and paste them to ~/m2/settings.xml

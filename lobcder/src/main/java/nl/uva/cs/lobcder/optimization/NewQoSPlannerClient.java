@@ -46,8 +46,11 @@ public class NewQoSPlannerClient {
                 JSONObject jsonObj = (JSONObject) o;
                 FloodlightStats fs = new FloodlightStats();
                 org.json.simple.JSONArray ipArray = (org.json.simple.JSONArray) jsonObj.get("ipv4");
-                fs.ip = (String) ipArray.get(0);
-
+                if(!ipArray.isEmpty()){
+                     fs.ip = (String) ipArray.get(0);
+                }else{
+                    continue;
+                }
 
                 JSONArray attachmentPointArray = (org.json.simple.JSONArray) jsonObj.get("attachmentPoint");
                 org.json.simple.JSONObject attachmentPoint = (org.json.simple.JSONObject) attachmentPointArray.get(0);
@@ -64,7 +67,6 @@ public class NewQoSPlannerClient {
 
                 for (Object sjo : statJVal) {
                     JSONObject jsonOb2j = (JSONObject) sjo;
-                    System.out.println(jsonOb2j + " " + jsonOb2j.getClass().getName());
                     java.lang.Long portNumber = (java.lang.Long) jsonOb2j.get("portNumber");
                     if (portNumber == fs.port) {
                         fs.receiveOverrunErrors = (java.lang.Long) jsonOb2j.get("receiveOverrunErrors");
