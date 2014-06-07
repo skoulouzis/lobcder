@@ -623,6 +623,7 @@ public class WebDataFileResource extends WebDataResource implements
         for (FloodlightStats f : stats) {
             long allStats = f.transmitBytes + f.receiveBytes
                     + f.receivePackets + f.transmitPackets;
+            WebDataFileResource.log.log(Level.INFO, "worker: {0} cost: {1}", new Object[]{f.ip, allStats});
 //                    + f.collisions
 //                    + f.receiveCRCErrors + f.receiveDropped + f.receiveErrors
 //                    + f.receiveFrameErrors + f.receiveOverrunErrors 
@@ -632,6 +633,7 @@ public class WebDataFileResource extends WebDataResource implements
                 for (String w : workers) {
                     if (w.startsWith("http://" + f.ip) || w.startsWith("https://" + f.ip)) {
                         worker = w;
+//                        WebDataFileResource.log.log(Level.INFO, "worker: {0} cost: {1}", new Object[]{worker, cost});
                         break;
                     }
                 }
