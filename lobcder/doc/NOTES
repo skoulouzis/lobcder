@@ -32,9 +32,10 @@ tar -xzvf apache-tomcat-6.0.36.tar.gz
 wget http://elab.lab.uvalight.net/~lobcder/conf/settings.xml
 mkdir /root/.m2/
 mv settings.xml /root/.m2/
+
 svn checkout --trust-server-cert --non-interactive --username anonsvn --password anonsvn https://gforge.cyfronet.pl/svn/lobcder/branches/dev/lobcder/
 cd lobcder
-mvn install 
+mvn clean install 
 rm -r target/lobcder
 mv target/lobcder-2.4 target/lobcder
 cd /root
@@ -144,3 +145,8 @@ as countProb
 
 follow redirects and resume downloads 
 curl -u user:pass -C - -O -L http://192.168.100.2:8080/lobcder/dav/file
+
+
+
+
+apt-get install cadaver curl
