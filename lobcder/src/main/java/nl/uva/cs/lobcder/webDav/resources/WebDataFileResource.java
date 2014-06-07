@@ -60,6 +60,7 @@ public class WebDataFileResource extends WebDataResource implements
 
     private int sleepTime = 5;
     private List<String> workers;
+    private HashMap<String, String> workersMap;
     private boolean doRedirect = true;
     private static int workerIndex = 0;
     private static final Map<String, Double> weightPDRIMap = new HashMap<>();
@@ -75,9 +76,18 @@ public class WebDataFileResource extends WebDataResource implements
             Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, ex);
         }
         if (doRedirect) {
-            workers = PropertiesHelper.getWorkers();
-            if (workers == null || workers.isEmpty()) {
+            List<String> workersURLs = PropertiesHelper.getWorkers();
+            if (workersURLs == null || workersURLs.isEmpty()) {
                 doRedirect = false;
+            } else {
+                workersMap = new HashMap<>();
+                for (String s : workersURLs) {
+                    try {
+                        workersMap.put(new URI(s).getHost(), s);
+                    } catch (URISyntaxException ex) {
+                        Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
             }
         }
 
@@ -516,7 +526,7 @@ public class WebDataFileResource extends WebDataResource implements
         return null;
     }
 
-    private String getBestWorker() throws IOException {
+    private String getBestWorker() throws IOException, URISyntaxException {
         if (doRedirect) {
 //            if (uri != null) {
             if (PropertiesHelper.getSchedulingAlg().equals("traffic")) {
@@ -534,6 +544,7 @@ public class WebDataFileResource extends WebDataResource implements
             if (workerIndex >= workers.size()) {
                 workerIndex = 0;
             }
+
             String worker = workers.get(workerIndex++);
             String w = worker + "/" + getLogicalData().getUid();
             String token = UUID.randomUUID().toString();
@@ -611,7 +622,7 @@ public class WebDataFileResource extends WebDataResource implements
         return false;
     }
 
-    private String getWorkerWithLessTraffic() throws IOException {
+    private String getWorkerWithLessTraffic() throws IOException, URISyntaxException {
         if (plannerClient == null) {
             String uri = PropertiesHelper.getFloodLightURL();
             plannerClient = new NewQoSPlannerClient(uri);
@@ -628,15 +639,10 @@ public class WebDataFileResource extends WebDataResource implements
 //                    + f.receiveCRCErrors + f.receiveDropped + f.receiveErrors
 //                    + f.receiveFrameErrors + f.receiveOverrunErrors 
 //                    + f.transmitDropped + f.transmitErrors;
-            if (allStats < cost) {
+            if (allStats < cost && workersMap.containsKey(f.ip)) {
                 cost = allStats;
-                for (String w : workers) {
-                    if (w.startsWith("http://" + f.ip) || w.startsWith("https://" + f.ip)) {
-                        worker = w;
-                        WebDataFileResource.log.log(Level.INFO, "worker: {0} cost: {1}", new Object[]{worker, cost});
-                        break;
-                    }
-                }
+                worker = workersMap.get(f.ip);
+//                WebDataFileResource.log.log(Level.INFO, "aaaaaaaaaaaaworker: {0} cost: {1}", new Object[]{f.ip, allStats});
             }
         }
 //        WebDataFileResource.log.log(Level.INFO, "portNum: {0} cost: {1} worker: {2}", new Object[]{portNum, cost, worker});
