@@ -66,13 +66,35 @@ public class VPDRI implements PDRI {
             boolean doChunkUpload) throws IOException {
         try {
             this.fileName = fileName;
+            if (this.fileName == null) {
+                throw new NullPointerException("fileName is null");
+            }
             this.resourceUrl = resourceUrl;
+            if (this.resourceUrl == null) {
+                throw new NullPointerException("resourceUrl is null");
+            }
             String encoded = VRL.encode(fileName);
+            if (encoded == null) {
+                throw new NullPointerException("encoded is null");
+            }
             vrl = new VRL(resourceUrl).appendPath(baseDir).append(encoded);
+            if (this.vrl == null) {
+                throw new NullPointerException("vrl is null");
+            }
             this.storageSiteId = storageSiteId;
+            if (this.storageSiteId == null) {
+                throw new NullPointerException("storageSiteId is null");
+            }
             this.username = username;
+            if (this.username == null) {
+                throw new NullPointerException("username is null");
+            }
             this.password = password;
+            if (this.password == null) {
+                throw new NullPointerException("password is null");
+            }
             this.encrypt = encrypt;
+
             this.keyInt = keyInt;
             this.doChunked = doChunkUpload;
             Logger.getLogger(VPDRI.class.getName()).log(Level.FINE, "fileName: {0}, storageSiteId: {1}, username: {2}, password: {3}, VRL: {4}", new Object[]{fileName, storageSiteId, username, password, vrl});
@@ -85,66 +107,74 @@ public class VPDRI implements PDRI {
         }
     }
 
-    private void initVFS() throws Exception {
-        this.vfsClient = new VFSClient();
-        VRSContext context = this.getVfsClient().getVRSContext();
-        //Bug in sftp: We have to put the username in the url
-        ServerInfo info = context.getServerInfoFor(vrl, true);
-        String authScheme = info.getAuthScheme();
+    private void initVFS() {
+        try {
+            this.vfsClient = new VFSClient();
+            VRSContext context = this.getVfsClient().getVRSContext();
+            //Bug in sftp: We have to put the username in the url
+            ServerInfo info = context.getServerInfoFor(vrl, true);
+            String authScheme = info.getAuthScheme();
 
-        if (StringUtil.equals(authScheme, ServerInfo.GSI_AUTH)) {
-            GridHelper.initGridProxy(username, password, context, destroyCert);
-//            copyVomsAndCerts();
-//            GridProxy gridProxy = context.getGridProxy();
-//            if (destroyCert) {
-//                gridProxy.destroy();
-//                gridProxy = null;
-//            }
-//            if (gridProxy == null || gridProxy.isValid() == false) {
-//                context.setProperty("grid.proxy.location", Constants.PROXY_FILE);
-//                // Default to $HOME/.globus
-//                context.setProperty("grid.certificate.location", Global.getUserHome() + "/.globus");
-//                String vo = username;
-//                context.setProperty("grid.proxy.voName", vo);
-//                context.setProperty("grid.proxy.lifetime", "200");
-//                gridProxy = context.getGridProxy();
-//                if (gridProxy.isValid() == false) {
-//                    gridProxy.setEnableVOMS(true);
-//                    gridProxy.setDefaultVOName(vo);
-//                    gridProxy.createWithPassword(password);
-//                    if (gridProxy.isValid() == false) {
-//                        throw new VlException("Created Proxy is not Valid!");
-//                    }
-//                    gridProxy.saveProxyTo(Constants.PROXY_FILE);
-////                    proxyCache.put(password, gridProxy);
-//                }
-//            }
-        }
-
-        if (StringUtil.equals(authScheme, ServerInfo.PASSWORD_AUTH)
-                || StringUtil.equals(authScheme, ServerInfo.PASSWORD_OR_PASSPHRASE_AUTH)
-                || StringUtil.equals(authScheme, ServerInfo.PASSPHRASE_AUTH)) {
-//            String username = storageSite.getCredential().getStorageSiteUsername();
-            if (username == null) {
-                throw new NullPointerException("Username is null!");
+            if (StringUtil.equals(authScheme, ServerInfo.GSI_AUTH)) {
+                GridHelper.initGridProxy(username, password, context, destroyCert);
+                //            copyVomsAndCerts();
+                //            GridProxy gridProxy = context.getGridProxy();
+                //            if (destroyCert) {
+                //                gridProxy.destroy();
+                //                gridProxy = null;
+                //            }
+                //            if (gridProxy == null || gridProxy.isValid() == false) {
+                //                context.setProperty("grid.proxy.location", Constants.PROXY_FILE);
+                //                // Default to $HOME/.globus
+                //                context.setProperty("grid.certificate.location", Global.getUserHome() + "/.globus");
+                //                String vo = username;
+                //                context.setProperty("grid.proxy.voName", vo);
+                //                context.setProperty("grid.proxy.lifetime", "200");
+                //                gridProxy = context.getGridProxy();
+                //                if (gridProxy.isValid() == false) {
+                //                    gridProxy.setEnableVOMS(true);
+                //                    gridProxy.setDefaultVOName(vo);
+                //                    gridProxy.createWithPassword(password);
+                //                    if (gridProxy.isValid() == false) {
+                //                        throw new VlException("Created Proxy is not Valid!");
+                //                    }
+                //                    gridProxy.saveProxyTo(Constants.PROXY_FILE);
+                ////                    proxyCache.put(password, gridProxy);
+                //                }
+                //            }
             }
-            info.setUsername(username);
-//            String password = storageSite.getCredential().getStorageSitePassword();
-            if (password == null) {
-                throw new NullPointerException("password is null!");
+
+            if (StringUtil.equals(authScheme, ServerInfo.PASSWORD_AUTH)
+                    || StringUtil.equals(authScheme, ServerInfo.PASSWORD_OR_PASSPHRASE_AUTH)
+                    || StringUtil.equals(authScheme, ServerInfo.PASSPHRASE_AUTH)) {
+                //            String username = storageSite.getCredential().getStorageSiteUsername();
+                if (username == null) {
+                    throw new NullPointerException("Username is null!");
+                }
+                info.setUsername(username);
+                //            String password = storageSite.getCredential().getStorageSitePassword();
+                if (password == null) {
+                    throw new NullPointerException("password is null!");
+                }
+                info.setPassword(password);
             }
-            info.setPassword(password);
+
+            info.setAttribute(ServerInfo.ATTR_DEFAULT_YES_NO_ANSWER, true);
+
+            //        if(getVrl().getScheme().equals(VRS.SFTP_SCHEME)){
+            //patch for bug with ssh driver 
+            info.setAttribute("sshKnownHostsFile", System.getProperty("user.home") + "/.ssh/known_hosts");
+            //        }
+            context.setProperty("chunk.upload", doChunked);
+            //        info.setAttribute(new VAttribute("chunk.upload", true));
+            info.store();
+        } catch (IOException ex) {
+            Logger.getLogger(VPDRI.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (VlException ex) {
+            Logger.getLogger(VPDRI.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (Exception ex) {
+            Logger.getLogger(VPDRI.class.getName()).log(Level.SEVERE, null, ex);
         }
-
-        info.setAttribute(ServerInfo.ATTR_DEFAULT_YES_NO_ANSWER, true);
-
-//        if(getVrl().getScheme().equals(VRS.SFTP_SCHEME)){
-        //patch for bug with ssh driver 
-        info.setAttribute("sshKnownHostsFile", System.getProperty("user.home") + "/.ssh/known_hosts");
-//        }
-        context.setProperty("chunk.upload", doChunked);
-//        info.setAttribute(new VAttribute("chunk.upload", true));
-        info.store();
     }
 
     @Override
