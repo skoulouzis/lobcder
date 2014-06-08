@@ -4,12 +4,15 @@
  */
 package nl.uva.cs.lobcder.optimization;
 
+import com.google.common.collect.HashBiMap;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.json.simple.JSONArray;
@@ -34,21 +37,19 @@ public class NewQoSPlannerClient {
         try {
             WebResource webResource = client.resource(uri);
 
-
             WebResource res = webResource.path("wm").path("device/");
             String s = res.get(String.class);
 
             Object obj = JSONValue.parse(s);
             JSONArray array = (JSONArray) obj;
-
-            List<FloodlightStats> stats = new ArrayList<>();
+            ArrayList<FloodlightStats> stats = new ArrayList<>();
             for (Object o : array) {
                 JSONObject jsonObj = (JSONObject) o;
                 FloodlightStats fs = new FloodlightStats();
                 org.json.simple.JSONArray ipArray = (org.json.simple.JSONArray) jsonObj.get("ipv4");
-                if(!ipArray.isEmpty()){
-                     fs.ip = (String) ipArray.get(0);
-                }else{
+                if (!ipArray.isEmpty()) {
+                    fs.ip = (String) ipArray.get(0);
+                } else {
                     continue;
                 }
 
@@ -59,31 +60,7 @@ public class NewQoSPlannerClient {
                 fs.port = (Long) jsonPort.get("port");
                 fs.switchDPID = (String) jsonPort.get("switchDPID");
 
-                res = webResource.path("wm").path("core").path("switch").path(fs.switchDPID).path("port").path("json");
-                s = res.get(String.class);
-                s = s.substring(27, s.indexOf("]}"));
-                s += "]";
-                org.json.simple.JSONArray statJVal = (org.json.simple.JSONArray) JSONValue.parse(s);
-
-                for (Object sjo : statJVal) {
-                    JSONObject jsonOb2j = (JSONObject) sjo;
-                    java.lang.Long portNumber = (java.lang.Long) jsonOb2j.get("portNumber");
-                    if (portNumber == fs.port) {
-                        fs.receiveOverrunErrors = (java.lang.Long) jsonOb2j.get("receiveOverrunErrors");
-                        fs.transmitErrors = (java.lang.Long) jsonOb2j.get("transmitErrors");
-                        fs.receiveDropped = (java.lang.Long) jsonOb2j.get("receiveDropped");
-                        fs.receiveErrors = (java.lang.Long) jsonOb2j.get("receiveErrors");
-                        fs.receiveFrameErrors = (java.lang.Long) jsonOb2j.get("receiveFrameErrors");
-                        fs.receiveCRCErrors = (java.lang.Long) jsonOb2j.get("receiveCRCErrors");
-                        fs.collisions = (java.lang.Long) jsonOb2j.get("collisions");
-                        fs.transmitBytes = (java.lang.Long) jsonOb2j.get("transmitBytes");
-                        fs.transmitPackets = (java.lang.Long) jsonOb2j.get("transmitPackets");
-                        fs.receivePackets = (java.lang.Long) jsonOb2j.get("receivePackets");
-                        fs.transmitDropped = (java.lang.Long) jsonOb2j.get("transmitDropped");
-                        break;
-                    }
-                }
-                stats.add(fs);
+                stats.add(getSwitchStats(fs, webResource));
             }
 
             return stats;
@@ -91,6 +68,38 @@ public class NewQoSPlannerClient {
             Logger.getLogger(NewQoSPlannerClient.class.getName()).log(Level.SEVERE, null, ex);
         }
         return null;
+    }
+
+    public Map<String, FloodlightStats> getStatsMap() {
+       
+        WebResource webResource = client.resource(uri);
+
+            WebResource res = webResource.path("wm").path("device/");
+            String s = res.get(String.class);
+
+            Object obj = JSONValue.parse(s);
+            JSONArray array = (JSONArray) obj;
+            Map<String, FloodlightStats> statsMap = new HashMap<>();
+            for (Object o : array) {
+                JSONObject jsonObj = (JSONObject) o;
+                FloodlightStats fs = new FloodlightStats();
+                org.json.simple.JSONArray ipArray = (org.json.simple.JSONArray) jsonObj.get("ipv4");
+                if (!ipArray.isEmpty()) {
+                    fs.ip = (String) ipArray.get(0);
+                } else {
+                    continue;
+                }
+
+                JSONArray attachmentPointArray = (org.json.simple.JSONArray) jsonObj.get("attachmentPoint");
+                org.json.simple.JSONObject attachmentPoint = (org.json.simple.JSONObject) attachmentPointArray.get(0);
+                Object val = JSONValue.parse(attachmentPoint.toJSONString());
+                JSONObject jsonPort = (JSONObject) val;
+                fs.port = (Long) jsonPort.get("port");
+                fs.switchDPID = (String) jsonPort.get("switchDPID");
+                
+                statsMap.put(fs.ip, getSwitchStats(fs, webResource));
+            }
+        return statsMap;
     }
 
     public void pushFlow(String switchID, int srcPort, int destPort) {
@@ -106,6 +115,34 @@ public class NewQoSPlannerClient {
 //            throw new RuntimeException("Failed : HTTP error code : "
 //                    + response.getStatus());
 //        }
+    }
+
+    private FloodlightStats getSwitchStats(FloodlightStats fs, WebResource webResource) {
+        WebResource res = webResource.path("wm").path("core").path("switch").path(fs.switchDPID).path("port").path("json");
+        String s = res.get(String.class);
+        s = s.substring(27, s.indexOf("]}"));
+        s += "]";
+        org.json.simple.JSONArray statJVal = (org.json.simple.JSONArray) JSONValue.parse(s);
+
+        for (Object sjo : statJVal) {
+            JSONObject jsonOb2j = (JSONObject) sjo;
+            java.lang.Long portNumber = (java.lang.Long) jsonOb2j.get("portNumber");
+            if (portNumber == fs.port) {
+                fs.receiveOverrunErrors = (java.lang.Long) jsonOb2j.get("receiveOverrunErrors");
+                fs.transmitErrors = (java.lang.Long) jsonOb2j.get("transmitErrors");
+                fs.receiveDropped = (java.lang.Long) jsonOb2j.get("receiveDropped");
+                fs.receiveErrors = (java.lang.Long) jsonOb2j.get("receiveErrors");
+                fs.receiveFrameErrors = (java.lang.Long) jsonOb2j.get("receiveFrameErrors");
+                fs.receiveCRCErrors = (java.lang.Long) jsonOb2j.get("receiveCRCErrors");
+                fs.collisions = (java.lang.Long) jsonOb2j.get("collisions");
+                fs.transmitBytes = (java.lang.Long) jsonOb2j.get("transmitBytes");
+                fs.transmitPackets = (java.lang.Long) jsonOb2j.get("transmitPackets");
+                fs.receivePackets = (java.lang.Long) jsonOb2j.get("receivePackets");
+                fs.transmitDropped = (java.lang.Long) jsonOb2j.get("transmitDropped");
+                break;
+            }
+        }
+        return fs;
     }
 
 //    @Data

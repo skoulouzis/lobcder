@@ -627,24 +627,36 @@ public class WebDataFileResource extends WebDataResource implements
             String uri = PropertiesHelper.getFloodLightURL();
             plannerClient = new NewQoSPlannerClient(uri);
         }
-        List<FloodlightStats> stats = plannerClient.getStats();
+        Map<String, FloodlightStats> stats1 = plannerClient.getStatsMap();
+        try {
+            Thread.sleep(750);
+        } catch (InterruptedException ex) {
+            Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        Map<String, FloodlightStats> stats2 = plannerClient.getStatsMap();
+        Set<String> keys = stats1.keySet();
         long cost = Long.MAX_VALUE;
         String worker = null;
+        for (String k : keys) {
+            FloodlightStats fs1 = stats1.get(k);
 
-        for (FloodlightStats f : stats) {
-            long allStats = f.transmitBytes + f.receiveBytes
-                    + f.receivePackets + f.transmitPackets;
-//            WebDataFileResource.log.log(Level.INFO, "worker: {0} cost: {1}", new Object[]{f.ip, allStats});
-//                    + f.collisions
-//                    + f.receiveCRCErrors + f.receiveDropped + f.receiveErrors
-//                    + f.receiveFrameErrors + f.receiveOverrunErrors 
-//                    + f.transmitDropped + f.transmitErrors;
-            if (allStats < cost && workersMap.containsKey(f.ip)) {
+            FloodlightStats fs2 = stats2.get(k);
+            long allStats = (fs2.receiveBytes - fs1.receiveBytes)
+                    + (fs2.transmitBytes - fs1.transmitBytes)
+                    + (fs2.receivePackets - fs1.receivePackets)
+                    + (fs2.transmitPackets - fs1.transmitPackets);
+            WebDataFileResource.log.log(Level.INFO, "worker: {0} cost: {1}", new Object[]{k, allStats});
+            if (allStats < cost && workersMap.containsKey(k)) {
                 cost = allStats;
-                worker = workersMap.get(f.ip);
-//                WebDataFileResource.log.log(Level.INFO, "aaaaaaaaaaaaworker: {0} cost: {1}", new Object[]{f.ip, allStats});
+                worker = workersMap.get(k);
+//                WebDataFileResource.log.log(Level.INFO, "worker: {0} cost: {1}", new Object[]{k, allStats});
+                if (cost <= 0) {
+                    break;
+                }
             }
+
         }
+
 //        WebDataFileResource.log.log(Level.INFO, "portNum: {0} cost: {1} worker: {2}", new Object[]{portNum, cost, worker});
         String w = worker + "/" + getLogicalData().getUid();
         String token = UUID.randomUUID().toString();
