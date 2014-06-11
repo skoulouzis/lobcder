@@ -635,6 +635,13 @@ public class WebDataFileResource extends WebDataResource implements
         }
         Map<String, FloodlightStats> stats2 = plannerClient.getStatsMap();
         Set<String> keys = stats1.keySet();
+        if(keys.isEmpty()){
+            keys.add("192.168.100.1");
+            keys.add("192.168.100.2");
+            keys.add("192.168.100.3");
+            keys.add("192.168.100.4");
+            keys.add("192.168.100.5");
+        }
         long cost = Long.MAX_VALUE;
         String worker = null;
         for (String k : keys) {
