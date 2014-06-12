@@ -547,7 +547,7 @@ public final class WorkerServlet extends HttpServlet {
         while ((read = in.read(buffer)) > 0) {
             output.write(buffer, 0, read);
             total += read;
-            Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, "Count : {0} ", count);
+            Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, "Count : " + count + " total: " + total);
             if (count % 1000 == 0 && count > 100) {
                 long elapsed = System.currentTimeMillis() - startTime;
                 speed = total / elapsed;
