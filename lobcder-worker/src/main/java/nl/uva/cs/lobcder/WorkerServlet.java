@@ -543,13 +543,15 @@ public final class WorkerServlet extends HttpServlet {
         double rateOfChange = 0;
         double speedPrev = 0;
         long startTime = System.currentTimeMillis();
+        double count = 1.0;
         while ((read = in.read(buffer)) > 0) {
             output.write(buffer, 0, read);
             total += read;
             double progress = (100.0 * total) / size;
             if (progress % 10 == 0 && progress > 10) {
                 long elapsed = System.currentTimeMillis() - startTime;
-                speed = total / elapsed;
+                speed = ((total / elapsed) + speedPrev) / count;
+                count++;
                 rateOfChange = (speed - speedPrev);
                 speedPrev = speed;
                 Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, "speed: {0} rateOfChange: {1}", new Object[]{speed, rateOfChange});
