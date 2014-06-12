@@ -637,7 +637,7 @@ public class WebDataFileResource extends WebDataResource implements
         Map<String, FloodlightStats> stats2 = plannerClient.getStatsMap();
         Set<String> keys = stats1.keySet();
         long cost = Long.MAX_VALUE;
-        String worker = null;
+        String worker = workersMap.values().iterator().next();
         for (String k : keys) {
             FloodlightStats fs1 = stats1.get(k);
 
