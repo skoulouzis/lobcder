@@ -88,6 +88,7 @@ public final class WorkerServlet extends HttpServlet {
     private int responseBufferSize;
     private double lim = -5.0;
     private boolean qosCopy;
+    private int warnings;
 
     // Actions ------------------------------------------------------------------------------------
     /**
@@ -109,6 +110,7 @@ public final class WorkerServlet extends HttpServlet {
             //        uname = prop.getProperty(("rest.uname"));
             clientConfig = configureClient();
             clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
+            warnings = Util.getNumOfWarnings();
         } catch (IOException ex) {
             Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -558,7 +560,7 @@ public final class WorkerServlet extends HttpServlet {
                     count++;
                     Logger.getLogger(WorkerServlet.class.getName()).log(Level.WARNING, "We will not tolarate this !!!! Next time line is off");
                     //This works with export ec=18; while [ $ec -eq 18 ]; do curl -O -C - -L --request GET -u user:pass http://localhost:8080/lobcder/dav/large_file; export ec=$?; done
-                    if (count >= 2) {
+                    if (count >= warnings) {
                         Logger.getLogger(WorkerServlet.class.getName()).log(Level.WARNING, "We will not tolarate this !!!! Find a new worker. rateOfChange: " + rateOfChange);
                         break;
                     }

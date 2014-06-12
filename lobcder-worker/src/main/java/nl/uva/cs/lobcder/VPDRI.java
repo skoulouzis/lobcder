@@ -62,6 +62,7 @@ public class VPDRI implements PDRI {
     private final int bufferSize;
     private final boolean qosCopy;
     private final double lim;
+    private int warnings;
 
     public VPDRI(String fileName, Long storageSiteId, String resourceUrl,
             String username, String password, boolean encrypt, BigInteger keyInt,
@@ -106,6 +107,7 @@ public class VPDRI implements PDRI {
             bufferSize = Util.getBufferSize();
             qosCopy = Util.doQosCopy();
             lim = Util.getRateOfChangeLim();
+            warnings = Util.getNumOfWarnings();
         } catch (Exception ex) {
             throw new IOException(ex);
         }
@@ -520,7 +522,7 @@ public class VPDRI implements PDRI {
                             count++;
                             Logger.getLogger(WorkerServlet.class.getName()).log(Level.WARNING, "We will not tolarate this !!!! Next time line is off");
                             //This works with export ec=18; while [ $ec -eq 18 ]; do curl -O -C - -L --request GET -u user:pass http://localhost:8080/lobcder/dav/large_file; export ec=$?; done
-                            if (count >= 2) {
+                            if (count >= warnings) {
                                 Logger.getLogger(WorkerServlet.class.getName()).log(Level.WARNING, "We will not tolarate this !!!! Find a new worker. rateOfChange: " + rateOfChange);
                                 break;
                             }

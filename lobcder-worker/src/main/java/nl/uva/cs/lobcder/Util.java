@@ -88,4 +88,8 @@ class Util {
     static boolean doQosCopy() throws IOException {
         return Boolean.valueOf(getProperties().getProperty(("do.qos.copy"), "false"));
     }
+
+    static int getNumOfWarnings() throws IOException {
+        return Integer.valueOf(getProperties().getProperty(("num.of.warnings"), "3"));
+    }
 }
