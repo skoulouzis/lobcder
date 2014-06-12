@@ -547,14 +547,14 @@ public final class WorkerServlet extends HttpServlet {
         while ((read = in.read(buffer)) > 0) {
             output.write(buffer, 0, read);
             total += read;
-            Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, "Count : " + count + " total: " + total);
-            if (count % 1000 == 0 && count > 100) {
+//            Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, "Count : " + count + " total: " + total);
+            if (count % 100 == 0 && count > 10) {
                 long elapsed = System.currentTimeMillis() - startTime;
                 speed = total / elapsed;
                 rateOfChange = (speed - speedPrev);
                 speedPrev = speed;
                 Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, "speed: {0} rateOfChange: {1}", new Object[]{speed, rateOfChange});
-                if (rateOfChange < lim && count > 1000) {
+                if (rateOfChange < lim && count > 100) {
                     //This works with export ec=18; while [ $ec -eq 18 ]; do curl -O -C - -L --request GET -u user:pass http://localhost:8080/lobcder/dav/large_file; export ec=$?; done
                     Logger.getLogger(WorkerServlet.class.getName()).log(Level.WARNING, "We will not tolarate this !!!! Find a new worker");
                     break;
