@@ -87,6 +87,7 @@ public final class WorkerServlet extends HttpServlet {
     private InputStream in;
     private int responseBufferSize;
     private double lim = -5.0;
+    private boolean qosCopy;
 
     // Actions ------------------------------------------------------------------------------------
     /**
@@ -99,6 +100,7 @@ public final class WorkerServlet extends HttpServlet {
         try {
             setResponseBufferSize = Util.isResponseBufferSize();
             useCircularBuffer = Util.isCircularBuffer();
+            qosCopy = Util.doQosCopy();
             bufferSize = Util.getBufferSize();
 
             restURL = Util.getRestURL();
@@ -516,8 +518,7 @@ public final class WorkerServlet extends HttpServlet {
                 // Write full range.
                 in = input.getData();
                 byte[] buffer = new byte[bufferSize];
-
-                if (useCircularBuffer) {
+                if (!qosCopy) {
                     CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((bufferSize), in, output);
                     cBuff.setMaxReadChunkSize(bufferSize);
                     if (responseBufferSize > 0) {
@@ -525,32 +526,7 @@ public final class WorkerServlet extends HttpServlet {
                     }
                     cBuff.startTransfer(new Long(-1));
                 } else {
-                    int read;
-                    long total = 0;
-                    int count = 0;
-                    double speed;
-                    double rateOfChange = 0;
-                    double speedPrev = 0;
-                    long startTime = System.currentTimeMillis();
-                    while ((read = in.read(buffer)) > 0) {
-                        output.write(buffer, 0, read);
-                        total += read;
-                        if (count % 1000 == 0 && count > 100) {
-                            long elapsed = System.currentTimeMillis() - startTime;
-                            speed = total / elapsed;
-                            rateOfChange = (speed - speedPrev);
-                            speedPrev = speed;
-                            Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, "speed: " + speed + " rateOfChange: " + rateOfChange);
-                            if (rateOfChange < lim && count > 1000) {
-                                //This works with export ec=18; while [ $ec -eq 18 ]; do curl -O -C - -L --request GET -u user:pass http://localhost:8080/lobcder/dav/large_file; export ec=$?; done
-                                Logger.getLogger(WorkerServlet.class.getName()).log(Level.WARNING, "We will not tolarate this !!!! Find a new worker");
-                                break;
-                            }
-                        }
-                        count++;
-                    }
-                    Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, "lim: {0}", lim);
-//                    Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, sb.toString());
+                    qoSCopy(buffer, output);
                 }
             } else {
                 input.copyRange(output, start, length);
@@ -558,6 +534,34 @@ public final class WorkerServlet extends HttpServlet {
         } finally {
             output.flush();
         }
+    }
+
+    private void qoSCopy(byte[] buffer, OutputStream output) throws IOException {
+        int read;
+        long total = 0;
+        int count = 0;
+        double speed;
+        double rateOfChange = 0;
+        double speedPrev = 0;
+        long startTime = System.currentTimeMillis();
+        while ((read = in.read(buffer)) > 0) {
+            output.write(buffer, 0, read);
+            total += read;
+            if (count % 1000 == 0 && count > 100) {
+                long elapsed = System.currentTimeMillis() - startTime;
+                speed = total / elapsed;
+                rateOfChange = (speed - speedPrev);
+                speedPrev = speed;
+                Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, "speed: {0} rateOfChange: {1}", new Object[]{speed, rateOfChange});
+                if (rateOfChange < lim && count > 1000) {
+                    //This works with export ec=18; while [ $ec -eq 18 ]; do curl -O -C - -L --request GET -u user:pass http://localhost:8080/lobcder/dav/large_file; export ec=$?; done
+                    Logger.getLogger(WorkerServlet.class.getName()).log(Level.WARNING, "We will not tolarate this !!!! Find a new worker");
+                    break;
+                }
+            }
+            count++;
+        }
+        Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, "lim: {0}", lim);
     }
 
     /**

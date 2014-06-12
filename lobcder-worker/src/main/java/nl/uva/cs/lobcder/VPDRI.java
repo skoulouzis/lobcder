@@ -60,6 +60,8 @@ public class VPDRI implements PDRI {
 //    private static final Map<String, GridProxy> proxyCache = new HashMap<>();
     private boolean destroyCert;
     private final int bufferSize;
+    private final boolean qosCopy;
+    private final double lim;
 
     public VPDRI(String fileName, Long storageSiteId, String resourceUrl,
             String username, String password, boolean encrypt, BigInteger keyInt,
@@ -102,6 +104,8 @@ public class VPDRI implements PDRI {
             }
             initVFS();
             bufferSize = Util.getBufferSize();
+            qosCopy = Util.doQosCopy();
+            lim = Util.getRateOfChangeLim();
         } catch (Exception ex) {
             throw new IOException(ex);
         }
@@ -481,6 +485,9 @@ public class VPDRI implements PDRI {
 
     @Override
     public void copyRange(OutputStream output, long start, long length) throws IOException {
+        if (!qosCopy) {
+        } else {
+        }
         try {
             VFile file = (VFile) getVfsClient().openLocation(vrl);
             if (file instanceof VRandomReadable) {
@@ -489,6 +496,13 @@ public class VPDRI implements PDRI {
                 byte[] buffer = new byte[bufferSize];
                 int read;
                 long toRead = length;
+                long total = 0;
+                int count = 0;
+                double speed;
+                double rateOfChange = 0;
+                double speedPrev = 0;
+                long startTime = System.currentTimeMillis();
+
                 while ((read = ra.readBytes(start, buffer, 0, buffer.length)) > 0) {
                     if ((toRead -= read) > 0) {
                         output.write(buffer, 0, read);
@@ -498,6 +512,20 @@ public class VPDRI implements PDRI {
                         start += read;
                         break;
                     }
+                    total += read;
+                    if (count % 1000 == 0 && count > 100 && qosCopy) {
+                        long elapsed = System.currentTimeMillis() - startTime;
+                        speed = total / elapsed;
+                        rateOfChange = (speed - speedPrev);
+                        speedPrev = speed;
+                        Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, "speed: {0} rateOfChange: {1}", new Object[]{speed, rateOfChange});
+                        if (rateOfChange < lim && count > 1000) {
+                            //This works with export ec=18; while [ $ec -eq 18 ]; do curl -O -C - -L --request GET -u user:pass http://localhost:8080/lobcder/dav/large_file; export ec=$?; done
+                            Logger.getLogger(WorkerServlet.class.getName()).log(Level.WARNING, "We will not tolarate this !!!! Find a new worker");
+                            break;
+                        }
+                    }
+                    count++;
                 }
             } else {
                 throw new IOException("Backend at " + vrl.getScheme() + "://" + vrl.getHostname() + "does not support random reads");

@@ -82,6 +82,10 @@ class Util {
     }
 
     static double getRateOfChangeLim() throws IOException {
-        return Double.valueOf(getProperties().getProperty(("rate.of.change"), "-5"));
+        return Double.valueOf(getProperties().getProperty(("rate.of.change"), "5000"));
+    }
+
+    static boolean doQosCopy() throws IOException {
+        return Boolean.valueOf(getProperties().getProperty(("do.qos.copy"), "false"));
     }
 }
