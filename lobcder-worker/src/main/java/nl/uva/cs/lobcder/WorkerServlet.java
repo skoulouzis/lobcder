@@ -543,6 +543,7 @@ public final class WorkerServlet extends HttpServlet {
         double rateOfChange = 0;
         double speedPrev = 0;
         long startTime = System.currentTimeMillis();
+        int count = 0;
         while ((read = in.read(buffer)) > 0) {
             output.write(buffer, 0, read);
             total += read;
@@ -554,9 +555,12 @@ public final class WorkerServlet extends HttpServlet {
                 speedPrev = speed;
                 Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, "speed: {0} rateOfChange: {1}", new Object[]{speed, rateOfChange});
                 if (rateOfChange < lim && progress > 12) {
+                    count++;
                     //This works with export ec=18; while [ $ec -eq 18 ]; do curl -O -C - -L --request GET -u user:pass http://localhost:8080/lobcder/dav/large_file; export ec=$?; done
-                    Logger.getLogger(WorkerServlet.class.getName()).log(Level.WARNING, "We will not tolarate this !!!! Find a new worker. rateOfChange: " + rateOfChange);
-                    break;
+                    if (count >= 2) {
+                        Logger.getLogger(WorkerServlet.class.getName()).log(Level.WARNING, "We will not tolarate this !!!! Find a new worker. rateOfChange: " + rateOfChange);
+                        break;
+                    }
                 }
             }
         }
