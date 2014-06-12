@@ -83,6 +83,7 @@ public class WebDataFileResource extends WebDataResource implements
                 workersMap = new HashMap<>();
                 for (String s : workersURLs) {
                     try {
+                        s = s.replaceAll(" ", "");
                         workersMap.put(new URI(s).getHost(), s);
                     } catch (URISyntaxException ex) {
                         Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, ex);
