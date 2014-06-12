@@ -485,9 +485,6 @@ public class VPDRI implements PDRI {
 
     @Override
     public void copyRange(OutputStream output, long start, long length) throws IOException {
-        if (!qosCopy) {
-        } else {
-        }
         try {
             VFile file = (VFile) getVfsClient().openLocation(vrl);
             if (file instanceof VRandomReadable) {
