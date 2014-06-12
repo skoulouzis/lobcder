@@ -494,7 +494,6 @@ public class VPDRI implements PDRI {
                 int read;
                 long toRead = length;
                 long total = 0;
-                int count = 0;
                 double speed;
                 double rateOfChange = 0;
                 double speedPrev = 0;
@@ -510,19 +509,19 @@ public class VPDRI implements PDRI {
                         break;
                     }
                     total += read;
-                    if (count % 1000 == 0 && count > 100 && qosCopy) {
+                    double progress = (100.0 * total) / length;
+                    if (progress > 10) {
                         long elapsed = System.currentTimeMillis() - startTime;
                         speed = total / elapsed;
                         rateOfChange = (speed - speedPrev);
                         speedPrev = speed;
                         Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, "speed: {0} rateOfChange: {1}", new Object[]{speed, rateOfChange});
-                        if (rateOfChange < lim && count > 1000) {
+                        if (rateOfChange < lim && progress > 12) {
                             //This works with export ec=18; while [ $ec -eq 18 ]; do curl -O -C - -L --request GET -u user:pass http://localhost:8080/lobcder/dav/large_file; export ec=$?; done
                             Logger.getLogger(WorkerServlet.class.getName()).log(Level.WARNING, "We will not tolarate this !!!! Find a new worker");
                             break;
                         }
                     }
-                    count++;
                 }
             } else {
                 throw new IOException("Backend at " + vrl.getScheme() + "://" + vrl.getHostname() + "does not support random reads");
