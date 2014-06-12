@@ -525,28 +525,26 @@ public final class WorkerServlet extends HttpServlet {
                     }
                     cBuff.startTransfer(new Long(-1));
                 } else {
-                    long startTime = System.currentTimeMillis();
                     int read;
+                    long total = 0;
                     int count = 0;
                     double speed;
                     double rateOfChange = 0;
                     double speedPrev = 0;
-//                    StringBuilder sb = new StringBuilder();
+                    long startTime = System.currentTimeMillis();
                     while ((read = in.read(buffer)) > 0) {
                         output.write(buffer, 0, read);
-                        if (count % 100 == 0) {
+                        total += read;
+                        if (count % 1000 == 0 && count > 100) {
                             long elapsed = System.currentTimeMillis() - startTime;
-                            speed = read * 1.0 / (elapsed * 1.0);
-                            if (count > 50) {
-                                rateOfChange = (speed - speedPrev) / (elapsed);
-                            }
+                            speed = total / elapsed;
+                            rateOfChange = (speed - speedPrev);
                             speedPrev = speed;
-//                            sb.append("read: ").append(read).append(" speed: ").append(speed).append(" rateOfChange: ").append(rateOfChange).append("\n");
-                            if (rateOfChange < lim) {
+                            Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, "speed: " + speed + " rateOfChange: " + rateOfChange);
+                            if (rateOfChange < lim && count > 1000) {
                                 //This works with export ec=18; while [ $ec -eq 18 ]; do curl -O -C - -L --request GET -u user:pass http://localhost:8080/lobcder/dav/large_file; export ec=$?; done
                                 Logger.getLogger(WorkerServlet.class.getName()).log(Level.WARNING, "We will not tolarate this !!!! Find a new worker");
                                 break;
-//                                throw new IOException("Low B/W");
                             }
                         }
                         count++;
@@ -608,11 +606,11 @@ public final class WorkerServlet extends HttpServlet {
         try {
             config.getProperties().put(HTTPSProperties.PROPERTY_HTTPS_PROPERTIES, new HTTPSProperties(
                     new HostnameVerifier() {
-                        @Override
-                        public boolean verify(String hostname, SSLSession session) {
-                            return true;
-                        }
-                    },
+                @Override
+                public boolean verify(String hostname, SSLSession session) {
+                    return true;
+                }
+            },
                     ctx));
         } catch (Exception e) {
         }
@@ -696,7 +694,7 @@ public final class WorkerServlet extends HttpServlet {
             String resourceIP = Util.getIP(uri.getHost());
             List<String> ips = Util.getAllIPs();
             for (String i : ips) {
-                Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, "Checking IP: {0}", i);
+//                Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, "Checking IP: {0}", i);
                 if (resourceIP.equals(i)) {
                     String resURL = p.resourceUrl.replaceFirst(uri.getScheme(), "file");
                     p.resourceUrl = resURL;
