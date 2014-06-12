@@ -513,11 +513,9 @@ public final class WorkerServlet extends HttpServlet {
      */
     private void copy(PDRI input, OutputStream output, long start, long length)
             throws IOException, VlException {
-        Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, "Start copy -------------------------");
         try {
             if (input.getLength() == length) {
                 // Write full range.
-                Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, "Write full range. -------------------------");
                 in = input.getData();
                 byte[] buffer = new byte[bufferSize];
                 if (!qosCopy) {
@@ -528,11 +526,9 @@ public final class WorkerServlet extends HttpServlet {
                     }
                     cBuff.startTransfer(new Long(-1));
                 } else {
-                    Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, "Start qoSCopy -------------------------");
                     qoSCopy(buffer, output);
                 }
             } else {
-                Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, "Start  input.copyRange -------------------------");
                 input.copyRange(output, start, length);
             }
         } finally {
@@ -551,6 +547,7 @@ public final class WorkerServlet extends HttpServlet {
         while ((read = in.read(buffer)) > 0) {
             output.write(buffer, 0, read);
             total += read;
+            Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, "Count : {0} ", count);
             if (count % 1000 == 0 && count > 100) {
                 long elapsed = System.currentTimeMillis() - startTime;
                 speed = total / elapsed;
