@@ -518,7 +518,7 @@ public class VPDRI implements PDRI {
                         rateOfChange = (speed - speedPrev);
                         speedPrev = speed;
                         Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, "speed: {0} rateOfChange: {1}", new Object[]{speed, rateOfChange});
-                        if (rateOfChange < lim && progress > 12) {
+                        if (rateOfChange < lim) {
                             count++;
                             Logger.getLogger(WorkerServlet.class.getName()).log(Level.WARNING, "We will not tolarate this !!!! Next time line is off");
                             //This works with export ec=18; while [ $ec -eq 18 ]; do curl -O -C - -L --request GET -u user:pass http://localhost:8080/lobcder/dav/large_file; export ec=$?; done
