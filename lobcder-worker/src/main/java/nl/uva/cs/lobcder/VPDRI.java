@@ -512,7 +512,7 @@ public class VPDRI implements PDRI {
                     }
                     total += read;
                     double progress = (100.0 * total) / length;
-                    if (progress % 5 == 0 && progress > 10) {
+                    if (progress % 5 == 0 && progress >= 5) {
                         long elapsed = System.currentTimeMillis() - startTime;
                         speed = (total / elapsed);
                         rateOfChange = (speed - speedPrev);
