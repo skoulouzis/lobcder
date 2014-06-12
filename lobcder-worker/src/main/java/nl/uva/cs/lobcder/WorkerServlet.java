@@ -531,7 +531,7 @@ public final class WorkerServlet extends HttpServlet {
                     double speed;
                     double rateOfChange = 0;
                     double speedPrev = 0;
-                    StringBuilder sb = new StringBuilder();
+//                    StringBuilder sb = new StringBuilder();
                     while ((read = in.read(buffer)) > 0) {
                         output.write(buffer, 0, read);
                         if (count % 100 == 0) {
@@ -551,7 +551,7 @@ public final class WorkerServlet extends HttpServlet {
                         }
                         count++;
                     }
-                    Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, "lim: " + lim);
+                    Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, "lim: {0}", lim);
 //                    Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, sb.toString());
                 }
             } else {
