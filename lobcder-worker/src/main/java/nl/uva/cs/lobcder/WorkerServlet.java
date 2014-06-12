@@ -526,7 +526,7 @@ public final class WorkerServlet extends HttpServlet {
                     }
                     cBuff.startTransfer(new Long(-1));
                 } else {
-                    qoSCopy(buffer, output);
+                    qoSCopy(buffer, output, length);
                 }
             } else {
                 input.copyRange(output, start, length);
@@ -536,10 +536,9 @@ public final class WorkerServlet extends HttpServlet {
         }
     }
 
-    private void qoSCopy(byte[] buffer, OutputStream output) throws IOException {
+    private void qoSCopy(byte[] buffer, OutputStream output, long size) throws IOException {
         int read;
         long total = 0;
-        int count = 0;
         double speed;
         double rateOfChange = 0;
         double speedPrev = 0;
@@ -547,20 +546,20 @@ public final class WorkerServlet extends HttpServlet {
         while ((read = in.read(buffer)) > 0) {
             output.write(buffer, 0, read);
             total += read;
+            double progress = (100.0 * total) / size;
 //            Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, "Count : " + count + " total: " + total);
-            if (count % 100 == 0 && count > 10) {
+            if (progress > 10) {
                 long elapsed = System.currentTimeMillis() - startTime;
                 speed = total / elapsed;
                 rateOfChange = (speed - speedPrev);
                 speedPrev = speed;
                 Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, "speed: {0} rateOfChange: {1}", new Object[]{speed, rateOfChange});
-                if (rateOfChange < lim && count > 100) {
+                if (rateOfChange < lim && progress > 12) {
                     //This works with export ec=18; while [ $ec -eq 18 ]; do curl -O -C - -L --request GET -u user:pass http://localhost:8080/lobcder/dav/large_file; export ec=$?; done
                     Logger.getLogger(WorkerServlet.class.getName()).log(Level.WARNING, "We will not tolarate this !!!! Find a new worker");
                     break;
                 }
             }
-            count++;
         }
         Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, "lim: {0}", lim);
     }
