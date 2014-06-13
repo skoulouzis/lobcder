@@ -559,7 +559,7 @@ public final class WorkerServlet extends HttpServlet {
                 speed = (total / elapsed);
                 rateOfChange = (speed - speedPrev);
                 speedPrev = speed;
-                Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, "progressThresshold: {0) speed: {1} rateOfChange: {2}", new Object[]{progressThresshold, speed, rateOfChange});
+                Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, "progressThresshold: {0} speed: {1} rateOfChange: {2}", new Object[]{progressThresshold, speed, rateOfChange});
                 if (rateOfChange < lim) {
                     count++;
                     Logger.getLogger(WorkerServlet.class.getName()).log(Level.WARNING, "We will not tolarate this !!!! Next time line is off");
