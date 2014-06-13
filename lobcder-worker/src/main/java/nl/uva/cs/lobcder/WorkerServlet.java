@@ -556,14 +556,7 @@ public final class WorkerServlet extends HttpServlet {
             output.write(buffer, 0, read);
             total += read;
             double progress = (100.0 * total) / size;
-            if (progress >= progressThresshold) {
-                Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, progress + " >= " + progressThresshold);
-            }
-            if (progress % 5 == 0) {
-                Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, progress + " % 5 == 0 ");
-            }
-            Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, progress + " % 5 = " + progress % 5);
-            if (progress >= progressThresshold && progress % 5 == 0) {
+            if (progress >= progressThresshold && Math.round(progress) % 5 == 0) {
                 long elapsed = System.currentTimeMillis() - startTime;
                 speed = (total / elapsed);
                 rateOfChange = (speed - speedPrev);
