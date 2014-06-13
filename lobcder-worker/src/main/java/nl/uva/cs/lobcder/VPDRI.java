@@ -64,6 +64,7 @@ public class VPDRI implements PDRI {
     private final double lim;
     private int warnings;
     private double progressThresshold;
+    private double coefficient;
 
     public VPDRI(String fileName, Long storageSiteId, String resourceUrl,
             String username, String password, boolean encrypt, BigInteger keyInt,
@@ -110,6 +111,7 @@ public class VPDRI implements PDRI {
             lim = Util.getRateOfChangeLim();
             warnings = Util.getNumOfWarnings();
             progressThresshold = Util.getProgressThresshold();
+            coefficient = Util.getProgressThressholdCoefficient();
         } catch (Exception ex) {
             throw new IOException(ex);
         }
@@ -503,7 +505,7 @@ public class VPDRI implements PDRI {
                 double speedPrev = 0;
                 long startTime = System.currentTimeMillis();
                 int count = 0;
-                progressThresshold = 100.0 * Math.exp(-0.0022 * (length / (1024.0 * 1024.0)));
+                progressThresshold = 100.0 * Math.exp(coefficient * (length / (1024.0 * 1024.0)));
                 while ((read = ra.readBytes(start, buffer, 0, buffer.length)) > 0) {
                     if ((toRead -= read) > 0) {
                         output.write(buffer, 0, read);

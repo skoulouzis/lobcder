@@ -91,6 +91,7 @@ public final class WorkerServlet extends HttpServlet {
     private boolean qosCopy;
     private int warnings;
     private double progressThresshold;
+    private double coefficient;
 
     // Actions ------------------------------------------------------------------------------------
     /**
@@ -114,6 +115,7 @@ public final class WorkerServlet extends HttpServlet {
             clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
             warnings = Util.getNumOfWarnings();
             progressThresshold = Util.getProgressThresshold();
+            coefficient = Util.getProgressThressholdCoefficient();
         } catch (IOException ex) {
             Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -549,7 +551,7 @@ public final class WorkerServlet extends HttpServlet {
         double speedPrev = 0;
         long startTime = System.currentTimeMillis();
         int count = 0;
-        progressThresshold = 100.0 * Math.exp(-0.0022 * (size / (1024.0 * 1024.0)));
+        progressThresshold = 100.0 * Math.exp(coefficient * (size / (1024.0 * 1024.0)));
         while ((read = in.read(buffer)) > 0) {
             output.write(buffer, 0, read);
             total += read;
@@ -571,7 +573,6 @@ public final class WorkerServlet extends HttpServlet {
                 }
             }
         }
-        Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, "lim: {0}", lim);
     }
 
     /**

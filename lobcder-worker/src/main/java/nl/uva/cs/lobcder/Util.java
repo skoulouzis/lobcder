@@ -96,4 +96,8 @@ class Util {
     static double getProgressThresshold() throws IOException {
         return Integer.valueOf(getProperties().getProperty(("progress.thresshold"), "10"));
     }
+
+    static double getProgressThressholdCoefficient() throws IOException {
+        return Double.valueOf(getProperties().getProperty(("progress.thresshold.coefficient"), "-0.0024"));
+    }
 }
