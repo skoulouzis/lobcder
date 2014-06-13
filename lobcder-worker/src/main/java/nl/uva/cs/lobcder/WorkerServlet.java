@@ -552,6 +552,7 @@ public final class WorkerServlet extends HttpServlet {
         long startTime = System.currentTimeMillis();
         int count = 0;
         progressThresshold = 100.0 * Math.exp(coefficient * (size / (1024.0 * 1024.0)));
+        Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, "progressThresshold: {0} rateOfChange: {1}", new Object[]{progressThresshold, rateOfChange});
         while ((read = in.read(buffer)) > 0) {
             output.write(buffer, 0, read);
             total += read;
