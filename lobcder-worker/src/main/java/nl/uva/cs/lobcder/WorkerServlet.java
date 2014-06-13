@@ -549,7 +549,7 @@ public final class WorkerServlet extends HttpServlet {
         double speedPrev = 0;
         long startTime = System.currentTimeMillis();
         int count = 0;
-        progressThresshold = 100 * Math.exp(-0.0022 * (size * 1024 * 1024));
+        progressThresshold = 100.0 * Math.exp(-0.0022 * (size * 1024.0 * 1024.0));
         while ((read = in.read(buffer)) > 0) {
             output.write(buffer, 0, read);
             total += read;

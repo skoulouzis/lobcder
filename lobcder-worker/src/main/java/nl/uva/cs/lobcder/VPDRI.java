@@ -503,7 +503,7 @@ public class VPDRI implements PDRI {
                 double speedPrev = 0;
                 long startTime = System.currentTimeMillis();
                 int count = 0;
-                progressThresshold = 100 * Math.exp(-0.0022 * (length * 1024 * 1024));
+                 progressThresshold = 100.0 * Math.exp(-0.0022 * (length * 1024.0 * 1024.0));
                 while ((read = ra.readBytes(start, buffer, 0, buffer.length)) > 0) {
                     if ((toRead -= read) > 0) {
                         output.write(buffer, 0, read);
