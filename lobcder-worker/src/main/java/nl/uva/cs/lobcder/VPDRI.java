@@ -503,6 +503,7 @@ public class VPDRI implements PDRI {
                 double speedPrev = 0;
                 long startTime = System.currentTimeMillis();
                 int count = 0;
+                progressThresshold = 100 * Math.exp(-0.0022 * (length*1024*1024));
                 while ((read = ra.readBytes(start, buffer, 0, buffer.length)) > 0) {
                     if ((toRead -= read) > 0) {
                         output.write(buffer, 0, read);
@@ -519,7 +520,7 @@ public class VPDRI implements PDRI {
                         speed = (total / elapsed);
                         rateOfChange = (speed - speedPrev);
                         speedPrev = speed;
-                        Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, "speed: {0} rateOfChange: {1}", new Object[]{speed, rateOfChange});
+                        Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, "progressThresshold: {0) speed: {1} rateOfChange: {2}", new Object[]{progressThresshold, speed, rateOfChange});
                         if (rateOfChange < lim) {
                             count++;
                             Logger.getLogger(WorkerServlet.class.getName()).log(Level.WARNING, "We will not tolarate this !!!! Next time line is off");

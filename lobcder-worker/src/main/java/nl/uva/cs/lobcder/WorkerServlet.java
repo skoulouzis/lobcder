@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.math.BigInteger;
+import java.math.MathContext;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.URI;
@@ -548,6 +549,7 @@ public final class WorkerServlet extends HttpServlet {
         double speedPrev = 0;
         long startTime = System.currentTimeMillis();
         int count = 0;
+        progressThresshold = 100 * Math.exp(-0.0022 * (size * 1024 * 1024));
         while ((read = in.read(buffer)) > 0) {
             output.write(buffer, 0, read);
             total += read;
@@ -557,7 +559,7 @@ public final class WorkerServlet extends HttpServlet {
                 speed = (total / elapsed);
                 rateOfChange = (speed - speedPrev);
                 speedPrev = speed;
-                Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, "speed: {0} rateOfChange: {1}", new Object[]{speed, rateOfChange});
+                Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, "progressThresshold: {0) speed: {1} rateOfChange: {2}", new Object[]{progressThresshold, speed, rateOfChange});
                 if (rateOfChange < lim) {
                     count++;
                     Logger.getLogger(WorkerServlet.class.getName()).log(Level.WARNING, "We will not tolarate this !!!! Next time line is off");
