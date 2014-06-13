@@ -557,7 +557,7 @@ public final class WorkerServlet extends HttpServlet {
             output.write(buffer, 0, read);
             total += read;
             double progress = (100.0 * total) / size;
-            if (progress % 3 == 0 && progress >= progressThresshold && progress <= (100 - progressThresshold)) {
+            if (progress % 5 == 0 && progress >= progressThresshold) {
                 long elapsed = System.currentTimeMillis() - startTime;
                 speed = (total / elapsed);
                 rateOfChange = (speed - speedPrev);
