@@ -92,4 +92,8 @@ class Util {
     static int getNumOfWarnings() throws IOException {
         return Integer.valueOf(getProperties().getProperty(("num.of.warnings"), "3"));
     }
+
+    static double getProgressThresshold() throws IOException {
+        return Integer.valueOf(getProperties().getProperty(("progress.thresshold"), "10"));
+    }
 }
