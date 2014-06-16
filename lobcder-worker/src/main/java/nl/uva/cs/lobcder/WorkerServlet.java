@@ -551,6 +551,7 @@ public final class WorkerServlet extends HttpServlet {
         double speedPrev = 0;
         long startTime = System.currentTimeMillis();
         int count = 0;
+        String d = "";
         progressThresshold = 100.0 * Math.exp(coefficient * (size / (1024.0 * 1024.0)));
         while ((read = in.read(buffer)) > 0) {
             output.write(buffer, 0, read);
@@ -559,20 +560,21 @@ public final class WorkerServlet extends HttpServlet {
             if (progress >= progressThresshold && Math.round(progress) % 5 == 0) {
                 long elapsed = System.currentTimeMillis() - startTime;
                 speed = (total / elapsed);
-                rateOfChange = (speed - speedPrev);
+                rateOfChange = (100.0 * speed) / speedPrev;
                 speedPrev = speed;
-                Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, "progressThresshold: {0} speed: {1} rateOfChange: {2}", new Object[]{progressThresshold, speed, rateOfChange});
+                d += "progressThresshold: " + progressThresshold + " speed: " + speed + " rateOfChange: " + rateOfChange + " speedPrev: " + speedPrev + " progress: " + progress + "\n";
                 if (rateOfChange < lim) {
                     count++;
                     Logger.getLogger(WorkerServlet.class.getName()).log(Level.WARNING, "We will not tolarate this !!!! Next time line is off");
                     //This works with export ec=18; while [ $ec -eq 18 ]; do curl -O -C - -L --request GET -u user:pass http://localhost:8080/lobcder/dav/large_file; export ec=$?; done
                     if (count >= warnings) {
-                        Logger.getLogger(WorkerServlet.class.getName()).log(Level.WARNING, "We will not tolarate this !!!! Find a new worker. rateOfChange: " + rateOfChange);
+                        Logger.getLogger(WorkerServlet.class.getName()).log(Level.WARNING, "We will not tolarate this !!!! Find a new worker. rateOfChange: {0}", rateOfChange);
                         break;
                     }
                 }
             }
         }
+        Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, d);
     }
 
     /**
