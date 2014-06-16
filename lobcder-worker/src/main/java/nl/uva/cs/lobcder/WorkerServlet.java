@@ -552,17 +552,17 @@ public final class WorkerServlet extends HttpServlet {
         long startTime = System.currentTimeMillis();
         int count = 0;
         String d = "";
-        progressThresshold = 100.0 * Math.exp(coefficient * (size / (1024.0 * 1024.0)));
+        double thresshold = 100.0 * Math.exp(coefficient * (size / (1024.0 * 1024.0)));
         while ((read = in.read(buffer)) > 0) {
             output.write(buffer, 0, read);
             total += read;
             double progress = (100.0 * total) / size;
-            if (progress >= progressThresshold && Math.round(progress) % 2 == 0) {
+            if (progress >= thresshold && Math.round(progress) % progressThresshold == 0) {
                 long elapsed = System.currentTimeMillis() - startTime;
                 speed = (total / elapsed);
                 rateOfChange = (100.0 * speed) / speedPrev;
                 speedPrev = speed;
-                d += "progressThresshold: " + progressThresshold + " speed: " + speed + " rateOfChange: " + rateOfChange + " speedPrev: " + speedPrev + " progress: " + progress + "\n";
+                d += "progressThresshold: " + thresshold + " speed: " + speed + " rateOfChange: " + rateOfChange + " speedPrev: " + speedPrev + " progress: " + progress + "\n";
                 if (rateOfChange < lim) {
                     count++;
                     Logger.getLogger(WorkerServlet.class.getName()).log(Level.WARNING, "We will not tolarate this !!!! Next time line is off");
