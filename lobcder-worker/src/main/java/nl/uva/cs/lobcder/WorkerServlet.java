@@ -548,7 +548,7 @@ public final class WorkerServlet extends HttpServlet {
         long total = 0;
         double speed;
         double rateOfChange = 0;
-        double speedPrev = 0;
+//        double speedPrev = 0;
         long startTime = System.currentTimeMillis();
         int count = 0;
         String d = "";
@@ -564,9 +564,9 @@ public final class WorkerServlet extends HttpServlet {
                 if (speed >= maxSpeed) {
                     maxSpeed = speed;
                 }
-                rateOfChange = (100.0 * maxSpeed) / speed;
-                speedPrev = speed;
-                d += "progressThresshold: " + thresshold + " speed: " + speed + " rateOfChange: " + rateOfChange + " speedPrev: " + speedPrev + " progress: " + progress + "\n";
+                rateOfChange = (100.0 * speed) / maxSpeed;
+//                speedPrev = speed;
+                d += "progressThresshold: " + thresshold + " speed: " + speed + " rateOfChange: " + rateOfChange + " speedPrev: " + 0 + " progress: " + progress + " maxSpeed: " + maxSpeed + "\n";
                 if (rateOfChange < lim) {
                     count++;
                     Logger.getLogger(WorkerServlet.class.getName()).log(Level.WARNING, "We will not tolarate this !!!! Next time line is off");
