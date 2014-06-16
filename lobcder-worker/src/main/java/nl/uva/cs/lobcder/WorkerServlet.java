@@ -564,7 +564,7 @@ public final class WorkerServlet extends HttpServlet {
                 if (speed >= maxSpeed) {
                     maxSpeed = speed;
                 }
-                rateOfChange = (100.0 * maxSpeed) / speedPrev;
+                rateOfChange = (100.0 * maxSpeed) / speed;
                 speedPrev = speed;
                 d += "progressThresshold: " + thresshold + " speed: " + speed + " rateOfChange: " + rateOfChange + " speedPrev: " + speedPrev + " progress: " + progress + "\n";
                 if (rateOfChange < lim) {
