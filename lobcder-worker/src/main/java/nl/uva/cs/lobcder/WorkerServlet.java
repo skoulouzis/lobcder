@@ -547,7 +547,7 @@ public final class WorkerServlet extends HttpServlet {
         int read;
         long total = 0;
         double speed;
-        double rateOfChange = 0;
+        double rateOfChange, change, prevChange = 0;
         double speedPrev = 0;
         long startTime = System.currentTimeMillis();
         int count = 0;
@@ -560,16 +560,18 @@ public final class WorkerServlet extends HttpServlet {
             if (progress >= thresshold && Math.round(progress) % progressThresshold == 0) {
                 long elapsed = System.currentTimeMillis() - startTime;
                 speed = (total / elapsed);
-                rateOfChange = (100.0 * speed) / speedPrev;
+                change = (100.0 * speed) / speedPrev;
                 speedPrev = speed;
+                prevChange = change;
+                rateOfChange = change - prevChange;
                 d += "progressThresshold: " + thresshold + " speed: " + speed + " rateOfChange: " + rateOfChange + " speedPrev: " + speedPrev + " progress: " + progress + "\n";
                 if (rateOfChange < lim) {
                     count++;
                     Logger.getLogger(WorkerServlet.class.getName()).log(Level.WARNING, "We will not tolarate this !!!! Next time line is off");
                     //This works with export ec=18; while [ $ec -eq 18 ]; do curl -O -C - -L --request GET -u user:pass http://localhost:8080/lobcder/dav/large_file; export ec=$?; done
 //                    if (count >= warnings) {
-                        Logger.getLogger(WorkerServlet.class.getName()).log(Level.WARNING, "We will not tolarate this !!!! Find a new worker. rateOfChange: {0}", rateOfChange);
-                        break;
+                    Logger.getLogger(WorkerServlet.class.getName()).log(Level.WARNING, "We will not tolarate this !!!! Find a new worker. rateOfChange: {0}", rateOfChange);
+                    break;
 //                    }
                 }
             }
