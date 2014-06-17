@@ -4,7 +4,6 @@ To clear up files not showing up in ldata_table: update pdrigroup_table set `ref
 -------------------------------------------------------------------------------------------------------------------
 To install on a new machine (ubuntu 12, debian)
 --------------------Set up master-----------------------------------------------
-
 echo "deb http://ppa.launchpad.net/webupd8team/java/ubuntu precise main" | tee -a /etc/apt/sources.list
 echo "deb-src http://ppa.launchpad.net/webupd8team/java/ubuntu precise main" | tee -a /etc/apt/sources.list
 apt-key adv --keyserver keyserver.ubuntu.com --recv-keys EEA14886
@@ -14,8 +13,7 @@ export DEBIAN_FRONTEND=noninteractive
 echo debconf shared/accepted-oracle-license-v1-1 select true | sudo debconf-set-selections
 echo debconf shared/accepted-oracle-license-v1-1 seen true | sudo debconf-set-selections
 
-apt-get -q -y --force-yes  install mysql-server mysql-client oracle-java7-installer subversion maven2 erlang wget makepasswd nmap
-
+apt-get -q -y --force-yes  install mysql-server mysql-client oracle-java7-installer subversion maven2 erlang wget makepasswd nmap bwm-ng
 
 
 
@@ -72,7 +70,7 @@ mv settings.xml /root/.m2/
 ./apache-tomcat-6.0.36/bin/shutdown.sh
 svn checkout --trust-server-cert --non-interactive --username anonsvn --password anonsvn https://gforge.cyfronet.pl/svn/lobcder/trunk/lobcder-worker/
 cd lobcder-worker/
-mvn clean install 
+mvn install 
 rm -r target/lobcder-worker
 mv target/lobcder-worker-1.0-SNAPSHOT target/lobcder-worker
 cd /root
@@ -146,7 +144,9 @@ as countProb
 follow redirects and resume downloads 
 curl -u user:pass -C - -O -L http://192.168.100.2:8080/lobcder/dav/file
 
+export ec=18; while [ $ec -eq 18 ]; do curl -O -C - -L --request GET -u user:pass http://192.168.100.2:8080/lobcder/dav/file; export ec=$?; done
 
 ------------------generate random file--------------
 dd if=/dev/urandom of=file100MB bs=100M count=1
 
+ wget http://localhost:8080/lobcder-worker/2/1

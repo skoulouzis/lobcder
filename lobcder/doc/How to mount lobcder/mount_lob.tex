@@ -1,0 +1,57 @@
+\documentclass[a4paper,10pt]{report}
+\usepackage[utf8]{inputenc}
+\usepackage{listings}
+\usepackage{url}
+
+% Title Page
+\title{}
+\author{S. Koulouzis}
+
+
+\begin{document}
+\maketitle
+Mounting lobcder manually on Ubuntu, Debian linux. 
+
+
+First of all, we need to install the davfs2 package. davfs2 provides the ability to access WebDAV resources like a typical filesystem, allowing for use by standard applications with no built-in support for WebDAV. 
+
+\begin{lstlisting}
+$sudo apt-get install davfs2
+\end{lstlisting}
+
+
+Next create, create the mount directory:
+
+\begin{lstlisting}
+$sudo mkdir /media/$USER/lobcder
+\end{lstlisting}
+
+Before mounting lobcder we need to obtain a ticket from \url{https://portal.vph-share.eu/} that we will use for authenticating our selfs with lobcder. Although we could use that ticket directly, davfs2 and most of WebDAV clients are unable to use passwords longer that 256 characters. To go around this we'll need to get a short translation of our ticket.
+
+\begin{enumerate}
+ \item Log in to \url{https://portal.vph-share.eu/}
+ \item Go to \url{https://portal.vph-share.eu/profile/} and click ``Copy your Authentication Ticket to clipboard''
+ \item Using a browser go to \url{https://lobcder.vph.cyfronet.pl/lobcder/urest/getshort/LONG\_TICKET} and we will get a short translation of our ticket . LONG\_TICKET is the ticket we copied form the previous step.
+\end{enumerate}
+
+Now we are ready to mount lobcder. 
+
+\begin{lstlisting}
+$sudo mount -t davfs https://lobcder.vph.cyfronet.pl/lobcder/dav \
+/media/$USER/lobcder -o rw,uid=$USER
+\end{lstlisting}
+
+You will be asked for a username and a password. For the username use the one you used to log in to \url{https://portal.vph-share.eu/}. For a password use the short token that you got from \url{https://lobcder.vph.cyfronet.pl/lobcder/urest/getshort/LONG_TICKET}. 
+Next we press 'y' to accept lobcder's certificate and lobcder is mounted on our machine. 
+
+You can also put your username/password in /etc/davfs2/secrets
+
+\begin{lstlisting}
+$sudo echo "https://lobcder.vph.cyfronet.pl/lobcder/dav  username  password" >> /etc/davfs2/secrets
+\end{lstlisting}
+
+
+Note that with this method you will have to re-enter you short token after some days since it's designed to expire.  
+
+
+\end{document}     
