@@ -115,7 +115,7 @@ public class PropertiesHelper {
     }
 
     public static boolean doRedirectGets() throws IOException {
-        return Boolean.valueOf(getProperties().getProperty("get.redirect", "false"));
+        return Boolean.valueOf(getProperties().getProperty("redirect.get", "false"));
     }
 
 //    public static boolean doRemoteAuth() throws IOException {
