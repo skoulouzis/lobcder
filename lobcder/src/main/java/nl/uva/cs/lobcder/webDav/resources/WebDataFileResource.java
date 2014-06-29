@@ -509,9 +509,10 @@ public class WebDataFileResource extends WebDataResource implements
                         if (!canRedirect(request)) {
                             return null;
                         }
-
                         //Replica selection algorithm
-                        redirect = getBestWorker(((HttpServletRequest) request).getRemoteAddr());
+//                        String from = ((HttpServletRequest) request).getRemoteAddr();
+                        String from  = request.getRemoteAddr();
+                        redirect = getBestWorker(from);
                     }
                     WebDataFileResource.log.log(Level.INFO, "Redirecting to: {0}", redirect);
                     return redirect;
@@ -623,7 +624,6 @@ public class WebDataFileResource extends WebDataResource implements
         }
         return false;
     }
-    
 
     private String getWorkerWithLessTraffic(String reqSource) throws IOException, URISyntaxException {
         if (plannerClient == null) {

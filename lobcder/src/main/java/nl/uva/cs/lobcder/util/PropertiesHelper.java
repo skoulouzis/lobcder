@@ -213,7 +213,7 @@ public class PropertiesHelper {
     }
 
     public static String getSchedulingAlg() throws IOException {
-        return getProperties().getProperty("scheduling.algorithm");
+        return getProperties().getProperty("worker.selection.algorithm");
     }
 
     public static String getPredictorAlgorithm() throws IOException {
