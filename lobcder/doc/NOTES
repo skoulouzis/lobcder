@@ -82,6 +82,12 @@ sleep 70
 for i in {1..6}; do ping -c 1 192.168.100.$i; done
 
 
+for i in {1..7}; do wget http://localhost:8080/lobcder-worker/2/1; ./apache-tomcat-6.0.36/bin/shutdown.sh; ./apache-tomcat-6.0.36/bin/startup.sh;  done
+
+
+
+
+
 -------------------------------------------------------------------------------------
 to solve the of type default using the available factories WagonRepositoryConnectorFactory 
 error when building go to http://elab.lab.uvalight.net/artifactory/webapp/mavensettings.html generate the settings and paste them to ~/m2/settings.xml
@@ -149,4 +155,3 @@ export ec=18; while [ $ec -eq 18 ]; do curl -O -C - -L --request GET -u user:pas
 ------------------generate random file--------------
 dd if=/dev/urandom of=file100MB bs=100M count=1
 
- wget http://localhost:8080/lobcder-worker/2/1

@@ -49,6 +49,7 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.servlet.http.HttpServletRequest;
 
 /**
  *
@@ -510,7 +511,7 @@ public class WebDataFileResource extends WebDataResource implements
                         }
 
                         //Replica selection algorithm
-                        redirect = getBestWorker();
+                        redirect = getBestWorker(((HttpServletRequest) request).getRemoteAddr());
                     }
                     WebDataFileResource.log.log(Level.INFO, "Redirecting to: {0}", redirect);
                     return redirect;
@@ -527,11 +528,11 @@ public class WebDataFileResource extends WebDataResource implements
         return null;
     }
 
-    private String getBestWorker() throws IOException, URISyntaxException {
+    private String getBestWorker(String reuSource) throws IOException, URISyntaxException {
         if (doRedirect) {
 //            if (uri != null) {
             if (PropertiesHelper.getSchedulingAlg().equals("traffic")) {
-                return getWorkerWithLessTraffic();
+                return getWorkerWithLessTraffic(reuSource);
             }
             if (PropertiesHelper.getSchedulingAlg().equals("round-robin")) {
                 return getWorkerRoundRobin();
@@ -622,8 +623,9 @@ public class WebDataFileResource extends WebDataResource implements
         }
         return false;
     }
+    
 
-    private String getWorkerWithLessTraffic() throws IOException, URISyntaxException {
+    private String getWorkerWithLessTraffic(String reqSource) throws IOException, URISyntaxException {
         if (plannerClient == null) {
             String uri = PropertiesHelper.getFloodLightURL();
             plannerClient = new NewQoSPlannerClient(uri);
