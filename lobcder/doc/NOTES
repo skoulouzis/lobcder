@@ -155,3 +155,100 @@ export ec=18; while [ $ec -eq 18 ]; do curl -O -C - -L --request GET -u user:pas
 ------------------generate random file--------------
 dd if=/dev/urandom of=file100MB bs=100M count=1
 
+-------------------------Configure openVSwitch with sFlow----------------------
+From http://www.areteix.net/blog/2013/08/network-flow-monitoring-with-open-vswitch/
+S1: 
+COLLECTOR_IP=192.168.2.1
+COLLECTOR_PORT=6343
+AGENT=eth2
+HEADER=128
+SAMPLING=256
+POLLING=10
+
+
+ovs-vsctl -- --id=@sflow create sflow agent=${AGENT} target=\"${COLLECTOR_IP}:${COLLECTOR_PORT}\" header=${HEADER} sampling=${SAMPLING} polling=${POLLING} -- set bridge br0 sflow=@sflow
+
+---------------------------Post boot script:----------------------------------
+
+#!/bin/bash
+
+# Wait for interfaces to be configured. This value should be tweaked.
+sleep 70
+
+# Create bridge
+ovs-vsctl add-br br0
+
+# Figure out which interfaces don't have an IP address and add to the bridge.
+if ! ifconfig eth1 | grep -q 'inet addr'; then ovs-vsctl add-port br0 eth1; ifconfig eth1 up; else AGENT=eth1; fi
+if ! ifconfig eth2 | grep -q 'inet addr'; then ovs-vsctl add-port br0 eth2; ifconfig eth2 up; else AGENT=eth2; fi
+if ! ifconfig eth3 | grep -q 'inet addr'; then ovs-vsctl add-port br0 eth3; ifconfig eth3 up; else AGENT=eth3; fi
+if ! ifconfig eth4 | grep -q 'inet addr'; then ovs-vsctl add-port br0 eth4; ifconfig eth4 up; else AGENT=eth4; fi
+
+# Configure controller
+ovs-vsctl set-controller br0 tcp:192.168.2.1:6633
+
+
+COLLECTOR_IP=192.168.2.1
+COLLECTOR_PORT=6343
+HEADER=128
+SAMPLING=128
+POLLING=5
+
+ovs-vsctl -- --id=@sflow create sflow agent=${AGENT} target=\"${COLLECTOR_IP}:${COLLECTOR_PORT}\" header=${HEADER} sampling=${SAMPLING} polling=${POLLING} -- set bridge br0 sflow=@sflow
+
+
+
+---------------------------------------------------------------------------------
+#!/bin/bash
+
+# Wait for interfaces to be configured. This value should be tweaked.
+sleep 70
+
+# Create bridge
+ovs-vsctl add-br br0
+
+# Figure out which interfaces don't have an IP address and add to the bridge.
+if ! ifconfig eth1 | grep -q 'inet addr'; then ovs-vsctl add-port br0 eth1; ifconfig eth1 up; else AGENT=eth1; fi
+if ! ifconfig eth2 | grep -q 'inet addr'; then ovs-vsctl add-port br0 eth2; ifconfig eth2 up; else AGENT=eth2; fi
+if ! ifconfig eth3 | grep -q 'inet addr'; then ovs-vsctl add-port br0 eth3; ifconfig eth3 up; else AGENT=eth3; fi
+if ! ifconfig eth4 | grep -q 'inet addr'; then ovs-vsctl add-port br0 eth4; ifconfig eth4 up; else AGENT=eth4; fi
+if ! ifconfig eth5 | grep -q 'inet addr'; then ovs-vsctl add-port br0 eth5; ifconfig eth5 up; else AGENT=eth5; fi
+
+# Configure controller
+ovs-vsctl set-controller br0 tcp:192.168.3.1:6633
+
+
+COLLECTOR_IP=192.168.3.1
+COLLECTOR_PORT=6343
+HEADER=128
+SAMPLING=128
+POLLING=5
+
+ovs-vsctl -- --id=@sflow create sflow agent=${AGENT} target=\"${COLLECTOR_IP}:${COLLECTOR_PORT}\" header=${HEADER} sampling=${SAMPLING} polling=${POLLING} -- set bridge br0 sflow=@sflow
+
+--------------------------------------------------------------------------------------
+
+From http://145.100.133.130:8008/html/api.html
+Controller: 
+wget http://www.inmon.com/products/sFlow-RT/sflow-rt.tar.gz
+
+tar -xvzf sflow-rt.tar.gz
+cd sflow-rt
+./start.sh
+
+
+
+
+-----------------------------Controller post boot script------------------------
+
+apt-get -y install default-jdk ant git screen >> /var/log/post-boot.log
+git clone git://github.com/floodlight/floodlight.git /opt/floodlight >> /var/log/post-boot.log
+cd /opt/floodlight
+ant >> /var/log/post-boot.log
+screen -d -m sh -c "java -jar /opt/floodlight/target/floodlight.jar"
+
+wget http://www.inmon.com/products/sFlow-RT/sflow-rt.tar.gz
+
+tar -xvzf sflow-rt.tar.gz
+cd sflow-rt
+screen -d -m sh -c "./start.sh"

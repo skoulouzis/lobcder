@@ -163,9 +163,19 @@ class WP4Sweep implements Runnable {
 
         @Override
         public void delete_dev(String global_id) throws Exception {
-            WebResource webResource = client.resource(uri_dev);
-            webResource.path(global_id).type(MediaType.APPLICATION_XML).delete();
-            log.log(Level.FINE, "Deleting metadata from: {0} global_id: {1}", new Object[]{uri_dev, global_id});
+            client.setReadTimeout(10000);
+            client.setConnectTimeout(10000);
+            WebResource webResource = client.resource(uri_dev).path(global_id);
+            WebResource.Builder wr = webResource.type(MediaType.APPLICATION_XML);
+            try {
+                wr.delete();
+                log.log(Level.FINE, "Deleting metadata from: {0} global_id: {1}", new Object[]{uri_dev, global_id});
+            } catch (Exception ex) {
+//                if(!ex.getMessage().contains("Read timed out")){
+//                    throw ex;
+//                }
+                log.log(Level.WARNING, "Did not delete metadata from: {0} global_id: {1}", new Object[]{uri_dev, global_id});
+            }
         }
     }
 
@@ -204,13 +214,14 @@ class WP4Sweep implements Runnable {
         try (Statement s1 = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY,
                 ResultSet.CONCUR_READ_ONLY)) {
             try (PreparedStatement s2 = connection.prepareStatement("UPDATE wp4_table SET need_update = FALSE WHERE id = ?")) {
-                ResultSet rs = s1.executeQuery("SELECT ownerId, ldName, global_id, views, id, global_id_dev FROM ldata_table JOIN wp4_table ON uid=local_id WHERE need_update=TRUE");
+                ResultSet rs = s1.executeQuery("SELECT ownerId, ldName, global_id, views, id, global_id_dev, local_id FROM ldata_table JOIN wp4_table ON uid=local_id WHERE need_update=TRUE");
                 while (rs.next()) {
                     ResourceMetadata rm = new ResourceMetadata();
                     rm.setAuthor(rs.getString(1));
                     rm.setName(rs.getString(2));
                     rm.setGlobalId(rs.getString(3));
                     rm.setViews(rs.getInt(4));
+                    rm.setLocalId(rs.getInt(5));
                     try {
                         wp4Connector.update(rm);
                         String global_id_dev = rs.getString(6);

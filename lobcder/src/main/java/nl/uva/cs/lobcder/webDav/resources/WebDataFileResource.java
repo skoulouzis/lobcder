@@ -533,7 +533,8 @@ public class WebDataFileResource extends WebDataResource implements
         if (doRedirect) {
 //            if (uri != null) {
             if (PropertiesHelper.getSchedulingAlg().equals("traffic")) {
-                return getWorkerWithLessTraffic(reuSource);
+//                return getWorkerWithLessTraffic(reuSource);
+                return setLowCostPath(reuSource);
             }
             if (PropertiesHelper.getSchedulingAlg().equals("round-robin")) {
                 return getWorkerRoundRobin();
@@ -624,6 +625,24 @@ public class WebDataFileResource extends WebDataResource implements
         }
         return false;
     }
+    
+     private String setLowCostPath(String reqSource) throws IOException, URISyntaxException {
+         Map<String, ArrayList<String>> pathsMap  = getPathsMap(reqSource);
+         Map<String,Double> costMap = getPathCostMap(pathsMap);
+        double minCost = Double.MAX_VALUE;
+        String bestPathKey = null;
+        for(String s : costMap.keySet()){
+            if(costMap.get(s) <= minCost){
+                minCost = costMap.get(s);
+                bestPathKey = s;
+                if(minCost<=0){
+                    break;
+                }
+            }
+        }
+        ArrayList<String> bestPath = pathsMap.get(bestPathKey);
+        return bestPath.get(0);
+     }
 
     private String getWorkerWithLessTraffic(String reqSource) throws IOException, URISyntaxException {
         if (plannerClient == null) {
@@ -694,5 +713,13 @@ public class WebDataFileResource extends WebDataResource implements
         String token = UUID.randomUUID().toString();
         AuthWorker.setTicket(worker, token);
         return w + "/" + token;
+    }
+
+    private Map<String, ArrayList<String>> getPathsMap(String reqSource) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    private Map<String, Double> getPathCostMap(Map<String, ArrayList<String>> pathsMap) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }
