@@ -114,10 +114,11 @@ class WP4Sweep implements Runnable {
             ClientResponse response = webResource.type(MediaType.APPLICATION_XML).post(ClientResponse.class, resourceMetadata.getXml());
             String entity = response.getEntity(String.class);
             if (response.getClientResponseStatus() == ClientResponse.Status.OK
-                    && !entity.contains("Error trying to create resource metadata in the system: null")) {
+                    && !entity.contains("Error trying to create resource metadata in the system")) {
 
-                Node uidNode = (Node) expression.evaluate(new InputSource(response.getEntityInputStream()), XPathConstants.NODE);
-                String result = uidNode.getTextContent();
+                String result = (String) entity.subSequence(entity.lastIndexOf("<_global_id>") + "<_global_id>".length(), entity.indexOf("</_global_id>"));
+//                Node uidNode = (Node) expression.evaluate(new InputSource(response.getEntityInputStream()), XPathConstants.NODE);
+//                String result = uidNode.getTextContent();
                 log.log(Level.FINE, "Send metadata to uri: {0} author: {1} name: {2} type: {3} global_id: {4}", new Object[]{uri, resourceMetadata.author, resourceMetadata.name, resourceMetadata.type, result});
                 return result;
             } else {
@@ -132,8 +133,10 @@ class WP4Sweep implements Runnable {
             String entity = response.getEntity(String.class);
             if (response.getClientResponseStatus() == ClientResponse.Status.OK
                     && !entity.contains("Error trying to create resource metadata in the system")) {
-                Node uidNode = (Node) expression.evaluate(new InputSource(response.getEntityInputStream()), XPathConstants.NODE);
-                String result = uidNode.getTextContent();
+                String result = (String) entity.subSequence(entity.lastIndexOf("<_global_id>") + "<_global_id>".length(), entity.indexOf("</_global_id>"));
+
+//                Node uidNode = (Node) expression.evaluate(new InputSource(response.getEntityInputStream()), XPathConstants.NODE);
+//                String result = uidNode.getTextContent();
                 log.log(Level.FINE, "Send metadata to uri: {0} author: {1} name: {2} type: {3} global_id: {4}", new Object[]{uri_dev, resourceMetadata.author, resourceMetadata.name, resourceMetadata.type, result});
                 return result;
             } else {
@@ -146,8 +149,8 @@ class WP4Sweep implements Runnable {
             WebResource webResource = client.resource(uri);
             ClientResponse response = webResource.path(resourceMetadata.getGlobalId()).type(MediaType.APPLICATION_XML).put(ClientResponse.class, resourceMetadata.getXml());
             String entity = response.getEntity(String.class);
-            if (response.getClientResponseStatus() == ClientResponse.Status.OK
-                    && !entity.contains("Error trying to create resource metadata in the system")) {
+            if (response.getClientResponseStatus() != ClientResponse.Status.OK
+                    || entity.contains("Error trying to create resource metadata in the system")) {
                 throw new Exception(uri + " responded with: " + response.getClientResponseStatus().toString() + ". Response Entity:" + entity);
             }
             log.log(Level.FINE, "Send metadata to uri: {0} author: {1} name: {2} type: {3} global_id: {4}", new Object[]{uri, resourceMetadata.author, resourceMetadata.name, resourceMetadata.type, resourceMetadata.globalId});
@@ -158,8 +161,8 @@ class WP4Sweep implements Runnable {
             WebResource webResource = client.resource(uri_dev);
             ClientResponse response = webResource.path(resourceMetadata.getGlobalId()).type(MediaType.APPLICATION_XML).put(ClientResponse.class, resourceMetadata.getXml());
             String entity = response.getEntity(String.class);
-            if (response.getClientResponseStatus() == ClientResponse.Status.OK
-                    && !entity.contains("Error trying to create resource metadata in the system")) {
+            if (response.getClientResponseStatus() != ClientResponse.Status.OK
+                    || entity.contains("Error trying to create resource metadata in the system")) {
                 throw new Exception(uri_dev + " responded with: " + response.getClientResponseStatus().toString() + ". Response Entity:" + entity);
             }
             log.log(Level.FINE, "Send metadata to uri: {0} author: {1} name: {2} type: {3} global_id: {4}", new Object[]{uri_dev, resourceMetadata.author, resourceMetadata.name, resourceMetadata.type, resourceMetadata.globalId});
