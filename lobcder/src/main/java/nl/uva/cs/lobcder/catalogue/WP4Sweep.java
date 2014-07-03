@@ -31,6 +31,7 @@ class WP4Sweep implements Runnable {
     private final DataSource datasource;
     private final String metadataRepository;
     private final String metadataRepositoryDev;
+    private long sleepTime=100;
 
     public WP4Sweep(DataSource datasource) throws IOException {
         this.datasource = datasource;
@@ -110,13 +111,16 @@ class WP4Sweep implements Runnable {
         public String create(ResourceMetadata resourceMetadata) throws Exception {
             WebResource webResource = client.resource(uri);
             ClientResponse response = webResource.type(MediaType.APPLICATION_XML).post(ClientResponse.class, resourceMetadata.getXml());
-            if (response.getClientResponseStatus() == ClientResponse.Status.OK) {
+            String entity = response.getEntity(String.class);
+            if (response.getClientResponseStatus() == ClientResponse.Status.OK
+                    && !entity.contains("Error trying to create resource metadata in the system: null")) {
+
                 Node uidNode = (Node) expression.evaluate(new InputSource(response.getEntityInputStream()), XPathConstants.NODE);
                 String result = uidNode.getTextContent();
                 log.log(Level.FINE, "Send metadata to uri: {0} author: {1} name: {2} type: {3} global_id: {4}", new Object[]{uri, resourceMetadata.author, resourceMetadata.name, resourceMetadata.type, result});
                 return result;
             } else {
-                throw new Exception(response.getClientResponseStatus().toString());
+                throw new Exception(uri + " responded with: " + response.getClientResponseStatus().toString() + ". Response Entity:" + entity);
             }
         }
 
@@ -124,13 +128,15 @@ class WP4Sweep implements Runnable {
         public String create_dev(ResourceMetadata resourceMetadata) throws Exception {
             WebResource webResource = client.resource(uri_dev);
             ClientResponse response = webResource.type(MediaType.APPLICATION_XML).post(ClientResponse.class, resourceMetadata.getXml());
-            if (response.getClientResponseStatus() == ClientResponse.Status.OK) {
+            String entity = response.getEntity(String.class);
+            if (response.getClientResponseStatus() == ClientResponse.Status.OK
+                    && !entity.contains("Error trying to create resource metadata in the system: null")) {
                 Node uidNode = (Node) expression.evaluate(new InputSource(response.getEntityInputStream()), XPathConstants.NODE);
                 String result = uidNode.getTextContent();
                 log.log(Level.FINE, "Send metadata to uri: {0} author: {1} name: {2} type: {3} global_id: {4}", new Object[]{uri_dev, resourceMetadata.author, resourceMetadata.name, resourceMetadata.type, result});
                 return result;
             } else {
-                throw new Exception(response.getClientResponseStatus().toString());
+                throw new Exception(uri_dev + " responded with: " + response.getClientResponseStatus().toString() + ". Response Entity:" + entity);
             }
         }
 
@@ -138,6 +144,7 @@ class WP4Sweep implements Runnable {
         public void update(ResourceMetadata resourceMetadata) throws Exception {
             WebResource webResource = client.resource(uri);
             ClientResponse response = webResource.path(resourceMetadata.getGlobalId()).type(MediaType.APPLICATION_XML).put(ClientResponse.class, resourceMetadata.getXml());
+            String entity = response.getEntity(String.class);
             if (response.getClientResponseStatus() != ClientResponse.Status.OK) {
                 throw new Exception(response.getClientResponseStatus().toString());
             }
@@ -148,6 +155,7 @@ class WP4Sweep implements Runnable {
         public void update_dev(ResourceMetadata resourceMetadata) throws Exception {
             WebResource webResource = client.resource(uri_dev);
             ClientResponse response = webResource.path(resourceMetadata.getGlobalId()).type(MediaType.APPLICATION_XML).put(ClientResponse.class, resourceMetadata.getXml());
+            String entity = response.getEntity(String.class);
             if (response.getClientResponseStatus() != ClientResponse.Status.OK) {
                 throw new Exception(response.getClientResponseStatus().toString());
             }
@@ -179,7 +187,7 @@ class WP4Sweep implements Runnable {
         }
     }
 
-    private void create(Connection connection, WP4ConnectorI wp4Connector) throws SQLException, UnknownHostException {
+    private void create(Connection connection, WP4ConnectorI wp4Connector) throws Exception {
         try (Statement s1 = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY,
                 ResultSet.CONCUR_READ_ONLY)) {
             try (PreparedStatement s2 = connection.prepareStatement("UPDATE wp4_table SET need_create = FALSE, global_id = ?, global_id_dev = ? WHERE id = ?")) {
@@ -199,10 +207,13 @@ class WP4Sweep implements Runnable {
                         s2.setLong(3, rs.getLong(5));
                         s2.executeUpdate();
                     } catch (Exception e) {
+//                        connection.rollback();
+                        connection.close();
+                        throw e;
 //                        if (e instanceof com.sun.jersey.api.client.ClientHandlerException && e.getMessage().contains("java.net.UnknownHostException")) {
 //                            throw new java.net.UnknownHostException(e.getMessage());
 //                        } else {
-                        WP4Sweep.log.log(Level.SEVERE, null, e);
+//                        WP4Sweep.log.log(Level.SEVERE, null, e);
 //                        }
                     }
                 }
@@ -278,6 +289,7 @@ class WP4Sweep implements Runnable {
             create(connection, connector);
             update(connection, connector);
             delete(connection, connector);
+            sleepTime = 100;
         } catch (Exception ex) {
 //            if (ex instanceof UnknownHostException) {
 //                    unknownHostExceptionCounter++;
@@ -285,8 +297,15 @@ class WP4Sweep implements Runnable {
 //                        runSweeper = false;
 //                    }
 //            } else {
+            sleepTime = sleepTime * 2;
             Logger.getLogger(WP4Sweep.class.getName()).log(Level.SEVERE, null, ex);
-//            }
+            Logger.getLogger(WP4Sweep.class.getName()).log(Level.SEVERE, "One of the sweepers throw an expetion. Thread will sleep for: {0} ms", sleepTime);
+            try {
+                Thread.sleep(sleepTime);
+    //            }
+            } catch (InterruptedException ex1) {
+                Logger.getLogger(WP4Sweep.class.getName()).log(Level.SEVERE, null, ex1);
+            }
         }
 
 
