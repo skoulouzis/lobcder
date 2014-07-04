@@ -100,6 +100,8 @@ class WP4Sweep implements Runnable {
                 this.uri = uri;
                 this.uri_dev = uri_dev;
                 client = Client.create();
+//                client.setReadTimeout(5000);
+//                client.setConnectTimeout(5000);
                 XPathFactory xpf = XPathFactory.newInstance();
                 XPath xpath = xpf.newXPath();
                 expression = xpath.compile("/message/data[1]/_global_id[1]");
@@ -114,7 +116,7 @@ class WP4Sweep implements Runnable {
             ClientResponse response = webResource.type(MediaType.APPLICATION_XML).post(ClientResponse.class, resourceMetadata.getXml());
             String entity = response.getEntity(String.class);
             if (response.getClientResponseStatus() == ClientResponse.Status.OK
-                    && !entity.contains("Error trying to create resource metadata in the system")) {
+                    && entity.contains("<_global_id>")) {
 
                 String result = (String) entity.subSequence(entity.lastIndexOf("<_global_id>") + "<_global_id>".length(), entity.indexOf("</_global_id>"));
 //                Node uidNode = (Node) expression.evaluate(new InputSource(response.getEntityInputStream()), XPathConstants.NODE);
@@ -132,7 +134,7 @@ class WP4Sweep implements Runnable {
             ClientResponse response = webResource.type(MediaType.APPLICATION_XML).post(ClientResponse.class, resourceMetadata.getXml());
             String entity = response.getEntity(String.class);
             if (response.getClientResponseStatus() == ClientResponse.Status.OK
-                    && !entity.contains("Error trying to create resource metadata in the system")) {
+                    && entity.contains("<_global_id>")) {
                 String result = (String) entity.subSequence(entity.lastIndexOf("<_global_id>") + "<_global_id>".length(), entity.indexOf("</_global_id>"));
 
 //                Node uidNode = (Node) expression.evaluate(new InputSource(response.getEntityInputStream()), XPathConstants.NODE);
@@ -177,8 +179,6 @@ class WP4Sweep implements Runnable {
 
         @Override
         public void delete_dev(String global_id) throws Exception {
-            client.setReadTimeout(10000);
-            client.setConnectTimeout(10000);
             WebResource webResource = client.resource(uri_dev).path(global_id);
             WebResource.Builder wr = webResource.type(MediaType.APPLICATION_XML);
             try {

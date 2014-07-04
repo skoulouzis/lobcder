@@ -180,8 +180,8 @@ public class PropertiesHelper {
         return new HashSet<>(Arrays.asList(getProperties().getProperty("allowed.origins").split(",")));
     }
 
-    public static String getFloodLightURL() throws IOException {
-        return getProperties().getProperty("floodlight.url");
+    public static String getSDNControllerURL() throws IOException {
+        return getProperties().getProperty("sdn.controller.url");
     }
 
     public static HashMap<Integer, String> getPortWorkerMap() {

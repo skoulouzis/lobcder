@@ -22,8 +22,8 @@ import nl.uva.cs.lobcder.auth.AuthI;
 import nl.uva.cs.lobcder.auth.AuthWorker;
 import nl.uva.cs.lobcder.auth.Permissions;
 import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
-import nl.uva.cs.lobcder.optimization.NewQoSPlannerClient;
-import nl.uva.cs.lobcder.optimization.NewQoSPlannerClient.FloodlightStats;
+import nl.uva.cs.lobcder.optimization.SDNControllerClient;
+import nl.uva.cs.lobcder.optimization.SDNControllerClient.FloodlightStats;
 import nl.uva.cs.lobcder.resources.LogicalData;
 import nl.uva.cs.lobcder.resources.PDRI;
 import nl.uva.cs.lobcder.resources.PDRIDescr;
@@ -67,7 +67,7 @@ public class WebDataFileResource extends WebDataResource implements
     private static final Map<String, Double> weightPDRIMap = new HashMap<>();
     private static final Map<String, Integer> numOfGetsMap = new HashMap<>();
     private static final Map<String, Integer> numOfWorkerTransfersMap = new HashMap<>();
-    private NewQoSPlannerClient plannerClient;
+    private SDNControllerClient sdnClient;
 
     public WebDataFileResource(@Nonnull LogicalData logicalData, Path path, @Nonnull JDBCatalogue catalogue, @Nonnull List<AuthI> authList) {
         super(logicalData, path, catalogue, authList);
@@ -627,7 +627,12 @@ public class WebDataFileResource extends WebDataResource implements
     }
     
      private String setLowCostPath(String reqSource) throws IOException, URISyntaxException {
-         Map<String, ArrayList<String>> pathsMap  = getPathsMap(reqSource);
+                 if (sdnClient == null) {
+            String uri = PropertiesHelper.getSDNControllerURL();
+            sdnClient = new SDNControllerClient(uri);
+        }
+                 
+         Map<String, ArrayList<String>> pathsMap  =  sdnClient.getPathsMap(reqSource,workers);
          Map<String,Double> costMap = getPathCostMap(pathsMap);
         double minCost = Double.MAX_VALUE;
         String bestPathKey = null;
@@ -645,17 +650,17 @@ public class WebDataFileResource extends WebDataResource implements
      }
 
     private String getWorkerWithLessTraffic(String reqSource) throws IOException, URISyntaxException {
-        if (plannerClient == null) {
-            String uri = PropertiesHelper.getFloodLightURL();
-            plannerClient = new NewQoSPlannerClient(uri);
+        if (sdnClient == null) {
+            String uri = PropertiesHelper.getSDNControllerURL();
+            sdnClient = new SDNControllerClient(uri);
         }
-        Map<String, FloodlightStats> stats1 = plannerClient.getStatsMap();
+        Map<String, FloodlightStats> stats1 = sdnClient.getStatsMap();
         try {
             Thread.sleep(750);
         } catch (InterruptedException ex) {
             Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, ex);
         }
-        Map<String, FloodlightStats> stats2 = plannerClient.getStatsMap();
+        Map<String, FloodlightStats> stats2 = sdnClient.getStatsMap();
         Set<String> keys = stats1.keySet();
         long cost = Long.MAX_VALUE;
         String worker = workersMap.values().iterator().next();
@@ -715,11 +720,7 @@ public class WebDataFileResource extends WebDataResource implements
         return w + "/" + token;
     }
 
-    private Map<String, ArrayList<String>> getPathsMap(String reqSource) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    private Map<String, Double> getPathCostMap(Map<String, ArrayList<String>> pathsMap) {
+   private Map<String, Double> getPathCostMap(Map<String, ArrayList<String>> pathsMap) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }
