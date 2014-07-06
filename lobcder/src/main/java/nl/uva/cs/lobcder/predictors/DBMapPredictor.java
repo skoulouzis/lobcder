@@ -32,7 +32,7 @@ import javax.naming.NamingException;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
-import nl.uva.cs.lobcder.optimization.LobState;
+import nl.uva.cs.lobcder.optimization.Vertex;
 import nl.uva.cs.lobcder.util.MyDataSource;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.optimization.LDClustering;
@@ -150,8 +150,8 @@ public class DBMapPredictor extends MyDataSource implements Predictor {
 
     }
 
-    protected LobState getSuccessor(String key) throws SQLException {
-        LobState ls = null;
+    protected Vertex getSuccessor(String key) throws SQLException {
+        Vertex ls = null;
         try (Connection connection = getConnection()) {
             try (PreparedStatement ps = connection.prepareStatement("select "
                     + "lobStateID from successor_table WHERE keyVal = ? ")) {
@@ -179,7 +179,7 @@ public class DBMapPredictor extends MyDataSource implements Predictor {
                             resource = id.split(",")[1];
                             break;
                     }
-                    ls = new LobState(method, resource);
+                    ls = new Vertex(method, resource);
                 }
             }
             connection.commit();
@@ -345,12 +345,12 @@ public class DBMapPredictor extends MyDataSource implements Predictor {
     }
 
     @Override
-    public LobState getNextState(LobState currentState) {
+    public Vertex getNextState(Vertex currentState) {
         return null;
     }
 
     @Override
-    public void setPreviousStateForCurrent(LobState prevState, LobState currentState) {
+    public void setPreviousStateForCurrent(Vertex prevState, Vertex currentState) {
     }
 
     @Data

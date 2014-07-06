@@ -26,7 +26,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Nonnull;
 import javax.naming.NamingException;
-import nl.uva.cs.lobcder.optimization.LobState;
+import nl.uva.cs.lobcder.optimization.Vertex;
 import static nl.uva.cs.lobcder.predictors.DBMapPredictor.type;
 import nl.uva.cs.lobcder.resources.LogicalData;
 import static nl.uva.cs.lobcder.util.PropertiesHelper.PREDICTION_TYPE.method;
@@ -44,7 +44,7 @@ public class RandomPredictor extends DBMapPredictor {
     }
 
     @Override
-    public LobState getNextState(LobState currentState) {
+    public Vertex getNextState(Vertex currentState) {
         String resource;
         Method method;
         try {
@@ -67,7 +67,7 @@ public class RandomPredictor extends DBMapPredictor {
                     break;
             }
 
-            return new LobState(method, resource);
+            return new Vertex(method, resource);
         } catch (SQLException ex) {
             Logger.getLogger(RandomPredictor.class.getName()).log(Level.SEVERE, null, ex);
         }

@@ -11,14 +11,19 @@ import io.milton.http.Request.Method;
  *
  * @author S. Koulouzis
  */
-public class LobState {
+public class Vertex {
 
     private final String resource;
     private final Method method;
 
-    public LobState(Request.Method method, String resource) {
+    public Vertex(Request.Method method, String resource) {
         this.resource = resource;
         this.method = method;
+    }
+
+    public Vertex(String resource) {
+        this.resource = resource;
+        this.method = null;
     }
 
     public String getResourceName() {

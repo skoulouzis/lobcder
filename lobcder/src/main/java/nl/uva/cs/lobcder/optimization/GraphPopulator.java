@@ -51,7 +51,7 @@ class GraphPopulator implements Runnable {
 //            log.log(Level.INFO, "Nodes: {0}", msg);
 
             Graph graph = populateGraph(nodes);
-            ArrayList<LobState> transitions = getTransitions(connection, nodes);
+            ArrayList<Vertex> transitions = getTransitions(connection, nodes);
 
             graph = addEdges(graph, transitions);
 
@@ -146,7 +146,7 @@ class GraphPopulator implements Runnable {
 
         for (int i = 0; i < nodes.size(); i++) {
             for (Method m : Method.values()) {
-                LobState v1 = new LobState(m, nodes.get(i).toString());
+                Vertex v1 = new Vertex(m, nodes.get(i).toString());
                 if (!graph.containsState(v1)) {
                     graph.addVertex(v1);
                 }
@@ -181,8 +181,8 @@ class GraphPopulator implements Runnable {
         return nodes;
     }
 
-    private ArrayList<LobState> getTransitions(Connection connection, ArrayList<Path> nodes) throws SQLException, MalformedURLException {
-        ArrayList<LobState> trans = new ArrayList<>();
+    private ArrayList<Vertex> getTransitions(Connection connection, ArrayList<Path> nodes) throws SQLException, MalformedURLException {
+        ArrayList<Vertex> trans = new ArrayList<>();
         StringBuilder query = new StringBuilder();
         query.append("SELECT requestURL, methodName FROM requests_table WHERE ");
 
@@ -219,21 +219,21 @@ class GraphPopulator implements Runnable {
                 } else {
                     path = Path.root;
                 }
-                trans.add(new LobState(Method.valueOf(method), path.toString()));
+                trans.add(new Vertex(Method.valueOf(method), path.toString()));
 //                log.log(Level.FINE, "path: {0} method {1}, size: {2}", new Object[]{path, method, trans.size()});
             }
         }
         return trans;
     }
 
-    private Graph addEdges(Graph graph, ArrayList<LobState> transitions) {
+    private Graph addEdges(Graph graph, ArrayList<Vertex> transitions) {
         for (int i = 0; i < transitions.size(); i++) {
             if (i >= transitions.size() - 1) {
 //                nextI = i;
                 break;
             } else {
-                LobState v1 = transitions.get(i);
-                LobState v2 = transitions.get(i + 1);
+                Vertex v1 = transitions.get(i);
+                Vertex v2 = transitions.get(i + 1);
                 if (graph.containsState(v1) && graph.containsState(v2)) {
 //                    log.log(Level.INFO, "V1: {0}: V2: {1}", new Object[]{v1.getID(),v2.getID()});
                     Edge e = new Edge(v1, v2);

@@ -27,7 +27,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
-import nl.uva.cs.lobcder.optimization.LobState;
+import nl.uva.cs.lobcder.optimization.Vertex;
 import nl.uva.cs.lobcder.optimization.MyTask;
 import nl.uva.cs.lobcder.predictors.FirstSuccessor;
 import nl.uva.cs.lobcder.predictors.LastSuccessor;
@@ -55,11 +55,11 @@ public class MyFilter extends MiltonFilter {
 
     private JDBCatalogue catalogue;
     private static Predictor predictor;
-    private static LobState prevState;
+    private static Vertex prevState;
     private static final BlockingQueue queue = new ArrayBlockingQueue(3500);
     private static RequestEventRecorder recorder;
     private Timer recordertimer;
-    private LobState prevPrediction;
+    private Vertex prevPrediction;
 
     public MyFilter() throws Exception {
         type = PropertiesHelper.getPredictionType();
@@ -250,8 +250,8 @@ public class MyFilter extends MiltonFilter {
                 break;
         }
 
-        LobState currentState = new LobState(method, Path.path(resource).toString());
-        LobState nextState = null;
+        Vertex currentState = new Vertex(method, Path.path(resource).toString());
+        Vertex nextState = null;
 
         nextState = getPredictor().getNextState(currentState);
         log.log(Level.INFO, "Predictior: {0}", getPredictor().getClass().getName());

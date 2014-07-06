@@ -10,26 +10,26 @@ package nl.uva.cs.lobcder.optimization;
  */
 class Edge {
 
-    private LobState v1;
-    private LobState v2;
+    private Vertex v1;
+    private Vertex v2;
     private double wheight;
 
-    public Edge(LobState v1, LobState v2, double wheight) {
+    public Edge(Vertex v1, Vertex v2, double wheight) {
         this.v1 = v1;
         this.v2 = v2;
         this.wheight = wheight;
     }
 
-    Edge(LobState v1, LobState v2) {
+    Edge(Vertex v1, Vertex v2) {
         this.v1 = v1;
         this.v2 = v2;
     }
 
-    LobState getVertex1() {
+    Vertex getVertex1() {
         return v1;
     }
 
-    LobState getVertex2() {
+    Vertex getVertex2() {
         return v2;
     }
 

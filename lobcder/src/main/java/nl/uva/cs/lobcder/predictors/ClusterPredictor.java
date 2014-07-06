@@ -21,7 +21,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.naming.NamingException;
 import nl.uva.cs.lobcder.optimization.LDClustering;
-import nl.uva.cs.lobcder.optimization.LobState;
+import nl.uva.cs.lobcder.optimization.Vertex;
 
 /**
  *
@@ -44,7 +44,7 @@ public class ClusterPredictor implements Predictor {
     }
 
     @Override
-    public LobState getNextState(LobState currentState) {
+    public Vertex getNextState(Vertex currentState) {
         try {
             return ldc.getNextState(currentState);
         } catch (Exception ex) {
@@ -55,7 +55,7 @@ public class ClusterPredictor implements Predictor {
 
     
     @Override
-    public void setPreviousStateForCurrent(LobState prevState, LobState currentState) {
+    public void setPreviousStateForCurrent(Vertex prevState, Vertex currentState) {
         //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }

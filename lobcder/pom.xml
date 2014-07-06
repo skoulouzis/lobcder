@@ -334,15 +334,22 @@
                     <artifactId>bctsp-jdk14</artifactId>
                     <groupId>bouncycastle</groupId>
                 </exclusion>
-            </exclusions>
+            </exclusions>            
         </dependency>
         
         
         
-        <dependency>
+        <!--        <dependency>
             <groupId>com.googlecode.json-simple</groupId>
             <artifactId>json-simple</artifactId>
             <version>1.1.1</version>
+        </dependency>-->
+        
+        
+        <dependency>
+            <groupId>org.jgrapht</groupId>
+            <artifactId>jgrapht-jdk1.5</artifactId>
+            <version>0.7.3</version>
         </dependency>
 
     </dependencies>

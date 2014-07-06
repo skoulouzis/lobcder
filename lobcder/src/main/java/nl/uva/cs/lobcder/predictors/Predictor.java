@@ -4,7 +4,7 @@
  */
 package nl.uva.cs.lobcder.predictors;
 
-import nl.uva.cs.lobcder.optimization.LobState;
+import nl.uva.cs.lobcder.optimization.Vertex;
 
 /**
  *
@@ -14,8 +14,8 @@ public interface Predictor {
 
     public void stop();
 
-    public LobState getNextState(LobState currentState);
+    public Vertex getNextState(Vertex currentState);
 
-    public void setPreviousStateForCurrent(LobState prevState, LobState currentState);
+    public void setPreviousStateForCurrent(Vertex prevState, Vertex currentState);
     
 }

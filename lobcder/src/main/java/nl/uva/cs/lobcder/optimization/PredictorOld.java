@@ -41,18 +41,18 @@ public class PredictorOld extends MyDataSource {
 //        return predictNextState(state.getMethod(), state.getResourceName());
 //    }
 
-    public LobState predictNextState(LobState state) {
+    public Vertex predictNextState(Vertex state) {
         Graph graph = graphPopulator.getGraph();
         if (graph == null) {
             graphPopulator.run();
         }
 
-        List<LobState> set = graphPopulator.getGraph().vertexSet();
+        List<Vertex> set = graphPopulator.getGraph().vertexSet();
 
 
         // Compute the total weight of all items together
         double totalWeight = 0.0d;
-        for (LobState i : set) {
+        for (Vertex i : set) {
             totalWeight += graphPopulator.getGraph().getWeight(state, i);
             log.log(Level.INFO, "totalWeight: {0}", totalWeight);
         }
@@ -61,7 +61,7 @@ public class PredictorOld extends MyDataSource {
         int randomIndex = -1;
         double random = Math.random() * totalWeight;
 
-        LobState[] vertexArray = new LobState[set.size()];
+        Vertex[] vertexArray = new Vertex[set.size()];
         vertexArray = set.toArray(vertexArray);
         for (int i = 0; i < vertexArray.length; ++i) {
 
@@ -71,7 +71,7 @@ public class PredictorOld extends MyDataSource {
                 break;
             }
         }
-        LobState myRandomItem = vertexArray[randomIndex];
+        Vertex myRandomItem = vertexArray[randomIndex];
 //        System.out.println("Will go to: " + myRandomItem + " " + node0 + "->" + myRandomItem + ": " + graphPopulator.getGraph().getWeight(node0, myRandomItem));
         return myRandomItem;
     }

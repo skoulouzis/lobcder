@@ -22,7 +22,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import nl.uva.cs.lobcder.optimization.LobState;
+import nl.uva.cs.lobcder.optimization.Vertex;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.naming.NamingException;
@@ -52,7 +52,7 @@ public class MarkovPredictor extends MyDataSource implements Predictor {
     }
 
     @Override
-    public LobState getNextState(LobState currentState) {
+    public Vertex getNextState(Vertex currentState) {
         try {
             return predictNextState(currentState);
         } catch (SQLException ex) {
@@ -62,7 +62,7 @@ public class MarkovPredictor extends MyDataSource implements Predictor {
     }
 
     @Override
-    public void setPreviousStateForCurrent(LobState prevState, LobState currentState) {
+    public void setPreviousStateForCurrent(Vertex prevState, Vertex currentState) {
         try {
             graph.addTransision(prevState, currentState);
         } catch (SQLException ex) {
@@ -70,7 +70,7 @@ public class MarkovPredictor extends MyDataSource implements Predictor {
         }
     }
 
-    private LobState predictNextState(LobState state) throws SQLException {
+    private Vertex predictNextState(Vertex state) throws SQLException {
         return graph.getWeightedRandomState(state);
     }
 
@@ -93,7 +93,7 @@ public class MarkovPredictor extends MyDataSource implements Predictor {
             }
         }
 
-        void addTransision(LobState from, LobState to) throws SQLException {
+        void addTransision(Vertex from, Vertex to) throws SQLException {
 
 
             String toID = null;
@@ -157,7 +157,7 @@ public class MarkovPredictor extends MyDataSource implements Predictor {
             }
         }
 
-        private LobState getWeightedRandomState(LobState from) throws SQLException {
+        private Vertex getWeightedRandomState(Vertex from) throws SQLException {
             String fromID;
             switch (type) {
                 case state:
@@ -174,7 +174,7 @@ public class MarkovPredictor extends MyDataSource implements Predictor {
                     break;
             }
 
-            LobState nextState = null;
+            Vertex nextState = null;
             try (Connection connection = getConnection()) {
                 try (PreparedStatement ps = connection.prepareStatement("select lobStateID from successor_table where keyVal = ? order by weight*rand() desc limit 1")) {
                     ps.setString(1, fromID);
@@ -212,7 +212,7 @@ public class MarkovPredictor extends MyDataSource implements Predictor {
                                 }
                                 break;
                         }
-                        nextState = new LobState(requestMethod, requestResource);
+                        nextState = new Vertex(requestMethod, requestResource);
                     }
                 }
                 connection.commit();

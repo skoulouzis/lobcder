@@ -10,7 +10,7 @@ import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.naming.NamingException;
-import nl.uva.cs.lobcder.optimization.LobState;
+import nl.uva.cs.lobcder.optimization.Vertex;
 import static nl.uva.cs.lobcder.predictors.DBMapPredictor.type;
 import static nl.uva.cs.lobcder.util.PropertiesHelper.PREDICTION_TYPE.method;
 import static nl.uva.cs.lobcder.util.PropertiesHelper.PREDICTION_TYPE.resource;
@@ -36,7 +36,7 @@ public class LastSuccessor extends DBMapPredictor {
     }
 
     @Override
-    public LobState getNextState(LobState currentState) {
+    public Vertex getNextState(Vertex currentState) {
         try {
             String currentID;
             switch (type) {
@@ -54,7 +54,7 @@ public class LastSuccessor extends DBMapPredictor {
                     break;
             }
             //        LobState nextState = lastS.get(currentState.getID());
-            LobState nextState = getSuccessor(currentID);
+            Vertex nextState = getSuccessor(currentID);
             return nextState;
         } catch (SQLException ex) {
             Logger.getLogger(LastSuccessor.class.getName()).log(Level.SEVERE, null, ex);
@@ -63,7 +63,7 @@ public class LastSuccessor extends DBMapPredictor {
     }
 
     @Override
-    public void setPreviousStateForCurrent(LobState prevState, LobState currentState) {
+    public void setPreviousStateForCurrent(Vertex prevState, Vertex currentState) {
         try {
 
             String prevID = null;

@@ -511,7 +511,7 @@ public class WebDataFileResource extends WebDataResource implements
                         }
                         //Replica selection algorithm
 //                        String from = ((HttpServletRequest) request).getRemoteAddr();
-                        String from  = request.getRemoteAddr();
+                        String from = request.getRemoteAddr();
                         redirect = getBestWorker(from);
                     }
                     WebDataFileResource.log.log(Level.INFO, "Redirecting to: {0}", redirect);
@@ -534,7 +534,7 @@ public class WebDataFileResource extends WebDataResource implements
 //            if (uri != null) {
             if (PropertiesHelper.getSchedulingAlg().equals("traffic")) {
 //                return getWorkerWithLessTraffic(reuSource);
-                return setLowCostPath(reuSource);
+                return getLowestCostWorker(reuSource);
             }
             if (PropertiesHelper.getSchedulingAlg().equals("round-robin")) {
                 return getWorkerRoundRobin();
@@ -625,29 +625,20 @@ public class WebDataFileResource extends WebDataResource implements
         }
         return false;
     }
-    
-     private String setLowCostPath(String reqSource) throws IOException, URISyntaxException {
-                 if (sdnClient == null) {
+
+    private String getLowestCostWorker(String reqSource) throws IOException, URISyntaxException {
+        if (sdnClient == null) {
             String uri = PropertiesHelper.getSDNControllerURL();
             sdnClient = new SDNControllerClient(uri);
         }
-                 
-         Map<String, ArrayList<String>> pathsMap  =  sdnClient.getPathsMap(reqSource,workers);
-         Map<String,Double> costMap = getPathCostMap(pathsMap);
-        double minCost = Double.MAX_VALUE;
-        String bestPathKey = null;
-        for(String s : costMap.keySet()){
-            if(costMap.get(s) <= minCost){
-                minCost = costMap.get(s);
-                bestPathKey = s;
-                if(minCost<=0){
-                    break;
-                }
-            }
-        }
-        ArrayList<String> bestPath = pathsMap.get(bestPathKey);
-        return bestPath.get(0);
-     }
+        String workerIP = sdnClient.getLowestCostWorker(reqSource, workersMap.keySet());
+        String worker = workersMap.get(workerIP);
+        String w = worker + "/" + getLogicalData().getUid();
+        String token = UUID.randomUUID().toString();
+        AuthWorker.setTicket(worker, token);
+        return w + "/" + token;
+
+    }
 
     private String getWorkerWithLessTraffic(String reqSource) throws IOException, URISyntaxException {
         if (sdnClient == null) {
@@ -718,9 +709,5 @@ public class WebDataFileResource extends WebDataResource implements
         String token = UUID.randomUUID().toString();
         AuthWorker.setTicket(worker, token);
         return w + "/" + token;
-    }
-
-   private Map<String, Double> getPathCostMap(Map<String, ArrayList<String>> pathsMap) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }

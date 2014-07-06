@@ -11,7 +11,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.naming.NamingException;
-import nl.uva.cs.lobcder.optimization.LobState;
+import nl.uva.cs.lobcder.optimization.Vertex;
 import static nl.uva.cs.lobcder.predictors.DBMapPredictor.type;
 import nl.uva.cs.lobcder.util.PropertiesHelper;
 import static nl.uva.cs.lobcder.util.PropertiesHelper.PREDICTION_TYPE.method;
@@ -29,7 +29,7 @@ import static nl.uva.cs.lobcder.util.PropertiesHelper.PREDICTION_TYPE.state;
  */
 public class RecentPopularity extends DBMapPredictor {
 
-    Map<String, List<LobState>> lastObservedK = new HashMap<>();
+    Map<String, List<Vertex>> lastObservedK = new HashMap<>();
     static Integer j;
     static Integer k;
 
@@ -46,7 +46,7 @@ public class RecentPopularity extends DBMapPredictor {
     }
 
     @Override
-    public LobState getNextState(LobState currentState) {
+    public Vertex getNextState(Vertex currentState) {
 
         String currentID;
         switch (type) {
@@ -63,7 +63,7 @@ public class RecentPopularity extends DBMapPredictor {
                 currentID = currentState.getID();
                 break;
         }
-        List<LobState> listOfKSuccessors = lastObservedK.get(currentID);
+        List<Vertex> listOfKSuccessors = lastObservedK.get(currentID);
         if (listOfKSuccessors != null && listOfKSuccessors.size() >= k) {
             return getPopularState(listOfKSuccessors);
         }
@@ -71,7 +71,7 @@ public class RecentPopularity extends DBMapPredictor {
     }
 
     @Override
-    public void setPreviousStateForCurrent(LobState prevState, LobState currentState) {
+    public void setPreviousStateForCurrent(Vertex prevState, Vertex currentState) {
         String prevID = null;
         String currentID = null;
         switch (type) {
@@ -93,7 +93,7 @@ public class RecentPopularity extends DBMapPredictor {
                 break;
         }
 
-        List<LobState> listOfKSuccessors = lastObservedK.get(prevID);
+        List<Vertex> listOfKSuccessors = lastObservedK.get(prevID);
         if (listOfKSuccessors == null) {
             listOfKSuccessors = new ArrayList<>();
         }
@@ -104,10 +104,10 @@ public class RecentPopularity extends DBMapPredictor {
         lastObservedK.put(prevID, listOfKSuccessors);
     }
 
-    private LobState getPopularState(List<LobState> listOfKSuccessors) {
+    private Vertex getPopularState(List<Vertex> listOfKSuccessors) {
         int count = 1, tempCount;
-        LobState popular = listOfKSuccessors.get(0);
-        LobState temp;
+        Vertex popular = listOfKSuccessors.get(0);
+        Vertex temp;
         for (int i = 0; i < (listOfKSuccessors.size() - 1); i++) {
             temp = listOfKSuccessors.get(i);
             tempCount = 0;

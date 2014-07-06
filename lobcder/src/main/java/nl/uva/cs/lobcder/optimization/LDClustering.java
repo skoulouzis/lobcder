@@ -166,9 +166,9 @@ public class LDClustering extends DBMapPredictor implements Runnable {
     }
 
     @Override
-    public LobState getNextState(LobState currentState) {
+    public Vertex getNextState(Vertex currentState) {
 
-        ArrayList<LobState> states = new ArrayList<>();
+        ArrayList<Vertex> states = new ArrayList<>();
         String rName = currentState.getResourceName();
         if (!rName.endsWith("/")) {
             rName += "/";
@@ -358,7 +358,7 @@ public class LDClustering extends DBMapPredictor implements Runnable {
         return inst;
     }
 
-    private LobState getNextLobState(Connection connection, double[] features) throws SQLException {
+    private Vertex getNextLobState(Connection connection, double[] features) throws SQLException {
         String query = "SELECT ldataRef, methodName, "
                 + "POW((f1 - ?), 2) + POW((f2 - ?), 2) + POW((f3 - ?), 2) + "
                 + "POW((f4 - ?), 2) + POW((f5 - ?), 2) + POW((f6 - ?), 2) + "
@@ -380,14 +380,14 @@ public class LDClustering extends DBMapPredictor implements Runnable {
             ResultSet rs = preparedStatement.executeQuery();
             while (rs.next()) {
                 String path = getPathforLogicalData(getLogicalDataByUid(rs.getLong(1), connection), connection);
-                LobState state = new LobState(Method.valueOf(rs.getString(2)), path);
+                Vertex state = new Vertex(Method.valueOf(rs.getString(2)), path);
                 log.log(Level.INFO, "State: {0}", state.getID());
             }
         }
         return null;
     }
 
-    private LobState getNextMethodState(Connection connection, double[] features) throws SQLException {
+    private Vertex getNextMethodState(Connection connection, double[] features) throws SQLException {
         String query = "SELECT ldataRef, methodName, "
                 + "POW((f2 - ?), 2)"
                 + "AS dist FROM features_table  ORDER BY dist ASC LIMIT ?";
@@ -400,14 +400,14 @@ public class LDClustering extends DBMapPredictor implements Runnable {
             ResultSet rs = preparedStatement.executeQuery();
             while (rs.next()) {
                 String path = getPathforLogicalData(getLogicalDataByUid(rs.getLong(1), connection), connection);
-                LobState state = new LobState(Method.valueOf(rs.getString(2)), path);
+                Vertex state = new Vertex(Method.valueOf(rs.getString(2)), path);
                 log.log(Level.INFO, "State: {0}", state.getID());
             }
         }
         return null;
     }
 
-    private LobState getNextResourceState(Connection connection, double[] features) throws SQLException {
+    private Vertex getNextResourceState(Connection connection, double[] features) throws SQLException {
         String query = "SELECT ldataRef, "
                 + "methodName, "
                 + "POW((f1 - ?), 2) + "
@@ -451,7 +451,7 @@ public class LDClustering extends DBMapPredictor implements Runnable {
                         rquestMethod = Method.valueOf(rs.getString(2));
                         break;
                 }
-                LobState state = new LobState(rquestMethod, path);
+                Vertex state = new Vertex(rquestMethod, path);
                 log.log(Level.INFO, "State: {0}", state.getID());
             }
         }

@@ -119,7 +119,7 @@ public class LDClusteringOld extends MyDataSource implements Runnable {
 //        c.setDatasource(dataSource);
         c.run();
 
-        c.getNextState(new LobState(Request.Method.GET, "/DSS2IR/DSS2IR_area.fits"));
+        c.getNextState(new Vertex(Request.Method.GET, "/DSS2IR/DSS2IR_area.fits"));
     }
 
     @Override
@@ -320,7 +320,7 @@ public class LDClusteringOld extends MyDataSource implements Runnable {
     private void evaluateCluster() {
     }
 
-    public LobState getNextState(LobState currentState) throws SQLException, Exception {
+    public Vertex getNextState(Vertex currentState) throws SQLException, Exception {
         String rName = currentState.getResourceName();
         if (rName.equals(ROOT)) {
             rName = "";
