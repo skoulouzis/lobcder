@@ -38,6 +38,8 @@ public class SDNControllerClient {
     private int floodlightPort = 8080;
     private int sflowRTPrt = 8008;
     private List<Switch> switches;
+    private Map<String, String> networkEntitySwitchMap;
+    private HashMap<String, Integer> sFlowHostPortMap;
 
     public SDNControllerClient(String uri) throws IOException {
         ClientConfig clientConfig = new DefaultClientConfig();
@@ -177,6 +179,7 @@ public class SDNControllerClient {
 
         int port = destinationEntity.attachmentPoint.get(0).port;
         graph.addVertex(switchDPID);
+
         DefaultWeightedEdge e1 = graph.addEdge(ipv4, switchDPID);
         graph.setEdgeWeight(e1, getCost(ipv4, switchDPID));
 
@@ -226,18 +229,19 @@ public class SDNControllerClient {
         DefaultWeightedEdge e = shortestPath.get(0);
         String[] workerSwitch = e.toString().split(" : ");
         String worker = workerSwitch[0].substring(1);
+
         return worker;
     }
 
-    private List<NetworkEntity> getNetworkEntity(String dest) {
+    private List<NetworkEntity> getNetworkEntity(String address) {
         WebResource webResource = client.resource(uri + ":" + floodlightPort);
         WebResource res = null;
-        if (dest.contains(".")) {
+        if (address.contains(".")) {
             // http://145.100.133.131:8080/wm/device/?ipv4=192.168.100.1
-            res = webResource.path("wm").path("device/").queryParam("ipv4", dest);
+            res = webResource.path("wm").path("device/").queryParam("ipv4", address);
         } else {
             // http://145.100.133.131:8080/wm/device/?mac=fe:16:3e:00:26:b1
-            res = webResource.path("wm").path("device/").queryParam("mac", dest);
+            res = webResource.path("wm").path("device/").queryParam("mac", address);
         }
         return res.get(new GenericType<List<NetworkEntity>>() {
         });
@@ -259,16 +263,50 @@ public class SDNControllerClient {
     }
 
     private double getCost(String v1, String v2) {
-        Map<String, Integer> map;
-        if (v1.contains(":")) {
-            map = getifNameOpenFlowPortNumberMap(v1);
+
+        if (sFlowHostPortMap == null) {
+            sFlowHostPortMap = new HashMap<>();
+        }
+        if (v1.contains(":") && v2.contains(":")) {
+            String switch1IP = getSwitchIPFromDPI(v1);
+            String switch2IP = getSwitchIPFromDPI(v2);
+
+            List<Flow> flows = getAgentFlows(switch1IP);
+            for (Flow f : flows) {
+                String[] keys = f.flowKeys.split(",");
+                String from = keys[0];
+                String to = keys[1];
+                if (!isAttached(from, v1) && isAttached(to, v1)) {
+                    Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, "Switch: " + switch1IP + " -> " + f.dataSource);
+                    break;
+                }
+
+            }
         } else {
-            map = getifNameOpenFlowPortNumberMap(v2);
+            String switchIP = null;
+            String hostIP = null;
+            if (v1.contains(".")) {
+                switchIP = getSwitchIPFromHostIP(v1);
+                hostIP = v1;
+            } else {
+                switchIP = getSwitchIPFromHostIP(v2);
+                hostIP = v2;
+            }
+
+            if (!sFlowHostPortMap.containsKey(hostIP)) {
+                List<Flow> flows = getAgentFlows(switchIP);
+                for (Flow f : flows) {
+                    String[] keys = f.flowKeys.split(",");
+                    if (keys[0].equals(hostIP)) {
+                        sFlowHostPortMap.put(hostIP, f.dataSource);
+                        break;
+                    }
+                }
+            }
+//        TT = [({MTU} / {bps}) + RTT] * [ {MTU}/{FS}]
+            Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, "Host: " + hostIP + " is attached to: " + switchIP + " port: " + sFlowHostPortMap.get(hostIP));
         }
 
-        Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, "---------------cost from: " + v1 + " to: " + v2);
-        if (v1.contains(":")) {
-        }
         return 1.0;
     }
 
@@ -295,6 +333,84 @@ public class SDNControllerClient {
             });
         }
         return switches;
+    }
+
+    private String getSwitchIPFromHostIP(String address) {
+        if (networkEntitySwitchMap == null) {
+            networkEntitySwitchMap = new HashMap<>();
+        }
+        if (!networkEntitySwitchMap.containsKey(address)) {
+            List<NetworkEntity> ne = getNetworkEntity(address);
+            String dpi = ne.get(0).attachmentPoint.get(0).switchDPID;
+            for (Switch sw : getSwitches()) {
+                if (sw.dpid.equals(dpi)) {
+                    String ip = sw.inetAddress.split(":")[0].substring(1);
+                    networkEntitySwitchMap.put(address, ip);
+                    break;
+                }
+            }
+        }
+
+        return networkEntitySwitchMap.get(address);
+    }
+
+    private List<Flow> getAgentFlows(String switchIP) {
+        List<Flow> agentFlows = new ArrayList<>();
+        for (Flow f : getAllFlows()) {
+            if (f.agent.equals(switchIP)) {
+                agentFlows.add(f);
+            }
+        }
+        return agentFlows;
+    }
+
+    private List<Flow> getAllFlows() {
+        WebResource webResource = client.resource(uri + ":" + sflowRTPrt);
+        WebResource res = webResource.path("flows").path("json");
+        return res.get(new GenericType<List<Flow>>() {
+        });
+    }
+
+    private boolean isAttached(String from, String dpi) {
+        for (NetworkEntity ne : getNetworkEntity(from)) {
+            for (AttachmentPoint ap : ne.attachmentPoint) {
+                if (ap.switchDPID.equals(dpi)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private String getSwitchIPFromDPI(String dpi) {
+        for (Switch s : getSwitches()) {
+            if (s.dpid.equals(dpi)) {
+                return s.inetAddress.split(":")[0].substring(1);
+            }
+        }
+        return null;
+    }
+
+    @XmlRootElement
+    @XmlAccessorType(XmlAccessType.FIELD)
+    public static class Flow {
+
+        @XmlElement(name = "agent")
+        String agent;
+        @XmlElement(name = "dataSource")
+        int dataSource;
+        @XmlElement(name = "end")
+        String end;
+        @XmlElement(name = "flowID")
+        int flowID;
+        @XmlElement(name = "flowKeys")
+        String flowKeys;
+        @XmlElement(name = "name")
+        String name;
+        @XmlElement(name = "start")
+        long start;
+        @XmlElement(name = "value")
+        double value;
     }
 
     @XmlRootElement
