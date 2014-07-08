@@ -523,13 +523,13 @@ public class WebDataFileResource extends WebDataResource implements
             Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, ex);
         } catch (URISyntaxException ex) {
             Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (SQLException | IOException ex) {
+        } catch (SQLException | IOException | InterruptedException ex) {
             Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, ex);
         }
         return null;
     }
 
-    private String getBestWorker(String reuSource) throws IOException, URISyntaxException {
+    private String getBestWorker(String reuSource) throws IOException, URISyntaxException, InterruptedException {
         if (doRedirect) {
 //            if (uri != null) {
             if (PropertiesHelper.getSchedulingAlg().equals("traffic")) {
@@ -626,7 +626,7 @@ public class WebDataFileResource extends WebDataResource implements
         return false;
     }
 
-    private String getLowestCostWorker(String reqSource) throws IOException, URISyntaxException {
+    private String getLowestCostWorker(String reqSource) throws IOException, URISyntaxException, InterruptedException {
         if (sdnClient == null) {
             String uri = PropertiesHelper.getSDNControllerURL();
             sdnClient = new SDNControllerClient(uri);
@@ -641,52 +641,53 @@ public class WebDataFileResource extends WebDataResource implements
     }
 
     private String getWorkerWithLessTraffic(String reqSource) throws IOException, URISyntaxException {
-        if (sdnClient == null) {
-            String uri = PropertiesHelper.getSDNControllerURL();
-            sdnClient = new SDNControllerClient(uri);
-        }
-        Map<String, FloodlightStats> stats1 = sdnClient.getStatsMap();
-        try {
-            Thread.sleep(750);
-        } catch (InterruptedException ex) {
-            Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        Map<String, FloodlightStats> stats2 = sdnClient.getStatsMap();
-        Set<String> keys = stats1.keySet();
-        long cost = Long.MAX_VALUE;
-        String worker = workersMap.values().iterator().next();
-        for (String k : keys) {
-            FloodlightStats fs1 = stats1.get(k);
-
-            FloodlightStats fs2 = stats2.get(k);
-            long allStats = (fs2.receiveBytes - fs1.receiveBytes)
-                    + (fs2.transmitBytes - fs1.transmitBytes)
-                    + (fs2.receivePackets - fs1.receivePackets)
-                    + (fs2.transmitPackets - fs1.transmitPackets);
-            WebDataFileResource.log.log(Level.INFO, "worker: {0} cost: {1}", new Object[]{k, allStats});
-            if (allStats < cost && workersMap.containsKey(k)) {
-                cost = allStats;
-                worker = workersMap.get(k);
-//                WebDataFileResource.log.log(Level.INFO, "worker: {0} cost: {1}", new Object[]{k, allStats});
-                if (cost <= 0) {
-                    break;
-                }
-            }
-
-        }
-
+//        if (sdnClient == null) {
+//            String uri = PropertiesHelper.getSDNControllerURL();
+//            sdnClient = new SDNControllerClient(uri);
+//        }
+//        Map<String, FloodlightStats> stats1 = sdnClient.getStatsMap();
+//        try {
+//            Thread.sleep(750);
+//        } catch (InterruptedException ex) {
+//            Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, ex);
+//        }
+//        Map<String, FloodlightStats> stats2 = sdnClient.getStatsMap();
+//        Set<String> keys = stats1.keySet();
+//        long cost = Long.MAX_VALUE;
+//        String worker = workersMap.values().iterator().next();
+//        for (String k : keys) {
+//            FloodlightStats fs1 = stats1.get(k);
+//
+//            FloodlightStats fs2 = stats2.get(k);
+//            long allStats = (fs2.receiveBytes - fs1.receiveBytes)
+//                    + (fs2.transmitBytes - fs1.transmitBytes)
+//                    + (fs2.receivePackets - fs1.receivePackets)
+//                    + (fs2.transmitPackets - fs1.transmitPackets);
+//            WebDataFileResource.log.log(Level.INFO, "worker: {0} cost: {1}", new Object[]{k, allStats});
+//            if (allStats < cost && workersMap.containsKey(k)) {
+//                cost = allStats;
+//                worker = workersMap.get(k);
+////                WebDataFileResource.log.log(Level.INFO, "worker: {0} cost: {1}", new Object[]{k, allStats});
+//                if (cost <= 0) {
+//                    break;
+//                }
+//            }
+//
+//        }
+//
 //        WebDataFileResource.log.log(Level.INFO, "portNum: {0} cost: {1} worker: {2}", new Object[]{portNum, cost, worker});
-        String w = worker + "/" + getLogicalData().getUid();
-        String token = UUID.randomUUID().toString();
-        AuthWorker.setTicket(worker, token);
-        int trans = 0;
-        if (numOfWorkerTransfersMap.containsKey(worker)) {
-            trans = numOfWorkerTransfersMap.get(worker);
-        }
-        trans++;
-        numOfWorkerTransfersMap.put(worker, trans);
-//        WebDataFileResource.log.log(Level.INFO, "worker: {0} cost: {1} transfers: {2}", new Object[]{worker, cost, trans});
-        return w + "/" + token;
+//        String w = worker + "/" + getLogicalData().getUid();
+//        String token = UUID.randomUUID().toString();
+//        AuthWorker.setTicket(worker, token);
+//        int trans = 0;
+//        if (numOfWorkerTransfersMap.containsKey(worker)) {
+//            trans = numOfWorkerTransfersMap.get(worker);
+//        }
+//        trans++;
+//        numOfWorkerTransfersMap.put(worker, trans);
+////        WebDataFileResource.log.log(Level.INFO, "worker: {0} cost: {1} transfers: {2}", new Object[]{worker, cost, trans});
+//        return w + "/" + token;
+        return null;
     }
 
     private String getWorkerRoundRobin() throws IOException {

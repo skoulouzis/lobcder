@@ -22,7 +22,17 @@ import java.util.logging.Logger;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
+import org.apache.commons.lang3.tuple.Pair;
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
+import org.codehaus.jackson.annotate.JsonProperty;
+import org.codehaus.jackson.annotate.JsonTypeName;
+import org.codehaus.jackson.map.DeserializationConfig;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.map.type.CollectionType;
+import org.codehaus.jackson.type.JavaType;
+import org.codehaus.jackson.type.TypeReference;
 import org.jgrapht.alg.DijkstraShortestPath;
 import org.jgrapht.graph.DefaultWeightedEdge;
 import org.jgrapht.graph.SimpleWeightedGraph;
@@ -37,16 +47,14 @@ public class SDNControllerClient {
     private String uri;
     private int floodlightPort = 8080;
     private int sflowRTPrt = 8008;
-    private List<Switch> switches;
-    private Map<String, String> networkEntitySwitchMap;
-    private HashMap<String, Integer> sFlowHostPortMap;
+    private static List<Switch> switches;
+    private static Map<String, String> networkEntitySwitchMap;
+    private static HashMap<String, Integer> sFlowHostPortMap;
 
     public SDNControllerClient(String uri) throws IOException {
         ClientConfig clientConfig = new DefaultClientConfig();
         clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
         client = Client.create(clientConfig);
-
-
         this.uri = uri;
     }
 
@@ -161,7 +169,7 @@ public class SDNControllerClient {
         return null;
     }
 
-    public String getLowestCostWorker(String dest, Set<String> sources) {
+    public String getLowestCostWorker(String dest, Set<String> sources) throws InterruptedException, IOException {
         SimpleWeightedGraph<String, DefaultWeightedEdge> graph = new SimpleWeightedGraph<>(DefaultWeightedEdge.class);
 
         dest = "192.168.100.1";
@@ -174,14 +182,11 @@ public class SDNControllerClient {
         }
         graph.addVertex(ipv4);
 
-        String mac = destinationEntity.mac.get(0);
         String switchDPID = destinationEntity.attachmentPoint.get(0).switchDPID;
-
-        int port = destinationEntity.attachmentPoint.get(0).port;
         graph.addVertex(switchDPID);
 
         DefaultWeightedEdge e1 = graph.addEdge(ipv4, switchDPID);
-        graph.setEdgeWeight(e1, getCost(ipv4, switchDPID));
+        graph.setEdgeWeight(e1, getCost(ipv4, switchDPID, destinationEntity.attachmentPoint.get(0).port));
 
         List<NetworkEntity> sourceEntityArray = getNetworkEntity(sources);
 
@@ -192,13 +197,11 @@ public class SDNControllerClient {
             }
             graph.addVertex(ipv4);
 
-            mac = ne.mac.get(0);
             switchDPID = ne.attachmentPoint.get(0).switchDPID;
-            port = ne.attachmentPoint.get(0).port;
             graph.addVertex(switchDPID);
 
             DefaultWeightedEdge e2 = graph.addEdge(ipv4, switchDPID);
-            graph.setEdgeWeight(e2, getCost(ipv4, switchDPID));
+            graph.setEdgeWeight(e2, getCost(ipv4, switchDPID, ne.attachmentPoint.get(0).port));
         }
 
         List<Link> links = getSwitchLinks();
@@ -206,7 +209,7 @@ public class SDNControllerClient {
             graph.addVertex(l.srcSwitch);
             graph.addVertex(l.dstSwitch);
             DefaultWeightedEdge e3 = graph.addEdge(l.srcSwitch, l.dstSwitch);
-            graph.setEdgeWeight(e3, getCost(l.srcSwitch, l.dstSwitch));
+            graph.setEdgeWeight(e3, getCost(l.srcSwitch, l.dstSwitch, l.srcPort));
         }
 
 
@@ -229,8 +232,176 @@ public class SDNControllerClient {
         DefaultWeightedEdge e = shortestPath.get(0);
         String[] workerSwitch = e.toString().split(" : ");
         String worker = workerSwitch[0].substring(1);
-
         return worker;
+    }
+
+    private double getCost(String v1, String v2, int port) throws InterruptedException, IOException {
+
+//        String[] agentPort = getsFlowPort(v1, v2);
+//        double tpp = getTimePerPacket(agentPort[0], Integer.valueOf(agentPort[1]));
+        String dpi;
+        if (v1.contains(":")) {
+            dpi = v1;
+        } else {
+            dpi = v2;
+        }
+        double interval = 1000.0;
+        FloodlightStats[] stats = getFloodlightPortStats(dpi, port, interval);
+
+        long rpps = stats[1].receivePackets - stats[0].receivePackets;
+        long tpps = stats[1].transmitPackets - stats[0].transmitPackets;
+        if (rpps <= 0) {
+            rpps = 1;
+        }
+        if (tpps <= 0) {
+            tpps = 1;
+        }
+
+//        double rrrt = (interval / rpps);
+//        double trrt = (interval / tpps);
+
+        double tpp = (rpps > tpps) ? rpps : tpps;
+        if (tpp <= 0) {
+            tpp = 1;
+        }
+
+
+        long rbytes = stats[1].receiveBytes - stats[0].receiveBytes;
+        long tbytes = stats[1].transmitBytes - stats[0].transmitBytes;
+        if (rbytes <= 0) {
+            rbytes = 1;
+        }
+        if (tbytes <= 0) {
+            tbytes = 1;
+        }
+        double rMTU = rbytes / rpps * 1.0;
+        double tMTU = tbytes / tpps * 1.0;
+        double mtu = (rMTU > tMTU) ? rMTU : tMTU;
+        if (mtu <= 0) {
+            mtu = 1500;
+        }
+
+        //TT=TpP * NoP
+        //NoP = {MTU}/{FS}
+        //TpP =[({MTU} / {bps}) + RTT] // is the time it takes to transmit one packet or time per packet
+        //TT = [({MTU} / {bps}) + RTT] * [ {MTU}/{FS}]
+
+        double nop = mtu / 1024.0;
+        double tt = tpp * nop;
+
+        Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, "From: " + v1 + " to: " + v2 + " tt: " + tt);
+        return tt;
+    }
+
+    private FloodlightStats[] getFloodlightPortStats(String dpi, int port, double interval) throws IOException, InterruptedException {
+        List<FloodlightStats> stats1 = getFloodlightPortStats(dpi);
+        Thread.sleep((long) interval);
+        List<FloodlightStats> stats2 = getFloodlightPortStats(dpi);
+
+        FloodlightStats stat1 = null;
+        for (FloodlightStats s : stats1) {
+            if (s.portNumber == port) {
+                stat1 = s;
+                break;
+            }
+        }
+
+        FloodlightStats stat2 = null;
+        for (FloodlightStats s : stats2) {
+            if (s.portNumber == port) {
+                stat2 = s;
+                break;
+            }
+        }
+        return new FloodlightStats[]{stat1, stat2};
+    }
+
+    private String[] getsFlowPort(String v1, String v2) {
+        String[] tuple = new String[2];
+        if (sFlowHostPortMap == null) {
+            sFlowHostPortMap = new HashMap<>();
+        }
+        if (v1.contains(":") && v2.contains(":")) {
+            String switch1IP = getSwitchIPFromDPI(v1);
+//            String switch2IP = getSwitchIPFromDPI(v2);
+            if (!sFlowHostPortMap.containsKey(switch1IP)) {
+                List<Flow> flows = getAgentFlows(switch1IP);
+                for (Flow f : flows) {
+                    String[] keys = f.flowKeys.split(",");
+                    String from = keys[0];
+                    String to = keys[1];
+                    if (!isAttached(from, v1) && isAttached(to, v1)) {
+//                        Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, "Switch: " + switch1IP + " -> " + f.dataSource);
+                        sFlowHostPortMap.put(switch1IP, f.dataSource);
+                        break;
+                    }
+                }
+            }
+//            Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, "Host: " + switch1IP + " port: " + sFlowHostPortMap.get(switch1IP));
+            tuple[0] = switch1IP;
+            tuple[1] = String.valueOf(sFlowHostPortMap.get(switch1IP));
+            return tuple;
+        } else {
+            String switchIP = null;
+            String hostIP = null;
+            if (v1.contains(".")) {
+                switchIP = getSwitchIPFromHostIP(v1);
+                hostIP = v1;
+            } else {
+                switchIP = getSwitchIPFromHostIP(v2);
+                hostIP = v2;
+            }
+
+            if (!sFlowHostPortMap.containsKey(hostIP)) {
+                List<Flow> flows = getAgentFlows(switchIP);
+                for (Flow f : flows) {
+                    String[] keys = f.flowKeys.split(",");
+                    if (keys[0].equals(hostIP)) {
+                        sFlowHostPortMap.put(hostIP, f.dataSource);
+                        break;
+                    }
+                }
+            }
+            Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, "Host: " + hostIP + " is attached to: " + switchIP + " port: " + sFlowHostPortMap.get(hostIP));
+            tuple[0] = switchIP;
+            tuple[1] = String.valueOf(sFlowHostPortMap.get(hostIP));
+            return tuple;
+        }
+    }
+
+    private Map<String, Integer> getifNameOpenFlowPortNumberMap(String dpi) {
+        HashMap<String, Integer> ifNamePortMap = new HashMap<>();
+        List<Switch> sw = getSwitches();
+        for (Switch s : sw) {
+            if (s.dpid.equals(dpi)) {
+                List<Port> ports = s.ports;
+                for (Port p : ports) {
+                    ifNamePortMap.put(p.name, p.portNumber);
+                }
+                break;
+            }
+        }
+        return ifNamePortMap;
+    }
+
+    private String getSwitchIPFromDPI(String dpi) {
+        for (Switch s : getSwitches()) {
+            if (s.dpid.equals(dpi)) {
+                return s.inetAddress.split(":")[0].substring(1);
+            }
+        }
+        return null;
+    }
+
+    private boolean isAttached(String from, String dpi) {
+        for (NetworkEntity ne : getNetworkEntity(from)) {
+            for (AttachmentPoint ap : ne.attachmentPoint) {
+                if (ap.switchDPID.equals(dpi)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private List<NetworkEntity> getNetworkEntity(String address) {
@@ -260,69 +431,6 @@ public class SDNControllerClient {
         WebResource res = webResource.path("wm").path("topology").path("links").path("json");
         return res.get(new GenericType<List<Link>>() {
         });
-    }
-
-    private double getCost(String v1, String v2) {
-
-        if (sFlowHostPortMap == null) {
-            sFlowHostPortMap = new HashMap<>();
-        }
-        if (v1.contains(":") && v2.contains(":")) {
-            String switch1IP = getSwitchIPFromDPI(v1);
-            String switch2IP = getSwitchIPFromDPI(v2);
-
-            List<Flow> flows = getAgentFlows(switch1IP);
-            for (Flow f : flows) {
-                String[] keys = f.flowKeys.split(",");
-                String from = keys[0];
-                String to = keys[1];
-                if (!isAttached(from, v1) && isAttached(to, v1)) {
-                    Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, "Switch: " + switch1IP + " -> " + f.dataSource);
-                    break;
-                }
-
-            }
-        } else {
-            String switchIP = null;
-            String hostIP = null;
-            if (v1.contains(".")) {
-                switchIP = getSwitchIPFromHostIP(v1);
-                hostIP = v1;
-            } else {
-                switchIP = getSwitchIPFromHostIP(v2);
-                hostIP = v2;
-            }
-
-            if (!sFlowHostPortMap.containsKey(hostIP)) {
-                List<Flow> flows = getAgentFlows(switchIP);
-                for (Flow f : flows) {
-                    String[] keys = f.flowKeys.split(",");
-                    if (keys[0].equals(hostIP)) {
-                        sFlowHostPortMap.put(hostIP, f.dataSource);
-                        break;
-                    }
-                }
-            }
-//        TT = [({MTU} / {bps}) + RTT] * [ {MTU}/{FS}]
-            Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, "Host: " + hostIP + " is attached to: " + switchIP + " port: " + sFlowHostPortMap.get(hostIP));
-        }
-
-        return 1.0;
-    }
-
-    private Map<String, Integer> getifNameOpenFlowPortNumberMap(String dpi) {
-        HashMap<String, Integer> ifNamePortMap = new HashMap<>();
-        List<Switch> sw = getSwitches();
-        for (Switch s : sw) {
-            if (s.dpid.equals(dpi)) {
-                List<Port> ports = s.ports;
-                for (Port p : ports) {
-                    ifNamePortMap.put(p.name, p.portNumber);
-                }
-                break;
-            }
-        }
-        return ifNamePortMap;
     }
 
     private List<Switch> getSwitches() {
@@ -371,24 +479,54 @@ public class SDNControllerClient {
         });
     }
 
-    private boolean isAttached(String from, String dpi) {
-        for (NetworkEntity ne : getNetworkEntity(from)) {
-            for (AttachmentPoint ap : ne.attachmentPoint) {
-                if (ap.switchDPID.equals(dpi)) {
-                    return true;
-                }
-            }
-        }
-        return false;
+    private List<Ifpkts> getifoutpktsMetric(String agent, int port) {
+        WebResource webResource = client.resource(uri + ":" + sflowRTPrt);
+        WebResource res = webResource.path("metric").path(agent).path(port + ".ifoutpkts").path("json");
+        return res.get(new GenericType<List<Ifpkts>>() {
+        });
     }
 
-    private String getSwitchIPFromDPI(String dpi) {
-        for (Switch s : getSwitches()) {
-            if (s.dpid.equals(dpi)) {
-                return s.inetAddress.split(":")[0].substring(1);
-            }
-        }
-        return null;
+    private List<FloodlightStats> getFloodlightPortStats(String dpi) throws IOException {
+        //http://145.100.133.130:8080/wm/core/switch/00:00:4e:cd:a6:8d:c9:44/port/json
+        WebResource webResource = client.resource(uri + ":" + floodlightPort);
+        WebResource res = webResource.path("wm").path("core").path("switch").path(dpi).path("port").path("json");
+
+
+        String output = res.get(String.class);
+        String out = output.substring(27, output.length() - 1);
+
+        ObjectMapper mapper = new ObjectMapper();
+        return mapper.readValue(out, mapper.getTypeFactory().constructCollectionType(List.class, FloodlightStats.class));
+    }
+
+    @XmlRootElement
+    @XmlAccessorType(XmlAccessType.FIELD)
+    public static class Ifpkts {
+
+        @XmlElement(name = "agent")
+        String agent;
+        @XmlElement(name = "dataSource")
+        int dataSource;
+        @XmlElement(name = "lastUpdate")
+        long lastUpdate;
+        /**
+         * The lastUpdateMax and lastUpdateMin values indicate how long ago (in
+         * milliseconds) the most recent and oldest updates
+         */
+        @XmlElement(name = "lastUpdateMax")
+        long lastUpdateMax;
+        @XmlElement(name = "lastUpdateMin")
+        /**
+         * The metricN field in the query result indicates the number of data
+         * sources that contributed to the summary metrics
+         */
+        long lastUpdateMin;
+        @XmlElement(name = "metricN")
+        int metricN;
+        @XmlElement(name = "metricName")
+        String metricName;
+        @XmlElement(name = "metricValue")
+        double value;
     }
 
     @XmlRootElement
@@ -541,25 +679,45 @@ public class SDNControllerClient {
         boolean supportsOfppTable;
     }
 
+//    @XmlRootElement
+//    @XmlAccessorType(XmlAccessType.FIELD)
+////    @JsonIgnoreProperties(ignoreUnknown = true)
+//    public static class FloodlightStatsWrapper {
+//
+////        @XmlElement(name = "00:00:4e:cd:a6:8d:c9:44")
+//        @XmlElementWrapper
+////        @XmlElement
+//        List<FloodlightStats> stats;
+//    }
+    @XmlRootElement
+    @XmlAccessorType(XmlAccessType.FIELD)
     public static class FloodlightStats {
 
-        public long receivePackets;
-        public long transmitPackets;
-        public long collisions;
-        public long receiveCRCErrors;
-        public long receiveDropped;
-        public long receiveErrors;
-        public long receiveFrameErrors;
-        public long receiveOverrunErrors;
-        public long transmitBytes;
-        public long transmitDropped;
-        public long transmitErrors;
-        public long receiveBytes;
-        public String ip;
-        public Long port;
-        public String switchDPID;
-
-        public FloodlightStats() {
-        }
+        @JsonProperty("portNumber")
+        int portNumber;
+        @JsonProperty("receivePackets")
+        long receivePackets;
+        @JsonProperty("transmitPackets")
+        long transmitPackets;
+        @JsonProperty("receiveBytes")
+        long receiveBytes;
+        @JsonProperty("transmitBytes")
+        long transmitBytes;
+        @JsonProperty("receiveDropped")
+        long receiveDropped;
+        @JsonProperty("transmitDropped")
+        long transmitDropped;
+        @JsonProperty("receiveErrors")
+        long receiveErrors;
+        @JsonProperty("transmitErrors")
+        long transmitErrors;
+        @JsonProperty("receiveFrameErrors")
+        long receiveFrameErrors;
+        @JsonProperty("receiveOverrunErrors")
+        long receiveOverrunErrors;
+        @JsonProperty("receiveCRCErrors")
+        long receiveCRCErrors;
+        @JsonProperty("collisions")
+        long collisions;
     }
 }
