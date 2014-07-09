@@ -6,21 +6,16 @@ import com.sun.jersey.api.client.WebResource;
 import lombok.Data;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.util.PropertiesHelper;
-import org.w3c.dom.Node;
-import org.xml.sax.InputSource;
 
 import javax.sql.DataSource;
 import javax.ws.rs.core.MediaType;
 import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathFactory;
 import java.io.IOException;
-import java.net.UnknownHostException;
 import java.sql.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import nl.uva.cs.lobcder.util.Constants;
 
 /**
  * User: dvasunin Date: 25.02.13 Time: 16:31 To change this template use File |

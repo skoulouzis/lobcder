@@ -201,7 +201,7 @@ The file lobcder.properties contains some properties used by lobcder.
  \item worker.token: A hard-coded token used by the lobcder workers. Values: It can be any alphanumeric.
  \item replication.aggressive: 
  \itam redirect.get: Controls if lobcder redirect GET requests to workers. Values: true/false
- \item use.metadata.repository: Controls if lobcder will send access data to a metadata repository GET requests to workers. Values: true/false
+ \item metadata.repository.use: Controls if lobcder will send access data to a metadata repository GET requests to workers. Values: true/false
  \item metadata.reposetory.url: The url of the metadata repository. Values: URL 
  \item default.rowlimit: Controls the number of results returned by the REST service when sending this query: http://host.com/rest/items/query?path={path} Values: integer
 %  \item tokens.deletesweep.count: 

@@ -22,17 +22,9 @@ import java.util.logging.Logger;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
-import org.apache.commons.lang3.tuple.Pair;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonProperty;
-import org.codehaus.jackson.annotate.JsonTypeName;
-import org.codehaus.jackson.map.DeserializationConfig;
 import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.type.CollectionType;
-import org.codehaus.jackson.type.JavaType;
-import org.codehaus.jackson.type.TypeReference;
 import org.jgrapht.alg.DijkstraShortestPath;
 import org.jgrapht.graph.DefaultWeightedEdge;
 import org.jgrapht.graph.SimpleWeightedGraph;
@@ -49,81 +41,16 @@ public class SDNControllerClient {
     private int sflowRTPrt = 8008;
     private static List<Switch> switches;
     private static Map<String, String> networkEntitySwitchMap;
-    private static HashMap<String, Integer> sFlowHostPortMap;
+    private static Map<String, Integer> sFlowHostPortMap;
+    private static Map<String, List<NetworkEntity>> networkEntityCache;
+    private static SimpleWeightedGraph<String, DefaultWeightedEdge> graph;
+    private static List<Link> linkCache;
 
     public SDNControllerClient(String uri) throws IOException {
         ClientConfig clientConfig = new DefaultClientConfig();
         clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
         client = Client.create(clientConfig);
         this.uri = uri;
-    }
-
-    public List<FloodlightStats> getStats() {
-//        try {
-//            WebResource webResource = client.resource(uri + ":" + floodlightPort);
-//
-//            WebResource res = webResource.path("wm").path("device/");
-//            String s = res.get(String.class);
-//
-//            Object obj = JSONValue.parse(s);
-//            JSONArray array = (JSONArray) obj;
-//            ArrayList<FloodlightStats> stats = new ArrayList<>();
-//            for (Object o : array) {
-//                JSONObject jsonObj = (JSONObject) o;
-//                FloodlightStats fs = new FloodlightStats();
-//                org.json.simple.JSONArray ipArray = (org.json.simple.JSONArray) jsonObj.get("ipv4");
-//                if (!ipArray.isEmpty()) {
-//                    fs.ip = (String) ipArray.get(0);
-//                } else {
-//                    continue;
-//                }
-//
-//                JSONArray attachmentPointArray = (org.json.simple.JSONArray) jsonObj.get("attachmentPoint");
-//                org.json.simple.JSONObject attachmentPoint = (org.json.simple.JSONObject) attachmentPointArray.get(0);
-//                Object val = JSONValue.parse(attachmentPoint.toJSONString());
-//                JSONObject jsonPort = (JSONObject) val;
-//                fs.port = (Long) jsonPort.get("port");
-//                fs.switchDPID = (String) jsonPort.get("switchDPID");
-//
-//                stats.add(getSwitchStats(fs, webResource));
-//            }
-//
-//            return stats;
-//        } catch (Exception ex) {
-//            Logger.getLogger(SDNControllerClient.class.getName()).log(Level.SEVERE, null, ex);
-//        }
-        return null;
-    }
-
-    public Map<String, FloodlightStats> getStatsMap() {
-//        WebResource webResource = client.resource(uri + ":" + floodlightPort);
-//
-//        WebResource res = webResource.path("wm").path("device/");
-//        String s = res.get(String.class);
-//
-//        Object obj = JSONValue.parse(s);
-//        JSONArray array = (JSONArray) obj;
-//        Map<String, FloodlightStats> statsMap = new HashMap<>();
-//        for (Object o : array) {
-//            JSONObject jsonObj = (JSONObject) o;
-//            FloodlightStats fs = new FloodlightStats();
-//            org.json.simple.JSONArray ipArray = (org.json.simple.JSONArray) jsonObj.get("ipv4");
-//            if (!ipArray.isEmpty()) {
-//                fs.ip = (String) ipArray.get(0);
-//            } else {
-//                continue;
-//            }
-//
-//            JSONArray attachmentPointArray = (org.json.simple.JSONArray) jsonObj.get("attachmentPoint");
-//            org.json.simple.JSONObject attachmentPoint = (org.json.simple.JSONObject) attachmentPointArray.get(0);
-//            Object val = JSONValue.parse(attachmentPoint.toJSONString());
-//            JSONObject jsonPort = (JSONObject) val;
-//            fs.port = (Long) jsonPort.get("port");
-//            fs.switchDPID = (String) jsonPort.get("switchDPID");
-//
-//            statsMap.put(fs.ip, getSwitchStats(fs, webResource));
-//        }
-        return null;
     }
 
     public void pushFlow(String switchID, int srcPort, int destPort) {
@@ -141,78 +68,73 @@ public class SDNControllerClient {
 //        }
     }
 
-    private FloodlightStats getSwitchStats(FloodlightStats fs, WebResource webResource) {
-//        WebResource res = webResource.path("wm").path("core").path("switch").path(fs.switchDPID).path("port").path("json");
-//        String s = res.get(String.class);
-//        s = s.substring(27, s.indexOf("]}"));
-//        s += "]";
-//        org.json.simple.JSONArray statJVal = (org.json.simple.JSONArray) JSONValue.parse(s);
-//
-//        for (Object sjo : statJVal) {
-//            JSONObject jsonOb2j = (JSONObject) sjo;
-//            java.lang.Long portNumber = (java.lang.Long) jsonOb2j.get("portNumber");
-//            if (portNumber == fs.port) {
-//                fs.receiveOverrunErrors = (java.lang.Long) jsonOb2j.get("receiveOverrunErrors");
-//                fs.transmitErrors = (java.lang.Long) jsonOb2j.get("transmitErrors");
-//                fs.receiveDropped = (java.lang.Long) jsonOb2j.get("receiveDropped");
-//                fs.receiveErrors = (java.lang.Long) jsonOb2j.get("receiveErrors");
-//                fs.receiveFrameErrors = (java.lang.Long) jsonOb2j.get("receiveFrameErrors");
-//                fs.receiveCRCErrors = (java.lang.Long) jsonOb2j.get("receiveCRCErrors");
-//                fs.collisions = (java.lang.Long) jsonOb2j.get("collisions");
-//                fs.transmitBytes = (java.lang.Long) jsonOb2j.get("transmitBytes");
-//                fs.transmitPackets = (java.lang.Long) jsonOb2j.get("transmitPackets");
-//                fs.receivePackets = (java.lang.Long) jsonOb2j.get("receivePackets");
-//                fs.transmitDropped = (java.lang.Long) jsonOb2j.get("transmitDropped");
-//                break;
-//            }
-//        }
-        return null;
-    }
-
     public String getLowestCostWorker(String dest, Set<String> sources) throws InterruptedException, IOException {
-        SimpleWeightedGraph<String, DefaultWeightedEdge> graph = new SimpleWeightedGraph<>(DefaultWeightedEdge.class);
+        if (graph == null) {
+            graph = new SimpleWeightedGraph<>(DefaultWeightedEdge.class);
+        }
 
         dest = "192.168.100.1";
 
-        List<NetworkEntity> destinationEntityArray = getNetworkEntity(dest);
-        NetworkEntity destinationEntity = destinationEntityArray.get(0);
-        String ipv4 = null;
-        if (!destinationEntity.ipv4.isEmpty()) {
-            ipv4 = destinationEntity.ipv4.get(0);
+        if (!graph.containsVertex(dest)) {
+            graph.addVertex(dest);
         }
-        graph.addVertex(ipv4);
 
-        String switchDPID = destinationEntity.attachmentPoint.get(0).switchDPID;
-        graph.addVertex(switchDPID);
-
-        DefaultWeightedEdge e1 = graph.addEdge(ipv4, switchDPID);
-        graph.setEdgeWeight(e1, getCost(ipv4, switchDPID, destinationEntity.attachmentPoint.get(0).port));
+        List<NetworkEntity> destinationEntityArray = getNetworkEntity(dest);
+        for (NetworkEntity ne : destinationEntityArray) {
+            for (AttachmentPoint ap : ne.attachmentPoint) {
+                if (!graph.containsVertex(ap.switchDPID)) {
+                    graph.addVertex(ap.switchDPID);
+                }
+                DefaultWeightedEdge e1;
+                if (!graph.containsEdge(dest, ap.switchDPID)) {
+                    e1 = graph.addEdge(dest, ap.switchDPID);
+                } else {
+                    e1 = graph.getEdge(dest, ap.switchDPID);
+                }
+                graph.setEdgeWeight(e1, getCost(dest, ap.switchDPID, ap.port));
+            }
+        }
 
         List<NetworkEntity> sourceEntityArray = getNetworkEntity(sources);
-
         for (NetworkEntity ne : sourceEntityArray) {
-
-            if (!ne.ipv4.isEmpty()) {
-                ipv4 = ne.ipv4.get(0);
+            for (String ip : ne.ipv4) {
+                if (!graph.containsVertex(ip)) {
+                    graph.addVertex(ip);
+                }
+                for (AttachmentPoint ap : ne.attachmentPoint) {
+                    if (!graph.containsVertex(ap.switchDPID)) {
+                        graph.addVertex(ap.switchDPID);
+                    }
+                    DefaultWeightedEdge e2;
+                    if (!graph.containsEdge(ip, ap.switchDPID)) {
+                        e2 = graph.addEdge(ip, ap.switchDPID);
+                    } else {
+                        e2 = graph.getEdge(ip, ap.switchDPID);
+                    }
+                    graph.setEdgeWeight(e2, getCost(ip, ap.switchDPID, ap.port));
+                }
             }
-            graph.addVertex(ipv4);
 
-            switchDPID = ne.attachmentPoint.get(0).switchDPID;
-            graph.addVertex(switchDPID);
-
-            DefaultWeightedEdge e2 = graph.addEdge(ipv4, switchDPID);
-            graph.setEdgeWeight(e2, getCost(ipv4, switchDPID, ne.attachmentPoint.get(0).port));
         }
 
         List<Link> links = getSwitchLinks();
         for (Link l : links) {
-            graph.addVertex(l.srcSwitch);
-            graph.addVertex(l.dstSwitch);
-            DefaultWeightedEdge e3 = graph.addEdge(l.srcSwitch, l.dstSwitch);
+            if (!graph.containsVertex(l.srcSwitch)) {
+                graph.addVertex(l.srcSwitch);
+            }
+            if (!graph.containsVertex(l.dstSwitch)) {
+                graph.addVertex(l.dstSwitch);
+            }
+
+            DefaultWeightedEdge e3;
+            if (!graph.containsEdge(l.srcSwitch, l.dstSwitch)) {
+                e3 = graph.addEdge(l.srcSwitch, l.dstSwitch);
+            } else {
+                e3 = graph.getEdge(l.srcSwitch, l.dstSwitch);
+            }
             graph.setEdgeWeight(e3, getCost(l.srcSwitch, l.dstSwitch, l.srcPort));
         }
-
-
+        
         double cost = Double.MAX_VALUE;
         List<DefaultWeightedEdge> shortestPath = null;
 
@@ -220,12 +142,14 @@ public class SDNControllerClient {
             if (graph.containsVertex(dest) && graph.containsVertex(s)) {
                 List<DefaultWeightedEdge> shorPath = DijkstraShortestPath.findPathBetween(graph, s, dest);
                 double w = 0;
-                for (DefaultWeightedEdge e : shorPath) {
-                    w += graph.getEdgeWeight(e);
-                }
-                if (w <= cost) {
-                    cost = w;
-                    shortestPath = shorPath;
+                if (shorPath != null) {
+                    for (DefaultWeightedEdge e : shorPath) {
+                        w += graph.getEdgeWeight(e);
+                    }
+                    if (w <= cost) {
+                        cost = w;
+                        shortestPath = shorPath;
+                    }
                 }
             }
         }
@@ -236,7 +160,6 @@ public class SDNControllerClient {
     }
 
     private double getCost(String v1, String v2, int port) throws InterruptedException, IOException {
-
 //        String[] agentPort = getsFlowPort(v1, v2);
 //        double tpp = getTimePerPacket(agentPort[0], Integer.valueOf(agentPort[1]));
         String dpi;
@@ -250,6 +173,7 @@ public class SDNControllerClient {
 
         long rpps = stats[1].receivePackets - stats[0].receivePackets;
         long tpps = stats[1].transmitPackets - stats[0].transmitPackets;
+
         if (rpps <= 0) {
             rpps = 1;
         }
@@ -277,7 +201,7 @@ public class SDNControllerClient {
         double rMTU = rbytes / rpps * 1.0;
         double tMTU = tbytes / tpps * 1.0;
         double mtu = (rMTU > tMTU) ? rMTU : tMTU;
-        if (mtu <= 0) {
+        if (mtu <= 500) {
             mtu = 1500;
         }
 
@@ -405,17 +329,24 @@ public class SDNControllerClient {
     }
 
     private List<NetworkEntity> getNetworkEntity(String address) {
-        WebResource webResource = client.resource(uri + ":" + floodlightPort);
-        WebResource res = null;
-        if (address.contains(".")) {
-            // http://145.100.133.131:8080/wm/device/?ipv4=192.168.100.1
-            res = webResource.path("wm").path("device/").queryParam("ipv4", address);
-        } else {
-            // http://145.100.133.131:8080/wm/device/?mac=fe:16:3e:00:26:b1
-            res = webResource.path("wm").path("device/").queryParam("mac", address);
+        if (networkEntityCache == null) {
+            networkEntityCache = new HashMap();
         }
-        return res.get(new GenericType<List<NetworkEntity>>() {
-        });
+        if (!networkEntityCache.containsKey(address)) {
+            WebResource webResource = client.resource(uri + ":" + floodlightPort);
+            WebResource res = null;
+            if (address.contains(".")) {
+                // http://145.100.133.131:8080/wm/device/?ipv4=192.168.100.1
+                res = webResource.path("wm").path("device/").queryParam("ipv4", address);
+            } else {
+                // http://145.100.133.131:8080/wm/device/?mac=fe:16:3e:00:26:b1
+                res = webResource.path("wm").path("device/").queryParam("mac", address);
+            }
+            List<NetworkEntity> ne = res.get(new GenericType<List<NetworkEntity>>() {
+            });
+            networkEntityCache.put(address, ne);
+        }
+        return networkEntityCache.get(address);
     }
 
     private List<NetworkEntity> getNetworkEntity(Set<String> sources) {
@@ -427,10 +358,17 @@ public class SDNControllerClient {
     }
 
     private List<Link> getSwitchLinks() {
-        WebResource webResource = client.resource(uri + ":" + floodlightPort);
-        WebResource res = webResource.path("wm").path("topology").path("links").path("json");
-        return res.get(new GenericType<List<Link>>() {
-        });
+        if (linkCache == null) {
+            linkCache = new ArrayList<>();
+        }
+        if (linkCache.isEmpty()) {
+            WebResource webResource = client.resource(uri + ":" + floodlightPort);
+            WebResource res = webResource.path("wm").path("topology").path("links").path("json");
+            linkCache = res.get(new GenericType<List<Link>>() {
+            });
+        }
+
+        return linkCache;
     }
 
     private List<Switch> getSwitches() {

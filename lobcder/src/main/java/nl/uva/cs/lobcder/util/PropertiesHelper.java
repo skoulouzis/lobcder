@@ -28,9 +28,9 @@ public class PropertiesHelper {
 
     public static final String propertiesPath = "lobcder.properties";
     public static final String cachePropertiesPath = "cache.properties";
-    
-    
+
     public static enum PREDICTION_TYPE {
+
         method,
         resource,
         state
@@ -130,7 +130,7 @@ public class PropertiesHelper {
     }
 
     public static Boolean useMetadataRepository() throws IOException {
-        return Boolean.valueOf(getProperties().getProperty("use.metadata.repository", "true"));
+        return Boolean.valueOf(getProperties().getProperty("metadata.repository.use", "true"));
     }
 
 //    public static String getAuthRemoteURL() throws IOException {
@@ -215,6 +215,10 @@ public class PropertiesHelper {
     public static String getSchedulingAlg() throws IOException {
         return getProperties().getProperty("worker.selection.algorithm");
     }
+    
+    public static Boolean useSDN() throws IOException {
+        return Boolean.valueOf(getProperties().getProperty("sdn.controller.use", "false"));
+    }
 
     public static String getPredictorAlgorithm() throws IOException {
         return getProperties().getProperty("predictor.algorithm", "FirstSuccessor");
@@ -241,7 +245,7 @@ public class PropertiesHelper {
     }
 
     public static int KNN() throws IOException {
-         return Integer.valueOf(getProperties().getProperty("knn", "10"));
+        return Integer.valueOf(getProperties().getProperty("knn", "10"));
     }
 
     public static PREDICTION_TYPE getPredictionType() throws IOException {
