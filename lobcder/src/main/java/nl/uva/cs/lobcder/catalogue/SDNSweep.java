@@ -58,7 +58,35 @@ public class SDNSweep implements Runnable {
     private List<Switch> switches;
     private long interval = 1000;
     @Getter
-    private static Map<String, StatsHolder> statsMap;
+    private static Map<String, Double> statsMap;
+    public static final String[] METRIC_NAMES = new String[]{"collisions",
+        "receiveBytes", "receiveCRCErrors", "receiveDropped", "receiveErrors",
+        "receiveFrameErrors", "receiveOverrunErrors", "receivePackets",
+        "transmitBytes", "transmitDropped", "transmitErrors", "transmitPackets"};
+    @Getter
+    private static Map<String, Double> collisionsMap = new HashMap<>();
+    @Getter
+    private static Map<String, Double> receiveBytesMap = new HashMap<>();
+    @Getter
+    private static Map<String, Double> receiveCRCErrorsMap = new HashMap<>();
+    @Getter
+    private static Map<String, Double> receiveDroppedMap = new HashMap<>();
+    @Getter
+    private static Map<String, Double> receiveErrorsMap = new HashMap<>();
+    @Getter
+    private static Map<String, Double> receiveFrameErrorsMap = new HashMap<>();
+    @Getter
+    private static Map<String, Double> receiveOverrunErrorsMap = new HashMap<>();
+    @Getter
+    private static Map<String, Double> receivePacketsMap = new HashMap<>();
+    @Getter
+    private static Map<String, Double> transmitBytesMap = new HashMap<>();
+    @Getter
+    private static Map<String, Double> transmitDroppedMap = new HashMap<>();
+    @Getter
+    private static Map<String, Double> transmitErrorsMap = new HashMap<>();
+    @Getter
+    private static Map<String, Double> transmitPacketsMap = new HashMap<>();
 
     public SDNSweep(DataSource datasource) throws IOException {
         this.datasource = datasource;
@@ -91,14 +119,108 @@ public class SDNSweep implements Runnable {
     }
 
     private void updateMtrics() throws IOException, InterruptedException {
-        if (statsMap == null) {
-            statsMap = new HashMap<>();
-        }
         for (Switch sw : getAllSwitches()) {
             List<FloodlightStats> stats1 = getFloodlightPortStats(sw.dpid);
             Thread.sleep(interval);
             List<FloodlightStats> stats2 = getFloodlightPortStats(sw.dpid);
-            statsMap.put(sw.dpid, new StatsHolder(stats1, stats2));
+
+            for (int i = 0; i < stats1.size(); i++) {
+//                for(String mn  : METRIC_NAMES){
+//                    String key = mn+"-"+sw.dpid + "-" + stats1.get(i).portNumber;
+//                }
+
+                Double oldValue = collisionsMap.get(sw.dpid + "-" + stats1.get(i).portNumber);
+                Double newValue = Double.valueOf(stats1.get(i).collisions - stats2.get(i).collisions);
+                if (oldValue != null) {
+                    newValue = (newValue + oldValue) / 2.0;
+                }
+                collisionsMap.put(sw.dpid + "-" + stats1.get(i).portNumber, newValue);
+
+                oldValue = receiveBytesMap.get(sw.dpid + "-" + stats1.get(i).portNumber);
+                newValue = Double.valueOf(stats1.get(i).receiveBytes - stats2.get(i).receiveBytes);
+                if (oldValue != null && newValue > oldValue) {
+                    receiveBytesMap.put(sw.dpid + "-" + stats1.get(i).portNumber, newValue);
+                }
+
+
+
+                oldValue = receiveCRCErrorsMap.get(sw.dpid + "-" + stats1.get(i).portNumber);
+                newValue = Double.valueOf(stats1.get(i).receiveCRCErrors - stats2.get(i).receiveCRCErrors);
+                if (oldValue != null) {
+                    newValue = (newValue + oldValue) / 2.0;
+                }
+                receiveCRCErrorsMap.put(sw.dpid + "-" + stats1.get(i).portNumber, newValue);
+
+
+                oldValue = receiveDroppedMap.get(sw.dpid + "-" + stats1.get(i).portNumber);
+                newValue = Double.valueOf(stats1.get(i).receiveDropped - stats2.get(i).receiveDropped);
+                if (oldValue != null) {
+                    newValue = (newValue + oldValue) / 2.0;
+                }
+                receiveDroppedMap.put(sw.dpid + "-" + stats1.get(i).portNumber, newValue);
+
+
+
+                oldValue = receiveErrorsMap.get(sw.dpid + "-" + stats1.get(i).portNumber);
+                newValue = Double.valueOf(stats1.get(i).receiveErrors - stats2.get(i).receiveErrors);
+                if (oldValue != null) {
+                    newValue = (newValue + oldValue) / 2.0;
+                }
+                receiveErrorsMap.put(sw.dpid + "-" + stats1.get(i).portNumber, newValue);
+
+
+                oldValue = receiveFrameErrorsMap.get(sw.dpid + "-" + stats1.get(i).portNumber);
+                newValue = Double.valueOf(stats1.get(i).receiveFrameErrors - stats2.get(i).receiveFrameErrors);
+                if (oldValue != null) {
+                    newValue = (newValue + oldValue) / 2.0;
+                }
+                receiveErrorsMap.put(sw.dpid + "-" + stats1.get(i).portNumber, newValue);
+
+                oldValue = receiveOverrunErrorsMap.get(sw.dpid + "-" + stats1.get(i).portNumber);
+                newValue = Double.valueOf(stats1.get(i).receiveOverrunErrors - stats2.get(i).receiveOverrunErrors);
+                if (oldValue != null) {
+                    newValue = (newValue + oldValue) / 2.0;
+                }
+                receiveOverrunErrorsMap.put(sw.dpid + "-" + stats1.get(i).portNumber, newValue);
+
+
+
+                oldValue = receivePacketsMap.get(sw.dpid + "-" + stats1.get(i).portNumber);
+                newValue = Double.valueOf(stats1.get(i).receivePackets - stats2.get(i).receivePackets);
+                if (oldValue != null && newValue > oldValue) {
+                    receivePacketsMap.put(sw.dpid + "-" + stats1.get(i).portNumber, newValue);
+                }
+
+
+                oldValue = transmitBytesMap.get(sw.dpid + "-" + stats1.get(i).portNumber);
+                newValue = Double.valueOf(stats1.get(i).transmitBytes - stats2.get(i).transmitBytes);
+                if (oldValue != null && newValue > oldValue) {
+                    transmitBytesMap.put(sw.dpid + "-" + stats1.get(i).portNumber, newValue);
+                }
+
+
+                oldValue = transmitDroppedMap.get(sw.dpid + "-" + stats1.get(i).portNumber);
+                newValue = Double.valueOf(stats1.get(i).transmitDropped - stats2.get(i).transmitDropped);
+                if (oldValue != null) {
+                    newValue = (newValue + oldValue) / 2.0;
+                }
+                transmitDroppedMap.put(sw.dpid + "-" + stats1.get(i).portNumber, newValue);
+
+
+                oldValue = transmitErrorsMap.get(sw.dpid + "-" + stats1.get(i).portNumber);
+                newValue = Double.valueOf(stats1.get(i).transmitErrors - stats2.get(i).transmitErrors);
+                if (oldValue != null) {
+                    newValue = (newValue + oldValue) / 2.0;
+                }
+                transmitErrorsMap.put(sw.dpid + "-" + stats1.get(i).portNumber, newValue);
+
+                oldValue = transmitPacketsMap.get(sw.dpid + "-" + stats1.get(i).portNumber);
+                newValue = Double.valueOf(stats1.get(i).transmitPackets - stats2.get(i).transmitPackets);
+                if (oldValue != null && newValue > oldValue) {
+                    transmitPacketsMap.put(sw.dpid + "-" + stats1.get(i).portNumber, newValue);
+                }
+
+            }
         }
     }
 
@@ -371,11 +493,11 @@ public class SDNSweep implements Runnable {
     public class StatsHolder {
 
         @Getter
-        private final List<FloodlightStats> stats1;
+        private final FloodlightStats stats1;
         @Getter
-        private final List<FloodlightStats> stats2;
+        private final FloodlightStats stats2;
 
-        public StatsHolder(List<FloodlightStats> stats1, List<FloodlightStats> stats2) {
+        public StatsHolder(FloodlightStats stats1, FloodlightStats stats2) {
             this.stats1 = stats1;
             this.stats2 = stats2;
         }

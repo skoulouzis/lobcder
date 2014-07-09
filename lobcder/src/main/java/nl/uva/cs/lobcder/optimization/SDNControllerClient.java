@@ -140,6 +140,9 @@ public class SDNControllerClient {
                     if (w <= cost) {
                         cost = w;
                         shortestPath = shorPath;
+                        if (cost <= 2) {
+                            break;
+                        }
                     }
                 }
             }
@@ -159,19 +162,9 @@ public class SDNControllerClient {
         } else {
             dpi = v2;
         }
-        double interval = 1000.0;
-        SDNSweep.FloodlightStats[] stats = getFloodlightPortStats(dpi, port, interval);
-
-
-        long rpps = stats[1].receivePackets - stats[0].receivePackets;
-        long tpps = stats[1].transmitPackets - stats[0].transmitPackets;
-
-        if (rpps <= 0) {
-            rpps = 1;
-        }
-        if (tpps <= 0) {
-            tpps = 1;
-        }
+        //        SDNSweep.FloodlightStats[] stats = getFloodlightPortStats(dpi, port);
+        Double rpps = SDNSweep.getReceivePacketsMap().get(dpi + "-" + port);
+        Double tpps = SDNSweep.getTransmitPacketsMap().get(dpi + "-" + port);
 
 //        double rrrt = (interval / rpps);
 //        double trrt = (interval / tpps);
@@ -180,16 +173,15 @@ public class SDNControllerClient {
         if (tpp <= 0) {
             tpp = 1;
         }
-
-
-        long rbytes = stats[1].receiveBytes - stats[0].receiveBytes;
-        long tbytes = stats[1].transmitBytes - stats[0].transmitBytes;
+        Double rbytes = SDNSweep.getReceiveBytesMap().get(dpi + "-" + port);
+        Double tbytes = SDNSweep.getTransmitBytesMap().get(dpi + "-" + port);
         if (rbytes <= 0) {
-            rbytes = 1;
+            rbytes = Double.valueOf(1);
         }
         if (tbytes <= 0) {
-            tbytes = 1;
+            tbytes = Double.valueOf(1);
         }
+
         double rMTU = rbytes / rpps * 1.0;
         double tMTU = tbytes / tpps * 1.0;
         double mtu = (rMTU > tMTU) ? rMTU : tMTU;
@@ -208,40 +200,37 @@ public class SDNControllerClient {
         Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, "From: " + v1 + " to: " + v2 + " tt: " + tt);
         return tt;
     }
-
-    private SDNSweep.FloodlightStats[] getFloodlightPortStats(String dpi, int port, double interval) throws IOException, InterruptedException {
-        List<SDNSweep.FloodlightStats> stats1 = null;
-        List<SDNSweep.FloodlightStats> stats2 = null;
-        //        List<FloodlightStats> stats1 = getFloodlightPortStats(dpi);
-        //        Thread.sleep((long) interval);
-        //        List<FloodlightStats> stats2 = getFloodlightPortStats(dpi);
-        Map<String, SDNSweep.StatsHolder> map = SDNSweep.getStatsMap();
-        if (map != null) {
-            SDNSweep.StatsHolder h = map.get(dpi);
-            if (h != null) {
-                stats1 = h.getStats1();
-                stats2 = h.getStats2();
-            }
-        }
-
-
-        SDNSweep.FloodlightStats stat1 = null;
-        for (SDNSweep.FloodlightStats s : stats1) {
-            if (s.portNumber == port) {
-                stat1 = s;
-                break;
-            }
-        }
-
-        SDNSweep.FloodlightStats stat2 = null;
-        for (SDNSweep.FloodlightStats s : stats2) {
-            if (s.portNumber == port) {
-                stat2 = s;
-                break;
-            }
-        }
-        return new SDNSweep.FloodlightStats[]{stat1, stat2};
-    }
+//    private SDNSweep.FloodlightStats[] getFloodlightPortStats(String dpi, int port) throws IOException, InterruptedException {
+//        SDNSweep.FloodlightStats stats1 = null;
+//        SDNSweep.FloodlightStats stats2 = null;
+//        //        List<FloodlightStats> stats1 = getFloodlightPortStats(dpi);
+//        //        Thread.sleep((long) interval);
+//        //        List<FloodlightStats> stats2 = getFloodlightPortStats(dpi);
+//        Map<String, SDNSweep.StatsHolder> map = SDNSweep.getStatsMap();
+//        if (map != null) {
+//            SDNSweep.StatsHolder h = map.get(dpi+"-"+port);
+//            if (h != null) {
+//                stats1 = h.getStats1();
+//                stats2 = h.getStats2();
+//            }
+//        }
+//        SDNSweep.FloodlightStats stat1 = null;
+//        for (SDNSweep.FloodlightStats s : stats1) {
+//            if (s.portNumber == port) {
+//                stat1 = s;
+//                break;
+//            }
+//        }
+//
+//        SDNSweep.FloodlightStats stat2 = null;
+//        for (SDNSweep.FloodlightStats s : stats2) {
+//            if (s.portNumber == port) {
+//                stat2 = s;
+//                break;
+//            }
+//        }
+//        return new SDNSweep.FloodlightStats[]{stats1, stats2};
+//    }
 //    private String[] getsFlowPort(String v1, String v2) {
 //        String[] tuple = new String[2];
 //        if (sFlowHostPortMap == null) {
