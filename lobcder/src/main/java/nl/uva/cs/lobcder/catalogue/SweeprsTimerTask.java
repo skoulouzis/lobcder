@@ -34,6 +34,9 @@ class SweeprsTimerTask extends TimerTask {
         if (useRepo) {
             wp4Sweep = new WP4Sweep(datasource);
         }
+        if (useSDN) {
+            sdnSweep = new SDNSweep(datasource);
+        }
     }
 
     @Override
@@ -43,6 +46,9 @@ class SweeprsTimerTask extends TimerTask {
             replicateSweep.run();
             if (wp4Sweep != null) {
                 wp4Sweep.run();
+            }
+            if (sdnSweep != null) {
+                sdnSweep.run();
             }
         } catch (Throwable th) {
             log.log(Level.SEVERE, "One of the sweepers encountered and error.", th);

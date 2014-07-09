@@ -53,7 +53,8 @@ public class SDNSweep implements Runnable {
     private final int sflowRTPrt = 8008;
     private final Client client;
     private static Map<String, NetworkEntity> networkEntitesCache;
-    private static List<Link> linkCache;
+    @Getter
+    private static List<Link> switchLinks;
     private List<Switch> switches;
     private long interval = 1000;
     @Getter
@@ -65,19 +66,22 @@ public class SDNSweep implements Runnable {
         ClientConfig clientConfig = new DefaultClientConfig();
         clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
         client = Client.create(clientConfig);
-
-        init();
     }
 
     private void init() {
         getAllNetworkEntites();
-        getSwitchLinks();
+        getAllSwitchLinks();
         getAllSwitches();
+    }
+
+    public static NetworkEntity getNetworkEntity(String dest) {
+        return networkEntitesCache.get(dest);
     }
 
     @Override
     public void run() {
         try {
+            init();
             updateMtrics();
         } catch (IOException ex) {
             Logger.getLogger(SDNSweep.class.getName()).log(Level.SEVERE, null, ex);
@@ -121,7 +125,7 @@ public class SDNSweep implements Runnable {
             });
 
             for (NetworkEntity ne : neList) {
-                if (networkEntitesCache.containsKey(ne.ipv4.get(0))) {
+                if (!networkEntitesCache.containsKey(ne.ipv4.get(0))) {
                     networkEntitesCache.put(ne.ipv4.get(0), ne);
                 }
             }
@@ -129,17 +133,17 @@ public class SDNSweep implements Runnable {
         return networkEntitesCache.values();
     }
 
-    private List<Link> getSwitchLinks() {
-        if (linkCache == null) {
-            linkCache = new ArrayList<>();
+    private List<Link> getAllSwitchLinks() {
+        if (switchLinks == null) {
+            switchLinks = new ArrayList<>();
         }
-        if (linkCache.isEmpty()) {
+        if (switchLinks.isEmpty()) {
             WebResource webResource = client.resource(uri + ":" + floodlightPort);
             WebResource res = webResource.path("wm").path("topology").path("links").path("json");
-            linkCache = res.get(new GenericType<List<Link>>() {
+            switchLinks = res.get(new GenericType<List<Link>>() {
             });
         }
-        return linkCache;
+        return switchLinks;
     }
 
     private List<Switch> getAllSwitches() {
@@ -157,29 +161,29 @@ public class SDNSweep implements Runnable {
     public static class Ifpkts {
 
         @XmlElement(name = "agent")
-        String agent;
+        public String agent;
         @XmlElement(name = "dataSource")
-        int dataSource;
+        public int dataSource;
         @XmlElement(name = "lastUpdate")
-        long lastUpdate;
+        public long lastUpdate;
         /**
          * The lastUpdateMax and lastUpdateMin values indicate how long ago (in
          * milliseconds) the most recent and oldest updates
          */
         @XmlElement(name = "lastUpdateMax")
-        long lastUpdateMax;
+        public long lastUpdateMax;
         @XmlElement(name = "lastUpdateMin")
         /**
          * The metricN field in the query result indicates the number of data
          * sources that contributed to the summary metrics
          */
-        long lastUpdateMin;
+        public long lastUpdateMin;
         @XmlElement(name = "metricN")
-        int metricN;
+        public int metricN;
         @XmlElement(name = "metricName")
-        String metricName;
+        public String metricName;
         @XmlElement(name = "metricValue")
-        double value;
+        public double value;
     }
 
     @XmlRootElement
@@ -187,21 +191,21 @@ public class SDNSweep implements Runnable {
     public static class Flow {
 
         @XmlElement(name = "agent")
-        String agent;
+        public String agent;
         @XmlElement(name = "dataSource")
-        int dataSource;
+        public int dataSource;
         @XmlElement(name = "end")
-        String end;
+        public String end;
         @XmlElement(name = "flowID")
-        int flowID;
+        public int flowID;
         @XmlElement(name = "flowKeys")
-        String flowKeys;
+        public String flowKeys;
         @XmlElement(name = "name")
-        String name;
+        public String name;
         @XmlElement(name = "start")
-        long start;
+        public long start;
         @XmlElement(name = "value")
-        double value;
+        public double value;
     }
 
     @XmlRootElement
@@ -209,17 +213,17 @@ public class SDNSweep implements Runnable {
     public static class NetworkEntity {
 
         @XmlElement(name = "entityClass")
-        String entityClass;
+        public String entityClass;
         @XmlElement(name = "lastSeen")
-        String lastSeen;
+        public String lastSeen;
         @XmlElement(name = "ipv4")
-        List<String> ipv4;
+        public List<String> ipv4;
         @XmlElement(name = "vlan")
-        List<String> vlan;
+        public List<String> vlan;
         @XmlElement(name = "mac")
-        List<String> mac;
+        public List<String> mac;
         @XmlElement(name = "attachmentPoint")
-        List<AttachmentPoint> attachmentPoint;
+        public List<AttachmentPoint> attachmentPoint;
     }
 
     @XmlRootElement
@@ -227,29 +231,29 @@ public class SDNSweep implements Runnable {
     public static class AttachmentPoint {
 
         @XmlElement(name = "port")
-        int port;
+        public int port;
         @XmlElement(name = "errorStatus")
-        String errorStatus;
+        public String errorStatus;
         @XmlElement(name = "switchDPID")
-        String switchDPID;
+        public String switchDPID;
     }
 
     @XmlRootElement
     @XmlAccessorType(XmlAccessType.FIELD)
-    private static class Link {
+    public static class Link {
 
         @XmlElement(name = "src-switch")
-        String srcSwitch;
+        public String srcSwitch;
         @XmlElement(name = "src-port")
-        int srcPort;
+        public int srcPort;
         @XmlElement(name = "dst-switch")
-        String dstSwitch;
+        public String dstSwitch;
         @XmlElement(name = "dst-port")
-        int dstPort;
+        public int dstPort;
         @XmlElement(name = "type")
-        String type;
+        public String type;
         @XmlElement(name = "direction")
-        String direction;
+        public String direction;
     }
 
     @XmlRootElement
@@ -257,79 +261,79 @@ public class SDNSweep implements Runnable {
     public static class Switch {
 
         @XmlElement(name = "actions")
-        int actions;
+        public int actions;
         @XmlElement(name = "attributes")
-        Attributes attributes;
+        public Attributes attributes;
         @XmlElement(name = "ports")
-        List<Port> ports;
+        public List<Port> ports;
         @XmlElement(name = "buffers")
-        int buffers;
+        public int buffers;
         @XmlElement(name = "description")
-        Description description;
+        public Description description;
         @XmlElement(name = "capabilities")
-        int capabilities;
+        public int capabilities;
         @XmlElement(name = "inetAddress")
-        String inetAddress;
+        public String inetAddress;
         @XmlElement(name = "connectedSince")
-        long connectedSince;
+        public long connectedSince;
         @XmlElement(name = "dpid")
-        String dpid;
+        public String dpid;
         @XmlElement(name = "harole")
-        String harole;
+        public String harole;
     }
 
     @XmlRootElement
     @XmlAccessorType(XmlAccessType.FIELD)
-    private static class Description {
+    public static class Description {
 
         @XmlElement(name = "software")
-        String software;
+        public String software;
         @XmlElement(name = "hardware")
-        String hardware;
+        public String hardware;
         @XmlElement(name = "manufacturer")
-        String manufacturer;
+        public String manufacturer;
         @XmlElement(name = "serialNum")
-        String serialNum;
+        public String serialNum;
         @XmlElement(name = "datapath")
-        String datapath;
+        public String datapath;
     }
 
     @XmlRootElement
     @XmlAccessorType(XmlAccessType.FIELD)
-    private static class Port {
+    public static class Port {
 
         @XmlElement(name = "portNumber")
-        int portNumber;
+        public int portNumber;
         @XmlElement(name = "hardwareAddress")
-        String hardwareAddress;
+        public String hardwareAddress;
         @XmlElement(name = "name")
-        String name;
+        public String name;
         @XmlElement(name = "config")
-        int config;
+        public int config;
         @XmlElement(name = "state")
-        int state;
+        public int state;
         @XmlElement(name = "currentFeatures")
-        int currentFeatures;
+        public int currentFeatures;
         @XmlElement(name = "advertisedFeatures")
-        int advertisedFeatures;
+        public int advertisedFeatures;
         @XmlElement(name = "supportedFeatures")
-        int supportedFeatures;
+        public int supportedFeatures;
         @XmlElement(name = "peerFeatures")
-        int peerFeatures;
+        public int peerFeatures;
     }
 
     @XmlRootElement
     @XmlAccessorType(XmlAccessType.FIELD)
-    private static class Attributes {
+    public static class Attributes {
 
         @XmlElement(name = "supportsOfppFlood")
-        boolean supportsOfppFlood;
+        public boolean supportsOfppFlood;
         @XmlElement(name = "supportsNxRole")
-        boolean supportsNxRole;
+        public boolean supportsNxRole;
         @XmlElement(name = "FastWildcards")
-        int fastWildcards;
+        public int fastWildcards;
         @XmlElement(name = "supportsOfppTable")
-        boolean supportsOfppTable;
+        public boolean supportsOfppTable;
     }
 
     @XmlRootElement
@@ -337,34 +341,34 @@ public class SDNSweep implements Runnable {
     public static class FloodlightStats {
 
         @JsonProperty("portNumber")
-        int portNumber;
+        public int portNumber;
         @JsonProperty("receivePackets")
-        long receivePackets;
+        public long receivePackets;
         @JsonProperty("transmitPackets")
-        long transmitPackets;
+        public long transmitPackets;
         @JsonProperty("receiveBytes")
-        long receiveBytes;
+        public long receiveBytes;
         @JsonProperty("transmitBytes")
-        long transmitBytes;
+        public long transmitBytes;
         @JsonProperty("receiveDropped")
-        long receiveDropped;
+        public long receiveDropped;
         @JsonProperty("transmitDropped")
-        long transmitDropped;
+        public long transmitDropped;
         @JsonProperty("receiveErrors")
-        long receiveErrors;
+        public long receiveErrors;
         @JsonProperty("transmitErrors")
-        long transmitErrors;
+        public long transmitErrors;
         @JsonProperty("receiveFrameErrors")
-        long receiveFrameErrors;
+        public long receiveFrameErrors;
         @JsonProperty("receiveOverrunErrors")
-        long receiveOverrunErrors;
+        public long receiveOverrunErrors;
         @JsonProperty("receiveCRCErrors")
-        long receiveCRCErrors;
+        public long receiveCRCErrors;
         @JsonProperty("collisions")
-        long collisions;
+        public long collisions;
     }
 
-    private class StatsHolder {
+    public class StatsHolder {
 
         @Getter
         private final List<FloodlightStats> stats1;
