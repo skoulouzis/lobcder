@@ -129,96 +129,91 @@ public class SDNSweep implements Runnable {
 //                    String key = mn+"-"+sw.dpid + "-" + stats1.get(i).portNumber;
 //                }
 
-                Double oldValue = collisionsMap.get(sw.dpid + "-" + stats1.get(i).portNumber);
+                Double val = collisionsMap.get(sw.dpid + "-" + stats1.get(i).portNumber);
+                Double oldValue = ((val == null) ? 1.0 : val);
                 Double newValue = Double.valueOf(stats1.get(i).collisions - stats2.get(i).collisions);
-                if (oldValue != null) {
-                    newValue = (newValue + oldValue) / 2.0;
-                }
+                newValue = (newValue + oldValue) / 2.0;
                 collisionsMap.put(sw.dpid + "-" + stats1.get(i).portNumber, newValue);
 
-                oldValue = receiveBytesMap.get(sw.dpid + "-" + stats1.get(i).portNumber);
+                val = receiveBytesMap.get(sw.dpid + "-" + stats1.get(i).portNumber);
+                oldValue = ((val == null) ? 1.0 : val);
                 newValue = Double.valueOf(stats1.get(i).receiveBytes - stats2.get(i).receiveBytes);
-                if (oldValue != null && newValue > oldValue) {
-                    receiveBytesMap.put(sw.dpid + "-" + stats1.get(i).portNumber, newValue);
-                }
+                val = ((newValue > oldValue) ? newValue : oldValue);
+                receiveBytesMap.put(sw.dpid + "-" + stats1.get(i).portNumber, val);
 
 
 
-                oldValue = receiveCRCErrorsMap.get(sw.dpid + "-" + stats1.get(i).portNumber);
+
+                val = receiveCRCErrorsMap.get(sw.dpid + "-" + stats1.get(i).portNumber);
+                oldValue = ((val == null) ? 1.0 : val);
                 newValue = Double.valueOf(stats1.get(i).receiveCRCErrors - stats2.get(i).receiveCRCErrors);
-                if (oldValue != null) {
-                    newValue = (newValue + oldValue) / 2.0;
-                }
+                newValue = (newValue + oldValue) / 2.0;
                 receiveCRCErrorsMap.put(sw.dpid + "-" + stats1.get(i).portNumber, newValue);
 
 
-                oldValue = receiveDroppedMap.get(sw.dpid + "-" + stats1.get(i).portNumber);
+                val = receiveDroppedMap.get(sw.dpid + "-" + stats1.get(i).portNumber);
+                oldValue = ((val == null) ? 1.0 : val);
                 newValue = Double.valueOf(stats1.get(i).receiveDropped - stats2.get(i).receiveDropped);
-                if (oldValue != null) {
-                    newValue = (newValue + oldValue) / 2.0;
-                }
+                newValue = (newValue + oldValue) / 2.0;
                 receiveDroppedMap.put(sw.dpid + "-" + stats1.get(i).portNumber, newValue);
 
 
 
-                oldValue = receiveErrorsMap.get(sw.dpid + "-" + stats1.get(i).portNumber);
+                val = receiveErrorsMap.get(sw.dpid + "-" + stats1.get(i).portNumber);
+                oldValue = ((val == null) ? 1.0 : val);
                 newValue = Double.valueOf(stats1.get(i).receiveErrors - stats2.get(i).receiveErrors);
-                if (oldValue != null) {
-                    newValue = (newValue + oldValue) / 2.0;
-                }
+                newValue = (newValue + oldValue) / 2.0;
                 receiveErrorsMap.put(sw.dpid + "-" + stats1.get(i).portNumber, newValue);
 
 
-                oldValue = receiveFrameErrorsMap.get(sw.dpid + "-" + stats1.get(i).portNumber);
+                val = receiveFrameErrorsMap.get(sw.dpid + "-" + stats1.get(i).portNumber);
+                oldValue = ((val == null) ? 1.0 : val);
                 newValue = Double.valueOf(stats1.get(i).receiveFrameErrors - stats2.get(i).receiveFrameErrors);
-                if (oldValue != null) {
-                    newValue = (newValue + oldValue) / 2.0;
-                }
+                newValue = (newValue + oldValue) / 2.0;
                 receiveErrorsMap.put(sw.dpid + "-" + stats1.get(i).portNumber, newValue);
 
-                oldValue = receiveOverrunErrorsMap.get(sw.dpid + "-" + stats1.get(i).portNumber);
+                val = receiveOverrunErrorsMap.get(sw.dpid + "-" + stats1.get(i).portNumber);
+                oldValue = ((val == null) ? 1.0 : val);
                 newValue = Double.valueOf(stats1.get(i).receiveOverrunErrors - stats2.get(i).receiveOverrunErrors);
-                if (oldValue != null) {
-                    newValue = (newValue + oldValue) / 2.0;
-                }
+                newValue = (newValue + oldValue) / 2.0;
                 receiveOverrunErrorsMap.put(sw.dpid + "-" + stats1.get(i).portNumber, newValue);
 
 
 
-                oldValue = receivePacketsMap.get(sw.dpid + "-" + stats1.get(i).portNumber);
+                val = receivePacketsMap.get(sw.dpid + "-" + stats1.get(i).portNumber);
+                oldValue = ((val == null) ? 1.0 : val);
                 newValue = Double.valueOf(stats1.get(i).receivePackets - stats2.get(i).receivePackets);
-                if (oldValue != null && newValue > oldValue) {
-                    receivePacketsMap.put(sw.dpid + "-" + stats1.get(i).portNumber, newValue);
-                }
+                val = ((newValue > oldValue) ? newValue : oldValue);
+                receivePacketsMap.put(sw.dpid + "-" + stats1.get(i).portNumber, val);
 
 
-                oldValue = transmitBytesMap.get(sw.dpid + "-" + stats1.get(i).portNumber);
+
+                val = transmitBytesMap.get(sw.dpid + "-" + stats1.get(i).portNumber);
+                oldValue = ((val == null) ? 1.0 : val);
                 newValue = Double.valueOf(stats1.get(i).transmitBytes - stats2.get(i).transmitBytes);
-                if (oldValue != null && newValue > oldValue) {
-                    transmitBytesMap.put(sw.dpid + "-" + stats1.get(i).portNumber, newValue);
-                }
+                val = ((newValue > oldValue) ? newValue : oldValue);
+                transmitBytesMap.put(sw.dpid + "-" + stats1.get(i).portNumber, val);
 
 
-                oldValue = transmitDroppedMap.get(sw.dpid + "-" + stats1.get(i).portNumber);
+
+                val = transmitDroppedMap.get(sw.dpid + "-" + stats1.get(i).portNumber);
+                oldValue = ((val == null) ? 1.0 : val);
                 newValue = Double.valueOf(stats1.get(i).transmitDropped - stats2.get(i).transmitDropped);
-                if (oldValue != null) {
-                    newValue = (newValue + oldValue) / 2.0;
-                }
+                newValue = (newValue + oldValue) / 2.0;
                 transmitDroppedMap.put(sw.dpid + "-" + stats1.get(i).portNumber, newValue);
 
 
-                oldValue = transmitErrorsMap.get(sw.dpid + "-" + stats1.get(i).portNumber);
+                val = transmitErrorsMap.get(sw.dpid + "-" + stats1.get(i).portNumber);
+                oldValue = ((val == null) ? 1.0 : val);
                 newValue = Double.valueOf(stats1.get(i).transmitErrors - stats2.get(i).transmitErrors);
-                if (oldValue != null) {
-                    newValue = (newValue + oldValue) / 2.0;
-                }
+                newValue = (newValue + oldValue) / 2.0;
                 transmitErrorsMap.put(sw.dpid + "-" + stats1.get(i).portNumber, newValue);
 
-                oldValue = transmitPacketsMap.get(sw.dpid + "-" + stats1.get(i).portNumber);
+                val = transmitPacketsMap.get(sw.dpid + "-" + stats1.get(i).portNumber);
+                oldValue = ((val == null) ? 1.0 : val);
                 newValue = Double.valueOf(stats1.get(i).transmitPackets - stats2.get(i).transmitPackets);
-                if (oldValue != null && newValue > oldValue) {
-                    transmitPacketsMap.put(sw.dpid + "-" + stats1.get(i).portNumber, newValue);
-                }
+                val = ((newValue > oldValue) ? newValue : oldValue);
+                transmitPacketsMap.put(sw.dpid + "-" + stats1.get(i).portNumber, val);
 
             }
         }
