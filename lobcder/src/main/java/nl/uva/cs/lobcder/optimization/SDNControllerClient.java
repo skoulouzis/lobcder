@@ -39,6 +39,7 @@ public class SDNControllerClient {
     }
 
     public String getLowestCostWorker(String dest, Set<String> sources) throws InterruptedException, IOException {
+        SDNSweep.setOtimiztionTargets(null,null,null);
         if (graph == null) {
             graph = new SimpleWeightedGraph<>(DefaultWeightedEdge.class);
         }
@@ -62,7 +63,9 @@ public class SDNControllerClient {
             } else {
                 e1 = graph.getEdge(dest, ap.switchDPID);
             }
-            graph.setEdgeWeight(e1, getCost(dest, ap.switchDPID, ap.port));
+            //Don't calculate the cost from the destination to the switch. 
+            //There is nothing we can do about it so why waste cycles ?
+            graph.setEdgeWeight(e1, 1);
         }
 //        }
 
@@ -130,6 +133,7 @@ public class SDNControllerClient {
         DefaultWeightedEdge e = shortestPath.get(0);
         String[] workerSwitch = e.toString().split(" : ");
         String worker = workerSwitch[0].substring(1);
+        SDNSweep.setOtimiztionTargets(dest,worker,graph);
         return worker;
     }
 
