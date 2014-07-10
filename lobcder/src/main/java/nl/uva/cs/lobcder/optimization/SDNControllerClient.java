@@ -4,28 +4,12 @@
  */
 package nl.uva.cs.lobcder.optimization;
 
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.GenericType;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.config.ClientConfig;
-import com.sun.jersey.api.client.config.DefaultClientConfig;
-import com.sun.jersey.api.json.JSONConfiguration;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
 import nl.uva.cs.lobcder.catalogue.SDNSweep;
-import org.codehaus.jackson.annotate.JsonProperty;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.jgrapht.alg.DijkstraShortestPath;
 import org.jgrapht.graph.DefaultWeightedEdge;
 import org.jgrapht.graph.SimpleWeightedGraph;
@@ -103,10 +87,6 @@ public class SDNControllerClient {
                 }
             }
         }
-
-
-
-
 
         List<SDNSweep.Link> links = SDNSweep.getSwitchLinks();
         for (SDNSweep.Link l : links) {
@@ -193,11 +173,26 @@ public class SDNControllerClient {
         //NoP = {MTU}/{FS}
         //TpP =[({MTU} / {bps}) + RTT] // is the time it takes to transmit one packet or time per packet
         //TT = [({MTU} / {bps}) + RTT] * [ {MTU}/{FS}]
-
         double nop = mtu / 1024.0;
         double tt = tpp * nop;
 
-        Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, "From: " + v1 + " to: " + v2 + " tt: " + tt);
+
+
+        SDNSweep.OFlow f = SDNSweep.getOFlowsMap().get(dpi + "-" + port);
+        double bps = -1;
+        if (f != null) {
+            bps = f.byteCount / f.durationSeconds * 1.0;
+            double aveilable_bpps = bps / 2.0;
+            double tmp = f.packetCount / f.durationSeconds * 1.0;
+            if (tpp <= 1 && tmp > tpp) {
+                tt = tmp * nop;
+            }
+            long age = System.currentTimeMillis() - f.timeStamp;
+            if (age < 10000) {
+                tt += (1024.0 / aveilable_bpps);
+            }
+        }
+        Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, "From: {0} to: {1} tt: {2} current bps: {3}", new Object[]{v1, v2, tt, bps});
         return tt;
     }
 //    private SDNSweep.FloodlightStats[] getFloodlightPortStats(String dpi, int port) throws IOException, InterruptedException {

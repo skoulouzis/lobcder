@@ -87,6 +87,8 @@ public class SDNSweep implements Runnable {
     private static Map<String, Double> transmitErrorsMap = new HashMap<>();
     @Getter
     private static Map<String, Double> transmitPacketsMap = new HashMap<>();
+    @Getter
+    private static Map<String, OFlow> oFlowsMap = new HashMap<>();
 
     public SDNSweep(DataSource datasource) throws IOException {
         this.datasource = datasource;
@@ -131,29 +133,27 @@ public class SDNSweep implements Runnable {
 
                 Double val = collisionsMap.get(sw.dpid + "-" + stats1.get(i).portNumber);
                 Double oldValue = ((val == null) ? 1.0 : val);
-                Double newValue = Double.valueOf(stats1.get(i).collisions - stats2.get(i).collisions);
+                Double newValue = Double.valueOf(stats2.get(i).collisions - stats1.get(i).collisions);
                 newValue = (newValue + oldValue) / 2.0;
                 collisionsMap.put(sw.dpid + "-" + stats1.get(i).portNumber, newValue);
 
                 val = receiveBytesMap.get(sw.dpid + "-" + stats1.get(i).portNumber);
                 oldValue = ((val == null) ? 1.0 : val);
-                newValue = Double.valueOf(stats1.get(i).receiveBytes - stats2.get(i).receiveBytes);
+                newValue = Double.valueOf(stats2.get(i).receiveBytes - stats1.get(i).receiveBytes);
                 val = ((newValue > oldValue) ? newValue : oldValue);
                 receiveBytesMap.put(sw.dpid + "-" + stats1.get(i).portNumber, val);
 
 
-
-
                 val = receiveCRCErrorsMap.get(sw.dpid + "-" + stats1.get(i).portNumber);
                 oldValue = ((val == null) ? 1.0 : val);
-                newValue = Double.valueOf(stats1.get(i).receiveCRCErrors - stats2.get(i).receiveCRCErrors);
+                newValue = Double.valueOf(stats2.get(i).receiveCRCErrors - stats1.get(i).receiveCRCErrors);
                 newValue = (newValue + oldValue) / 2.0;
                 receiveCRCErrorsMap.put(sw.dpid + "-" + stats1.get(i).portNumber, newValue);
 
 
                 val = receiveDroppedMap.get(sw.dpid + "-" + stats1.get(i).portNumber);
                 oldValue = ((val == null) ? 1.0 : val);
-                newValue = Double.valueOf(stats1.get(i).receiveDropped - stats2.get(i).receiveDropped);
+                newValue = Double.valueOf(stats2.get(i).receiveDropped - stats1.get(i).receiveDropped);
                 newValue = (newValue + oldValue) / 2.0;
                 receiveDroppedMap.put(sw.dpid + "-" + stats1.get(i).portNumber, newValue);
 
@@ -161,20 +161,20 @@ public class SDNSweep implements Runnable {
 
                 val = receiveErrorsMap.get(sw.dpid + "-" + stats1.get(i).portNumber);
                 oldValue = ((val == null) ? 1.0 : val);
-                newValue = Double.valueOf(stats1.get(i).receiveErrors - stats2.get(i).receiveErrors);
+                newValue = Double.valueOf(stats2.get(i).receiveErrors - stats1.get(i).receiveErrors);
                 newValue = (newValue + oldValue) / 2.0;
                 receiveErrorsMap.put(sw.dpid + "-" + stats1.get(i).portNumber, newValue);
 
 
                 val = receiveFrameErrorsMap.get(sw.dpid + "-" + stats1.get(i).portNumber);
                 oldValue = ((val == null) ? 1.0 : val);
-                newValue = Double.valueOf(stats1.get(i).receiveFrameErrors - stats2.get(i).receiveFrameErrors);
+                newValue = Double.valueOf(stats2.get(i).receiveFrameErrors - stats1.get(i).receiveFrameErrors);
                 newValue = (newValue + oldValue) / 2.0;
                 receiveErrorsMap.put(sw.dpid + "-" + stats1.get(i).portNumber, newValue);
 
                 val = receiveOverrunErrorsMap.get(sw.dpid + "-" + stats1.get(i).portNumber);
                 oldValue = ((val == null) ? 1.0 : val);
-                newValue = Double.valueOf(stats1.get(i).receiveOverrunErrors - stats2.get(i).receiveOverrunErrors);
+                newValue = Double.valueOf(stats2.get(i).receiveOverrunErrors - stats1.get(i).receiveOverrunErrors);
                 newValue = (newValue + oldValue) / 2.0;
                 receiveOverrunErrorsMap.put(sw.dpid + "-" + stats1.get(i).portNumber, newValue);
 
@@ -182,7 +182,7 @@ public class SDNSweep implements Runnable {
 
                 val = receivePacketsMap.get(sw.dpid + "-" + stats1.get(i).portNumber);
                 oldValue = ((val == null) ? 1.0 : val);
-                newValue = Double.valueOf(stats1.get(i).receivePackets - stats2.get(i).receivePackets);
+                newValue = Double.valueOf(stats2.get(i).receivePackets - stats1.get(i).receivePackets);
                 val = ((newValue > oldValue) ? newValue : oldValue);
                 receivePacketsMap.put(sw.dpid + "-" + stats1.get(i).portNumber, val);
 
@@ -190,7 +190,7 @@ public class SDNSweep implements Runnable {
 
                 val = transmitBytesMap.get(sw.dpid + "-" + stats1.get(i).portNumber);
                 oldValue = ((val == null) ? 1.0 : val);
-                newValue = Double.valueOf(stats1.get(i).transmitBytes - stats2.get(i).transmitBytes);
+                newValue = Double.valueOf(stats2.get(i).transmitBytes - stats1.get(i).transmitBytes);
                 val = ((newValue > oldValue) ? newValue : oldValue);
                 transmitBytesMap.put(sw.dpid + "-" + stats1.get(i).portNumber, val);
 
@@ -198,25 +198,47 @@ public class SDNSweep implements Runnable {
 
                 val = transmitDroppedMap.get(sw.dpid + "-" + stats1.get(i).portNumber);
                 oldValue = ((val == null) ? 1.0 : val);
-                newValue = Double.valueOf(stats1.get(i).transmitDropped - stats2.get(i).transmitDropped);
+                newValue = Double.valueOf(stats2.get(i).transmitDropped - stats1.get(i).transmitDropped);
                 newValue = (newValue + oldValue) / 2.0;
                 transmitDroppedMap.put(sw.dpid + "-" + stats1.get(i).portNumber, newValue);
 
 
                 val = transmitErrorsMap.get(sw.dpid + "-" + stats1.get(i).portNumber);
                 oldValue = ((val == null) ? 1.0 : val);
-                newValue = Double.valueOf(stats1.get(i).transmitErrors - stats2.get(i).transmitErrors);
+                newValue = Double.valueOf(stats2.get(i).transmitErrors - stats1.get(i).transmitErrors);
                 newValue = (newValue + oldValue) / 2.0;
                 transmitErrorsMap.put(sw.dpid + "-" + stats1.get(i).portNumber, newValue);
 
                 val = transmitPacketsMap.get(sw.dpid + "-" + stats1.get(i).portNumber);
                 oldValue = ((val == null) ? 1.0 : val);
-                newValue = Double.valueOf(stats1.get(i).transmitPackets - stats2.get(i).transmitPackets);
+                newValue = Double.valueOf(stats2.get(i).transmitPackets - stats1.get(i).transmitPackets);
                 val = ((newValue > oldValue) ? newValue : oldValue);
                 transmitPacketsMap.put(sw.dpid + "-" + stats1.get(i).portNumber, val);
 
             }
         }
+        for (Switch sw : getAllSwitches()) {
+            List<OFlow> flows = getOflow(sw.dpid);
+            for (OFlow f : flows) {
+                if (f != null) {
+                    f.timeStamp = System.currentTimeMillis();
+                    oFlowsMap.put(sw.dpid + "-" + f.match.inputPort, f);
+
+                    Double val = receiveBytesMap.get(sw.dpid + "-" + f.match.inputPort);
+                    double oldValue = (val == null) ? 1.0 : val;
+                    Double newValue = Double.valueOf(f.byteCount / f.durationSeconds * 1.0);
+                    val = ((newValue > oldValue) ? newValue : oldValue);
+                    receiveBytesMap.put(sw.dpid + "-" + f.match.inputPort, val);
+                    
+                    val = receivePacketsMap.get(sw.dpid + "-" + f.match.inputPort);
+                    oldValue = (val == null) ? 1.0 : val;
+                    newValue = Double.valueOf(f.packetCount / f.durationSeconds * 1.0);
+                    val = ((newValue > oldValue) ? newValue : oldValue);
+                    receivePacketsMap.put(sw.dpid + "-" + f.match.inputPort, val);
+                }
+            }
+        }
+
     }
 
     private List<FloodlightStats> getFloodlightPortStats(String dpi) throws IOException {
@@ -227,6 +249,15 @@ public class SDNSweep implements Runnable {
         String out = output.substring(27, output.length() - 1);
         ObjectMapper mapper = new ObjectMapper();
         return mapper.readValue(out, mapper.getTypeFactory().constructCollectionType(List.class, FloodlightStats.class));
+    }
+
+    private List<OFlow> getOflow(String dpi) throws IOException {
+        WebResource webResource = client.resource(uri + ":" + floodlightPort);
+        WebResource res = webResource.path("wm").path("core").path("switch").path(dpi).path("flow").path("json");
+        String output = res.get(String.class);
+        String out = output.substring(27, output.length() - 1);
+        ObjectMapper mapper = new ObjectMapper();
+        return mapper.readValue(out, mapper.getTypeFactory().constructCollectionType(List.class, OFlow.class));
     }
 
     private Collection<NetworkEntity> getAllNetworkEntites() {
@@ -242,7 +273,7 @@ public class SDNSweep implements Runnable {
             });
 
             for (NetworkEntity ne : neList) {
-                if (!networkEntitesCache.containsKey(ne.ipv4.get(0))) {
+                if (!ne.ipv4.isEmpty() && !networkEntitesCache.containsKey(ne.ipv4.get(0))) {
                     networkEntitesCache.put(ne.ipv4.get(0), ne);
                 }
             }
@@ -305,7 +336,7 @@ public class SDNSweep implements Runnable {
 
     @XmlRootElement
     @XmlAccessorType(XmlAccessType.FIELD)
-    public static class Flow {
+    public static class SFlow {
 
         @XmlElement(name = "agent")
         public String agent;
@@ -485,16 +516,82 @@ public class SDNSweep implements Runnable {
         public long collisions;
     }
 
-    public class StatsHolder {
+    public static class Actions {
 
-        @Getter
-        private final FloodlightStats stats1;
-        @Getter
-        private final FloodlightStats stats2;
+        @JsonProperty("type")
+        public String type;
+        @JsonProperty("length")
+        public int length;
+        @JsonProperty("port")
+        public int port;
+        @JsonProperty("maxLength")
+        public int maxLength;
+        @JsonProperty("lengthU")
+        public int lengthU;
+    }
 
-        public StatsHolder(FloodlightStats stats1, FloodlightStats stats2) {
-            this.stats1 = stats1;
-            this.stats2 = stats2;
-        }
+    @XmlRootElement
+    @XmlAccessorType(XmlAccessType.FIELD)
+    public static class Match {
+
+        @JsonProperty("dataLayerDestination")
+        public String dataLayerDestination;
+        @JsonProperty("dataLayerSource")
+        public String dataLayerSource;
+        @JsonProperty("dataLayerType")
+        public String dataLayerType;
+        @JsonProperty("dataLayerVirtualLan")
+        public int dataLayerVirtualLan;
+        @JsonProperty("dataLayerVirtualLanPriorityCodePoint")
+        public int dataLayerVirtualLanPriorityCodePoint;
+        @JsonProperty("inputPort")
+        public int inputPort;
+        @JsonProperty("networkDestination")
+        public String networkDestination;
+        @JsonProperty("networkDestinationMaskLen")
+        public int networkDestinationMaskLen;
+        @JsonProperty("networkSourceMaskLen")
+        public int networkSourceMaskLen;
+        @JsonProperty("networkProtocol")
+        public int networkProtocol;
+        @JsonProperty("networkSource")
+        public String networkSource;
+        @JsonProperty("networkTypeOfService")
+        public int networkTypeOfService;
+        @JsonProperty("transportDestination")
+        public int transportDestination;
+        @JsonProperty("transportSource")
+        public int transportSource;
+        @JsonProperty("wildcards")
+        public int wildcards;
+    }
+
+    @XmlRootElement
+    @XmlAccessorType(XmlAccessType.FIELD)
+    public static class OFlow {
+
+        @JsonProperty("tableId")
+        public int tableId;
+        @JsonProperty("match")
+        public Match match;
+        @JsonProperty("durationSeconds")
+        public int durationSeconds;
+        @JsonProperty("durationNanoseconds")
+        public long durationNanoseconds;
+        @JsonProperty("priority")
+        public int priority;
+        @JsonProperty("idleTimeout")
+        public int idleTimeout;
+        @JsonProperty("hardTimeout")
+        public int hardTimeout;
+        @JsonProperty("cookie")
+        public long cookie;
+        @JsonProperty("packetCount")
+        public long packetCount;
+        @JsonProperty("byteCount")
+        public long byteCount;
+        @JsonProperty("actions")
+        public List<Actions> actions;
+        public long timeStamp;
     }
 }
