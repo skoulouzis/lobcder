@@ -40,6 +40,7 @@ import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.util.PropertiesHelper;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.jgrapht.alg.DijkstraShortestPath;
 import org.jgrapht.graph.DefaultWeightedEdge;
 import org.jgrapht.graph.SimpleWeightedGraph;
 
@@ -93,8 +94,6 @@ public class SDNSweep implements Runnable {
     private static Map<String, Double> transmitPacketsMap = new HashMap<>();
     @Getter
     private static Map<String, OFlow> oFlowsMap = new HashMap<>();
-    private static String source = null;
-    private static String destination = null;
 
     public SDNSweep(DataSource datasource) throws IOException {
         this.datasource = datasource;
@@ -114,18 +113,11 @@ public class SDNSweep implements Runnable {
         return networkEntitesCache.get(dest);
     }
 
-    public static void setOtimiztionTargets(String dest, String selectedSource, SimpleWeightedGraph<String, DefaultWeightedEdge> g) {
-        source = selectedSource;
-        destination = dest;
-        graph = g;
-    }
-
     @Override
     public void run() {
         try {
             init();
             updateMtrics();
-            optimizeFlows();
         } catch (IOException ex) {
             Logger.getLogger(SDNSweep.class.getName()).log(Level.SEVERE, null, ex);
         } catch (InterruptedException ex) {
@@ -315,15 +307,6 @@ public class SDNSweep implements Runnable {
             });
         }
         return switches;
-    }
-
-    private void optimizeFlows() {
-        if (source != null && destination != null && graph != null) {
-            Set<DefaultWeightedEdge> edges = graph.getAllEdges(source, destination);
-            for (DefaultWeightedEdge e : edges) {
-                Logger.getLogger(SDNSweep.class.getName()).log(Level.INFO, "DefaultWeightedEdge: " + e);
-            }
-        }
     }
 
     @XmlRootElement

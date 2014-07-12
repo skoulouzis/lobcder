@@ -15,7 +15,6 @@ import java.util.*;
 import java.util.logging.Level;
 import javax.annotation.Nonnull;
 import javax.naming.NamingException;
-import javax.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.java.Log;
@@ -27,10 +26,10 @@ import nl.uva.cs.lobcder.resources.LogicalData;
 import nl.uva.cs.lobcder.resources.PDRI;
 import nl.uva.cs.lobcder.resources.PDRIDescr;
 import nl.uva.cs.lobcder.resources.StorageSite;
+import nl.uva.cs.lobcder.rest.wrappers.Stats;
 import nl.uva.cs.lobcder.rest.wrappers.UsersWrapper;
 import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.cs.lobcder.util.MyDataSource;
-import org.apache.commons.codec.binary.Base64;
 
 /**
  *
@@ -569,7 +568,6 @@ public class JDBCatalogue extends MyDataSource {
     public void setPermissions(Long UID, Permissions perm, @Nonnull Connection connection) throws SQLException {
         try (Statement s = connection.createStatement(java.sql.ResultSet.TYPE_FORWARD_ONLY,
                 java.sql.ResultSet.CONCUR_UPDATABLE)) {
-
             s.addBatch("DELETE FROM permission_table WHERE permission_table.ldUidRef = " + UID);
             for (String cr : perm.getRead()) {
                 s.addBatch("INSERT INTO permission_table (permType, ldUidRef, roleName) VALUES ('read', " + UID + " , '" + cr + "')");
@@ -1234,7 +1232,6 @@ public class JDBCatalogue extends MyDataSource {
 //            ResultSet rs = preparedStatement.getGeneratedKeys();
 //        }
 //    }
-
     public void recordRequests(Connection connection, List<RequestWapper> requestEvents) throws SQLException, UnsupportedEncodingException {
         try (Statement s = connection.createStatement()) {
             for (RequestWapper e : requestEvents) {
@@ -1438,33 +1435,109 @@ public class JDBCatalogue extends MyDataSource {
         }
     }
 
-    private String getUserName(HttpServletRequest httpServletRequest) throws UnsupportedEncodingException {
-        String authorizationHeader = httpServletRequest.getHeader("authorization");
-        String userNpasswd = "";
-        if (authorizationHeader != null) {
-            final int index = authorizationHeader.indexOf(' ');
-            if (index > 0) {
-                final String credentials = new String(Base64.decodeBase64(authorizationHeader.substring(index).getBytes()), "UTF8");
-                String[] encodedToken = credentials.split(":");
-                if (encodedToken.length > 1) {
-                    String token = new String(Base64.decodeBase64(encodedToken[1]));
-                    if (token.contains(";") && token.contains("uid=")) {
-                        String uid = token.split(";")[0];
-                        userNpasswd = uid.split("uid=")[1];
-                    } else {
-                        userNpasswd = credentials.substring(0, credentials.indexOf(":"));
-                    }
-                }
-//                    if (userNpasswd == null || userNpasswd.length() < 1) {
+//    private String getUserName(HttpServletRequest httpServletRequest) throws UnsupportedEncodingException {
+//        String authorizationHeader = httpServletRequest.getHeader("authorization");
+//        String userNpasswd = "";
+//        if (authorizationHeader != null) {
+//            final int index = authorizationHeader.indexOf(' ');
+//            if (index > 0) {
+//                final String credentials = new String(Base64.decodeBase64(authorizationHeader.substring(index).getBytes()), "UTF8");
+//                String[] encodedToken = credentials.split(":");
+//                if (encodedToken.length > 1) {
+//                    String token = new String(Base64.decodeBase64(encodedToken[1]));
+//                    if (token.contains(";") && token.contains("uid=")) {
+//                        String uid = token.split(";")[0];
+//                        userNpasswd = uid.split("uid=")[1];
+//                    } else {
 //                        userNpasswd = credentials.substring(0, credentials.indexOf(":"));
 //                    }
-
-//                final String credentials = new String(Base64.decodeBase64(autheader.substring(index)), "UTF8");
-
-//                final String token = credentials.substring(credentials.indexOf(":") + 1);
+//                }
+////                    if (userNpasswd == null || userNpasswd.length() < 1) {
+////                        userNpasswd = credentials.substring(0, credentials.indexOf(":"));
+////                    }
+//
+////                final String credentials = new String(Base64.decodeBase64(autheader.substring(index)), "UTF8");
+//
+////                final String token = credentials.substring(credentials.indexOf(":") + 1);
+//            }
+//        }
+//        return userNpasswd;
+//    }
+    public void setSpeed(Stats stats) throws SQLException {
+        try (Connection connection = getConnection()) {
+            try {
+                setSpeed(stats, connection);
+                connection.commit();
+            } catch (SQLException e) {
+                connection.rollback();
+                throw e;
             }
         }
-        return userNpasswd;
+    }
+
+    private void setSpeed(Stats stats, Connection connection) throws SQLException {
+
+        try (PreparedStatement ps = connection.prepareStatement(
+                "select id, averageSpeed, minSpeed, maxSpeed from speed_table where src = ? AND dst = ? AND fSize = ?")) {
+            ps.setString(1, stats.getSource());
+            ps.setString(2, stats.getDestination());
+            if (stats.getSize() < 2097152) {
+                ps.setString(3, "s");
+            } else if (stats.getSize() >= 2097152 && stats.getSize() < 20971520) {
+                ps.setString(3, "m");
+            } else if (stats.getSize() >= 20971520 && stats.getSize() < 209715200) {
+                ps.setString(3, "l");
+            } else if (stats.getSize() >= 209715200) {
+                ps.setString(3, "xl");
+            }
+            ResultSet rs = ps.executeQuery();
+            int id = -1;
+            double averageSpeed = -1;
+            double minSpeed = -1;
+            double maxSpeed = -1;
+            if (rs.next()) {
+                id = rs.getInt(1);
+                averageSpeed = rs.getDouble(2);
+                minSpeed = rs.getDouble(3);
+                maxSpeed = rs.getDouble(4);
+            }
+
+            if (id != -1) {
+                averageSpeed = (averageSpeed + stats.getSpeed()) / 2.0;
+                maxSpeed = ((stats.getSpeed() > maxSpeed) ? stats.getSpeed() : maxSpeed);
+                minSpeed = ((stats.getSpeed() < minSpeed) ? stats.getSpeed() : minSpeed);
+                try (PreparedStatement ps2 = connection.prepareStatement("UPDATE speed_table SET `averageSpeed` = ?, `minSpeed` = ?, `maxSpeed` = ? WHERE id = ?")) {
+                    ps2.setInt(1, id);
+                    ps2.setDouble(2, averageSpeed);
+                    ps2.setDouble(3, minSpeed);
+                    ps2.setDouble(4, maxSpeed);
+                    ps2.executeUpdate();
+                }
+            } else {
+                averageSpeed = stats.getSpeed();
+                maxSpeed = stats.getSpeed();
+                minSpeed = stats.getSpeed();
+                try (PreparedStatement ps2 = connection.prepareStatement("INSERT INTO speed_table (src, dst, fSize, averageSpeed, minSpeed, maxSpeed) "
+                        + "VALUES ('?', '?', '?', ?, ?, ?)")) {
+                    ps2.setString(1, stats.getSource());
+                    ps2.setString(2, stats.getDestination());
+                    if (stats.getSize() < 2097152) {
+                        ps2.setString(3, "s");
+                    } else if (stats.getSize() >= 2097152 && stats.getSize() < 20971520) {
+                        ps2.setString(3, "m");
+                    } else if (stats.getSize() >= 20971520 && stats.getSize() < 209715200) {
+                        ps2.setString(3, "l");
+                    } else if (stats.getSize() >= 209715200) {
+                        ps2.setString(3, "xl");
+                    }
+
+                    ps2.setDouble(4, averageSpeed);
+                    ps2.setDouble(5, minSpeed);
+                    ps2.setDouble(6, maxSpeed);
+                }
+            }
+        }
+
     }
 
     @Data
