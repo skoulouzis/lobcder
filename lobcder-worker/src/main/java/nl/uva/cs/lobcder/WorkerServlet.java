@@ -5,6 +5,7 @@
 package nl.uva.cs.lobcder;
 
 import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.GenericType;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.config.ClientConfig;
@@ -12,12 +13,12 @@ import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.json.JSONConfiguration;
 import com.sun.jersey.client.urlconnection.HTTPSProperties;
 import io.milton.common.Path;
+import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.math.BigInteger;
-import java.math.MathContext;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.URI;
@@ -48,13 +49,15 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.MediaType;
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import lombok.extern.java.Log;
 import nl.uva.vlet.data.StringUtil;
 import nl.uva.vlet.exception.VlException;
 import nl.uva.vlet.io.CircularStreamBufferTransferer;
-import nl.uva.vlet.vfs.VFSTransfer;
-import nl.uva.vlet.vrl.VRL;
 
 /**
  * A file servlet supporting resume of downloads and client-side caching and
@@ -166,7 +169,7 @@ public final class WorkerServlet extends HttpServlet {
      * @throws IOException If something fails at I/O level.
      */
     private void processRequest(HttpServletRequest request, HttpServletResponse response, boolean content)
-            throws IOException, InterruptedException, URISyntaxException, VlException {
+            throws IOException, InterruptedException, URISyntaxException, VlException, JAXBException {
         long startTime = System.currentTimeMillis();
 
         // Get requested file by path info.
@@ -436,7 +439,6 @@ public final class WorkerServlet extends HttpServlet {
             }
 
 
-
             long elapsed = System.currentTimeMillis() - startTime;
             if (elapsed <= 0) {
                 elapsed = 1;
@@ -453,6 +455,12 @@ public final class WorkerServlet extends HttpServlet {
             double averagre = (speed + oldSpeed) / (double) numOfGets;
             numOfGetsMap.put(pdri.getHost(), numOfGets++);
             weightPDRIMap.put(pdri.getHost(), averagre);
+            Stats stats = new Stats();
+            stats.source = request.getLocalAddr();
+            stats.destination = request.getRemoteAddr();
+            stats.speed = speed;
+            stats.size = this.logicalDataCache.get(fileUID).logicalData.length;
+            setSpeed(stats);
 
             String speedMsg = "Source: " + request.getLocalAddr() + " Destination: " + request.getRemoteAddr() + " Tx_Speed: " + speed + " Kbites/sec Tx_Size: " + this.logicalDataCache.get(fileUID).logicalData.length + " bytes";
             Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, speedMsg);
@@ -789,6 +797,28 @@ public final class WorkerServlet extends HttpServlet {
         Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, ex);
     }
 
+    private void setSpeed(Stats stats) throws JAXBException {
+
+
+        JAXBContext context = JAXBContext.newInstance(Stats.class);
+        Marshaller m = context.createMarshaller();
+        m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+        OutputStream out = new ByteArrayOutputStream();
+        m.marshal(stats, out);
+
+
+        String stringStats = String.valueOf(out);
+
+        if (restClient == null) {
+            restClient = Client.create(clientConfig);
+        }
+        restClient.removeAllFilters();
+        restClient.addFilter(new com.sun.jersey.api.client.filter.HTTPBasicAuthFilter("worker-", token));
+        WebResource webResource = restClient.resource(restURL);
+        ClientResponse response = webResource.path("lob_statistics").path("set")
+                .type(MediaType.APPLICATION_XML).put(ClientResponse.class, stringStats);
+    }
+
     @XmlRootElement
     public static class LogicalDataWrapped {
 
@@ -836,6 +866,19 @@ public final class WorkerServlet extends HttpServlet {
         public String pdriGroupRef;
         public String resourceUrl;
         public String username;
+    }
+
+    @XmlRootElement
+    public static class Stats {
+
+        @XmlElement(name = "source")
+        String source;
+        @XmlElement(name = "destination")
+        String destination;
+        @XmlElement(name = "size")
+        Long size;
+        @XmlElement(name = "speed")
+        Double speed;
     }
 
     // Inner classes ------------------------------------------------------------------------------
