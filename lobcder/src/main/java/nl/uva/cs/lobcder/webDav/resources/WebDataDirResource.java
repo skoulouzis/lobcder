@@ -30,6 +30,7 @@ import nl.uva.cs.lobcder.auth.Permissions;
 import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
 import nl.uva.cs.lobcder.resources.LogicalData;
 import nl.uva.cs.lobcder.resources.PDRI;
+import nl.uva.cs.lobcder.rest.wrappers.Stats;
 import nl.uva.cs.lobcder.util.Constants;
 import org.apache.commons.io.FilenameUtils;
 import static org.rendersnake.HtmlAttributesFactory.*;
@@ -271,12 +272,17 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
         double speed = ((resource.getContentLength() * 8.0) * 1000.0) / (elapsed * 1000.0);
         String msg = null;
         try {
+            Stats stats = new Stats();
+            stats.setSource(fromAddress);
+            stats.setDestination(pdri.getHost());
+            stats.setSpeed(speed);
+            stats.setSize(resource.getContentLength());
+            getCatalogue().setSpeed(stats);
             msg = "Source: " + fromAddress + " Destination: " + new URI(pdri.getURI()).getScheme() + "://" + pdri.getHost() + " Rx_Speed: " + speed + " Kbites/sec Rx_Size: " + (resource.getContentLength()) + " bytes";
-        } catch (URISyntaxException ex) {
+        } catch (URISyntaxException | SQLException ex) {
             Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, ex);
         }
         WebDataDirResource.log.log(Level.INFO, msg);
-//        SpeedLogger.logSpeed(msg);
         return resource;
     }
 

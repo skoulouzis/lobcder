@@ -112,7 +112,6 @@ class WP4Sweep implements Runnable {
             String entity = response.getEntity(String.class);
             if (response.getClientResponseStatus() == ClientResponse.Status.OK
                     && entity.contains("<_global_id>")) {
-
                 String result = (String) entity.subSequence(entity.lastIndexOf("<_global_id>") + "<_global_id>".length(), entity.indexOf("</_global_id>"));
 //                Node uidNode = (Node) expression.evaluate(new InputSource(response.getEntityInputStream()), XPathConstants.NODE);
 //                String result = uidNode.getTextContent();

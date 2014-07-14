@@ -4,6 +4,13 @@
  */
 package nl.uva.cs.lobcder.resources;
 
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.api.client.config.ClientConfig;
+import com.sun.jersey.api.client.config.DefaultClientConfig;
+import com.sun.jersey.api.json.JSONConfiguration;
+import com.sun.jersey.client.urlconnection.HTTPSProperties;
 import io.milton.http.Range;
 import java.io.*;
 import java.math.BigInteger;
@@ -12,12 +19,27 @@ import java.net.UnknownHostException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+import javax.ws.rs.core.MediaType;
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
 import lombok.extern.java.Log;
+import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
+import nl.uva.cs.lobcder.rest.wrappers.Stats;
 import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.cs.lobcder.util.DesEncrypter;
 import nl.uva.cs.lobcder.util.GridHelper;
@@ -50,7 +72,6 @@ public class VPDRI implements PDRI {
         }
     }
     private VFSClient vfsClient;
-    //    private MyStorageSite storageSite;
     private VRL vrl;
     private final String username;
     private final String password;
@@ -58,7 +79,6 @@ public class VPDRI implements PDRI {
     private final String baseDir = "LOBCDER-REPLICA-vTEST";//"LOBCDER-REPLICA-v2.0";
     private final String fileName;
     private int reconnectAttemts = 0;
-    private final static boolean debug = true;
     private BigInteger keyInt;
     private boolean encrypt;
     private final String resourceUrl;
@@ -554,6 +574,13 @@ public class VPDRI implements PDRI {
 //            putData(source.getData());
             double elapsed = System.currentTimeMillis() - start;
             double speed = ((source.getLength() * 8.0) * 1000.0) / (elapsed * 1000.0);
+
+            Stats stats = new Stats();
+            stats.setSource(source.getHost());
+            stats.setDestination(getHost());
+            stats.setSpeed(speed);
+            stats.setSize(getLength());
+//            setSpeed(stats);
 
             String msg = "Source: " + source.getHost() + " Destination: " + vrl.getScheme() + "://" + getHost() + " Replication_Speed: " + speed + " Kbites/sec Repl_Size: " + (getLength()) + " bytes";
             VPDRI.log.log(Level.INFO, msg);

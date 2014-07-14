@@ -25,9 +25,8 @@ import lombok.Data;
 @XmlRootElement
 @Data
 public class Stats {
-
     String source;
     String destination;
-    Double size;
+    Long size;
     Double speed;
 }

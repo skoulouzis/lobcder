@@ -1478,18 +1478,21 @@ public class JDBCatalogue extends MyDataSource {
     private void setSpeed(Stats stats, Connection connection) throws SQLException {
 
         try (PreparedStatement ps = connection.prepareStatement(
-                "select id, averageSpeed, minSpeed, maxSpeed from speed_table where src = ? AND dst = ? AND fSize = ?")) {
+                "select id, averageSpeed, minSpeed, maxSpeed from speed_table "
+                + "where src = ? AND dst = ? AND fSize = ?")) {
             ps.setString(1, stats.getSource());
             ps.setString(2, stats.getDestination());
+            String size = "m";
             if (stats.getSize() < 2097152) {
-                ps.setString(3, "s");
+                size = "s";
             } else if (stats.getSize() >= 2097152 && stats.getSize() < 20971520) {
-                ps.setString(3, "m");
+                size = "m";
             } else if (stats.getSize() >= 20971520 && stats.getSize() < 209715200) {
-                ps.setString(3, "l");
+                size = "l";
             } else if (stats.getSize() >= 209715200) {
-                ps.setString(3, "xl");
+                size = "xl";
             }
+            ps.setString(3, size);
             ResultSet rs = ps.executeQuery();
             int id = -1;
             double averageSpeed = -1;
@@ -1517,23 +1520,16 @@ public class JDBCatalogue extends MyDataSource {
                 averageSpeed = stats.getSpeed();
                 maxSpeed = stats.getSpeed();
                 minSpeed = stats.getSpeed();
-                try (PreparedStatement ps2 = connection.prepareStatement("INSERT INTO speed_table (src, dst, fSize, averageSpeed, minSpeed, maxSpeed) "
-                        + "VALUES ('?', '?', '?', ?, ?, ?)")) {
+                try (PreparedStatement ps2 = connection.prepareStatement("INSERT "
+                        + "INTO speed_table (src, dst, fSize, averageSpeed, minSpeed, maxSpeed) "
+                        + "VALUES (?, ?, ?, ?, ?, ?)")) {
                     ps2.setString(1, stats.getSource());
                     ps2.setString(2, stats.getDestination());
-                    if (stats.getSize() < 2097152) {
-                        ps2.setString(3, "s");
-                    } else if (stats.getSize() >= 2097152 && stats.getSize() < 20971520) {
-                        ps2.setString(3, "m");
-                    } else if (stats.getSize() >= 20971520 && stats.getSize() < 209715200) {
-                        ps2.setString(3, "l");
-                    } else if (stats.getSize() >= 209715200) {
-                        ps2.setString(3, "xl");
-                    }
-
+                    ps2.setString(3, size);
                     ps2.setDouble(4, averageSpeed);
                     ps2.setDouble(5, minSpeed);
                     ps2.setDouble(6, maxSpeed);
+                    ps2.executeUpdate();
                 }
             }
         }

@@ -48,6 +48,7 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import nl.uva.cs.lobcder.rest.wrappers.Stats;
 
 /**
  *
@@ -468,7 +469,17 @@ public class WebDataFileResource extends WebDataResource implements
         weightPDRIMap.put(pdri.getHost(), averagre);
 
         getCatalogue().addViewForRes(getLogicalData().getUid());
-        String msg = "Source: " + pdri.getHost() + " Destination: " + fromAddress + " Tx_Speed: " + speed + " Kbites/sec Tx_Size: " + getContentLength() + " bytes";
+        Stats stats = new Stats();
+        stats.setSource(pdri.getHost());
+        stats.setDestination(fromAddress);
+        stats.setSpeed(speed);
+        stats.setSize(getContentLength());
+        String msg = "Source: " + stats.getSource() + " Destination: " + stats.getDestination() + " Tx_Speed: " + speed + " Kbites/sec Tx_Size: " + getContentLength() + " bytes";
+        try {
+            getCatalogue().setSpeed(stats);
+        } catch (SQLException ex) {
+            Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, ex);
+        }
         WebDataFileResource.log.log(Level.INFO, msg);
     }
 

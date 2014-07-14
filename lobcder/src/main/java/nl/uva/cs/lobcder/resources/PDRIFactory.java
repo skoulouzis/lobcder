@@ -5,6 +5,8 @@
 package nl.uva.cs.lobcder.resources;
 
 import java.io.IOException;
+import javax.annotation.Nonnull;
+import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
 
 /**
  *

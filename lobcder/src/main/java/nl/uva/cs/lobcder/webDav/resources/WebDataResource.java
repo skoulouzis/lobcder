@@ -619,7 +619,7 @@ public class WebDataResource implements PropFindableResource, Resource,
                     }
                 }
                 getLogicalData().setLockTimeout(System.currentTimeMillis() + Constants.LOCK_TIME);
-                
+
                 getCatalogue().setLockTimeout(getLogicalData().getUid(), getLogicalData().getLockTimeout(), connection);
                 LockInfo lockInfo = new LockInfo(LockInfo.LockScope.valueOf(getLogicalData().getLockScope()),
                         LockInfo.LockType.valueOf(getLogicalData().getLockType()), getLogicalData().getLockedByUser(),
