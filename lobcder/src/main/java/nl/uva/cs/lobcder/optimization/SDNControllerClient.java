@@ -135,7 +135,6 @@ public class SDNControllerClient {
 
         optimizeFlows(worker, dest);
 
-
         return worker;
     }
 
@@ -148,9 +147,10 @@ public class SDNControllerClient {
         } else {
             dpi = v2;
         }
+        String key = dpi + "-" + port;
         //        SDNSweep.FloodlightStats[] stats = getFloodlightPortStats(dpi, port);
-        Double rpps = SDNSweep.getReceivePacketsMap().get(dpi + "-" + port);
-        Double tpps = SDNSweep.getTransmitPacketsMap().get(dpi + "-" + port);
+        Double rpps = SDNSweep.getReceivePacketsMap().get(key);
+        Double tpps = SDNSweep.getTransmitPacketsMap().get(key);
 
 //        double rrrt = (interval / rpps);
 //        double trrt = (interval / tpps);
@@ -159,8 +159,8 @@ public class SDNControllerClient {
         if (tpp <= 0) {
             tpp = 1;
         }
-        Double rbytes = SDNSweep.getReceiveBytesMap().get(dpi + "-" + port);
-        Double tbytes = SDNSweep.getTransmitBytesMap().get(dpi + "-" + port);
+        Double rbytes = SDNSweep.getReceiveBytesMap().get(key);
+        Double tbytes = SDNSweep.getTransmitBytesMap().get(key);
         if (rbytes <= 0) {
             rbytes = Double.valueOf(1);
         }
@@ -182,26 +182,26 @@ public class SDNControllerClient {
         double nop = mtu / 1024.0;
         double tt = tpp * nop;
 
-
-
-        SDNSweep.OFlow f = SDNSweep.getOFlowsMap().get(dpi + "-" + port);
+        SDNSweep.OFlow f = SDNSweep.getOFlowsMap().get(key);
         double bps = -1;
         if (f != null) {
             bps = f.byteCount / f.durationSeconds * 1.0;
-            double aveilable_bpps = bps / 2.0;
             double tmp = f.packetCount / f.durationSeconds * 1.0;
             if (tpp <= 1 && tmp > tpp) {
                 tt = tmp * nop;
             }
-            long age = System.currentTimeMillis() - f.timeStamp;
-            if (age < 10000) {
-                tt += (1024.0 / aveilable_bpps);
-            }
         }
+        Double averageLinkUsage = SDNSweep.getAverageLinkUsageMap().get(key);
+        if (averageLinkUsage != null) {
+            //For each sec of usage how much extra time we get ? 
+            //We asume a liner ralationship 
+            tt += averageLinkUsage;
+        }
+
         Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, "From: {0} to: {1} tt: {2} current bps: {3}", new Object[]{v1, v2, tt, bps});
         return tt;
     }
-    
+
 //    private SDNSweep.FloodlightStats[] getFloodlightPortStats(String dpi, int port) throws IOException, InterruptedException {
 //        SDNSweep.FloodlightStats stats1 = null;
 //        SDNSweep.FloodlightStats stats2 = null;
@@ -650,7 +650,6 @@ public class SDNControllerClient {
 //        @JsonProperty("collisions")
 //        long collisions;
 //    }
-
     private void optimizeFlows(String worker, String dest) {
         Thread t = new ThreadFlow(worker, dest, graph);
     }

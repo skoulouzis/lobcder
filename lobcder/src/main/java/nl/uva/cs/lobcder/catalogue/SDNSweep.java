@@ -27,7 +27,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.sql.DataSource;
@@ -40,7 +39,6 @@ import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.util.PropertiesHelper;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.ObjectMapper;
-import org.jgrapht.alg.DijkstraShortestPath;
 import org.jgrapht.graph.DefaultWeightedEdge;
 import org.jgrapht.graph.SimpleWeightedGraph;
 
@@ -94,6 +92,8 @@ public class SDNSweep implements Runnable {
     private static Map<String, Double> transmitPacketsMap = new HashMap<>();
     @Getter
     private static Map<String, OFlow> oFlowsMap = new HashMap<>();
+    @Getter
+    private static Map<String, Double> averageLinkUsageMap = new HashMap<>();
 
     public SDNSweep(DataSource datasource) throws IOException {
         this.datasource = datasource;
@@ -117,7 +117,7 @@ public class SDNSweep implements Runnable {
     public void run() {
         try {
             init();
-            updateMtrics();
+            updateMetrics();
         } catch (IOException ex) {
             Logger.getLogger(SDNSweep.class.getName()).log(Level.SEVERE, null, ex);
         } catch (InterruptedException ex) {
@@ -125,7 +125,7 @@ public class SDNSweep implements Runnable {
         }
     }
 
-    private void updateMtrics() throws IOException, InterruptedException {
+    private void updateMetrics() throws IOException, InterruptedException {
         for (Switch sw : getAllSwitches()) {
             List<FloodlightStats> stats1 = getFloodlightPortStats(sw.dpid);
             Thread.sleep(interval);
@@ -226,20 +226,35 @@ public class SDNSweep implements Runnable {
             List<OFlow> flows = getOflow(sw.dpid);
             for (OFlow f : flows) {
                 if (f != null) {
+                    String key = sw.dpid + "-" + f.match.inputPort;
                     f.timeStamp = System.currentTimeMillis();
-                    oFlowsMap.put(sw.dpid + "-" + f.match.inputPort, f);
+                    oFlowsMap.put(key, f);
 
-                    Double val = receiveBytesMap.get(sw.dpid + "-" + f.match.inputPort);
+                    Double val = receiveBytesMap.get(key);
                     double oldValue = (val == null) ? 1.0 : val;
                     Double newValue = Double.valueOf(f.byteCount / f.durationSeconds * 1.0);
                     val = ((newValue > oldValue) ? newValue : oldValue);
-                    receiveBytesMap.put(sw.dpid + "-" + f.match.inputPort, val);
+                    receiveBytesMap.put(key, val);
 
-                    val = receivePacketsMap.get(sw.dpid + "-" + f.match.inputPort);
+                    val = receivePacketsMap.get(key);
                     oldValue = (val == null) ? 1.0 : val;
                     newValue = Double.valueOf(f.packetCount / f.durationSeconds * 1.0);
                     val = ((newValue > oldValue) ? newValue : oldValue);
-                    receivePacketsMap.put(sw.dpid + "-" + f.match.inputPort, val);
+                    receivePacketsMap.put(key, val);
+                    Double averageLinkUsage = averageLinkUsageMap.get(key);
+                    if (averageLinkUsage == null) {
+                        averageLinkUsageMap.put(key, Double.valueOf(f.durationSeconds));
+                    } else {
+                        //$d_{new} = α ∗ d_{old} + (1 - α ) ∗ d_{sample}$ 
+                        //with α ∈ [0 , 1] being the weighting factor, d_{sample} 
+                        //being the new sample, d_{old} the current metric value 
+                        //and d_{new} the newly calculated value. In fact, 
+                        //this calculation implements a discrete low pass filter
+                        double a = 0.5;
+                        averageLinkUsage = a * averageLinkUsage + (1 - a) * f.durationSeconds;
+                        averageLinkUsage = (averageLinkUsage + f.durationSeconds) / 2.0;
+                        averageLinkUsageMap.put(key, averageLinkUsage);
+                    }
                 }
             }
         }
