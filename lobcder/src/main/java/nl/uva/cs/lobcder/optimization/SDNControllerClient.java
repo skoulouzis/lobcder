@@ -180,7 +180,7 @@ public class SDNControllerClient {
         //TpP =[({MTU} / {bps}) + RTT] // is the time it takes to transmit one packet or time per packet
         //TT = [({MTU} / {bps}) + RTT] * [ {MTU}/{FS}]
         double nop = mtu / 1024.0;
-        double tt = tpp * nop;
+        double ett = tpp * nop;
 
         SDNSweep.OFlow f = SDNSweep.getOFlowsMap().get(key);
         double bps = -1;
@@ -188,18 +188,20 @@ public class SDNControllerClient {
             bps = f.byteCount / f.durationSeconds * 1.0;
             double tmp = f.packetCount / f.durationSeconds * 1.0;
             if (tpp <= 1 && tmp > tpp) {
-                tt = tmp * nop;
+                ett = tmp * nop;
             }
         }
         Double averageLinkUsage = SDNSweep.getAverageLinkUsageMap().get(key);
         if (averageLinkUsage != null) {
+            Double factor = 1.0;
             //For each sec of usage how much extra time we get ? 
             //We asume a liner ralationship 
-            tt += averageLinkUsage;
+            //The longer the usage it means either more transfers per flow or larger files or both
+            ett += averageLinkUsage * factor;
         }
 
-        Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, "From: {0} to: {1} tt: {2} current bps: {3}", new Object[]{v1, v2, tt, bps});
-        return tt;
+        Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, "From: {0} to: {1} tt: {2} current bps: {3}", new Object[]{v1, v2, ett, bps});
+        return ett;
     }
 
 //    private SDNSweep.FloodlightStats[] getFloodlightPortStats(String dpi, int port) throws IOException, InterruptedException {

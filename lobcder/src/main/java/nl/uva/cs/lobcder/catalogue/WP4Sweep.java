@@ -232,7 +232,7 @@ class WP4Sweep implements Runnable {
                     rm.setName(rs.getString(2));
                     rm.setGlobalId(rs.getString(3));
                     rm.setViews(rs.getInt(4));
-                    rm.setLocalId(rs.getInt(5));
+                    rm.setLocalId(rs.getInt(7));
                     try {
                         wp4Connector.update(rm);
                         String global_id_dev = rs.getString(6);
