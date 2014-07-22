@@ -49,6 +49,7 @@ import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import nl.uva.cs.lobcder.rest.wrappers.Stats;
+import org.jgrapht.graph.DefaultWeightedEdge;
 
 /**
  *
@@ -640,7 +641,11 @@ public class WebDataFileResource extends WebDataResource implements
             String uri = PropertiesHelper.getSDNControllerURL();
             sdnClient = new SDNControllerClient(uri);
         }
-        String workerIP = sdnClient.getLowestCostWorker(reqSource, workersMap.keySet());
+        List<DefaultWeightedEdge> shortestPath = sdnClient.getShortestPath(reqSource, workersMap.keySet());
+        DefaultWeightedEdge e = shortestPath.get(0);
+        String[] workerSwitch = e.toString().split(" : ");
+        String workerIP = workerSwitch[0].substring(1);
+
         String worker = workersMap.get(workerIP);
         String w = worker + "/" + getLogicalData().getUid();
         String token = UUID.randomUUID().toString();

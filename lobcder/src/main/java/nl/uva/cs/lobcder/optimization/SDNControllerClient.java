@@ -38,7 +38,7 @@ public class SDNControllerClient {
 //        this.uri = uri;
     }
 
-    public String getLowestCostWorker(String dest, Set<String> sources) throws InterruptedException, IOException {
+    public List<DefaultWeightedEdge> getShortestPath(String dest, Set<String> sources) throws InterruptedException, IOException {
         if (graph == null) {
             graph = new SimpleWeightedGraph<>(DefaultWeightedEdge.class);
         }
@@ -129,13 +129,7 @@ public class SDNControllerClient {
                 }
             }
         }
-        DefaultWeightedEdge e = shortestPath.get(0);
-        String[] workerSwitch = e.toString().split(" : ");
-        String worker = workerSwitch[0].substring(1);
-
-        optimizeFlows(worker, dest);
-
-        return worker;
+        return shortestPath;
     }
 
     private double getCost(String v1, String v2, int port) throws InterruptedException, IOException {
@@ -203,7 +197,6 @@ public class SDNControllerClient {
         Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, "From: {0} to: {1} tt: {2} current bps: {3}", new Object[]{v1, v2, ett, bps});
         return ett;
     }
-
 //    private SDNSweep.FloodlightStats[] getFloodlightPortStats(String dpi, int port) throws IOException, InterruptedException {
 //        SDNSweep.FloodlightStats stats1 = null;
 //        SDNSweep.FloodlightStats stats2 = null;
@@ -652,31 +645,4 @@ public class SDNControllerClient {
 //        @JsonProperty("collisions")
 //        long collisions;
 //    }
-    private void optimizeFlows(String worker, String dest) {
-        Thread t = new ThreadFlow(worker, dest, graph);
-    }
-
-    private static class ThreadFlow extends Thread {
-
-        private final String source;
-        private final String destination;
-        private final SimpleWeightedGraph<String, DefaultWeightedEdge> graph;
-
-        public ThreadFlow(String worker, String dest, SimpleWeightedGraph<String, DefaultWeightedEdge> graph) {
-            this.source = worker;
-            this.destination = dest;
-            this.graph = graph;
-        }
-
-        @Override
-        public void run() {
-            List<DefaultWeightedEdge> shortestPath = DijkstraShortestPath.findPathBetween(graph, source, destination);
-            for (DefaultWeightedEdge e : shortestPath) {
-                double w = graph.getEdgeWeight(e);
-                String s = graph.getEdgeSource(e);
-                String t = graph.getEdgeTarget(e);
-                Logger.getLogger(ThreadFlow.class.getName()).log(Level.INFO, s + "->" + t + ": " + w);
-            }
-        }
-    }
 }
