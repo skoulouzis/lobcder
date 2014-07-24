@@ -59,7 +59,7 @@ public class SDNSweep implements Runnable {
     @Getter
     private static List<Link> switchLinks;
     private List<Switch> switches;
-    private long interval = 1000;
+    private long interval = 800;
     @Getter
     private static Map<String, Double> statsMap;
     public static final String[] METRIC_NAMES = new String[]{"collisions",
@@ -94,6 +94,7 @@ public class SDNSweep implements Runnable {
     private static Map<String, OFlow> oFlowsMap = new HashMap<>();
     @Getter
     private static Map<String, Double> averageLinkUsageMap = new HashMap<>();
+    private long iterations = 1;
 
     public SDNSweep(DataSource datasource) throws IOException {
         this.datasource = datasource;
@@ -107,6 +108,8 @@ public class SDNSweep implements Runnable {
         getAllNetworkEntites();
         getAllSwitchLinks();
         getAllSwitches();
+
+
     }
 
     public static NetworkEntity getNetworkEntity(String dest) {
@@ -116,6 +119,7 @@ public class SDNSweep implements Runnable {
     @Override
     public void run() {
         try {
+            iterations++;
             init();
             updateMetrics();
         } catch (IOException ex) {
@@ -135,115 +139,25 @@ public class SDNSweep implements Runnable {
 //                for(String mn  : METRIC_NAMES){
 //                    String key = mn+"-"+sw.dpid + "-" + stats1.get(i).portNumber;
 //                }
+                String key = sw.dpid + "-" + stats1.get(i).portNumber;
 
-                Double val = collisionsMap.get(sw.dpid + "-" + stats1.get(i).portNumber);
+
+                Double val = collisionsMap.get(key);
                 Double oldValue = ((val == null) ? 1.0 : val);
                 Double newValue = Double.valueOf(stats2.get(i).collisions - stats1.get(i).collisions);
                 newValue = (newValue + oldValue) / 2.0;
-                collisionsMap.put(sw.dpid + "-" + stats1.get(i).portNumber, newValue);
+                collisionsMap.put(key, newValue);
 
-                val = receiveBytesMap.get(sw.dpid + "-" + stats1.get(i).portNumber);
+                val = receiveBytesMap.get(key);
                 oldValue = ((val == null) ? 1.0 : val);
                 newValue = Double.valueOf(stats2.get(i).receiveBytes - stats1.get(i).receiveBytes);
-                val = ((newValue > oldValue) ? newValue : oldValue);
-                receiveBytesMap.put(sw.dpid + "-" + stats1.get(i).portNumber, val);
+                Double averageLinkUsage = averageLinkUsageMap.get(key);
 
+                if (newValue > 1) {
+                    long durationSeconds = interval * iterations;
 
-                val = receiveCRCErrorsMap.get(sw.dpid + "-" + stats1.get(i).portNumber);
-                oldValue = ((val == null) ? 1.0 : val);
-                newValue = Double.valueOf(stats2.get(i).receiveCRCErrors - stats1.get(i).receiveCRCErrors);
-                newValue = (newValue + oldValue) / 2.0;
-                receiveCRCErrorsMap.put(sw.dpid + "-" + stats1.get(i).portNumber, newValue);
-
-
-                val = receiveDroppedMap.get(sw.dpid + "-" + stats1.get(i).portNumber);
-                oldValue = ((val == null) ? 1.0 : val);
-                newValue = Double.valueOf(stats2.get(i).receiveDropped - stats1.get(i).receiveDropped);
-                newValue = (newValue + oldValue) / 2.0;
-                receiveDroppedMap.put(sw.dpid + "-" + stats1.get(i).portNumber, newValue);
-
-
-
-                val = receiveErrorsMap.get(sw.dpid + "-" + stats1.get(i).portNumber);
-                oldValue = ((val == null) ? 1.0 : val);
-                newValue = Double.valueOf(stats2.get(i).receiveErrors - stats1.get(i).receiveErrors);
-                newValue = (newValue + oldValue) / 2.0;
-                receiveErrorsMap.put(sw.dpid + "-" + stats1.get(i).portNumber, newValue);
-
-
-                val = receiveFrameErrorsMap.get(sw.dpid + "-" + stats1.get(i).portNumber);
-                oldValue = ((val == null) ? 1.0 : val);
-                newValue = Double.valueOf(stats2.get(i).receiveFrameErrors - stats1.get(i).receiveFrameErrors);
-                newValue = (newValue + oldValue) / 2.0;
-                receiveErrorsMap.put(sw.dpid + "-" + stats1.get(i).portNumber, newValue);
-
-                val = receiveOverrunErrorsMap.get(sw.dpid + "-" + stats1.get(i).portNumber);
-                oldValue = ((val == null) ? 1.0 : val);
-                newValue = Double.valueOf(stats2.get(i).receiveOverrunErrors - stats1.get(i).receiveOverrunErrors);
-                newValue = (newValue + oldValue) / 2.0;
-                receiveOverrunErrorsMap.put(sw.dpid + "-" + stats1.get(i).portNumber, newValue);
-
-
-
-                val = receivePacketsMap.get(sw.dpid + "-" + stats1.get(i).portNumber);
-                oldValue = ((val == null) ? 1.0 : val);
-                newValue = Double.valueOf(stats2.get(i).receivePackets - stats1.get(i).receivePackets);
-                val = ((newValue > oldValue) ? newValue : oldValue);
-                receivePacketsMap.put(sw.dpid + "-" + stats1.get(i).portNumber, val);
-
-
-
-                val = transmitBytesMap.get(sw.dpid + "-" + stats1.get(i).portNumber);
-                oldValue = ((val == null) ? 1.0 : val);
-                newValue = Double.valueOf(stats2.get(i).transmitBytes - stats1.get(i).transmitBytes);
-                val = ((newValue > oldValue) ? newValue : oldValue);
-                transmitBytesMap.put(sw.dpid + "-" + stats1.get(i).portNumber, val);
-
-
-
-                val = transmitDroppedMap.get(sw.dpid + "-" + stats1.get(i).portNumber);
-                oldValue = ((val == null) ? 1.0 : val);
-                newValue = Double.valueOf(stats2.get(i).transmitDropped - stats1.get(i).transmitDropped);
-                newValue = (newValue + oldValue) / 2.0;
-                transmitDroppedMap.put(sw.dpid + "-" + stats1.get(i).portNumber, newValue);
-
-
-                val = transmitErrorsMap.get(sw.dpid + "-" + stats1.get(i).portNumber);
-                oldValue = ((val == null) ? 1.0 : val);
-                newValue = Double.valueOf(stats2.get(i).transmitErrors - stats1.get(i).transmitErrors);
-                newValue = (newValue + oldValue) / 2.0;
-                transmitErrorsMap.put(sw.dpid + "-" + stats1.get(i).portNumber, newValue);
-
-                val = transmitPacketsMap.get(sw.dpid + "-" + stats1.get(i).portNumber);
-                oldValue = ((val == null) ? 1.0 : val);
-                newValue = Double.valueOf(stats2.get(i).transmitPackets - stats1.get(i).transmitPackets);
-                val = ((newValue > oldValue) ? newValue : oldValue);
-                transmitPacketsMap.put(sw.dpid + "-" + stats1.get(i).portNumber, val);
-
-            }
-        }
-        for (Switch sw : getAllSwitches()) {
-            List<OFlow> flows = getOflow(sw.dpid);
-            for (OFlow f : flows) {
-                if (f != null) {
-                    String key = sw.dpid + "-" + f.match.inputPort;
-                    f.timeStamp = System.currentTimeMillis();
-                    oFlowsMap.put(key, f);
-
-                    Double val = receiveBytesMap.get(key);
-                    double oldValue = (val == null) ? 1.0 : val;
-                    Double newValue = Double.valueOf(f.byteCount / f.durationSeconds * 1.0);
-                    val = ((newValue > oldValue) ? newValue : oldValue);
-                    receiveBytesMap.put(key, val);
-
-                    val = receivePacketsMap.get(key);
-                    oldValue = (val == null) ? 1.0 : val;
-                    newValue = Double.valueOf(f.packetCount / f.durationSeconds * 1.0);
-                    val = ((newValue > oldValue) ? newValue : oldValue);
-                    receivePacketsMap.put(key, val);
-                    Double averageLinkUsage = averageLinkUsageMap.get(key);
                     if (averageLinkUsage == null) {
-                        averageLinkUsageMap.put(key, Double.valueOf(f.durationSeconds));
+                        averageLinkUsageMap.put(key, Double.valueOf(durationSeconds));
                     } else {
                         //$d_{new} = α ∗ d_{old} + (1 - α ) ∗ d_{sample}$ 
                         //with α ∈ [0 , 1] being the weighting factor, d_{sample} 
@@ -251,13 +165,124 @@ public class SDNSweep implements Runnable {
                         //and d_{new} the newly calculated value. In fact, 
                         //this calculation implements a discrete low pass filter
                         double a = 0.5;
-                        averageLinkUsage = a * averageLinkUsage + (1 - a) * f.durationSeconds;
-                        averageLinkUsage = (averageLinkUsage + f.durationSeconds) / 2.0;
+                        averageLinkUsage = a * averageLinkUsage + (1 - a) * durationSeconds;
+                        averageLinkUsage = (averageLinkUsage + durationSeconds) / 2.0;
                         averageLinkUsageMap.put(key, averageLinkUsage);
                     }
                 }
+                val = ((newValue > oldValue) ? newValue : oldValue);
+                receiveBytesMap.put(key, val);
+
+
+                val = receiveCRCErrorsMap.get(key);
+                oldValue = ((val == null) ? 1.0 : val);
+                newValue = Double.valueOf(stats2.get(i).receiveCRCErrors - stats1.get(i).receiveCRCErrors);
+                newValue = (newValue + oldValue) / 2.0;
+                receiveCRCErrorsMap.put(key, newValue);
+
+
+                val = receiveDroppedMap.get(key);
+                oldValue = ((val == null) ? 1.0 : val);
+                newValue = Double.valueOf(stats2.get(i).receiveDropped - stats1.get(i).receiveDropped);
+                newValue = (newValue + oldValue) / 2.0;
+                receiveDroppedMap.put(key, newValue);
+
+
+
+                val = receiveErrorsMap.get(key);
+                oldValue = ((val == null) ? 1.0 : val);
+                newValue = Double.valueOf(stats2.get(i).receiveErrors - stats1.get(i).receiveErrors);
+                newValue = (newValue + oldValue) / 2.0;
+                receiveErrorsMap.put(key, newValue);
+
+
+                val = receiveFrameErrorsMap.get(key);
+                oldValue = ((val == null) ? 1.0 : val);
+                newValue = Double.valueOf(stats2.get(i).receiveFrameErrors - stats1.get(i).receiveFrameErrors);
+                newValue = (newValue + oldValue) / 2.0;
+                receiveErrorsMap.put(key, newValue);
+
+                val = receiveOverrunErrorsMap.get(key);
+                oldValue = ((val == null) ? 1.0 : val);
+                newValue = Double.valueOf(stats2.get(i).receiveOverrunErrors - stats1.get(i).receiveOverrunErrors);
+                newValue = (newValue + oldValue) / 2.0;
+                receiveOverrunErrorsMap.put(key, newValue);
+
+
+
+                val = receivePacketsMap.get(key);
+                oldValue = ((val == null) ? 1.0 : val);
+                newValue = Double.valueOf(stats2.get(i).receivePackets - stats1.get(i).receivePackets);
+                val = ((newValue > oldValue) ? newValue : oldValue);
+                receivePacketsMap.put(key, val);
+
+
+
+                val = transmitBytesMap.get(key);
+                oldValue = ((val == null) ? 1.0 : val);
+                newValue = Double.valueOf(stats2.get(i).transmitBytes - stats1.get(i).transmitBytes);
+                val = ((newValue > oldValue) ? newValue : oldValue);
+                transmitBytesMap.put(key, val);
+
+
+
+                val = transmitDroppedMap.get(key);
+                oldValue = ((val == null) ? 1.0 : val);
+                newValue = Double.valueOf(stats2.get(i).transmitDropped - stats1.get(i).transmitDropped);
+                newValue = (newValue + oldValue) / 2.0;
+                transmitDroppedMap.put(key, newValue);
+
+
+                val = transmitErrorsMap.get(key);
+                oldValue = ((val == null) ? 1.0 : val);
+                newValue = Double.valueOf(stats2.get(i).transmitErrors - stats1.get(i).transmitErrors);
+                newValue = (newValue + oldValue) / 2.0;
+                transmitErrorsMap.put(key, newValue);
+
+                val = transmitPacketsMap.get(key);
+                oldValue = ((val == null) ? 1.0 : val);
+                newValue = Double.valueOf(stats2.get(i).transmitPackets - stats1.get(i).transmitPackets);
+                val = ((newValue > oldValue) ? newValue : oldValue);
+                transmitPacketsMap.put(key, val);
+
             }
         }
+//        for (Switch sw : getAllSwitches()) {
+//            List<OFlow> flows = getOflow(sw.dpid);
+//            for (OFlow f : flows) {
+//                if (f != null) {
+//                    String key = sw.dpid + "-" + f.match.inputPort;
+//                    f.timeStamp = System.currentTimeMillis();
+//                    oFlowsMap.put(key, f);
+//
+//                    Double val = receiveBytesMap.get(key);
+//                    double oldValue = (val == null) ? 1.0 : val;
+//                    Double newValue = Double.valueOf(f.byteCount / f.durationSeconds * 1.0);
+//                    val = ((newValue > oldValue) ? newValue : oldValue);
+//                    receiveBytesMap.put(key, val);
+//
+//                    val = receivePacketsMap.get(key);
+//                    oldValue = (val == null) ? 1.0 : val;
+//                    newValue = Double.valueOf(f.packetCount / f.durationSeconds * 1.0);
+//                    val = ((newValue > oldValue) ? newValue : oldValue);
+//                    receivePacketsMap.put(key, val);
+//                    Double averageLinkUsage = averageLinkUsageMap.get(key);
+//                    if (averageLinkUsage == null) {
+//                        averageLinkUsageMap.put(key, Double.valueOf(f.durationSeconds));
+//                    } else {
+//                        //$d_{new} = α ∗ d_{old} + (1 - α ) ∗ d_{sample}$ 
+//                        //with α ∈ [0 , 1] being the weighting factor, d_{sample} 
+//                        //being the new sample, d_{old} the current metric value 
+//                        //and d_{new} the newly calculated value. In fact, 
+//                        //this calculation implements a discrete low pass filter
+//                        double a = 0.5;
+//                        averageLinkUsage = a * averageLinkUsage + (1 - a) * f.durationSeconds;
+//                        averageLinkUsage = (averageLinkUsage + f.durationSeconds) / 2.0;
+//                        averageLinkUsageMap.put(key, averageLinkUsage);
+//                    }
+//                }
+//            }
+//        }
 
     }
 

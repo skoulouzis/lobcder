@@ -178,13 +178,13 @@ public class SDNControllerClient {
 
         SDNSweep.OFlow f = SDNSweep.getOFlowsMap().get(key);
         double bps = -1;
-        if (f != null) {
-            bps = f.byteCount / f.durationSeconds * 1.0;
-            double tmp = f.packetCount / f.durationSeconds * 1.0;
-            if (tpp <= 1 && tmp > tpp) {
-                ett = tmp * nop;
-            }
-        }
+//        if (f != null) {
+//            bps = f.byteCount / f.durationSeconds * 1.0;
+//            double tmp = f.packetCount / f.durationSeconds * 1.0;
+//            if (tpp <= 1 && tmp > tpp) {
+//                ett = tmp * nop;
+//            }
+//        }
         Double averageLinkUsage = SDNSweep.getAverageLinkUsageMap().get(key);
         if (averageLinkUsage != null) {
             Double factor = 1.0;
