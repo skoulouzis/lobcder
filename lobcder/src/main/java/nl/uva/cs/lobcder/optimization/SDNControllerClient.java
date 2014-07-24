@@ -10,6 +10,7 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import nl.uva.cs.lobcder.catalogue.SDNSweep;
+import nl.uva.cs.lobcder.catalogue.SDNSweep.Port;
 import org.jgrapht.alg.DijkstraShortestPath;
 import org.jgrapht.graph.DefaultWeightedEdge;
 import org.jgrapht.graph.SimpleWeightedGraph;
@@ -42,6 +43,32 @@ public class SDNControllerClient {
         if (graph == null) {
             graph = new SimpleWeightedGraph<>(DefaultWeightedEdge.class);
         }
+        List<SDNSweep.Switch> sw = SDNSweep.getSwitches();
+        for (int i = 0; i < sw.size(); i++) {
+            List<Port> ports = sw.get(i).ports;
+            for (int j = 0; j < ports.size(); j++) {
+                for (int k = 0; k < ports.size(); k++) {
+                    if (ports.get(j).state == 0 && ports.get(k).state == 0 && j != k) {
+                        String vertex1 = sw.get(i).dpid + "-" + ports.get(j).portNumber;
+                        String vertex2 = sw.get(i).dpid + "-" + ports.get(k).portNumber;
+                        Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, "From: {0} to: {1}", new Object[]{vertex1, vertex2});
+                        if (!graph.containsVertex(vertex1)) {
+                            graph.addVertex(vertex1);
+                        }
+                        if (!graph.containsVertex(vertex2)) {
+                            graph.addVertex(vertex2);
+                        }
+                        DefaultWeightedEdge e1;
+                        if (!graph.containsEdge(vertex1, vertex2)) {
+                            e1 = graph.addEdge(vertex1, vertex2);
+                        } else {
+                            e1 = graph.getEdge(vertex1, vertex2);
+                        }
+                        graph.setEdgeWeight(e1, 1);
+                    }
+                }
+            }
+        }
 
         dest = "192.168.100.1";
 
@@ -53,18 +80,21 @@ public class SDNControllerClient {
 //        List<NetworkEntity> destinationEntityArray = getNetworkEntity(dest);
 //        for (SDNSweep.NetworkEntity ne : destinationEntityArray) {
         for (SDNSweep.AttachmentPoint ap : destinationEntityArray.attachmentPoint) {
-            if (!graph.containsVertex(ap.switchDPID)) {
-                graph.addVertex(ap.switchDPID);
+            String vertex = ap.switchDPID + "-" + ap.port;
+            if (!graph.containsVertex(vertex)) {
+                graph.addVertex(vertex);
             }
+
             DefaultWeightedEdge e1;
-            if (!graph.containsEdge(dest, ap.switchDPID)) {
-                e1 = graph.addEdge(dest, ap.switchDPID);
+            if (!graph.containsEdge(dest, vertex)) {
+                e1 = graph.addEdge(dest, vertex);
             } else {
-                e1 = graph.getEdge(dest, ap.switchDPID);
+                e1 = graph.getEdge(dest, vertex);
             }
             //Don't calculate the cost from the destination to the switch. 
             //There is nothing we can do about it so why waste cycles ?
-            graph.setEdgeWeight(e1, 1);
+//            graph.setEdgeWeight(e1, 2);
+            graph.setEdgeWeight(e1, getCost(dest, vertex));
         }
 //        }
 
@@ -76,36 +106,39 @@ public class SDNControllerClient {
                     graph.addVertex(ip);
                 }
                 for (SDNSweep.AttachmentPoint ap : ne.attachmentPoint) {
-                    if (!graph.containsVertex(ap.switchDPID)) {
-                        graph.addVertex(ap.switchDPID);
+                    String vertex = ap.switchDPID + "-" + ap.port;
+                    if (!graph.containsVertex(vertex)) {
+                        graph.addVertex(vertex);
                     }
                     DefaultWeightedEdge e2;
-                    if (!graph.containsEdge(ip, ap.switchDPID)) {
-                        e2 = graph.addEdge(ip, ap.switchDPID);
+                    if (!graph.containsEdge(ip, vertex)) {
+                        e2 = graph.addEdge(ip, vertex);
                     } else {
-                        e2 = graph.getEdge(ip, ap.switchDPID);
+                        e2 = graph.getEdge(ip, vertex);
                     }
-                    graph.setEdgeWeight(e2, getCost(ip, ap.switchDPID, ap.port));
+                    graph.setEdgeWeight(e2, getCost(ip, vertex));
                 }
             }
         }
 
         List<SDNSweep.Link> links = SDNSweep.getSwitchLinks();
         for (SDNSweep.Link l : links) {
-            if (!graph.containsVertex(l.srcSwitch)) {
-                graph.addVertex(l.srcSwitch);
+            String srcVertex = l.srcSwitch + "-" + l.srcPort;
+            if (!graph.containsVertex(srcVertex)) {
+                graph.addVertex(srcVertex);
             }
-            if (!graph.containsVertex(l.dstSwitch)) {
-                graph.addVertex(l.dstSwitch);
+            String dstVertex = l.dstSwitch + "-" + l.dstPort;
+            if (!graph.containsVertex(dstVertex)) {
+                graph.addVertex(dstVertex);
             }
 
             DefaultWeightedEdge e3;
-            if (!graph.containsEdge(l.srcSwitch, l.dstSwitch)) {
-                e3 = graph.addEdge(l.srcSwitch, l.dstSwitch);
+            if (!graph.containsEdge(srcVertex, dstVertex)) {
+                e3 = graph.addEdge(srcVertex, dstVertex);
             } else {
-                e3 = graph.getEdge(l.srcSwitch, l.dstSwitch);
+                e3 = graph.getEdge(srcVertex, dstVertex);
             }
-            graph.setEdgeWeight(e3, getCost(l.srcSwitch, l.dstSwitch, l.srcPort));
+            graph.setEdgeWeight(e3, getCost(srcVertex, dstVertex));
         }
 
         double cost = Double.MAX_VALUE;
@@ -132,7 +165,7 @@ public class SDNControllerClient {
         return shortestPath;
     }
 
-    private double getCost(String v1, String v2, int port) throws InterruptedException, IOException {
+    private double getCost(String v1, String v2) throws InterruptedException, IOException {
 //        String[] agentPort = getsFlowPort(v1, v2);
 //        double tpp = getTimePerPacket(agentPort[0], Integer.valueOf(agentPort[1]));
         String dpi;
@@ -141,10 +174,10 @@ public class SDNControllerClient {
         } else {
             dpi = v2;
         }
-        String key = dpi + "-" + port;
+
         //        SDNSweep.FloodlightStats[] stats = getFloodlightPortStats(dpi, port);
-        Double rpps = SDNSweep.getReceivePacketsMap().get(key);
-        Double tpps = SDNSweep.getTransmitPacketsMap().get(key);
+        Double rpps = SDNSweep.getReceivePacketsMap().get(dpi);
+        Double tpps = SDNSweep.getTransmitPacketsMap().get(dpi);
 
 //        double rrrt = (interval / rpps);
 //        double trrt = (interval / tpps);
@@ -153,8 +186,8 @@ public class SDNControllerClient {
         if (tpp <= 0) {
             tpp = 1;
         }
-        Double rbytes = SDNSweep.getReceiveBytesMap().get(key);
-        Double tbytes = SDNSweep.getTransmitBytesMap().get(key);
+        Double rbytes = SDNSweep.getReceiveBytesMap().get(dpi);
+        Double tbytes = SDNSweep.getTransmitBytesMap().get(dpi);
         if (rbytes <= 0) {
             rbytes = Double.valueOf(1);
         }
@@ -176,8 +209,8 @@ public class SDNControllerClient {
         double nop = mtu / 1024.0;
         double ett = tpp * nop;
 
-        SDNSweep.OFlow f = SDNSweep.getOFlowsMap().get(key);
-        double bps = -1;
+//        SDNSweep.OFlow f = SDNSweep.getOFlowsMap().get(dpi);
+//        double bps = -1;
 //        if (f != null) {
 //            bps = f.byteCount / f.durationSeconds * 1.0;
 //            double tmp = f.packetCount / f.durationSeconds * 1.0;
@@ -185,7 +218,7 @@ public class SDNControllerClient {
 //                ett = tmp * nop;
 //            }
 //        }
-        Double averageLinkUsage = SDNSweep.getAverageLinkUsageMap().get(key);
+        Double averageLinkUsage = SDNSweep.getAverageLinkUsageMap().get(dpi);
         if (averageLinkUsage != null) {
             Double factor = 1.0;
             //For each sec of usage how much extra time we get ? 
@@ -194,8 +227,14 @@ public class SDNControllerClient {
             ett += averageLinkUsage * factor;
         }
 
-        Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, "From: {0} to: {1} tt: {2} current bps: {3}", new Object[]{v1, v2, ett, bps});
+        Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, "From: {0} to: {1} tt: {2}", new Object[]{v1, v2, ett});
         return ett;
+    }
+
+    public void pushFlow(List<DefaultWeightedEdge> shortestPath) {
+        for (DefaultWeightedEdge e : shortestPath) {
+            Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, "Puch flow throught: " + e);
+        }
     }
 //    private SDNSweep.FloodlightStats[] getFloodlightPortStats(String dpi, int port) throws IOException, InterruptedException {
 //        SDNSweep.FloodlightStats stats1 = null;

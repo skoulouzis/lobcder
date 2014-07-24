@@ -58,7 +58,8 @@ public class SDNSweep implements Runnable {
     private static Map<String, NetworkEntity> networkEntitesCache;
     @Getter
     private static List<Link> switchLinks;
-    private List<Switch> switches;
+    @Getter
+    private static List<Switch> switches;
     private long interval = 800;
     @Getter
     private static Map<String, Double> statsMap;
@@ -108,8 +109,6 @@ public class SDNSweep implements Runnable {
         getAllNetworkEntites();
         getAllSwitchLinks();
         getAllSwitches();
-
-
     }
 
     public static NetworkEntity getNetworkEntity(String dest) {

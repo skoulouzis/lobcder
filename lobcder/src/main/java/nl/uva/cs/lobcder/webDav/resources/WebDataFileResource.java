@@ -642,6 +642,7 @@ public class WebDataFileResource extends WebDataResource implements
             sdnClient = new SDNControllerClient(uri);
         }
         List<DefaultWeightedEdge> shortestPath = sdnClient.getShortestPath(reqSource, workersMap.keySet());
+        sdnClient.pushFlow(shortestPath);
         DefaultWeightedEdge e = shortestPath.get(0);
         String[] workerSwitch = e.toString().split(" : ");
         String workerIP = workerSwitch[0].substring(1);
