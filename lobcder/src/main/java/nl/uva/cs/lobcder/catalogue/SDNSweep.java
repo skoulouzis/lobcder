@@ -16,6 +16,7 @@
 package nl.uva.cs.lobcder.catalogue;
 
 import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.GenericType;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.config.ClientConfig;
@@ -30,6 +31,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.sql.DataSource;
+import javax.ws.rs.core.MediaType;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
@@ -103,12 +105,16 @@ public class SDNSweep implements Runnable {
         ClientConfig clientConfig = new DefaultClientConfig();
         clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
         client = Client.create(clientConfig);
+
+
     }
 
     private void init() {
         getAllNetworkEntites();
         getAllSwitchLinks();
         getAllSwitches();
+
+        pushFlowIntoOnePort();
     }
 
     public static NetworkEntity getNetworkEntity(String dest) {
@@ -345,6 +351,18 @@ public class SDNSweep implements Runnable {
         return networkEntitesCache.values();
     }
 
+    private void pushFlows(List<String> rules) {
+        WebResource webResource = client.resource(uri + ":" + floodlightPort);
+        WebResource res = null;
+        //  /wm/staticflowentrypusher/json 
+        res = webResource.path("wm").path("staticflowentrypusher").path("json");
+        for (String r : rules) {
+            ClientResponse response = webResource.post(ClientResponse.class, r);
+            Logger.getLogger(SDNSweep.class.getName()).log(Level.INFO, response.toString());
+            
+        }
+    }
+
     private List<Link> getAllSwitchLinks() {
         if (switchLinks == null) {
             switchLinks = new ArrayList<>();
@@ -366,6 +384,57 @@ public class SDNSweep implements Runnable {
             });
         }
         return switches;
+    }
+
+    private void pushFlowIntoOnePort() {
+        String s1 = getAllSwitches().get(0).dpid;
+        String s2 = getAllSwitches().get(1).dpid;
+        int s1ToS2Port = getAllSwitchLinks().get(0).srcPort;
+        int s2ToS1Port = getAllSwitchLinks().get(0).dstPort;
+        getAllNetworkEntites();
+
+        String[] s1Hosts = new String[]{"192.168.100.1", "192.168.100.4"};
+        String[] s2Hosts = new String[]{"192.168.100.2", "192.168.100.3", "192.168.100.5"};
+
+        List<String> rules = new ArrayList<>();
+        //s1 to s2
+        for (String h1 : s1Hosts) {
+            for (String h2 : s2Hosts) {
+                String rule1To2 = "{\"switch\": \"" + s1 + "\", \"name\":\"" + h1 + "To" + h2 + "\", \"cookie\":\"0\", \"priority\":\"32768\", "
+                        + "\"src-ip\":\"" + h1 + "\", \"ingress-port\":\"" + networkEntitesCache.get(h1).attachmentPoint.get(0).port + "\", "
+                        + "\"dst-ip\": \"" + h2 + "\", \"active\":\"true\",\"ether-type\":\"0x0800\", "
+                        + "\"actions\":\"output=" + s1ToS2Port + "\"}";
+                rules.add(rule1To2);
+//                Logger.getLogger(SDNSweep.class.getName()).log(Level.INFO, rule1To2);
+
+            }
+        }
+
+        //s2 to s1
+        for (String h1 : s2Hosts) {
+            for (String h2 : s1Hosts) {
+                String rule2To1 = "{\"switch\": \"" + s2 + "\", \"name\":\"" + h1 + "To" + h2 + "\", \"cookie\":\"0\", \"priority\":\"32768\", "
+                        + "\"src-ip\":\"" + h1 + "\", \"ingress-port\":\"" + networkEntitesCache.get(h1).attachmentPoint.get(0).port + "\", "
+                        + "\"dst-ip\": \"" + h2 + "\", \"active\":\"true\",\"ether-type\":\"0x0800\", "
+                        + "\"actions\":\"output=" + s2ToS1Port + "\"}";
+                rules.add(rule2To1);
+//                Logger.getLogger(SDNSweep.class.getName()).log(Level.INFO, rule2To1);
+            }
+            pushFlows(rules);
+        }
+//        String rule1To2 = "{\"switch\": \"" + s1 + "\", \"name\":\"1-2\", \"cookie\":\"0\", \"priority\":\"32768\", "
+//                + "\"src-ip\":\"192.168.100.1\", \"ingress-port\":\"" + portOf_1 + "\", "
+//                + "\"dst-ip\": \"192.168.100.2\", \"active\":\"true\",\"ether-type\":\"0x0800\", "
+//                + "\"actions\":\"output=" + s1ToS2Port + "\"}";
+//        String rule1To3 = "{\"switch\": \"" + s1 + "\", \"name\":\"1-3\", \"cookie\":\"0\", \"priority\":\"32768\", "
+//                + "\"src-ip\":\"192.168.100.1\", \"ingress-port\":\"" + portOf_1 + "\", "
+//                + "\"dst-ip\": \"192.168.100.3\", \"active\":\"true\",\"ether-type\":\"0x0800\", "
+//                + "\"actions\":\"output=" + s1ToS2Port + "\"}";
+//        String rule1To5 = "{\"switch\": \"" + s1 + "\", \"name\":\"1-5\", \"cookie\":\"0\", \"priority\":\"32768\", "
+//                + "\"src-ip\":\"192.168.100.1\", \"ingress-port\":\"" + portOf_1 + "\", "
+//                + "\"dst-ip\": \"192.168.100.5\", \"active\":\"true\",\"ether-type\":\"0x0800\", "
+//                + "\"actions\":\"output=" + s1ToS2Port + "\"}";
+
     }
 
     @XmlRootElement
