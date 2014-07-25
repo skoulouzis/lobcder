@@ -152,7 +152,7 @@ public class SDNSweep implements Runnable {
                 newValue = Double.valueOf(stats2.get(i).receiveBytes - stats1.get(i).receiveBytes);
                 Double averageLinkUsage = averageLinkUsageMap.get(key);
 
-                if (newValue > 1) {
+                if ((newValue / interval) > 200) {
                     long durationSeconds = interval * iterations;
 
                     if (averageLinkUsage == null) {
@@ -165,12 +165,36 @@ public class SDNSweep implements Runnable {
                         //this calculation implements a discrete low pass filter
                         double a = 0.5;
                         averageLinkUsage = a * averageLinkUsage + (1 - a) * durationSeconds;
-                        averageLinkUsage = (averageLinkUsage + durationSeconds) / 2.0;
+//                        averageLinkUsage = (averageLinkUsage + durationSeconds) / 2.0;
                         averageLinkUsageMap.put(key, averageLinkUsage);
                     }
                 }
                 val = ((newValue > oldValue) ? newValue : oldValue);
                 receiveBytesMap.put(key, val);
+
+
+                val = transmitBytesMap.get(key);
+                oldValue = ((val == null) ? 1.0 : val);
+                newValue = Double.valueOf(stats2.get(i).transmitBytes - stats1.get(i).transmitBytes);
+                if ((newValue / interval) > 200) {
+                    long durationSeconds = interval * iterations;
+                    if (averageLinkUsage == null) {
+                        averageLinkUsageMap.put(key, Double.valueOf(durationSeconds));
+                    } else {
+                        //$d_{new} = α ∗ d_{old} + (1 - α ) ∗ d_{sample}$ 
+                        //with α ∈ [0 , 1] being the weighting factor, d_{sample} 
+                        //being the new sample, d_{old} the current metric value 
+                        //and d_{new} the newly calculated value. In fact, 
+                        //this calculation implements a discrete low pass filter
+                        double a = 0.5;
+                        averageLinkUsage = a * averageLinkUsage + (1 - a) * durationSeconds;
+//                        averageLinkUsage = (averageLinkUsage + durationSeconds) / 2.0;
+                        averageLinkUsageMap.put(key, averageLinkUsage);
+                    }
+                }
+
+                val = ((newValue > oldValue) ? newValue : oldValue);
+                transmitBytesMap.put(key, val);
 
 
                 val = receiveCRCErrorsMap.get(key);
@@ -214,31 +238,10 @@ public class SDNSweep implements Runnable {
                 newValue = Double.valueOf(stats2.get(i).receivePackets - stats1.get(i).receivePackets);
                 val = ((newValue > oldValue) ? newValue : oldValue);
                 receivePacketsMap.put(key, val);
-                
-                
-                
-                val = transmitBytesMap.get(key);
-                oldValue = ((val == null) ? 1.0 : val);
-                newValue = Double.valueOf(stats2.get(i).transmitBytes - stats1.get(i).transmitBytes);
-                if (newValue > 1 ) {
-                    long durationSeconds = interval * iterations;
-                    if (averageLinkUsage == null) {
-                        averageLinkUsageMap.put(key, Double.valueOf(durationSeconds));
-                    } else {
-                        //$d_{new} = α ∗ d_{old} + (1 - α ) ∗ d_{sample}$ 
-                        //with α ∈ [0 , 1] being the weighting factor, d_{sample} 
-                        //being the new sample, d_{old} the current metric value 
-                        //and d_{new} the newly calculated value. In fact, 
-                        //this calculation implements a discrete low pass filter
-                        double a = 0.5;
-                        averageLinkUsage = a * averageLinkUsage + (1 - a) * durationSeconds;
-                        averageLinkUsage = (averageLinkUsage + durationSeconds) / 2.0;
-                        averageLinkUsageMap.put(key, averageLinkUsage);
-                    }
-                }
 
-                val = ((newValue > oldValue) ? newValue : oldValue);
-                transmitBytesMap.put(key, val);
+
+
+
 
 
 
