@@ -98,6 +98,7 @@ public class SDNSweep implements Runnable {
     @Getter
     private static Map<String, Double> averageLinkUsageMap = new HashMap<>();
     private long iterations = 1;
+    private static boolean flowPushed = true;
 
     public SDNSweep(DataSource datasource) throws IOException {
         this.datasource = datasource;
@@ -114,10 +115,12 @@ public class SDNSweep implements Runnable {
         getAllSwitchLinks();
         getAllSwitches();
 
-        pushFlowIntoOnePort();
+        if (!flowPushed) {
+            pushFlowIntoOnePort();
+        }
     }
 
-    public static NetworkEntity getNetworkEntity(String dest) {
+    public static NetworkEntity getNetworkEntity(String dest) throws IOException {
         return networkEntitesCache.get(dest);
     }
 
@@ -244,13 +247,8 @@ public class SDNSweep implements Runnable {
                 newValue = Double.valueOf(stats2.get(i).receivePackets - stats1.get(i).receivePackets);
                 val = ((newValue > oldValue) ? newValue : oldValue);
                 receivePacketsMap.put(key, val);
-
-
-
-
-
-
-
+                
+                
                 val = transmitDroppedMap.get(key);
                 oldValue = ((val == null) ? 1.0 : val);
                 newValue = Double.valueOf(stats2.get(i).transmitDropped - stats1.get(i).transmitDropped);
@@ -334,7 +332,7 @@ public class SDNSweep implements Runnable {
         if (networkEntitesCache == null) {
             networkEntitesCache = new HashMap<>();
         }
-        if (networkEntitesCache.isEmpty()) {
+        if (networkEntitesCache.isEmpty() || iterations % 5 == 0) {
             WebResource webResource = client.resource(uri + ":" + floodlightPort);
             WebResource res = null;
             // http://145.100.133.131:8080/wm/device/?ipv4=192.168.100.1
@@ -351,15 +349,11 @@ public class SDNSweep implements Runnable {
         return networkEntitesCache.values();
     }
 
-    private void pushFlows(List<String> rules) {
-        WebResource webResource = client.resource(uri + ":" + floodlightPort);
-        WebResource res = null;
-        //  /wm/staticflowentrypusher/json 
-        res = webResource.path("wm").path("staticflowentrypusher").path("json");
+    public void pushFlows(List<String> rules) {
+        WebResource webResource = client.resource(uri + ":" + floodlightPort).path("wm").path("staticflowentrypusher").path("json");
         for (String r : rules) {
             ClientResponse response = webResource.post(ClientResponse.class, r);
             Logger.getLogger(SDNSweep.class.getName()).log(Level.INFO, response.toString());
-            
         }
     }
 
@@ -367,7 +361,7 @@ public class SDNSweep implements Runnable {
         if (switchLinks == null) {
             switchLinks = new ArrayList<>();
         }
-        if (switchLinks.isEmpty()) {
+        if (switchLinks.isEmpty() || iterations % 5 == 0) {
             WebResource webResource = client.resource(uri + ":" + floodlightPort);
             WebResource res = webResource.path("wm").path("topology").path("links").path("json");
             switchLinks = res.get(new GenericType<List<Link>>() {
@@ -387,54 +381,63 @@ public class SDNSweep implements Runnable {
     }
 
     private void pushFlowIntoOnePort() {
+
         String s1 = getAllSwitches().get(0).dpid;
         String s2 = getAllSwitches().get(1).dpid;
-        int s1ToS2Port = getAllSwitchLinks().get(0).srcPort;
-        int s2ToS1Port = getAllSwitchLinks().get(0).dstPort;
-        getAllNetworkEntites();
+        int s1ToS2Port = 0;
+        int s2ToS1Port = 0;
+        for (Link l : getAllSwitchLinks()) {
+            if (l.srcSwitch.equals(s1)) {
+                s1ToS2Port = l.srcPort;
+                s2ToS1Port = l.dstPort;
+                break;
+            } else if (l.srcSwitch.equals(s2)) {
+                s1ToS2Port = l.dstPort;
+                s2ToS1Port = l.srcPort;
+                break;
+            }
+        }
 
-        String[] s1Hosts = new String[]{"192.168.100.1", "192.168.100.4"};
-        String[] s2Hosts = new String[]{"192.168.100.2", "192.168.100.3", "192.168.100.5"};
+        List<String> s1Hosts = new ArrayList<>();
+        List<String> s2Hosts = new ArrayList<>();
+
+        for (NetworkEntity ne : getAllNetworkEntites()) {
+            if (ne.attachmentPoint.get(0).switchDPID.equals(s1)) {
+                s1Hosts.add(ne.ipv4.get(0));
+            } else if (ne.attachmentPoint.get(0).switchDPID.equals(s2)) {
+                s2Hosts.add(ne.ipv4.get(0));
+            }
+        }
+
+
 
         List<String> rules = new ArrayList<>();
         //s1 to s2
         for (String h1 : s1Hosts) {
             for (String h2 : s2Hosts) {
-                String rule1To2 = "{\"switch\": \"" + s1 + "\", \"name\":\"" + h1 + "To" + h2 + "\", \"cookie\":\"0\", \"priority\":\"32768\", "
+                String rule1To2 = "{\"switch\": \"" + s1 + "\", \"name\":\"" + h1 + "To" + h2 + "\", \"cookie\":\"0\", \"priority\":\"0\", "
                         + "\"src-ip\":\"" + h1 + "\", \"ingress-port\":\"" + networkEntitesCache.get(h1).attachmentPoint.get(0).port + "\", "
                         + "\"dst-ip\": \"" + h2 + "\", \"active\":\"true\",\"ether-type\":\"0x0800\", "
                         + "\"actions\":\"output=" + s1ToS2Port + "\"}";
                 rules.add(rule1To2);
-//                Logger.getLogger(SDNSweep.class.getName()).log(Level.INFO, rule1To2);
-
+                Logger.getLogger(SDNSweep.class.getName()).log(Level.INFO, rule1To2);
             }
         }
 
         //s2 to s1
         for (String h1 : s2Hosts) {
             for (String h2 : s1Hosts) {
-                String rule2To1 = "{\"switch\": \"" + s2 + "\", \"name\":\"" + h1 + "To" + h2 + "\", \"cookie\":\"0\", \"priority\":\"32768\", "
+                String rule2To1 = "{\"switch\": \"" + s2 + "\", \"name\":\"" + h1 + "To" + h2 + "\", \"cookie\":\"0\", \"priority\":\"0\", "
                         + "\"src-ip\":\"" + h1 + "\", \"ingress-port\":\"" + networkEntitesCache.get(h1).attachmentPoint.get(0).port + "\", "
                         + "\"dst-ip\": \"" + h2 + "\", \"active\":\"true\",\"ether-type\":\"0x0800\", "
                         + "\"actions\":\"output=" + s2ToS1Port + "\"}";
-                rules.add(rule2To1);
-//                Logger.getLogger(SDNSweep.class.getName()).log(Level.INFO, rule2To1);
-            }
-            pushFlows(rules);
-        }
-//        String rule1To2 = "{\"switch\": \"" + s1 + "\", \"name\":\"1-2\", \"cookie\":\"0\", \"priority\":\"32768\", "
-//                + "\"src-ip\":\"192.168.100.1\", \"ingress-port\":\"" + portOf_1 + "\", "
-//                + "\"dst-ip\": \"192.168.100.2\", \"active\":\"true\",\"ether-type\":\"0x0800\", "
-//                + "\"actions\":\"output=" + s1ToS2Port + "\"}";
-//        String rule1To3 = "{\"switch\": \"" + s1 + "\", \"name\":\"1-3\", \"cookie\":\"0\", \"priority\":\"32768\", "
-//                + "\"src-ip\":\"192.168.100.1\", \"ingress-port\":\"" + portOf_1 + "\", "
-//                + "\"dst-ip\": \"192.168.100.3\", \"active\":\"true\",\"ether-type\":\"0x0800\", "
-//                + "\"actions\":\"output=" + s1ToS2Port + "\"}";
-//        String rule1To5 = "{\"switch\": \"" + s1 + "\", \"name\":\"1-5\", \"cookie\":\"0\", \"priority\":\"32768\", "
-//                + "\"src-ip\":\"192.168.100.1\", \"ingress-port\":\"" + portOf_1 + "\", "
-//                + "\"dst-ip\": \"192.168.100.5\", \"active\":\"true\",\"ether-type\":\"0x0800\", "
-//                + "\"actions\":\"output=" + s1ToS2Port + "\"}";
 
+                rules.add(rule2To1);
+                Logger.getLogger(SDNSweep.class.getName()).log(Level.INFO, rule2To1);
+            }
+        }
+        pushFlows(rules);
+        flowPushed = true;
     }
 
     @XmlRootElement
