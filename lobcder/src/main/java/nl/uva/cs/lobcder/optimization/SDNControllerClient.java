@@ -71,7 +71,7 @@ public class SDNControllerClient {
             }
         }
 
-        dest = "192.168.100.1";
+//        dest = "192.168.100.1";
 
         if (!graph.containsVertex(dest)) {
             graph.addVertex(dest);
