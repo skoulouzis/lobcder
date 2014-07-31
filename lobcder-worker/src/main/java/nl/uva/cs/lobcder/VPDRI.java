@@ -60,7 +60,7 @@ public class VPDRI implements PDRI {
 //    private static final Map<String, GridProxy> proxyCache = new HashMap<>();
     private boolean destroyCert;
     private final int bufferSize;
-    private final boolean qosCopy;
+//    private final boolean qosCopy;
     private final double lim;
     private int warnings;
     private double progressThresshold;
@@ -107,7 +107,7 @@ public class VPDRI implements PDRI {
             }
             initVFS();
             bufferSize = Util.getBufferSize();
-            qosCopy = Util.doQosCopy();
+//            qosCopy = Util.doQosCopy();
             lim = Util.getRateOfChangeLim();
             warnings = Util.getNumOfWarnings();
             progressThresshold = Util.getProgressThresshold();

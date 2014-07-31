@@ -387,7 +387,7 @@ public final class WorkerServlet extends HttpServlet {
                     }
 
                     // Copy full range.
-                    copy(pdri, output, r.start, r.length);
+                    copy(pdri, output, r.start, r.length, request);
                 }
 
             } else if (ranges.size() == 1) {
@@ -401,7 +401,7 @@ public final class WorkerServlet extends HttpServlet {
 
                 if (content) {
                     // Copy single part range.
-                    copy(pdri, output, r.start, r.length);
+                    copy(pdri, output, r.start, r.length, request);
                 }
 
             } else {
@@ -423,7 +423,7 @@ public final class WorkerServlet extends HttpServlet {
                         sos.println("Content-Range: bytes " + r.start + "-" + r.end + "/" + r.total);
 
                         // Copy single part range of multi part range.
-                        copy(pdri, output, r.start, r.length);
+                        copy(pdri, output, r.start, r.length, request);
                     }
 
                     // End with multipart boundary.
@@ -533,8 +533,8 @@ public final class WorkerServlet extends HttpServlet {
      * @param length Length of the byte range.
      * @throws IOException If something fails at I/O level.
      */
-    private void copy(PDRI input, OutputStream output, long start, long length)
-            throws IOException, VlException {
+    private void copy(PDRI input, OutputStream output, long start, long length, HttpServletRequest request)
+            throws IOException, VlException, JAXBException {
         try {
             if (input.getLength() == length) {
                 // Write full range.
@@ -548,7 +548,7 @@ public final class WorkerServlet extends HttpServlet {
                     }
                     cBuff.startTransfer(new Long(-1));
                 } else {
-                    qoSCopy(buffer, output, length);
+                    qoSCopy(buffer, output, length, request);
                 }
             } else {
                 input.copyRange(output, start, length);
@@ -558,7 +558,7 @@ public final class WorkerServlet extends HttpServlet {
         }
     }
 
-    private void qoSCopy(byte[] buffer, OutputStream output, long size) throws IOException {
+    private void qoSCopy(byte[] buffer, OutputStream output, long size, HttpServletRequest request) throws IOException, JAXBException {
         int read;
         long total = 0;
         double speed;
@@ -585,6 +585,7 @@ public final class WorkerServlet extends HttpServlet {
                 if (rateOfChange < lim) {
                     count++;
                     Logger.getLogger(WorkerServlet.class.getName()).log(Level.WARNING, "We will not tolarate this !!!! Next time line is off");
+                    optimizeFlow(request);
                     //This works with export ec=18; while [ $ec -eq 18 ]; do curl -O -C - -L --request GET -u user:pass http://localhost:8080/lobcder/dav/large_file; export ec=$?; done
                     if (count >= warnings) {
                         Logger.getLogger(WorkerServlet.class.getName()).log(Level.WARNING, "We will not tolarate this !!!! Find a new worker. rateOfChange: {0}", rateOfChange);
@@ -826,6 +827,24 @@ public final class WorkerServlet extends HttpServlet {
                 .type(MediaType.APPLICATION_XML).put(ClientResponse.class, stringStats);
     }
 
+    private void optimizeFlow(HttpServletRequest request) throws JAXBException {
+        Endpoints endpoints = new Endpoints();
+        endpoints.destination = request.getRemoteAddr();
+        endpoints.source = request.getLocalAddr();
+
+        JAXBContext context = JAXBContext.newInstance(Endpoints.class);
+        Marshaller m = context.createMarshaller();
+        m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+        OutputStream out = new ByteArrayOutputStream();
+        m.marshal(endpoints, out);
+
+        WebResource webResource = restClient.resource(restURL);
+        String stringStats = String.valueOf(out);
+
+        ClientResponse response = webResource.path("sdn").path("optimizeFlow")
+                .type(MediaType.APPLICATION_XML).put(ClientResponse.class, stringStats);
+    }
+
     @XmlRootElement
     public static class LogicalDataWrapped {
 
@@ -886,6 +905,15 @@ public final class WorkerServlet extends HttpServlet {
         Long size;
         @XmlElement(name = "speed")
         Double speed;
+    }
+
+    @XmlRootElement
+    public static class Endpoints {
+
+        @XmlElement(name = "source")
+        String source;
+        @XmlElement(name = "destination")
+        String destination;
     }
 
     // Inner classes ------------------------------------------------------------------------------
