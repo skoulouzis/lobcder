@@ -562,33 +562,35 @@ public final class WorkerServlet extends HttpServlet {
         int read;
         long total = 0;
         double speed;
-        double rateOfChange = 0;
-//        double speedPrev = 0;
         long startTime = System.currentTimeMillis();
         int count = 0;
         String d = "";
         double maxSpeed = -1;
         double thresshold = 100.0 * Math.exp(coefficient * (size / (1024.0 * 1024.0)));
+        double averageSpeed = -1;
         while ((read = in.read(buffer)) > 0) {
             output.write(buffer, 0, read);
             total += read;
             double progress = (100.0 * total) / size;
             if (progress >= thresshold && Math.round(progress) % progressThresshold == 0) {
                 long elapsed = System.currentTimeMillis() - startTime;
+                double a = 0.5;
                 speed = (total / elapsed);
+                if (averageSpeed <= 0) {
+                    averageSpeed = speed;
+                }
+                averageSpeed = a * averageSpeed + (1 - a) * speed;
                 if (speed >= maxSpeed) {
                     maxSpeed = speed;
                 }
-                rateOfChange = (100.0 * speed) / maxSpeed;
-//                speedPrev = speed;
-                d += "progressThresshold: " + thresshold + " speed: " + speed + " rateOfChange: " + rateOfChange + " speedPrev: " + 0 + " progress: " + progress + " maxSpeed: " + maxSpeed + "\n";
-                if (rateOfChange < lim) {
+                d += "progressThresshold: " + thresshold + " speed: " + speed + " averageSpeed: " + averageSpeed +" progress: " + progress + " maxSpeed: " + maxSpeed + "\n";
+                if (averageSpeed < (maxSpeed / 10.0)) {
                     count++;
                     Logger.getLogger(WorkerServlet.class.getName()).log(Level.WARNING, "We will not tolarate this !!!! Next time line is off");
                     optimizeFlow(request);
                     //This works with export ec=18; while [ $ec -eq 18 ]; do curl -O -C - -L --request GET -u user:pass http://localhost:8080/lobcder/dav/large_file; export ec=$?; done
                     if (count >= warnings) {
-                        Logger.getLogger(WorkerServlet.class.getName()).log(Level.WARNING, "We will not tolarate this !!!! Find a new worker. rateOfChange: {0}", rateOfChange);
+                        Logger.getLogger(WorkerServlet.class.getName()).log(Level.WARNING, "We will not tolarate this !!!! Find a new worker. rateOfChange: {0}", averageSpeed);
                         break;
                     }
                 }
