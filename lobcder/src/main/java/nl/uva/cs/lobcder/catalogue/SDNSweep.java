@@ -98,7 +98,7 @@ public class SDNSweep implements Runnable {
     @Getter
     private static Map<String, Double> averageLinkUsageMap = new HashMap<>();
     private long iterations = 1;
-    private static boolean flowPushed = true;
+    private static boolean flowPushed = false;
 
     public SDNSweep(DataSource datasource) throws IOException {
         this.datasource = datasource;
