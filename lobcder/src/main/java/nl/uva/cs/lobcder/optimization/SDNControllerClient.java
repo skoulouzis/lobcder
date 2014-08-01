@@ -236,64 +236,80 @@ public class SDNControllerClient {
 
         Thread thread = new Thread() {
             public void run() {
-                DefaultWeightedEdge e = shortestPath.get(0);
-                String pair = e.toString().substring(1, e.toString().length() - 1);
-                String[] workerSwitch = pair.toString().split(" : ");
-                String srcIP = workerSwitch[0];
-                String srcSwitchAndPort = workerSwitch[1];
-                String srcSwitch = srcSwitchAndPort.split("-")[0];
-                String srcIngressPort = srcSwitchAndPort.split("-")[1];
-                String srcOutput;
-
-                e = shortestPath.get(1);
-                pair = e.toString().substring(1, e.toString().length() - 1);
-                workerSwitch = pair.split(" : ");
-                if (workerSwitch[0].equals(srcSwitch + "-" + srcIngressPort)) {
-                    srcOutput = workerSwitch[1].split("-")[1];
-                } else {
-                    srcOutput = workerSwitch[0].split("-")[1];
-                }
-
-                e = shortestPath.get(shortestPath.size() - 1);
-                pair = e.toString().substring(1, e.toString().length() - 1);
-                workerSwitch = pair.toString().split(" : ");
-                String dstIP = workerSwitch[0];
-                String dstSwitchAndPort = workerSwitch[1];
-                String dstSwitch = dstSwitchAndPort.split("-")[0];
-                String dstOutput = dstSwitchAndPort.split("-")[1];
-
-
-                e = shortestPath.get(shortestPath.size() - 2);
-                pair = e.toString().substring(1, e.toString().length() - 1);
-                workerSwitch = pair.toString().split(" : ");
-                String node1 = workerSwitch[0];
-                String node2 = workerSwitch[1];
-                String dstIngressPort = "";
-                if (node1.equals(dstSwitch + "-" + dstOutput)) {
-                    dstIngressPort = node2.split("-")[1];
-                } else {
-                    dstIngressPort = node1.split("-")[1];
-                }
-
-
-
-                String rulesrcToSw = "{\"switch\": \"" + srcSwitch + "\", \"name\":\"tmp\", \"cookie\":\"0\", \"priority\":\"0\", "
-                        + "\"src-ip\":\"" + srcIP + "\", \"ingress-port\":\"" + srcIngressPort + "\", "
-                        + "\"dst-ip\": \"" + dstIP + "\", \"active\":\"true\",\"ether-type\":\"0x0800\", "
-                        + "\"actions\":\"output=" + srcOutput + "\"}";
-
-
-                String ruleSwTodst = "{\"switch\": \"" + dstSwitch + "\", \"name\":\"tmp\", \"cookie\":\"0\", \"priority\":\"0\", "
-                        + "\"src-ip\":\"" + srcIP + "\", \"ingress-port\":\"" + dstIngressPort + "\", "
-                        + "\"dst-ip\": \"" + dstIP + "\", \"active\":\"true\",\"ether-type\":\"0x0800\", "
-                        + "\"actions\":\"output=" + dstOutput + "\"}";
-
-
-                List<String> rules = new ArrayList<>();
-                rules.add(ruleSwTodst);
-                rules.add(rulesrcToSw);
                 try {
-                    new SDNSweep(null).pushFlows(rules);
+                    DefaultWeightedEdge e = shortestPath.get(0);
+                    String pair = e.toString().substring(1, e.toString().length() - 1);
+                    String[] workerSwitch = pair.toString().split(" : ");
+                    String srcIP = workerSwitch[0];
+                    String srcMac = SDNSweep.getNetworkEntity(srcIP).mac.get(0);
+                    String srcSwitchAndPort = workerSwitch[1];
+                    String srcSwitch = srcSwitchAndPort.split("-")[0];
+                    String srcIngressPort = String.valueOf(SDNSweep.getNetworkEntity(srcIP).attachmentPoint.get(0).port);
+                    String srcOutput;
+
+                    e = shortestPath.get(1);
+                    pair = e.toString().substring(1, e.toString().length() - 1);
+                    workerSwitch = pair.split(" : ");
+                    if (workerSwitch[0].equals(srcSwitch + "-" + srcIngressPort)) {
+                        srcOutput = workerSwitch[1].split("-")[1];
+                    } else {
+                        srcOutput = workerSwitch[0].split("-")[1];
+                    }
+
+                    e = shortestPath.get(shortestPath.size() - 1);
+                    pair = e.toString().substring(1, e.toString().length() - 1);
+                    workerSwitch = pair.toString().split(" : ");
+                    String dstIP = workerSwitch[0];
+                    String dstMac = SDNSweep.getNetworkEntity(dstIP).mac.get(0);
+                    String dstSwitchAndPort = workerSwitch[1];
+                    String dstSwitch = dstSwitchAndPort.split("-")[0];
+                    String dstOutput = String.valueOf(SDNSweep.getNetworkEntity(dstIP).attachmentPoint.get(0).port);
+
+
+                    e = shortestPath.get(shortestPath.size() - 2);
+                    pair = e.toString().substring(1, e.toString().length() - 1);
+                    workerSwitch = pair.toString().split(" : ");
+                    String node1 = workerSwitch[0];
+                    String node2 = workerSwitch[1];
+                    String dstIngressPort = "";
+                    if (node1.equals(dstSwitch + "-" + dstOutput)) {
+                        dstIngressPort = node2.split("-")[1];
+                    } else {
+                        dstIngressPort = node1.split("-")[1];
+                    }
+
+
+
+//                    String rulesrcToSw = "{\"switch\": \"" + srcSwitch + "\", \"name\":\"tmp\", \"cookie\":\"0\", \"priority\":\"0\", "
+//                            + "\"src-ip\":\"" + srcIP + "\", \"ingress-port\":\"" + srcIngressPort + "\", "
+//                            + "\"dst-ip\": \"" + dstIP + "\", \"active\":\"true\",\"ether-type\":\"0x0800\", "
+//                            + "\"actions\":\"output=" + srcOutput + "\"}";
+//
+//
+//                    String ruleSwTodst = "{\"switch\": \"" + dstSwitch + "\", \"name\":\"tmp\", \"cookie\":\"0\", \"priority\":\"0\", "
+//                            + "\"src-ip\":\"" + srcIP + "\", \"ingress-port\":\"" + dstIngressPort + "\", "
+//                            + "\"dst-ip\": \"" + dstIP + "\", \"active\":\"true\",\"ether-type\":\"0x0800\", "
+//                            + "\"actions\":\"output=" + dstOutput + "\"}";
+
+                    String rulesrcToSw = "{\"switch\": \"" + srcSwitch + "\", \"name\":\"tmp1\", \"cookie\":\"0\", \"priority\":\"0\", "
+                            + "\"src-mac\":\"" + srcMac + "\", \"ingress-port\":\"" + srcIngressPort + "\", "
+                            + "\"dst-mac\": \"" + dstMac + "\", \"active\":\"true\",\"vlan-id\":\"-1\", "
+                            + "\"actions\":\"output=" + srcOutput + "\"}";
+
+                    String ruleSwTodst = "{\"switch\": \"" + dstSwitch + "\", \"name\":\"tmp2\", \"cookie\":\"0\", \"priority\":\"0\", "
+                            + "\"src-mac\":\"" + srcMac + "\", \"ingress-port\":\"" + dstIngressPort + "\", "
+                            + "\"dst-mac\": \"" + dstMac + "\", \"active\":\"true\",\"vlan-id\":\"-1\", "
+                            + "\"actions\":\"output=" + srcOutput + "\"}";
+
+
+                    List<String> rules = new ArrayList<>();
+                    rules.add(ruleSwTodst);
+                    rules.add(rulesrcToSw);
+                    try {
+                        new SDNSweep(null).pushFlows(rules);
+                    } catch (IOException ex) {
+                        Logger.getLogger(SDNControllerClient.class.getName()).log(Level.SEVERE, null, ex);
+                    }
                 } catch (IOException ex) {
                     Logger.getLogger(SDNControllerClient.class.getName()).log(Level.SEVERE, null, ex);
                 }
@@ -301,7 +317,7 @@ public class SDNControllerClient {
         };
 
         thread.start();
-        
+
     }
 //    private SDNSweep.FloodlightStats[] getFloodlightPortStats(String dpi, int port) throws IOException, InterruptedException {
 //        SDNSweep.FloodlightStats stats1 = null;

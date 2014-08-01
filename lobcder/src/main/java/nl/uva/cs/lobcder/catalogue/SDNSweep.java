@@ -98,7 +98,7 @@ public class SDNSweep implements Runnable {
     @Getter
     private static Map<String, Double> averageLinkUsageMap = new HashMap<>();
     private long iterations = 1;
-    private static boolean flowPushed = false;
+    private static boolean flowPushed = true;
 
     public SDNSweep(DataSource datasource) throws IOException {
         this.datasource = datasource;
@@ -353,6 +353,7 @@ public class SDNSweep implements Runnable {
         WebResource webResource = client.resource(uri + ":" + floodlightPort).path("wm").path("staticflowentrypusher").path("json");
         for (String r : rules) {
             ClientResponse response = webResource.post(ClientResponse.class, r);
+            Logger.getLogger(SDNSweep.class.getName()).log(Level.INFO, r);
             Logger.getLogger(SDNSweep.class.getName()).log(Level.INFO, response.toString());
         }
     }
