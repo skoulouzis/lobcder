@@ -314,7 +314,7 @@ public class SDNControllerClient {
 
 
                     String rule22 = "{\"switch\": \"" + dstSwitch + "\", \"name\":\"tmp2-2\", \"cookie\":\"0\", \"priority\":\"5\", "
-                            + "\"src-mac\":\"" + dstMac + "\", \"ingress-port\":\"" + srcOutput + "\", "
+                            + "\"src-mac\":\"" + dstMac + "\", \"ingress-port\":\"" + dstOutput + "\", "
                             + "\"dst-mac\": \"" + srcMac + "\", \"active\":\"true\",\"vlan-id\":\"-1\", "
                             + "\"actions\":\"output=" + dstIngressPort + "\"}";
 
