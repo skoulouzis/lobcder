@@ -280,31 +280,52 @@ public class SDNControllerClient {
 
 
 
-//                    String rulesrcToSw = "{\"switch\": \"" + srcSwitch + "\", \"name\":\"tmp\", \"cookie\":\"0\", \"priority\":\"0\", "
+//                    String rulesrcToSw = "{\"switch\": \"" + srcSwitch + "\", \"name\":\"tmp\", \"cookie\":\"0\", \"priority\":\"5\", "
 //                            + "\"src-ip\":\"" + srcIP + "\", \"ingress-port\":\"" + srcIngressPort + "\", "
 //                            + "\"dst-ip\": \"" + dstIP + "\", \"active\":\"true\",\"ether-type\":\"0x0800\", "
 //                            + "\"actions\":\"output=" + srcOutput + "\"}";
 //
 //
-//                    String ruleSwTodst = "{\"switch\": \"" + dstSwitch + "\", \"name\":\"tmp\", \"cookie\":\"0\", \"priority\":\"0\", "
+//                    String ruleSwTodst = "{\"switch\": \"" + dstSwitch + "\", \"name\":\"tmp\", \"cookie\":\"0\", \"priority\":\"5\", "
 //                            + "\"src-ip\":\"" + srcIP + "\", \"ingress-port\":\"" + dstIngressPort + "\", "
 //                            + "\"dst-ip\": \"" + dstIP + "\", \"active\":\"true\",\"ether-type\":\"0x0800\", "
 //                            + "\"actions\":\"output=" + dstOutput + "\"}";
 
-                    String rulesrcToSw = "{\"switch\": \"" + srcSwitch + "\", \"name\":\"tmp1\", \"cookie\":\"0\", \"priority\":\"0\", "
+                    String rule11 = "{\"switch\": \"" + srcSwitch + "\", \"name\":\"tmp1-1\", \"cookie\":\"0\", \"priority\":\"5\", "
                             + "\"src-mac\":\"" + srcMac + "\", \"ingress-port\":\"" + srcIngressPort + "\", "
                             + "\"dst-mac\": \"" + dstMac + "\", \"active\":\"true\",\"vlan-id\":\"-1\", "
                             + "\"actions\":\"output=" + srcOutput + "\"}";
 
-                    String ruleSwTodst = "{\"switch\": \"" + dstSwitch + "\", \"name\":\"tmp2\", \"cookie\":\"0\", \"priority\":\"0\", "
+
+                    String rule12 = "{\"switch\": \"" + srcSwitch + "\", \"name\":\"tmp1-2\", \"cookie\":\"0\", \"priority\":\"5\", "
+                            + "\"src-mac\":\"" + dstMac + "\", \"ingress-port\":\"" + srcOutput + "\", "
+                            + "\"dst-mac\": \"" + srcMac + "\", \"active\":\"true\",\"vlan-id\":\"-1\", "
+                            + "\"actions\":\"output=" + srcIngressPort + "\"}";
+
+
+
+
+
+
+                    String rule21 = "{\"switch\": \"" + dstSwitch + "\", \"name\":\"tmp2-1\", \"cookie\":\"0\", \"priority\":\"5\", "
                             + "\"src-mac\":\"" + srcMac + "\", \"ingress-port\":\"" + dstIngressPort + "\", "
                             + "\"dst-mac\": \"" + dstMac + "\", \"active\":\"true\",\"vlan-id\":\"-1\", "
                             + "\"actions\":\"output=" + srcOutput + "\"}";
 
 
+                    String rule22 = "{\"switch\": \"" + dstSwitch + "\", \"name\":\"tmp2-2\", \"cookie\":\"0\", \"priority\":\"5\", "
+                            + "\"src-mac\":\"" + dstMac + "\", \"ingress-port\":\"" + srcOutput + "\", "
+                            + "\"dst-mac\": \"" + srcMac + "\", \"active\":\"true\",\"vlan-id\":\"-1\", "
+                            + "\"actions\":\"output=" + dstIngressPort + "\"}";
+
+
+
+
                     List<String> rules = new ArrayList<>();
-                    rules.add(ruleSwTodst);
-                    rules.add(rulesrcToSw);
+                    rules.add(rule11);
+                    rules.add(rule12);
+                    rules.add(rule21);
+                    rules.add(rule22);
                     try {
                         new SDNSweep(null).pushFlows(rules);
                     } catch (IOException ex) {
