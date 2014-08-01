@@ -90,7 +90,7 @@ public final class WorkerServlet extends HttpServlet {
     private static final HashMap<String, Integer> numOfGetsMap = new HashMap<>();
     private InputStream in;
     private int responseBufferSize;
-    private double lim = -5.0;
+    private double lim = 4;
     private boolean qosCopy;
     private int warnings;
     private double progressThresshold;
@@ -584,7 +584,7 @@ public final class WorkerServlet extends HttpServlet {
                     maxSpeed = speed;
                 }
                 d += "progressThresshold: " + thresshold + " speed: " + speed + " averageSpeed: " + averageSpeed +" progress: " + progress + " maxSpeed: " + maxSpeed + "\n";
-                if (averageSpeed < (maxSpeed / 10.0)) {
+                if (averageSpeed < (maxSpeed / lim)) {
                     count++;
                     Logger.getLogger(WorkerServlet.class.getName()).log(Level.WARNING, "We will not tolarate this !!!! Next time line is off");
                     optimizeFlow(request);
