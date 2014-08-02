@@ -583,7 +583,7 @@ public final class WorkerServlet extends HttpServlet {
                 if (speed >= maxSpeed) {
                     maxSpeed = speed;
                 }
-                d += "progressThresshold: " + thresshold + " speed: " + speed + " averageSpeed: " + averageSpeed +" progress: " + progress + " maxSpeed: " + maxSpeed + "\n";
+                d += "progressThresshold: " + thresshold + " speed: " + speed + " averageSpeed: " + averageSpeed + " progress: " + progress + " maxSpeed: " + maxSpeed + "\n";
                 if (averageSpeed < (maxSpeed / lim)) {
                     count++;
                     Logger.getLogger(WorkerServlet.class.getName()).log(Level.WARNING, "We will not tolarate this !!!! Next time line is off");
