@@ -652,6 +652,7 @@ public class WebDataFileResource extends WebDataResource implements
         String w = worker + "/" + getLogicalData().getUid();
         String token = UUID.randomUUID().toString();
         AuthWorker.setTicket(worker, token);
+//        w = "http://localhost:8080/lobcder-worker/"+getLogicalData().getUid();
         return w + "/" + token;
     }
 
