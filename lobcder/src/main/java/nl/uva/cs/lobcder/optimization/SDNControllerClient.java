@@ -52,7 +52,7 @@ public class SDNControllerClient {
                     if (ports.get(j).state == 0 && ports.get(k).state == 0 && j != k) {
                         String vertex1 = sw.get(i).dpid + "-" + ports.get(j).portNumber;
                         String vertex2 = sw.get(i).dpid + "-" + ports.get(k).portNumber;
-//                        Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, "From: {0} to: {1}", new Object[]{vertex1, vertex2});
+                        Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, "From: {0} to: {1}", new Object[]{vertex1, vertex2});
                         if (!graph.containsVertex(vertex1)) {
                             graph.addVertex(vertex1);
                         }

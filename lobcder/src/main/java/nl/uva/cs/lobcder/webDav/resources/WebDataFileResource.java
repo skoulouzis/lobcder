@@ -544,6 +544,7 @@ public class WebDataFileResource extends WebDataResource implements
 //            if (uri != null) {
             if (PropertiesHelper.getSchedulingAlg().equals("traffic")) {
 //                return getWorkerWithLessTraffic(reuSource);
+                WebDataFileResource.log.log(Level.FINE, "SchedulingAlg: traffic");
                 return getLowestCostWorker(reuSource);
             }
             if (PropertiesHelper.getSchedulingAlg().equals("round-robin")) {
@@ -642,7 +643,7 @@ public class WebDataFileResource extends WebDataResource implements
             sdnClient = new SDNControllerClient(uri);
         }
         List<DefaultWeightedEdge> shortestPath = sdnClient.getShortestPath(reqSource, workersMap.keySet());
-
+        WebDataFileResource.log.log(Level.FINE, "getShortestPath: " + shortestPath);
         sdnClient.pushFlow(shortestPath);
         DefaultWeightedEdge e = shortestPath.get(0);
         String[] workerSwitch = e.toString().split(" : ");
