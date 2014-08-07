@@ -90,7 +90,7 @@ public final class WorkerServlet extends HttpServlet {
     private static final HashMap<String, Integer> numOfGetsMap = new HashMap<>();
     private InputStream in;
     private int responseBufferSize;
-    private double lim = 4;
+//    private double lim = 4;
     private boolean qosCopy;
     private int warnings;
     private double progressThresshold;
@@ -112,7 +112,7 @@ public final class WorkerServlet extends HttpServlet {
 
             restURL = Util.getRestURL();
             token = Util.getRestPassword();
-            lim = Util.getRateOfChangeLim();
+//            lim = Util.getRateOfChangeLim();
             //        uname = prop.getProperty(("rest.uname"));
             clientConfig = configureClient();
             clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
@@ -584,7 +584,7 @@ public final class WorkerServlet extends HttpServlet {
                     maxSpeed = speed;
                 }
                 d += "progressThresshold: " + thresshold + " speed: " + speed + " averageSpeed: " + averageSpeed + " progress: " + progress + " maxSpeed: " + maxSpeed + "\n";
-                if (averageSpeed < (maxSpeed / lim)) {
+                if (averageSpeed < (maxSpeed / Util.getRateOfChangeLim())) {
                     count++;
                     Logger.getLogger(WorkerServlet.class.getName()).log(Level.WARNING, "We will not tolarate this !!!! Next time line is off");
                     optimizeFlow(request);
