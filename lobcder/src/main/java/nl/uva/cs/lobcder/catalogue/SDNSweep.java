@@ -106,8 +106,6 @@ public class SDNSweep implements Runnable {
         ClientConfig clientConfig = new DefaultClientConfig();
         clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
         client = Client.create(clientConfig);
-
-
     }
 
     private void init() {
@@ -417,8 +415,8 @@ public class SDNSweep implements Runnable {
         for (String h1 : s1Hosts) {
             for (String h2 : s2Hosts) {
                 String rule1To2 = "{\"switch\": \"" + s1 + "\", \"name\":\"" + h1 + "To" + h2 + "\", \"cookie\":\"0\", \"priority\":\"10\", "
-                        + "\"src-ip\":\"" + h1 + "\", \"ingress-port\":\"" + networkEntitesCache.get(h1).attachmentPoint.get(0).port + "\", "
-                        + "\"dst-ip\": \"" + h2 + "\", \"active\":\"true\",\"ether-type\":\"0x0800\", "
+                        + "\"src-mac\":\"" + networkEntitesCache.get(h1).mac.get(0) + "\", \"ingress-port\":\"" + networkEntitesCache.get(h1).attachmentPoint.get(0).port + "\", "
+                        + "\"dst-mac\": \"" + networkEntitesCache.get(h2).mac.get(0) + "\", \"active\":\"true\","
                         + "\"actions\":\"output=" + s1ToS2Port + "\"}";
                 rules.add(rule1To2);
                 Logger.getLogger(SDNSweep.class.getName()).log(Level.INFO, rule1To2);
@@ -429,8 +427,8 @@ public class SDNSweep implements Runnable {
         for (String h1 : s2Hosts) {
             for (String h2 : s1Hosts) {
                 String rule2To1 = "{\"switch\": \"" + s2 + "\", \"name\":\"" + h1 + "To" + h2 + "\", \"cookie\":\"0\", \"priority\":\"10\", "
-                        + "\"src-ip\":\"" + h1 + "\", \"ingress-port\":\"" + networkEntitesCache.get(h1).attachmentPoint.get(0).port + "\", "
-                        + "\"dst-ip\": \"" + h2 + "\", \"active\":\"true\",\"ether-type\":\"0x0800\", "
+                        + "\"src-mac\":\"" +networkEntitesCache.get(h1).mac.get(0)+ "\", \"ingress-port\":\"" + networkEntitesCache.get(h1).attachmentPoint.get(0).port + "\", "
+                        + "\"dst-mac\": \"" + networkEntitesCache.get(h2).mac.get(0) + "\", \"active\":\"true\","
                         + "\"actions\":\"output=" + s2ToS1Port + "\"}";
 
                 rules.add(rule2To1);

@@ -253,3 +253,15 @@ wget http://www.inmon.com/products/sFlow-RT/sflow-rt.tar.gz
 tar -xvzf sflow-rt.tar.gz
 cd sflow-rt
 screen -d -m sh -c "./start.sh"
+
+
+
+
+--------------------------limit BW--------------------------
+tc qdisc add dev $1 root handle 1: htb default 12 
+tc class add dev $1 parent 1:1 classid 1:12 htb rate 20kbps ceil 20kbps 
+tc qdisc add dev $1 parent 1:12 netem delay 1000ms 
+
+
+--------------remove limit-----------------------
+tc qdisc del root dev $1
