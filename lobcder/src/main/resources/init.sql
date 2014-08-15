@@ -39,7 +39,7 @@ CREATE TABLE ldata_table (
  uid SERIAL PRIMARY KEY,
  parentRef BIGINT UNSIGNED, INDEX(parentRef),
  ownerId VARCHAR(255), INDEX(ownerId),
- datatype ENUM('logical.file', 'logical.folder'), INDEX(datatype),
+ datatype ENUM('logical.file', 'logical.folder', 'nullocked'), INDEX(datatype),
  ldName VARCHAR(255), INDEX(ldName), UNIQUE KEY(parentRef, ldName),
  createDate DATETIME NOT NULL,
  modifiedDate DATETIME NOT NULL,
@@ -47,7 +47,7 @@ CREATE TABLE ldata_table (
  contentTypesStr VARCHAR(5240),
  pdriGroupRef BIGINT UNSIGNED NOT NULL DEFAULT 0, INDEX(pdriGroupRef),
  isSupervised BOOLEAN NOT NULL DEFAULT FALSE, INDEX(isSupervised), 
- checksum VARCHAR(512),
+ checksum VARCHAR(512), INDEX(checksum),
  lastValidationDate BIGINT NOT NULL DEFAULT 0,
  lockTokenId  VARCHAR(255),
  lockScope  VARCHAR(255),
@@ -57,13 +57,14 @@ CREATE TABLE ldata_table (
  lockTimeout  BIGINT NOT NULL DEFAULT 0,
  description VARCHAR(1024),
  locationPreference VARCHAR(1024),
- status enum('unavailable', 'corrupted', 'OK')
+ status enum('unavailable', 'corrupted', 'OK') NOT NULL DEFAULT 'unavailable'
 ) ENGINE=InnoDB;
 
 CREATE TABLE wp4_table (
  id SERIAL PRIMARY KEY,
  local_id BIGINT UNSIGNED, FOREIGN KEY(local_id) REFERENCES ldata_table(uid) ON DELETE SET NULL ,
  global_id VARCHAR(255),
+ global_id_dev VARCHAR(255),
  views INT UNSIGNED NOT NULL DEFAULT 0,
  need_update BOOLEAN NOT NULL DEFAULT FALSE, INDEX(need_update),
  need_create BOOLEAN NOT NULL DEFAULT TRUE, INDEX(need_create)
@@ -200,7 +201,6 @@ END|
 -- END|
 
 
-DELIMITER ;
 
 INSERT INTO ldata_table(parentRef, ownerId, datatype, ldName, createDate, modifiedDate) VALUES(1, 'root', 'logical.folder', '', NOW(), NOW());
 SET @rootRef = LAST_INSERT_ID();

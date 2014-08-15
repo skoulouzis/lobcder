@@ -59,7 +59,7 @@ class WP4Sweep implements Runnable {
                     .append("<relatedResources/>")
                     .append("<semanticAnnotations/>")
                     .append("<status>active</status>")
-                    .append("<type>File</type>")
+                    .append("<619220>File</type>")
                     .append("<views>").append(views).append("</views>")
                     .append("<fileType>").append(type).append("</fileType>")
                     .append("<subjectID/>")

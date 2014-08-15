@@ -147,9 +147,11 @@ public class AuthTicket implements AuthI  {
                 }
                 long now = new Date().getTime()/1000;
                 if (u.validuntil < now) {
+                    System.out.println("Expired");
                    return null;
                 }
             } else {
+                System.out.println("Can't verify");
                 return null;
             }
             return u;
@@ -159,14 +161,15 @@ public class AuthTicket implements AuthI  {
         }
     }
 
-    public static void main(String[] args){
+    public static void main(String[] args) {
         AuthI au = null;
         try {
             au = new AuthTicket();
         } catch (Exception e) {
             e.printStackTrace();
         }
-        System.out.println(au.checkToken("dWlkPWR2YXN1bmluO3ZhbGlkdW50aWw9MTM4OTc3NjcxNjtjaXA9MC4wLjAuMDt0b2tlbnM9dGVzdCxkZXZlbG9wZXIsZnJpZW5kLGFkbWluLHZwaCxWUEg7dWRhdGE9ZHZhc3VuaW4sRG1pdHJ5IFZhc3l1bmluLGR2YXN1bmluQGdtYWlsLmNvbSwsTkVUSEVSTEFORFMsMTA5OFhIO3NpZz1NQzRDRlFEWjBnU3dEcnkyOTdzbXJlQUNJdXl5NzFuK2J3SVZBUGdOVEg0NEdPbTVUUWZlcDExOGtTNjNoQ3E2"));
+        //System.out.println(au.checkToken("dWlkPWR2YXN1bmluO3ZhbGlkdW50aWw9MTM4OTc3NjcxNjtjaXA9MC4wLjAuMDt0b2tlbnM9dGVzdCxkZXZlbG9wZXIsZnJpZW5kLGFkbWluLHZwaCxWUEg7dWRhdGE9ZHZhc3VuaW4sRG1pdHJ5IFZhc3l1bmluLGR2YXN1bmluQGdtYWlsLmNvbSwsTkVUSEVSTEFORFMsMTA5OFhIO3NpZz1NQzRDRlFEWjBnU3dEcnkyOTdzbXJlQUNJdXl5NzFuK2J3SVZBUGdOVEg0NEdPbTVUUWZlcDExOGtTNjNoQ3E2"));
+        System.out.println(au.checkToken("dWlkPWR2YXN1bmluO3ZhbGlkdW50aWw9MTQwNjE1NzQ5OTtjaXA9MC4wLjAuMDt0b2tlbnM9dGVzdCxkZXZlbG9wZXIsZnJpZW5kLGFkbWluLHZwaCxWUEgtU2hhcmUgZGV2ZWxvcGVycyxWUEg7dWRhdGE9ZHZhc3VuaW4sRG1pdHJ5IFZhc3l1bmluLGR2YXN1bmluQGdtYWlsLmNvbSwsTkVUSEVSTEFORFMsMTA5OFhIO3NpZz1NQ3dDRkJwSnBmZk85aXlkNkpvdTI2UEYwYTBrR3kwQUFoUkM2ckExQnZxd1JuWEUxZlpWQzNIR215TDBEdz09"));
     }
 
 }
