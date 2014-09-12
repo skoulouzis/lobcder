@@ -60,7 +60,7 @@ public class Translator {
                         }
                     }
                 };
-                deleteOld(cn);
+//                deleteOld(cn);
                 return Response.ok(shortId).build();
             }  catch (SQLException e) {
                 return Response.serverError().entity(e).build();
