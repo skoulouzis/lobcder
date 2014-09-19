@@ -72,7 +72,7 @@ public class SDNControllerClient {
         }
 
 //        dest = "192.168.100.1";
-
+        Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, "Destination: {0}", new Object[]{dest});
         if (!graph.containsVertex(dest)) {
             graph.addVertex(dest);
         }
@@ -82,6 +82,7 @@ public class SDNControllerClient {
 //        for (SDNSweep.NetworkEntity ne : destinationEntityArray) {
         for (SDNSweep.AttachmentPoint ap : destinationEntityArray.attachmentPoint) {
             String vertex = ap.switchDPID + "-" + ap.port;
+            Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, "vertex: {0}", new Object[]{vertex});
             if (!graph.containsVertex(vertex)) {
                 graph.addVertex(vertex);
             }
@@ -106,6 +107,7 @@ public class SDNControllerClient {
                 if (!graph.containsVertex(ip)) {
                     graph.addVertex(ip);
                 }
+
                 for (SDNSweep.AttachmentPoint ap : ne.attachmentPoint) {
                     String vertex = ap.switchDPID + "-" + ap.port;
                     if (!graph.containsVertex(vertex)) {
@@ -117,6 +119,7 @@ public class SDNControllerClient {
                     } else {
                         e2 = graph.getEdge(ip, vertex);
                     }
+                    Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, "vertex: {0}", new Object[]{vertex});
                     graph.setEdgeWeight(e2, getCost(ip, vertex));
                 }
             }
@@ -139,6 +142,7 @@ public class SDNControllerClient {
             } else {
                 e3 = graph.getEdge(srcVertex, dstVertex);
             }
+            Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, "dstVertex: {0}", new Object[]{dstVertex});
             graph.setEdgeWeight(e3, getCost(srcVertex, dstVertex));
         }
 
