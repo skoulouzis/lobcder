@@ -542,7 +542,7 @@ public class WebDataFileResource extends WebDataResource implements
     private String getBestWorker(String reuSource) throws IOException, URISyntaxException, InterruptedException {
         if (doRedirect) {
 //            if (uri != null) {
-            if (PropertiesHelper.getSchedulingAlg().equals("traffic")) {
+            if (PropertiesHelper.getSchedulingAlg().equals("traffic") && PropertiesHelper.useSDN()) {
 //                return getWorkerWithLessTraffic(reuSource);
                 WebDataFileResource.log.log(Level.FINE, "SchedulingAlg: traffic");
                 return getLowestCostWorker(reuSource);
