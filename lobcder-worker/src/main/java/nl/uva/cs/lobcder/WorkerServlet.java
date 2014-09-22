@@ -588,8 +588,9 @@ public final class WorkerServlet extends HttpServlet {
                     count++;
                     Logger.getLogger(WorkerServlet.class.getName()).log(Level.WARNING, "We will not tolarate this !!!! Next time line is off");
                     optimizeFlow(request);
+                    Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, "optimizeFlow: "+request);
                     //This works with export ec=18; while [ $ec -eq 18 ]; do curl -O -C - -L --request GET -u user:pass http://localhost:8080/lobcder/dav/large_file; export ec=$?; done
-                    if (count >= warnings) {
+                    if (count >= warnings && Util.dropConnection() ) {
                         Logger.getLogger(WorkerServlet.class.getName()).log(Level.WARNING, "We will not tolarate this !!!! Find a new worker. rateOfChange: {0}", averageSpeed);
                         break;
                     }
@@ -845,6 +846,9 @@ public final class WorkerServlet extends HttpServlet {
 
         ClientResponse response = webResource.path("sdn").path("optimizeFlow")
                 .type(MediaType.APPLICATION_XML).put(ClientResponse.class, stringStats);
+
+
+        Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, "response: " + response);
     }
 
     @XmlRootElement

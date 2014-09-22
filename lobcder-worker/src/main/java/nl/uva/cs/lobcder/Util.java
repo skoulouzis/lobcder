@@ -104,4 +104,8 @@ class Util {
     static Boolean getSendStats() throws IOException {
         return Boolean.valueOf(getProperties().getProperty(("send.stats"), "false"));
     }
+
+    static boolean dropConnection() throws IOException {
+        return Boolean.valueOf(getProperties().getProperty(("drop.connection"), "false"));
+    }
 }
