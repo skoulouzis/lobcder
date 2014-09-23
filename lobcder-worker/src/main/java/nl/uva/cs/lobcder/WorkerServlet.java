@@ -582,7 +582,7 @@ public final class WorkerServlet extends HttpServlet {
                 }
                 averageSpeed = a * averageSpeed + (1 - a) * speed;
                 if (speed >= maxSpeed) {
-                    maxSpeed = speed;
+                    maxSpeed = averageSpeed;
                 }
                 d += "progressThresshold: " + progressThresshold + " speed: " + speed + " averageSpeed: " + averageSpeed + " progress: " + progress + " maxSpeed: " + maxSpeed + " limit: " + (maxSpeed / Util.getRateOfChangeLim()) + "\n";
                 Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, d);
