@@ -568,6 +568,7 @@ public final class WorkerServlet extends HttpServlet {
         double maxSpeed = -1;
         double thresshold = 100.0 * Math.exp(coefficient * (size / (1024.0 * 1024.0)));
         double averageSpeed = -1;
+        double averageSpeedPrev = -2;
         while ((read = in.read(buffer)) > 0) {
             output.write(buffer, 0, read);
             total += read;
@@ -585,7 +586,7 @@ public final class WorkerServlet extends HttpServlet {
                 }
                 d += "progressThresshold: " + progressThresshold + " speed: " + speed + " averageSpeed: " + averageSpeed + " progress: " + progress + " maxSpeed: " + maxSpeed + " limit: " + (maxSpeed / Util.getRateOfChangeLim()) + "\n";
                 Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, d);
-                if (averageSpeed < (maxSpeed / Util.getRateOfChangeLim())) {
+                if (averageSpeed < (maxSpeed / Util.getRateOfChangeLim()) && averageSpeed < averageSpeedPrev) {
                     count++;
                     Logger.getLogger(WorkerServlet.class.getName()).log(Level.WARNING, "We will not tolarate this !!!! Next time line is off");
                     optimizeFlow(request);
@@ -596,6 +597,7 @@ public final class WorkerServlet extends HttpServlet {
                         break;
                     }
                 }
+                averageSpeedPrev = averageSpeed;
             }
         }
         Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, d);
@@ -849,7 +851,7 @@ public final class WorkerServlet extends HttpServlet {
                 .type(MediaType.APPLICATION_XML).put(ClientResponse.class, stringStats);
 
 
-        Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, "response: " + response);
+        Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, "response: {0}", response);
     }
 
     @XmlRootElement
