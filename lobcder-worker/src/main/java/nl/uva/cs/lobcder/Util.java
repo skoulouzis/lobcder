@@ -108,4 +108,8 @@ class Util {
     static boolean dropConnection() throws IOException {
         return Boolean.valueOf(getProperties().getProperty(("drop.connection"), "false"));
     }
+
+    static boolean getOptimizeFlow() throws IOException {
+        return Boolean.valueOf(getProperties().getProperty(("optimize.flow"), "true"));
+    }
 }
