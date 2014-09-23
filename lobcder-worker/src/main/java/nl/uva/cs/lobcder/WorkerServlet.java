@@ -583,14 +583,15 @@ public final class WorkerServlet extends HttpServlet {
                 if (speed >= maxSpeed) {
                     maxSpeed = speed;
                 }
-                d += "progressThresshold: " + thresshold + " speed: " + speed + " averageSpeed: " + averageSpeed + " progress: " + progress + " maxSpeed: " + maxSpeed + "\n";
+                d += "progressThresshold: " + progressThresshold + " speed: " + speed + " averageSpeed: " + averageSpeed + " progress: " + progress + " maxSpeed: " + maxSpeed + "\n";
+                Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, d);
                 if (averageSpeed < (maxSpeed / Util.getRateOfChangeLim())) {
                     count++;
                     Logger.getLogger(WorkerServlet.class.getName()).log(Level.WARNING, "We will not tolarate this !!!! Next time line is off");
                     optimizeFlow(request);
-                    Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, "optimizeFlow: "+request);
+                    Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, "optimizeFlow: " + request);
                     //This works with export ec=18; while [ $ec -eq 18 ]; do curl -O -C - -L --request GET -u user:pass http://localhost:8080/lobcder/dav/large_file; export ec=$?; done
-                    if (count >= warnings && Util.dropConnection() ) {
+                    if (count >= warnings && Util.dropConnection()) {
                         Logger.getLogger(WorkerServlet.class.getName()).log(Level.WARNING, "We will not tolarate this !!!! Find a new worker. rateOfChange: {0}", averageSpeed);
                         break;
                     }
