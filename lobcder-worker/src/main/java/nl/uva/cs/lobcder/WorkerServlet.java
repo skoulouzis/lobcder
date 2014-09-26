@@ -189,15 +189,12 @@ public final class WorkerServlet extends HttpServlet {
 //            cacheFile = new File(baseDir, "lobcder-cache" + request.getLocalName());
         Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "token: {0} fileUID: {1}", new Object[]{token, fileUID});
 
-
         long startGetPDRI = System.currentTimeMillis();
         Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "start getPDRI at:{0}", startGetPDRI);
         pdri = getPDRI(fileUID);
 
-
         // URL-decode the file name (might contain spaces and on) and prepare file object.
 //        File file = new File("", URLDecoder.decode(requestedFile, "UTF-8"));
-
         // Check if file actually exists in filesystem.
         if (pdri == null) {
             // Do your thing if the file appears to be non-existing.
@@ -213,9 +210,7 @@ public final class WorkerServlet extends HttpServlet {
         String eTag = fileName + "_" + length + "_" + lastModified;
         long expires = System.currentTimeMillis() + DEFAULT_EXPIRE_TIME;
 
-
         // Validate request headers for caching ---------------------------------------------------
-
         // If-None-Match header should contain "*" or ETag. If so, then return 304.
         String ifNoneMatch = request.getHeader("If-None-Match");
         if (ifNoneMatch != null && matches(ifNoneMatch, eTag)) {
@@ -235,9 +230,7 @@ public final class WorkerServlet extends HttpServlet {
             return;
         }
 
-
         // Validate request headers for resume ----------------------------------------------------
-
         // If-Match header should contain "*" or ETag. If not, then return 412.
         String ifMatch = request.getHeader("If-Match");
         if (ifMatch != null && !matches(ifMatch, eTag)) {
@@ -252,9 +245,7 @@ public final class WorkerServlet extends HttpServlet {
             return;
         }
 
-
         // Validate and process range -------------------------------------------------------------
-
         // Prepare some variables. The full Range represents the complete file.
         Range full = new Range(0, length - 1, length);
         List<Range> ranges = new ArrayList<>();
@@ -312,9 +303,7 @@ public final class WorkerServlet extends HttpServlet {
             }
         }
 
-
         // Prepare and initialize response --------------------------------------------------------
-
         // Get content type by file name and set default GZIP support and content disposition.
         String contentType = getServletContext().getMimeType(fileName);
         if (contentType == null) {
@@ -357,7 +346,6 @@ public final class WorkerServlet extends HttpServlet {
         response.setContentLength((int) this.logicalDataCache.get(fileUID).logicalData.length);
 
         // Send requested file (part(s)) to client ------------------------------------------------
-
         // Prepare streams.
 //        RandomAccessFile input = null;
         OutputStream output = null;
@@ -437,7 +425,6 @@ public final class WorkerServlet extends HttpServlet {
             if (in != null) {
                 in.close();
             }
-
 
             long elapsed = System.currentTimeMillis() - startTime;
             if (elapsed <= 0) {
@@ -591,6 +578,7 @@ public final class WorkerServlet extends HttpServlet {
                     Logger.getLogger(WorkerServlet.class.getName()).log(Level.WARNING, "We will not tolarate this !!!! Next time line is off");
                     if (Util.getOptimizeFlow()) {
                         optimizeFlow(request);
+                        maxSpeed = averageSpeed;
                         Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, "optimizeFlow: " + request);
                     }
 
@@ -652,11 +640,11 @@ public final class WorkerServlet extends HttpServlet {
         try {
             config.getProperties().put(HTTPSProperties.PROPERTY_HTTPS_PROPERTIES, new HTTPSProperties(
                     new HostnameVerifier() {
-                @Override
-                public boolean verify(String hostname, SSLSession session) {
-                    return true;
-                }
-            },
+                        @Override
+                        public boolean verify(String hostname, SSLSession session) {
+                            return true;
+                        }
+                    },
                     ctx));
         } catch (Exception e) {
         }
@@ -679,7 +667,7 @@ public final class WorkerServlet extends HttpServlet {
             WebResource res = webResource.path("item").path("query").path(fileUID);
             logicalData = res.accept(MediaType.APPLICATION_XML).
                     get(new GenericType<LogicalDataWrapped>() {
-            });
+                    });
 
             if (logicalData != null) {
                 Set<PDRIDesc> pdris = logicalData.pdriList;
@@ -705,7 +693,6 @@ public final class WorkerServlet extends HttpServlet {
             }
             logicalDataCache.put(fileUID, logicalData);
         }
-
 
         pdriDesc = selectBestPDRI(logicalData.pdriList);
 
@@ -816,13 +803,11 @@ public final class WorkerServlet extends HttpServlet {
 
     private void setSpeed(Stats stats) throws JAXBException {
 
-
         JAXBContext context = JAXBContext.newInstance(Stats.class);
         Marshaller m = context.createMarshaller();
         m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
         OutputStream out = new ByteArrayOutputStream();
         m.marshal(stats, out);
-
 
         String stringStats = String.valueOf(out);
 
@@ -852,7 +837,6 @@ public final class WorkerServlet extends HttpServlet {
 
         ClientResponse response = webResource.path("sdn").path("optimizeFlow")
                 .type(MediaType.APPLICATION_XML).put(ClientResponse.class, stringStats);
-
 
         Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, "response: {0}", response);
     }
