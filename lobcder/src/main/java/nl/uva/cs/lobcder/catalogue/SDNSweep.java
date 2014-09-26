@@ -62,7 +62,7 @@ public class SDNSweep implements Runnable {
     private static List<Link> switchLinks;
     @Getter
     private static List<Switch> switches;
-    private long interval = 800;
+    public static long interval = 800;
     @Getter
     private static Map<String, Double> statsMap;
     public static final String[] METRIC_NAMES = new String[]{"collisions",

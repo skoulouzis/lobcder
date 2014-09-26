@@ -193,6 +193,11 @@ public class SDNControllerClient {
         }
         Double rbytes = SDNSweep.getReceiveBytesMap().get(dpi);
         Double tbytes = SDNSweep.getTransmitBytesMap().get(dpi);
+        double rbps = rbytes / SDNSweep.interval;
+        double tbps = tbytes / SDNSweep.interval;
+        double cost = 1.0 /((rbps + tbps) / 2.0 );
+
+
         if (rbytes <= 0) {
             rbytes = Double.valueOf(1);
         }
@@ -233,7 +238,7 @@ public class SDNControllerClient {
         }
 
         Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, "From: {0} to: {1} tt: {2}", new Object[]{v1, v2, ett});
-        return ett;
+        return cost;//ett;
     }
 
     public void pushFlow(final List<DefaultWeightedEdge> shortestPath) throws IOException {
