@@ -52,7 +52,7 @@ public class SDNControllerClient {
                     if (ports.get(j).state == 0 && ports.get(k).state == 0 && j != k) {
                         String vertex1 = sw.get(i).dpid + "-" + ports.get(j).portNumber;
                         String vertex2 = sw.get(i).dpid + "-" + ports.get(k).portNumber;
-                        Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, "From: {0} to: {1}", new Object[]{vertex1, vertex2});
+//                        Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, "From: {0} to: {1}", new Object[]{vertex1, vertex2});
                         if (!graph.containsVertex(vertex1)) {
                             graph.addVertex(vertex1);
                         }
@@ -71,8 +71,8 @@ public class SDNControllerClient {
             }
         }
 
-//        dest = "192.168.100.1";
-        Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, "Destination: {0}", new Object[]{dest});
+        dest = "192.168.100.1";
+//        Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, "Destination: {0}", new Object[]{dest});
         if (!graph.containsVertex(dest)) {
             graph.addVertex(dest);
         }
@@ -82,7 +82,7 @@ public class SDNControllerClient {
 //        for (SDNSweep.NetworkEntity ne : destinationEntityArray) {
         for (SDNSweep.AttachmentPoint ap : destinationEntityArray.attachmentPoint) {
             String vertex = ap.switchDPID + "-" + ap.port;
-            Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, "vertex: {0}", new Object[]{vertex});
+//            Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, "vertex: {0}", new Object[]{vertex});
             if (!graph.containsVertex(vertex)) {
                 graph.addVertex(vertex);
             }
@@ -119,7 +119,7 @@ public class SDNControllerClient {
                     } else {
                         e2 = graph.getEdge(ip, vertex);
                     }
-                    Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, "vertex: {0}", new Object[]{vertex});
+//                    Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, "vertex: {0}", new Object[]{vertex});
                     graph.setEdgeWeight(e2, getCost(ip, vertex));
                 }
             }
@@ -142,7 +142,7 @@ public class SDNControllerClient {
             } else {
                 e3 = graph.getEdge(srcVertex, dstVertex);
             }
-            Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, "dstVertex: {0}", new Object[]{dstVertex});
+//            Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, "dstVertex: {0}", new Object[]{dstVertex});
             graph.setEdgeWeight(e3, getCost(srcVertex, dstVertex));
         }
 
@@ -203,9 +203,9 @@ public class SDNControllerClient {
         double rMTU = rbytes / rpps * 1.0;
         double tMTU = tbytes / tpps * 1.0;
         double mtu = (rMTU > tMTU) ? rMTU : tMTU;
-        if (mtu <= 500) {
-            mtu = 1500;
-        }
+//        if (mtu <= 500) {
+//            mtu = 1500;
+//        }
 
         //TT=TpP * NoP
         //NoP = {MTU}/{FS}
@@ -225,11 +225,11 @@ public class SDNControllerClient {
 //        }
         Double averageLinkUsage = SDNSweep.getAverageLinkUsageMap().get(dpi);
         if (averageLinkUsage != null) {
-            Double factor = 0.3;
+            Double factor = 0.6;
             //For each sec of usage how much extra time we get ? 
             //We asume a liner ralationship 
             //The longer the usage it means either more transfers per flow or larger files or both
-//            ett += averageLinkUsage * factor;
+            ett += averageLinkUsage * factor;
         }
 
         Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, "From: {0} to: {1} tt: {2}", new Object[]{v1, v2, ett});
