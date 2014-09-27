@@ -238,7 +238,7 @@ public class SDNControllerClient {
         }
 
         Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, "From: {0} to: {1} tt: {2}", new Object[]{v1, v2, ett});
-        return cost;//ett;
+        return ett;
     }
 
     public void pushFlow(final List<DefaultWeightedEdge> shortestPath) throws IOException {
