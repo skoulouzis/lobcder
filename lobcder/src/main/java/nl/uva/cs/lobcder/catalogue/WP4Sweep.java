@@ -48,22 +48,22 @@ class WP4Sweep implements Runnable {
         public String getXml() {
             return new StringBuilder("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>")
                     .append("<resource_metadata>")
-                    .append("<file>")
-                    .append("<author>").append(author).append("</author>")
-                    .append("<category>General Metadata</category>")
-                    .append("<description>LOBCDER</description>")
-                    .append("<linkedTo/>")
-                    .append("<localID>").append(localId).append("</localID>")
-                    .append("<name>").append(name).append("</name>")
-                    .append("<rating>0</rating>")
-                    .append("<relatedResources/>")
-                    .append("<semanticAnnotations/>")
-                    .append("<status>active</status>")
-                    .append("<619220>File</type>")
-                    .append("<views>").append(views).append("</views>")
-                    .append("<fileType>").append(type).append("</fileType>")
-                    .append("<subjectID/>")
-                    .append("</file>")
+                        .append("<file>")
+                            .append("<author>").append(author).append("</author>")
+                            .append("<category>General Metadata</category>")
+                            .append("<description>LOBCDER</description>")
+                            .append("<linkedTo/>")
+                            .append("<localID>").append(localId).append("</localID>")
+                            .append("<name>").append(name).append("</name>")
+                            .append("<rating>0</rating>")
+                            .append("<relatedResources/>")
+                            .append("<semanticAnnotations/>")
+                            .append("<status>active</status>")
+                            .append("<type>File</type>")
+                            .append("<views>").append(views).append("</views>")
+                            .append("<fileType>").append(type).append("</fileType>")
+                            .append("<subjectID/>")
+                        .append("</file>")
                     .append("</resource_metadata>").toString();
         }
     }
@@ -108,7 +108,8 @@ class WP4Sweep implements Runnable {
         @Override
         public String create(ResourceMetadata resourceMetadata) throws Exception {
             WebResource webResource = client.resource(uri);
-            ClientResponse response = webResource.type(MediaType.APPLICATION_XML).post(ClientResponse.class, resourceMetadata.getXml());
+            String xml = resourceMetadata.getXml();
+            ClientResponse response = webResource.type(MediaType.APPLICATION_XML).post(ClientResponse.class, xml);
             String entity = response.getEntity(String.class);
             if (response.getClientResponseStatus() == ClientResponse.Status.OK
                     && entity.contains("<_global_id>")) {
