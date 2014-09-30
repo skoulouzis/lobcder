@@ -6,6 +6,7 @@ package nl.uva.cs.lobcder.webDav.resources;
 
 import io.milton.common.Path;
 import io.milton.http.*;
+import static io.milton.http.Request.Method.MKCOL;
 import io.milton.http.exceptions.BadRequestException;
 import io.milton.http.exceptions.ConflictException;
 import io.milton.http.exceptions.NotAuthorizedException;
@@ -42,7 +43,7 @@ import org.rendersnake.HtmlCanvas;
  */
 @Log
 public class WebDataDirResource extends WebDataResource implements FolderResource,
-        CollectionResource, DeletableCollectionResource, LockingCollectionResource {
+        CollectionResource, DeletableCollectionResource, LockingCollectionResource, PostableResource {
 
     private int attempts = 0;
     private Map<String, String> mimeTypeMap = new HashMap<>();
@@ -525,6 +526,29 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
             if (ex instanceof PreConditionFailedException) {
                 throw new RuntimeException(ex);
             }
+        }
+        return null;
+    }
+
+    @Override
+    public String processForm(Map<String, String> parameters,
+            Map<String, FileItem> files) throws BadRequestException,
+            NotAuthorizedException,
+            ConflictException {
+        //        Set<String> keys = parameters.keySet();
+        //        for (String s : keys) {
+        //            WebDataDirResource.log.log(Level.INFO, "{0} : {1}", new Object[]{s, parameters.get(s)});
+        //        }
+        Set<String> keys = files.keySet();
+        for (String s : keys) {
+            WebDataDirResource.log.log(Level.INFO, "{0} : {1}", new Object[]{s, files.get(s).getFieldName()});
+            try {
+                //         public Resource createNew(String newName, InputStream inputStream, Long length, String contentType) throws IOException,
+                createNew(files.get(s).getFieldName(), files.get(s).getInputStream(), files.get(s).getSize(), files.get(s).getContentType());
+            } catch (IOException ex) {
+                throw new BadRequestException(this, ex.getMessage());
+            }
+
         }
         return null;
     }
