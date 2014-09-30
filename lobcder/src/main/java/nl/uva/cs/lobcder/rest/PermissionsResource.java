@@ -221,4 +221,119 @@ public class PermissionsResource {
             throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
+
+    @Path("recursive/{uid}/")
+    @POST
+    @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public UIDS addPermissionsRecursive(@PathParam("uid") Long uid_p, JAXBElement<Permissions> jbPermissions) {
+        UIDS result = new UIDS();
+        try (Connection connection = catalogue.getConnection()) {
+            try {
+                Permissions permissions = jbPermissions.getValue();
+                MyPrincipal principal = (MyPrincipal) request.getAttribute("myprincipal");
+                LogicalData ld = catalogue.getLogicalDataByUid(uid_p, connection);
+                Stack<Long> folders = new Stack<>();
+                ArrayList<Long> elements = new ArrayList<>();
+                ArrayList<Long> changeOwner = new ArrayList<>();
+                Permissions p = catalogue.getPermissions(ld.getUid(), ld.getOwner(), connection);
+                if(ld.isFolder() && principal.canRead(p)) {
+                    folders.add(ld.getUid());
+                }
+                if(principal.canWrite(p)){
+                    elements.add(ld.getUid());
+                    if(!ld.getOwner().equals(permissions.getOwner())){
+                        changeOwner.add(ld.getUid());
+                    }
+                }
+                try(PreparedStatement ps = connection.prepareStatement("SELECT uid, ownerId, datatype FROM ldata_table WHERE parentRef = ?")){
+                    while(!folders.isEmpty()){
+                        Long curUid = folders.pop();
+                        ps.setLong(1, curUid);
+                        try(ResultSet resultSet = ps.executeQuery()){
+                            while(resultSet.next()) {
+                                Long entry_uid = resultSet.getLong(1);
+                                String entry_owner = resultSet.getString(2);
+                                String entry_datatype = resultSet.getString(3);
+                                Permissions entry_p = catalogue.getPermissions(entry_uid, entry_owner, connection);
+                                if(entry_datatype.equals(Constants.LOGICAL_FOLDER) && principal.canRead(entry_p)){
+                                    folders.push(entry_uid);
+                                }
+                                if(principal.canWrite(entry_p)){
+                                    elements.add(entry_uid);
+                                    if(!entry_owner.equals(permissions.getOwner())) {
+                                        changeOwner.add(entry_uid);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                Set<String> read = new HashSet<>(permissions.getRead());
+                Set<String> write = new HashSet<>(permissions.getWrite());
+                try(PreparedStatement ps = connection.prepareStatement("SELECT permType, roleName, ldUidRef, id  FROM permission_table WHERE permission_table.ldUidRef = ?",
+                        java.sql.ResultSet.TYPE_FORWARD_ONLY,
+                        java.sql.ResultSet.CONCUR_UPDATABLE)) {
+                    for (Long uid : elements) {
+                        ps.setLong(1, uid);
+                        ResultSet rs = ps.executeQuery();
+                        while (rs.next()) {
+                            String permType = rs.getString(1);
+                            String roleName = rs.getString(2);
+                            if (permType.equals("read")) {
+                                read.remove(roleName);
+                            } else if (permType.equals("write")) {
+                                write.remove(roleName);
+                            }
+                        }
+
+                        for (String role : read) {
+                            rs.moveToInsertRow();
+                            rs.updateString(1, "read");
+                            rs.updateString(2, role);
+                            rs.updateLong(3, uid);
+                            rs.insertRow();
+                        }
+                        for (String role : write) {
+                            rs.moveToInsertRow();
+                            rs.updateString(1, "write");
+                            rs.updateString(2, role);
+                            rs.updateLong(3, uid);
+                            rs.insertRow();
+                        }
+                        if (!read.isEmpty() || !write.isEmpty()) {
+                            result.uids.add(catalogue.getGlobalID(uid, connection));
+                        }
+                    }
+                }
+                if(permissions.getOwner() != null && !permissions.getOwner().isEmpty()) {
+                    try (PreparedStatement ps = connection.prepareStatement("SELECT ownerId, uid from ldata_table WHERE uid = ?",
+                            java.sql.ResultSet.TYPE_FORWARD_ONLY,
+                            java.sql.ResultSet.CONCUR_UPDATABLE)) {
+                        for (Long uid : changeOwner) {
+                            ps.setLong(1, uid);
+                            ResultSet rs = ps.executeQuery();
+                            if (rs.next()) {
+                                String owner = rs.getString(1);
+                                if (!owner.equals(permissions.getOwner())) {
+                                    rs.updateString(1, permissions.getOwner());
+                                    rs.updateRow();
+                                    result.uids.add(catalogue.getGlobalID(uid, connection));
+                                }
+                            }
+                        }
+                    }
+                }
+                connection.commit();
+                return result;
+            } catch (SQLException ex) {
+                log.log(Level.SEVERE, null, ex);
+                connection.rollback();
+                throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
+            }
+        } catch (SQLException ex) {
+            log.log(Level.SEVERE, null, ex);
+            throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
+        }
+    }
 }
