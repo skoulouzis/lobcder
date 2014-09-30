@@ -12,12 +12,19 @@ import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.json.JSONConfiguration;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.Properties;
+import java.util.Random;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -35,25 +42,44 @@ import nl.uva.vlet.vrl.VRL;
 import nl.uva.vlet.vrs.ServerInfo;
 import nl.uva.vlet.vrs.VRS;
 import nl.uva.vlet.vrs.VRSContext;
+import org.apache.commons.httpclient.Credentials;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpStatus;
+import org.apache.commons.httpclient.HttpVersion;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.contrib.ssl.EasySSLProtocolSocketFactory;
 import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
+import org.apache.commons.httpclient.methods.PostMethod;
+import org.apache.commons.httpclient.methods.RequestEntity;
 import org.apache.commons.httpclient.methods.StringRequestEntity;
+import org.apache.commons.httpclient.methods.multipart.FilePart;
+import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
+import org.apache.commons.httpclient.methods.multipart.Part;
+import org.apache.commons.httpclient.methods.multipart.StringPart;
 import org.apache.commons.httpclient.params.HttpClientParams;
+import org.apache.commons.httpclient.params.HttpMethodParams;
 import org.apache.commons.httpclient.protocol.Protocol;
 import org.apache.commons.httpclient.protocol.ProtocolSocketFactory;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.mime.HttpMultipartMode;
+import org.apache.http.entity.mime.MultipartEntity;
+import org.apache.http.entity.mime.content.ContentBody;
+import org.apache.http.entity.mime.content.FileBody;
+import org.apache.http.entity.mime.content.StringBody;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.params.CoreProtocolPNames;
 import org.apache.jackrabbit.webdav.*;
 import org.apache.jackrabbit.webdav.client.methods.CopyMethod;
 import org.apache.jackrabbit.webdav.client.methods.DeleteMethod;
 import org.apache.jackrabbit.webdav.client.methods.MkColMethod;
-import org.apache.jackrabbit.webdav.client.methods.MoveMethod;
 import org.apache.jackrabbit.webdav.client.methods.PropFindMethod;
 import org.apache.jackrabbit.webdav.client.methods.PutMethod;
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
 import org.apache.jackrabbit.webdav.property.DavPropertySet;
+import org.globus.util.http.HttpResponse;
 import static org.junit.Assert.*;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -74,6 +100,7 @@ public class TestWebWAVFS {
     private static Properties prop;
     private static Client restClient;
     private static String restURL;
+    private static DefaultHttpClient httpclient;
 
     static {
         try {
@@ -174,6 +201,15 @@ public class TestWebWAVFS {
         client1.getState().setCredentials(
                 new AuthScope(uri.getHost(), uri.getPort()),
                 new UsernamePasswordCredentials(username1, password1));
+
+
+        httpclient = new DefaultHttpClient();
+        org.apache.http.auth.Credentials defaultcreds = new org.apache.http.auth.UsernamePasswordCredentials(username1, password1);
+        httpclient.getCredentialsProvider().setCredentials(org.apache.http.auth.AuthScope.ANY, (org.apache.http.auth.Credentials) defaultcreds);
+//        httpclient.getParams().setParameter(CoreProtocolPNames.PROTOCOL_VERSION, HttpVersion.HTTP_1_1);
+
+
+        HttpClient cl = new HttpClient();
 
 
         client2 = new HttpClient();
@@ -339,7 +375,7 @@ public class TestWebWAVFS {
         String testFileURI1 = uri.toASCIIString() + TestSettings.TEST_FILE_NAME1 + ".txt";
         DeleteMethod del = new DeleteMethod(testFileURI1);
         int status = client1.executeMethod(del);
-        assertTrue(status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT ||  status == HttpStatus.SC_NOT_FOUND);
+        assertTrue(status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT || status == HttpStatus.SC_NOT_FOUND);
 
         try {
             //PROPFIND file is not there 
@@ -474,6 +510,76 @@ public class TestWebWAVFS {
 
             assertEquals(TestSettings.TEST_DATA.length(), content.length());
             assertTrue(content.equals(TestSettings.TEST_DATA));
+
+        } finally {
+            delete(testFileURI1);
+        }
+    }
+
+    @Test
+    public void testFileConsistency() throws VlException, IOException {
+        String testFileURI1 = uri.toASCIIString() + TestSettings.TEST_FILE_NAME1;
+        try {
+            int size = 520;
+            for (int j = 515; j < size; j += 1) {
+
+                File file = new File("/tmp/" + TestSettings.TEST_FILE_NAME1);
+
+
+                FileOutputStream fos = new FileOutputStream(file);
+                byte[] buffer = new byte[1024 * 1024]; //1MB
+                Random r = new Random();
+
+                for (int i = 0; i < j; i++) {
+                    r.nextBytes(buffer);
+                    fos.write(buffer);
+                }
+                fos.flush();
+                fos.close();
+
+
+
+                String localChecksum = getChecksum(file, "SHA1");
+
+                postFile(file);
+                
+                
+                Thread.sleep(60000);
+
+                GetMethod get = new GetMethod(testFileURI1);
+                client1.executeMethod(get);
+                int status = get.getStatusCode();
+                assertEquals(HttpStatus.SC_OK, status);
+                InputStream in = get.getResponseBodyAsStream();
+                File fromLob = new File("/tmp/fromLob");
+                fos = new FileOutputStream(fromLob);
+
+
+
+                byte buf[] = new byte[1024];
+                int len;
+                while ((len = in.read(buf)) > 0) {
+                    fos.write(buf, 0, len);
+                }
+                fos.close();
+                in.close();
+
+
+
+                String fromLobChecksum = getChecksum(fromLob, "SHA1");
+
+                assertEquals(fromLobChecksum, localChecksum);
+
+
+                System.out.println(j + " of " + size);
+            }
+
+
+
+
+        } catch (Exception ex) {
+            fail(ex.getMessage());
+            Logger.getLogger(TestWebWAVFS.class.getName()).log(Level.SEVERE, null, ex);
 
         } finally {
             delete(testFileURI1);
@@ -653,6 +759,61 @@ public class TestWebWAVFS {
             System.err.println("Deleting: " + vrl);
             cli.openLocation(vrl).delete();
         }
+    }
+
+    private String getChecksum(File file, String algorithm) throws NoSuchAlgorithmException, FileNotFoundException, IOException {
+        MessageDigest md = MessageDigest.getInstance(algorithm);
+
+
+        FileInputStream fis = new FileInputStream(file);
+        byte[] dataBytes = new byte[1024];
+
+        int nread = 0;
+
+        while ((nread = fis.read(dataBytes)) != -1) {
+            md.update(dataBytes, 0, nread);
+        };
+
+        byte[] mdbytes = md.digest();
+
+        //convert the byte to hex format
+        StringBuilder sb = new StringBuilder("");
+        for (int i = 0; i < mdbytes.length; i++) {
+            sb.append(Integer.toString((mdbytes[i] & 0xff) + 0x100, 16).substring(1));
+        }
+
+        return sb.toString();
+
+    }
+
+    private void postFile(File file) throws IOException {
+
+
+        PostMethod method = new PostMethod(uri.toASCIIString());
+
+        Part[] parts = {
+            new StringPart("param_name", "value"),
+            new FilePart(file.getName(), file)
+        };
+
+        MultipartRequestEntity requestEntity = new MultipartRequestEntity(parts, method.getParams());
+        method.setRequestEntity(requestEntity);
+
+        int status = client1.executeMethod(method);
+        assertTrue(status == HttpStatus.SC_CREATED || status == HttpStatus.SC_OK);
+
+//        HttpPost httppost = new HttpPost(uri.toASCIIString());
+//        MultipartEntity mpEntity = new MultipartEntity();
+//        ContentBody cbFile = new FileBody(file, "image/jpeg");
+//        mpEntity.addPart("userfile", cbFile);
+//
+//
+//        httppost.setEntity(mpEntity);
+//        System.out.println("executing request " + httppost.getRequestLine());
+//        CloseableHttpResponse response = httpclient.execute(httppost);
+//
+//
+//        System.out.println(response.getStatusLine());
     }
 
     private static class UserThread extends Thread {

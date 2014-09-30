@@ -12,7 +12,7 @@ import java.util.Properties;
 
 /**
  *
- * @author alogo
+ * @author S. Koulouzis
  */
 public class TestSettings {
 

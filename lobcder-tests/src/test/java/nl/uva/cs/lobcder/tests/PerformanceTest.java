@@ -297,61 +297,61 @@ public class PerformanceTest {
     }
 
     private void benchmarkUpload() throws IOException, VlException {
-        VFile localFile = localTempDir.createFile("test1MBUpload");
-
-        double sum = 0;
-        double start_time = 0;
-        double lobcderUpSpeed;
-
-        String lobcderFilePath = lobcdrTestPath + localFile.getName();
-        PutMethod put = new PutMethod(lobcderFilePath);
-        RequestEntity requestEntity = new FileRequestEntity(new File(localFile.getVRL().toURI()), "application/octet-stream");
-        put.setRequestEntity(requestEntity);
-
-        String header = "numOfFiles,sizeUploaded(kb),UploadTime(sec),Speed(kb/sec)";
-        for (int k : FILE_SIZE_IN_KB) {
-            FileWriter writer = new FileWriter(uploadDir.getAbsolutePath() + File.separator + System.currentTimeMillis() + "_" + k + "k.csv");
-            writer.append(header + "\n");
-            int len = 1024 * k;
-            Random generator = new Random();
-            byte buffer[] = new byte[len];
-            generator.nextBytes(buffer);
-            localFile.streamWrite(buffer, 0, buffer.length);
-
-            debug("upload file size: " + localFile.getLength());
-
-            for (int i = MIN_SIZE_DATASET; i < MAX_SIZE_DATASET; i *= STEP_SIZE_DATASET) {
-                debug("Doing dataset: " + i);
-                client.executeMethod(put);
-                long datasetStart = System.currentTimeMillis();
-                for (int j = 0; j < i; j++) {
-
-                    lobcderFilePath = lobcdrTestPath + localFile.getName() + i;
-                    put = new PutMethod(lobcderFilePath);
-                    requestEntity = new InputStreamRequestEntity(localFile.getInputStream());
-                    put.setRequestEntity(requestEntity);
-                    start_time = System.currentTimeMillis();
-                    int status = client.executeMethod(put);
-                    double total_millis = System.currentTimeMillis() - start_time;
-//                    assertEquals(HttpStatus.SC_CREATED, status);
-                    lobcderUpSpeed = (len / 1024.0) / (total_millis / 1000.0);
-//                    debug("lobcder upload speed=" + lobcderUpSpeed + "KB/s");
-//            sum += lobcderUpSpeed;
-                }
-                long datasetElapsed = System.currentTimeMillis() - datasetStart;
-                double sizeUploaded = i * localFile.getLength();
-                double sizeUploadedKb = (sizeUploaded / 1024.0);
-                double datasetUploadSpeedKBperSec = sizeUploadedKb / (datasetElapsed / 1000.0);
-                debug("mean lobcder upload speed=" + datasetUploadSpeedKBperSec + "KB/s");
-                writer.append(i + "," + sizeUploadedKb + "," + (datasetElapsed / 1000.0) + "," + datasetUploadSpeedKBperSec + "\n");
-                writer.flush();
-            }
-            writer.flush();
-            writer.close();
-
-//        double mean = sum / N;
-//        debug("mean lobcder upload speed=" + mean + "KB/s");
-        }
+//        VFile localFile = localTempDir.createFile("test1MBUpload");
+//
+//        double sum = 0;
+//        double start_time = 0;
+//        double lobcderUpSpeed;
+//
+//        String lobcderFilePath = lobcdrTestPath + localFile.getName();
+//        PutMethod put = new PutMethod(lobcderFilePath);
+//        RequestEntity requestEntity = new FileRequestEntity(new File(localFile.getVRL().toURI()), "application/octet-stream");
+//        put.setRequestEntity(requestEntity);
+//
+//        String header = "numOfFiles,sizeUploaded(kb),UploadTime(sec),Speed(kb/sec)";
+//        for (int k : FILE_SIZE_IN_KB) {
+//            FileWriter writer = new FileWriter(uploadDir.getAbsolutePath() + File.separator + System.currentTimeMillis() + "_" + k + "k.csv");
+//            writer.append(header + "\n");
+//            int len = 1024 * k;
+//            Random generator = new Random();
+//            byte buffer[] = new byte[len];
+//            generator.nextBytes(buffer);
+//            localFile.streamWrite(buffer, 0, buffer.length);
+//
+//            debug("upload file size: " + localFile.getLength());
+//
+//            for (int i = MIN_SIZE_DATASET; i < MAX_SIZE_DATASET; i *= STEP_SIZE_DATASET) {
+//                debug("Doing dataset: " + i);
+//                client.executeMethod(put);
+//                long datasetStart = System.currentTimeMillis();
+//                for (int j = 0; j < i; j++) {
+//
+//                    lobcderFilePath = lobcdrTestPath + localFile.getName() + i;
+//                    put = new PutMethod(lobcderFilePath);
+//                    requestEntity = new InputStreamRequestEntity(localFile.getInputStream());
+//                    put.setRequestEntity(requestEntity);
+//                    start_time = System.currentTimeMillis();
+//                    int status = client.executeMethod(put);
+//                    double total_millis = System.currentTimeMillis() - start_time;
+////                    assertEquals(HttpStatus.SC_CREATED, status);
+//                    lobcderUpSpeed = (len / 1024.0) / (total_millis / 1000.0);
+////                    debug("lobcder upload speed=" + lobcderUpSpeed + "KB/s");
+////            sum += lobcderUpSpeed;
+//                }
+//                long datasetElapsed = System.currentTimeMillis() - datasetStart;
+//                double sizeUploaded = i * localFile.getLength();
+//                double sizeUploadedKb = (sizeUploaded / 1024.0);
+//                double datasetUploadSpeedKBperSec = sizeUploadedKb / (datasetElapsed / 1000.0);
+//                debug("mean lobcder upload speed=" + datasetUploadSpeedKBperSec + "KB/s");
+//                writer.append(i + "," + sizeUploadedKb + "," + (datasetElapsed / 1000.0) + "," + datasetUploadSpeedKBperSec + "\n");
+//                writer.flush();
+//            }
+//            writer.flush();
+//            writer.close();
+//
+////        double mean = sum / N;
+////        debug("mean lobcder upload speed=" + mean + "KB/s");
+//        }
     }
 
     private static void debug(String msg) {
