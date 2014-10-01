@@ -551,7 +551,6 @@ public final class WorkerServlet extends HttpServlet {
         double speed;
         long startTime = System.currentTimeMillis();
         int count = 0;
-        int iteration = 0;
         String d = "";
         double maxSpeed = -1;
         double thresshold = 100.0 * Math.exp(coefficient * (size / (1024.0 * 1024.0)));
@@ -561,9 +560,7 @@ public final class WorkerServlet extends HttpServlet {
             output.write(buffer, 0, read);
             total += read;
             double progress = (100.0 * total) / size;
-//            if (progress >= thresshold && Math.round(progress) % progressThresshold == 0) {
-            if (iteration % 200 == 0) {
-                iteration++;
+            if (progress >= thresshold && Math.round(progress) % progressThresshold == 0) {
                 long elapsed = System.currentTimeMillis() - startTime;
                 double a = 0.5;
                 speed = (total / elapsed);
@@ -643,11 +640,11 @@ public final class WorkerServlet extends HttpServlet {
         try {
             config.getProperties().put(HTTPSProperties.PROPERTY_HTTPS_PROPERTIES, new HTTPSProperties(
                     new HostnameVerifier() {
-                @Override
-                public boolean verify(String hostname, SSLSession session) {
-                    return true;
-                }
-            },
+                        @Override
+                        public boolean verify(String hostname, SSLSession session) {
+                            return true;
+                        }
+                    },
                     ctx));
         } catch (Exception e) {
         }
@@ -670,7 +667,7 @@ public final class WorkerServlet extends HttpServlet {
             WebResource res = webResource.path("item").path("query").path(fileUID);
             logicalData = res.accept(MediaType.APPLICATION_XML).
                     get(new GenericType<LogicalDataWrapped>() {
-            });
+                    });
 
             if (logicalData != null) {
                 Set<PDRIDesc> pdris = logicalData.pdriList;
