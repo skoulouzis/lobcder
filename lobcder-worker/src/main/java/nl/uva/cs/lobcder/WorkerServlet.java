@@ -560,7 +560,7 @@ public final class WorkerServlet extends HttpServlet {
             output.write(buffer, 0, read);
             total += read;
             double progress = (100.0 * total) / size;
-            if (progress >= thresshold && Math.round(progress) % progressThresshold == 0) {
+            if (progress >= thresshold && Math.round(progress) % progressThresshold == 0 && !Util.dropConnection() && !Util.getOptimizeFlow()) {
                 long elapsed = System.currentTimeMillis() - startTime;
                 double a = 0.5;
                 speed = (total / elapsed);
