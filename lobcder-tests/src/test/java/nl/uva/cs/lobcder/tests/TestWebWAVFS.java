@@ -42,35 +42,22 @@ import nl.uva.vlet.vrl.VRL;
 import nl.uva.vlet.vrs.ServerInfo;
 import nl.uva.vlet.vrs.VRS;
 import nl.uva.vlet.vrs.VRSContext;
-import org.apache.commons.httpclient.Credentials;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpStatus;
-import org.apache.commons.httpclient.HttpVersion;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.contrib.ssl.EasySSLProtocolSocketFactory;
 import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
 import org.apache.commons.httpclient.methods.PostMethod;
-import org.apache.commons.httpclient.methods.RequestEntity;
 import org.apache.commons.httpclient.methods.StringRequestEntity;
 import org.apache.commons.httpclient.methods.multipart.FilePart;
 import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
 import org.apache.commons.httpclient.methods.multipart.Part;
 import org.apache.commons.httpclient.methods.multipart.StringPart;
 import org.apache.commons.httpclient.params.HttpClientParams;
-import org.apache.commons.httpclient.params.HttpMethodParams;
 import org.apache.commons.httpclient.protocol.Protocol;
 import org.apache.commons.httpclient.protocol.ProtocolSocketFactory;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.mime.HttpMultipartMode;
-import org.apache.http.entity.mime.MultipartEntity;
-import org.apache.http.entity.mime.content.ContentBody;
-import org.apache.http.entity.mime.content.FileBody;
-import org.apache.http.entity.mime.content.StringBody;
 import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.params.CoreProtocolPNames;
 import org.apache.jackrabbit.webdav.*;
 import org.apache.jackrabbit.webdav.client.methods.CopyMethod;
 import org.apache.jackrabbit.webdav.client.methods.DeleteMethod;
@@ -79,7 +66,6 @@ import org.apache.jackrabbit.webdav.client.methods.PropFindMethod;
 import org.apache.jackrabbit.webdav.client.methods.PutMethod;
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
 import org.apache.jackrabbit.webdav.property.DavPropertySet;
-import org.globus.util.http.HttpResponse;
 import static org.junit.Assert.*;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -295,6 +281,7 @@ public class TestWebWAVFS {
 
     @Test
     public void testCreateAndDeleteFile() throws IOException, DavException {
+        System.err.println("testCreateAndDeleteFile");
         //Make sure it's deleted 
         String testFileURI1 = uri.toASCIIString() + TestSettings.TEST_FILE_NAME1;
         DeleteMethod del = new DeleteMethod(testFileURI1);
@@ -339,6 +326,7 @@ public class TestWebWAVFS {
 
     @Test
     public void testSetGetPropertySet() throws IOException, DavException {
+        System.err.println("testSetGetPropertySet");
         String testFileURI1 = this.uri.toASCIIString() + TestSettings.TEST_FILE_NAME1 + ".txt";
         PutMethod put = new PutMethod(testFileURI1);
         put.setRequestEntity(new StringRequestEntity(TestSettings.TEST_DATA, "text/plain", "UTF-8"));
@@ -371,6 +359,7 @@ public class TestWebWAVFS {
 
     @Test
     public void testPROPFIND_PUT_PROPFIND_GET_PUT() throws IOException, DavException {
+        System.err.println("testPROPFIND_PUT_PROPFIND_GET_PUT");
         //Make sure it's deleted 
         String testFileURI1 = uri.toASCIIString() + TestSettings.TEST_FILE_NAME1 + ".txt";
         DeleteMethod del = new DeleteMethod(testFileURI1);
@@ -452,6 +441,7 @@ public class TestWebWAVFS {
 
     @Test
     public void testUploadFileOnRootWithoutAdminRole() throws IOException, DavException {
+        System.err.println("testUploadFileOnRootWithoutAdminRole");
         String uname = prop.getProperty(("webdav.test.non.admin.username1"), "nonAdmin");
         assertNotNull(uname);
         String pass = prop.getProperty(("webdav.test.non.admin.password1"), "secret");
@@ -477,6 +467,7 @@ public class TestWebWAVFS {
 
     @Test
     public void testUpDownloadFileWithSpace() throws IOException, DavException {
+        System.err.println("testUpDownloadFileWithSpace");
 //        String testFileURI1 = uri.toASCIIString() + "file with spaces";
 //        PutMethod put = new PutMethod(testFileURI1);
 //        put.setRequestEntity(new StringRequestEntity(TestSettings.TEST_DATA, "text/plain", "UTF-8"));
@@ -494,6 +485,7 @@ public class TestWebWAVFS {
 
     @Test
     public void testPutGet() throws VlException, IOException {
+        System.err.println("testPutGet");
         String testFileURI1 = uri.toASCIIString() + TestSettings.TEST_FILE_NAME1 + ".txt";
         try {
             PutMethod put = new PutMethod(testFileURI1);
@@ -518,6 +510,7 @@ public class TestWebWAVFS {
 
     @Test
     public void testFileConsistency() throws VlException, IOException {
+        System.err.println("testFileConsistency");
         String testFileURI1 = uri.toASCIIString() + TestSettings.TEST_FILE_NAME1;
         try {
             int size = 520;
@@ -533,18 +526,18 @@ public class TestWebWAVFS {
                 for (int i = 0; i < j; i++) {
                     r.nextBytes(buffer);
                     fos.write(buffer);
+                    if (i % 100 == 0) {
+                        System.err.println(i + " of " + j);
+                    }
                 }
                 fos.flush();
                 fos.close();
 
-
+                postFile(file);
 
                 String localChecksum = getChecksum(file, "SHA1");
 
-                postFile(file);
-                
-                
-                Thread.sleep(60000);
+                Thread.sleep(80000);
 
                 GetMethod get = new GetMethod(testFileURI1);
                 client1.executeMethod(get);
@@ -588,6 +581,7 @@ public class TestWebWAVFS {
 
     @Test
     public void testInconsistency() throws VlException, IOException {
+        System.err.println("testInconsistency");
         String testFileURI1 = uri.toASCIIString() + TestSettings.TEST_FILE_NAME1 + ".txt";
         try {
             PutMethod put = new PutMethod(testFileURI1);
@@ -648,6 +642,7 @@ public class TestWebWAVFS {
 
     @Test
     public void testCopy() throws VlException, IOException {
+        System.err.println("testCopy");
         String testFileURI1 = this.uri.toASCIIString() + TestSettings.TEST_FILE_NAME1 + ".txt";
         String testcol = root + "testResourceId/";
         try {
@@ -687,6 +682,7 @@ public class TestWebWAVFS {
 
     @Test
     public void testMultiThread() throws IOException, DavException {
+        System.err.println("testMultiThread");
         try {
             Thread userThread1 = new UserThread(client1, uri.toASCIIString(), 1);
             userThread1.setName("T1");
@@ -788,7 +784,7 @@ public class TestWebWAVFS {
 
     private void postFile(File file) throws IOException {
 
-
+        System.err.println("post:" + file.getName());
         PostMethod method = new PostMethod(uri.toASCIIString());
 
         Part[] parts = {
