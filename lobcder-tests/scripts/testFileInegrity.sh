@@ -25,6 +25,7 @@ if mount | grep https://lobcder.vph.cyfronet.pl/lobcder/dav > /dev/null; then
             exit 1
         else
             rm /tmp/$md5.copy
+            rm /media/$USER/lobcder/skoulouz/$md5.copy
         fi
     done
 
