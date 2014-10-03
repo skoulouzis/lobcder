@@ -1,35 +1,22 @@
-<?xml version="1.0"?>
-<!DOCTYPE tsung SYSTEM "/usr/share/tsung/tsung-1.0.dtd">
 <tsung loglevel="notice" version="1.0">
-
     <clients>
-        <client host="localhost" use_controller_vm="true" maxusers="1024">
+        <client host="localhost" use_controller_vm="true" maxusers="1">
         </client>
     </clients>
-  
-  
     <servers>
-        <server host="192.168.100.2" port="8080" type="tcp"/>
+        <server host="localhost" port="8080" type="tcp"/>
     </servers>
-  
     <load>
-        <arrivalphase phase="1" duration="5" unit="second">
-            <users maxnumber="1024" arrivalrate="1" unit="second"/>
+        <arrivalphase phase="1" duration="20" unit="second">
+            <users maxnumber="1" arrivalrate="1" unit="second"/>
         </arrivalphase>
-
-   
     </load>
-
     <options>
         <option type="ts_http" name="user_agent">
-            <user_agent probability="100">Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.7.8) Gecko/20050513 Galeon/1.3.21</user_agent>
+            <user_agent probability="100">Benchmark</user_agent>
         </option>
-   
     </options>
-
-
     <sessions>
-      
         <session name="http-example" probability="100" type="ts_http">
             <request>
                 <dyn_variable name="redirect" re="Location: (http://.*)\r"/>
@@ -37,7 +24,6 @@
                     <www_authenticate userid="user" passwd="pass"/>
                 </http>
             </request>
-
             <repeat name="redirect_loop" max_repeat="1">
                 <request subst="true">
                     <dyn_variable name="redirect" re="Location: (http://.*)\r"/>
@@ -46,6 +32,5 @@
                 <until var="redirect" eq=""/>
             </repeat>
         </session>
-	
     </sessions>
 </tsung>
