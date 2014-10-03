@@ -64,6 +64,7 @@ CREATE TABLE wp4_table (
  id SERIAL PRIMARY KEY,
  local_id BIGINT UNSIGNED, FOREIGN KEY(local_id) REFERENCES ldata_table(uid) ON DELETE SET NULL ,
  global_id VARCHAR(255),
+ global_id_dev VARCHAR(255),
  views INT UNSIGNED NOT NULL DEFAULT 0,
  need_update BOOLEAN NOT NULL DEFAULT FALSE, INDEX(need_update),
  need_create BOOLEAN NOT NULL DEFAULT TRUE, INDEX(need_create)
