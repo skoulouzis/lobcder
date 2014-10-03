@@ -552,37 +552,42 @@ public class TestREST {
             assertNotNull(list);
             assertFalse(list.isEmpty());
             LogicalDataWrapped logicalDataWrapped = null;
+
+            Client mrClient = Client.create();
+
             for (LogicalDataWrapped ldw : list) {
                 checkLogicalDataWrapped(ldw);
                 if (ldw.logicalData.type.equals("logical.file") && ldw.logicalData.name.equals("file1")) {
                     logicalDataWrapped = ldw;
                 }
+                params = new MultivaluedMapImpl();
+                params.add("logicalExpression", "name=%22" + ldw.logicalData.name + "%22");
+                params.add("logicalExpression", "description=%22LOBCDER%22");
+
+                webResource = mrClient.resource(mrURL).path("filter").queryParams(params);
+
+                Thread.sleep(60000);
+                String response = webResource.get(String.class);
+                String idStr = response.substring(response.indexOf("<localID>") + "<localID>".length(), response.indexOf("</localID>"));
+
+
+                assertEquals(Integer.valueOf(ldw.logicalData.uid), Integer.valueOf(idStr));
+
             }
             assertNotNull(logicalDataWrapped);
-            int localID = list.get(0).logicalData.uid;
-            Client mrClient = Client.create();
 
 
 
 
-            params = new MultivaluedMapImpl();
-            params.add("logicalExpression", "name=%22" + testResourceId + "%22");
-            params.add("logicalExpression", "description=%22LOBCDER%22");
-            
-            webResource = mrClient.resource(mrURL).path("filter").queryParams(params);
 
-            Thread.sleep(60000);
-            String response = webResource.get(String.class);
-            String idStr = response.substring(response.indexOf("<localID>")+"<localID>".length(), response.indexOf("</localID>"));
 
-            
-            assertEquals(Integer.valueOf(localID), Integer.valueOf(idStr));
+
         } catch (InterruptedException ex) {
             Logger.getLogger(TestREST.class.getName()).log(Level.SEVERE, null, ex);
-        }finally{
+        } finally {
             deleteCollection();
         }
-        
+
     }
 
     @Test
