@@ -116,7 +116,7 @@ class WP4Sweep implements Runnable {
                 String result = (String) entity.subSequence(entity.lastIndexOf("<_global_id>") + "<_global_id>".length(), entity.indexOf("</_global_id>"));
 //                Node uidNode = (Node) expression.evaluate(new InputSource(response.getEntityInputStream()), XPathConstants.NODE);
 //                String result = uidNode.getTextContent();
-                log.log(Level.FINE, "Send metadata to uri: {0} author: {1} name: {2} type: {3} global_id: {4} localId: {5}", new Object[]{uri, resourceMetadata.author, resourceMetadata.name, resourceMetadata.type, resourceMetadata.localId, result});
+                log.log(Level.FINE, "Send metadata to uri: {0} author: {1} name: {2} type: {3} global_id: {4}", new Object[]{uri, resourceMetadata.author, resourceMetadata.name, resourceMetadata.type, result});
                 return result;
             } else {
                 throw new Exception(uri + " responded with: " + response.getClientResponseStatus().toString() + ". Response Entity:" + entity);
@@ -134,7 +134,7 @@ class WP4Sweep implements Runnable {
 
 //                Node uidNode = (Node) expression.evaluate(new InputSource(response.getEntityInputStream()), XPathConstants.NODE);
 //                String result = uidNode.getTextContent();
-                log.log(Level.FINE, "Send metadata to uri: {0} author: {1} name: {2} type: {3} global_id: {4} localId: {5}", new Object[]{uri, resourceMetadata.author, resourceMetadata.name, resourceMetadata.type, resourceMetadata.localId, result});
+                log.log(Level.FINE, "Send metadata to uri: {0} author: {1} name: {2} type: {3} global_id: {4}", new Object[]{uri_dev, resourceMetadata.author, resourceMetadata.name, resourceMetadata.type, result});
                 return result;
             } else {
                 throw new Exception(uri_dev + " responded with: " + response.getClientResponseStatus().toString() + ". Response Entity:" + entity);
@@ -150,7 +150,7 @@ class WP4Sweep implements Runnable {
                     || entity.contains("Error trying to create resource metadata in the system")) {
                 throw new Exception(uri + " responded with: " + response.getClientResponseStatus().toString() + ". Response Entity:" + entity);
             }
-            log.log(Level.FINE, "Send metadata to uri: {0} author: {1} name: {2} type: {3} global_id: {4} localId: {5}", new Object[]{uri, resourceMetadata.author, resourceMetadata.name, resourceMetadata.type, resourceMetadata.localId, entity});
+            log.log(Level.FINE, "Send metadata to uri: {0} author: {1} name: {2} type: {3} global_id: {4}", new Object[]{uri, resourceMetadata.author, resourceMetadata.name, resourceMetadata.type, resourceMetadata.globalId});
         }
 
         @Override
@@ -162,7 +162,7 @@ class WP4Sweep implements Runnable {
                     || entity.contains("Error trying to create resource metadata in the system")) {
                 throw new Exception(uri_dev + " responded with: " + response.getClientResponseStatus().toString() + ". Response Entity:" + entity);
             }
-            log.log(Level.FINE, "Send metadata to uri: {0} author: {1} name: {2} type: {3} global_id: {4} localId: {5}", new Object[]{uri, resourceMetadata.author, resourceMetadata.name, resourceMetadata.type, resourceMetadata.localId, entity});
+            log.log(Level.FINE, "Send metadata to uri: {0} author: {1} name: {2} type: {3} global_id: {4}", new Object[]{uri_dev, resourceMetadata.author, resourceMetadata.name, resourceMetadata.type, resourceMetadata.globalId});
         }
 
         @Override
