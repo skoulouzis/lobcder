@@ -93,7 +93,7 @@ public class VPDRI implements PDRI {
     private void initVFS() throws Exception {
         this.vfsClient = new VFSClient();
         VRSContext context = this.getVfsClient().getVRSContext();
-        context.setProperty(GlobalConfig.TCP_CONNECTION_TIMEOUT, "20");
+        context.setProperty(GlobalConfig.TCP_CONNECTION_TIMEOUT, "20000");
         //Bug in sftp: We have to put the username in the url
         ServerInfo info = context.getServerInfoFor(vrl, true);
         String authScheme = info.getAuthScheme();
