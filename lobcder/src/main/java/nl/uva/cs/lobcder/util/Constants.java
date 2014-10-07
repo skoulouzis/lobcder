@@ -36,14 +36,13 @@ public class Constants {
     public static final QName DATA_LOC_PREF_NAME = new QName("custom:", "data-location-preference");
     public static final QName ENCRYPT_PROP_NAME = new QName("custom:", "encrypt");
     public static final QName AVAIL_STORAGE_SITES_PROP_NAME = new QName("custom:", "avail-storage-sites");
-    public static final QName[] PROP_NAMES = new QName[]{DATA_DIST_PROP_NAME, DRI_SUPERVISED_PROP_NAME, DRI_CHECKSUM_PROP_NAME, DRI_LAST_VALIDATION_DATE_PROP_NAME, DRI_STATUS_PROP_NANE, DESCRIPTION_PROP_NAME, DATA_LOC_PREF_NAME, ENCRYPT_PROP_NAME, AVAIL_STORAGE_SITES_PROP_NAME,DAV_LOCK_PROP_NAME};
-    public static final int BUF_SIZE = 4*1024 * 1024;
+    public static final QName[] PROP_NAMES = new QName[]{DATA_DIST_PROP_NAME, DRI_SUPERVISED_PROP_NAME, DRI_CHECKSUM_PROP_NAME, DRI_LAST_VALIDATION_DATE_PROP_NAME, DRI_STATUS_PROP_NANE, DESCRIPTION_PROP_NAME, DATA_LOC_PREF_NAME, ENCRYPT_PROP_NAME, AVAIL_STORAGE_SITES_PROP_NAME, DAV_LOCK_PROP_NAME};
+    public static final int BUF_SIZE = 4 * 1024 * 1024;
     public static Long LOCK_TIME = new Long(60000);
     public static final int RECONNECT_NTRY = 20;
     public static final String RANGE_HEADER_NAME = "range";
     public static final String CERT_LOCATION = System.getProperty("user.home") + "/.globus/certificates/";
     public static final String PROXY_FILE = "/tmp/myProxy";
-    public static String[] BUFFERED_TYPES = new String[]{"audio/mpeg","video/mp4"};
+    public static String[] BUFFERED_TYPES = new String[]{"audio/mpeg", "video/mp4"};
     public static int CACHE_SIZE = 300;
-
 }

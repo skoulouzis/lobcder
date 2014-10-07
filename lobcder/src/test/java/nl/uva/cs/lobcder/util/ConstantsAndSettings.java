@@ -9,7 +9,7 @@ import io.milton.common.Path;
 
 /**
  *
- * @author skoulouz
+ * @author S. Koulouzis
  */
 public class ConstantsAndSettings {
 
