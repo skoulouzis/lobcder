@@ -35,6 +35,15 @@ public class PropertiesHelper {
         resource,
         state
     }
+    
+        public static enum ReplicationPolicy {
+
+        aggressive,
+        firstSite
+        
+    }
+        
+    
 
     private static Properties getProperties() throws IOException {
         InputStream in = null;
@@ -109,9 +118,8 @@ public class PropertiesHelper {
         return getProperties().getProperty("worker.token");
     }
 
-    public static boolean doAggressiveReplication() throws IOException {
-
-        return Boolean.valueOf(getProperties().getProperty("replication.aggressive", "false"));
+    public static ReplicationPolicy getReplicationPolicy() throws IOException {
+        return ReplicationPolicy.valueOf( getProperties().getProperty("replication.policy", "firstSite"));
     }
 
     public static boolean doRedirectGets() throws IOException {

@@ -23,12 +23,12 @@ import nl.uva.cs.lobcder.util.PropertiesHelper;
 class ReplicateSweep implements Runnable {
 
     private final DataSource datasource;
-    private boolean aggressiveReplicate = false;
+    private static PropertiesHelper.ReplicationPolicy replicatePolicy = PropertiesHelper.ReplicationPolicy.firstSite;
 
     public ReplicateSweep(DataSource datasource) {
         this.datasource = datasource;
         try {
-            aggressiveReplicate = PropertiesHelper.doAggressiveReplication();
+            replicatePolicy = PropertiesHelper.getReplicationPolicy();
         } catch (IOException ex) {
             Logger.getLogger(ReplicateSweep.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -44,16 +44,23 @@ class ReplicateSweep implements Runnable {
     }
 
     private Collection<StorageSite> findBestSites() {
-        if (aggressiveReplicate) {
-            return availableStorage;
-        } else {
-            ArrayList<StorageSite> sites = new ArrayList<StorageSite>();
-            if (it == null || !it.hasNext()) {
-                it = availableStorage.iterator();
-            }
-            sites.add(it.next());
-            return sites;
-            //             
+        switch (replicatePolicy) {
+            case firstSite:
+                ArrayList<StorageSite> sites = new ArrayList<>();
+                if (it == null || !it.hasNext()) {
+                    it = availableStorage.iterator();
+                }
+                sites.add(it.next());
+                return sites;
+            case aggressive:
+                return availableStorage;
+            default:
+                sites = new ArrayList<>();
+                if (it == null || !it.hasNext()) {
+                    it = availableStorage.iterator();
+                }
+                sites.add(it.next());
+                return sites;
         }
     }
 
@@ -168,9 +175,9 @@ class ReplicateSweep implements Runnable {
                 }
                 connection.commit();
                 for (PDRIDescr cd : toReplicate) {
-                    
-                    
-                    
+
+
+
                     log.log(Level.FINE, "to replicate: {0}", cd.getResourceUrl());
                     try (PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO pdri_table "
                             + "(fileName, storageSiteRef, pdriGroupRef,isEncrypted, encryptionKey) VALUES(?, ?, ?, ?, ?)")) {
