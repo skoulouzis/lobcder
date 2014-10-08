@@ -108,8 +108,7 @@ class WP4Sweep implements Runnable {
         @Override
         public String create(ResourceMetadata resourceMetadata) throws Exception {
             WebResource webResource = client.resource(uri);
-            String xml = resourceMetadata.getXml();
-            ClientResponse response = webResource.type(MediaType.APPLICATION_XML).post(ClientResponse.class, xml);
+            ClientResponse response = webResource.type(MediaType.APPLICATION_XML).post(ClientResponse.class, resourceMetadata.getXml());
             String entity = response.getEntity(String.class);
             if (response.getClientResponseStatus() == ClientResponse.Status.OK
                     && entity.contains("<_global_id>")) {

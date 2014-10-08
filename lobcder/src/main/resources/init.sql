@@ -74,7 +74,8 @@ CREATE TABLE permission_table (
  id SERIAL PRIMARY KEY,
  permType ENUM('read', 'write'), INDEX(permType),
  ldUidRef BIGINT UNSIGNED, FOREIGN KEY(ldUidRef) REFERENCES ldata_table(uid) ON DELETE CASCADE, INDEX(ldUidRef),
- roleName VARCHAR(255)
+ roleName VARCHAR(255),
+ INDEX(permType, ldUidRef, roleName)
 ) ENGINE=InnoDB;
 
 
@@ -442,7 +443,7 @@ CREATE TABLE IF NOT EXISTS tokens_table (
 
 CREATE EVENT IF NOT EXISTS e_tokens_sweep
   ON SCHEDULE
-    EVERY 10 SECOND
+    EVERY 600 SECOND
 DO
   DELETE FROM tokens_table WHERE exp_date < NOW();
 

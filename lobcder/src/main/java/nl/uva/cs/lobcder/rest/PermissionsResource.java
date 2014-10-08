@@ -163,51 +163,70 @@ public class PermissionsResource {
                         }
                     }
                 }
-                final int batchSize = 100;
-                int count = 0;
-                try(PreparedStatement psDel = connection.prepareStatement("DELETE FROM permission_table WHERE permission_table.ldUidRef = ?");
-                    PreparedStatement psIns = connection.prepareStatement("INSERT INTO permission_table (permType, ldUidRef, roleName) VALUES (?, ?, ?)")) {
-                    for(Long uid : elements) {
-                        psDel.setLong(1, uid);
-                        psDel.addBatch();
-                        for (String cr : permissions.getRead()) {
-                            psIns.setString(1, "read");
-                            psIns.setLong(2, uid);
-                            psIns.setString(3, cr);
-                            psIns.addBatch();
-                        }
-                        for (String cw : permissions.getWrite()) {
-                            psIns.setString(1, "write");
-                            psIns.setLong(2, uid);
-                            psIns.setString(3, cw);
-                            psIns.addBatch();
-                        }
-                        String myuid = catalogue.getGlobalID(uid, connection);
-                        if (myuid != null) {
-                            result.uids.add(myuid);
-                        }
-                        count++;
-                        if (count % batchSize == 0) {
-                            psDel.executeBatch();
-                            psIns.executeBatch();
-                        }
 
-                    }
-                    psDel.executeBatch();
-                    psIns.executeBatch();
-                }
-                try (PreparedStatement ps = connection.prepareStatement("UPDATE ldata_table SET ownerId = ? WHERE uid = ?")) {
-                    count = 0;
-                    ps.setString(1, permissions.getOwner());
-                    for(Long uid : changeOwner) {
-                        ps.setLong(2, uid);
-                        ps.addBatch();
-                        count++;
-                        if (count % batchSize == 0) {
-                            ps.executeBatch();
+                try(PreparedStatement ps = connection.prepareStatement("SELECT permType, roleName, ldUidRef, id  FROM permission_table WHERE permission_table.ldUidRef = ?",
+                        java.sql.ResultSet.TYPE_FORWARD_ONLY,
+                        java.sql.ResultSet.CONCUR_UPDATABLE)) {
+                    for (Long uid : elements) {
+                        ps.setLong(1, uid);
+                        ResultSet rs = ps.executeQuery();
+                        Set<String> read = new HashSet<>(permissions.getRead());
+                        Set<String> write = new HashSet<>(permissions.getWrite());
+                        boolean updateFlag = false;
+                        while (rs.next()) {
+                            String permType = rs.getString(1);
+                            String roleName = rs.getString(2);
+                            if (permType.equals("read")) {
+                                if(!read.remove(roleName)) {
+                                    rs.deleteRow();
+                                    updateFlag = true;
+                                }
+                            } else if (permType.equals("write")) {
+                                if(!write.remove(roleName)) {
+                                    rs.deleteRow();
+                                    updateFlag = true;
+                                }
+                            }
+                        }
+                        for (String role : read) {
+                            rs.moveToInsertRow();
+                            rs.updateString(1, "read");
+                            rs.updateString(2, role);
+                            rs.updateLong(3, uid);
+                            rs.insertRow();
+                        }
+                        for (String role : write) {
+                            rs.moveToInsertRow();
+                            rs.updateString(1, "write");
+                            rs.updateString(2, role);
+                            rs.updateLong(3, uid);
+                            rs.insertRow();
+                        }
+                        if (updateFlag || !read.isEmpty() || !write.isEmpty()) {
+                            String myuid = catalogue.getGlobalID(uid, connection);
+                            if (myuid != null) {
+                                result.uids.add(myuid);
+                            }
                         }
                     }
-                    ps.executeBatch();
+                }
+                if(permissions.getOwner() != null && !permissions.getOwner().isEmpty()) {
+                    try (PreparedStatement ps = connection.prepareStatement("SELECT ownerId, uid from ldata_table WHERE uid = ?",
+                            java.sql.ResultSet.TYPE_FORWARD_ONLY,
+                            java.sql.ResultSet.CONCUR_UPDATABLE)) {
+                        for (Long uid : changeOwner) {
+                            ps.setLong(1, uid);
+                            ResultSet rs = ps.executeQuery();
+                            if (rs.next()) {
+                                String owner = rs.getString(1);
+                                if (!owner.equals(permissions.getOwner())) {
+                                    rs.updateString(1, permissions.getOwner());
+                                    rs.updateRow();
+                                    result.uids.add(catalogue.getGlobalID(uid, connection));
+                                }
+                            }
+                        }
+                    }
                 }
                 connection.commit();
                 return result;
@@ -269,14 +288,14 @@ public class PermissionsResource {
                         }
                     }
                 }
-                Set<String> read = new HashSet<>(permissions.getRead());
-                Set<String> write = new HashSet<>(permissions.getWrite());
                 try(PreparedStatement ps = connection.prepareStatement("SELECT permType, roleName, ldUidRef, id  FROM permission_table WHERE permission_table.ldUidRef = ?",
                         java.sql.ResultSet.TYPE_FORWARD_ONLY,
                         java.sql.ResultSet.CONCUR_UPDATABLE)) {
                     for (Long uid : elements) {
                         ps.setLong(1, uid);
                         ResultSet rs = ps.executeQuery();
+                        Set<String> read = new HashSet<>(permissions.getRead());
+                        Set<String> write = new HashSet<>(permissions.getWrite());
                         while (rs.next()) {
                             String permType = rs.getString(1);
                             String roleName = rs.getString(2);
@@ -286,7 +305,6 @@ public class PermissionsResource {
                                 write.remove(roleName);
                             }
                         }
-
                         for (String role : read) {
                             rs.moveToInsertRow();
                             rs.updateString(1, "read");
@@ -302,7 +320,10 @@ public class PermissionsResource {
                             rs.insertRow();
                         }
                         if (!read.isEmpty() || !write.isEmpty()) {
-                            result.uids.add(catalogue.getGlobalID(uid, connection));
+                            String myuid = catalogue.getGlobalID(uid, connection);
+                            if (myuid != null) {
+                                result.uids.add(myuid);
+                            }
                         }
                     }
                 }
@@ -320,6 +341,84 @@ public class PermissionsResource {
                                     rs.updateRow();
                                     result.uids.add(catalogue.getGlobalID(uid, connection));
                                 }
+                            }
+                        }
+                    }
+                }
+                connection.commit();
+                return result;
+            } catch (SQLException ex) {
+                log.log(Level.SEVERE, null, ex);
+                connection.rollback();
+                throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
+            }
+        } catch (SQLException ex) {
+            log.log(Level.SEVERE, null, ex);
+            throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @Path("recursive/{uid}/")
+    @DELETE
+    @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public UIDS delPermissionsRecursive(@PathParam("uid") Long uid_p, JAXBElement<Permissions> jbPermissions) {
+        UIDS result = new UIDS();
+        try (Connection connection = catalogue.getConnection()) {
+            try {
+                Permissions permissions = jbPermissions.getValue();
+                MyPrincipal principal = (MyPrincipal) request.getAttribute("myprincipal");
+                LogicalData ld = catalogue.getLogicalDataByUid(uid_p, connection);
+                Stack<Long> folders = new Stack<>();
+                ArrayList<Long> elements = new ArrayList<>();
+                Permissions p = catalogue.getPermissions(ld.getUid(), ld.getOwner(), connection);
+                if(ld.isFolder() && principal.canRead(p)) {
+                    folders.add(ld.getUid());
+                }
+                if(principal.canWrite(p)){
+                    elements.add(ld.getUid());
+                }
+                try(PreparedStatement ps = connection.prepareStatement("SELECT uid, ownerId, datatype FROM ldata_table WHERE parentRef = ?")){
+                    while(!folders.isEmpty()){
+                        Long curUid = folders.pop();
+                        ps.setLong(1, curUid);
+                        try(ResultSet resultSet = ps.executeQuery()){
+                            while(resultSet.next()) {
+                                Long entry_uid = resultSet.getLong(1);
+                                String entry_owner = resultSet.getString(2);
+                                String entry_datatype = resultSet.getString(3);
+                                Permissions entry_p = catalogue.getPermissions(entry_uid, entry_owner, connection);
+                                if(entry_datatype.equals(Constants.LOGICAL_FOLDER) && principal.canRead(entry_p)){
+                                    folders.push(entry_uid);
+                                }
+                                if(principal.canWrite(entry_p)){
+                                    elements.add(entry_uid);
+                                }
+                            }
+                        }
+                    }
+                }
+                try(PreparedStatement ps = connection.prepareStatement("DELETE FROM permission_table WHERE permType = ? AND ldUidRef = ? AND roleName=?")) {
+                    for(Long uid : elements) {
+                        for (String cr : permissions.getRead()) {
+                            ps.setString(1, "read");
+                            ps.setLong(2, uid);
+                            ps.setString(3, cr);
+                            ps.addBatch();
+                        }
+                        for (String cw : permissions.getWrite()) {
+                            ps.setString(1, "write");
+                            ps.setLong(2, uid);
+                            ps.setString(3, cw);
+                            ps.addBatch();
+                        }
+                        for(int i : ps.executeBatch()) {
+                            if(i > 0) {
+                                String myuid = catalogue.getGlobalID(uid, connection);
+                                if (myuid != null) {
+                                    result.uids.add(myuid);
+                                }
+                                break;
                             }
                         }
                     }
