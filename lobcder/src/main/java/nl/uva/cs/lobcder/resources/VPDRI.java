@@ -30,6 +30,7 @@ import nl.uva.vlet.exception.VlException;
 import nl.uva.vlet.io.CircularStreamBufferTransferer;
 import nl.uva.vlet.vfs.*;
 import nl.uva.vlet.vfs.cloud.CloudFile;
+import nl.uva.vlet.vfs.webdavfs.WebdavFile;
 import nl.uva.vlet.vrl.VRL;
 import nl.uva.vlet.vrs.ServerInfo;
 import nl.uva.vlet.vrs.VRSContext;
@@ -543,9 +544,17 @@ public class VPDRI implements PDRI {
         if (getVfsClient() == null) {
             reconnect();
         }
-        CloudFile thisFile = (CloudFile) getVfsClient().createFile(vrl, true);
-        VFile sourceFile = getVfsClient().openFile(new VRL(source.getURI()));
-        thisFile.uploadFrom(sourceFile);
+        VFile file = getVfsClient().createFile(vrl, true);
+        if (file instanceof CloudFile) {
+            CloudFile uFile = (CloudFile) file;
+            VFile sourceFile = getVfsClient().openFile(new VRL(source.getURI()));
+            uFile.uploadFrom(sourceFile);
+        }
+        if (file instanceof WebdavFile) {
+            WebdavFile wFile = (WebdavFile) file;
+            VFile sourceFile = getVfsClient().openFile(new VRL(source.getURI()));
+            wFile.uploadFrom(sourceFile);
+        }
     }
 
     @Override
@@ -560,7 +569,7 @@ public class VPDRI implements PDRI {
             if (!vfsClient.existsDir(vrl.getParent())) {
                 VDir remoteDir = vfsClient.mkdirs(vrl.getParent(), true);
             }
-            if (desteScheme.equals("swift") && sourceScheme.equals("file")) {
+            if (desteScheme.equals("swift") && sourceScheme.equals("file") || desteScheme.startsWith("webdav") && sourceScheme.equals("file")) {
                 upload(source);
             } else {
                 VFile destFile = getVfsClient().createFile(vrl, true);

@@ -288,9 +288,9 @@ public class WebDataFileResource extends WebDataResource implements
                 if (ex instanceof nl.uva.vlet.exception.VlInterruptedException && ++tryCount < Constants.RECONNECT_NTRY) {
                     transferer(pdris, out, tryCount, false);
                 } else if (++tryCount < Constants.RECONNECT_NTRY) {
-                    transferer(pdris, out, tryCount, true);
+                    transferer(pdris, out, tryCount, false);
                 } else {
-                    transferer(pdris, out, 0, true);
+                    transferer(pdris, out, 0, false);
                 }
             } catch (InterruptedException ex1) {
                 sleepTime = 5;
@@ -430,7 +430,7 @@ public class WebDataFileResource extends WebDataResource implements
                 pdri = transfererRange(it, out, 0, null, range);
             } else {
 //                pdri = transferer(it, out, 0, null, false);
-                pdri = transferer(pdris, out, 0, doRedirect);
+                pdri = transferer(pdris, out, 0, false);
             }
         } catch (SQLException ex) {
             throw new BadRequestException(this, ex.getMessage());
