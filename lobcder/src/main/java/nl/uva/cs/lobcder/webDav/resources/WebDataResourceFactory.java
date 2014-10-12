@@ -3,6 +3,7 @@ package nl.uva.cs.lobcder.webDav.resources;
 import io.milton.common.Path;
 import io.milton.http.ResourceFactory;
 import io.milton.resource.Resource;
+import java.io.UnsupportedEncodingException;
 import lombok.Setter;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.auth.AuthI;
@@ -13,6 +14,7 @@ import nl.uva.cs.lobcder.util.Constants;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Log
 public class WebDataResourceFactory implements ResourceFactory {
@@ -69,6 +71,8 @@ public class WebDataResourceFactory implements ResourceFactory {
                 throw new RuntimeException(ex);
             }
 
+        } catch (UnsupportedEncodingException ex) {
+            Logger.getLogger(WebDataResourceFactory.class.getName()).log(Level.SEVERE, null, ex);
         }
         return null;
     }

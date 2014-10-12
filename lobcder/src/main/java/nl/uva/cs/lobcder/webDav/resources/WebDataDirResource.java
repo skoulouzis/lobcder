@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.NoSuchAlgorithmException;
@@ -526,6 +527,8 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
             if (ex instanceof PreConditionFailedException) {
                 throw new RuntimeException(ex);
             }
+        } catch (UnsupportedEncodingException ex) {
+            Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, ex);
         }
         return null;
     }

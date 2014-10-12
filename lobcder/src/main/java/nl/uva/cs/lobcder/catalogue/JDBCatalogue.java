@@ -344,24 +344,29 @@ public class JDBCatalogue extends MyDataSource {
         }
     }
 
-    public LogicalData getLogicalDataByPath(Path logicalResourceName) throws SQLException {
-        LogicalData res = getFromLDataCache(null, logicalResourceName.toString());
+    public LogicalData getLogicalDataByPath(Path logicalResourceName) throws SQLException, UnsupportedEncodingException {
+        Path decodedLogicalFileName = Path.path(java.net.URLDecoder.decode(logicalResourceName.toString(), "UTF-8"));
+        LogicalData res = getFromLDataCache(null, decodedLogicalFileName.toString());
         if (res != null) {
             return res;
         }
         try (Connection connection = getConnection()) {
-            res = getLogicalDataByPath(logicalResourceName, connection);
+            res = getLogicalDataByPath(decodedLogicalFileName, connection);
             return res;
         }
     }
 
     public Long getLogicalDataUidByPath(Path logicalResourceName, @Nonnull Connection connection) throws SQLException {
-        try (PreparedStatement preparedStatement = connection.prepareStatement(
-                "SELECT uid FROM ldata_table WHERE ldata_table.parentRef = ? AND ldata_table.ldName = ?")) {
-            long parent = 0;
-            for (String p : logicalResourceName.getParts()) {
-                preparedStatement.setLong(1, parent);
-                preparedStatement.setString(2, p);
+//        try (PreparedStatement preparedStatement = connection.prepareStatement(
+//                "SELECT uid FROM ldata_table WHERE ldata_table.parentRef = ? AND ldata_table.ldName = ?")) {
+        long parent = 0;
+
+        for (String p : logicalResourceName.getParts()) {
+
+            try (PreparedStatement preparedStatement = connection.prepareStatement(
+                    "SELECT uid FROM ldata_table WHERE ldata_table.parentRef = " + parent + " AND ldata_table.ldName like '" + p + "'")) {
+//                preparedStatement.setLong(1, parent);
+//                preparedStatement.setString(2, p);
                 ResultSet rs = preparedStatement.executeQuery();
                 if (rs.next()) {
                     parent = rs.getLong(1);
@@ -371,13 +376,14 @@ public class JDBCatalogue extends MyDataSource {
             }
             return parent;
         }
+        return null;
     }
 
     public Long getLogicalDataUidByParentRefAndName(Long parentRef, String name, @Nonnull Connection connection) throws SQLException {
         try (PreparedStatement preparedStatement = connection.prepareStatement(
-                "SELECT uid FROM ldata_table WHERE ldata_table.parentRef = ? AND ldata_table.ldName = ?")) {
-            preparedStatement.setLong(1, parentRef);
-            preparedStatement.setString(2, name);
+                "SELECT uid FROM ldata_table WHERE ldata_table.parentRef = " + parentRef + " AND ldata_table.ldName like '" + name + "'")) {
+//            preparedStatement.setLong(1, parentRef);
+//            preparedStatement.setString(2, name);
             ResultSet rs = preparedStatement.executeQuery();
             if (rs.next()) {
                 return rs.getLong(1);
@@ -393,9 +399,9 @@ public class JDBCatalogue extends MyDataSource {
                 + "contentTypesStr, pdriGroupRef, isSupervised, checksum, lastValidationDate, "
                 + "lockTokenID, lockScope, lockType, lockedByUser, lockDepth, lockTimeout, "
                 + "description, locationPreference "
-                + "FROM ldata_table WHERE ldata_table.parentRef = ? AND ldata_table.ldName = ?")) {
-            preparedStatement.setLong(1, parentRef);
-            preparedStatement.setString(2, name);
+                + "FROM ldata_table WHERE ldata_table.parentRef = " + parentRef + " AND ldata_table.ldName like '" + name + "'")) {
+//            preparedStatement.setLong(1, parentRef);
+//            preparedStatement.setString(2, name);
             ResultSet rs = preparedStatement.executeQuery();
             if (rs.next()) {
                 LogicalData res = new LogicalData();
@@ -428,7 +434,8 @@ public class JDBCatalogue extends MyDataSource {
         }
     }
 
-    public LogicalData getLogicalDataByPath(Path logicalResourceName, @Nonnull Connection connection) throws SQLException {
+    public LogicalData getLogicalDataByPath(Path logicalResourceName, @Nonnull Connection connection) throws SQLException, UnsupportedEncodingException {
+        Path decodedLogicalResourceName = Path.path(java.net.URLDecoder.decode(logicalResourceName.toString(), "UTF-8"));
         LogicalData res = getFromLDataCache(null, logicalResourceName.toPath());
         if (res != null) {
             return res;
@@ -448,9 +455,9 @@ public class JDBCatalogue extends MyDataSource {
                             + "contentTypesStr, pdriGroupRef, isSupervised, checksum, lastValidationDate, "
                             + "lockTokenID, lockScope, lockType, lockedByUser, lockDepth, lockTimeout, "
                             + "description, locationPreference, status "
-                            + "FROM ldata_table WHERE ldata_table.parentRef = ? AND ldata_table.ldName = ?")) {
-                        preparedStatement1.setLong(1, parent);
-                        preparedStatement1.setString(2, p);
+                            + "FROM ldata_table WHERE ldata_table.parentRef = " + parent + " AND ldata_table.ldName like '" + p + "'")) {
+//                        preparedStatement1.setLong(1, parent);
+//                        preparedStatement1.setString(2, p);
                         ResultSet rs = preparedStatement1.executeQuery();
                         if (rs.next()) {
                             res = new LogicalData();
@@ -477,16 +484,18 @@ public class JDBCatalogue extends MyDataSource {
                             res.setDataLocationPreference(rs.getString(19));
                             res.setStatus(rs.getString(20));
 
-                            putToLDataCache(res, logicalResourceName.toString());
+                            putToLDataCache(res, decodedLogicalResourceName.toString());
                             return res;
                         } else {
                             return null;
                         }
                     }
                 } else {
-                    preparedStatement.setLong(1, parent);
-                    preparedStatement.setString(2, p);
-                    ResultSet rs = preparedStatement.executeQuery();
+//                    preparedStatement.setLong(1, parent);
+//                    preparedStatement.setString(2, p);
+                    String query = "SELECT uid FROM ldata_table WHERE ldata_table.parentRef = " + parent + " AND ldata_table.ldName like '" + p + "'";
+                    ResultSet rs = preparedStatement.executeQuery(query);
+//                    ResultSet rs = preparedStatement.executeQuery();
                     if (rs.next()) {
                         parent = rs.getLong(1);
                     } else {
@@ -686,6 +695,8 @@ public class JDBCatalogue extends MyDataSource {
             ps.setString(2, newName);
             ps.setLong(3, toMove.getUid());
             ps.executeUpdate();
+//            String query = "UPDATE ldata_table SET parentRef = " + newParent.getUid() + ", ldName like '" + newName + "' WHERE uid = " + toMove.getUid();
+//            ps.executeUpdate(query);
         }
         removeFromLDataCache(toMove, null);
     }
@@ -1392,15 +1403,16 @@ public class JDBCatalogue extends MyDataSource {
         return users;
     }
 
-    public List<LogicalData> getLogicalDataByName(Path fileName, Connection connection) throws SQLException {
+    public List<LogicalData> getLogicalDataByName(Path fileName, Connection connection) throws SQLException, UnsupportedEncodingException {
+        Path decodedLogicalFileName = Path.path(java.net.URLDecoder.decode(fileName.toString(), "UTF-8"));
         try (PreparedStatement ps = connection.prepareStatement("SELECT uid, parentRef, "
                 + "ownerId, datatype, ldName, createDate, modifiedDate, ldLength, "
                 + "contentTypesStr, pdriGroupRef, isSupervised, checksum, "
                 + "lastValidationDate, lockTokenID, lockScope, lockType, "
                 + "lockedByUser, lockDepth, lockTimeout, description, "
                 + "locationPreference, status "
-                + "FROM ldata_table WHERE ldata_table.ldName = ?")) {
-            ps.setString(1, fileName.toString());
+                + "FROM ldata_table WHERE ldata_table.ldName like '" + decodedLogicalFileName.toString() + "'")) {
+//            ps.setString(1, fileName.toString());
             ResultSet rs = ps.executeQuery();
             List<LogicalData> results = new ArrayList<>();
             while (rs.next()) {

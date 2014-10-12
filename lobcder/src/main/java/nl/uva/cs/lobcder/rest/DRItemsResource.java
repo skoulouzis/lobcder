@@ -4,6 +4,7 @@
  */
 package nl.uva.cs.lobcder.rest;
 
+import java.io.UnsupportedEncodingException;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.auth.MyPrincipal;
 import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
@@ -72,7 +73,7 @@ public class DRItemsResource {
      */
     @Path("supervised/{flag}")
     @PUT
-    public void setSupervised(@PathParam("flag") Boolean flag, @QueryParam("path") String path) {
+    public void setSupervised(@PathParam("flag") Boolean flag, @QueryParam("path") String path) throws UnsupportedEncodingException {
         try (Connection cn = catalogue.getConnection()) {
             MyPrincipal mp = (MyPrincipal) request.getAttribute("myprincipal");
             if (mp.isAdmin()) {
