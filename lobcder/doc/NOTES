@@ -269,7 +269,7 @@ tc qdisc del root dev $1
 
 
 -----------------------------get usage data from elasticsearch
- curl "http://elab.lab.uvalight.net/elasticsearch/_all/_search?q=rx_size:*&size=5" | jq '.hits.hits | .[] | ._source | .rx_size'
+ curl "http://elab.lab.uvalight.net/elasticsearch/_all/_search?q=rx_size:*&size=5" | jq --raw-output '.hits.hits | .[] | ._source | "\(.logdate)\t\(.rx_source)\t\(.rx_destination)\t\(.rx_speed)\t\(.rx_size)\t\(.rx_sourceLoc.country_code2)\t\(.rx_sourceLoc.country_name)"'
 
 
 
