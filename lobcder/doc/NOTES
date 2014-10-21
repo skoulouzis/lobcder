@@ -263,5 +263,15 @@ tc class add dev $1 parent 1:1 classid 1:12 htb rate 20kbps ceil 20kbps
 tc qdisc add dev $1 parent 1:12 netem delay 1000ms 
 
 
---------------remove limit-----------------------
+--------------remove limit
 tc qdisc del root dev $1
+
+
+
+-----------------------------get usage data from elasticsearch
+ curl "http://elab.lab.uvalight.net/elasticsearch/_all/_search?q=rx_size:*&size=5" | jq '.hits.hits | .[] | ._source | .rx_size'
+
+
+
+----------------------------------------swift 
+swift --os-auth-url http://10.100.0.24:5000/v2.0/ --os-username username --os-password pass --os-tenant-name username list
