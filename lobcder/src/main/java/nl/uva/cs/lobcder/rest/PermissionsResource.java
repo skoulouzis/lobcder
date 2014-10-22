@@ -120,7 +120,7 @@ public class PermissionsResource {
     @PUT
     @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public UIDS setPermissions1(@PathParam("uid") Long uid_p, JAXBElement<Permissions> jbPermissions) {
+    public UIDS setPermissionsRecursive(@PathParam("uid") Long uid_p, @DefaultValue("False") @QueryParam("getall") Boolean getall, JAXBElement<Permissions> jbPermissions) {
         UIDS result = new UIDS();
         try (Connection connection = catalogue.getConnection()) {
             try {
@@ -136,7 +136,7 @@ public class PermissionsResource {
                 }
                 if(principal.canWrite(p)){
                     elements.add(ld.getUid());
-                    if(!ld.getOwner().equals(permissions.getOwner())){
+                    if(permissions.getOwner() != null && !ld.getOwner().equals(permissions.getOwner())){
                         changeOwner.add(ld.getUid());
                     }
                 }
@@ -155,7 +155,7 @@ public class PermissionsResource {
                                 }
                                 if(principal.canWrite(entry_p)){
                                     elements.add(entry_uid);
-                                    if(!entry_owner.equals(permissions.getOwner())) {
+                                    if(permissions.getOwner() != null && !entry_owner.equals(permissions.getOwner())) {
                                         changeOwner.add(entry_uid);
                                     }
                                 }
@@ -202,7 +202,7 @@ public class PermissionsResource {
                             rs.updateLong(3, uid);
                             rs.insertRow();
                         }
-                        if (updateFlag || !read.isEmpty() || !write.isEmpty()) {
+                        if (getall || updateFlag || !read.isEmpty() || !write.isEmpty()) {
                             String myuid = catalogue.getGlobalID(uid, connection);
                             if (myuid != null) {
                                 result.uids.add(myuid);
@@ -218,10 +218,9 @@ public class PermissionsResource {
                             ps.setLong(1, uid);
                             ResultSet rs = ps.executeQuery();
                             if (rs.next()) {
-                                String owner = rs.getString(1);
-                                if (!owner.equals(permissions.getOwner())) {
-                                    rs.updateString(1, permissions.getOwner());
-                                    rs.updateRow();
+                                rs.updateString(1, permissions.getOwner());
+                                rs.updateRow();
+                                if(!getall) {
                                     result.uids.add(catalogue.getGlobalID(uid, connection));
                                 }
                             }
@@ -245,7 +244,7 @@ public class PermissionsResource {
     @POST
     @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public UIDS addPermissionsRecursive(@PathParam("uid") Long uid_p, JAXBElement<Permissions> jbPermissions) {
+    public UIDS addPermissionsRecursive(@PathParam("uid") Long uid_p, @DefaultValue("False") @QueryParam("getall") Boolean getall, JAXBElement<Permissions> jbPermissions) {
         UIDS result = new UIDS();
         try (Connection connection = catalogue.getConnection()) {
             try {
@@ -261,7 +260,7 @@ public class PermissionsResource {
                 }
                 if(principal.canWrite(p)){
                     elements.add(ld.getUid());
-                    if(!ld.getOwner().equals(permissions.getOwner())){
+                    if(permissions.getOwner() != null && !ld.getOwner().equals(permissions.getOwner())){
                         changeOwner.add(ld.getUid());
                     }
                 }
@@ -280,7 +279,7 @@ public class PermissionsResource {
                                 }
                                 if(principal.canWrite(entry_p)){
                                     elements.add(entry_uid);
-                                    if(!entry_owner.equals(permissions.getOwner())) {
+                                    if(permissions.getOwner() != null && !entry_owner.equals(permissions.getOwner())) {
                                         changeOwner.add(entry_uid);
                                     }
                                 }
@@ -319,7 +318,7 @@ public class PermissionsResource {
                             rs.updateLong(3, uid);
                             rs.insertRow();
                         }
-                        if (!read.isEmpty() || !write.isEmpty()) {
+                        if (getall || !read.isEmpty() || !write.isEmpty()) {
                             String myuid = catalogue.getGlobalID(uid, connection);
                             if (myuid != null) {
                                 result.uids.add(myuid);
@@ -335,10 +334,9 @@ public class PermissionsResource {
                             ps.setLong(1, uid);
                             ResultSet rs = ps.executeQuery();
                             if (rs.next()) {
-                                String owner = rs.getString(1);
-                                if (!owner.equals(permissions.getOwner())) {
-                                    rs.updateString(1, permissions.getOwner());
-                                    rs.updateRow();
+                                rs.updateString(1, permissions.getOwner());
+                                rs.updateRow();
+                                if(!getall) {
                                     result.uids.add(catalogue.getGlobalID(uid, connection));
                                 }
                             }
@@ -362,7 +360,7 @@ public class PermissionsResource {
     @DELETE
     @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public UIDS delPermissionsRecursive(@PathParam("uid") Long uid_p, JAXBElement<Permissions> jbPermissions) {
+    public UIDS delPermissionsRecursive(@PathParam("uid") Long uid_p, @DefaultValue("False") @QueryParam("getall") Boolean getall, JAXBElement<Permissions> jbPermissions) {
         UIDS result = new UIDS();
         try (Connection connection = catalogue.getConnection()) {
             try {
@@ -413,7 +411,7 @@ public class PermissionsResource {
                             ps.addBatch();
                         }
                         for(int i : ps.executeBatch()) {
-                            if(i > 0) {
+                            if(getall || (i > 0)) {
                                 String myuid = catalogue.getGlobalID(uid, connection);
                                 if (myuid != null) {
                                     result.uids.add(myuid);
