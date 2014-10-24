@@ -37,7 +37,8 @@ public class Permissions {
     public Permissions(MyPrincipal mp, Permissions parentPermissions) {
         owner = mp.getUserId();
         read.addAll(parentPermissions.getRead());
-        read.addAll(mp.getRoles());
+        // Do not include the roles the user belongs to to the list of readers. For security reason.
+        //read.addAll(mp.getRoles());
         write.addAll(parentPermissions.getWrite());
     }
 
