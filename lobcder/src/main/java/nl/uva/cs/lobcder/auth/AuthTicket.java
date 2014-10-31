@@ -28,17 +28,16 @@ import java.util.logging.Level;
  *
  * @author dvasunin
  */
-
 @Log
-public class AuthTicket implements AuthI  {
+public class AuthTicket implements AuthI {
 
     @Setter
     private PrincipalCacheI principalCache = null;
-
     @Setter
     private DataSource dataSource;
 
     public static class User {
+
         public String username;
         public String role[];
         public long validuntil;
@@ -51,12 +50,12 @@ public class AuthTicket implements AuthI  {
             if (principalCache != null) {
                 res = principalCache.getPrincipal(token);
             }
-            if(token.length() == 12){
-                try(Connection cn = dataSource.getConnection()) {
-                    try(PreparedStatement ps = cn.prepareStatement("SELECT long_tkt FROM tokens_table WHERE short_tkt = ?")) {
+            if (token.length() == 12) {
+                try (Connection cn = dataSource.getConnection()) {
+                    try (PreparedStatement ps = cn.prepareStatement("SELECT long_tkt FROM tokens_table WHERE short_tkt = ?")) {
                         ps.setString(1, token);
-                        try(ResultSet rs = ps.executeQuery()){
-                            if(rs.next())   {
+                        try (ResultSet rs = ps.executeQuery()) {
+                            if (rs.next()) {
                                 token = rs.getString(1);
                             }
                         }
@@ -79,9 +78,6 @@ public class AuthTicket implements AuthI  {
         }
         return res;
     }
-
-
-
     Signature verifier = null;
 
     public AuthTicket() throws Exception {
@@ -90,11 +86,11 @@ public class AuthTicket implements AuthI  {
         Properties properties = new Properties();
         properties.load(in);
         String lpubKeyFile = properties.getProperty("mi.cert.pub.der", "mi_pub_key.der");
-        String pubKeyType =  properties.getProperty("mi.cert.alg", "DSA");
+        String pubKeyType = properties.getProperty("mi.cert.alg", "DSA");
         in = classLoader.getResourceAsStream(lpubKeyFile);
         byte[] keyBytes = new byte[in.available()];
         in.read(keyBytes);
-        X509EncodedKeySpec spec =  new X509EncodedKeySpec(keyBytes);
+        X509EncodedKeySpec spec = new X509EncodedKeySpec(keyBytes);
         KeyFactory kf = null;
         switch (pubKeyType) {
             case "DSA":
@@ -110,10 +106,10 @@ public class AuthTicket implements AuthI  {
         verifier.initVerify(pubKey);
     }
 
-    public User validateTicket (String token) {
-        try{
+    public User validateTicket(String token) {
+        try {
             String ticket = new String(Base64.decodeBase64(token));
-            byte [] signBytes;
+            byte[] signBytes;
             User u = null;
 
             // check errors
@@ -124,7 +120,7 @@ public class AuthTicket implements AuthI  {
                 return null;
             }
 
-            String ticketSign = ticket.substring(posSign+5);
+            String ticketSign = ticket.substring(posSign + 5);
             String cleanTicket = ticket.substring(0, posSign);
             signBytes = Base64.decodeBase64(ticketSign);
             verifier.update(cleanTicket.getBytes());
@@ -133,9 +129,11 @@ public class AuthTicket implements AuthI  {
 
                 String parts[] = cleanTicket.split(";");
 
-                if (parts.length < 4 ||  parts.length > 6) return null;
+                if (parts.length < 4 || parts.length > 6) {
+                    return null;
+                }
                 u = new User();
-                for(int i = 0; i < parts.length; i++) {
+                for (int i = 0; i < parts.length; i++) {
                     String fields[] = parts[i].split("=");
                     if (fields[0].compareTo("uid") == 0) {
                         u.username = fields[1];
@@ -145,13 +143,13 @@ public class AuthTicket implements AuthI  {
                         u.role = fields[1].split(",");
                     }
                 }
-                long now = new Date().getTime()/1000;
+                long now = new Date().getTime() / 1000;
                 if (u.validuntil < now) {
-                    System.out.println("Expired");
-                   return null;
+                    AuthTicket.log.log(Level.FINE, "Certificate Expired");
+                    return null;
                 }
             } else {
-                System.out.println("Can't verify");
+                AuthTicket.log.log(Level.FINE, "Can't verify");
                 return null;
             }
             return u;
@@ -171,6 +169,4 @@ public class AuthTicket implements AuthI  {
         //System.out.println(au.checkToken("dWlkPWR2YXN1bmluO3ZhbGlkdW50aWw9MTM4OTc3NjcxNjtjaXA9MC4wLjAuMDt0b2tlbnM9dGVzdCxkZXZlbG9wZXIsZnJpZW5kLGFkbWluLHZwaCxWUEg7dWRhdGE9ZHZhc3VuaW4sRG1pdHJ5IFZhc3l1bmluLGR2YXN1bmluQGdtYWlsLmNvbSwsTkVUSEVSTEFORFMsMTA5OFhIO3NpZz1NQzRDRlFEWjBnU3dEcnkyOTdzbXJlQUNJdXl5NzFuK2J3SVZBUGdOVEg0NEdPbTVUUWZlcDExOGtTNjNoQ3E2"));
         System.out.println(au.checkToken("dWlkPWR2YXN1bmluO3ZhbGlkdW50aWw9MTQwNjE1NzQ5OTtjaXA9MC4wLjAuMDt0b2tlbnM9dGVzdCxkZXZlbG9wZXIsZnJpZW5kLGFkbWluLHZwaCxWUEgtU2hhcmUgZGV2ZWxvcGVycyxWUEg7dWRhdGE9ZHZhc3VuaW4sRG1pdHJ5IFZhc3l1bmluLGR2YXN1bmluQGdtYWlsLmNvbSwsTkVUSEVSTEFORFMsMTA5OFhIO3NpZz1NQ3dDRkJwSnBmZk85aXlkNkpvdTI2UEYwYTBrR3kwQUFoUkM2ckExQnZxd1JuWEUxZlpWQzNIR215TDBEdz09"));
     }
-
 }
-

@@ -268,10 +268,41 @@ tc qdisc del root dev $1
 
 
 
------------------------------get usage data from elasticsearch
- curl "http://elab.lab.uvalight.net/elasticsearch/_all/_search?q=rx_size:*&size=5" | jq --raw-output '.hits.hits | .[] | ._source | "\(.logdate)\t\(.rx_source)\t\(.rx_destination)\t\(.rx_speed)\t\(.rx_size)\t\(.rx_sourceLoc.country_code2)\t\(.rx_sourceLoc.country_name)"'
+-----------------------------proccess usage data from elasticsearch
+curl "http://elab.lab.uvalight.net/elasticsearch/_all/_search?q=rx_size:*&size=5" | jq --raw-output '.hits.hits | .[] | ._source | "\(.logdate)\t\(.rx_source)\t\(.rx_destination)\t\(.rx_speed)\t\(.rx_size)\t\(.rx_sourceLoc.country_code2)\t\(.rx_sourceLoc.country_name)"'
+
+curl "http://elab.lab.uvalight.net/elasticsearch/_all/_search?q=tx_size:*&size=5" | jq --raw-output '.hits.hits | .[] | ._source | "\(.logdate)\t\(.tx_source)\t\(.tx_destination)\t\(.tx_speed)\t\(.tx_size)\t\(.tx_destinationLoc.country_code2)\t\(.tx_destinationLoc.country_name)"'
 
 
+curl "http://elab.lab.uvalight.net/elasticsearch/_all/_search?q=req_source:*&from=0&size=5" | jq --raw-output '.hits.hits | .[] | ._source | "\(.logdate)\t\(.req_sourceLoc.country_code2)\t\(.req_sourceLoc.country_name)\t\(.req_sourceLoc.city_name)\t\(.req_userAgent)\t\(.req_user)\t\(.req_verb)\t\(.req_contLen)\t\(.req_contType)\t\(.req_elapsed)\t\(.req_contType)\t\(.req_queryString)\t\(.req_URL)"'
+
+
+jq --raw-output '.hits.hits | .[] | ._source | "\(.logdate)\t\(.repl_source)\t\(.repl_destination)\t\(.repl_speed)\t\(.repl_size)"'
+
+---------------------Usare agents
+
+sed -i 's/Jakarta\ Commons-HttpClient.*/Jakarta\ Commons-HttpClient/' req.csv
+sed -i 's/cadaver.*/cadaver/' req.csv
+sed -i 's/python-requests.*/python-requests/' req.csv
+sed -i 's/Microsoft\ Data\ Access\ Internet\ Publishing\ Provider.*/Microsoft\ Data\ Access\ Internet\ Publishing\ Provider/' req.csv
+sed -i 's/davfs2.*/davfs2/' req.csv
+sed -i 's/Mozilla.*/Mozilla/' req.csv
+sed -i 's/curl.*/curl/' req.csv
+sed -i 's/Java.*/Java/' req.csv
+sed -i 's/Cyberduck.*/Cyberduck/' req.csv
+sed -i 's/gvfs.*/gvfs/' req.csv
+sed -i 's/BitKinex.*/BitKinex/' req.csv
+sed -i 's/Opera.*/Opera/' req.csv
+sed -i 's/WebDAVLib.*/WebDAVLib/' req.csv
+sed -i 's/WebDAVFS.*/WebDAVFS/' req.csv
+sed -i 's/NetBox.*/NetBox/' req.csv
+sed -i 's/Microsoft-WebDAV-MiniRedir.*/Microsoft-WebDAV-MiniRedir/' req.csv
+sed -i 's/Apache-HttpClient.*/Apache-HttpClient/' req.csv
+sed -i 's/Transmit.*/Transmit/' req.csv
+sed -i 's/Benchmark.*/Benchmark/' req.csv
+sed -i 's/UCI\ DAV\ Explorer.*/UCI\ DAV\ Explorer/' req.csv
+sed -i 's/Wget.*/Wget/' req.csv
+sed -i 's/Transmit.*/Transmit/' req.csv
 
 ----------------------------------------swift 
 swift --os-auth-url http://10.100.0.24:5000/v2.0/ --os-username username --os-password pass --os-tenant-name username list
