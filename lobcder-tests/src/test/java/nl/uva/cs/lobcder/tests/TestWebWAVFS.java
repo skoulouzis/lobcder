@@ -513,8 +513,8 @@ public class TestWebWAVFS {
         System.err.println("testFileConsistency");
         String testFileURI1 = uri.toASCIIString() + TestSettings.TEST_FILE_NAME1;
         try {
-            int size = 520;
-            for (int j = 515; j < size; j += 1) {
+            int size = 110;
+            for (int j = 100; j < size; j += 5) {
 
                 File file = new File("/tmp/" + TestSettings.TEST_FILE_NAME1);
 

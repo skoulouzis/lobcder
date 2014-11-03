@@ -21,9 +21,9 @@ STATE_UNKNOWN=3
 EXIT_STATE=$STATE_OK
 # ---------------------------PUT--------------------------
 #echo "Test PUT"
-curl -ks -X DELETE $url/$file > /dev/null
+curl -3  -ks -X DELETE $url/$file > /dev/null
 echo "Safe to delete" > $localdir/$file 
-success=`curl -iks -H "Content-Type:plain/text" -T $localdir/$file $url/$file | grep "HTTP/1.[01] 20.." 2>&1`
+success=`curl -3  -iks -H "Content-Type:plain/text" -T $localdir/$file $url/$file | grep "HTTP/1.[01] 20.." 2>&1`
 if [ -z "$success" ]
 then
   EXIT_STATE=$STATE_CRITICAL
@@ -39,11 +39,11 @@ fi
 
 # ---------------------------GET--------------------------
 #echo "Test GET"
-curl -ks -X DELETE $url/$file > /dev/null
+curl -3  -ks -X DELETE $url/$file > /dev/null
 echo "Safe to delete" > $localdir/$file 
-curl -iks -H "Content-Type:plain/text" -T $localdir/$file $url/$file > /dev/null
+curl -3  -iks -H "Content-Type:plain/text" -T $localdir/$file $url/$file > /dev/null
 
-success=`curl -iks  $url | grep "HTTP/1.[01] 20.." 2>&1`
+success=`curl -3  -iks  $url | grep "HTTP/1.[01] 20.." 2>&1`
 if [ -z "$success" ]
 then
   EXIT_STATE=$STATE_CRITICAL
@@ -59,11 +59,11 @@ fi
 
 # ---------------------------DELETE--------------------------
 #echo "Test DELETE"
-curl -ks -X DELETE $url/$file > /dev/null
+curl -3  -ks -X DELETE $url/$file > /dev/null
 echo "Safe to delete" > $localdir/$file > /dev/null
-curl -iks -H "Content-Type:plain/text" -T $localdir/$file $url/$file > /dev/null
+curl -3  -iks -H "Content-Type:plain/text" -T $localdir/$file $url/$file > /dev/null
 
-success=`curl -iks -X DELETE $url/$file | grep "HTTP/1.[01] 20.." 2>&1`
+success=`curl -3  -iks -X DELETE $url/$file | grep "HTTP/1.[01] 20.." 2>&1`
 if [ -z "$success" ]
 then
   EXIT_STATE=$STATE_CRITICAL
@@ -79,7 +79,7 @@ fi
 
 # ---------------------------PROPFIND--------------------------
 #echo "Test PROPFIND"
-success=`curl -iks -X PROPFIND $url | grep "HTTP/1.[01] 20.." 2>&1`
+success=`curl -3  -iks -X PROPFIND $url | grep "HTTP/1.[01] 20.." 2>&1`
 
 if [ -z "$success" ]
 then
@@ -96,8 +96,8 @@ fi
 
 # ---------------------------MKCOL--------------------------
 #echo "Test MKCOL"
-curl -ks -X DELETE $url/$dir > /dev/null
-success=`curl -iks -X MKCOL $url/$dir | grep "HTTP/1.[01] 20.." 2>&1`
+curl -3  -ks -X DELETE $url/$dir > /dev/null
+success=`curl -3  -iks -X MKCOL $url/$dir | grep "HTTP/1.[01] 20.." 2>&1`
 if [ -z "$success" ]
 then
   EXIT_STATE=$STATE_WARNING
@@ -112,11 +112,11 @@ fi
 
 # ---------------------------MOVE/RENAME--------------------------
 #echo "Test MOVE"
-curl -ks -X DELETE $url/$file > /dev/null
-curl -ks -X DELETE $url/$file.move > /dev/null
+curl -3  -ks -X DELETE $url/$file > /dev/null
+curl -3  -ks -X DELETE $url/$file.move > /dev/null
 echo "Safe to delete" > $localdir/$file 
-curl -iks -H "Content-Type:plain/text" -T $localdir/$file $url/$file > /dev/null
-success=`curl -iks -X MOVE --header "Destination: $url/$file.move" $url/$file | grep "HTTP/1.[01] 20.." 2>&1`
+curl -3  -iks -H "Content-Type:plain/text" -T $localdir/$file $url/$file > /dev/null
+success=`curl -3  -iks -X MOVE --header "Destination: $url/$file.move" $url/$file | grep "HTTP/1.[01] 20.." 2>&1`
 
 if [ -z "$success" ]
 then
@@ -128,11 +128,11 @@ then
   EXIT_STATE=$STATE_OK
 fi
 
-curl -ks -X DELETE $url/$dir > /dev/null
-curl -ks -X DELETE $url/$dir.move > /dev/null
+curl -3  -ks -X DELETE $url/$dir > /dev/null
+curl -3  -ks -X DELETE $url/$dir.move > /dev/null
 
-curl -iks -X MKCOL $url/$dir > /dev/null
-success=`curl -iks -X MOVE --header "Destination: $url/$dir.move" $url/$dir | grep "HTTP/1.[01] 20.." 2>&1`
+curl -3  -iks -X MKCOL $url/$dir > /dev/null
+success=`curl -3  -iks -X MOVE --header "Destination: $url/$dir.move" $url/$dir | grep "HTTP/1.[01] 20.." 2>&1`
 if [ -z "$success" ]
 then
   EXIT_STATE=$STATE_WARNING
@@ -146,12 +146,12 @@ fi
 
 # ---------------------------COPY--------------------------
 #echo "Test COPY"
-curl -ks -X DELETE $url/$file > /dev/null
-curl -ks -X DELETE $url/$file.copy > /dev/null
+curl -3  -ks -X DELETE $url/$file > /dev/null
+curl -3  -ks -X DELETE $url/$file.copy > /dev/null
 echo "Safe to delete" > $localdir/$file 
-curl -iks -H "Content-Type:plain/text" -T $localdir/$file $url/$file > /dev/null
+curl -3  -iks -H "Content-Type:plain/text" -T $localdir/$file $url/$file > /dev/null
 
-success=`curl -iks -X COPY --header "Destination:$url/$file.copy" $url/$file | grep "HTTP/1.[01] 20.." 2>&1`
+success=`curl -3  -iks -X COPY --header "Destination:$url/$file.copy" $url/$file | grep "HTTP/1.[01] 20.." 2>&1`
 
 if [ -z "$success" ]
 then
@@ -170,7 +170,7 @@ fi
 # 
 # # ---------------------------HEAD--------------------------
 # # Takes too long 
-# # success=`curl -iks -X HEAD https://$user:$pass@$url/ | grep "HTTP/1.[01] 20.." 2>&1`
+# # success=`curl -3  -iks -X HEAD https://$user:$pass@$url/ | grep "HTTP/1.[01] 20.." 2>&1`
 # # if [ -z "$success" ]
 # # then
 # #   EXIT_STATE=$STATE_WARNING

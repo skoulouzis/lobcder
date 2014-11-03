@@ -221,6 +221,7 @@ public class WebDAVTest {
         assertTrue("Allow header should include OPTIONS method", allow.contains("OPTIONS"));
         assertTrue("Allow header should include MOVE method", allow.contains("MOVE"));
         assertTrue("Allow header should include PUT method", allow.contains("PUT"));
+        assertTrue("Allow header should include PUT method", allow.contains("POST"));
         assertTrue("Allow header should include PUT method", allow.contains("UNLOCK"));
         assertTrue("Allow header should include PUT method", allow.contains("LOCK"));
 
