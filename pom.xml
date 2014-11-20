@@ -1,0 +1,259 @@
+                        <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>net.lobcder</groupId>
+    <artifactId>lobcder-worker</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>war</packaging>
+
+    <name>lobcder-worker</name>
+    <url>http://maven.apache.org</url>
+
+    <dependencies>
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>servlet-api</artifactId>
+            <version>2.5</version>
+            <scope>provided</scope>            
+        </dependency>
+        
+<!--        <dependency>
+            <groupId>javax.servlet.jsp</groupId>
+            <artifactId>jsp-api</artifactId>
+            <version>2.1</version>
+            <scope>provided</scope>
+        </dependency>-->
+    
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>0.11.6</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>net.sourceforge.findbugs</groupId>
+            <artifactId>jsr305</artifactId>
+            <version>1.3.7</version>
+        </dependency>
+
+        <dependency>
+            <groupId>net.sourceforge.findbugs</groupId>
+            <artifactId>annotations</artifactId>
+            <version>1.3.2</version>
+        </dependency>
+
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.8.2</version>
+            <scope>test</scope>
+        </dependency>
+        
+        <dependency>
+            <groupId>io.milton</groupId>
+            <artifactId>milton-server-ce</artifactId>
+            <version>2.4.2-SNAPSHOT</version>
+        </dependency>   
+        
+
+        <dependency>
+            <groupId>commons-httpclient</groupId>
+            <artifactId>commons-httpclient</artifactId>
+            <version>3.1</version>
+        </dependency>
+        
+
+      <dependency>
+            <groupId>nl.uva.vlet</groupId>
+            <artifactId>vlet-vrs.core</artifactId>
+            <version>1.5.0-dev-1</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>nl.uva.vlet</groupId>
+            <artifactId>vlet-vfs.cloud</artifactId>
+            <version>2.2</version>
+        </dependency>
+        
+        
+        <dependency>
+            <groupId>nl.uva.vlet</groupId>
+            <artifactId>vlet-vfs.jcraft.ssh</artifactId>
+            <version>1.5.0-dev-1</version>
+            <scope>runtime</scope>
+        </dependency>
+
+        
+        <dependency>
+            <groupId>nl.uva.vlet</groupId>
+            <artifactId>vlet-vfs.gftp</artifactId>
+            <version>1.5.0-dev-1</version>
+            <scope>runtime</scope>
+        </dependency>       
+        
+        <dependency>
+            <groupId>nl.uva.vlet</groupId>
+            <artifactId>vlet-vfs.webdav</artifactId>
+            <version>2.0</version>
+        </dependency>   
+        
+        <dependency>
+            <groupId>xerces</groupId>
+            <artifactId>xercesImpl</artifactId>
+            <version>2.11.0</version>
+            <scope>runtime</scope>
+        </dependency>
+         
+        <dependency>
+            <groupId>org.apache.jackrabbit</groupId>
+            <artifactId>jackrabbit-webdav</artifactId>
+             <version>2.2.0</version>
+            <scope>runtime</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.claymoresystems</groupId>
+            <artifactId>puretls</artifactId>
+            <version>0.1</version>
+            <scope>runtime</scope>
+        </dependency>
+        
+
+        <dependency>
+            <groupId>cryptix</groupId>
+            <artifactId>cryptix-asn1</artifactId>
+            <version>1.0</version>
+            <scope>runtime</scope>
+        </dependency>
+                
+        <dependency>
+            <groupId>cryptix</groupId>
+            <artifactId>cryptix32</artifactId>
+            <version>3.2.0</version>
+            <scope>runtime</scope>
+        </dependency>
+                
+                
+        <dependency>
+            <groupId>cryptix</groupId>
+            <artifactId>cryptix</artifactId>
+            <version>1.0</version>
+            <scope>runtime</scope>
+        </dependency>
+
+
+        <dependency>
+            <groupId>nl.uva.vlet</groupId>
+            <artifactId>vlet-grid.globus</artifactId>
+            <version>1.5.0-dev-1</version>
+            <scope>runtime</scope>
+        </dependency>  
+        
+        
+        <dependency>
+            <groupId>org.globus</groupId>
+            <artifactId>cog-jglobus</artifactId>
+            <version>1.4</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.globus</groupId>
+            <artifactId>cog-url</artifactId>
+            <version>1.4</version>
+        </dependency>
+        
+        
+<!--        <dependency>
+            <groupId>bouncycastle</groupId>
+            <artifactId>jce-jdk13</artifactId>
+            <version>131</version>
+        </dependency>
+        
+        
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcprov-jdk15</artifactId>
+            <version>1.43</version>
+        </dependency>-->
+            
+                
+        <dependency>
+            <groupId>nl.uva.vlet</groupId>
+            <artifactId>vlet-vfs.srm</artifactId>
+            <version>1.5.0-dev-1</version>
+            <scope>runtime</scope>
+        </dependency>
+        
+        <dependency>
+            <groupId>nl.uva.vlet</groupId>
+            <artifactId>vlet-vfs.lfc</artifactId>
+            <version>1.5.0-dev-1</version>
+            <scope>runtime</scope>
+        </dependency>
+        
+        <dependency>
+            <groupId>com.sun.jersey</groupId>
+            <artifactId>jersey-client</artifactId>
+            <version>1.14</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.jersey</groupId>
+            <artifactId>jersey-server</artifactId>
+            <version>1.14</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.jersey</groupId>
+            <artifactId>jersey-servlet</artifactId>
+            <version>1.14</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.jersey</groupId>
+            <artifactId>jersey-json</artifactId>
+            <version>1.14</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <version>1.5.8</version>
+        </dependency>
+        
+        
+        <!--        <dependency>
+            <groupId>com.mycompany</groupId>
+            <artifactId>lobcder</artifactId>
+            <classifier>classes</classifier>
+            <version>2.3_jdk1.6</version>
+        </dependency>  -->
+        <!--        <dependency>
+            <groupId>com.mycompany</groupId>
+            <artifactId>lobcder</artifactId>
+            <version>2.4</version>
+            <type>war</type>
+        </dependency>-->
+    </dependencies>
+    
+    <repositories>
+        <repository>
+            <id>elab.lab.uvalight.net</id>
+            <name>elab.lab.uvalight.net-releases</name>
+            <url>>http://elab.lab.uvalight.net/artifactory/local</url>
+        </repository>
+    </repositories>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>2.0.2</version>
+                <configuration>
+                    <source>1.7</source>
+                    <target>1.7</target>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

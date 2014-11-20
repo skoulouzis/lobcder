@@ -1,0 +1,12 @@
+#
+# @(#)$Id: 0a12b607.info,v 1.1 2008/01/21 20:29:39 pmacvsdg Exp $
+# UGRID - The Ukrainian Grid CA
+#
+alias = UGRID
+ca_url = https://ca.ugrid.org/certs/cacert.pem
+crl_url = http://ca.ugrid.org/cacrl.der
+email = ca@ugrid.org
+status = accredited:classic
+url = https://ca.ugrid.org/
+version = 1.53
+sha1fp.0 = 21:E7:0D:EE:D7:57:B6:47:A6:F5:04:29:76:81:FE:CD:E8:48:DD:9A
