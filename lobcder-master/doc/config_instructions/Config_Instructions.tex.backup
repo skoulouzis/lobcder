@@ -1,0 +1,231 @@
+\documentclass[a4paper,10pt]{article}
+%\documentclass[a4paper,10pt]{scrartcl}
+
+\usepackage[utf8]{inputenc}
+\usepackage{listings}
+
+\title{LOBCDER configuration instructions}
+\author{S. Koulouzis}
+\date{}
+
+\pdfinfo{%
+ /Title  ()
+ /Author  ()
+ /Creator ()
+ /Producer ()
+ /Subject ()
+ /Keywords ()
+}
+
+
+\begin{document}
+\maketitle
+This is are some basic instruction on how to configure and deploy LOBCDER 
+
+\section{Requrements}
+mysql >= 5.1
+java >= 1.7
+apache-tomcat>=6.0.33
+
+
+\section{Create and configure the logical file system}
+LOBCDER uses MySQL to store and query the logical file system.
+
+\subsection{Create and configure MySQL DB}
+Install mysql: 
+\begin{lstlisting}
+sudo apt-get install mysql-server mysql-client
+\end{lstlisting}
+
+
+Connect to the local database server as root.
+IDENTIFIED by 'password';
+\begin{lstlisting}
+$mysql -h localhost -u root -p
+$mysql> create database lobcderDB2;
+\end{lstlisting}
+
+
+Now we create the user 'lobcder' and give him super permissions on the new database. SUPER is required for 
+enabling the delete and replicate triggers\footnote{When LOBCDER is asked to delete a file it simply removes it 
+from it's logical file system, and schedules a deletion of the physical files which will run at a later time 
+asynchronously. The same applies for replication} (for mysql version 5.0.95). 
+\begin{lstlisting}
+$mysql>GRANT ALL PRIVILEGES on lobcderDB2.* to lobcder@localhost \ 
+			IDENTIFIED by 'password';
+$mysql>GRANT SUPER ON *.* to lobcder@localhost \
+			IDENTIFIED by 'password';
+\end{lstlisting}
+
+
+\subsection{Initialize the logical file system and the triggers}
+Edit the init.sql file to include the proper backends\footnote{Backends are the storage systems 
+(cloud, grid, FTP) LOBCDER is using for holding the physical files.}. 
+These will be used by LOBCDER to hold the physical data. At the moment we have tested sftp and swift so if we want 
+to add a swift cloud storage we add in \texttt{storage\_site\_table}, swift://localhost:8080/path. In the 
+init.sql file look for the following line and modify it: 
+
+\begin{lstlisting}
+INSERT INTO credential_table(username, password) \
+	 VALUES ('backend_username', 'backend_password');
+SET @credID = LAST_INSERT_ID();
+
+INSERT INTO 
+	storage_site_table(resourceURI, 
+			 credentialRef, 
+			 currentNum, 
+			 currentSize, 
+			 quotaNum, 
+			 quotaSize)
+			 VALUES('schema://HOST:PORT/PATH/', 
+			 @credID, -1, -1, -1, -1);
+\end{lstlisting}
+
+To add more storage sites copy and paste the above lines as many times as necessary. 
+
+\subsection{Add local accounts}\lebel{leb:local}
+
+To enable authorization and authentication based on local accounts, i.e. account created and kept on the local 
+DB, in the init.sql file look for the following line and modify it:
+
+ \begin{lstlisting}
+INSERT INTO auth_usernames_table(token, uname) \
+	VALUES ('password', 'username');
+
+SET @authUserNamesRef = LAST_INSERT_ID();
+INSERT INTO auth_roles_tables(roleName, unameRef) \
+	VALUES ('role1',   @authUserNamesRef),
+	('role2',   @authUserNamesRef),
+	('role2', @authUserNamesRef);
+\end{lstlisting}
+
+Alternatively you can run this command \textbf{after} you have run the init.sql script 
+\begin{lstlisting}
+$mysql -h localhost -u root -p
+$mysql>INSERT INTO lobcderDB2.auth_usernames_table (token, uname) 
+   VALUES ('user_password', 'username');
+$mysql> use lobcderDB2 database;
+$mysql> select * from auth_usernames_table;
+\end{lstlisting}
+
+Take the user \texttt{ID\_NUM} from the \texttt{auth\_usernames\_table} table and type:
+\begin{lstlisting}
+$mysql>INSERT INTO lobcderDB2.auth_roles_tables (role_name, uname_id)
+  VALUES ('role1', ID_NUM);
+\end{lstlisting}
+
+
+\subsection{Create the schema}
+Run the init.sql script from the command-line as 'lobcder': 
+\begin{lstlisting}
+mysql --user=lobcder --password=password lobcderDB2 < init.sql
+\end{lstlisting}
+
+
+To check if the database is created you can run:
+\begin{lstlisting}
+mysql -h localhost -u root -p
+mysql> show databeses;
+\end{lstlisting}
+
+and you should see something like this: 
+
+\begin{lstlisting}
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| lobcderDB2         |
+| mysql              |
++--------------------+
+3 rows in set (0.00 sec)
+\end{lstlisting}
+
+
+to see if all storage sites are created type:
+
+\begin{lstlisting}
+mysql> select * from storage_site_table;
+\end{lstlisting}
+or 
+\begin{lstlisting}
+mysql> select * from lobcderDB2.storage_site_table;
+\end{lstlisting}
+
+and to see the local users (see \ref{leb:local})
+
+\begin{lstlisting}
+mysql> select * from lobcderDB2.auth_usernames_table;
+mysql> select * from lobcderDB2.auth_roles_tables;
+\end{lstlisting}
+
+
+\section{Configure LOBCDER to connect to the DB}
+In the META-INF/context.xml file edit or add this line:
+
+\begin{lstlisting}
+
+<Resource auth="Container" driverClassName="com.mysql.jdbc.Driver"
+      name="jdbc/lobcder" 
+      password="password"
+      type="javax.sql.DataSource" 
+      url="jdbc:mysql://localhost:3306/lobcderDB2" 
+      username="lobcder"
+      maxActive="20"
+      maxIdle="100"
+      minIdle="10"
+      maxWait="30000"
+      validationQuery="SELECT 1"
+      testOnBorrow="true"
+      poolPreparedStatements="true"
+      removeAbandoned="true"
+      removeAbandonedTimeout="60"
+      logAbandoned="true"/>
+\end{lstlisting}
+
+In the WEB-INF/web.xml file edit or add this line:
+\begin{lstlisting}
+  <resource-ref>
+    <description>DB Connection Pooling</description>
+    <res-ref-name>jdbc/lobcderDB2</res-ref-name>
+    <res-type>javax.sql.DataSource</res-type>
+    <res-auth>Container</res-auth>
+  </resource-ref>
+\end{lstlisting}
+
+
+\section{Configure LOBCDER properties}
+The file lobcder.properties contains some properties used by lobcder. 
+
+\begin{itemize}
+ \item worker.token: A hard-coded token used by the lobcder workers. Values: It can be any alphanumeric.
+ \item replication.aggressive: 
+ \itam get.redirect: Controls if lobcder redirect GET requests to workers. Values: true/false
+ \item use.metadata.repository: Controls if lobcder will send access data to a metadata repository GET requests to workers. Values: true/false
+ \item metadata.reposetory.url: The url of the metadata repository. Values: URL 
+ \item default.rowlimit: Controls the number of results returned by the REST service when sending this query: http://host.com/rest/items/query?path={path} Values: integer
+%  \item tokens.deletesweep.count: 
+  \item mi.cert.pub.der: The public key used to validate tickets. Values: file path 
+  \item mi.cert.alg: The alogrithm used for validate tickets:  Values: DAS/RSA
+\end{itemize}
+
+\section{Build and Deploy LOBCDER}
+LOBCDER is tested on apache-tomcat-6.0.33 but you can deploy it on any application server such as glassfish etc. 
+
+To build the project run:
+\begin{lstlisting}
+mvn install
+\end{lstlisting}
+
+To have lobcder on a url like: http://host.com/lobcder/ instead of http://host.com/lobcder-2.4/ rename the target: 
+\begin{lstlisting}
+mv target/lobcder-2.4 target/lobcder
+\end{lstlisting}
+
+Copy the target/lobcder folder on \$CATALINA_HOME/webapps/ and restart tomcat.
+
+
+\section{Build and Deploy LOBCDER worker}
+
+
+\end{document}

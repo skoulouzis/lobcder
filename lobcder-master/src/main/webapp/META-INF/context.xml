@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Context antiJARLocking="true" path="/lobcder">
+    
+    <Resource auth="Container" driverClassName="com.mysql.jdbc.Driver"
+            name="jdbc/lobcder" 
+            password="RoomC3156"
+            type="javax.sql.DataSource" 
+            url="jdbc:mysql://localhost:3306/lobcderDB2" 
+            username="lobcder"
+            maxActive="20"
+            maxIdle="100"
+            minIdle="10"
+            maxWait="30000"
+            validationQuery="SELECT 1"
+            testOnBorrow="true"
+            poolPreparedStatements="true"
+            removeAbandoned="true"
+            removeAbandonedTimeout="60"
+            logAbandoned="true"/>
+                                
+                                
+    <Resource auth="Container" factory="org.apache.naming.factory.BeanFactory" 
+            name="bean/JDBCatalog" type="nl.uva.cs.lobcder.catalogue.JDBCatalogue"/>
+
+    <Resource auth="Container" factory="org.apache.naming.factory.BeanFactory" 
+            name="bean/Predictor" type="nl.uva.cs.lobcder.optimization.FileAccessPredictor"/>
+</Context>
