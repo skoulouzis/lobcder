@@ -1,0 +1,7 @@
+alias = PRAGMA-UCSD
+crl_url = http://ca.pragma-grid.net/ca-certs/7721d4d3.r0
+email = pragma-ucsd-ca@sdsc.edu
+status = accredited:classic
+url = http://ca.pragma-grid.net/
+version = 1.53
+sha1fp.0 = 35:3D:A7:16:0C:B4:C7:B5:E8:53:EA:9F:96:51:D1:5F:60:87:35:F6

@@ -1,0 +1,13 @@
+#
+# @(#)$Id: b3222f9e.info,v 1.1 2011/11/18 12:57:05 pmacvsdg Exp $
+# Information for CA JUnet
+#   
+alias = JUnet-CA
+ca_url = https://ra.junet.edu.jo/pki/pub/cacert/cacert.pem
+crl_url = http://ra.junet.edu.jo/pki/pub/crl/cacrl.crl
+policy_url = https://ra.junet.edu.jo/pki/pub/cacert/CP_CPS_9-29-2011.pdf
+email = cagrid@junet.edu.jo
+status = accredited:classic
+url = http://www.junet.edu.jo/ca
+version = 1.53
+sha1fp.0 = DA:BB:DF:B0:61:3D:21:04:7B:19:24:4D:B2:E7:BF:E6:B5:3A:03:15

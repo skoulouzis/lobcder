@@ -1,0 +1,10 @@
+# @<#>$Id: f2e89fe3.info,v 1.3 2008/09/29 13:35:41 pmacvsdg Exp $
+#
+alias = NCSA-slcs
+url = http://security.ncsa.uiuc.edu/CA/
+ca_url =  http://ca.ncsa.uiuc.edu/f2e89fe3.0
+crl_url = http://ca.ncsa.uiuc.edu/f2e89fe3.r0
+email = security@ncsa.uiuc.edu
+status =  accredited:slcs
+sha1fp.0 = 0B:61:1B:73:FA:CA:0D:14:4C:3B:57:39:30:CE:29:82:9B:CE:02:A9
+version = 1.53

@@ -1,0 +1,11 @@
+#
+# @(#)$Id: a317c467.info,v 1.5 2009/04/06 13:23:40 pmacvsyt Exp $
+# Information for CA AIST
+#   obtained from a317c467 in APGrid/
+alias = AIST
+crl_url = http://crls.apgrid.org/AIST/a317c467.r0
+email = gridca@m.aist.go.jp
+status = accredited:classic
+url = https://www.apgrid.org/CA/AIST/Production/
+version = 1.53
+sha1fp.0 = 72:A1:E0:49:1A:B7:41:04:60:D7:88:14:2C:A6:27:36:F4:6A:7C:54

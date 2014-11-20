@@ -1,0 +1,9 @@
+1. davfs2
+
+Install davfs2 package
+sudo mkdir  /media/lobcder-2.0
+
+sudo mount.davfs http://yourwebsite.com/lobcder-X.X-SNAPSHOT/dav /media/lobcder-2.0 -o rw,uid=john
+
+
+

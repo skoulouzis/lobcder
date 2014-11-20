@@ -1,0 +1,11 @@
+#
+# @(#)$Id: 5cf9d536.info,v 1.4 2011/11/22 12:05:05 pmacvsdg Exp $
+#   
+alias = QuoVadis-Root-CA1
+url = http://www.switch.ch/pki/
+ca_url = http://trust.quovadisglobal.com/pem/qvrca.crt
+crl_url = http://crl.quovadisglobal.com/qvrca.crl
+email = grid@switch.ch
+status = accredited:classic
+version = 1.53
+sha1fp.0 = DE:3F:40:BD:50:93:D3:9B:6C:60:F6:DA:BC:07:62:01:00:89:76:C9
