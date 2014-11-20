@@ -4,9 +4,9 @@
  */
 package nl.uva.cs.lobcder.webDav.resources;
 
-import com.google.common.io.Files;
 import io.milton.common.Path;
 import io.milton.http.*;
+import static io.milton.http.Request.Method.MKCOL;
 import io.milton.http.exceptions.BadRequestException;
 import io.milton.http.exceptions.ConflictException;
 import io.milton.http.exceptions.NotAuthorizedException;
@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.NoSuchAlgorithmException;
@@ -31,8 +32,9 @@ import nl.uva.cs.lobcder.auth.Permissions;
 import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
 import nl.uva.cs.lobcder.resources.LogicalData;
 import nl.uva.cs.lobcder.resources.PDRI;
+import nl.uva.cs.lobcder.rest.wrappers.Stats;
 import nl.uva.cs.lobcder.util.Constants;
-import nl.uva.cs.lobcder.util.SpeedLogger;
+import org.apache.commons.io.FilenameUtils;
 import static org.rendersnake.HtmlAttributesFactory.*;
 import org.rendersnake.HtmlCanvas;
 
@@ -42,7 +44,7 @@ import org.rendersnake.HtmlCanvas;
  */
 @Log
 public class WebDataDirResource extends WebDataResource implements FolderResource,
-        CollectionResource, DeletableCollectionResource, LockingCollectionResource {
+        CollectionResource, DeletableCollectionResource, LockingCollectionResource, PostableResource {
 
     private int attempts = 0;
     private Map<String, String> mimeTypeMap = new HashMap<>();
@@ -95,9 +97,11 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
     @Override
     public CollectionResource createCollection(String newName) throws NotAuthorizedException, ConflictException, BadRequestException {
         WebDataDirResource.log.log(Level.FINE, "createCollection {0} in {1}", new Object[]{newName, getPath()});
+
         try (Connection connection = getCatalogue().getConnection()) {
             try {
                 Path newCollectionPath = Path.path(getPath(), newName);
+
                 Long newFolderEntryId = getCatalogue().getLogicalDataUidByParentRefAndName(getLogicalData().getUid(), newName, connection);
                 if (newFolderEntryId != null) {
                     throw new ConflictException(this, newName);
@@ -117,7 +121,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                     return res;
                 }
             } catch (SQLException e) {
-                WebDataDirResource.log.log(Level.SEVERE, null, 1);
+                WebDataDirResource.log.log(Level.SEVERE, null, e);
                 connection.rollback();
                 throw new BadRequestException(this, e.getMessage());
             }
@@ -201,7 +205,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                 Path newPath = Path.path(getPath(), newName);
                 fileLogicalData = getCatalogue().getLogicalDataByPath(newPath, connection);
                 if (contentType == null || contentType.equals("application/octet-stream")) {
-                    contentType = mimeTypeMap.get(Files.getFileExtension(newName));
+                    contentType = mimeTypeMap.get(FilenameUtils.getExtension(newName));
                 }
                 if (fileLogicalData != null) {  // Resource exists, update
 //                    throw new ConflictException(this, newName);
@@ -212,16 +216,20 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                     fileLogicalData.setLength(length);
                     fileLogicalData.setModifiedDate(System.currentTimeMillis());
                     if (contentType == null) {
-                        contentType = mimeTypeMap.get(Files.getFileExtension(newName));
+                        contentType = mimeTypeMap.get(FilenameUtils.getExtension(newName));
                     }
                     fileLogicalData.addContentType(contentType);
 
                     //Create new
                     pdri = createPDRI(fileLogicalData.getLength(), newName, connection);
+                    pdri.setLength(length);
                     pdri.putData(inputStream);
-
                     fileLogicalData = getCatalogue().updateLogicalDataAndPdri(fileLogicalData, pdri, connection);
                     connection.commit();
+//                    String md5 = pdri.getStringChecksum();
+//                    if (md5 != null) {
+//                        fileLogicalData.setChecksum(md5);
+//                    }
                     resource = new WebDataFileResource(fileLogicalData, Path.path(getPath(), newName), getCatalogue(), authList);
 //                    return new WebDataFileResource(fileLogicalData, Path.path(getPath(), newName), getCatalogue(), authList);
                 } else { // Resource does not exists, create a new one
@@ -236,8 +244,12 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                     fileLogicalData.setModifiedDate(System.currentTimeMillis());
                     fileLogicalData.addContentType(contentType);
                     pdri = createPDRI(length, newName, connection);
+                    pdri.setLength(length);
                     pdri.putData(inputStream);
-                    //fileLogicalData.setChecksum(pdri.getChecksum());
+//                    String md5 = pdri.getStringChecksum();
+//                    if (md5 != null) {
+//                        fileLogicalData.setChecksum(md5);
+//                    }
                     fileLogicalData = getCatalogue().associateLogicalDataAndPdri(fileLogicalData, pdri, connection);
                     getCatalogue().setPermissions(fileLogicalData.getUid(), new Permissions(getPrincipal(), getPermissions()), connection);
                     connection.commit();
@@ -262,12 +274,17 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
         double speed = ((resource.getContentLength() * 8.0) * 1000.0) / (elapsed * 1000.0);
         String msg = null;
         try {
+            Stats stats = new Stats();
+            stats.setSource(fromAddress);
+            stats.setDestination(pdri.getHost());
+            stats.setSpeed(speed);
+            stats.setSize(resource.getContentLength());
+            getCatalogue().setSpeed(stats);
             msg = "Source: " + fromAddress + " Destination: " + new URI(pdri.getURI()).getScheme() + "://" + pdri.getHost() + " Rx_Speed: " + speed + " Kbites/sec Rx_Size: " + (resource.getContentLength()) + " bytes";
-        } catch (URISyntaxException ex) {
+        } catch (URISyntaxException | SQLException ex) {
             Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, ex);
         }
         WebDataDirResource.log.log(Level.INFO, msg);
-//        SpeedLogger.logSpeed(msg);
         return resource;
     }
 
@@ -453,8 +470,10 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
         WebDataDirResource.log.log(Level.FINE, "moveTo({0}, ''{1}'') for {2}", new Object[]{toWDDR.getPath(), name, getPath()});
         try (Connection connection = getCatalogue().getConnection()) {
             try {
-                Permissions newParentPerm = getCatalogue().getPermissions(toWDDR.getLogicalData().getUid(), toWDDR.getLogicalData().getOwner(), connection);
-                if (!getPrincipal().canWrite(newParentPerm)) {
+                Permissions destPerm = getCatalogue().getPermissions(toWDDR.getLogicalData().getUid(), toWDDR.getLogicalData().getOwner(), connection);
+                LogicalData parentLD = getCatalogue().getLogicalDataByUid(getLogicalData().getParentRef());
+                Permissions parentPerm = getCatalogue().getPermissions(parentLD.getUid(), parentLD.getOwner());
+                if (!(getPrincipal().canWrite(destPerm) && getPrincipal().canWrite(parentPerm))) {
                     throw new NotAuthorizedException(this);
                 }
                 getCatalogue().moveEntry(getLogicalData(), toWDDR.getLogicalData(), name, connection);
@@ -508,6 +527,31 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
             if (ex instanceof PreConditionFailedException) {
                 throw new RuntimeException(ex);
             }
+        } catch (UnsupportedEncodingException ex) {
+            Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return null;
+    }
+
+    @Override
+    public String processForm(Map<String, String> parameters,
+            Map<String, FileItem> files) throws BadRequestException,
+            NotAuthorizedException,
+            ConflictException {
+        //        Set<String> keys = parameters.keySet();
+        //        for (String s : keys) {
+        //            WebDataDirResource.log.log(Level.INFO, "{0} : {1}", new Object[]{s, parameters.get(s)});
+        //        }
+        Set<String> keys = files.keySet();
+        for (String s : keys) {
+            WebDataDirResource.log.log(Level.INFO, "{0} : {1}", new Object[]{s, files.get(s).getFieldName()});
+            try {
+                //         public Resource createNew(String newName, InputStream inputStream, Long length, String contentType) throws IOException,
+                createNew(files.get(s).getFieldName(), files.get(s).getInputStream(), files.get(s).getSize(), files.get(s).getContentType());
+            } catch (IOException ex) {
+                throw new BadRequestException(this, ex.getMessage());
+            }
+
         }
         return null;
     }

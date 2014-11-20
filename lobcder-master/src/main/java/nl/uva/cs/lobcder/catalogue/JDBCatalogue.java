@@ -12,14 +12,11 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.*;
 import java.util.*;
-import java.util.Map.Entry;
 import java.util.logging.Level;
 import javax.annotation.Nonnull;
 import javax.naming.NamingException;
-import javax.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.SneakyThrows;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.auth.MyPrincipal;
 import nl.uva.cs.lobcder.auth.Permissions;
@@ -29,11 +26,10 @@ import nl.uva.cs.lobcder.resources.LogicalData;
 import nl.uva.cs.lobcder.resources.PDRI;
 import nl.uva.cs.lobcder.resources.PDRIDescr;
 import nl.uva.cs.lobcder.resources.StorageSite;
+import nl.uva.cs.lobcder.rest.wrappers.Stats;
 import nl.uva.cs.lobcder.rest.wrappers.UsersWrapper;
 import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.cs.lobcder.util.MyDataSource;
-import nl.uva.cs.lobcder.util.PropertiesHelper;
-import org.apache.commons.codec.binary.Base64;
 
 /**
  *
@@ -55,7 +51,7 @@ public class JDBCatalogue extends MyDataSource {
     public void startSweep() throws IOException {
         TimerTask gcTask = new SweeprsTimerTask(getDatasource());
         timer = new Timer(true);
-        timer.schedule(gcTask, 10000, 10000); //once in 10 sec
+        timer.schedule(gcTask, 7000, 7000); //once in 10 sec
     }
 
     public void stopSweep() {
@@ -71,10 +67,10 @@ public class JDBCatalogue extends MyDataSource {
     public Collection<StorageSite> getStorageSites(Connection connection, Boolean isCache) throws SQLException {
         try (Statement s = connection.createStatement()) {
             try (ResultSet rs = s.executeQuery("SELECT storageSiteId, resourceURI, "
-                            + "currentNum, currentSize, quotaNum, quotaSize, username, "
-                            + "password, encrypt FROM storage_site_table "
-                            + "JOIN credential_table ON credentialRef = credintialId "
-                            + "WHERE isCache = " + isCache)) {
+                    + "currentNum, currentSize, quotaNum, quotaSize, username, "
+                    + "password, encrypt FROM storage_site_table "
+                    + "JOIN credential_table ON credentialRef = credintialId "
+                    + "WHERE isCache = " + isCache)) {
 
                 ArrayList<StorageSite> res = new ArrayList<>();
                 while (rs.next()) {
@@ -127,8 +123,8 @@ public class JDBCatalogue extends MyDataSource {
 //    }
     public LogicalData registerDirLogicalData(LogicalData entry, @Nonnull Connection connection) throws SQLException {
         try (PreparedStatement preparedStatement = connection.prepareStatement(
-                        "INSERT INTO ldata_table(parentRef, ownerId, datatype, ldName, createDate, modifiedDate)"
-                        + " VALUES (?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS)) {
+                "INSERT INTO ldata_table(parentRef, ownerId, datatype, ldName, createDate, modifiedDate)"
+                + " VALUES (?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS)) {
             preparedStatement.setLong(1, entry.getParentRef());
             preparedStatement.setString(2, entry.getOwner());
             preparedStatement.setString(3, Constants.LOGICAL_FOLDER);
@@ -149,15 +145,15 @@ public class JDBCatalogue extends MyDataSource {
 
     public LogicalData registerLogicalData(LogicalData entry, @Nonnull Connection connection) throws SQLException {
         try (PreparedStatement preparedStatement = connection.prepareStatement(
-                        "INSERT INTO ldata_table(parentRef, ownerId, datatype, "
-                        + "createDate, modifiedDate, ldLength, "
-                        + "contentTypesStr, pdriGroupRef, isSupervised, "
-                        + "checksum, lastValidationDate, lockTokenId, "
-                        + "lockScope, lockType, lockedByUser, lockDepth, "
-                        + "lockTimeout, description, locationPreference, "
-                        + "ldName) "
-                        + "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, "
-                        + "?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS)) {
+                "INSERT INTO ldata_table(parentRef, ownerId, datatype, "
+                + "createDate, modifiedDate, ldLength, "
+                + "contentTypesStr, pdriGroupRef, isSupervised, "
+                + "checksum, lastValidationDate, lockTokenId, "
+                + "lockScope, lockType, lockedByUser, lockDepth, "
+                + "lockTimeout, description, locationPreference, "
+                + "ldName) "
+                + "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, "
+                + "?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS)) {
             preparedStatement.setLong(1, entry.getParentRef());
             preparedStatement.setString(2, entry.getOwner());
             preparedStatement.setString(3, entry.getType());
@@ -191,10 +187,10 @@ public class JDBCatalogue extends MyDataSource {
     public LogicalData updateLogicalData(LogicalData entry, @Nonnull Connection connection) throws SQLException {
 //        "UPDATE lobcder.ldata_table SET ldName = testFileName1.txtsdsdsdd, ldLength = 23231 WHERE uid = 44"
         try (PreparedStatement ps = connection.prepareStatement("UPDATE ldata_table SET modifiedDate = ?, "
-                        + "ldLength = ?, "
-                        + "contentTypesStr = ?, "
-                        + "pdriGroupRef = ? "
-                        + "WHERE uid = ?")) {
+                + "ldLength = ?, "
+                + "contentTypesStr = ?, "
+                + "pdriGroupRef = ? "
+                + "WHERE uid = ?")) {
             ps.setTimestamp(1, new Timestamp(entry.getModifiedDate()));
             ps.setLong(2, entry.getLength());
             ps.setString(3, entry.getContentTypesAsString());
@@ -272,12 +268,12 @@ public class JDBCatalogue extends MyDataSource {
         ArrayList<PDRIDescr> res = new ArrayList<>();
         long pdriId;
         try (PreparedStatement ps = connection.prepareStatement(""
-                        + "SELECT fileName, storageSiteRef, storage_site_table.resourceUri, "
-                        + "username, password, isEncrypted, encryptionKey, pdri_table.pdriId, pdriGroupRef "
-                        + "FROM pdri_table "
-                        + "JOIN storage_site_table ON storageSiteRef = storageSiteId "
-                        + "JOIN credential_table ON credentialRef = credintialId "
-                        + "WHERE storageSiteRef = ? ")) {
+                + "SELECT fileName, storageSiteRef, storage_site_table.resourceUri, "
+                + "username, password, isEncrypted, encryptionKey, pdri_table.pdriId, pdriGroupRef "
+                + "FROM pdri_table "
+                + "JOIN storage_site_table ON storageSiteRef = storageSiteId "
+                + "JOIN credential_table ON credentialRef = credintialId "
+                + "WHERE storageSiteRef = ? ")) {
             ps.setLong(1, StorageSiteId);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -315,11 +311,11 @@ public class JDBCatalogue extends MyDataSource {
         long pdriGroupRef;
         long pdriId;
         try (PreparedStatement ps = connection.prepareStatement("SELECT fileName, storageSiteRef, storage_site_table.resourceUri, "
-                        + "username, password, isEncrypted, encryptionKey, pdri_table.pdriId  "
-                        + "FROM pdri_table "
-                        + "JOIN storage_site_table ON storageSiteRef = storageSiteId "
-                        + "JOIN credential_table ON credentialRef = credintialId "
-                        + "WHERE pdri_table.pdriGroupRef = ? ")) {
+                + "username, password, isEncrypted, encryptionKey, pdri_table.pdriId  "
+                + "FROM pdri_table "
+                + "JOIN storage_site_table ON storageSiteRef = storageSiteId "
+                + "JOIN credential_table ON credentialRef = credintialId "
+                + "WHERE pdri_table.pdriGroupRef = ? ")) {
             ps.setLong(1, groupId);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -348,24 +344,29 @@ public class JDBCatalogue extends MyDataSource {
         }
     }
 
-    public LogicalData getLogicalDataByPath(Path logicalResourceName) throws SQLException {
-        LogicalData res = getFromLDataCache(null, logicalResourceName.toString());
+    public LogicalData getLogicalDataByPath(Path logicalResourceName) throws SQLException, UnsupportedEncodingException {
+        Path decodedLogicalFileName = Path.path(java.net.URLDecoder.decode(logicalResourceName.toString(), "UTF-8"));
+        LogicalData res = getFromLDataCache(null, decodedLogicalFileName.toString());
         if (res != null) {
             return res;
         }
         try (Connection connection = getConnection()) {
-            res = getLogicalDataByPath(logicalResourceName, connection);
+            res = getLogicalDataByPath(decodedLogicalFileName, connection);
             return res;
         }
     }
 
     public Long getLogicalDataUidByPath(Path logicalResourceName, @Nonnull Connection connection) throws SQLException {
-        try (PreparedStatement preparedStatement = connection.prepareStatement(
-                        "SELECT uid FROM ldata_table WHERE ldata_table.parentRef = ? AND ldata_table.ldName = ?")) {
-            long parent = 0;
-            for (String p : logicalResourceName.getParts()) {
-                preparedStatement.setLong(1, parent);
-                preparedStatement.setString(2, p);
+//        try (PreparedStatement preparedStatement = connection.prepareStatement(
+//                "SELECT uid FROM ldata_table WHERE ldata_table.parentRef = ? AND ldata_table.ldName = ?")) {
+        long parent = 0;
+
+        for (String p : logicalResourceName.getParts()) {
+
+            try (PreparedStatement preparedStatement = connection.prepareStatement(
+                    "SELECT uid FROM ldata_table WHERE ldata_table.parentRef = " + parent + " AND ldata_table.ldName like '" + p + "'")) {
+//                preparedStatement.setLong(1, parent);
+//                preparedStatement.setString(2, p);
                 ResultSet rs = preparedStatement.executeQuery();
                 if (rs.next()) {
                     parent = rs.getLong(1);
@@ -375,13 +376,14 @@ public class JDBCatalogue extends MyDataSource {
             }
             return parent;
         }
+        return null;
     }
 
     public Long getLogicalDataUidByParentRefAndName(Long parentRef, String name, @Nonnull Connection connection) throws SQLException {
         try (PreparedStatement preparedStatement = connection.prepareStatement(
-                        "SELECT uid FROM ldata_table WHERE ldata_table.parentRef = ? AND ldata_table.ldName = ?")) {
-            preparedStatement.setLong(1, parentRef);
-            preparedStatement.setString(2, name);
+                "SELECT uid FROM ldata_table WHERE ldata_table.parentRef = " + parentRef + " AND ldata_table.ldName like '" + name + "'")) {
+//            preparedStatement.setLong(1, parentRef);
+//            preparedStatement.setString(2, name);
             ResultSet rs = preparedStatement.executeQuery();
             if (rs.next()) {
                 return rs.getLong(1);
@@ -393,13 +395,13 @@ public class JDBCatalogue extends MyDataSource {
 
     public LogicalData getLogicalDataByParentRefAndName(Long parentRef, String name, @Nonnull Connection connection) throws SQLException {
         try (PreparedStatement preparedStatement = connection.prepareStatement(
-                        "SELECT uid, ownerId, datatype, createDate, modifiedDate, ldLength, "
-                        + "contentTypesStr, pdriGroupRef, isSupervised, checksum, lastValidationDate, "
-                        + "lockTokenID, lockScope, lockType, lockedByUser, lockDepth, lockTimeout, "
-                        + "description, locationPreference "
-                        + "FROM ldata_table WHERE ldata_table.parentRef = ? AND ldata_table.ldName = ?")) {
-            preparedStatement.setLong(1, parentRef);
-            preparedStatement.setString(2, name);
+                "SELECT uid, ownerId, datatype, createDate, modifiedDate, ldLength, "
+                + "contentTypesStr, pdriGroupRef, isSupervised, checksum, lastValidationDate, "
+                + "lockTokenID, lockScope, lockType, lockedByUser, lockDepth, lockTimeout, "
+                + "description, locationPreference "
+                + "FROM ldata_table WHERE ldata_table.parentRef = " + parentRef + " AND ldata_table.ldName like '" + name + "'")) {
+//            preparedStatement.setLong(1, parentRef);
+//            preparedStatement.setString(2, name);
             ResultSet rs = preparedStatement.executeQuery();
             if (rs.next()) {
                 LogicalData res = new LogicalData();
@@ -432,13 +434,14 @@ public class JDBCatalogue extends MyDataSource {
         }
     }
 
-    public LogicalData getLogicalDataByPath(Path logicalResourceName, @Nonnull Connection connection) throws SQLException {
+    public LogicalData getLogicalDataByPath(Path logicalResourceName, @Nonnull Connection connection) throws SQLException, UnsupportedEncodingException {
+        Path decodedLogicalResourceName = Path.path(java.net.URLDecoder.decode(logicalResourceName.toString(), "UTF-8"));
         LogicalData res = getFromLDataCache(null, logicalResourceName.toPath());
         if (res != null) {
             return res;
         }
         try (PreparedStatement preparedStatement = connection.prepareStatement(
-                        "SELECT uid FROM ldata_table WHERE ldata_table.parentRef = ? AND ldata_table.ldName = ?")) {
+                "SELECT uid FROM ldata_table WHERE ldata_table.parentRef = ? AND ldata_table.ldName = ?")) {
             long parent = 1;
             String parts[] = logicalResourceName.getParts();
             if (parts.length == 0) {
@@ -448,13 +451,13 @@ public class JDBCatalogue extends MyDataSource {
                 String p = parts[i];
                 if (i == (parts.length - 1)) {
                     try (PreparedStatement preparedStatement1 = connection.prepareStatement(
-                                    "SELECT uid, ownerId, datatype, createDate, modifiedDate, ldLength, "
-                                    + "contentTypesStr, pdriGroupRef, isSupervised, checksum, lastValidationDate, "
-                                    + "lockTokenID, lockScope, lockType, lockedByUser, lockDepth, lockTimeout, "
-                                    + "description, locationPreference, status "
-                                    + "FROM ldata_table WHERE ldata_table.parentRef = ? AND ldata_table.ldName = ?")) {
-                        preparedStatement1.setLong(1, parent);
-                        preparedStatement1.setString(2, p);
+                            "SELECT uid, ownerId, datatype, createDate, modifiedDate, ldLength, "
+                            + "contentTypesStr, pdriGroupRef, isSupervised, checksum, lastValidationDate, "
+                            + "lockTokenID, lockScope, lockType, lockedByUser, lockDepth, lockTimeout, "
+                            + "description, locationPreference, status "
+                            + "FROM ldata_table WHERE ldata_table.parentRef = " + parent + " AND ldata_table.ldName like '" + p + "'")) {
+//                        preparedStatement1.setLong(1, parent);
+//                        preparedStatement1.setString(2, p);
                         ResultSet rs = preparedStatement1.executeQuery();
                         if (rs.next()) {
                             res = new LogicalData();
@@ -481,16 +484,18 @@ public class JDBCatalogue extends MyDataSource {
                             res.setDataLocationPreference(rs.getString(19));
                             res.setStatus(rs.getString(20));
 
-                            putToLDataCache(res, logicalResourceName.toString());
+                            putToLDataCache(res, decodedLogicalResourceName.toString());
                             return res;
                         } else {
                             return null;
                         }
                     }
                 } else {
-                    preparedStatement.setLong(1, parent);
-                    preparedStatement.setString(2, p);
-                    ResultSet rs = preparedStatement.executeQuery();
+//                    preparedStatement.setLong(1, parent);
+//                    preparedStatement.setString(2, p);
+                    String query = "SELECT uid FROM ldata_table WHERE ldata_table.parentRef = " + parent + " AND ldata_table.ldName like '" + p + "'";
+                    ResultSet rs = preparedStatement.executeQuery(query);
+//                    ResultSet rs = preparedStatement.executeQuery();
                     if (rs.next()) {
                         parent = rs.getLong(1);
                     } else {
@@ -518,10 +523,10 @@ public class JDBCatalogue extends MyDataSource {
             return res;
         }
         try (PreparedStatement ps = connection.prepareStatement("SELECT parentRef, ownerId, datatype, ldName, "
-                        + "createDate, modifiedDate, ldLength, contentTypesStr, pdriGroupRef, "
-                        + "isSupervised, checksum, lastValidationDate, lockTokenID, lockScope, "
-                        + "lockType, lockedByUser, lockDepth, lockTimeout, description, locationPreference, status "
-                        + "FROM ldata_table WHERE ldata_table.uid = ?")) {
+                + "createDate, modifiedDate, ldLength, contentTypesStr, pdriGroupRef, "
+                + "isSupervised, checksum, lastValidationDate, lockTokenID, lockScope, "
+                + "lockType, lockedByUser, lockDepth, lockTimeout, description, locationPreference, status "
+                + "FROM ldata_table WHERE ldata_table.uid = ?")) {
             ps.setLong(1, UID);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
@@ -571,7 +576,7 @@ public class JDBCatalogue extends MyDataSource {
 
     public void setPermissions(Long UID, Permissions perm, @Nonnull Connection connection) throws SQLException {
         try (Statement s = connection.createStatement(java.sql.ResultSet.TYPE_FORWARD_ONLY,
-                        java.sql.ResultSet.CONCUR_UPDATABLE)) {
+                java.sql.ResultSet.CONCUR_UPDATABLE)) {
             s.addBatch("DELETE FROM permission_table WHERE permission_table.ldUidRef = " + UID);
             for (String cr : perm.getRead()) {
                 s.addBatch("INSERT INTO permission_table (permType, ldUidRef, roleName) VALUES ('read', " + UID + " , '" + cr + "')");
@@ -614,6 +619,7 @@ public class JDBCatalogue extends MyDataSource {
             p.setRead(canRead);
             p.setWrite(canWrite);
             p.setOwner(owner);
+            p.setLocalId(UID);
             putToPermissionsCache(UID, p);
             return p;
         }
@@ -634,11 +640,11 @@ public class JDBCatalogue extends MyDataSource {
 
     public Collection<LogicalData> getChildrenByParentRef(Long parentRef, @Nonnull Connection connection) throws SQLException {
         try (PreparedStatement preparedStatement = connection.prepareStatement(
-                        "SELECT uid, ownerId, datatype, ldName, createDate, modifiedDate, ldLength, "
-                        + "contentTypesStr, pdriGroupRef, isSupervised, checksum, lastValidationDate, "
-                        + "lockTokenID, lockScope, lockType, lockedByUser, lockDepth, lockTimeout, "
-                        + "description, locationPreference "
-                        + "FROM ldata_table WHERE ldata_table.parentRef = ?")) {
+                "SELECT uid, ownerId, datatype, ldName, createDate, modifiedDate, ldLength, "
+                + "contentTypesStr, pdriGroupRef, isSupervised, checksum, lastValidationDate, "
+                + "lockTokenID, lockScope, lockType, lockedByUser, lockDepth, lockTimeout, "
+                + "description, locationPreference "
+                + "FROM ldata_table WHERE ldata_table.parentRef = ?")) {
             preparedStatement.setLong(1, parentRef);
             ResultSet rs = preparedStatement.executeQuery();
             LinkedList<LogicalData> res = new LinkedList<>();
@@ -689,72 +695,80 @@ public class JDBCatalogue extends MyDataSource {
             ps.setString(2, newName);
             ps.setLong(3, toMove.getUid());
             ps.executeUpdate();
+//            String query = "UPDATE ldata_table SET parentRef = " + newParent.getUid() + ", ldName like '" + newName + "' WHERE uid = " + toMove.getUid();
+//            ps.executeUpdate(query);
         }
         removeFromLDataCache(toMove, null);
     }
 
-    @SneakyThrows(CloneNotSupportedException.class)
     public void copyFolder(LogicalData toCopy, LogicalData newParent, String newName, MyPrincipal principal, Connection connection) throws SQLException {
-        Permissions toCopyPerm = getPermissions(toCopy.getUid(), toCopy.getOwner(), connection);
-        Permissions newParentPerm = getPermissions(newParent.getUid(), newParent.getOwner(), connection);
-        Permissions permissionsForNew = new Permissions(principal, newParentPerm);
-        if (toCopy.isFolder() && principal.canWrite(newParentPerm)) {
-            // ignore folder if there is a problem
-            LogicalData newFolderEntry = toCopy.clone();
-            newFolderEntry.setName(newName);
-            newFolderEntry.setParentRef(newParent.getUid());
-            newFolderEntry.setType(Constants.LOGICAL_FOLDER);
-            newFolderEntry.setCreateDate(System.currentTimeMillis());
-            newFolderEntry.setModifiedDate(System.currentTimeMillis());
-            newFolderEntry.setOwner(principal.getUserId());
-            newFolderEntry = registerDirLogicalData(newFolderEntry, connection);
-            setPermissions(newFolderEntry.getUid(), permissionsForNew, connection);
-            if (principal.canRead(toCopyPerm)) {
-                try (CallableStatement cs = connection.prepareCall("{CALL copyFolderContentProc(?, ?, ?, ?, ?, ?)}")) {
-                    cs.setString(1, principal.getUserId());
-                    cs.setString(2, principal.getRolesStr());
-                    cs.setString(3, permissionsForNew.getReadStr());
-                    cs.setString(4, permissionsForNew.getWriteStr());
-                    cs.setLong(5, toCopy.getUid());
-                    cs.setLong(6, newFolderEntry.getUid());
-                    cs.execute();
-                    try (PreparedStatement ps1 = connection.prepareStatement(
-                                    "SELECT uid, ownerId, ldName FROM ldata_table WHERE datatype='logical.folder' AND parentRef = ?")) {
-                        ps1.setLong(1, toCopy.getUid());
-                        ResultSet rs = ps1.executeQuery();
-                        while (rs.next()) {
-                            LogicalData element = new LogicalData();
-                            element.setUid(rs.getLong(1));
-                            element.setOwner(rs.getString(2));
-                            element.setType("logical.folder");
-                            element.setName(rs.getString(3));
-                            element.setParentRef(toCopy.getUid());
-                            copyFolder(element, newFolderEntry, element.getName(), principal, connection);
+        try {
+            Permissions toCopyPerm = getPermissions(toCopy.getUid(), toCopy.getOwner(), connection);
+            Permissions newParentPerm = getPermissions(newParent.getUid(), newParent.getOwner(), connection);
+            Permissions permissionsForNew = new Permissions(principal, newParentPerm);
+            if (toCopy.isFolder() && principal.canWrite(newParentPerm)) {
+                // ignore folder if there is a problem
+                LogicalData newFolderEntry = toCopy.clone();
+                newFolderEntry.setName(newName);
+                newFolderEntry.setParentRef(newParent.getUid());
+                newFolderEntry.setType(Constants.LOGICAL_FOLDER);
+                newFolderEntry.setCreateDate(System.currentTimeMillis());
+                newFolderEntry.setModifiedDate(System.currentTimeMillis());
+                newFolderEntry.setOwner(principal.getUserId());
+                newFolderEntry = registerDirLogicalData(newFolderEntry, connection);
+                setPermissions(newFolderEntry.getUid(), permissionsForNew, connection);
+                if (principal.canRead(toCopyPerm)) {
+                    try (CallableStatement cs = connection.prepareCall("{CALL copyFolderContentProc(?, ?, ?, ?, ?, ?)}")) {
+                        cs.setString(1, principal.getUserId());
+                        cs.setString(2, principal.getRolesStr());
+                        cs.setString(3, permissionsForNew.getReadStr());
+                        cs.setString(4, permissionsForNew.getWriteStr());
+                        cs.setLong(5, toCopy.getUid());
+                        cs.setLong(6, newFolderEntry.getUid());
+                        cs.execute();
+                        try (PreparedStatement ps1 = connection.prepareStatement(
+                                "SELECT uid, ownerId, ldName FROM ldata_table WHERE datatype='logical.folder' AND parentRef = ?")) {
+                            ps1.setLong(1, toCopy.getUid());
+                            ResultSet rs = ps1.executeQuery();
+                            while (rs.next()) {
+                                LogicalData element = new LogicalData();
+                                element.setUid(rs.getLong(1));
+                                element.setOwner(rs.getString(2));
+                                element.setType("logical.folder");
+                                element.setName(rs.getString(3));
+                                element.setParentRef(toCopy.getUid());
+                                copyFolder(element, newFolderEntry, element.getName(), principal, connection);
+                            }
                         }
                     }
                 }
             }
+        } catch (CloneNotSupportedException e) {
+            throw new RuntimeException(e);
         }
     }
 
-    @SneakyThrows(CloneNotSupportedException.class)
     public void copyFile(LogicalData toCopy, LogicalData newParent, String newName, MyPrincipal principal, Connection connection) throws SQLException {
-        Permissions toCopyPerm = getPermissions(toCopy.getUid(), toCopy.getOwner(), connection);
-        Permissions newParentPerm = getPermissions(newParent.getUid(), newParent.getOwner(), connection);
-        Permissions permissionsForNew = new Permissions(principal, newParentPerm);
-        if (!toCopy.isFolder() && principal.canRead(toCopyPerm) && principal.canWrite(newParentPerm)) {
-            LogicalData newFileEntry = toCopy.clone();
-            newFileEntry.setUid(Long.valueOf(0));
-            newFileEntry.setOwner(principal.getUserId());
-            newFileEntry.setName(newName);
-            newFileEntry.setParentRef(newParent.getUid());
-            newFileEntry.setCreateDate(System.currentTimeMillis());
-            newFileEntry.setModifiedDate(System.currentTimeMillis());
-            newFileEntry = registerLogicalData(newFileEntry, connection);
-            setPermissions(newFileEntry.getUid(), permissionsForNew, connection);
-            try (Statement s = connection.createStatement()) {
-                s.executeUpdate("UPDATE pdrigroup_table SET refCount=refCount+1 WHERE pdriGroupId = " + newFileEntry.getPdriGroupId());
+        try {
+            Permissions toCopyPerm = getPermissions(toCopy.getUid(), toCopy.getOwner(), connection);
+            Permissions newParentPerm = getPermissions(newParent.getUid(), newParent.getOwner(), connection);
+            Permissions permissionsForNew = new Permissions(principal, newParentPerm);
+            if (!toCopy.isFolder() && principal.canRead(toCopyPerm) && principal.canWrite(newParentPerm)) {
+                LogicalData newFileEntry = toCopy.clone();
+                newFileEntry.setUid(Long.valueOf(0));
+                newFileEntry.setOwner(principal.getUserId());
+                newFileEntry.setName(newName);
+                newFileEntry.setParentRef(newParent.getUid());
+                newFileEntry.setCreateDate(System.currentTimeMillis());
+                newFileEntry.setModifiedDate(System.currentTimeMillis());
+                newFileEntry = registerLogicalData(newFileEntry, connection);
+                setPermissions(newFileEntry.getUid(), permissionsForNew, connection);
+                try (Statement s = connection.createStatement()) {
+                    s.executeUpdate("UPDATE pdrigroup_table SET refCount=refCount+1 WHERE pdriGroupId = " + newFileEntry.getPdriGroupId());
+                }
             }
+        } catch (CloneNotSupportedException cns) {
+            throw new RuntimeException(cns);
         }
     }
 
@@ -1209,27 +1223,26 @@ public class JDBCatalogue extends MyDataSource {
 //        pathCache.put(uid, res);
     }
 
-    public void recordRequest(Connection connection, HttpServletRequest httpServletRequest, double elapsed) throws SQLException, UnsupportedEncodingException {
-        try (PreparedStatement preparedStatement = connection.prepareStatement(
-                        "INSERT INTO requests_table (methodName, requestURL, "
-                        + "remoteAddr, contentLen, contentType, elapsedTime,userName, userAgent) "
-                        + "VALUES(?, ?, ?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS)) {
-            preparedStatement.setString(1, httpServletRequest.getMethod());
-            preparedStatement.setString(2, httpServletRequest.getRequestURL().toString());
-            preparedStatement.setString(3, httpServletRequest.getRemoteAddr());
-            preparedStatement.setInt(4, httpServletRequest.getContentLength());
-            preparedStatement.setString(5, httpServletRequest.getContentType());
-            preparedStatement.setDouble(6, elapsed);
-
-
-            String userNpasswd = getUserName(httpServletRequest);
-            preparedStatement.setString(7, userNpasswd);
-            preparedStatement.setString(8, httpServletRequest.getHeader("User-Agent"));
-            preparedStatement.executeUpdate();
-            ResultSet rs = preparedStatement.getGeneratedKeys();
-        }
-    }
-
+//    public void recordRequest(Connection connection, HttpServletRequest httpServletRequest, double elapsed) throws SQLException, UnsupportedEncodingException {
+//        try (PreparedStatement preparedStatement = connection.prepareStatement(
+//                "INSERT INTO requests_table (methodName, requestURL, "
+//                + "remoteAddr, contentLen, contentType, elapsedTime,userName, userAgent) "
+//                + "VALUES(?, ?, ?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS)) {
+//            preparedStatement.setString(1, httpServletRequest.getMethod());
+//            preparedStatement.setString(2, httpServletRequest.getRequestURL().toString());
+//            preparedStatement.setString(3, httpServletRequest.getRemoteAddr());
+//            preparedStatement.setInt(4, httpServletRequest.getContentLength());
+//            preparedStatement.setString(5, httpServletRequest.getContentType());
+//            preparedStatement.setDouble(6, elapsed);
+//
+//
+//            String userNpasswd = getUserName(httpServletRequest);
+//            preparedStatement.setString(7, userNpasswd);
+//            preparedStatement.setString(8, httpServletRequest.getHeader("User-Agent"));
+//            preparedStatement.executeUpdate();
+//            ResultSet rs = preparedStatement.getGeneratedKeys();
+//        }
+//    }
     public void recordRequests(Connection connection, List<RequestWapper> requestEvents) throws SQLException, UnsupportedEncodingException {
         try (Statement s = connection.createStatement()) {
             for (RequestWapper e : requestEvents) {
@@ -1264,8 +1277,8 @@ public class JDBCatalogue extends MyDataSource {
 
             if (credentialID == -1) {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(
-                                "INSERT INTO credential_table (username, "
-                                + "password) VALUES (?, ?)", Statement.RETURN_GENERATED_KEYS)) {
+                        "INSERT INTO credential_table (username, "
+                        + "password) VALUES (?, ?)", Statement.RETURN_GENERATED_KEYS)) {
                     preparedStatement.setString(1, s.getCredential().getStorageSiteUsername());
                     preparedStatement.setString(2, s.getCredential().getStorageSitePassword());
                     preparedStatement.executeUpdate();
@@ -1282,16 +1295,16 @@ public class JDBCatalogue extends MyDataSource {
                 if (es.getResourceURI().equals(s.getResourceURI())) {
 //                    Long id = es.getStorageSiteId();
                     try (PreparedStatement preparedStatement = connection.prepareStatement(
-                                    "UPDATE storage_site_table SET "
-                                    + "`resourceUri` = ?, "
-                                    + "`credentialRef` = ?, "
-                                    + "`currentNum` = ?, "
-                                    + "`currentSize` = ?, "
-                                    + "`quotaNum` = ?, "
-                                    + "`quotaSize` = ?, "
-                                    + "`isCache` = ?, "
-                                    + "`encrypt` = ? "
-                                    + "WHERE storageSiteId = ?;")) {
+                            "UPDATE storage_site_table SET "
+                            + "resourceUri = ?, "
+                            + "credentialRef = ?, "
+                            + "currentNum = ?, "
+                            + "currentSize = ?, "
+                            + "quotaNum = ?, "
+                            + "quotaSize = ?, "
+                            + "isCache = ?, "
+                            + "encrypt = ? "
+                            + "WHERE storageSiteId = ?")) {
                         preparedStatement.setString(1, s.getResourceURI());
                         preparedStatement.setLong(2, credentialID);
                         preparedStatement.setLong(3, s.getCurrentNum());
@@ -1308,11 +1321,11 @@ public class JDBCatalogue extends MyDataSource {
             }
             if (!updatedSites.contains(s.getResourceURI())) {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(
-                                "INSERT INTO storage_site_table "
-                                + "(resourceUri, credentialRef, currentNum, "
-                                + "currentSize, quotaNum, quotaSize, isCache, extra, "
-                                + "encrypt) "
-                                + "VALUES (?, ?, ?, ?, ?, ?, ?, NULL, ?)", Statement.RETURN_GENERATED_KEYS)) {
+                        "INSERT INTO storage_site_table "
+                        + "(resourceUri, credentialRef, currentNum, "
+                        + "currentSize, quotaNum, quotaSize, isCache, extra, "
+                        + "encrypt) "
+                        + "VALUES (?, ?, ?, ?, ?, ?, ?, NULL, ?)", Statement.RETURN_GENERATED_KEYS)) {
                     preparedStatement.setString(1, s.getResourceURI());
                     preparedStatement.setLong(2, credentialID);
                     preparedStatement.setLong(3, s.getCurrentNum());
@@ -1336,7 +1349,7 @@ public class JDBCatalogue extends MyDataSource {
         if (ids != null && ids.size() > 0) {
             for (Long id : ids) {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(
-                                "DELETE FROM storage_site_table WHERE storageSiteId = ?")) {
+                        "DELETE FROM storage_site_table WHERE storageSiteId = ?")) {
                     preparedStatement.setLong(1, id);
                     preparedStatement.executeUpdate();
                 }
@@ -1346,7 +1359,7 @@ public class JDBCatalogue extends MyDataSource {
 
     private Collection<Credential> getCredentials(Connection connection) throws SQLException {
         try (PreparedStatement preparedStatement = connection.prepareStatement(
-                        "select * from credential_table")) {
+                "select * from credential_table")) {
 
             ResultSet rs = preparedStatement.executeQuery();
             Collection<Credential> res = new ArrayList<>();
@@ -1364,7 +1377,7 @@ public class JDBCatalogue extends MyDataSource {
     public List<UsersWrapper> getUsers(Connection connection) throws SQLException {
         List<UsersWrapper> users = new ArrayList<>();
         try (PreparedStatement preparedStatement = connection.prepareStatement(
-                        "select * from auth_usernames_table")) {
+                "select * from auth_usernames_table")) {
             ResultSet rs = preparedStatement.executeQuery();
             while (rs.next()) {
                 UsersWrapper uw = new UsersWrapper();
@@ -1377,7 +1390,7 @@ public class JDBCatalogue extends MyDataSource {
 
                 List<String> roles = new ArrayList<>();
                 try (PreparedStatement preparedStatement2 = connection.prepareStatement(
-                                "SELECT roleName FROM auth_roles_tables WHERE unameRef = " + id)) {
+                        "SELECT roleName FROM auth_roles_tables WHERE unameRef = " + id)) {
                     ResultSet rs2 = preparedStatement2.executeQuery();
                     while (rs2.next()) {
                         roles.add(rs2.getString(1));
@@ -1390,15 +1403,16 @@ public class JDBCatalogue extends MyDataSource {
         return users;
     }
 
-    public List<LogicalData> getLogicalDataByName(Path fileName, Connection connection) throws SQLException {
+    public List<LogicalData> getLogicalDataByName(Path fileName, Connection connection) throws SQLException, UnsupportedEncodingException {
+        Path decodedLogicalFileName = Path.path(java.net.URLDecoder.decode(fileName.toString(), "UTF-8"));
         try (PreparedStatement ps = connection.prepareStatement("SELECT uid, parentRef, "
-                        + "ownerId, datatype, ldName, createDate, modifiedDate, ldLength, "
-                        + "contentTypesStr, pdriGroupRef, isSupervised, checksum, "
-                        + "lastValidationDate, lockTokenID, lockScope, lockType, "
-                        + "lockedByUser, lockDepth, lockTimeout, description, "
-                        + "locationPreference, status "
-                        + "FROM ldata_table WHERE ldata_table.ldName = ?")) {
-            ps.setString(1, fileName.toString());
+                + "ownerId, datatype, ldName, createDate, modifiedDate, ldLength, "
+                + "contentTypesStr, pdriGroupRef, isSupervised, checksum, "
+                + "lastValidationDate, lockTokenID, lockScope, lockType, "
+                + "lockedByUser, lockDepth, lockTimeout, description, "
+                + "locationPreference, status "
+                + "FROM ldata_table WHERE ldata_table.ldName like '" + decodedLogicalFileName.toString() + "'")) {
+//            ps.setString(1, fileName.toString());
             ResultSet rs = ps.executeQuery();
             List<LogicalData> results = new ArrayList<>();
             while (rs.next()) {
@@ -1433,33 +1447,105 @@ public class JDBCatalogue extends MyDataSource {
         }
     }
 
-    private String getUserName(HttpServletRequest httpServletRequest) throws UnsupportedEncodingException {
-        String authorizationHeader = httpServletRequest.getHeader("authorization");
-        String userNpasswd = "";
-        if (authorizationHeader != null) {
-            final int index = authorizationHeader.indexOf(' ');
-            if (index > 0) {
-                final String credentials = new String(Base64.decodeBase64(authorizationHeader.substring(index).getBytes()), "UTF8");
-                String[] encodedToken = credentials.split(":");
-                if (encodedToken.length > 1) {
-                    String token = new String(Base64.decodeBase64(encodedToken[1]));
-                    if (token.contains(";") && token.contains("uid=")) {
-                        String uid = token.split(";")[0];
-                        userNpasswd = uid.split("uid=")[1];
-                    } else {
-                        userNpasswd = credentials.substring(0, credentials.indexOf(":"));
-                    }
-                }
-//                    if (userNpasswd == null || userNpasswd.length() < 1) {
+//    private String getUserName(HttpServletRequest httpServletRequest) throws UnsupportedEncodingException {
+//        String authorizationHeader = httpServletRequest.getHeader("authorization");
+//        String userNpasswd = "";
+//        if (authorizationHeader != null) {
+//            final int index = authorizationHeader.indexOf(' ');
+//            if (index > 0) {
+//                final String credentials = new String(Base64.decodeBase64(authorizationHeader.substring(index).getBytes()), "UTF8");
+//                String[] encodedToken = credentials.split(":");
+//                if (encodedToken.length > 1) {
+//                    String token = new String(Base64.decodeBase64(encodedToken[1]));
+//                    if (token.contains(";") && token.contains("uid=")) {
+//                        String uid = token.split(";")[0];
+//                        userNpasswd = uid.split("uid=")[1];
+//                    } else {
 //                        userNpasswd = credentials.substring(0, credentials.indexOf(":"));
 //                    }
-
-//                final String credentials = new String(Base64.decodeBase64(autheader.substring(index)), "UTF8");
-
-//                final String token = credentials.substring(credentials.indexOf(":") + 1);
+//                }
+////                    if (userNpasswd == null || userNpasswd.length() < 1) {
+////                        userNpasswd = credentials.substring(0, credentials.indexOf(":"));
+////                    }
+//
+////                final String credentials = new String(Base64.decodeBase64(autheader.substring(index)), "UTF8");
+//
+////                final String token = credentials.substring(credentials.indexOf(":") + 1);
+//            }
+//        }
+//        return userNpasswd;
+//    }
+    public void setSpeed(Stats stats) throws SQLException {
+        try (Connection connection = getConnection()) {
+            try {
+                setSpeed(stats, connection);
+                connection.commit();
+            } catch (SQLException e) {
+                connection.rollback();
+                throw e;
             }
         }
-        return userNpasswd;
+    }
+
+    private void setSpeed(Stats stats, Connection connection) throws SQLException {
+
+        try (PreparedStatement ps = connection.prepareStatement(
+                "select id, averageSpeed, minSpeed, maxSpeed from speed_table "
+                + "where src = ? AND dst = ? AND fSize = ?")) {
+            ps.setString(1, stats.getSource());
+            ps.setString(2, stats.getDestination());
+            String size = "m";
+            if (stats.getSize() < 2097152) {
+                size = "s";
+            } else if (stats.getSize() >= 2097152 && stats.getSize() < 20971520) {
+                size = "m";
+            } else if (stats.getSize() >= 20971520 && stats.getSize() < 209715200) {
+                size = "l";
+            } else if (stats.getSize() >= 209715200) {
+                size = "xl";
+            }
+            ps.setString(3, size);
+            ResultSet rs = ps.executeQuery();
+            int id = -1;
+            double averageSpeed = -1;
+            double minSpeed = -1;
+            double maxSpeed = -1;
+            if (rs.next()) {
+                id = rs.getInt(1);
+                averageSpeed = rs.getDouble(2);
+                minSpeed = rs.getDouble(3);
+                maxSpeed = rs.getDouble(4);
+            }
+
+            if (id != -1) {
+                averageSpeed = (averageSpeed + stats.getSpeed()) / 2.0;
+                maxSpeed = ((stats.getSpeed() > maxSpeed) ? stats.getSpeed() : maxSpeed);
+                minSpeed = ((stats.getSpeed() < minSpeed) ? stats.getSpeed() : minSpeed);
+                try (PreparedStatement ps2 = connection.prepareStatement("UPDATE speed_table SET `averageSpeed` = ?, `minSpeed` = ?, `maxSpeed` = ? WHERE id = ?")) {
+                    ps2.setInt(1, id);
+                    ps2.setDouble(2, averageSpeed);
+                    ps2.setDouble(3, minSpeed);
+                    ps2.setDouble(4, maxSpeed);
+                    ps2.executeUpdate();
+                }
+            } else {
+                averageSpeed = stats.getSpeed();
+                maxSpeed = stats.getSpeed();
+                minSpeed = stats.getSpeed();
+                try (PreparedStatement ps2 = connection.prepareStatement("INSERT "
+                        + "INTO speed_table (src, dst, fSize, averageSpeed, minSpeed, maxSpeed) "
+                        + "VALUES (?, ?, ?, ?, ?, ?)")) {
+                    ps2.setString(1, stats.getSource());
+                    ps2.setString(2, stats.getDestination());
+                    ps2.setString(3, size);
+                    ps2.setDouble(4, averageSpeed);
+                    ps2.setDouble(5, minSpeed);
+                    ps2.setDouble(6, maxSpeed);
+                    ps2.executeUpdate();
+                }
+            }
+        }
+
     }
 
     @Data
@@ -1501,7 +1587,7 @@ public class JDBCatalogue extends MyDataSource {
             return res;
         }
         try (PreparedStatement ps = connection.prepareStatement(
-                        "SELECT ldName, parentRef FROM ldata_table WHERE uid = ?")) {
+                "SELECT ldName, parentRef FROM ldata_table WHERE uid = ?")) {
             PathInfo pi = new PathInfo(ld.getName(), ld.getParentRef());
             List<PathInfo> pil = new ArrayList<>();
             getPathforLogicalData(pi, pil, ps);
@@ -1551,6 +1637,25 @@ public class JDBCatalogue extends MyDataSource {
             }
         } catch (Exception e) {
             log.log(Level.SEVERE, null, e);
+        }
+    }
+
+    public String getGlobalID(Long uid, Connection connection) throws SQLException {
+        String res = null;
+        try (PreparedStatement ps = connection.prepareStatement("SELECT global_id FROM wp4_table WHERE local_id = ?")) {
+            ps.setLong(1, uid);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                res = rs.getString(1);
+            }
+            return res;
+        }
+
+    }
+
+    public String getGlobalID(Long uid) throws SQLException {
+        try (Connection connection = getConnection()) {
+            return getGlobalID(uid, connection);
         }
     }
 }

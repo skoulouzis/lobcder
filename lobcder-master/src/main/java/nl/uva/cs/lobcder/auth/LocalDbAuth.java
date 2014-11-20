@@ -63,7 +63,7 @@ public class LocalDbAuth implements AuthI {
                                 while (rs2.next()) {
                                     roles.add(rs2.getString(1));
                                 }
-                                res = new MyPrincipal(uname, roles);
+                                res = new MyPrincipal(uname, roles, token);
                             }
                         }
                     }

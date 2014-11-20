@@ -22,7 +22,7 @@ import java.util.Date;
 import java.util.logging.Level;
 
 /**
- *
+ * Used by the DRI service to supervise resources for corrupted files etc.  
  * @author dvasunin
  */
 @Log
@@ -36,6 +36,12 @@ public class DRIDataResource {
         this.request = request;
     }
 
+    
+    /**
+     * Sets supervised flag for a resource. 
+     * @param uid the resource's id 
+     * @param flag the flag 
+     */
     @Path("{uid}/supervised/{flag}/")
     @PUT
     public void setSupervised(@PathParam("uid") Long uid, @PathParam("flag") Boolean flag) {
@@ -63,6 +69,11 @@ public class DRIDataResource {
         }
     }
 
+    /**
+     * Gets supervised flag for a resource. 
+     * @param uid the resource's id 
+     * @return the supervised flag for a resource. 
+     */
     @Path("{uid}/supervised/")
     @GET
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
@@ -84,6 +95,11 @@ public class DRIDataResource {
         }
     }
 
+    /**
+     * Sets checksum property for an item
+     * @param uid the resource's id  
+     * @param checksum the checksum. This value is not check if it's correct by lobcder 
+     */
     @Path("{uid}/checksum/{checksum}/")
     @PUT
     public void setChecksum(@PathParam("uid") Long uid, @PathParam("checksum") String checksum) {
@@ -111,6 +127,11 @@ public class DRIDataResource {
         }
     }
 
+    /**
+     * Gets checksum property for an item. 
+     * @param uid the resource's id  
+     * @return the checksum. This value is not check if it's correct by lobcder
+     */
     @Path("{uid}/checksum/")
     @GET
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
@@ -132,6 +153,12 @@ public class DRIDataResource {
         }
     }
 
+    
+    /**
+     * Sets lastvalidationdate property for a resource
+     * @param uid the resource's id  
+     * @param lastValidationDate the date last validated
+     */
     @Path("{uid}/lastValidationDate/{lastValidationDate}/")
     @PUT
     public void setLastValidationDate(@PathParam("uid") Long uid, @PathParam("lastValidationDate") Long lastValidationDate) {
@@ -159,6 +186,11 @@ public class DRIDataResource {
         }
     }
 
+    /**
+     * Gets lastvalidationdate property for a resource
+     * @param uid the resource's id  
+     * @return the date last validated
+     */
     @Path("{uid}/lastValidationDate/")
     @GET
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
@@ -180,6 +212,11 @@ public class DRIDataResource {
         }
     }
 
+    /**
+     * Gets lastvalidationdate property for a resource in text format 
+     * @param uid  the resource's id  
+     * @return the date last validated in text format 
+     */
     @Path("{uid}/lastValidationDate/")
     @GET
     @Produces({MediaType.TEXT_PLAIN, MediaType.TEXT_HTML})

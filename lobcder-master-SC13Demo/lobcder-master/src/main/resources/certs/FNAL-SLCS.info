@@ -1,0 +1,9 @@
+# @(#)$Id: 99f9f5a3.info,v 1.2 2009/05/30 12:42:17 pmacvsdg Exp $
+alias = FNAL-SLCS
+url = http://security.fnal.gov/cookbook/TrustingCertificates.html
+ca_url = http://security.fnal.gov/pki/99f9f5a3.0
+crl_url = http://security.fnal.gov/pki/99f9f5a3.r0
+email = nightwatch@fnal.gov
+status = accredited:slcs
+version = 1.53
+sha1fp.0 = 6A:5E:7A:A2:CB:F3:6D:A1:3E:DA:48:63:0B:3E:B8:1D:63:4B:ED:AD

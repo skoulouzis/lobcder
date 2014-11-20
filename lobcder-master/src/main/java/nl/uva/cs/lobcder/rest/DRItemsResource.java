@@ -4,6 +4,7 @@
  */
 package nl.uva.cs.lobcder.rest;
 
+import java.io.UnsupportedEncodingException;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.auth.MyPrincipal;
 import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
@@ -23,7 +24,7 @@ import java.util.ArrayList;
 import java.util.logging.Level;
 
 /**
- * REST Web Service
+ * Used by the DRI service to supervise resources for corrupted files etc.  
  *
  * @author dvasunin
  */
@@ -63,9 +64,16 @@ public class DRItemsResource {
         }
     }
 
+    
+   
+    /**
+     * Sets supervised flag for a resource. 
+     * @param flag the flag
+     * @param path  the resource's path
+     */
     @Path("supervised/{flag}")
     @PUT
-    public void setSupervised(@PathParam("flag") Boolean param, @QueryParam("path") String path) {
+    public void setSupervised(@PathParam("flag") Boolean flag, @QueryParam("path") String path) throws UnsupportedEncodingException {
         try (Connection cn = catalogue.getConnection()) {
             MyPrincipal mp = (MyPrincipal) request.getAttribute("myprincipal");
             if (mp.isAdmin()) {
@@ -76,11 +84,11 @@ public class DRItemsResource {
                     } else {
                         logicalData = catalogue.getLogicalDataByPath(io.milton.common.Path.path(path), cn);
                     }
-                    catalogue.setLogicalDataSupervised(logicalData.getUid(), param, cn);
+                    catalogue.setLogicalDataSupervised(logicalData.getUid(), flag, cn);
                     if (logicalData.isFolder()) {
                         try (PreparedStatement ps1 = cn.prepareStatement("UPDATE ldata_table SET isSupervised=? WHERE parentRef = ?");
                                 PreparedStatement ps2 = cn.prepareStatement("SELECT uid FROM ldata_table WHERE parentRef = ? AND datatype = '" + Constants.LOGICAL_FOLDER + "'")) {
-                            setDirSupervised(logicalData.getUid(), param, ps1, ps2);
+                            setDirSupervised(logicalData.getUid(), flag, ps1, ps2);
                         }
                     }
                     cn.commit();

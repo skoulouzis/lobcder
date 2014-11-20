@@ -1,0 +1,11 @@
+#
+# @(#)$Id: 71a89a47.info,v 1.3 2008/09/11 03:39:44 pmacvsyt Exp $
+# Information for CA NCHC
+#   obtained from 71a89a47 in APGrid/
+alias = NCHC
+crl_url = http://ca.goc.nchc.org.tw/nchcca/CRL/NCHCCRL.der
+email = nchcca@nchc.org.tw
+status = accredited:classic
+url = http://ca.goc.nchc.org.tw/
+version = 1.53
+sha1fp.0 = 27:BF:3B:DB:1F:A8:29:4E:D9:F2:63:A3:5E:1F:62:7D:7B:6E:7F:37

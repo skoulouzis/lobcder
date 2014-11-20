@@ -15,14 +15,14 @@ import java.util.Map;
  */
 class Graph {
 
-    private List<LobState> vertices = new ArrayList<>();
+    private List<Vertex> vertices = new ArrayList<>();
     private Map<String, Edge> edges = new HashMap<>();
 
     public Graph() {
     }
 
-    boolean containsState(LobState vertex) {
-        for (LobState v : vertices) {
+    boolean containsState(Vertex vertex) {
+        for (Vertex v : vertices) {
             if (v.getResourceName().equals(vertex.getResourceName()) &&
                     v.getMethod().toString().equals(vertex.getMethod().toString())) {
                 return true;
@@ -31,7 +31,7 @@ class Graph {
         return false;
     }
 
-    void addVertex(LobState v) {
+    void addVertex(Vertex v) {
         vertices.add(v);
     }
 
@@ -46,7 +46,7 @@ class Graph {
 //        return edges.contains(edge);
     }
 
-    double getWeight(LobState v1, LobState v2) {
+    double getWeight(Vertex v1, Vertex v2) {
 //        for (Edge e : edges) {
 //            if (e.getVertex1().getID().equals(v1.getID()) && e.getVertex2().getID().equals(v2.getID())) {
 //                return e.getWeight();
@@ -65,11 +65,15 @@ class Graph {
         this.edges.put(edge.getID(), edge);
     }
 
-    private String getEdgeID(LobState v1, LobState v2) {
+    private String getEdgeID(Vertex v1, Vertex v2) {
         return v1.getMethod()+","+v1.getResourceName() + ":" + v2.getMethod()+","+v2.getResourceName();
     }
 
-    List<LobState> vertexSet() {
+    List<Vertex> vertexSet() {
         return this.vertices;
+    }
+
+    void addEdge(Edge edge) {
+        edges.put(edge.getID(), edge);
     }
 }

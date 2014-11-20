@@ -17,6 +17,24 @@ import io.milton.http.exceptions.NotFoundException;
 import io.milton.resource.BufferingControlResource;
 import io.milton.resource.CollectionResource;
 import io.milton.resource.FileResource;
+import lombok.extern.java.Log;
+import nl.uva.cs.lobcder.auth.AuthI;
+import nl.uva.cs.lobcder.auth.AuthWorker;
+import nl.uva.cs.lobcder.auth.Permissions;
+import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
+import nl.uva.cs.lobcder.optimization.SDNControllerClient;
+import nl.uva.cs.lobcder.resources.LogicalData;
+import nl.uva.cs.lobcder.resources.PDRI;
+import nl.uva.cs.lobcder.resources.PDRIDescr;
+import nl.uva.cs.lobcder.resources.PDRIFactory;
+import nl.uva.cs.lobcder.util.Constants;
+import nl.uva.cs.lobcder.util.DesEncrypter;
+import nl.uva.cs.lobcder.util.PropertiesHelper;
+import nl.uva.vlet.data.StringUtil;
+import nl.uva.vlet.io.CircularStreamBufferTransferer;
+import org.apache.commons.codec.binary.Base64;
+
+import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -30,23 +48,8 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.annotation.Nonnull;
-import lombok.extern.java.Log;
-import nl.uva.cs.lobcder.auth.AuthI;
-import nl.uva.cs.lobcder.auth.AuthWorker;
-import nl.uva.cs.lobcder.auth.Permissions;
-import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
-import nl.uva.cs.lobcder.optimization.NewQoSPlannerClient;
-import nl.uva.cs.lobcder.resources.LogicalData;
-import nl.uva.cs.lobcder.resources.PDRI;
-import nl.uva.cs.lobcder.resources.PDRIDescr;
-import nl.uva.cs.lobcder.resources.PDRIFactory;
-import nl.uva.cs.lobcder.util.Constants;
-import nl.uva.cs.lobcder.util.DesEncrypter;
-import nl.uva.cs.lobcder.util.PropertiesHelper;
-import nl.uva.vlet.data.StringUtil;
-import nl.uva.vlet.io.CircularStreamBufferTransferer;
-import org.apache.commons.codec.binary.Base64;
+import nl.uva.cs.lobcder.rest.wrappers.Stats;
+import org.jgrapht.graph.DefaultWeightedEdge;
 
 /**
  *
@@ -58,12 +61,13 @@ public class WebDataFileResource extends WebDataResource implements
 
     private int sleepTime = 5;
     private List<String> workers;
+    private HashMap<String, String> workersMap;
     private boolean doRedirect = true;
     private static int workerIndex = 0;
     private static final Map<String, Double> weightPDRIMap = new HashMap<>();
     private static final Map<String, Integer> numOfGetsMap = new HashMap<>();
     private static final Map<String, Integer> numOfWorkerTransfersMap = new HashMap<>();
-    private NewQoSPlannerClient plannerClient;
+    private SDNControllerClient sdnClient;
 
     public WebDataFileResource(@Nonnull LogicalData logicalData, Path path, @Nonnull JDBCatalogue catalogue, @Nonnull List<AuthI> authList) {
         super(logicalData, path, catalogue, authList);
@@ -73,9 +77,19 @@ public class WebDataFileResource extends WebDataResource implements
             Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, ex);
         }
         if (doRedirect) {
-            workers = PropertiesHelper.getWorkers();
-            if (workers == null || workers.isEmpty()) {
+            List<String> workersURLs = PropertiesHelper.getWorkers();
+            if (workersURLs == null || workersURLs.isEmpty()) {
                 doRedirect = false;
+            } else {
+                workersMap = new HashMap<>();
+                for (String s : workersURLs) {
+                    try {
+                        s = s.replaceAll(" ", "");
+                        workersMap.put(new URI(s).getHost(), s);
+                    } catch (URISyntaxException ex) {
+                        Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
             }
         }
 
@@ -127,7 +141,9 @@ public class WebDataFileResource extends WebDataResource implements
         try (Connection connection = getCatalogue().getConnection()) {
             try {
                 Permissions destPerm = getCatalogue().getPermissions(toWDDR.getLogicalData().getUid(), toWDDR.getLogicalData().getOwner(), connection);
-                if (!getPrincipal().canWrite(destPerm)) {
+                LogicalData parentLD = getCatalogue().getLogicalDataByUid(getLogicalData().getParentRef());
+                Permissions parentPerm = getCatalogue().getPermissions(parentLD.getUid(), parentLD.getOwner());
+                if (!(getPrincipal().canWrite(destPerm) && getPrincipal().canWrite(parentPerm))) {
                     throw new NotAuthorizedException(this);
                 }
                 getCatalogue().moveEntry(getLogicalData(), toWDDR.getLogicalData(), name, connection);
@@ -240,7 +256,6 @@ public class WebDataFileResource extends WebDataResource implements
             pdri = PDRIFactory.getFactory().createInstance(pdriDescr, false);
             if (pdri != null) {
                 in = pdri.getData();
-                WebDataFileResource.log.log(Level.FINE, "sendContent() for {0}--------- {1}", new Object[]{getPath(), pdri.getFileName()});
                 if (!pdri.getEncrypted()) {
                     if (doCircularStreamBufferTransferer) {
                         CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((Constants.BUF_SIZE), in, out);
@@ -273,9 +288,9 @@ public class WebDataFileResource extends WebDataResource implements
                 if (ex instanceof nl.uva.vlet.exception.VlInterruptedException && ++tryCount < Constants.RECONNECT_NTRY) {
                     transferer(pdris, out, tryCount, false);
                 } else if (++tryCount < Constants.RECONNECT_NTRY) {
-                    transferer(pdris, out, tryCount, true);
+                    transferer(pdris, out, tryCount, false);
                 } else {
-                    transferer(pdris, out, 0, true);
+                    transferer(pdris, out, 0, false);
                 }
             } catch (InterruptedException ex1) {
                 sleepTime = 5;
@@ -415,7 +430,7 @@ public class WebDataFileResource extends WebDataResource implements
                 pdri = transfererRange(it, out, 0, null, range);
             } else {
 //                pdri = transferer(it, out, 0, null, false);
-                pdri = transferer(pdris, out, 0, doRedirect);
+                pdri = transferer(pdris, out, 0, false);
             }
         } catch (SQLException ex) {
             throw new BadRequestException(this, ex.getMessage());
@@ -455,7 +470,17 @@ public class WebDataFileResource extends WebDataResource implements
         weightPDRIMap.put(pdri.getHost(), averagre);
 
         getCatalogue().addViewForRes(getLogicalData().getUid());
-        String msg = "Source: " + pdri.getHost() + " Destination: " + fromAddress + " Tx_Speed: " + speed + " Kbites/sec Tx_Size: " + getContentLength() + " bytes";
+        Stats stats = new Stats();
+        stats.setSource(pdri.getHost());
+        stats.setDestination(fromAddress);
+        stats.setSpeed(speed);
+        stats.setSize(getContentLength());
+        String msg = "Source: " + stats.getSource() + " Destination: " + stats.getDestination() + " Tx_Speed: " + speed + " Kbites/sec Tx_Size: " + getContentLength() + " bytes";
+        try {
+            getCatalogue().setSpeed(stats);
+        } catch (SQLException ex) {
+            Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, ex);
+        }
         WebDataFileResource.log.log(Level.INFO, msg);
     }
 
@@ -463,7 +488,7 @@ public class WebDataFileResource extends WebDataResource implements
     public String processForm(Map<String, String> parameters,
             Map<String, FileItem> files) throws BadRequestException,
             NotAuthorizedException {
-//        Set<String> keys = parameters.keySet();
+        Set<String> keys = parameters.keySet();
 //        for (String s : keys) {
 //            WebDataFileResource.log.log(Level.INFO, "{0} : {1}", new Object[]{s, parameters.get(s)});
 //        }
@@ -494,9 +519,10 @@ public class WebDataFileResource extends WebDataResource implements
                         if (!canRedirect(request)) {
                             return null;
                         }
-
                         //Replica selection algorithm
-                        redirect = getBestWorker();
+//                        String from = ((HttpServletRequest) request).getRemoteAddr();
+                        String from = request.getRemoteAddr();
+                        redirect = getBestWorker(from);
                     }
                     WebDataFileResource.log.log(Level.INFO, "Redirecting to: {0}", redirect);
                     return redirect;
@@ -507,64 +533,33 @@ public class WebDataFileResource extends WebDataResource implements
             Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, ex);
         } catch (URISyntaxException ex) {
             Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (SQLException | IOException ex) {
+        } catch (SQLException | IOException | InterruptedException ex) {
             Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, ex);
         }
         return null;
     }
 
-    private String getBestWorker() throws IOException {
+    private String getBestWorker(String reuSource) throws IOException, URISyntaxException, InterruptedException {
         if (doRedirect) {
-//            String uri = PropertiesHelper.getFloodLightURL();
 //            if (uri != null) {
-//                if (plannerClient == null) {
-//                    plannerClient = new NewQoSPlannerClient(uri);
-//                }
-//                List<FloodlightStats> stats = plannerClient.getStats();
-//                long cost = Long.MAX_VALUE;
-//                int portNum = -1;
-//                HashMap<Integer, String> map = PropertiesHelper.getPortWorkerMap();
-//                String worker;
-//                for (FloodlightStats f : stats) {
-//                    if (f.portNumber != 3 && f.portNumber != 2 && f.portNumber >= 0) {
-//                        if ((f.receivePackets + f.transmitPackets) < cost) {
-////                            cost = f.receivePackets + f.transmitPackets + f.collisions
-////                                    + f.receiveCRCErrors + f.receiveDropped + f.receiveErrors
-////                                    + f.receiveFrameErrors + f.receiveOverrunErrors + f.transmitBytes
-////                                    + f.transmitDropped + f.transmitErrors;s
-//                            cost = f.receivePackets + f.transmitPackets;
-//                            portNum = f.portNumber;
-//                            worker = map.get(portNum);
-//                            if (numOfWorkerTransfersMap.containsKey(worker)) {
-//                                long weightedTras = numOfWorkerTransfersMap.get(worker) + (cost / 6);
-//                                cost += weightedTras;
-//                            }
-//                        }
-//                    }
-//                }
-//                worker = map.get(portNum);
-//                plannerClient.pushFlow("00:00:c2:b3:aa:aa:2d:41", portNum, 3);
-//                plannerClient.pushFlow("00:00:c2:b3:aa:aa:2d:41", 3, portNum);
-//
-//                WebDataFileResource.log.log(Level.INFO, "portNum: {0} min: {1} worker: {2}", new Object[]{portNum, cost, worker});
-//                String w = worker + "/" + getLogicalData().getUid();
-//                String token = UUID.randomUUID().toString();
-//                AuthWorker.setTicket(worker, token);
-//                int trans = 0;
-//                if (numOfWorkerTransfersMap.containsKey(worker)) {
-//                    trans = numOfWorkerTransfersMap.get(worker);
-//                }
-//                trans++;
-//                numOfWorkerTransfersMap.put(worker, trans);
-//                WebDataFileResource.log.log(Level.INFO, "worker: " + worker + " transfers: " + trans);
-//                return w + "/" + token;
+            if (PropertiesHelper.getSchedulingAlg().equals("traffic") && PropertiesHelper.useSDN()) {
+//                return getWorkerWithLessTraffic(reuSource);
+                WebDataFileResource.log.log(Level.FINE, "SchedulingAlg: traffic");
+                return getLowestCostWorker(reuSource);
+            }
+            if (PropertiesHelper.getSchedulingAlg().equals("round-robin")) {
+                return getWorkerRoundRobin();
+            }
+            if (PropertiesHelper.getSchedulingAlg().equals("random")) {
+                return getWorkerRandom();
+            }
 //            }
-
 
             workers = PropertiesHelper.getWorkers();
             if (workerIndex >= workers.size()) {
                 workerIndex = 0;
             }
+
             String worker = workers.get(workerIndex++);
             String w = worker + "/" + getLogicalData().getUid();
             String token = UUID.randomUUID().toString();
@@ -621,7 +616,7 @@ public class WebDataFileResource extends WebDataResource implements
         if (userAgent == null || userAgent.length() <= 1) {
             return false;
         }
-        WebDataFileResource.log.log(Level.FINE, "userAgent: {0}", userAgent);
+//        WebDataFileResource.log.log(Level.FINE, "userAgent: {0}", userAgent);
         List<String> nonRedirectableUserAgents = PropertiesHelper.getNonRedirectableUserAgents();
         for (String s : nonRedirectableUserAgents) {
             if (userAgent.contains(s)) {
@@ -640,5 +635,47 @@ public class WebDataFileResource extends WebDataResource implements
             }
         }
         return false;
+    }
+
+    private String getLowestCostWorker(String reqSource) throws IOException, URISyntaxException, InterruptedException {
+        if (sdnClient == null) {
+            String uri = PropertiesHelper.getSDNControllerURL();
+            sdnClient = new SDNControllerClient(uri);
+        }
+        List<DefaultWeightedEdge> shortestPath = sdnClient.getShortestPath(reqSource, workersMap.keySet());
+        WebDataFileResource.log.log(Level.FINE, "getShortestPath: " + shortestPath);
+        sdnClient.pushFlow(shortestPath);
+        DefaultWeightedEdge e = shortestPath.get(0);
+        String[] workerSwitch = e.toString().split(" : ");
+        String workerIP = workerSwitch[0].substring(1);
+
+        String worker = workersMap.get(workerIP);
+        String w = worker + "/" + getLogicalData().getUid();
+        String token = UUID.randomUUID().toString();
+        AuthWorker.setTicket(worker, token);
+//        w = "http://localhost:8080/lobcder-worker/"+getLogicalData().getUid();
+        return w + "/" + token;
+    }
+
+    private String getWorkerRoundRobin() throws IOException {
+        workers = PropertiesHelper.getWorkers();
+        if (workerIndex >= workers.size()) {
+            workerIndex = 0;
+        }
+        String worker = workers.get(workerIndex++);
+        String w = worker + "/" + getLogicalData().getUid();
+        String token = UUID.randomUUID().toString();
+        AuthWorker.setTicket(worker, token);
+        return w + "/" + token;
+    }
+
+    private String getWorkerRandom() throws IOException {
+        workers = PropertiesHelper.getWorkers();
+        int randomIndex = new Random().nextInt((workers.size() - 1 - 0) + 1) + 0;
+        String worker = workers.get(randomIndex);
+        String w = worker + "/" + getLogicalData().getUid();
+        String token = UUID.randomUUID().toString();
+        AuthWorker.setTicket(worker, token);
+        return w + "/" + token;
     }
 }

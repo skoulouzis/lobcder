@@ -18,10 +18,11 @@ import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import lombok.extern.java.Log;
+import nl.uva.cs.lobcder.rest.wrappers.Stats;
 import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.cs.lobcder.util.DesEncrypter;
 import nl.uva.cs.lobcder.util.GridHelper;
-import nl.uva.cs.lobcder.util.SpeedLogger;
+import nl.uva.vlet.GlobalConfig;
 import nl.uva.vlet.data.StringUtil;
 import nl.uva.vlet.exception.ResourceNotFoundException;
 import nl.uva.vlet.exception.VRLSyntaxException;
@@ -29,6 +30,7 @@ import nl.uva.vlet.exception.VlException;
 import nl.uva.vlet.io.CircularStreamBufferTransferer;
 import nl.uva.vlet.vfs.*;
 import nl.uva.vlet.vfs.cloud.CloudFile;
+import nl.uva.vlet.vfs.webdavfs.WebdavFile;
 import nl.uva.vlet.vrl.VRL;
 import nl.uva.vlet.vrs.ServerInfo;
 import nl.uva.vlet.vrs.VRSContext;
@@ -50,7 +52,6 @@ public class VPDRI implements PDRI {
         }
     }
     private VFSClient vfsClient;
-    //    private MyStorageSite storageSite;
     private VRL vrl;
     private final String username;
     private final String password;
@@ -58,7 +59,6 @@ public class VPDRI implements PDRI {
     private final String baseDir = "LOBCDER-REPLICA-vTEST";//"LOBCDER-REPLICA-v2.0";
     private final String fileName;
     private int reconnectAttemts = 0;
-    private final static boolean debug = true;
     private BigInteger keyInt;
     private boolean encrypt;
     private final String resourceUrl;
@@ -66,15 +66,17 @@ public class VPDRI implements PDRI {
     private int sleeTime = 5;
 //    private static final Map<String, GridProxy> proxyCache = new HashMap<>();
     private boolean destroyCert;
+    private long length = -1;
 
     public VPDRI(String fileName, Long storageSiteId, String resourceUrl,
             String username, String password, boolean encrypt, BigInteger keyInt,
             boolean doChunkUpload) throws IOException {
         try {
             this.fileName = fileName;
-            this.resourceUrl = resourceUrl;
+            this.resourceUrl = resourceUrl.replaceAll(" ", "");
+
             String encoded = VRL.encode(fileName);
-            vrl = new VRL(resourceUrl).appendPath(baseDir).append(encoded);
+            vrl = new VRL(this.resourceUrl).appendPath(baseDir).append(encoded);
 //            vrl = new VRL(resourceUrl).appendPath(baseDir).append(URLEncoder.encode(fileName, "UTF-8").replace("+", "%20"));
             this.storageSiteId = storageSiteId;
             this.username = username;
@@ -82,7 +84,6 @@ public class VPDRI implements PDRI {
             this.encrypt = encrypt;
             this.keyInt = keyInt;
             this.doChunked = doChunkUpload;
-//            this.resourceUrl = resourceUrl;
             VPDRI.log.log(Level.FINE, "fileName: {0}, storageSiteId: {1}, username: {2}, password: {3}, VRL: {4}", new Object[]{fileName, storageSiteId, username, password, vrl});
             initVFS();
         } catch (Exception ex) {
@@ -93,6 +94,7 @@ public class VPDRI implements PDRI {
     private void initVFS() throws Exception {
         this.vfsClient = new VFSClient();
         VRSContext context = this.getVfsClient().getVRSContext();
+        context.setProperty(GlobalConfig.TCP_CONNECTION_TIMEOUT, "20000");
         //Bug in sftp: We have to put the username in the url
         ServerInfo info = context.getServerInfoFor(vrl, true);
         String authScheme = info.getAuthScheme();
@@ -249,7 +251,9 @@ public class VPDRI implements PDRI {
                 byte[] buff = new byte[buffSize];
                 int totalBytesRead = 0;
                 while (totalBytesRead < len || read != -1) {
+                    long startT = System.currentTimeMillis();
                     read = ra.readBytes(start, buff, 0, buff.length);
+                    VPDRI.log.log(Level.INFO, "speed: {0} kb/s", (read / 1024.0) / ((System.currentTimeMillis() - startT) / 1000.0));
                     if (read == -1 || totalBytesRead == len) {
                         break;
                     }
@@ -371,6 +375,23 @@ public class VPDRI implements PDRI {
             VDir remoteDir = getVfsClient().mkdirs(parentVrl, true);
             getVfsClient().createFile(vrl, true);
             out = getVfsClient().getFile(vrl).getOutputStream();
+
+//            BufferedReader br = new BufferedReader(new InputStreamReader(in));
+//            String line = null;
+//
+////            StringBuilder responseData = new StringBuilder();
+//           int count = 0;
+//            while ((line = br.readLine()) != null) {
+////            for (int i = 0; i < 3; i++) {
+//                count++;
+//                VPDRI.log.log(Level.FINE, "line:" + line);
+//                if (count >= 4) {
+//                    break;
+//                }
+//            }
+
+
+
             if (!getEncrypted()) {
                 CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((Constants.BUF_SIZE), in, out);
                 cBuff.startTransfer(new Long(-1));
@@ -434,20 +455,30 @@ public class VPDRI implements PDRI {
 
     @Override
     public String getHost() throws UnknownHostException {
-        VPDRI.log.log(Level.FINE, "getHostName: {0}", InetAddress.getLocalHost().getHostName());
         if (vrl.getScheme().equals("file")
                 || StringUtil.isEmpty(vrl.getHostname())
                 || vrl.getHostname().equals("localhost")
                 || vrl.getHostname().equals("127.0.0.1")) {
-            return InetAddress.getLocalHost().getHostName();
+            return getIP("localhost");
         } else {
             return vrl.getHostname();
+        }
+    }
+
+    private String getIP(String hostName) {
+        try {
+            return InetAddress.getByName(hostName).getHostAddress();
+        } catch (UnknownHostException ex) {
+            return hostName;
         }
     }
 
     @Override
     public long getLength() throws IOException {
         try {
+            if (length > -1) {
+                return length;
+            }
             return getVfsClient().getFile(vrl).getLength();
         } catch (Exception ex) {
             if (reconnectAttemts < Constants.RECONNECT_NTRY) {
@@ -489,6 +520,20 @@ public class VPDRI implements PDRI {
         return null;
     }
 
+    @Override
+    public String getStringChecksum() throws IOException {
+        try {
+            VFile physicalFile = getVfsClient().getFile(vrl);
+            if (physicalFile instanceof VChecksum) {
+                return ((VChecksum) physicalFile).getChecksum("MD5");
+            }
+        } catch (VlException ex) {
+            throw new IOException(ex);
+        } finally {
+        }
+        return null;
+    }
+
 //    private void debug(String msg) {
 //        if (debug) {
 ////            System.err.println(this.getClass().getName() + ": " + msg);
@@ -499,9 +544,17 @@ public class VPDRI implements PDRI {
         if (getVfsClient() == null) {
             reconnect();
         }
-        CloudFile thisFile = (CloudFile) getVfsClient().createFile(vrl, true);
-        VFile sourceFile = getVfsClient().openFile(new VRL(source.getURI()));
-        thisFile.uploadFrom(sourceFile);
+        VFile file = getVfsClient().createFile(vrl, true);
+        if (file instanceof CloudFile) {
+            CloudFile uFile = (CloudFile) file;
+            VFile sourceFile = getVfsClient().openFile(new VRL(source.getURI()));
+            uFile.uploadFrom(sourceFile);
+        }
+        if (file instanceof WebdavFile) {
+            WebdavFile wFile = (WebdavFile) file;
+            VFile sourceFile = getVfsClient().openFile(new VRL(source.getURI()));
+            wFile.uploadFrom(sourceFile);
+        }
     }
 
     @Override
@@ -516,7 +569,7 @@ public class VPDRI implements PDRI {
             if (!vfsClient.existsDir(vrl.getParent())) {
                 VDir remoteDir = vfsClient.mkdirs(vrl.getParent(), true);
             }
-            if (desteScheme.equals("swift") && sourceScheme.equals("file")) {
+            if (desteScheme.equals("swift") && sourceScheme.equals("file") || desteScheme.startsWith("webdav") && sourceScheme.equals("file")) {
                 upload(source);
             } else {
                 VFile destFile = getVfsClient().createFile(vrl, true);
@@ -527,10 +580,19 @@ public class VPDRI implements PDRI {
             double elapsed = System.currentTimeMillis() - start;
             double speed = ((source.getLength() * 8.0) * 1000.0) / (elapsed * 1000.0);
 
+            Stats stats = new Stats();
+            stats.setSource(source.getHost());
+            stats.setDestination(getHost());
+            stats.setSpeed(speed);
+            stats.setSize(getLength());
+//            setSpeed(stats);
+
             String msg = "Source: " + source.getHost() + " Destination: " + vrl.getScheme() + "://" + getHost() + " Replication_Speed: " + speed + " Kbites/sec Repl_Size: " + (getLength()) + " bytes";
             VPDRI.log.log(Level.INFO, msg);
-            SpeedLogger.logSpeed(msg);
-            
+
+
+//            getAsyncDelete(getVfsClient(), vrl).run();
+
         } catch (VlException ex) {
             Logger.getLogger(VPDRI.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -586,5 +648,10 @@ public class VPDRI implements PDRI {
             reconnect();
         }
         return vfsClient;
+    }
+
+    @Override
+    public void setLength(long length) {
+        this.length = length;
     }
 }

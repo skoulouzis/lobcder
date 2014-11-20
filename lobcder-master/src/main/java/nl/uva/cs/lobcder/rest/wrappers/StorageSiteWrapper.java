@@ -6,7 +6,6 @@ package nl.uva.cs.lobcder.rest.wrappers;
 
 import javax.xml.bind.annotation.XmlRootElement;
 import lombok.Data;
-import nl.uva.cs.lobcder.rest.wrappers.CredentialWrapped;
 
 /**
  *

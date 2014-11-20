@@ -54,4 +54,8 @@ public class SingletonesHelper {
         return res;
     }
 
+    public AuthI getTktAuth() {
+          return authTicket;
+    }
+
 }

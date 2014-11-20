@@ -4,8 +4,6 @@
  */
 package nl.uva.cs.lobcder.util;
 
-import nl.uva.cs.lobcder.webDav.resources.WebDataFileResource;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -20,6 +18,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import nl.uva.cs.lobcder.webDav.resources.WebDataFileResource;
 
 /**
  *
@@ -28,6 +27,23 @@ import java.util.logging.Logger;
 public class PropertiesHelper {
 
     public static final String propertiesPath = "lobcder.properties";
+    public static final String cachePropertiesPath = "cache.properties";
+
+    public static enum PREDICTION_TYPE {
+
+        method,
+        resource,
+        state
+    }
+    
+        public static enum ReplicationPolicy {
+
+        aggressive,
+        firstSite
+        
+    }
+        
+    
 
     private static Properties getProperties() throws IOException {
         InputStream in = null;
@@ -61,14 +77,11 @@ public class PropertiesHelper {
                 workers.add(line);
             }
             br.close();
-        } catch (Exception ex) {
-//            Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, ex);
-            return null;
+        } catch (IOException ex) {
+            Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
             try {
-                if (br != null) {
-                    br.close();
-                }
+                br.close();
             } catch (IOException ex) {
                 Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -105,31 +118,32 @@ public class PropertiesHelper {
         return getProperties().getProperty("worker.token");
     }
 
-    public static boolean doAggressiveReplication() throws IOException {
-
-        return Boolean.valueOf(getProperties().getProperty("replication.aggressive", "false"));
+    public static ReplicationPolicy getReplicationPolicy() throws IOException {
+        return ReplicationPolicy.valueOf( getProperties().getProperty("replication.policy", "firstSite"));
     }
 
     public static boolean doRedirectGets() throws IOException {
-        return Boolean.valueOf(getProperties().getProperty("get.redirect", "false"));
+        return Boolean.valueOf(getProperties().getProperty("redirect.get", "false"));
     }
 
 //    public static boolean doRemoteAuth() throws IOException {
 //        return Boolean.valueOf(getProperties().getProperty("auth.use.remote", "true"));
 //    }
-
-    public static String getMetadataReposetoryURL() throws IOException {
-        return getProperties().getProperty("metadata.reposetory.url", "http://vphshare.atosresearch.eu/metadata-retrieval/rest/metadata");
+    public static String getMetadataRepositoryURL() throws IOException {
+        return getProperties().getProperty("metadata.repository.url", "http://vphshare.atosresearch.eu/metadata-extended/rest/metadata");
     }
 
-    public static Boolean useMetadataReposetory() throws IOException {
-        return Boolean.valueOf(getProperties().getProperty("use.metadata.repository", "true"));
+    public static String getMetadataRepositoryDevURL() throws IOException {
+        return getProperties().getProperty("metadata.repository.test.url", "http://vphshare.atosresearch.eu/metadata-extended-test/rest/metadata");
+    }
+
+    public static Boolean useMetadataRepository() throws IOException {
+        return Boolean.valueOf(getProperties().getProperty("metadata.repository.use", "true"));
     }
 
 //    public static String getAuthRemoteURL() throws IOException {
 //        return getProperties().getProperty("auth.remote.url", "https://jump.vph-share.eu/validatetkt/?ticket=");
 //    }
-
     public static int getDefaultRowLimit() throws IOException {
         return Integer.valueOf(getProperties().getProperty("default.rowlimit", "500"));
     }
@@ -171,15 +185,15 @@ public class PropertiesHelper {
     }
 
     public static Set<String> getAllowedOrigins() throws IOException {
-        return new HashSet<>(Arrays.asList (getProperties().getProperty("allowed.origins").split(",")));
+        return new HashSet<>(Arrays.asList(getProperties().getProperty("allowed.origins").split(",")));
     }
 
-    public static String getFloodLightURL() throws IOException {
-        return getProperties().getProperty("floodlight.url");
+    public static String getSDNControllerURL() throws IOException {
+        return getProperties().getProperty("sdn.controller.url");
     }
 
     public static HashMap<Integer, String> getPortWorkerMap() {
-         HashMap<Integer, String> ipMap = new HashMap<>();
+        HashMap<Integer, String> ipMap = new HashMap<>();
         BufferedReader br = null;
         try {
             ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
@@ -204,5 +218,45 @@ public class PropertiesHelper {
             }
         }
         return ipMap;
+    }
+
+    public static String getSchedulingAlg() throws IOException {
+        return getProperties().getProperty("worker.selection.algorithm");
+    }
+    
+    public static Boolean useSDN() throws IOException {
+        return Boolean.valueOf(getProperties().getProperty("sdn.controller.use", "false"));
+    }
+
+    public static String getPredictorAlgorithm() throws IOException {
+        return getProperties().getProperty("predictor.algorithm", "FirstSuccessor");
+    }
+
+    public static Integer getStableSuccessorN() throws IOException {
+        return Integer.valueOf(getProperties().getProperty("stable.successor.N", "3"));
+    }
+
+    public static Integer RecentPopularityJ() throws IOException {
+        return Integer.valueOf(getProperties().getProperty("recent.popularity.j", "5"));
+    }
+
+    public static Integer RecentPopularityK() throws IOException {
+        return Integer.valueOf(getProperties().getProperty("recent.popularity.k", "3"));
+    }
+
+    public static Integer PredecessorPositionLen() throws IOException {
+        return Integer.valueOf(getProperties().getProperty("predecessor.position.len", "3"));
+    }
+
+    public static Integer getFirstSuccessorrN() throws IOException {
+        return Integer.valueOf(getProperties().getProperty("first.successor.N", "1"));
+    }
+
+    public static int KNN() throws IOException {
+        return Integer.valueOf(getProperties().getProperty("knn", "10"));
+    }
+
+    public static PREDICTION_TYPE getPredictionType() throws IOException {
+        return PREDICTION_TYPE.valueOf(getProperties().getProperty("predictor.type", "state"));
     }
 }

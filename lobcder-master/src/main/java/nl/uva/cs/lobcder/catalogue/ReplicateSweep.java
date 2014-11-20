@@ -23,12 +23,12 @@ import nl.uva.cs.lobcder.util.PropertiesHelper;
 class ReplicateSweep implements Runnable {
 
     private final DataSource datasource;
-    private boolean aggressiveReplicate = false;
+    private static PropertiesHelper.ReplicationPolicy replicatePolicy = PropertiesHelper.ReplicationPolicy.firstSite;
 
     public ReplicateSweep(DataSource datasource) {
         this.datasource = datasource;
         try {
-            aggressiveReplicate = PropertiesHelper.doAggressiveReplication();
+            replicatePolicy = PropertiesHelper.getReplicationPolicy();
         } catch (IOException ex) {
             Logger.getLogger(ReplicateSweep.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -44,16 +44,23 @@ class ReplicateSweep implements Runnable {
     }
 
     private Collection<StorageSite> findBestSites() {
-        if (aggressiveReplicate) {
-            return availableStorage;
-        } else {
-            ArrayList<StorageSite> sites = new ArrayList<StorageSite>();
-            if (it == null || !it.hasNext()) {
-                it = availableStorage.iterator();
-            }
-            sites.add(it.next());
-            return sites;
-            //             
+        switch (replicatePolicy) {
+            case firstSite:
+                ArrayList<StorageSite> sites = new ArrayList<>();
+                if (it == null || !it.hasNext()) {
+                    it = availableStorage.iterator();
+                }
+                sites.add(it.next());
+                return sites;
+            case aggressive:
+                return availableStorage;
+            default:
+                sites = new ArrayList<>();
+                if (it == null || !it.hasNext()) {
+                    it = availableStorage.iterator();
+                }
+                sites.add(it.next());
+                return sites;
         }
     }
 
@@ -162,14 +169,18 @@ class ReplicateSweep implements Runnable {
                         pdriId = rs.getLong(9);
                         PDRIDescr cd = new PDRIDescr(name, ssID, resourceURL, username, password, encrypt, key, pdriGroupRef, pdriId);
                         toReplicate.add(cd);
+
                     }
 
                 }
                 connection.commit();
                 for (PDRIDescr cd : toReplicate) {
+
+
+
                     log.log(Level.FINE, "to replicate: {0}", cd.getResourceUrl());
                     try (PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO pdri_table "
-                                    + "(fileName, storageSiteRef, pdriGroupRef,isEncrypted, encryptionKey) VALUES(?, ?, ?, ?, ?)")) {
+                            + "(fileName, storageSiteRef, pdriGroupRef,isEncrypted, encryptionKey) VALUES(?, ?, ?, ?, ?)")) {
                         source = new PDRIFactory().createInstance(cd, false);
 //                        StorageSite ss = findBestSite();
                         Collection<StorageSite> ss = findBestSites();
@@ -183,6 +194,7 @@ class ReplicateSweep implements Runnable {
                                     s.getCredential().getStorageSitePassword(), s.isEncrypt(), pdriKey, cd.getPdriGroupRef(), null);
 
                             PDRI replica = PDRIFactory.getFactory().createInstance(pdriDescr, false);
+//                            replica.setLength(length);
                             replica.replicate(source);
                             preparedStatement.setString(1, cd.getName());
                             preparedStatement.setLong(2, s.getStorageSiteId());

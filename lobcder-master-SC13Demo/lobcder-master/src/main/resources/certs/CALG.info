@@ -1,0 +1,12 @@
+#
+# @(#)$Id: 742edd45.info,v 1.4 2009/09/09 08:55:02 pmacvsdg Exp $
+# Information for CA CALG (LatGrid)
+#   
+alias = CALG
+crl_url = http://grid.lumii.lv/calg-crl.pem
+ca_url = http://grid.lumii.lv/uploads/ca-cert.pem
+url = http://grid.lumii.lv/?lang=en
+email = ca@grid.lumii.lv
+status = accredited:classic
+version = 1.53
+sha1fp.0 = 1E:54:9B:D1:23:22:F2:12:6F:14:16:C4:2C:21:DA:59:3E:F3:78:0B

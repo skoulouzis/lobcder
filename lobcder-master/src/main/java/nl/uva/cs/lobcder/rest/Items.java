@@ -38,6 +38,8 @@ import java.util.Queue;
 import java.util.logging.Level;
 
 /**
+ * Gets resource properties like length owner physical location etc.
+ *
  * @author dvasunin
  */
 @Log
@@ -45,7 +47,6 @@ import java.util.logging.Level;
 public class Items extends CatalogueHelper {
 
     private int defaultRowLimit;
-
     @Context
     UriInfo info;
     @Context
@@ -60,15 +61,17 @@ public class Items extends CatalogueHelper {
     @Data
     @AllArgsConstructor
     class MyData {
+
         Long uid;
         String path;
     }
+
     private List<LogicalDataWrapped> queryLogicalData(MyData myData, int limit, PreparedStatement ps1, PreparedStatement ps2, MyPrincipal mp, Connection cn) throws Exception {
         List<LogicalDataWrapped> ldwl = new LinkedList<>();
         Queue<MyData> dirs = new LinkedList<>();
         dirs.offer(myData);
         MyData dir;
-        while((dir = dirs.poll()) != null) {
+        while ((dir = dirs.poll()) != null) {
             ps1.setLong(1, dir.getUid());
             ps1.setInt(20, limit + 1);
             try (ResultSet resultSet = ps1.executeQuery()) {
@@ -81,7 +84,7 @@ public class Items extends CatalogueHelper {
                     if (mp.canRead(p) && uid != 1) {
                         LogicalData logicalData = new LogicalData();
                         logicalData.setUid(uid);
-                        logicalData.setParentRef(myData.getUid());
+                        logicalData.setParentRef(dir.getUid());
                         logicalData.setOwner(owner);
                         logicalData.setType(datatype);
                         logicalData.setName(ldName);
@@ -104,9 +107,10 @@ public class Items extends CatalogueHelper {
                         logicalData.setStatus(resultSet.getString(22));
 
                         LogicalDataWrapped ldw = new LogicalDataWrapped();
+                        ldw.setGlobalID(getCatalogue().getGlobalID(uid, cn));
                         ldw.setLogicalData(logicalData);
                         ldw.setPermissions(p);
-                        ldw.setPath(myData.getPath().concat("/").concat(logicalData.getName()));
+                        ldw.setPath(dir.getPath().concat("/").concat(logicalData.getName()));
                         if (!logicalData.isFolder() && mp.isAdmin()) {
                             List<PDRIDescr> pdriDescr = getCatalogue().getPdriDescrByGroupId(logicalData.getPdriGroupId(), cn);
                             for (PDRIDescr pdri : pdriDescr) {
@@ -124,13 +128,14 @@ public class Items extends CatalogueHelper {
                         ldwl.add(ldw);
                         limit--;
                     }
-                    if(limit == 0)
+                    if (limit == 0) {
                         break;
+                    }
                 }
             }
-            if(limit != 0) {
+            if (limit != 0) {
                 ps2.setLong(1, dir.getUid());
-                try(ResultSet resultSet = ps2.executeQuery()){
+                try (ResultSet resultSet = ps2.executeQuery()) {
                     while (resultSet.next()) {
                         Long myUid = resultSet.getLong(1);
                         String myOwner = resultSet.getString(2);
@@ -148,9 +153,7 @@ public class Items extends CatalogueHelper {
         return ldwl;
     }
 
-
-    private List<LogicalDataWrapped> queryLogicalData(@Nonnull MyPrincipal mp, @Nonnull Connection cn) throws Exception
-        {
+    private List<LogicalDataWrapped> queryLogicalData(@Nonnull MyPrincipal mp, @Nonnull Connection cn) throws Exception {
         MultivaluedMap<String, String> queryParameters = info.getQueryParameters();
         boolean addFlag = true;
         String rootPath = (queryParameters.containsKey("path") && queryParameters.get("path").iterator().hasNext())
@@ -162,7 +165,7 @@ public class Items extends CatalogueHelper {
         int rowLimit;
         try {
             rowLimit = (queryParameters.containsKey("limit") && queryParameters.get("limit").iterator().hasNext())
-                ? Integer.valueOf(queryParameters.get("limit").iterator().next()).intValue() : defaultRowLimit;
+                    ? Integer.valueOf(queryParameters.get("limit").iterator().next()).intValue() : defaultRowLimit;
         } catch (Throwable th) {
             rowLimit = defaultRowLimit;
         }
@@ -175,22 +178,22 @@ public class Items extends CatalogueHelper {
         Permissions p = getCatalogue().getPermissions(ld.getUid(), ld.getOwner(), cn);
         if (mp.canRead(p)) {
             try (PreparedStatement ps1 = cn.prepareStatement("SELECT uid, parentRef, "
-                            + "ownerId, datatype, ldName, createDate, modifiedDate, ldLength, "
-                            + "contentTypesStr, pdriGroupRef, isSupervised, checksum, lastValidationDate, "
-                            + "lockTokenID, lockScope, lockType, lockedByUser, lockDepth, lockTimeout, "
-                            + "description, locationPreference, status "
-                            + "FROM ldata_table WHERE (parentRef = ?) "
-                            + "AND (? OR (isSupervised = ?)) "
-                            + "AND (? OR (createDate BETWEEN FROM_UNIXTIME(?) AND FROM_UNIXTIME(?))) "
-                            + "AND (? OR (createDate >= FROM_UNIXTIME(?))) "
-                            + "AND (? OR (createDate <= FROM_UNIXTIME(?))) "
-                            + "AND (? OR (modifiedDate BETWEEN FROM_UNIXTIME(?) AND FROM_UNIXTIME(?))) "
-                            + "AND (? OR (modifiedDate >= FROM_UNIXTIME(?))) "
-                            + "AND (? OR (modifiedDate <= FROM_UNIXTIME(?))) "
-                            + "AND (? OR (ldName LIKE CONCAT('%', ? , '%')))"
-                            + "LIMIT ?");
+                    + "ownerId, datatype, ldName, createDate, modifiedDate, ldLength, "
+                    + "contentTypesStr, pdriGroupRef, isSupervised, checksum, lastValidationDate, "
+                    + "lockTokenID, lockScope, lockType, lockedByUser, lockDepth, lockTimeout, "
+                    + "description, locationPreference, status "
+                    + "FROM ldata_table WHERE (parentRef = ?) "
+                    + "AND (? OR (isSupervised = ?)) "
+                    + "AND (? OR (createDate BETWEEN FROM_UNIXTIME(?) AND FROM_UNIXTIME(?))) "
+                    + "AND (? OR (createDate >= FROM_UNIXTIME(?))) "
+                    + "AND (? OR (createDate <= FROM_UNIXTIME(?))) "
+                    + "AND (? OR (modifiedDate BETWEEN FROM_UNIXTIME(?) AND FROM_UNIXTIME(?))) "
+                    + "AND (? OR (modifiedDate >= FROM_UNIXTIME(?))) "
+                    + "AND (? OR (modifiedDate <= FROM_UNIXTIME(?))) "
+                    + "AND (? OR (ldName LIKE CONCAT('%', ? , '%')))"
+                    + "LIMIT ?");
                     PreparedStatement ps2 = cn.prepareStatement("SELECT uid, ownerId, "
-                            + "ldName FROM ldata_table WHERE parentRef = ? AND datatype = '" + Constants.LOGICAL_FOLDER + "'")) {
+                    + "ldName FROM ldata_table WHERE parentRef = ? AND datatype = '" + Constants.LOGICAL_FOLDER + "'")) {
                 {
                     if (queryParameters.containsKey("name") && queryParameters.get("name").iterator().hasNext()) {
                         String name = queryParameters.get("name").iterator().next();
@@ -297,11 +300,12 @@ public class Items extends CatalogueHelper {
                     }
                     if (addFlag) {
                         LogicalDataWrapped ldw = new LogicalDataWrapped();
+                        ldw.setGlobalID(getCatalogue().getGlobalID(ld.getUid(), cn));
                         ldw.setLogicalData(ld);
                         ldw.setPath(rootPath);
                         ldw.setPermissions(p);
+                        List<PDRIDescr> pdriDescr = getCatalogue().getPdriDescrByGroupId(ld.getPdriGroupId(), cn);
                         if (mp.isAdmin()) {
-                            List<PDRIDescr> pdriDescr = getCatalogue().getPdriDescrByGroupId(ld.getPdriGroupId(), cn);
                             for (PDRIDescr pdri : pdriDescr) {
                                 if (pdri.getResourceUrl().startsWith("lfc")
                                         || pdri.getResourceUrl().startsWith("srm")
@@ -312,12 +316,23 @@ public class Items extends CatalogueHelper {
                                     pdriDescr.add(pdri);
                                 }
                             }
-                            ldw.setPdriList(pdriDescr);
+                        } else {
+                            for (PDRIDescr pdri : pdriDescr) {
+                                pdriDescr.remove(pdri);
+                                pdri.setPassword(null);
+                                pdri.setUsername(null);
+                                pdri.setKey(null);
+                                pdri.setId(null);
+                                pdri.setPdriGroupRef(null);
+                                pdri.setStorageSiteId(null);
+                                pdriDescr.add(pdri);
+                            }
                         }
+                        ldw.setPdriList(pdriDescr);
                         logicalDataWrappedList.add(ldw);
                         rowLimit--;
                     }
-                    if(rowLimit != 0) {
+                    if (rowLimit != 0) {
                         logicalDataWrappedList.addAll(queryLogicalData(new MyData(ld.getUid(), rootPath.equals("/") ? "" : rootPath), rowLimit, ps1, ps2, mp, cn));
                     }
                 }
@@ -326,6 +341,12 @@ public class Items extends CatalogueHelper {
         return logicalDataWrappedList;
     }
 
+    /**
+     * Gets the resource's properties (length, owner, permitions etc.)
+     *
+     * @return the resource's properties
+     * @throws Exception
+     */
     @Path("query/")
     @GET
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})

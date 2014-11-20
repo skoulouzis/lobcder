@@ -9,14 +9,15 @@ import javax.xml.bind.annotation.XmlRootElement;
 import java.util.List;
 
 /**
- * User: dvasunin
- * Date: 19.03.13
- * Time: 16:37
- * To change this template use File | Settings | File Templates.
+ * A wrapper for the logical data. It incudes all resource's properties
+ *
+ * @author dvasunin
  */
 @XmlRootElement
 @Data
 public class LogicalDataWrapped {
+
+    private String globalID;
     private LogicalData logicalData;
     private String path;
     private Permissions permissions;

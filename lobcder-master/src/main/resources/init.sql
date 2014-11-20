@@ -64,6 +64,7 @@ CREATE TABLE wp4_table (
  id SERIAL PRIMARY KEY,
  local_id BIGINT UNSIGNED, FOREIGN KEY(local_id) REFERENCES ldata_table(uid) ON DELETE SET NULL ,
  global_id VARCHAR(255),
+ global_id_dev VARCHAR(255),
  views INT UNSIGNED NOT NULL DEFAULT 0,
  need_update BOOLEAN NOT NULL DEFAULT FALSE, INDEX(need_update),
  need_create BOOLEAN NOT NULL DEFAULT TRUE, INDEX(need_create)
@@ -73,7 +74,8 @@ CREATE TABLE permission_table (
  id SERIAL PRIMARY KEY,
  permType ENUM('read', 'write'), INDEX(permType),
  ldUidRef BIGINT UNSIGNED, FOREIGN KEY(ldUidRef) REFERENCES ldata_table(uid) ON DELETE CASCADE, INDEX(ldUidRef),
- roleName VARCHAR(255)
+ roleName VARCHAR(255),
+ INDEX(permType, ldUidRef, roleName)
 ) ENGINE=InnoDB;
 
 
@@ -89,6 +91,66 @@ CREATE TABLE requests_table (
  userAgent VARCHAR(1024),
  timeStamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
+
+
+CREATE TABLE successor_table (
+ uid SERIAL PRIMARY KEY,
+ keyVal VARCHAR(1024), INDEX(keyVal),
+ lobStateID VARCHAR(1024),
+ weight DOUBLE
+) ENGINE=InnoDB;
+
+CREATE TABLE occurrences_table (
+ uid SERIAL PRIMARY KEY,
+ keyVal VARCHAR(1024), INDEX(keyVal),
+ occurrences BIGINT
+) ENGINE=InnoDB;
+
+
+
+CREATE TABLE features_table (
+ uid SERIAL PRIMARY KEY,
+ methodName VARCHAR(255),
+ ldataRef BIGINT UNSIGNED,
+ f1 DOUBLE, 
+ f2 DOUBLE,
+ f3 DOUBLE,
+ f4 DOUBLE,
+ f5 DOUBLE,
+ f6 DOUBLE,
+ f7 DOUBLE,
+ f8 DOUBLE,
+ f9 DOUBLE,
+ f10 DOUBLE,
+ f11 DOUBLE,
+ f12 DOUBLE,
+ f13 DOUBLE,
+ f14 DOUBLE,
+ f15 DOUBLE,
+ f16 DOUBLE,
+ f17 DOUBLE,
+ f18 DOUBLE,
+ f19 DOUBLE,
+ f20 DOUBLE,
+ f21 DOUBLE,
+ f22 DOUBLE,
+ f23 DOUBLE,
+ f24 DOUBLE,
+ f25 DOUBLE
+) ENGINE=InnoDB;
+
+
+
+CREATE TABLE speed_table (
+  id SERIAL PRIMARY KEY,
+  src VARCHAR(1024),INDEX(src),
+  dst VARCHAR(1024),INDEX(dst),
+  fSize ENUM('S', 'M','L','XL'), INDEX(fSize),
+  averageSpeed DOUBLE,
+  minSpeed DOUBLE,
+  maxSpeed DOUBLE
+) ENGINE=InnoDB;
+
 
 DELIMITER |
 
@@ -154,11 +216,12 @@ SET @credRef = LAST_INSERT_ID();
 INSERT INTO storage_site_table(resourceUri, credentialRef, currentNum, currentSize, quotaNum, quotaSize, isCache)
             VALUES('file:///tmp/', @credRef, -1, -1, -1, -1, TRUE);
 SET @ssRef = LAST_INSERT_ID();
-INSERT INTO  credential_table(username, password) VALUES ('dvasunin', 'my-secretpwd');
-SET @credRef = LAST_INSERT_ID();
-INSERT INTO storage_site_table(resourceUri, credentialRef, currentNum, currentSize, quotaNum, quotaSize)
-            VALUES('sftp://dvasunin@elab.lab.uvalight.net/home/dvasunin/tmp/lobcder/', @credRef, -1, -1, -1, -1);
-SET @ssRef = LAST_INSERT_ID();
+
+-- INSERT INTO  credential_table(username, password) VALUES ('dvasunin', 'my-secretpwd');
+-- SET @credRef = LAST_INSERT_ID();
+-- INSERT INTO storage_site_table(resourceUri, credentialRef, currentNum, currentSize, quotaNum, quotaSize)
+--             VALUES('sftp://dvasunin@elab.lab.uvalight.net/home/dvasunin/tmp/lobcder/', @credRef, -1, -1, -1, -1);
+-- SET @ssRef = LAST_INSERT_ID();
 
 # Here we createtables for built-in user IDs/roles
 DROP TABLE IF EXISTS auth_roles_tables, auth_usernames_table;
@@ -172,17 +235,11 @@ CREATE TABLE auth_roles_tables (
     roleName VARCHAR(255), INDEX(roleName),
     unameRef BIGINT UNSIGNED, FOREIGN KEY(unameRef) REFERENCES auth_usernames_table(id) ON DELETE CASCADE
 );
-INSERT INTO auth_usernames_table(token, uname) VALUES ('secret0', 'token0');
+INSERT INTO auth_usernames_table(token, uname) VALUES ('admin', 'RoomC3156');
 SET @authUserNamesRef = LAST_INSERT_ID();
 INSERT INTO auth_roles_tables(roleName, unameRef) VALUES  ('admin',     @authUserNamesRef),
                                                           ('other',     @authUserNamesRef),
                                                           ('megarole',  @authUserNamesRef);
-INSERT INTO auth_usernames_table(token, uname) VALUES ('secret1', 'token1');
-SET @authUserNamesRef = LAST_INSERT_ID();
-INSERT INTO auth_roles_tables(roleName, unameRef) VALUES  ('other',     @authUserNamesRef);
-INSERT INTO auth_usernames_table(token, uname) VALUES ('secret2', 'token2');
-SET @authUserNamesRef = LAST_INSERT_ID();
-INSERT INTO auth_roles_tables(roleName, unameRef) VALUES  ('admin',     @authUserNamesRef);
 
 
 DROP FUNCTION IF EXISTS SPLIT_STR;
@@ -379,7 +436,15 @@ DELIMITER ;
 
 CREATE TABLE IF NOT EXISTS tokens_table (
   short_tkt CHAR(12) NOT NULL PRIMARY KEY,
+  userId VARCHAR(255), INDEX(userId),
   long_tkt VARCHAR(5240) NOT NULL, INDEX(long_tkt),
   exp_date DATETIME, INDEX(exp_date)
 ) ENGINE=InnoDB;
 
+CREATE EVENT IF NOT EXISTS e_tokens_sweep
+  ON SCHEDULE
+    EVERY 600 SECOND
+DO
+  DELETE FROM tokens_table WHERE exp_date < NOW();
+
+SET GLOBAL event_scheduler = ON;

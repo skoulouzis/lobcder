@@ -1,0 +1,11 @@
+#
+# @(#)$Id: da75f6a8.info,v 1.1 2008/11/06 07:27:02 pmacvsyt Exp $
+# Information for CA 
+#   obtained from da75f6a8 in APGrid/
+alias = IGCA
+crl_url = http://ca.garudaindia.in/crl/cacrl.pem
+email = igca@cdacb.ernet.in
+status = accredited:classic
+url = http://ca.garudaindia.in/
+version = 1.53
+sha1fp.0 = 11:0B:CF:C7:15:B2:2C:A0:9B:C6:74:48:F1:4F:F8:C8:1D:EC:81:60

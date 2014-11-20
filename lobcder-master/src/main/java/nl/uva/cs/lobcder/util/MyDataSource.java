@@ -27,6 +27,7 @@ public class MyDataSource {
         datasource = (DataSource) envContext.lookup(jndiName);
     }
 
+
     public Connection getConnection() throws SQLException {
         Connection cn = datasource.getConnection();
         cn.setAutoCommit(false);

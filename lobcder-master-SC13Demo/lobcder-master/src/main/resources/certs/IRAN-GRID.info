@@ -1,0 +1,12 @@
+#
+# @(#)$Id: ce33db76.info,v 1.2 2009/10/24 20:55:15 pmacvsdg Exp $
+#   
+alias = IRAN-GRID
+ca_url = http://cagrid.ipm.ac.ir/pub/cacert/cacert.txt
+crl_url = http://cagrid.ipm.ac.ir/pub/crl/cacrl.pem
+policy_url = http://cagrid.ipm.ac.ir/policy.htm
+email = ca-manager@ipm.ir
+status = accredited:classic
+url = http://cagrid.ipm.ac.ir/
+version = 1.53
+sha1fp.0 = 4F:A6:E6:2C:70:75:5D:FB:DE:B5:CC:8D:87:7D:E1:D0:F7:D8:41:D3

@@ -4,6 +4,7 @@
  */
 package nl.uva.cs.lobcder.rest;
 
+import java.io.UnsupportedEncodingException;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.auth.MyPrincipal;
 import nl.uva.cs.lobcder.auth.Permissions;
@@ -23,7 +24,7 @@ import java.util.Stack;
 import java.util.logging.Level;
 
 /**
- *
+ * Sets permissions for folder and subtree 
  * @author dvasunin
  */
 @Log
@@ -58,7 +59,7 @@ public class SetBulkPermissionsResource {
         }
     }
 
-    private void setPermissions(String rootPath, Permissions perm, MyPrincipal principal, @Nonnull Connection connection) throws SQLException {
+    private void setPermissions(String rootPath, Permissions perm, MyPrincipal principal, @Nonnull Connection connection) throws SQLException, UnsupportedEncodingException {
         LogicalData ld = catalogue.getLogicalDataByPath(io.milton.common.Path.path(rootPath), connection);
         Permissions p = catalogue.getPermissions(ld.getUid(), ld.getOwner(), connection);
         if (ld.isFolder() && principal.canRead(p)) {
@@ -80,7 +81,7 @@ public class SetBulkPermissionsResource {
 
     //@PUT
     //@Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public void setPermissions(@QueryParam("path") String path, JAXBElement<Permissions> jbPermissions) {
+    public void setPermissions(@QueryParam("path") String path, JAXBElement<Permissions> jbPermissions) throws UnsupportedEncodingException {
         try (Connection connection = catalogue.getConnection()) {
             try {
                 Permissions permissions = jbPermissions.getValue();
@@ -98,7 +99,7 @@ public class SetBulkPermissionsResource {
         }
     }
 
-    private void setPermissionsJava(String rootPath, Permissions perm, MyPrincipal principal, @Nonnull Connection connection) throws SQLException {
+    private void setPermissionsJava(String rootPath, Permissions perm, MyPrincipal principal, @Nonnull Connection connection) throws SQLException, UnsupportedEncodingException {
         LogicalData ld = catalogue.getLogicalDataByPath(io.milton.common.Path.path(rootPath), connection);
         Permissions p = catalogue.getPermissions(ld.getUid(), ld.getOwner(), connection);
         if(ld.isFolder() && principal.canRead(p)) {
@@ -135,9 +136,15 @@ public class SetBulkPermissionsResource {
         }
     }
 
+    
+    /**
+     * Sets permissions for folder and subtree
+     * @param path the folder's path 
+     * @param jbPermissions the permissions: owner, read, write
+     */
     @PUT
     @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public void setPermissions2(@QueryParam("path") String path, JAXBElement<Permissions> jbPermissions) {
+    public void setPermissions2(@QueryParam("path") String path, JAXBElement<Permissions> jbPermissions) throws UnsupportedEncodingException {
         try (Connection connection = catalogue.getConnection()) {
             try {
                 Permissions permissions = jbPermissions.getValue();
