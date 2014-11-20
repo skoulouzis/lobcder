@@ -1,0 +1,308 @@
+To clear up files not showing up in ldata_table: update pdrigroup_table set `refCount` = 0 where pdriGroupId not in (select pdriGroupRef from ldata_table where pdriGroupRef != 0)
+
+
+-------------------------------------------------------------------------------------------------------------------
+To install on a new machine (ubuntu 12, debian)
+--------------------Set up master-----------------------------------------------
+echo "deb http://ppa.launchpad.net/webupd8team/java/ubuntu precise main" | tee -a /etc/apt/sources.list
+echo "deb-src http://ppa.launchpad.net/webupd8team/java/ubuntu precise main" | tee -a /etc/apt/sources.list
+apt-key adv --keyserver keyserver.ubuntu.com --recv-keys EEA14886
+apt-get update
+apt-get upgrade
+
+export DEBIAN_FRONTEND=noninteractive
+echo debconf shared/accepted-oracle-license-v1-1 select true | sudo debconf-set-selections
+echo debconf shared/accepted-oracle-license-v1-1 seen true | sudo debconf-set-selections
+
+apt-get -q -y --force-yes  install mysql-server mysql-client oracle-java7-installer subversion maven2 erlang wget makepasswd nmap bwm-ng
+
+
+
+cd /root
+
+mysql --user=root < /root/lobcder/src/main/resources/initLOBDB.sql
+wget http://elab.lab.uvalight.net/~lobcder/conf/init.sql
+mysql --user=lobcder --password=RoomC3156 lobcderDB2 < init.sql
+
+
+wget http://elab.lab.uvalight.net/~lobcder/apache-tomcat-6.0.36.tar.gz
+tar -xzvf apache-tomcat-6.0.36.tar.gz
+
+wget http://elab.lab.uvalight.net/~lobcder/conf/settings.xml
+mkdir /root/.m2/
+mv settings.xml /root/.m2/
+
+svn checkout --trust-server-cert --non-interactive --username anonsvn --password anonsvn https://gforge.cyfronet.pl/svn/lobcder/branches/dev/lobcder/
+cd lobcder
+mvn clean install 
+rm -r target/lobcder
+mv target/lobcder-2.4 target/lobcder
+cd /root
+
+cp -r lobcder/target/lobcder apache-tomcat-6.0.36/webapps/
+./apache-tomcat-6.0.36/bin/startup.sh
+
+--------------------Set up worker-----------------------------------------------
+
+echo "deb http://ppa.launchpad.net/webupd8team/java/ubuntu precise main" | tee -a /etc/apt/sources.list
+echo "deb-src http://ppa.launchpad.net/webupd8team/java/ubuntu precise main" | tee -a /etc/apt/sources.list
+apt-key adv --keyserver keyserver.ubuntu.com --recv-keys EEA14886
+apt-get update
+
+export DEBIAN_FRONTEND=noninteractive
+echo debconf shared/accepted-oracle-license-v1-1 select true | sudo debconf-set-selections
+echo debconf shared/accepted-oracle-license-v1-1 seen true | sudo debconf-set-selections
+apt-get -q -y --force-yes  install oracle-java7-installer subversion maven2 erlang wget makepasswd nmap
+
+password="pass"
+pass=$(perl -e 'print crypt($ARGV[0], "password")' $password)
+useradd w -m -p $pass
+
+
+wget http://elab.lab.uvalight.net/~lobcder/apache-tomcat-6.0.36.tar.gz
+tar -xzvf apache-tomcat-6.0.36.tar.gz
+
+
+cd /root
+wget http://elab.lab.uvalight.net/~lobcder/conf/settings.xml
+mkdir /root/.m2/
+mv settings.xml /root/.m2/
+
+./apache-tomcat-6.0.36/bin/shutdown.sh
+svn checkout --trust-server-cert --non-interactive --username anonsvn --password anonsvn https://gforge.cyfronet.pl/svn/lobcder/trunk/lobcder-worker/
+cd lobcder-worker/
+mvn install 
+rm -r target/lobcder-worker
+mv target/lobcder-worker-1.0-SNAPSHOT target/lobcder-worker
+cd /root
+cp -r lobcder-worker/target/lobcder-worker apache-tomcat-6.0.36/webapps/
+./apache-tomcat-6.0.36/bin/startup.sh
+
+
+sleep 70 
+for i in {1..6}; do ping -c 1 192.168.100.$i; done
+
+
+for i in {1..7}; do wget http://localhost:8080/lobcder-worker/2/1; ./apache-tomcat-6.0.36/bin/shutdown.sh; ./apache-tomcat-6.0.36/bin/startup.sh;  done
+
+
+
+
+
+-------------------------------------------------------------------------------------
+to solve the of type default using the available factories WagonRepositoryConnectorFactory 
+error when building go to http://elab.lab.uvalight.net/artifactory/webapp/mavensettings.html generate the settings and paste them to ~/m2/settings.xml
+
+---------------------------------------------------------------------------------------
+To start events for to sweep short tokens: SET GLOBAL event_scheduler = ON;
+
+----------------------------------------------------------------------------------------
+We have to keep two different global_id: one for MR and other for test MR. To do so I add a column to the wp4_table. Now DDL for wp4_table shall be:
+CREATE TABLE wp4_table (
+ id SERIAL PRIMARY KEY,
+ local_id BIGINT UNSIGNED, FOREIGN KEY(local_id) REFERENCES ldata_table(uid) ON DELETE SET NULL ,
+ global_id VARCHAR(255),
+ global_id_dev VARCHAR(255),
+ views INT UNSIGNED NOT NULL DEFAULT 0,
+ need_update BOOLEAN NOT NULL DEFAULT FALSE, INDEX(need_update),
+ need_create BOOLEAN NOT NULL DEFAULT TRUE, INDEX(need_create)
+) ENGINE=InnoDB;
+
+To modify existing table we can use this:
+
+ALTER TABLE wp4_table ADD global_id_dev VARCHAR(255) AFTER global_id;
+
+
+
+-----------------------Build state graph from request table--------------------
+insert into successor_table (keyVal,lobStateID,weight) 
+
+SELECT 
+keyVal, 
+lobStateID, 
+sum(count) AS weight
+FROM (
+select 
+    rt.uid,
+    CONCAT(rt.methodname, ', ', rt.requestUrl) AS keyval,
+    rtn.lobStateId,
+    rtn.previousuid,
+    1 AS count
+FROM requests_table AS rt
+JOIN
+(
+select uid, uid-1 AS previousuid, CONCAT(methodname, ', ', requestUrl) AS lobstateId from requests_table AS rt
+) AS rtn
+ON rt.uid = rtn.previousuid
+) AS bla
+GROUP BY 
+keyval, 
+lobstateId
+ORDER BY weight DESC;
+
+
+
+select count, prob, cumulativeSum(prob) from
+(select count, (count(*)/(select count(*) from graph_table)) as prob from graph_table group by count order by count) 
+as countProb
+
+---------------------------------------------------------
+
+follow redirects and resume downloads 
+curl -u user:pass -C - -O -L http://192.168.100.2:8080/lobcder/dav/file
+
+export ec=18; while [ $ec -eq 18 ]; do curl -O -C - -L --request GET -u user:pass http://192.168.100.2:8080/lobcder/dav/file; export ec=$?; done
+
+------------------generate random file--------------
+dd if=/dev/urandom of=file100MB bs=100M count=1
+
+-------------------------Configure openVSwitch with sFlow----------------------
+From http://www.areteix.net/blog/2013/08/network-flow-monitoring-with-open-vswitch/
+S1: 
+COLLECTOR_IP=192.168.2.1
+COLLECTOR_PORT=6343
+AGENT=eth2
+HEADER=128
+SAMPLING=256
+POLLING=10
+
+
+ovs-vsctl -- --id=@sflow create sflow agent=${AGENT} target=\"${COLLECTOR_IP}:${COLLECTOR_PORT}\" header=${HEADER} sampling=${SAMPLING} polling=${POLLING} -- set bridge br0 sflow=@sflow
+
+---------------------------Post boot script:----------------------------------
+
+#!/bin/bash
+
+# Wait for interfaces to be configured. This value should be tweaked.
+sleep 70
+
+# Create bridge
+ovs-vsctl add-br br0
+
+# Figure out which interfaces don't have an IP address and add to the bridge.
+if ! ifconfig eth1 | grep -q 'inet addr'; then ovs-vsctl add-port br0 eth1; ifconfig eth1 up; else AGENT=eth1; fi
+if ! ifconfig eth2 | grep -q 'inet addr'; then ovs-vsctl add-port br0 eth2; ifconfig eth2 up; else AGENT=eth2; fi
+if ! ifconfig eth3 | grep -q 'inet addr'; then ovs-vsctl add-port br0 eth3; ifconfig eth3 up; else AGENT=eth3; fi
+if ! ifconfig eth4 | grep -q 'inet addr'; then ovs-vsctl add-port br0 eth4; ifconfig eth4 up; else AGENT=eth4; fi
+
+# Configure controller
+ovs-vsctl set-controller br0 tcp:192.168.2.1:6633
+
+
+COLLECTOR_IP=192.168.2.1
+COLLECTOR_PORT=6343
+HEADER=128
+SAMPLING=128
+POLLING=5
+
+ovs-vsctl -- --id=@sflow create sflow agent=${AGENT} target=\"${COLLECTOR_IP}:${COLLECTOR_PORT}\" header=${HEADER} sampling=${SAMPLING} polling=${POLLING} -- set bridge br0 sflow=@sflow
+
+
+
+---------------------------------------------------------------------------------
+#!/bin/bash
+
+# Wait for interfaces to be configured. This value should be tweaked.
+sleep 70
+
+# Create bridge
+ovs-vsctl add-br br0
+
+# Figure out which interfaces don't have an IP address and add to the bridge.
+if ! ifconfig eth1 | grep -q 'inet addr'; then ovs-vsctl add-port br0 eth1; ifconfig eth1 up; else AGENT=eth1; fi
+if ! ifconfig eth2 | grep -q 'inet addr'; then ovs-vsctl add-port br0 eth2; ifconfig eth2 up; else AGENT=eth2; fi
+if ! ifconfig eth3 | grep -q 'inet addr'; then ovs-vsctl add-port br0 eth3; ifconfig eth3 up; else AGENT=eth3; fi
+if ! ifconfig eth4 | grep -q 'inet addr'; then ovs-vsctl add-port br0 eth4; ifconfig eth4 up; else AGENT=eth4; fi
+if ! ifconfig eth5 | grep -q 'inet addr'; then ovs-vsctl add-port br0 eth5; ifconfig eth5 up; else AGENT=eth5; fi
+
+# Configure controller
+ovs-vsctl set-controller br0 tcp:192.168.3.1:6633
+
+
+COLLECTOR_IP=192.168.3.1
+COLLECTOR_PORT=6343
+HEADER=128
+SAMPLING=128
+POLLING=5
+
+ovs-vsctl -- --id=@sflow create sflow agent=${AGENT} target=\"${COLLECTOR_IP}:${COLLECTOR_PORT}\" header=${HEADER} sampling=${SAMPLING} polling=${POLLING} -- set bridge br0 sflow=@sflow
+
+--------------------------------------------------------------------------------------
+
+From http://145.100.133.130:8008/html/api.html
+Controller: 
+wget http://www.inmon.com/products/sFlow-RT/sflow-rt.tar.gz
+
+tar -xvzf sflow-rt.tar.gz
+cd sflow-rt
+./start.sh
+
+
+
+
+-----------------------------Controller post boot script------------------------
+
+apt-get -y install default-jdk ant git screen >> /var/log/post-boot.log
+git clone git://github.com/floodlight/floodlight.git /opt/floodlight >> /var/log/post-boot.log
+cd /opt/floodlight
+ant >> /var/log/post-boot.log
+screen -d -m sh -c "java -jar /opt/floodlight/target/floodlight.jar"
+
+wget http://www.inmon.com/products/sFlow-RT/sflow-rt.tar.gz
+
+tar -xvzf sflow-rt.tar.gz
+cd sflow-rt
+screen -d -m sh -c "./start.sh"
+
+
+
+
+--------------------------limit BW--------------------------
+tc qdisc add dev $1 root handle 1: htb default 12 
+tc class add dev $1 parent 1:1 classid 1:12 htb rate 20kbps ceil 20kbps 
+tc qdisc add dev $1 parent 1:12 netem delay 1000ms 
+
+
+--------------remove limit
+tc qdisc del root dev $1
+
+
+
+-----------------------------proccess usage data from elasticsearch
+curl "http://elab.lab.uvalight.net/elasticsearch/_all/_search?q=rx_size:*&size=5" | jq --raw-output '.hits.hits | .[] | ._source | "\(.logdate)\t\(.rx_source)\t\(.rx_destination)\t\(.rx_speed)\t\(.rx_size)\t\(.rx_sourceLoc.country_code2)\t\(.rx_sourceLoc.country_name)"'
+
+curl "http://elab.lab.uvalight.net/elasticsearch/_all/_search?q=tx_size:*&size=5" | jq --raw-output '.hits.hits | .[] | ._source | "\(.logdate)\t\(.tx_source)\t\(.tx_destination)\t\(.tx_speed)\t\(.tx_size)\t\(.tx_destinationLoc.country_code2)\t\(.tx_destinationLoc.country_name)"'
+
+
+curl "http://elab.lab.uvalight.net/elasticsearch/_all/_search?q=req_source:*&from=0&size=5" | jq --raw-output '.hits.hits | .[] | ._source | "\(.logdate)\t\(.req_sourceLoc.country_code2)\t\(.req_sourceLoc.country_name)\t\(.req_sourceLoc.city_name)\t\(.req_userAgent)\t\(.req_user)\t\(.req_verb)\t\(.req_contLen)\t\(.req_contType)\t\(.req_elapsed)\t\(.req_contType)\t\(.req_queryString)\t\(.req_URL)"'
+
+
+jq --raw-output '.hits.hits | .[] | ._source | "\(.logdate)\t\(.repl_source)\t\(.repl_destination)\t\(.repl_speed)\t\(.repl_size)"'
+
+---------------------Usare agents
+
+sed -i 's/Jakarta\ Commons-HttpClient.*/Jakarta\ Commons-HttpClient/' req.csv
+sed -i 's/cadaver.*/cadaver/' req.csv
+sed -i 's/python-requests.*/python-requests/' req.csv
+sed -i 's/Microsoft\ Data\ Access\ Internet\ Publishing\ Provider.*/Microsoft\ Data\ Access\ Internet\ Publishing\ Provider/' req.csv
+sed -i 's/davfs2.*/davfs2/' req.csv
+sed -i 's/Mozilla.*/Mozilla/' req.csv
+sed -i 's/curl.*/curl/' req.csv
+sed -i 's/Java.*/Java/' req.csv
+sed -i 's/Cyberduck.*/Cyberduck/' req.csv
+sed -i 's/gvfs.*/gvfs/' req.csv
+sed -i 's/BitKinex.*/BitKinex/' req.csv
+sed -i 's/Opera.*/Opera/' req.csv
+sed -i 's/WebDAVLib.*/WebDAVLib/' req.csv
+sed -i 's/WebDAVFS.*/WebDAVFS/' req.csv
+sed -i 's/NetBox.*/NetBox/' req.csv
+sed -i 's/Microsoft-WebDAV-MiniRedir.*/Microsoft-WebDAV-MiniRedir/' req.csv
+sed -i 's/Apache-HttpClient.*/Apache-HttpClient/' req.csv
+sed -i 's/Transmit.*/Transmit/' req.csv
+sed -i 's/Benchmark.*/Benchmark/' req.csv
+sed -i 's/UCI\ DAV\ Explorer.*/UCI\ DAV\ Explorer/' req.csv
+sed -i 's/Wget.*/Wget/' req.csv
+sed -i 's/Transmit.*/Transmit/' req.csv
+
+----------------------------------------swift 
+swift --os-auth-url http://10.100.0.24:5000/v2.0/ --os-username username --os-password pass --os-tenant-name username list

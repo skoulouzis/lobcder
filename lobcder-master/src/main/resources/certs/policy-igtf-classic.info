@@ -1,0 +1,134 @@
+# @(#)policy-igtf-classic.info - IGTF classic authorities
+# Generated Monday, 20 May, 2013
+version = 1.53
+requires = CNRS2-Grid-FR = 1.53, \
+    AIST = 1.53, \
+    RDIG = 1.53, \
+    CESNET-CA-Root = 1.53, \
+    UKeScienceCA-2B = 1.53, \
+    SRCE = 1.53, \
+    DOEGrids = 1.53, \
+    IRAN-GRID = 1.53, \
+    SWITCHgrid-Root = 1.53, \
+    PK-Grid-2007 = 1.53, \
+    ANSPGrid = 1.53, \
+    NECTEC = 1.53, \
+    MYIFAM = 1.53, \
+    CNRS2-Projets = 1.53, \
+    MaGrid = 1.53, \
+    KISTI-2007 = 1.53, \
+    HellasGrid-Root = 1.53, \
+    SiGNET-CA = 1.53, \
+    pkIRISGrid = 1.53, \
+    CNRS2 = 1.53, \
+    CALG = 1.53, \
+    ULAGrid-CA-2008 = 1.53, \
+    CNIC = 1.53, \
+    MARGI = 1.53, \
+    UniandesCA = 1.53, \
+    NAREGI = 1.53, \
+    LACGridCA = 1.53, \
+    APAC = 1.53, \
+    BEGrid2008 = 1.53, \
+    PRAGMA-UCSD = 1.53, \
+    QuoVadis-Root-CA1 = 1.53, \
+    CyGrid = 1.53, \
+    ESnet = 1.53, \
+    NIKHEF = 1.53, \
+    UNLPGrid = 1.53, \
+    UGRID = 1.53, \
+    HIAST = 1.53, \
+    RomanianGRID = 1.53, \
+    TRGrid = 1.53, \
+    SlovakGrid = 1.53, \
+    BG-ACAD-CA = 1.53, \
+    DFN-GridGermany-Root = 1.53, \
+    BalticGrid = 1.53, \
+    REUNA-ca = 1.53, \
+    HKU = 1.53, \
+    UNAMgrid-ca = 1.53, \
+    ASGCCA-2007 = 1.53, \
+    MD-Grid = 1.53, \
+    BrGrid = 1.53, \
+    TERENA-eScience-SSL-CA = 1.53, \
+    UKeScienceCA-2A = 1.53, \
+    LIPCA = 1.53, \
+    SDG = 1.53, \
+    EG-GRID = 1.53, \
+    NIIF = 1.53, \
+    CERN-TCA = 1.53, \
+    IUCC = 1.53, \
+    INFN-CA-2006 = 1.53, \
+    ArmeSFo = 1.53, \
+    IHEP = 1.53, \
+    IHEP-2013 = 1.53, \
+    MREN-CA = 1.53, \
+    CESNET-CA-3 = 1.53, \
+    HellasGrid-CA-2006 = 1.53, \
+    DigiCertGridCA-1-Classic = 1.53, \
+    JUnet-CA = 1.53, \
+    BYGCA = 1.53, \
+    DZeScience = 1.53, \
+    KEK = 1.53, \
+    AustrianGrid = 1.53, \
+    DigiCertAssuredIDRootCA-Root = 1.53, \
+    AddTrust-External-CA-Root = 1.53, \
+    GermanGrid = 1.53, \
+    NorduGrid = 1.53, \
+    UTN-USERFirst-Hardware = 1.53, \
+    NCHC = 1.53, \
+    DigiCertGridTrustCA-Classic = 1.53, \
+    AEGIS = 1.53, \
+    SWITCH-QuoVadis-Grid-ICA = 1.53, \
+    IGCA = 1.53, \
+    CERN-Root = 1.53, \
+    GridCanada = 1.53, \
+    SEE-GRID = 1.53, \
+    PolishGrid = 1.53, \
+    UKeScienceRoot-2007 = 1.53, \
+    DigiCertGridRootCA-Root = 1.53
+obsoletes = CyGrid-old, \
+    CNRS-DataGrid, \
+    CESNET-old, \
+    SwissSign-Silver-Root, \
+    SWITCH-Personal2, \
+    SWITCH-CA2, \
+    SWITCH-Server2, \
+    KISTI, \
+    Russia, \
+    SWITCH-Server, \
+    SWITCH-Personal, \
+    LIP, \
+    GridCanada-old, \
+    UKeScience, \
+    HellasGrid, \
+    INFN, \
+    Spain, \
+    SiGNET, \
+    CERN, \
+    SWITCH-Personal-2006, \
+    SWITCH-Server-2006, \
+    ASGCCA, \
+    UKeScienceRoot, \
+    UKeScienceCA, \
+    PK-Grid, \
+    EstonianGrid, \
+    DFN-GridGermany-User, \
+    DFN-GridGermany-Server, \
+    BEGrid, \
+    SWITCH-Personal-2007, \
+    SwissSign-Root, \
+    SWITCH, \
+    SwissSign-Bronze, \
+    SwissSign-Silver, \
+    SWITCH-Server-2007, \
+    RMKI, \
+    CNRS, \
+    CNRS-Projets, \
+    CNRS-Grid-FR, \
+    NGO-Netrust, \
+    CESNET, \
+    Grid-Ireland, \
+    UKeScienceCA-2007, \
+    TACC-Classic, \
+    TACC-Root

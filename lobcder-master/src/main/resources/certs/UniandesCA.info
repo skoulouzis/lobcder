@@ -1,0 +1,8 @@
+alias = UniandesCA
+url = https://ra.uniandes.edu.co
+email = ca@uniandes.edu.co
+crl_url = http://ra.uniandes.edu.co/pki/pub/crl/cacrl.crl
+ca_url = http://ra.uniandes.edu.co/pki/pub/cacert/cacert.pem
+status = accredited:classic
+version = 1.53
+sha1fp.0 = 00:B7:AA:54:AE:7B:1D:BE:FB:40:F4:68:02:85:5F:73:01:83:B6:0D
