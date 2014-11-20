@@ -1,0 +1,12 @@
+#
+# @(#)$Id: 6fee79b0.info,v 1.5 2008/09/10 15:59:17 pmacvsdg Exp $
+# Information for CA IUCC
+#   obtained from 6fee79b0 in IUCC/
+alias = IUCC
+url = http://certificate.iucc.ac.il/
+email = ca@iucc.ac.il
+ca_url = http://certificate.iucc.ac.il/ca/cacert.pem
+crl_url = http://certificate.iucc.ac.il/ca/cacrl.pem
+status = accredited:classic
+version = 1.53
+sha1fp.0 = BE:D5:68:B0:9A:7F:46:77:10:F5:CD:26:6F:D2:66:3F:53:8D:1E:6B

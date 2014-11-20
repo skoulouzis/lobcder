@@ -1,0 +1,11 @@
+#
+# @(#)$Id: 11b4a5a2.info,v 1.5 2011/08/04 17:56:37 pmacvsdg Exp $
+# Information for CA LIPCA
+#   obtained from 11b4a5a2 in LIPCA/
+alias = LIPCA
+crl_url = http://ca.lip.pt/crl/crl.der
+email = ca@lip.pt
+status = accredited:classic
+url = http://ca.lip.pt/
+version = 1.53
+sha1fp.0 = 06:BA:B3:02:A6:8E:3F:55:48:F9:4C:1B:3A:E6:B2:E4:BA:ED:5A:F7

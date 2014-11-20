@@ -1,0 +1,1 @@
+To clear up files not showing up in ldata_table: update pdrigroup_table set `refCount` = 0 where pdriGroupId not in (select pdriGroupRef from ldata_table where pdriGroupRef != 0)
