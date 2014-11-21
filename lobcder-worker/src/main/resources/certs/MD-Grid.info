@@ -1,0 +1,12 @@
+#
+# @(#)$Id: 9ff26ea4.info,v 1.1 2009/04/06 18:55:20 pmacvsdg Exp $
+# Information for MD-Grid CA
+#   
+alias = MD-Grid
+ca_url = http://ca.grid.md/files/ca.pem
+crl_url = http://ca.grid.md/files/crl-v2.der
+email = ca@renam.md
+status = accredited:classic
+url = http://ca.grid.md/
+version = 1.53
+sha1fp.0 = 60:5F:50:06:71:7C:2F:E4:58:BB:C0:E9:33:05:B4:B9:3B:14:C9:A0

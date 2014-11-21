@@ -1,0 +1,19 @@
+##############################################################################
+#NAMESPACES-VERSION: 1.0
+#
+# @(#)4a96b1ea.namespaces
+# CA alias    : EG-GRID
+#    subord_of: 
+#    subjectDN: /C=EG/O=EG-GRID/CN=EG-GRID Certification Authority
+#    hash     : 4a96b1ea
+#    (generated automatically from 4a96b1ea.signing_policy)
+#
+TO Issuer "/C=EG/O=EG-GRID/CN=EG-GRID Certification Authority" \
+  PERMIT Subject "/C=EG/O=EG-GRID/OU=Users/.*"
+
+TO Issuer "/C=EG/O=EG-GRID/CN=EG-GRID Certification Authority" \
+  PERMIT Subject "/C=EG/O=EG-GRID/OU=Host/.*"
+
+TO Issuer "/C=EG/O=EG-GRID/CN=EG-GRID Certification Authority" \
+  PERMIT Subject "/C=EG/O=EG-GRID/OU=Service/.*"
+

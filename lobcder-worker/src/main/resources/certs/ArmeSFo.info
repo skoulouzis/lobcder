@@ -1,0 +1,11 @@
+#
+# @(#)$Id: d0c2a341.info,v 1.6 2010/11/21 14:41:06 pmacvsdg Exp $
+# Information for CA ArmeSFo
+#   obtained from d0c2a341 in ArmeSFo/
+alias = ArmeSFo
+email = ca@escience.am
+crl_url = http://armesfoca-crl.fzk.de/crl.pem
+url = http://www.escience.am/ca/
+status = accredited:classic
+version = 1.53
+sha1fp.0 = AC:9B:0F:D4:2D:28:96:50:BA:44:02:6D:87:D0:11:6B:81:90:19:AD

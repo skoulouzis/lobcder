@@ -1,0 +1,11 @@
+# @(#)$Id: 74c6eaeb.info,v 1.2 2011/06/24 07:39:11 pmacvsdg Exp $
+# HIAST CA
+alias = HIAST
+url = http://ca.grid.hiast.edu.sy/
+ca_url = https://ca.grid.hiast.edu.sy/pki/pub/cacert/cacert.pem
+crl_url = http://ca.grid.hiast.edu.sy/pki/pub/crl/cacrl.crl
+status = accredited:classic
+policy_url = http://ca.grid.hiast.edu.sy/download/HIAST_CP_CPS_V_0_97.doc
+email = cagrid@hiast.edu.sy
+version = 1.53
+sha1fp.0 = 2D:A2:B6:8A:95:6A:38:92:28:EF:2E:F0:FD:26:51:B7:CF:F3:F0:B9

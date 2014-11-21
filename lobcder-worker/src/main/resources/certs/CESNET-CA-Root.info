@@ -1,0 +1,13 @@
+#
+# @($)$Id: edca0fc0.info,v 1.2 2010/02/12 21:00:01 pmacvsdg Exp $
+# /DC=cz/DC=cesnet-ca/O=CESNET CA/CN=CESNET CA Root
+#
+alias = CESNET-CA-Root
+url = http://www.cesnet.cz/pki/
+ca_url = http://crt.cesnet-ca.cz/CESNET_CA_Root.crt
+crl_url = http://crl.cesnet-ca.cz/CESNET_CA_Root.crl
+policy_url = http://www.cesnet.cz/pki/en/ch-cp-cps.html
+email = ca@cesnet.cz
+status = accredited:classic
+version = 1.53
+sha1fp.0 = E7:84:74:90:F7:11:43:FC:CE:F6:F6:5A:30:DA:1F:23:9E:0F:D7:BA
