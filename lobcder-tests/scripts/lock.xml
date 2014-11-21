@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<d:lockinfo xmlns:d="DAV:">
+    <d:lockscope>
+        <d:exclusive/>
+    </d:lockscope>
+    <d:locktype>
+        <d:write/>
+    </d:locktype>
+    <d:owner>
+        user
+    </d:owner>
+    <d:locktoken>
+        <d:href>opaquelocktoken:e1471c1c-5e91-460a-aa9c-1fc7c2ab6540</d:href>
+    </d:locktoken>
+</d:lockinfo>

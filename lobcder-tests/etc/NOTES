@@ -1,0 +1,97 @@
+In mongoDB to get the sum,min,max,average of rx_size field: 
+db.lobcderCollection.aggregate({ $match: { rx_size: {$gte:0}} } , { $group: { _id : null, sum : { $sum: "$rx_size" } } });
+db.lobcderCollection.aggregate({ $match: { rx_size: {$gte:0}} } , { $group: { _id : null, max : { $max: "$rx_size" } } });
+db.lobcderCollection.aggregate({ $match: { rx_size: {$gte:0}} } , { $group: { _id : null, min : { $min: "$rx_size" } } });
+db.lobcderCollection.aggregate({ $match: { rx_size: {$gte:0}} } , { $group: { _id : null, avg : { $avg: "$rx_size" } } });
+
+To export to csv: 
+
+ mongoexport --db lobcderDatabase --collection lobcderCollection -q '{ rx_size : { $exists : true } }, {rx_size:1}' -f logdate,rx_size --csv --out lobcderCollection.csv
+
+or 
+
+
+mongoexport --db lobcderDatabase --collection lobcderCollection -q '{ rx_size : { $exists : true } }' -f logdate,rx_size --csv --out rx.csv
+
+
+
+CREATE TABLE auth_users (
+ uid SERIAL PRIMARY KEY,
+ logdate TIMESTAMP,
+ userName TEXT(5240)
+) ENGINE=InnoDB;
+
+
+LOAD DATA LOCAL INFILE '/home/alogo/Documents/my_papers/vph2014/measures/auth_user.csv' 
+INTO TABLE auth_users FIELDS TERMINATED BY ',' 
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n' 
+(@var1,userName)
+set logdate = STR_TO_DATE(@var1, '%M %d,%Y %h:%i:%s %p')
+
+
+
+
+
+
+
+
+CREATE TABLE rx_table (
+ logdate DATE,
+ rx_size BIGINT
+) ENGINE=InnoDB;
+
+
+LOAD DATA LOCAL INFILE '/home/alogo/Documents/my_papers/vph2014/measures/rx.csv' 
+INTO TABLE rx_table FIELDS TERMINATED BY ',' 
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n' 
+(@var1,rx_size)
+set logdate = STR_TO_DATE(@var1, '%M %d,%Y %h:%i:%s %p')
+
+
+
+------------------ Full joind between rx and tx---------------------
+
+CREATE TABLE rx_tx_table (
+ uid INT,
+ rx_logdate DATE,
+ rx_size BIGINT,
+ tx_size BIGINT,
+ tx_logdate DATE
+) ENGINE=InnoDB;
+
+
+insert INTO rx_tx_table
+
+SELECT * FROM rx_table as n LEFT OUTER JOIN 
+(SELECT tx_size, tx_logdate 
+FROM tx_table GROUP BY DATE(tx_logdate)) 
+as p ON DATE(n.rx_logdate) = DATE(p.tx_logdate) 
+
+
+UNION 
+SELECT * FROM rx_table as n RIGHT OUTER JOIN 
+(SELECT tx_size, tx_logdate FROM tx_table GROUP BY DATE(tx_logdate)) as p ON 
+DATE(n.rx_logdate) = DATE(p.tx_logdate) 
+
+
+select 
+COALESCE (rx_logdate, tx_logdate) AS logdate,
+sum(rx_size) AS rx_size,
+sum(tx_size) AS tx_size
+from rx_tx_table
+GROUP BY logdate
+ORDER by logdate;
+
+
+or
+
+
+select 
+COALESCE (rx_logdate, tx_logdate) AS logdate,
+count(rx_size) AS rx_size,
+count(tx_size) AS tx_size
+from rx_tx_table
+GROUP BY logdate
+ORDER by logdate;
