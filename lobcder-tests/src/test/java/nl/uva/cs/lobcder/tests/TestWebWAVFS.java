@@ -124,9 +124,8 @@ public class TestWebWAVFS {
     @BeforeClass
     public static void setUpClass() throws Exception {
 
-        String propBasePath = System.getProperty("user.home") + File.separator
-                + "workspace" + File.separator + "lobcder-tests"
-                + File.separator + "etc" + File.separator + "test.proprties";
+        String propBasePath = "etc" + File.separator + "test.proprties";
+
         prop = TestSettings.getTestProperties(propBasePath);
 
         String testURL = prop.getProperty("webdav.test.url");
@@ -537,7 +536,7 @@ public class TestWebWAVFS {
 
                 String localChecksum = getChecksum(file, "SHA1");
 
-                Thread.sleep(80000);
+                Thread.sleep(40000);
 
                 GetMethod get = new GetMethod(testFileURI1);
                 client1.executeMethod(get);

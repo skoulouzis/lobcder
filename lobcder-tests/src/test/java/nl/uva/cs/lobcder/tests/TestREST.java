@@ -464,36 +464,35 @@ public class TestREST {
 //            deleteCollection();
 //        }
 //    }
-    @Test
-    public void testGetWorkersStatus() throws IOException {
-        System.err.println("testGetWorkersStatus");
-        try {
-            createCollection();
-            WebResource webResource = restClient.resource(restURL);
-//        rest/reservation/workers/?host=kscvdfv&host=sp2&host=192.168.1.1
-            MultivaluedMap<String, String> params = new MultivaluedMapImpl();
-            params.add("host", "host1");
-            params.add("host", "host2");
-            params.add("host", "host3");
-
-            WebResource res = webResource.path("reservation").path("workers").queryParams(params);
-            List<WorkerStatus> list = res.accept(MediaType.APPLICATION_XML).
-                    get(new GenericType<List<WorkerStatus>>() {
-            });
-
-            assertNotNull(list);
-            assertFalse(list.isEmpty());
-            for (WorkerStatus w : list) {
-                assertNotNull(w.status);
-                assertNotNull(w.hostName);
-            }
-
-
-        } finally {
-            deleteCollection();
-        }
-    }
-
+//    @Test
+//    public void testGetWorkersStatus() throws IOException {
+//        System.err.println("testGetWorkersStatus");
+//        try {
+//            createCollection();
+//            WebResource webResource = restClient.resource(restURL);
+////        rest/reservation/workers/?host=kscvdfv&host=sp2&host=192.168.1.1
+//            MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+//            params.add("host", "host1");
+//            params.add("host", "host2");
+//            params.add("host", "host3");
+//
+//            WebResource res = webResource.path("reservation").path("workers").queryParams(params);
+//            List<WorkerStatus> list = res.accept(MediaType.APPLICATION_XML).
+//                    get(new GenericType<List<WorkerStatus>>() {
+//            });
+//
+//            assertNotNull(list);
+//            assertFalse(list.isEmpty());
+//            for (WorkerStatus w : list) {
+//                assertNotNull(w.status);
+//                assertNotNull(w.hostName);
+//            }
+//
+//
+//        } finally {
+//            deleteCollection();
+//        }
+//    }
     @Test
     public void testTicketTranslator() throws IOException {
         System.err.println("testTicketTranslator");
@@ -537,6 +536,7 @@ public class TestREST {
 
     @Test
     public void testMetadataService() throws IOException, JAXBException {
+        System.err.println("testMetadataService");
         try {
             createCollection();
             WebResource webResource = restClient.resource(restURL);
@@ -566,12 +566,12 @@ public class TestREST {
 
                 webResource = mrClient.resource(mrURL).path("filter").queryParams(params);
 
-                Thread.sleep(60000);
+                Thread.sleep(30000);
                 String response = webResource.get(String.class);
                 String idStr = response.substring(response.indexOf("<localID>") + "<localID>".length(), response.indexOf("</localID>"));
 
-
                 assertEquals(Integer.valueOf(ldw.logicalData.uid), Integer.valueOf(idStr));
+                System.err.println(ldw.logicalData.name + ": ok");
 
             }
             assertNotNull(logicalDataWrapped);
@@ -592,6 +592,7 @@ public class TestREST {
 
     @Test
     public void testSetSpeed() throws JAXBException {
+        System.err.println("testSetSpeed");
         Stats stats = new Stats();
         stats.destination = "192.168.100.5";
         stats.source = "192.168.100.1";
@@ -613,6 +614,29 @@ public class TestREST {
             fail();
         }
 //        fail();
+    }
+
+    @Test
+    public void testArchiveService() throws JAXBException, IOException {
+        System.err.println("testArchiveService");
+        try {
+            createCollection();
+
+
+
+            //wait for replication
+            Thread.sleep(5000);
+
+
+            GetMethod get = new GetMethod(restURL + "/compress/getzip/" + testResourceId);
+            int status = client.executeMethod(get);
+            assertEquals(HttpStatus.SC_OK, status);
+
+        } catch (InterruptedException ex) {
+            Logger.getLogger(TestREST.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            deleteCollection();
+        }
     }
 
     public static ClientConfig configureClient() {
