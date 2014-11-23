@@ -123,7 +123,7 @@ public class WebDataFileResource extends WebDataResource implements
                 }
                 getCatalogue().copyFile(getLogicalData(), toWDDR.getLogicalData(), name, getPrincipal(), connection);
                 connection.commit();
-            } catch (Exception e) {
+            } catch (SQLException | NotAuthorizedException e) {
                 log.log(Level.SEVERE, null, e);
                 connection.rollback();
                 throw new BadRequestException(this, e.getMessage());
@@ -643,7 +643,7 @@ public class WebDataFileResource extends WebDataResource implements
             sdnClient = new SDNControllerClient(uri);
         }
         List<DefaultWeightedEdge> shortestPath = sdnClient.getShortestPath(reqSource, workersMap.keySet());
-        WebDataFileResource.log.log(Level.FINE, "getShortestPath: " + shortestPath);
+        WebDataFileResource.log.log(Level.FINE, "getShortestPath: {0}", shortestPath);
         sdnClient.pushFlow(shortestPath);
         DefaultWeightedEdge e = shortestPath.get(0);
         String[] workerSwitch = e.toString().split(" : ");
