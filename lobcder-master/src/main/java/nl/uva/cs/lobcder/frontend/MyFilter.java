@@ -100,7 +100,7 @@ public class MyFilter extends MiltonFilter {
         if (authorizationHeader != null) {
             userNpasswd = authorizationHeader.split("Basic ")[1];
         }
-
+        
         if (PropertiesHelper.doRequestLoging()) {
             RequestWapper my = new RequestWapper();
             my.setMethod(method);
@@ -109,14 +109,14 @@ public class MyFilter extends MiltonFilter {
             my.setTimeStamp(System.currentTimeMillis());
             my.setElapsed(elapsed);
             my.setRemoteAddr(from);
-            my.setRequestURL(((HttpServletRequest) req).getRequestURL().toString());
+            my.setRequestURL(reqURL.toString());
             my.setUserAgent(userAgent);
             my.setUserNpasswd(getUserName((HttpServletRequest) req));
             queue.add(my);
             startRecorder();
         }
 
-        log.log(Level.INFO, "Req_Source: {0} Method: {1} Content_Len: {2} Content_Type: {3} Elapsed_Time: {4} sec EncodedUser: {5} UserAgent: {6}", new Object[]{from, method, contentLen, contentType, elapsed / 1000.0, userNpasswd, userAgent});
+        log.log(Level.INFO, "Req_Source: {0} Method: {1} Content_Len: {2} Content_Type: {3} Elapsed_Time: {4} sec EncodedUser: {5} UserAgent: {6} path:{7}", new Object[]{from, method, contentLen, contentType, elapsed / 1000.0, userNpasswd, userAgent, reqURL.toString()});
     }
 
     private String getUserName(HttpServletRequest httpServletRequest) throws UnsupportedEncodingException {
