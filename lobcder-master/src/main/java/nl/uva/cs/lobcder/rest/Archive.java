@@ -102,9 +102,9 @@ public class Archive extends CatalogueHelper {
                         Permissions p = catalogue.getPermissions(rootElement.getUid(), rootElement.getOwner(), connection);
                         if (principal.canRead(p)) {
                             if (rootElement.isFolder()) {
-                                folders.add(new Folder("/" + rootName, rootElement));
+                                folders.add(new Folder(rootName, rootElement));
                             } else {
-                                ze = new ZipEntry("/" + rootName);
+                                ze = new ZipEntry(rootName);
                                 zip.putNextEntry(ze);
                                 List<PDRIDescr> pdris = catalogue.getPdriDescrByGroupId(rootElement.getPdriGroupId());
                                 copyStream(pdris, zip);
