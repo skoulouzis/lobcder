@@ -375,31 +375,15 @@ public class VPDRI implements PDRI {
             VDir remoteDir = getVfsClient().mkdirs(parentVrl, true);
             getVfsClient().createFile(vrl, true);
             out = getVfsClient().getFile(vrl).getOutputStream();
-
-//            BufferedReader br = new BufferedReader(new InputStreamReader(in));
-//            String line = null;
-//
-////            StringBuilder responseData = new StringBuilder();
-//           int count = 0;
-//            while ((line = br.readLine()) != null) {
-////            for (int i = 0; i < 3; i++) {
-//                count++;
-//                VPDRI.log.log(Level.FINE, "line:" + line);
-//                if (count >= 4) {
-//                    break;
-//                }
-//            }
-
-
-
+            
             if (!getEncrypted()) {
-                CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((Constants.BUF_SIZE), in, out);
-                cBuff.startTransfer(new Long(-1));
-//                int read;
-//                byte[] copyBuffer = new byte[Constants.BUF_SIZE];
-//                while ((read = in.read(copyBuffer, 0, copyBuffer.length)) != -1) {
-//                    out.write(copyBuffer, 0, read);
-//                }
+//                CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((Constants.BUF_SIZE), in, out);
+//                cBuff.startTransfer(new Long(-1));
+                int read;
+                byte[] copyBuffer = new byte[Constants.BUF_SIZE];
+                while ((read = in.read(copyBuffer, 0, copyBuffer.length)) != -1) {
+                    out.write(copyBuffer, 0, read);
+                }
 
             } else {
                 DesEncrypter encrypter = new DesEncrypter(getKeyInt());
