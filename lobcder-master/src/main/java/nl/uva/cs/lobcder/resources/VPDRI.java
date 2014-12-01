@@ -375,7 +375,7 @@ public class VPDRI implements PDRI {
             VDir remoteDir = getVfsClient().mkdirs(parentVrl, true);
             getVfsClient().createFile(vrl, true);
             out = getVfsClient().getFile(vrl).getOutputStream();
-            
+
             if (!getEncrypted()) {
 //                CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((Constants.BUF_SIZE), in, out);
 //                cBuff.startTransfer(new Long(-1));
@@ -578,7 +578,7 @@ public class VPDRI implements PDRI {
 //            getAsyncDelete(getVfsClient(), vrl).run();
 
         } catch (VlException ex) {
-            Logger.getLogger(VPDRI.class.getName()).log(Level.SEVERE, null, ex);
+            throw new IOException(ex);
         }
     }
 
@@ -637,5 +637,15 @@ public class VPDRI implements PDRI {
     @Override
     public void setLength(long length) {
         this.length = length;
+    }
+
+    @Override
+    public boolean exists(String fileName) throws IOException {
+        try {
+            VRL vrlss = vrl.getParent().append(fileName);
+            return getVfsClient().existsFile(vrlss);
+        } catch (VlException ex) {
+            throw new IOException(ex);
+        }
     }
 }

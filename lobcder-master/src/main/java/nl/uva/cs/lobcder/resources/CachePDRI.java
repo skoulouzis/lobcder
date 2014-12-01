@@ -33,6 +33,7 @@ public class CachePDRI implements PDRI {
     static {
         baseLocation = "/tmp/LOBCDER-REPLICA-vTEST/";
     }
+    
     final private String file_name;
     final private Long ssid;
     private final File file;
@@ -196,5 +197,10 @@ public class CachePDRI implements PDRI {
     @Override
     public String getStringChecksum() throws IOException {
         return null;
+    }
+
+    @Override
+    public boolean exists(String fileName) throws IOException {
+        return new File(new File(this.file_name).getParentFile().getAbsoluteFile()+"/"+fileName).exists();
     }
 }
