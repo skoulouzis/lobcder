@@ -154,7 +154,7 @@ class ReplicateSweep implements Runnable {
                             + "JOIN storage_site_table ON pdri_table.storageSiteRef = storage_site_table.storageSiteId "
                             + "JOIN credential_table on credential_table.credintialId = storage_site_table.credentialRef "
                             + " JOIN ldata_table on (ldata_table.pdriGroupRef =  pdri_table.pdriGroupRef AND ldata_table.lockTokenId is NULL)"
-                            + "WHERE refcnt > 1 AND isCache LIMIT 100";
+                            + "WHERE refcnt >= 1 AND isCache LIMIT 100";
                     ResultSet rs = statement.executeQuery(sql);
                     while (rs.next()) {
                         name = rs.getString(1);
