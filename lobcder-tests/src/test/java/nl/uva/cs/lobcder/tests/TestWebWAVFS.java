@@ -565,10 +565,7 @@ public class TestWebWAVFS {
 
                 System.out.println(j + " of " + size);
             }
-
-
-
-
+            
         } catch (Exception ex) {
             fail(ex.getMessage());
             Logger.getLogger(TestWebWAVFS.class.getName()).log(Level.SEVERE, null, ex);
@@ -630,10 +627,9 @@ public class TestWebWAVFS {
             assertEquals(HttpStatus.SC_CONFLICT, status);
 
 
-        } catch (IOException ex) {
-            fail(ex.getMessage());
+        } catch (Exception ex) {
             Logger.getLogger(TestWebWAVFS.class.getName()).log(Level.SEVERE, null, ex);
-
+            fail(ex.getMessage());
         } finally {
             delete(testFileURI1);
         }
