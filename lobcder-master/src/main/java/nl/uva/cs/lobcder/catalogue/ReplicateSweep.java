@@ -202,10 +202,10 @@ class ReplicateSweep implements Runnable {
                                 }
                                 try (Statement s2 = connection.createStatement()) {
                                     ResultSet rs = s2.executeQuery("select * from pdri_table WHERE "
-                                            + "(fileName LIKE '" + cd.getName()+"'"+
-                                            " AND storageSiteRef = " + s.getStorageSiteId()+
-                                            " AND pdriGroupRef = " + cd.getPdriGroupRef() +
-                                            " AND isEncrypted = " + replica.getEncrypted()+ ")");
+                                            + "(fileName LIKE '" + cd.getName() + "'"
+                                            + " AND storageSiteRef = " + s.getStorageSiteId()
+                                            + " AND pdriGroupRef = " + cd.getPdriGroupRef()
+                                            + " AND isEncrypted = " + replica.getEncrypted() + ")");
                                     if (!rs.next()) {
                                         preparedStatement.setString(1, cd.getName());
                                         preparedStatement.setLong(2, s.getStorageSiteId());
@@ -219,6 +219,7 @@ class ReplicateSweep implements Runnable {
                             } catch (IOException ex) {
                                 //Add Sleep here 
                                 failed = true;
+                                Logger.getLogger(ReplicateSweep.class.getName()).log(Level.WARNING, null, ex);
                                 continue;
                             }
                         }
