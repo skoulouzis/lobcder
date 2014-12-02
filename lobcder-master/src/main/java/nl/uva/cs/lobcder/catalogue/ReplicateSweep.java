@@ -217,6 +217,7 @@ class ReplicateSweep implements Runnable {
                                 }
 
                             } catch (IOException ex) {
+                                //Add Sleep here 
                                 failed = true;
                                 continue;
                             }
