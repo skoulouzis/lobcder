@@ -26,6 +26,8 @@ public class LogicalData implements Cloneable {
     private Long parentRef;
     private Long createDate = Long.valueOf(0);
     private Long modifiedDate = Long.valueOf(0);
+    private Long lastAccessDate;
+    private Integer ttlSec;
     private Long length = Long.valueOf(0);
     @XmlTransient
     private String contentTypesAsString = "";
