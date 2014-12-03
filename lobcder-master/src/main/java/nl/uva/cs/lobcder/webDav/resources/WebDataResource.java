@@ -368,10 +368,12 @@ public class WebDataResource implements PropFindableResource, Resource,
                             sb.append("[");
                             for (WebDataResource r : children) {
                                 if (r instanceof WebDataFileResource) {
-                                    sb.append("'").append(r.getName()).append("' : [");
+//                                    sb.append("'").append(r.getName()).append("' : [");
+                                    sb.append(r.getName()).append(" : [");
                                     Collection<PDRIDescr> pdris = getCatalogue().getPdriDescrByGroupId(r.getLogicalData().getPdriGroupId(), connection);
                                     for (PDRIDescr p : pdris) {
-                                        sb.append("'").append(p.getResourceUrl()).append("/").append(p.getName()).append("',");
+//                                        sb.append("'").append(p.getResourceUrl()).append("/").append(p.getName()).append("',");
+                                        sb.append(p.getResourceUrl()).append("/").append(p.getName()).append(",");
                                     }
                                     sb.replace(sb.lastIndexOf(","), sb.length(), "").append("],");
                                 }
@@ -380,7 +382,8 @@ public class WebDataResource implements PropFindableResource, Resource,
                             Collection<PDRIDescr> pdris = getCatalogue().getPdriDescrByGroupId(getLogicalData().getPdriGroupId(), connection);
                             sb.append("[");
                             for (PDRIDescr p : pdris) {
-                                sb.append("'").append(p.getResourceUrl()).append("/").append(p.getName()).append("'");
+//                                sb.append("'").append(p.getResourceUrl()).append("/").append(p.getName()).append("'");
+                                sb.append(p.getResourceUrl()).append("/").append(p.getName());
                                 sb.append(",");
                             }
                         }

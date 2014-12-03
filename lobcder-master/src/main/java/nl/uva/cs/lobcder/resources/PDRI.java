@@ -50,4 +50,6 @@ public interface PDRI {
     public void copyRange(Range range, OutputStream out) throws IOException;
 
     public void setLength(long length);
+
+    public boolean exists(String fileName) throws IOException;
 }
