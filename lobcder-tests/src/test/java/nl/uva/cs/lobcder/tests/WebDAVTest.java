@@ -1782,7 +1782,7 @@ public class WebDAVTest {
 //        }
 //    }
     @Test
-    public void testGetSetLocationPreference() throws UnsupportedEncodingException, IOException, DavException {
+    public void testGetSetLocationPreference() throws UnsupportedEncodingException, IOException, DavException, InterruptedException {
         System.out.println("testGetSetCustomComment");
         String testcol1 = root + "testResourceId/";
         String testuri1 = testcol1 + "file1";
@@ -1806,7 +1806,6 @@ public class WebDAVTest {
             for (MultiStatusResponse r : responses) {
 //                System.out.println("Responce: " + r.getHref());
                 DavPropertySet allProp = getProperties(r);
-
                 DavPropertyIterator iter = allProp.iterator();
                 while (iter.hasNext()) {
                     DavProperty<?> p = iter.nextProperty();
@@ -1829,14 +1828,14 @@ public class WebDAVTest {
             multiStatus = getProperty(testcol1, dataLocationPreferenceName);
             responses = multiStatus.getResponses();
             for (MultiStatusResponse r : responses) {
-                System.out.println("Responce: " + r.getHref());
+//                System.out.println("Responce: " + r.getHref());
                 DavPropertySet allProp = getProperties(r);
 
                 DavPropertyIterator iter = allProp.iterator();
                 while (iter.hasNext()) {
                     DavProperty<?> p = iter.nextProperty();
                     assertEquals(p.getName(), dataLocationPreferenceName);
-                    System.out.println(p.getName() + " : " + p.getValue());
+//                    System.out.println(p.getName() + " : " + p.getValue());
                     assertNotNull(p.getValue());
                     if (new URL(testcol1).getPath().equals(r.getHref())) {
                         String val = p.getValue().toString();
@@ -1844,12 +1843,120 @@ public class WebDAVTest {
                     }
                 }
             }
-            
+
             PutMethod put = new PutMethod(testuri1);
             put.setRequestEntity(new StringRequestEntity("foo", "text/plain", "UTF-8"));
             status = client.executeMethod(put);
             assertEquals(HttpStatus.SC_CREATED, status);
-            
+
+            boolean done = false;
+            int count = 0;
+            while (!done) {
+                DavPropertyName dataDistributionName = DavPropertyName.create("data-distribution", Namespace.getNamespace("custom:"));
+                multiStatus = getProperty(testuri1, dataDistributionName);
+                responses = multiStatus.getResponses();
+                String dataDist = null;
+                for (MultiStatusResponse r : responses) {
+                    System.out.println("Responce: " + r.getHref());
+                    DavPropertySet allProp = getProperties(r);
+
+                    DavPropertyIterator iter = allProp.iterator();
+
+                    while (iter.hasNext()) {
+                        DavProperty<?> p = iter.nextProperty();
+                        assertEquals(p.getName(), dataDistributionName);
+                        assertNotNull(p.getValue());
+                        dataDist = (String) p.getValue();
+                        if (dataDist.contains(location)) {
+                            done = true;
+                            assertTrue(dataDist.contains(location));
+                            break;
+                        } else {
+                            count++;
+                        }
+                        System.out.println(p.getName() + " : " + p.getValue());
+                    }
+                }
+                if (count > 100) {
+                    fail(testuri1 + " is not replicated in " + location + " it is in " + dataDist);
+                    break;
+                }
+                Thread.sleep(7000);
+            }
+
+
+            //Now test fail. Add a non existing location 
+            delete = new DeleteMethod(testuri1);
+            status = client.executeMethod(delete);
+            assertTrue("DeleteMethod status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
+
+
+            String nowhere = "Going_nowhere";
+            dataLocationPreferenceName = DavPropertyName.create("data-location-preference", Namespace.getNamespace("custom:"));
+            dataLocationPreference = new DefaultDavProperty(dataLocationPreferenceName, nowhere);
+            setProperty(testcol1, dataLocationPreference);
+
+            multiStatus = getProperty(testcol1, dataLocationPreferenceName);
+            responses = multiStatus.getResponses();
+            for (MultiStatusResponse r : responses) {
+                DavPropertySet allProp = getProperties(r);
+                DavPropertyIterator iter = allProp.iterator();
+                while (iter.hasNext()) {
+                    DavProperty<?> p = iter.nextProperty();
+                    assertEquals(p.getName(), dataLocationPreferenceName);
+                    assertNotNull(p.getValue());
+                    if (new URL(testcol1).getPath().equals(r.getHref())) {
+                        String val = p.getValue().toString();
+                        assertEquals(nowhere, val);
+                    }
+                }
+            }
+
+            put = new PutMethod(testuri1);
+            put.setRequestEntity(new StringRequestEntity("foo", "text/plain", "UTF-8"));
+            status = client.executeMethod(put);
+            assertEquals(HttpStatus.SC_CREATED, status);
+
+
+
+            done = false;
+            count = 0;
+            while (!done) {
+                DavPropertyName dataDistributionName = DavPropertyName.create("data-distribution", Namespace.getNamespace("custom:"));
+                multiStatus = getProperty(testuri1, dataDistributionName);
+                responses = multiStatus.getResponses();
+                String dataDist = null;
+                for (MultiStatusResponse r : responses) {
+                    System.out.println("Responce: " + r.getHref());
+                    DavPropertySet allProp = getProperties(r);
+                    DavPropertyIterator iter = allProp.iterator();
+
+                    while (iter.hasNext()) {
+                        DavProperty<?> p = iter.nextProperty();
+                        assertEquals(p.getName(), dataDistributionName);
+                        assertNotNull(p.getValue());
+                        dataDist = (String) p.getValue();
+                        if (dataDist.contains(availStorageSites[0])) {
+                            done = true;
+                            assertTrue(dataDist.contains(availStorageSites[0]));
+                            break;
+                        } else if (availStorageSites.length > 1 && dataDist.contains(availStorageSites[1])) {
+                            done = true;
+                            assertTrue(dataDist.contains(availStorageSites[1]));
+                            break;
+                        } else {
+                            count++;
+                        }
+                        System.out.println(p.getName() + " : " + p.getValue());
+                    }
+                }
+                if (count > 100) {
+                    fail(testuri1 + " is not replicated in " + availStorageSites[0] + " or " + availStorageSites[1] + " it is in " + dataDist);
+                    break;
+                }
+                Thread.sleep(7000);
+            }
+
 
         } finally {
             DeleteMethod delete = new DeleteMethod(testcol1);
