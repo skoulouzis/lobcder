@@ -243,6 +243,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                     fileLogicalData.setCreateDate(System.currentTimeMillis());
                     fileLogicalData.setModifiedDate(System.currentTimeMillis());
                     fileLogicalData.addContentType(contentType);
+                    fileLogicalData = inheritProperties(fileLogicalData, connection);
                     pdri = createPDRI(length, newName, connection);
                     pdri.setLength(length);
                     pdri.putData(inputStream);
@@ -554,5 +555,14 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
 
         }
         return null;
+    }
+
+    private LogicalData inheritProperties(LogicalData fileLogicalData, Connection connection) throws SQLException {
+        String value = (String) getProperty(Constants.DATA_LOC_PREF_NAME);
+        if (value != null) {
+            fileLogicalData.setDataLocationPreference(value);
+            getCatalogue().setLocationPreference(fileLogicalData.getUid(), value, connection);
+        }
+        return fileLogicalData;
     }
 }

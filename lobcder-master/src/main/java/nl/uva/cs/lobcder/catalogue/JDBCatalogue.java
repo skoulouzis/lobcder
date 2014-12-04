@@ -48,7 +48,7 @@ public class JDBCatalogue extends MyDataSource {
     public JDBCatalogue() throws NamingException {
     }
 
-    public void startSweep() throws IOException {
+    public void startSweep() throws IOException, NamingException {
         TimerTask gcTask = new SweeprsTimerTask(getDatasource());
         timer = new Timer(true);
         timer.schedule(gcTask, 7000, 7000); //once in 10 sec
