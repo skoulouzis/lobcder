@@ -204,8 +204,6 @@ class ReplicateSweep implements Runnable {
                 connection.commit();
                 for (PDRIDescr sourceDescr : toReplicate) {
 
-
-
                     log.log(Level.FINE, "to replicate: {0}", sourceDescr.getResourceUrl());
                     try (PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO pdri_table "
                             + "(fileName, storageSiteRef, pdriGroupRef,isEncrypted, encryptionKey) VALUES(?, ?, ?, ?, ?)")) {
@@ -216,14 +214,31 @@ class ReplicateSweep implements Runnable {
                         //Get the prefered store location for file
                         String loclPrefStr = locationPerMap.get(sourceDescr.getPdriGroupRef());
                         if (loclPrefStr != null && loclPrefStr.length() > 1) {
+                            StorageSite destinationSite = availableStorage.get(loclPrefStr);
+                            if (destinationSite != null) {
+                                BigInteger pdriKey = DesEncrypter.generateKey();
+                                PDRIDescr destinationDescr = new PDRIDescr(
+                                        sourceDescr.getName(),
+                                        destinationSite.getStorageSiteId(),
+                                        destinationSite.getResourceURI(),
+                                        destinationSite.getCredential().getStorageSiteUsername(),
+                                        destinationSite.getCredential().getStorageSitePassword(), destinationSite.isEncrypt(), pdriKey, sourceDescr.getPdriGroupRef(), null);
+                                try {
+                                    replicate(sourceDescr, destinationDescr, preparedStatement, pdriKey, connection);
+                                } catch (IOException ex) {
+                                    failed = true;
+                                    Logger.getLogger(ReplicateSweep.class.getName()).log(Level.WARNING, null, ex);
+                                }
+                                if (!failed) {
+                                    onCacheReplicate(sourceDescr, sourcePDRI, connection);
+                                }
+                                connection.commit();
+
+                                continue;
+                            }
                         }
 
-
                         for (StorageSite destinationSite : ss.values()) {
-
-
-
-
                             BigInteger pdriKey = DesEncrypter.generateKey();
                             PDRIDescr destinationDescr = new PDRIDescr(
                                     sourceDescr.getName(),
@@ -232,34 +247,8 @@ class ReplicateSweep implements Runnable {
                                     destinationSite.getCredential().getStorageSiteUsername(),
                                     destinationSite.getCredential().getStorageSitePassword(), destinationSite.isEncrypt(), pdriKey, sourceDescr.getPdriGroupRef(), null);
 
-
-
-
-//                            PDRI destinationPDRI = PDRIFactory.getFactory().createInstance(destinationDescr, false);
-
-//                            destinationPDRI.setLength(length);
                             try {
                                 replicate(sourceDescr, destinationDescr, preparedStatement, pdriKey, connection);
-
-//                                if (!destinationPDRI.exists(sourcePDRI.getFileName())) {
-//                                    destinationPDRI.replicate(sourcePDRI);
-//                                }
-//                                try (Statement s2 = connection.createStatement()) {
-//                                    ResultSet rs = s2.executeQuery("select * from pdri_table WHERE "
-//                                            + "(fileName LIKE '" + sourceDescr.getName() + "'"
-//                                            + " AND storageSiteRef = " + destinationSite.getStorageSiteId()
-//                                            + " AND pdriGroupRef = " + destinationDescr.getPdriGroupRef()
-//                                            + " AND isEncrypted = " + destinationPDRI.getEncrypted() + ")");
-//                                    if (!rs.next()) {
-//                                        preparedStatement.setString(1, sourceDescr.getName());
-//                                        preparedStatement.setLong(2, destinationSite.getStorageSiteId());
-//                                        preparedStatement.setLong(3, sourceDescr.getPdriGroupRef());
-//                                        preparedStatement.setBoolean(4, destinationPDRI.getEncrypted());
-//                                        preparedStatement.setLong(5, pdriKey.longValue());
-//                                        preparedStatement.executeUpdate();
-//                                    }
-//                                }
-
                             } catch (IOException ex) {
                                 //Add Sleep here 
                                 failed = true;
@@ -271,8 +260,6 @@ class ReplicateSweep implements Runnable {
                             onCacheReplicate(sourceDescr, sourcePDRI, connection);
                         }
                         connection.commit();
-
-
                     } catch (NoSuchAlgorithmException ex) {
                         Logger.getLogger(ReplicateSweep.class.getName()).log(Level.SEVERE, null, ex);
                     }
