@@ -53,6 +53,8 @@ public class WebDataResourceFactory implements ResourceFactory {
             if (entry == null) {
                 return null;
             }
+            catalogue.updateAccessTime(entry.getUid());
+
 
             if (entry.getType().equals(Constants.LOGICAL_FOLDER)) {
                 return new WebDataDirResource(entry, ldri, catalogue, authList);

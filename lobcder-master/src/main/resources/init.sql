@@ -57,7 +57,9 @@ CREATE TABLE ldata_table (
  lockTimeout  BIGINT NOT NULL DEFAULT 0,
  description VARCHAR(1024),
  locationPreference VARCHAR(1024),
- status enum('unavailable', 'corrupted', 'OK')
+ status enum('unavailable', 'corrupted', 'OK'),
+ accessDate DATETIME,
+ ttlSec int
 ) ENGINE=InnoDB;
 
 CREATE TABLE wp4_table (
@@ -446,5 +448,28 @@ CREATE EVENT IF NOT EXISTS e_tokens_sweep
     EVERY 600 SECOND
 DO
   DELETE FROM tokens_table WHERE exp_date < NOW();
+
+DROP EVENT IF EXISTS ttl_sweep;
+CREATE EVENT IF NOT EXISTS ttl_sweep
+  ON SCHEDULE
+    EVERY 60 SECOND
+DO
+  BEGIN
+    DECLARE countRow INT;
+    DELETE FROM ldata_table WHERE datatype = 'logical.file' AND  ttlSec IS NOT NULL AND accessDate IS NOT NULL AND timestampdiff(SECOND, accessDate, now()) > ttlSec;
+    del_fold_loop:
+    LOOP
+      DELETE FROM ldata_table WHERE uid in (
+        SELECT * FROM (
+                        SELECT * FROM (
+                          (SELECT uid FROM ldata_table WHERE datatype = 'logical.folder' AND  ttlSec IS NOT NULL AND timestampdiff(SECOND, accessDate, now()) > ttlSec) AS t)
+                        WHERE (SELECT COUNT(*) FROM ldata_table WHERE parentRef=t.uid) = 0)
+          AS qq);
+      SET countRow =  ROW_COUNT();
+      IF countRow = 0 THEN
+        LEAVE del_fold_loop;
+      END IF;
+    END LOOP del_fold_loop;
+  END;
 
 SET GLOBAL event_scheduler = ON;

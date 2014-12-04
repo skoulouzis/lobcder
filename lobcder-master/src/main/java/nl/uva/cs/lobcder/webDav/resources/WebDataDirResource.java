@@ -164,7 +164,6 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
         try {
             try (Connection connection = getCatalogue().getConnection()) {
                 try {
-
                     List<Resource> children = new ArrayList<>();
                     Collection<LogicalData> childrenLD = getCatalogue().getChildrenByParentRef(getLogicalData().getUid(), connection);
                     if (childrenLD != null) {
@@ -215,6 +214,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                     }
                     fileLogicalData.setLength(length);
                     fileLogicalData.setModifiedDate(System.currentTimeMillis());
+                    fileLogicalData.setLastAccessDate(fileLogicalData.getModifiedDate());
                     if (contentType == null) {
                         contentType = mimeTypeMap.get(FilenameUtils.getExtension(newName));
                     }
@@ -242,6 +242,8 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                     fileLogicalData.setLength(length);
                     fileLogicalData.setCreateDate(System.currentTimeMillis());
                     fileLogicalData.setModifiedDate(System.currentTimeMillis());
+                    fileLogicalData.setLastAccessDate(System.currentTimeMillis());
+                    fileLogicalData.setTtlSec(getLogicalData().getTtlSec());
                     fileLogicalData.addContentType(contentType);
                     fileLogicalData = inheritProperties(fileLogicalData, connection);
                     pdri = createPDRI(length, newName, connection);
@@ -506,8 +508,8 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
      * This means to just lock the name Not to create the resource.
      *
      * @param name
-     * @param lt
-     * @param li
+     * @param timeout
+     * @param lockInfo
      * @return
      * @throws NotAuthorizedException
      */
