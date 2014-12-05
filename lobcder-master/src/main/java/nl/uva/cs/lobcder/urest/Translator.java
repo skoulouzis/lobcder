@@ -32,7 +32,7 @@ public class Translator {
     @GET
     public Response getShortWeb(@PathParam("longTocken") String longTocken) throws SQLException {
         try{
-            MyPrincipal principal = SingletonesHelper.getInstance().getTktAuth().checkToken(longTocken);
+            MyPrincipal principal = SingletonesHelper.getInstance().getTktAuth().checkToken("from_translator", longTocken);
             Long expDate = principal.getValidUntil();
             String userId = principal.getUserId();
             try (Connection cn = SingletonesHelper.getInstance().getDataSource().getConnection()) {

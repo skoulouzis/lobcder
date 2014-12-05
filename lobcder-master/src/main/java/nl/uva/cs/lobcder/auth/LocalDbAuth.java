@@ -31,7 +31,7 @@ public class LocalDbAuth implements AuthI {
     private int attempts = 0;
 
     @Override
-    public MyPrincipal checkToken(String token) {
+    public MyPrincipal checkToken(String uname,String token) {
 //        Connection connection = null;
         MyPrincipal res = null;
         try {
@@ -41,13 +41,12 @@ public class LocalDbAuth implements AuthI {
                 }
             }
             if (res == null) {
-                String uname;
+                
                 int id;
                 try (Connection connection = datasource.getConnection()) {
                     try (Statement s = connection.createStatement()) {
                         HashSet<String> roles = new HashSet<>();
-                        String query = "SELECT id, uname FROM auth_usernames_table WHERE token = '" + token + "'";
-                        LocalDbAuth.log.fine(query);
+                        String query = "SELECT id, uname FROM auth_usernames_table WHERE token LIKE '" + token + "' AND uname LIKE '"+uname;
                         try (ResultSet rs = s.executeQuery(query)) {
                             if (rs.next()) {
                                 id = rs.getInt(1);
@@ -57,8 +56,9 @@ public class LocalDbAuth implements AuthI {
                             } else {
                                 return null;
                             }
+                            query = "select * from auth_usernames_table where uname LIKE '"+uname+"'";
+
                             query = "SELECT roleName FROM auth_roles_tables WHERE unameRef = " + id;
-                            LocalDbAuth.log.fine(query);
                             try (ResultSet rs2 = s.executeQuery(query)) {
                                 while (rs2.next()) {
                                     roles.add(rs2.getString(1));
@@ -82,7 +82,7 @@ public class LocalDbAuth implements AuthI {
             if (ex instanceof SQLException
                     && attempts <= Constants.RECONNECT_NTRY) {
                 attempts++;
-                checkToken(token);
+                checkToken(uname, token);
             } else {
                 LocalDbAuth.log.log(Level.SEVERE, null, ex);
                 return null;
