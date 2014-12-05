@@ -9,18 +9,26 @@ import lombok.Setter;
 
 import java.util.HashSet;
 import java.util.Set;
+import lombok.extern.java.Log;
 
 /**
  *
  * @author dvasunin
  */
+@Log
 public class MyPrincipal {
 
-    @Getter private final String token;
-    @Getter private final String userId;
-    @Getter private final Set<String> roles;
-    @Getter private final boolean admin;
-    @Getter @Setter private Long validUntil;
+    @Getter
+    private final String token;
+    @Getter
+    private final String userId;
+    @Getter
+    private final Set<String> roles;
+    @Getter
+    private final boolean admin;
+    @Getter
+    @Setter
+    private Long validUntil;
 
     public MyPrincipal(String userId, Set<String> roles, String token) {
         this.userId = userId;
@@ -52,7 +60,7 @@ public class MyPrincipal {
         if (isAdmin()) {
             return true;
         }
-        Set<String> r1 = new HashSet<String>(roles);
+        Set<String> r1 = new HashSet<>(roles);
         r1.retainAll(p.getRead());
         return !r1.isEmpty();
     }
@@ -64,7 +72,7 @@ public class MyPrincipal {
         if (isAdmin()) {
             return true;
         }
-        Set<String> r1 = new HashSet<String>(roles);
+        Set<String> r1 = new HashSet<>(roles);
         r1.retainAll(p.getWrite());
         return !r1.isEmpty();
     }
