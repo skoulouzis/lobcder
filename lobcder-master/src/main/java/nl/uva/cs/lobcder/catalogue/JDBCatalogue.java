@@ -622,7 +622,8 @@ public class JDBCatalogue extends MyDataSource {
         }
         p = new Permissions();
         try (Statement s = connection.createStatement()) {
-            ResultSet rs = s.executeQuery("SELECT permType, roleName FROM permission_table WHERE permission_table.ldUidRef = " + UID);
+            ResultSet rs = s.executeQuery("SELECT permType, roleName FROM permission_table "
+                    + "WHERE permission_table.ldUidRef = " + UID);
             Set<String> canRead = new HashSet<>();
             Set<String> canWrite = new HashSet<>();
             while (rs.next()) {
