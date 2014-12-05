@@ -46,18 +46,18 @@ public class LocalDbAuth implements AuthI {
                 try (Connection connection = datasource.getConnection()) {
                     try (Statement s = connection.createStatement()) {
                         HashSet<String> roles = new HashSet<>();
-                        String query = "SELECT id, uname FROM auth_usernames_table WHERE token LIKE '" + token + "' AND uname LIKE '"+uname;
+                        //Fix this!!! Can use injection with % 
+//                        fix
+                        String query = "SELECT id, uname FROM auth_usernames_table WHERE token LIKE '" + token + "' AND uname LIKE '"+uname+"'";
                         try (ResultSet rs = s.executeQuery(query)) {
                             if (rs.next()) {
                                 id = rs.getInt(1);
                                 uname = rs.getString(2);
-                                roles.add("other");
+//                                roles.add("other");
                                 roles.add(uname);
                             } else {
                                 return null;
                             }
-                            query = "select * from auth_usernames_table where uname LIKE '"+uname+"'";
-
                             query = "SELECT roleName FROM auth_roles_tables WHERE unameRef = " + id;
                             try (ResultSet rs2 = s.executeQuery(query)) {
                                 while (rs2.next()) {
