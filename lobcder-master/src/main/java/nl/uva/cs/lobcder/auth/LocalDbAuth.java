@@ -10,6 +10,7 @@ import nl.uva.cs.lobcder.util.Constants;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -31,7 +32,7 @@ public class LocalDbAuth implements AuthI {
     private int attempts = 0;
 
     @Override
-    public MyPrincipal checkToken(String uname,String token) {
+    public MyPrincipal checkToken(String uname, String token) {
 //        Connection connection = null;
         MyPrincipal res = null;
         try {
@@ -41,15 +42,16 @@ public class LocalDbAuth implements AuthI {
                 }
             }
             if (res == null) {
-                
+
                 int id;
                 try (Connection connection = datasource.getConnection()) {
                     try (Statement s = connection.createStatement()) {
                         HashSet<String> roles = new HashSet<>();
-                        //Fix this!!! Can use injection with % 
-//                        fix
-                        String query = "SELECT id, uname FROM auth_usernames_table WHERE token LIKE '" + token + "' AND uname LIKE '"+uname+"'";
-                        try (ResultSet rs = s.executeQuery(query)) {
+                        try (PreparedStatement authStatement = connection.prepareStatement(
+                                "SELECT id, uname FROM auth_usernames_table WHERE token = ? AND uname = ?")) {
+                            authStatement.setString(1, token);
+                            authStatement.setString(2, uname);
+                            ResultSet rs = authStatement.executeQuery();
                             if (rs.next()) {
                                 id = rs.getInt(1);
                                 uname = rs.getString(2);
@@ -58,8 +60,10 @@ public class LocalDbAuth implements AuthI {
                             } else {
                                 return null;
                             }
-                            query = "SELECT roleName FROM auth_roles_tables WHERE unameRef = " + id;
-                            try (ResultSet rs2 = s.executeQuery(query)) {
+                            try (PreparedStatement roleStatement = connection.prepareStatement(
+                                    "SELECT roleName FROM auth_roles_tables WHERE unameRef = ?")) {
+                                roleStatement.setInt(1, id);
+                                ResultSet rs2 = roleStatement.executeQuery();
                                 while (rs2.next()) {
                                     roles.add(rs2.getString(1));
                                 }
