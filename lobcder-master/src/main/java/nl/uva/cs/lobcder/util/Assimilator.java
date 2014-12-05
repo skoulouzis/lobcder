@@ -437,12 +437,12 @@ public class Assimilator {
             List<StorageSite> sites = new ArrayList<>();
 
             Credential credential = new Credential();
-            credential.setStorageSiteUsername("vphdemo:vphdemo");
-            credential.setStorageSitePassword("LibiDibi7");
+            credential.setStorageSiteUsername("vphdemo");
+            credential.setStorageSitePassword("demo");
 
             StorageSite ss1 = new StorageSite();
             ss1.setCredential(credential);
-            ss1.setResourceURI("swift://149.156.10.131:8443/auth/v1.0/uploadContainer/");
+            ss1.setResourceURI("swift://somewhere:8443/auth/v1.0/uploadContainer/");
             ss1.setCurrentNum(Long.valueOf("-1"));
             ss1.setCurrentSize(Long.valueOf("-1"));
             ss1.setEncrypt(false);
