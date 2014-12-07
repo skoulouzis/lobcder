@@ -92,6 +92,7 @@ sed -i 's/http\:\/\/127.0.0.1:8080\/lobcder\///g' /tmp/result.csv
 sed -i 's/https\:\/\/127.0.0.1\/lobcder\///g' /tmp/result.csv
 sed -i 's/ZGVtbzE6ZDNtb1Bhc3N3ZA==/demo1/g' /tmp/result.csv
 sed -i 's/http\:\/\/server.cyfronet.pl:8080\/lobcder\///g' /tmp/result.csv
+sed -i 's/http\:\/\/server.cyfronet.pl\/lobcder\///g' /tmp/result.csv
 sed -i 's/http\:\/\/elab.lab.uvalight.net\/lobcder\///g' /tmp/result.csv
 
 
