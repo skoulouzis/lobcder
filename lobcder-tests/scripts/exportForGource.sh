@@ -139,3 +139,6 @@ sed -i 's/\t/|/g' /tmp/result.csv
 
 
 cp /tmp/result.csv $CATALINA_HOME/logs/gourceResult.csv
+
+
+ #gource --log-format custom ~/Documents/logs/lobcder.production/gourceResult.csv --stop-at-end  -key -auto-skip-seconds 0.5 --file-idle-time 0.1 --max-file-lag 0.1 --title "LOBCDER Users Activity Visualisation" --time-scale 4 --seconds-per-day 0.25 --bloom-intensity 0.2 --user-scale 6 --multi-sampling -1024x768 --max-files 0 --hide filenames,usernames --dir-name-depth 1 --highlight-dirs  --output-ppm-stream - | avconv -an -threads 4 -y -f image2pipe -vcodec ppm -i - -b 65536K -r 30.000 -vb 8000000  Videos/lobcder-user-activity0.mp4
