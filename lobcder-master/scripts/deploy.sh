@@ -14,6 +14,8 @@ OPTIONS:
    -p	Database password for the lobcder user. The lobcder is the user that will make the queries 
    -u	mysql username. Root if possible
    -a	mysql password
+   -l	lobcder admin username
+   -s	lobcder admin password
    -f   Storage site description file. Format: <URI> <USERNAME> <PASSWORD>. 
 	Available implmentations: sftp://host:PORT/, swift(ssl)://host:PORT/, webdav(ssl)://host:PORT/, file://host:PORT/, 
    -c	Path where tomcat is. The equivelat of \$CATALINA_HOME 
@@ -24,8 +26,11 @@ dbName=
 dbPasswd=
 sqlUser=
 sqlPass=
+lobAdmin=
+lobPass=
 ssFile=
-while getopts “hn:p:u:a:f:c:v” OPTION
+catalinaLocation=
+while getopts “hn:p:u:a:l:s:f:c:v” OPTION
 do
      case $OPTION in
          h)
@@ -43,7 +48,13 @@ do
              ;;           
          a)
              sqlPass=$OPTARG
-             ;;                 
+             ;;          
+         l)
+             lobAdmin=$OPTARG
+             ;;     
+         s)
+             lobPass=$OPTARG
+             ;;              
          f)
              ssFile=$OPTARG
              ;;
@@ -57,7 +68,7 @@ do
      esac
 done
 
-if [[ -z $dbName ]] || [[ -z $dbPasswd ]] || [[ -z $sqlUser ]] || [[ -z $sqlPass ]] || [[ -z $ssFile  ]] || [[ -z $catalinaLocation  ]]
+if [[ -z $dbName ]] || [[ -z $dbPasswd ]] || [[ -z $sqlUser ]] || [[ -z $sqlPass ]] || [[ -z $ssFile  ]] || [[ -z $catalinaLocation  ]] || [[ -z $lobAdmin  ]] || [[ -z $lobPass ]]
 then
      usage
      exit 1
@@ -86,14 +97,21 @@ sed -i "s#password=\"RoomC3156\"#password=\"$dbPasswd\"#g" lobcder/lobcder-maste
 
 #  --------------------- Build tables trigers and storage sites  --------------------
 mysql --user=lobcder --password=$dbPasswd $dbName < lobcder/lobcder-master/target/lobcder/WEB-INF/classes/init.sql
-# while read uri username pass
-# do
-#   echo Adding $username":"$pass"@"$uri
-#   mysql -u$sqlUser -p$sqlPass -s -N -e  "INSERT INTO  $dbName.credential_table(username, password) VALUES ('$username', '$pass'); 
-#   SET @credRef = LAST_INSERT_ID();
-#   INSERT INTO $dbName.storage_site_table(resourceUri, credentialRef, currentNum, currentSize, quotaNum, quotaSize, isCache) VALUES('$uri', @credRef, -1, -1, -1, -1, TRUE);"
-# done < $ssFile
-# 
-# 
-# 
-# cp -r lobcder/lobcder-master/target/lobcder $catalinaLocation/webapps/
+while read uri username pass
+do
+  echo Adding $username":"$pass"@"$uri
+  mysql -u$sqlUser -p$sqlPass -s -N -e  "INSERT INTO  $dbName.credential_table(username, password) VALUES ('$username', '$pass'); 
+  SET @credRef = LAST_INSERT_ID();
+  INSERT INTO $dbName.storage_site_table(resourceUri, credentialRef, currentNum, currentSize, quotaNum, quotaSize, isCache) VALUES('$uri', @credRef, -1, -1, -1, -1, TRUE);"
+done < $ssFile
+
+
+
+mysql -u$sqlUser -p$sqlPass -s -N -e  "INSERT INTO $dbName.auth_usernames_table(token, uname) VALUES ('$lobAdmin', '$lobPass');
+SET @authUserNamesRef = LAST_INSERT_ID();
+INSERT INTO $dbName.auth_roles_tables(roleName, unameRef) VALUES  ('admin',     @authUserNamesRef),
+                                                          ('other',     @authUserNamesRef),
+                                                          ('megarole',  @authUserNamesRef);"
+
+
+cp -r lobcder/lobcder-master/target/lobcder $catalinaLocation/webapps/

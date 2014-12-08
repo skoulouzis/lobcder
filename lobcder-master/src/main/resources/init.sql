@@ -237,11 +237,12 @@ CREATE TABLE auth_roles_tables (
     roleName VARCHAR(255), INDEX(roleName),
     unameRef BIGINT UNSIGNED, FOREIGN KEY(unameRef) REFERENCES auth_usernames_table(id) ON DELETE CASCADE
 );
-INSERT INTO auth_usernames_table(token, uname) VALUES ('admin', 'RoomC3156');
-SET @authUserNamesRef = LAST_INSERT_ID();
-INSERT INTO auth_roles_tables(roleName, unameRef) VALUES  ('admin',     @authUserNamesRef),
-                                                          ('other',     @authUserNamesRef),
-                                                          ('megarole',  @authUserNamesRef);
+
+-- INSERT INTO auth_usernames_table(token, uname) VALUES ('admin', 'RoomC3156');
+-- SET @authUserNamesRef = LAST_INSERT_ID();
+-- INSERT INTO auth_roles_tables(roleName, unameRef) VALUES  ('admin',     @authUserNamesRef),
+--                                                           ('other',     @authUserNamesRef),
+--                                                           ('megarole',  @authUserNamesRef);
 
 
 DROP FUNCTION IF EXISTS SPLIT_STR;
