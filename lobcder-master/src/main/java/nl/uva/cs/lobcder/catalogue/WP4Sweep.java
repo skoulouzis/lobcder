@@ -52,6 +52,23 @@ class WP4Sweep implements Runnable {
                             .append("<author>").append(author).append("</author>")
                             .append("<category>General Metadata</category>")
                             .append("<description>LOBCDER</description>")
+                            .append("<localID>").append(localId).append("</localID>")
+                            .append("<name>").append(name).append("</name>")
+                            .append("<status>active</status>")
+                            .append("<type>File</type>")
+                            .append("<views>").append(views).append("</views>")
+                            .append("<fileType>").append(type).append("</fileType>")
+                        .append("</file>")
+                    .append("</resource_metadata>").toString();
+        }
+
+        public String getXmlPost() {
+            return new StringBuilder("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>")
+                    .append("<resource_metadata>")
+                        .append("<file>")
+                            .append("<author>").append(author).append("</author>")
+                            .append("<category>General Metadata</category>")
+                            .append("<description>LOBCDER</description>")
                             .append("<linkedTo/>")
                             .append("<localID>").append(localId).append("</localID>")
                             .append("<name>").append(name).append("</name>")
@@ -108,7 +125,7 @@ class WP4Sweep implements Runnable {
         @Override
         public String create(ResourceMetadata resourceMetadata) throws Exception {
             WebResource webResource = client.resource(uri);
-            ClientResponse response = webResource.type(MediaType.APPLICATION_XML).post(ClientResponse.class, resourceMetadata.getXml());
+            ClientResponse response = webResource.type(MediaType.APPLICATION_XML).post(ClientResponse.class, resourceMetadata.getXmlPost());
             String entity = response.getEntity(String.class);
             if (response.getClientResponseStatus() == ClientResponse.Status.OK
                     && entity.contains("<_global_id>")) {
@@ -125,7 +142,7 @@ class WP4Sweep implements Runnable {
         @Override
         public String create_dev(ResourceMetadata resourceMetadata) throws Exception {
             WebResource webResource = client.resource(uri_dev);
-            ClientResponse response = webResource.type(MediaType.APPLICATION_XML).post(ClientResponse.class, resourceMetadata.getXml());
+            ClientResponse response = webResource.type(MediaType.APPLICATION_XML).post(ClientResponse.class, resourceMetadata.getXmlPost());
             String entity = response.getEntity(String.class);
             if (response.getClientResponseStatus() == ClientResponse.Status.OK
                     && entity.contains("<_global_id>")) {
