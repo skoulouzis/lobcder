@@ -1,4 +1,5 @@
-DROP TABLE IF EXISTS permission_table, wp4_table, ldata_table, pdri_table, pdrigroup_table, storage_site_table, credential_table;
+DROP TABLE IF EXISTS permission_table, wp4_table, ldata_table, pdri_table, pdrigroup_table, 
+storage_site_table, credential_table, requests_table, successor_table, occurrences_table, features_table, speed_table;
 
 CREATE TABLE pdrigroup_table (
   pdriGroupId SERIAL PRIMARY KEY,
@@ -449,14 +450,17 @@ CREATE EVENT IF NOT EXISTS e_tokens_sweep
 DO
   DELETE FROM tokens_table WHERE exp_date < NOW();
 
+
 DROP EVENT IF EXISTS ttl_sweep;
+
+DELIMITER |
 CREATE EVENT IF NOT EXISTS ttl_sweep
   ON SCHEDULE
     EVERY 60 SECOND
 DO
   BEGIN
     DECLARE countRow INT;
-    DELETE FROM ldata_table WHERE datatype = 'logical.file' AND  ttlSec IS NOT NULL AND accessDate IS NOT NULL AND timestampdiff(SECOND, accessDate, now()) > ttlSec;
+        DELETE FROM ldata_table WHERE datatype = 'logical.file' AND  ttlSec IS NOT NULL AND accessDate IS NOT NULL AND timestampdiff(SECOND, accessDate, now()) > ttlSec;
     del_fold_loop:
     LOOP
       DELETE FROM ldata_table WHERE uid in (
@@ -470,6 +474,9 @@ DO
         LEAVE del_fold_loop;
       END IF;
     END LOOP del_fold_loop;
-  END;
+--   END;
+END 
+|
+DELIMITER ;
 
 SET GLOBAL event_scheduler = ON;
