@@ -1,0 +1,3 @@
+swift://host1 userName1 password1
+webdav://host2 userName2 password2
+file:///dev/null userName3 password3

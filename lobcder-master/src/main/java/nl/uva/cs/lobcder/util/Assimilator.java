@@ -39,6 +39,7 @@ public class Assimilator {
     static final String USER = "lobcder";
     static final String PASS = "RoomC3156";
     private final Connection conn;
+    private static String importingOwner;
 
     public Assimilator() throws ClassNotFoundException, SQLException {
         //STEP 2: Register JDBC driver
@@ -354,7 +355,7 @@ public class Assimilator {
                     entry.setCreateDate(f.getModificationTime());
                     entry.setModifiedDate(f.getModificationTime());
                     entry.setName(f.getName());
-                    entry.setOwner("admin");
+                    entry.setOwner(importingOwner);
                     entry.setParentRef(parentRef);
 
                     register = registerDirLogicalData(entry, connection);
@@ -434,21 +435,22 @@ public class Assimilator {
 
     public static void main(String args[]) throws SQLException, MalformedURLException, VlException, NoSuchAlgorithmException, Exception {
         try {
+            importingOwner = "no-one";
             List<StorageSite> sites = new ArrayList<>();
 
             Credential credential = new Credential();
             credential.setStorageSiteUsername("vphdemo");
             credential.setStorageSitePassword("demo");
 
-            StorageSite ss1 = new StorageSite();
-            ss1.setCredential(credential);
-            ss1.setResourceURI("swift://somewhere:8443/auth/v1.0/uploadContainer/");
-            ss1.setCurrentNum(Long.valueOf("-1"));
-            ss1.setCurrentSize(Long.valueOf("-1"));
-            ss1.setEncrypt(false);
-            ss1.setQuotaNum(Long.valueOf("-1"));
-            ss1.setQuotaSize(Long.valueOf("-1"));
-            sites.add(ss1);
+//            StorageSite ss1 = new StorageSite();
+//            ss1.setCredential(credential);
+//            ss1.setResourceURI("swift://somewhere:8443/auth/v1.0/uploadContainer/");
+//            ss1.setCurrentNum(Long.valueOf("-1"));
+//            ss1.setCurrentSize(Long.valueOf("-1"));
+//            ss1.setEncrypt(false);
+//            ss1.setQuotaNum(Long.valueOf("-1"));
+//            ss1.setQuotaSize(Long.valueOf("-1"));
+//            sites.add(ss1);
 //
 //
 //            StorageSite ss2 = new StorageSite();
@@ -462,16 +464,16 @@ public class Assimilator {
 //            sites.add(ss2);
 
 
-//            StorageSite ss3 = new StorageSite();
-//            ss3.setCredential(credential);
-////            ss3.setResourceURI("file:///" + System.getProperty("user.home") + "/Downloads/files");
+            StorageSite ss3 = new StorageSite();
+            ss3.setCredential(credential);
+            ss3.setResourceURI("file:///" + System.getProperty("user.home") + "/Downloads/lobcderUsageData");
 //            ss3.setResourceURI("srm://tbn18.nikhef.nl:8446/dpm/nikhef.nl/home/biomed/lobcder");
-//            ss3.setCurrentNum(Long.valueOf("-1"));
-//            ss3.setCurrentSize(Long.valueOf("-1"));
-//            ss3.setEncrypt(false);
-//            ss3.setQuotaNum(Long.valueOf("-1"));
-//            ss3.setQuotaSize(Long.valueOf("-1"));
-//            sites.add(ss3);
+            ss3.setCurrentNum(Long.valueOf("-1"));
+            ss3.setCurrentSize(Long.valueOf("-1"));
+            ss3.setEncrypt(false);
+            ss3.setQuotaNum(Long.valueOf("-1"));
+            ss3.setQuotaSize(Long.valueOf("-1"));
+            sites.add(ss3);
 
             Assimilator a = new Assimilator();
             a.assimilate(sites);
