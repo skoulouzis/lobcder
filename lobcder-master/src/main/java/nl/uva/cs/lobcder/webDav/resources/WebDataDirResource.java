@@ -112,6 +112,8 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                     newFolderEntry.setName(newName);
                     newFolderEntry.setCreateDate(System.currentTimeMillis());
                     newFolderEntry.setModifiedDate(System.currentTimeMillis());
+                    newFolderEntry.setLastAccessDate(System.currentTimeMillis());
+                    newFolderEntry.setTtlSec(getLogicalData().getTtlSec());
                     newFolderEntry.setOwner(getPrincipal().getUserId());
                     WebDataDirResource res = new WebDataDirResource(newFolderEntry, newCollectionPath, getCatalogue(), authList);
                     getCatalogue().setPermissions(
