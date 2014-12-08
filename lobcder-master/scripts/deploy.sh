@@ -102,7 +102,7 @@ do
   echo Adding $username":"$pass"@"$uri
   mysql -u$sqlUser -p$sqlPass -s -N -e  "INSERT INTO  $dbName.credential_table(username, password) VALUES ('$username', '$pass'); 
   SET @credRef = LAST_INSERT_ID();
-  INSERT INTO $dbName.storage_site_table(resourceUri, credentialRef, currentNum, currentSize, quotaNum, quotaSize, isCache) VALUES('$uri', @credRef, -1, -1, -1, -1, TRUE);"
+  INSERT INTO $dbName.storage_site_table(resourceUri, credentialRef, currentNum, currentSize, quotaNum, quotaSize, isCache) VALUES('$uri', @credRef, -1, -1, -1, -1, FALSE);"
 done < $ssFile
 
 
