@@ -48,7 +48,7 @@ public class JDBCatalogue extends MyDataSource {
     public JDBCatalogue() throws NamingException {
     }
 
-    public void startSweep() throws IOException {
+    public void startSweep() throws IOException, NamingException {
         TimerTask gcTask = new SweeprsTimerTask(getDatasource());
         timer = new Timer(true);
         timer.schedule(gcTask, 7000, 7000); //once in 10 sec
@@ -631,7 +631,8 @@ public class JDBCatalogue extends MyDataSource {
         }
         p = new Permissions();
         try (Statement s = connection.createStatement()) {
-            ResultSet rs = s.executeQuery("SELECT permType, roleName FROM permission_table WHERE permission_table.ldUidRef = " + UID);
+            ResultSet rs = s.executeQuery("SELECT permType, roleName FROM permission_table "
+                    + "WHERE permission_table.ldUidRef = " + UID);
             Set<String> canRead = new HashSet<>();
             Set<String> canWrite = new HashSet<>();
             while (rs.next()) {

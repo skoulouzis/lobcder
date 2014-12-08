@@ -101,7 +101,7 @@ public class BasicAuthFilter implements Filter {
                             }
                         }
                     }
-                    principal = authWorker.checkToken(token);
+                    principal = authWorker.checkToken(uname,token);
                     
 //                    for (String s : workers) {
 //                        try {
@@ -132,7 +132,7 @@ public class BasicAuthFilter implements Filter {
 //                                && a instanceof AuthTicket) {
 //                            continue;
 //                        }
-                        principal = a.checkToken(token);
+                        principal = a.checkToken(uname,token);
                         if (principal != null) {
                             break;
                         }

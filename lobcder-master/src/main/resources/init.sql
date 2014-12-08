@@ -1,4 +1,5 @@
-DROP TABLE IF EXISTS permission_table, wp4_table, ldata_table, pdri_table, pdrigroup_table, storage_site_table, credential_table;
+DROP TABLE IF EXISTS permission_table, wp4_table, ldata_table, pdri_table, pdrigroup_table, 
+storage_site_table, credential_table, requests_table, successor_table, occurrences_table, features_table, speed_table;
 
 CREATE TABLE pdrigroup_table (
   pdriGroupId SERIAL PRIMARY KEY,
@@ -209,8 +210,7 @@ DELIMITER ;
 INSERT INTO ldata_table(parentRef, ownerId, datatype, ldName, createDate, modifiedDate) VALUES(1, 'root', 'logical.folder', '', NOW(), NOW());
 SET @rootRef = LAST_INSERT_ID();
 UPDATE ldata_table SET parentRef = @rootRef WHERE uid = @rootRef;
-INSERT INTO permission_table (permType, ldUidRef, roleName) VALUES  ('read', @rootRef, 'other'),
-                                                                    ('read', @rootRef, 'admin'),
+INSERT INTO permission_table (permType, ldUidRef, roleName) VALUES  ('read', @rootRef, 'admin'),
                                                                     ('write', @rootRef, 'admin');
 
 INSERT INTO  credential_table(username, password) VALUES ('fakeuser', 'fakepass');
@@ -237,11 +237,12 @@ CREATE TABLE auth_roles_tables (
     roleName VARCHAR(255), INDEX(roleName),
     unameRef BIGINT UNSIGNED, FOREIGN KEY(unameRef) REFERENCES auth_usernames_table(id) ON DELETE CASCADE
 );
-INSERT INTO auth_usernames_table(token, uname) VALUES ('admin', 'RoomC3156');
-SET @authUserNamesRef = LAST_INSERT_ID();
-INSERT INTO auth_roles_tables(roleName, unameRef) VALUES  ('admin',     @authUserNamesRef),
-                                                          ('other',     @authUserNamesRef),
-                                                          ('megarole',  @authUserNamesRef);
+
+-- INSERT INTO auth_usernames_table(token, uname) VALUES ('admin', 'RoomC3156');
+-- SET @authUserNamesRef = LAST_INSERT_ID();
+-- INSERT INTO auth_roles_tables(roleName, unameRef) VALUES  ('admin',     @authUserNamesRef),
+--                                                           ('other',     @authUserNamesRef),
+--                                                           ('megarole',  @authUserNamesRef);
 
 
 DROP FUNCTION IF EXISTS SPLIT_STR;
@@ -449,14 +450,17 @@ CREATE EVENT IF NOT EXISTS e_tokens_sweep
 DO
   DELETE FROM tokens_table WHERE exp_date < NOW();
 
+
 DROP EVENT IF EXISTS ttl_sweep;
+
+DELIMITER |
 CREATE EVENT IF NOT EXISTS ttl_sweep
   ON SCHEDULE
     EVERY 60 SECOND
 DO
   BEGIN
     DECLARE countRow INT;
-    DELETE FROM ldata_table WHERE datatype = 'logical.file' AND  ttlSec IS NOT NULL AND accessDate IS NOT NULL AND timestampdiff(SECOND, accessDate, now()) > ttlSec;
+        DELETE FROM ldata_table WHERE datatype = 'logical.file' AND  ttlSec IS NOT NULL AND accessDate IS NOT NULL AND timestampdiff(SECOND, accessDate, now()) > ttlSec;
     del_fold_loop:
     LOOP
       DELETE FROM ldata_table WHERE uid in (
@@ -470,6 +474,9 @@ DO
         LEAVE del_fold_loop;
       END IF;
     END LOOP del_fold_loop;
-  END;
+--   END;
+END 
+|
+DELIMITER ;
 
 SET GLOBAL event_scheduler = ON;

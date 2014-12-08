@@ -91,7 +91,7 @@ public class WebDataResource implements PropFindableResource, Resource,
         MyPrincipal principal = null;
 
         for (AuthI a : authList) {
-            principal = a.checkToken(token);
+            principal = a.checkToken(user,token);
             if (principal != null) {
                 break;
             }

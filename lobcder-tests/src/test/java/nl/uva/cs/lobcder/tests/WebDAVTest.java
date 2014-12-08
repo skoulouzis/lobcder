@@ -122,7 +122,7 @@ public class WebDAVTest {
 
         Properties prop = TestSettings.getTestProperties(propBasePath);
 
-        String testURL = prop.getProperty("webdav.test.url","http://localhost:8080/lobcder/dav");
+        String testURL = prop.getProperty("webdav.test.url", "http://localhost:8080/lobcder/dav");
         assertTrue(testURL != null);
         if (!testURL.endsWith("/")) {
             testURL = testURL + "/";
@@ -1030,7 +1030,7 @@ public class WebDAVTest {
             MultiStatusResponse[] responses = multiStatus.getResponses();
 
             for (MultiStatusResponse r : responses) {
-//                System.out.println("Responce: " + r.getHref());
+//                System.out.println("Response: " + r.getHref());
                 DavPropertySet allProp = getProperties(r);
 
                 DavPropertyIterator iter = allProp.iterator();
@@ -1407,7 +1407,7 @@ public class WebDAVTest {
             MultiStatusResponse[] responses = multiStatus.getResponses();
 
             for (MultiStatusResponse r : responses) {
-//                System.out.println("Responce: " + r.getHref());
+//                System.out.println("Response: " + r.getHref());
                 DavPropertySet allProp = getProperties(r);
 
                 DavPropertyIterator iter = allProp.iterator();
@@ -1432,7 +1432,7 @@ public class WebDAVTest {
 //            responses = multiStatus.getResponses();
 //
 //            for (MultiStatusResponse r : responses) {
-//                System.out.println("Responce: " + r.getHref());
+//                System.out.println("Response: " + r.getHref());
 //                DavPropertySet allProp = getProperties(r);
 //
 //                DavPropertyIterator iter = allProp.iterator();
@@ -1536,7 +1536,7 @@ public class WebDAVTest {
             MultiStatusResponse[] responses = multiStatus.getResponses();
 
             for (MultiStatusResponse r : responses) {
-//                System.out.println("Responce: " + r.getHref());
+//                System.out.println("Response: " + r.getHref());
                 DavPropertySet allProp = getProperties(r);
 
                 DavPropertyIterator iter = allProp.iterator();
@@ -1645,7 +1645,7 @@ public class WebDAVTest {
             MultiStatusResponse[] responses = multiStatus.getResponses();
 
             for (MultiStatusResponse r : responses) {
-//                System.out.println("Responce: " + r.getHref());
+//                System.out.println("Response: " + r.getHref());
                 DavPropertySet allProp = getProperties(r);
 
                 DavPropertyIterator iter = allProp.iterator();
@@ -1675,7 +1675,7 @@ public class WebDAVTest {
             responses = multiStatus.getResponses();
 
             for (MultiStatusResponse r : responses) {
-//                System.out.println("Responce: " + r.getHref());
+//                System.out.println("Response: " + r.getHref());
                 DavPropertySet allProp = getProperties(r);
 
                 DavPropertyIterator iter = allProp.iterator();
@@ -1730,7 +1730,7 @@ public class WebDAVTest {
             MultiStatusResponse[] responses = multiStatus.getResponses();
 
             for (MultiStatusResponse r : responses) {
-//                System.out.println("Responce: " + r.getHref());
+//                System.out.println("Response: " + r.getHref());
                 DavPropertySet allProp = getProperties(r);
 
                 DavPropertyIterator iter = allProp.iterator();
@@ -1760,7 +1760,7 @@ public class WebDAVTest {
             responses = multiStatus.getResponses();
 
             for (MultiStatusResponse r : responses) {
-                System.out.println("Responce: " + r.getHref());
+                System.out.println("Response: " + r.getHref());
                 DavPropertySet allProp = getProperties(r);
 
                 DavPropertyIterator iter = allProp.iterator();
@@ -1783,11 +1783,12 @@ public class WebDAVTest {
     }
 
     @Test
-    public void testGetSetLocationPreference() throws UnsupportedEncodingException, IOException, DavException {
+    public void testGetSetLocationPreference() throws UnsupportedEncodingException, IOException, DavException, InterruptedException {
         System.out.println("testGetSetCustomComment");
         String testcol1 = root + "testResourceId/";
         String testuri1 = testcol1 + "file1";
         try {
+
 
             DeleteMethod delete = new DeleteMethod(testcol1);
             int status = client.executeMethod(delete);
@@ -1797,62 +1798,45 @@ public class WebDAVTest {
             status = client.executeMethod(mkcol);
             assertEquals(HttpStatus.SC_CREATED, status);
 
-            PutMethod put = new PutMethod(testuri1);
-            put.setRequestEntity(new StringRequestEntity("foo", "text/plain", "UTF-8"));
-            status = client.executeMethod(put);
-            assertEquals(HttpStatus.SC_CREATED, status);
-            
-            DavPropertyNameSet commentNameSet = new DavPropertyNameSet();
-            DavPropertyName dataLocationPreferenceName = DavPropertyName.create("data-location-preference", Namespace.getNamespace("custom:"));
-            commentNameSet.add(dataLocationPreferenceName);
-
-            PropFindMethod propFind = new PropFindMethod(testuri1, commentNameSet, DavConstants.DEPTH_INFINITY);
-            status = client.executeMethod(propFind);
-            assertEquals(HttpStatus.SC_MULTI_STATUS, status);
+            DavPropertyName availStorageSitesName = DavPropertyName.create("avail-storage-sites", Namespace.getNamespace("custom:"));
+            MultiStatus multiStatus = getProperty(testcol1, availStorageSitesName);
 
 
-            MultiStatus multiStatus = propFind.getResponseBodyAsMultiStatus();
             MultiStatusResponse[] responses = multiStatus.getResponses();
-
+            String availStorageSitesStr = null;
             for (MultiStatusResponse r : responses) {
-//                System.out.println("Responce: " + r.getHref());
+//                System.out.println("Response: " + r.getHref());
                 DavPropertySet allProp = getProperties(r);
-
                 DavPropertyIterator iter = allProp.iterator();
                 while (iter.hasNext()) {
                     DavProperty<?> p = iter.nextProperty();
+                    availStorageSitesStr = (String) p.getValue();
 //                    System.out.println(p.getName() + " : " + p.getValue());
-                    assertEquals(p.getName(), dataLocationPreferenceName);
+                    assertEquals(p.getName(), availStorageSitesName);
                 }
             }
 
-            DavPropertySet descriptionSet = new DavPropertySet();
-            String location = "149.156.10.138";
-            DavProperty<String> driProp = new DefaultDavProperty<String>(dataLocationPreferenceName, location);
-            descriptionSet.add(driProp);
-            PropPatchMethod proPatch = new PropPatchMethod(testuri1, descriptionSet, commentNameSet);
-            status = client.executeMethod(proPatch);
-            assertEquals(HttpStatus.SC_MULTI_STATUS, status);
+            String tmp = availStorageSitesStr.substring(1);
+            String tmp1 = tmp.substring(0, tmp.length() - 1);
+            String[] availStorageSites = tmp1.split(",");
 
+            String location = availStorageSites[0];
 
+            DavPropertyName dataLocationPreferenceName = DavPropertyName.create("data-location-preference", Namespace.getNamespace("custom:"));
+            DavProperty dataLocationPreference = new DefaultDavProperty(dataLocationPreferenceName, location);
+            setProperty(testcol1, dataLocationPreference);
 
-            propFind = new PropFindMethod(testuri1, commentNameSet, DavConstants.DEPTH_INFINITY);
-            status = client.executeMethod(propFind);
-            assertEquals(HttpStatus.SC_MULTI_STATUS, status);
-
-
-            multiStatus = propFind.getResponseBodyAsMultiStatus();
+            multiStatus = getProperty(testcol1, dataLocationPreferenceName);
             responses = multiStatus.getResponses();
-
             for (MultiStatusResponse r : responses) {
-                System.out.println("Responce: " + r.getHref());
+//                System.out.println("Response: " + r.getHref());
                 DavPropertySet allProp = getProperties(r);
 
                 DavPropertyIterator iter = allProp.iterator();
                 while (iter.hasNext()) {
                     DavProperty<?> p = iter.nextProperty();
                     assertEquals(p.getName(), dataLocationPreferenceName);
-                    System.out.println(p.getName() + " : " + p.getValue());
+//                    System.out.println(p.getName() + " : " + p.getValue());
                     assertNotNull(p.getValue());
                     if (new URL(testcol1).getPath().equals(r.getHref())) {
                         String val = p.getValue().toString();
@@ -1860,6 +1844,121 @@ public class WebDAVTest {
                     }
                 }
             }
+
+            PutMethod put = new PutMethod(testuri1);
+            put.setRequestEntity(new StringRequestEntity("foo", "text/plain", "UTF-8"));
+            status = client.executeMethod(put);
+            assertEquals(HttpStatus.SC_CREATED, status);
+
+            boolean done = false;
+            int count = 0;
+            while (!done) {
+                DavPropertyName dataDistributionName = DavPropertyName.create("data-distribution", Namespace.getNamespace("custom:"));
+                multiStatus = getProperty(testuri1, dataDistributionName);
+                responses = multiStatus.getResponses();
+                String dataDist = null;
+                for (MultiStatusResponse r : responses) {
+                    System.out.println("Response: " + r.getHref());
+                    DavPropertySet allProp = getProperties(r);
+
+                    DavPropertyIterator iter = allProp.iterator();
+
+                    while (iter.hasNext()) {
+                        DavProperty<?> p = iter.nextProperty();
+                        assertEquals(p.getName(), dataDistributionName);
+                        assertNotNull(p.getValue());
+                        dataDist = (String) p.getValue();
+                        if (dataDist.contains(location)) {
+                            done = true;
+                            assertTrue(dataDist.contains(location));
+                            break;
+                        } else {
+                            count++;
+                        }
+                        System.out.println(p.getName() + " : " + p.getValue());
+                    }
+                }
+                if (count > 100) {
+                    fail(testuri1 + " is not replicated in " + location + " it is in " + dataDist);
+                    break;
+                }
+                Thread.sleep(7000);
+            }
+
+
+            //Now test fail. Add a non existing location 
+            delete = new DeleteMethod(testuri1);
+            status = client.executeMethod(delete);
+            assertTrue("DeleteMethod status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
+
+
+            String nowhere = "Going_nowhere";
+            dataLocationPreferenceName = DavPropertyName.create("data-location-preference", Namespace.getNamespace("custom:"));
+            dataLocationPreference = new DefaultDavProperty(dataLocationPreferenceName, nowhere);
+            setProperty(testcol1, dataLocationPreference);
+
+            multiStatus = getProperty(testcol1, dataLocationPreferenceName);
+            responses = multiStatus.getResponses();
+            for (MultiStatusResponse r : responses) {
+                DavPropertySet allProp = getProperties(r);
+                DavPropertyIterator iter = allProp.iterator();
+                while (iter.hasNext()) {
+                    DavProperty<?> p = iter.nextProperty();
+                    assertEquals(p.getName(), dataLocationPreferenceName);
+                    assertNotNull(p.getValue());
+                    if (new URL(testcol1).getPath().equals(r.getHref())) {
+                        String val = p.getValue().toString();
+                        assertEquals(nowhere, val);
+                    }
+                }
+            }
+
+            put = new PutMethod(testuri1);
+            put.setRequestEntity(new StringRequestEntity("foo", "text/plain", "UTF-8"));
+            status = client.executeMethod(put);
+            assertEquals(HttpStatus.SC_CREATED, status);
+
+
+
+            done = false;
+            count = 0;
+            while (!done) {
+                DavPropertyName dataDistributionName = DavPropertyName.create("data-distribution", Namespace.getNamespace("custom:"));
+                multiStatus = getProperty(testuri1, dataDistributionName);
+                responses = multiStatus.getResponses();
+                String dataDist = null;
+                for (MultiStatusResponse r : responses) {
+                    System.out.println("Response: " + r.getHref());
+                    DavPropertySet allProp = getProperties(r);
+                    DavPropertyIterator iter = allProp.iterator();
+
+                    while (iter.hasNext()) {
+                        DavProperty<?> p = iter.nextProperty();
+                        assertEquals(p.getName(), dataDistributionName);
+                        assertNotNull(p.getValue());
+                        dataDist = (String) p.getValue();
+                        if (dataDist.contains(availStorageSites[0])) {
+                            done = true;
+                            assertTrue(dataDist.contains(availStorageSites[0]));
+                            break;
+                        } else if (availStorageSites.length > 1 && dataDist.contains(availStorageSites[1])) {
+                            done = true;
+                            assertTrue(dataDist.contains(availStorageSites[1]));
+                            break;
+                        } else {
+                            count++;
+                        }
+                        System.out.println(p.getName() + " : " + p.getValue());
+                    }
+                }
+                if (count > 100) {
+                    fail(testuri1 + " is not replicated in " + availStorageSites[0] + " or " + availStorageSites[1] + " it is in " + dataDist);
+                    break;
+                }
+                Thread.sleep(7000);
+            }
+
+
         } finally {
             DeleteMethod delete = new DeleteMethod(testcol1);
             int status = client.executeMethod(delete);
@@ -1933,37 +2032,37 @@ public class WebDAVTest {
             assertEquals(part, response);
 
 
-            start = 9;
-            end = 19;
-            len = end - start + 1;
-            get = new GetMethod(testuri1);
-            get.setRequestHeader(new Header("Range", "bytes=" + start + "-" + end));
-            client.executeMethod(get);
-            status = get.getStatusCode();
-            assertEquals(HttpStatus.SC_PARTIAL_CONTENT, status);
-            assertEquals(len, get.getResponseContentLength());
-            response = get.getResponseBodyAsString();
-            System.err.println("response:\t\t" + response);
-            part = TestSettings.TEST_DATA.substring(start, end + 1);
-            System.err.println("part:\t\t" + part);
-            assertEquals(part, response);
-
-            start = TestSettings.TEST_DATA.length() / 2;
-            end = TestSettings.TEST_DATA.length() - 3;
-            len = end - start + 1;
-            get = new GetMethod(testuri1);
-            get.setRequestHeader(new Header("Range", "bytes=" + start + "-" + end));
-            client.executeMethod(get);
-            status = get.getStatusCode();
-            assertEquals(HttpStatus.SC_PARTIAL_CONTENT, status);
-            assertEquals(len, get.getResponseContentLength());
-
-            response = get.getResponseBodyAsString();
-            System.err.println("response:\t\t" + response);
-
-            part = TestSettings.TEST_DATA.substring(start, end + 1);
-            System.err.println("part:\t\t" + part);
-            assertEquals(part, response);
+//            start = 9;
+//            end = 19;
+//            len = end - start + 1;
+//            get = new GetMethod(testuri1);
+//            get.setRequestHeader(new Header("Range", "bytes=" + start + "-" + end));
+//            client.executeMethod(get);
+//            status = get.getStatusCode();
+//            assertEquals(HttpStatus.SC_PARTIAL_CONTENT, status);
+//            assertEquals(len, get.getResponseContentLength());
+//            response = get.getResponseBodyAsString();
+//            System.err.println("response:\t\t" + response);
+//            part = TestSettings.TEST_DATA.substring(start, end + 1);
+//            System.err.println("part:\t\t" + part);
+//            assertEquals(part, response);
+//
+//            start = TestSettings.TEST_DATA.length() / 2;
+//            end = TestSettings.TEST_DATA.length() - 3;
+//            len = end - start + 1;
+//            get = new GetMethod(testuri1);
+//            get.setRequestHeader(new Header("Range", "bytes=" + start + "-" + end));
+//            client.executeMethod(get);
+//            status = get.getStatusCode();
+//            assertEquals(HttpStatus.SC_PARTIAL_CONTENT, status);
+//            assertEquals(len, get.getResponseContentLength());
+//
+//            response = get.getResponseBodyAsString();
+//            System.err.println("response:\t\t" + response);
+//
+//            part = TestSettings.TEST_DATA.substring(start, end + 1);
+//            System.err.println("part:\t\t" + part);
+//            assertEquals(part, response);
 
 
 
@@ -2302,6 +2401,25 @@ public class WebDAVTest {
 //        // exhausted reader without reaching end of headers
 //        fail("Unexpected end of data");
 //    }
+
+    private MultiStatus getProperty(String resource, DavPropertyName propertyName) throws IOException, DavException {
+        DavPropertyNameSet commentNameSet1 = new DavPropertyNameSet();
+        commentNameSet1.add(propertyName);
+
+        PropFindMethod propFind = new PropFindMethod(resource, commentNameSet1, DavConstants.DEPTH_INFINITY);
+        int status = client.executeMethod(propFind);
+        assertEquals(HttpStatus.SC_MULTI_STATUS, status);
+        return propFind.getResponseBodyAsMultiStatus();
+    }
+
+    private void setProperty(String resource, DavProperty property) throws IOException {
+        DavPropertyNameSet commentNameSet = new DavPropertyNameSet();
+        DavPropertySet descriptionSet = new DavPropertySet();
+        descriptionSet.add(property);
+        PropPatchMethod proPatch = new PropPatchMethod(resource, descriptionSet, commentNameSet);
+        int status = client.executeMethod(proPatch);
+        assertEquals(HttpStatus.SC_MULTI_STATUS, status);
+    }
 
     private static class GetRunnable implements Runnable {
 

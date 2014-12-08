@@ -10,6 +10,7 @@ import javax.sql.DataSource;
 import java.io.IOException;
 import java.util.TimerTask;
 import java.util.logging.Level;
+import javax.naming.NamingException;
 import lombok.extern.java.Log;
 
 /**
@@ -26,7 +27,7 @@ class SweeprsTimerTask extends TimerTask {
     private WP4Sweep wp4Sweep = null;
     private SDNSweep sdnSweep = null;
 
-    SweeprsTimerTask(DataSource datasource) throws IOException {
+    SweeprsTimerTask(DataSource datasource) throws IOException, NamingException {
         deleteSweep = new DeleteSweep(datasource);
         replicateSweep = new ReplicateSweep(datasource);
         useRepo = PropertiesHelper.useMetadataRepository();

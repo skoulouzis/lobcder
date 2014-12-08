@@ -32,7 +32,7 @@ public class AuthWorker implements AuthI {
     }
 
     @Override
-    public MyPrincipal checkToken(String token) {
+    public MyPrincipal checkToken(String uname,String token) {
         try {
             MyPrincipal principal = null;
             if (theToken == null) {
@@ -42,7 +42,7 @@ public class AuthWorker implements AuthI {
             if (theToken.equals(token)) {
                 HashSet<String> roles = new HashSet<>();
                 roles.add("admin");
-                principal = new MyPrincipal("worker-", roles, token);
+                principal = new MyPrincipal(uname, roles, token);
             }
             return principal;
         } catch (Exception ex) {
