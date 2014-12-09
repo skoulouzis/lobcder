@@ -21,7 +21,7 @@ OPTIONS:
 	Available implmentations: sftp://host:PORT/, swift(ssl)://host:PORT/, webdav(ssl)://host:PORT/, file://host:PORT/, 
    -c	Path where tomcat is. The equivelat of \$CATALINA_HOME 
 
-Example: /deploy.sh  -n lobcderDB -p lobPass -u root -a mysqlPass -f storageFile -l admin -s admin -c ./apache-tomcat-6.0.36/
+Example: ./deploy.sh  -n lobcderDB -p lobPass -u root -a mysqlPass -f storageFile -l admin -s admin -c ./apache-tomcat-6.0.36/
 EOF
 }
 
@@ -118,3 +118,7 @@ INSERT INTO $dbName.auth_roles_tables(roleName, unameRef) VALUES  ('admin',     
 
 
 cp -r lobcder/lobcder-master/target/lobcder $catalinaLocation/webapps/
+
+
+echo "-------------------------------------------------------"
+echo "If everything went OK look at $catalinaLocation/webapps/lobcder/WEB-INF/classes/lobcder.properties" 
