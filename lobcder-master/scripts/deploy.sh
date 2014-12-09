@@ -6,7 +6,8 @@ usage()
 cat << EOF
 usage: $0 options
 
-This script run the test1 or test2 over a machine.
+This script deploys lobcder. It first creates a data base and the necessary tables, 
+the clones the project compiles it and copies it to tomcat's webapps
 
 OPTIONS:
    -h	Show this message
@@ -19,6 +20,8 @@ OPTIONS:
    -f   Storage site description file. Format: <URI> <USERNAME> <PASSWORD>. 
 	Available implmentations: sftp://host:PORT/, swift(ssl)://host:PORT/, webdav(ssl)://host:PORT/, file://host:PORT/, 
    -c	Path where tomcat is. The equivelat of \$CATALINA_HOME 
+
+Example: /deploy.sh  -n lobcderDB -p lobPass -u root -a mysqlPass -f storageFile -l admin -s admin -c ./apache-tomcat-6.0.36/
 EOF
 }
 
