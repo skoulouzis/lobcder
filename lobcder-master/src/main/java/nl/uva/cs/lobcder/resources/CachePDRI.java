@@ -28,21 +28,20 @@ import nl.uva.vlet.vfs.VFile;
 public class CachePDRI implements PDRI {
 
     private final static CatalogueHelper ch = new CatalogueHelper();
-    private final static String baseLocation;
-
-    static {
-        baseLocation = "/tmp/LOBCDER-REPLICA-vTEST/";
-    }
-    
+    private static String baseLocation;
+//    static {
+//        baseLocation = "/tmp/LOBCDER-REPLICA-vTEST/";
+//    }
     final private String file_name;
     final private Long ssid;
     private final File file;
     private BigInteger key;
     private boolean encrypt;
 
-    public CachePDRI(String file_name) {
+    public CachePDRI(String file_name) throws IOException {
         this.ssid = Long.valueOf(Constants.CACHE_STORAGE_SITE_ID);
         this.file_name = file_name;
+        baseLocation = "/tmp/" + nl.uva.cs.lobcder.util.PropertiesHelper.getBackendWorkingFolderName();
         file = new File(baseLocation + file_name);
     }
 
@@ -201,6 +200,6 @@ public class CachePDRI implements PDRI {
 
     @Override
     public boolean exists(String fileName) throws IOException {
-        return new File(new File(this.file_name).getParentFile().getAbsoluteFile()+"/"+fileName).exists();
+        return new File(new File(this.file_name).getParentFile().getAbsoluteFile() + "/" + fileName).exists();
     }
 }

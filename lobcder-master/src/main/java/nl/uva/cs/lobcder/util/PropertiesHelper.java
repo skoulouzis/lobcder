@@ -259,4 +259,9 @@ public class PropertiesHelper {
     public static PREDICTION_TYPE getPredictionType() throws IOException {
         return PREDICTION_TYPE.valueOf(getProperties().getProperty("predictor.type", "state"));
     }
+    
+    
+        public static String getBackendWorkingFolderName() throws IOException {
+        return getProperties().getProperty("backend.working.folder.name", "LOBCDER-REPLICA-vTEST");
+    }
 }
