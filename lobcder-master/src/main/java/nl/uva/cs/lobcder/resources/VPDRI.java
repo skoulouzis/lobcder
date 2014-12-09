@@ -56,7 +56,7 @@ public class VPDRI implements PDRI {
     private final String username;
     private final String password;
     private final Long storageSiteId;
-    private final String baseDir = "LOBCDER-REPLICA-vTEST";//"LOBCDER-REPLICA-v2.0";
+    private String baseDir; //= "LOBCDER-REPLICA-vTEST";//"LOBCDER-REPLICA-v2.0";
     private final String fileName;
     private int reconnectAttemts = 0;
     private BigInteger keyInt;
@@ -74,7 +74,7 @@ public class VPDRI implements PDRI {
         try {
             this.fileName = fileName;
             this.resourceUrl = resourceUrl.replaceAll(" ", "");
-
+            baseDir = nl.uva.cs.lobcder.util.PropertiesHelper.getBackendWorkingFolderName();
             String encoded = VRL.encode(fileName);
             vrl = new VRL(this.resourceUrl).appendPath(baseDir).append(encoded);
 //            vrl = new VRL(resourceUrl).appendPath(baseDir).append(URLEncoder.encode(fileName, "UTF-8").replace("+", "%20"));

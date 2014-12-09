@@ -135,7 +135,7 @@ public class DBMapPredictor extends MyDataSource implements Predictor {
                 }
             } else {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(
-                        "UPDATE lobcderDB2.occurrences_table SET `occurrences` = ? WHERE uid = ?",
+                        "UPDATE occurrences_table SET `occurrences` = ? WHERE uid = ?",
                         Statement.RETURN_GENERATED_KEYS)) {
                     preparedStatement.setInt(1, occurrences);
                     preparedStatement.setLong(2, uid);

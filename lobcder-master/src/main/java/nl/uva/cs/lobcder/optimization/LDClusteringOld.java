@@ -99,11 +99,13 @@ public class LDClusteringOld extends MyDataSource implements Runnable {
 //    }
     public static void main(String args[]) throws Exception {
         BasicDataSource dataSource = new BasicDataSource();
-
+        String dbName = "";
+        String dbUname = "";
+        String dbPasswd = "";
         dataSource.setDriverClassName("com.mysql.jdbc.Driver");
-        dataSource.setUsername("lobcder");
-        dataSource.setPassword("RoomC3156");
-        String url = "jdbc:mysql://localhost:3306/lobcderDB2?zeroDateTimeBehavior=convertToNull";
+        dataSource.setUsername(dbUname);
+        dataSource.setPassword(dbPasswd);
+        String url = "jdbc:mysql://localhost:3306/" + dbName;
         dataSource.setUrl(url);
         dataSource.setMaxActive(10);
         dataSource.setMaxIdle(5);

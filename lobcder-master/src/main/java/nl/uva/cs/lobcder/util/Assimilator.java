@@ -33,11 +33,12 @@ import java.util.logging.Logger;
  */
 public class Assimilator {
 
+    static final String dbName = "";
     static final String JDBC_DRIVER = "com.mysql.jdbc.Driver";
-    static final String DB_URL = "jdbc:mysql://localhost/lobcderDB2";
+    static final String DB_URL = "jdbc:mysql://localhost/"+dbName;
     //  Database credentials
-    static final String USER = "lobcder";
-    static final String PASS = "RoomC3156";
+    static final String USER = "";
+    static final String PASS = "";
     private final Connection conn;
     private static String importingOwner;
 
