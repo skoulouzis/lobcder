@@ -123,14 +123,20 @@ public class JDBCatalogue extends MyDataSource {
 //    }
     public LogicalData registerDirLogicalData(LogicalData entry, @Nonnull Connection connection) throws SQLException {
         try (PreparedStatement preparedStatement = connection.prepareStatement(
-                "INSERT INTO ldata_table(parentRef, ownerId, datatype, ldName, createDate, modifiedDate)"
-                + " VALUES (?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS)) {
+                "INSERT INTO ldata_table(parentRef, ownerId, datatype, ldName, createDate, modifiedDate, accessDate, ttlSec)"
+                + " VALUES (?, ?, ?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS)) {
             preparedStatement.setLong(1, entry.getParentRef());
             preparedStatement.setString(2, entry.getOwner());
             preparedStatement.setString(3, Constants.LOGICAL_FOLDER);
             preparedStatement.setString(4, entry.getName());
             preparedStatement.setTimestamp(5, new Timestamp(entry.getCreateDate()));
             preparedStatement.setTimestamp(6, new Timestamp(entry.getModifiedDate()));
+            preparedStatement.setTimestamp(7, new Timestamp(entry.getLastAccessDate()));
+            if(entry.getTtlSec() == null)
+                preparedStatement.setNull(8, Types.INTEGER);
+            else
+                preparedStatement.setInt(8, entry.getTtlSec());
+
             preparedStatement.executeUpdate();
             ResultSet rs = preparedStatement.getGeneratedKeys();
             rs.next();
@@ -412,7 +418,7 @@ public class JDBCatalogue extends MyDataSource {
         try (PreparedStatement preparedStatement = connection.prepareStatement(
                 "SELECT uid, ownerId, datatype, createDate, modifiedDate, ldLength, "
                 + "contentTypesStr, pdriGroupRef, isSupervised, checksum, lastValidationDate, "
-                + "lockTokenID, lockScope, lockType, lockedByUser, lockDepth, lockTimeout, "
+                + "lockTokenId, lockScope, lockType, lockedByUser, lockDepth, lockTimeout, "
                 + "description, locationPreference, accessDate, ttlSec "
                 + "FROM ldata_table WHERE ldata_table.parentRef = " + parentRef + " AND ldata_table.ldName like '" + name + "'")) {
 //            preparedStatement.setLong(1, parentRef);
@@ -441,7 +447,8 @@ public class JDBCatalogue extends MyDataSource {
                 res.setLockTimeout(rs.getLong(17));
                 res.setDescription(rs.getString(18));
                 res.setDataLocationPreference(rs.getString(19));
-                res.setLastAccessDate(rs.getTimestamp(20) != null ? rs.getTimestamp(20).getTime() : null);
+                Timestamp ts = rs.getTimestamp(20);
+                res.setLastAccessDate(ts != null ? ts.getTime() : null);
                 int ttl = rs.getInt(21);
                 res.setTtlSec(rs.wasNull() ? null : ttl);
                 return res;
@@ -497,7 +504,9 @@ public class JDBCatalogue extends MyDataSource {
                             res.setDescription(rs.getString(18));
                             res.setDataLocationPreference(rs.getString(19));
                             res.setStatus(rs.getString(20));
-                            res.setLastAccessDate(rs.getTimestamp(21) != null ? rs.getTimestamp(21).getTime() : null);
+                            Timestamp ts =  rs.getTimestamp(21);
+                            //Object ts = rs.getObject(21);
+                            res.setLastAccessDate(ts != null ? ts.getTime() : null);
                             int ttl = rs.getInt(22);
                             res.setTtlSec(rs.wasNull() ? null : ttl);
                             return res;

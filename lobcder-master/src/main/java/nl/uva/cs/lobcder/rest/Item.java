@@ -8,15 +8,16 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.logging.Level;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
+import javax.ws.rs.core.*;
+
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.auth.MyPrincipal;
 import nl.uva.cs.lobcder.auth.Permissions;
@@ -140,5 +141,36 @@ public class Item extends CatalogueHelper {
     @Path("permissions/")
     public PermissionsResource getPermissions() {
         return new PermissionsResource(getCatalogue(), request);
+    }
+
+    @Path("ttl/{uid}/{ttl}")
+    @PUT
+    public void setTTL(@PathParam("uid") Long uid, @PathParam("ttl")  Long ttl){
+        MyPrincipal mp = (MyPrincipal) request.getAttribute("myprincipal");
+        try (Connection cn = getCatalogue().getConnection()) {
+            try (PreparedStatement ps = cn.prepareStatement("SELECT uid, ownerId, ttlSec FROM ldata_table WHERE uid=?", ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE)) {
+                ps.setLong(1, uid);
+                ResultSet rs = ps.executeQuery();
+                if (!rs.next()) {
+                    throw new WebApplicationException(Response.Status.NOT_FOUND);
+                } else {
+                    String owner = rs.getString(2);
+                    Permissions p = getCatalogue().getPermissions(uid, owner, cn);
+                    if (!mp.canWrite(p)) {
+                        throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+                    }
+                    rs.updateLong(3, ttl);
+                    rs.updateRow();
+                    cn.commit();
+                }
+            } catch (SQLException ex) {
+                log.log(Level.SEVERE, null, ex);
+                cn.rollback();
+                throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
+            }
+        } catch (SQLException ex) {
+            log.log(Level.SEVERE, null, ex);
+            throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
+        }
     }
 }
