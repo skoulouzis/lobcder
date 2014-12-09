@@ -378,16 +378,18 @@ public class JDBCatalogue extends MyDataSource {
     }
 
     public Long getLogicalDataUidByPath(Path logicalResourceName, @Nonnull Connection connection) throws SQLException {
-//        try (PreparedStatement preparedStatement = connection.prepareStatement(
-//                "SELECT uid FROM ldata_table WHERE ldata_table.parentRef = ? AND ldata_table.ldName = ?")) {
-        long parent = 0;
-
-        for (String p : logicalResourceName.getParts()) {
-
-            try (PreparedStatement preparedStatement = connection.prepareStatement(
-                    "SELECT uid FROM ldata_table WHERE ldata_table.parentRef = " + parent + " AND ldata_table.ldName like '" + p + "'")) {
-//                preparedStatement.setLong(1, parent);
-//                preparedStatement.setString(2, p);
+        Long res = null;
+        try (PreparedStatement preparedStatement = connection.prepareStatement(
+                "SELECT uid FROM ldata_table WHERE ldata_table.parentRef = ? AND ldata_table.ldName = ?")) {
+            long parent = 1;
+            String parts[] = logicalResourceName.getParts();
+            if (parts.length == 0) {
+                parts = new String[]{""};
+            }
+            for (int i = 0; i != parts.length; ++i) {
+                String p = parts[i];
+                preparedStatement.setLong(1, parent);
+                preparedStatement.setString(2, p);
                 ResultSet rs = preparedStatement.executeQuery();
                 if (rs.next()) {
                     parent = rs.getLong(1);
@@ -397,7 +399,6 @@ public class JDBCatalogue extends MyDataSource {
             }
             return parent;
         }
-        return null;
     }
 
     public Long getLogicalDataUidByParentRefAndName(Long parentRef, String name, @Nonnull Connection connection) throws SQLException {

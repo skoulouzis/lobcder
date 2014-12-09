@@ -259,4 +259,12 @@ public class PropertiesHelper {
     public static PREDICTION_TYPE getPredictionType() throws IOException {
         return PREDICTION_TYPE.valueOf(getProperties().getProperty("predictor.type", "state"));
     }
+
+    public static Long getTmpDirUid() {
+        Long result = null;
+        try {
+            result = Long.valueOf(getProperties().getProperty("tmpdiruid", "14"));
+        } catch (Throwable th){}
+        return result;
+    }
 }
