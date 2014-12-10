@@ -3,7 +3,7 @@ package nl.uva.cs.lobcder.frontend;
 import io.milton.servlet.DefaultMiltonConfigurator;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.auth.AuthI;
-import nl.uva.cs.lobcder.auth.AuthWorker;
+import nl.uva.cs.lobcder.auth.AuthLobcderComponents;
 import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
 import nl.uva.cs.lobcder.util.PropertiesHelper;
 import nl.uva.cs.lobcder.util.SingletonesHelper;
@@ -19,7 +19,7 @@ public class MyMiltonConfigurator extends DefaultMiltonConfigurator {
 
     private JDBCatalogue catalogue;
     private WebDataResourceFactory webDataResourceFactory;
-    private AuthWorker workerAuth;
+    private AuthLobcderComponents workerAuth;
 
 //    public MyMiltonConfigurator() {
     //        super();
@@ -53,10 +53,10 @@ public class MyMiltonConfigurator extends DefaultMiltonConfigurator {
             catalogue = (JDBCatalogue) envContext.lookup("bean/JDBCatalog");
             catalogue.startSweep();
 
-//            workerAuth = (AuthWorker) envContext.lookup("bean/authWorker");
+//            workerAuth = (AuthLobcderComponents) envContext.lookup("bean/authWorker");
             List<String> workers = PropertiesHelper.getWorkers();
             if (workers != null && workers.size() > 0) {
-                workerAuth = new AuthWorker();
+                workerAuth = new AuthLobcderComponents();
             }
 
 

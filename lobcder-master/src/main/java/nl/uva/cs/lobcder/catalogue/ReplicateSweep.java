@@ -38,7 +38,7 @@ class ReplicateSweep implements Runnable {
     private Map<String, StorageSite> availableStorage = null;
     private Iterator<StorageSite> it = null;
 
-    private Map<String, StorageSite> findBestSites() {
+    private Map<String, StorageSite> findBestSites(Connection connection) throws SQLException {
         switch (replicatePolicy) {
             case firstSite:
                 Map<String, StorageSite> sites = new HashMap<>();
@@ -50,6 +50,8 @@ class ReplicateSweep implements Runnable {
                 return sites;
             case aggressive:
                 return availableStorage;
+            case fastest:
+                return getFastestSites(connection,1);
             default:
                 sites = new HashMap<>();
                 if (it == null || !it.hasNext()) {
@@ -114,20 +116,38 @@ class ReplicateSweep implements Runnable {
 
     }
 
+    private Map<String, StorageSite> getFastestSites(Connection connection, int i) throws SQLException {
+         try (Statement s = connection.createStatement()) {
+            ResultSet rs = s.executeQuery("SELECT storageSiteId, resourceURI, "
+                    + "currentNum, currentSize, quotaNum, quotaSize, username, "
+                    + "password, encrypt FROM storage_site_table JOIN credential_table ON "
+                    + "credentialRef = credintialId WHERE isCache != TRUE");
+            Map<String, StorageSite> res = new HashMap<>();
+            while (rs.next()) {
+                Credential c = new Credential();
+                c.setStorageSiteUsername(rs.getString(7));
+                c.setStorageSitePassword(rs.getString(8));
+                StorageSite ss = new StorageSite();
+                ss.setStorageSiteId(rs.getLong(1));
+                ss.setCredential(c);
+                String uri = rs.getString(2);
+                ss.setResourceURI(uri);
+                ss.setCurrentNum(rs.getLong(3));
+                ss.setCurrentSize(rs.getLong(4));
+                ss.setQuotaNum(rs.getLong(5));
+                ss.setQuotaSize(rs.getLong(6));
+                ss.setEncrypt(rs.getBoolean(9));
+                res.put(uri, ss);
+            }
+            return res;
+        }
+    }
+
     class CacheDescr {
 
         Long pdriId;
         String name;
         Long pdriGroupRef;
-    }
-
-    private void onCacheReplicate(CacheDescr cd, CachePDRI cpdri, Connection connection) throws SQLException, IOException {
-        try (PreparedStatement ps = connection.prepareStatement("DELETE FROM pdri_table WHERE pdriId = ?")) {
-            cpdri.delete();
-            ps.setLong(1, cd.pdriId);
-            ps.executeUpdate();
-            // PDRIDescrCache.
-        }
     }
 
     private void onCacheReplicate(PDRIDescr cd, PDRI cpdri, Connection connection) throws SQLException, IOException {
@@ -206,7 +226,7 @@ class ReplicateSweep implements Runnable {
                             + "(fileName, storageSiteRef, pdriGroupRef,isEncrypted, encryptionKey) VALUES(?, ?, ?, ?, ?)")) {
                         sourcePDRI = new PDRIFactory().createInstance(sourceDescr, false);
                         //                        StorageSite ss = findBestSite();
-                        Map<String, StorageSite> ss = findBestSites();
+                        Map<String, StorageSite> ss = findBestSites(connection);
                         boolean failed = false;
                         //Get the prefered store location for file
                         String loclPrefStr = locationPerMap.get(sourceDescr.getPdriGroupRef());

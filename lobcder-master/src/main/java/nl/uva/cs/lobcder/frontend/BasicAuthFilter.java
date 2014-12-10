@@ -10,11 +10,9 @@ import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.List;
 import java.util.logging.Level;
-import java.util.logging.Logger;
+import nl.uva.cs.lobcder.resources.VPDRI;
 
 /**
  * A very simple Servlet Filter for HTTP Basic Auth.
@@ -26,7 +24,7 @@ public class BasicAuthFilter implements Filter {
 
     private String _realm;
     private List<AuthI> authList;
-    private AuthWorker authWorker;
+    private AuthLobcderComponents authWorker;
 
     @Override
     public void destroy() {
@@ -41,10 +39,10 @@ public class BasicAuthFilter implements Filter {
         final HttpServletResponse httpResponse = (HttpServletResponse) response;
 
         final String autheader = httpRequest.getHeader("Authorization");
-        
-        
+
+
 //        log.log(Level.INFO, "Auth for rest. autheader: "+autheader);
-        
+
         if (autheader != null) {
 
             final int index = autheader.indexOf(' ');
@@ -90,19 +88,27 @@ public class BasicAuthFilter implements Filter {
 //                        break;
 //                    }
 //                }
-                if (PropertiesHelper.doRedirectGets() && workers != null
+                if (uname.equals(VPDRI.class.getName()) && request.getRemoteHost().equals("localhost") || request.getRemoteHost().equals("127.0.0.1")) {
+                    for (AuthI a : authList) {
+                        if (a instanceof AuthLobcderComponents) {
+                            authWorker = (AuthLobcderComponents) a;
+                            break;
+                        }
+                    }
+                    principal = authWorker.checkToken(uname, token);
+                } else if (PropertiesHelper.doRedirectGets() && workers != null
                         && workers.size() > 0 && uname.startsWith("worker-")) {
                     if (authWorker == null) {
                         for (AuthI a : authList) {
                             log.log(Level.INFO, "Init AuthWorker");
-                            if (a instanceof AuthWorker) {
-                                authWorker = (AuthWorker) a;
+                            if (a instanceof AuthLobcderComponents) {
+                                authWorker = (AuthLobcderComponents) a;
                                 break;
                             }
                         }
                     }
-                    principal = authWorker.checkToken(uname,token);
-                    
+                    principal = authWorker.checkToken(uname, token);
+
 //                    for (String s : workers) {
 //                        try {
 //                            String workerHost = new URI(s).getHost();
@@ -125,14 +131,14 @@ public class BasicAuthFilter implements Filter {
 //                    }
                 } else {
                     for (AuthI a : authList) {
-                        if (a instanceof AuthWorker) {
+                        if (a instanceof AuthLobcderComponents) {
                             continue;
                         }
 //                        if (!PropertiesHelper.doRemoteAuth()
 //                                && a instanceof AuthTicket) {
 //                            continue;
 //                        }
-                        principal = a.checkToken(uname,token);
+                        principal = a.checkToken(uname, token);
                         if (principal != null) {
                             break;
                         }
@@ -189,6 +195,6 @@ public class BasicAuthFilter implements Filter {
     public void init(final FilterConfig config) throws ServletException {
         _realm = "SECRET";
         authList = SingletonesHelper.getInstance().getAuth();
-        authList.add(new AuthWorker());
+        authList.add(new AuthLobcderComponents());
     }
 }

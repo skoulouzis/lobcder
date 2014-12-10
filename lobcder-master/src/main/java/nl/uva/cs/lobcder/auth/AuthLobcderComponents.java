@@ -16,7 +16,7 @@ import nl.uva.cs.lobcder.util.PropertiesHelper;
  * @author S. Koulouzis
  */
 @Log
-public class AuthWorker implements AuthI {
+public class AuthLobcderComponents implements AuthI {
 
     private static String theToken;
 
@@ -24,10 +24,10 @@ public class AuthWorker implements AuthI {
 //    private static final List<String> temporarryTokens = new ArrayList<>();
     static {
         try {
-//            temporarryTokens.add(PropertiesHelper.getWorkerToken());
-            theToken = PropertiesHelper.getWorkerToken();
+//            temporarryTokens.add(PropertiesHelper.getLobComponentToken());
+            theToken = PropertiesHelper.getLobComponentToken();
         } catch (IOException ex) {
-            Logger.getLogger(AuthWorker.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AuthLobcderComponents.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -36,9 +36,9 @@ public class AuthWorker implements AuthI {
         try {
             MyPrincipal principal = null;
             if (theToken == null) {
-                theToken = PropertiesHelper.getWorkerToken();
+                theToken = PropertiesHelper.getLobComponentToken();
             }
-
+            
             if (theToken.equals(token)) {
                 HashSet<String> roles = new HashSet<>();
                 roles.add("admin");
@@ -46,7 +46,7 @@ public class AuthWorker implements AuthI {
             }
             return principal;
         } catch (Exception ex) {
-            Logger.getLogger(AuthWorker.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AuthLobcderComponents.class.getName()).log(Level.SEVERE, null, ex);
         }
         return null;
     }

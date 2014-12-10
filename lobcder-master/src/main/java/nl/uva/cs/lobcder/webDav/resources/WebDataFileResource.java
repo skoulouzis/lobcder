@@ -19,7 +19,7 @@ import io.milton.resource.CollectionResource;
 import io.milton.resource.FileResource;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.auth.AuthI;
-import nl.uva.cs.lobcder.auth.AuthWorker;
+import nl.uva.cs.lobcder.auth.AuthLobcderComponents;
 import nl.uva.cs.lobcder.auth.Permissions;
 import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
 import nl.uva.cs.lobcder.optimization.SDNControllerClient;
@@ -563,7 +563,7 @@ public class WebDataFileResource extends WebDataResource implements
             String worker = workers.get(workerIndex++);
             String w = worker + "/" + getLogicalData().getUid();
             String token = UUID.randomUUID().toString();
-            AuthWorker.setTicket(worker, token);
+            AuthLobcderComponents.setTicket(worker, token);
             return w + "/" + token;
         } else {
             return null;
@@ -652,7 +652,7 @@ public class WebDataFileResource extends WebDataResource implements
         String worker = workersMap.get(workerIP);
         String w = worker + "/" + getLogicalData().getUid();
         String token = UUID.randomUUID().toString();
-        AuthWorker.setTicket(worker, token);
+        AuthLobcderComponents.setTicket(worker, token);
 //        w = "http://localhost:8080/lobcder-worker/"+getLogicalData().getUid();
         return w + "/" + token;
     }
@@ -665,7 +665,7 @@ public class WebDataFileResource extends WebDataResource implements
         String worker = workers.get(workerIndex++);
         String w = worker + "/" + getLogicalData().getUid();
         String token = UUID.randomUUID().toString();
-        AuthWorker.setTicket(worker, token);
+        AuthLobcderComponents.setTicket(worker, token);
         return w + "/" + token;
     }
 
@@ -675,7 +675,7 @@ public class WebDataFileResource extends WebDataResource implements
         String worker = workers.get(randomIndex);
         String w = worker + "/" + getLogicalData().getUid();
         String token = UUID.randomUUID().toString();
-        AuthWorker.setTicket(worker, token);
+        AuthLobcderComponents.setTicket(worker, token);
         return w + "/" + token;
     }
 }

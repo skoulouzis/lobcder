@@ -132,10 +132,11 @@ public class JDBCatalogue extends MyDataSource {
             preparedStatement.setTimestamp(5, new Timestamp(entry.getCreateDate()));
             preparedStatement.setTimestamp(6, new Timestamp(entry.getModifiedDate()));
             preparedStatement.setTimestamp(7, new Timestamp(entry.getLastAccessDate()));
-            if(entry.getTtlSec() == null)
+            if (entry.getTtlSec() == null) {
                 preparedStatement.setNull(8, Types.INTEGER);
-            else
+            } else {
                 preparedStatement.setInt(8, entry.getTtlSec());
+            }
 
             preparedStatement.executeUpdate();
             ResultSet rs = preparedStatement.getGeneratedKeys();
@@ -181,10 +182,11 @@ public class JDBCatalogue extends MyDataSource {
             preparedStatement.setString(19, entry.getDataLocationPreference());
             preparedStatement.setString(20, entry.getName());
             preparedStatement.setTimestamp(21, new Timestamp(entry.getLastAccessDate()));
-            if(entry.getTtlSec() == null)
+            if (entry.getTtlSec() == null) {
                 preparedStatement.setNull(22, Types.INTEGER);
-            else
+            } else {
                 preparedStatement.setInt(22, entry.getTtlSec());
+            }
             preparedStatement.executeUpdate();
             ResultSet rs = preparedStatement.getGeneratedKeys();
             rs.next();
@@ -208,14 +210,16 @@ public class JDBCatalogue extends MyDataSource {
             ps.setLong(2, entry.getLength());
             ps.setString(3, entry.getContentTypesAsString());
             ps.setLong(4, entry.getPdriGroupId());
-            if(entry.getLastAccessDate() == null)
+            if (entry.getLastAccessDate() == null) {
                 ps.setNull(5, Types.TIMESTAMP);
-            else
+            } else {
                 ps.setTimestamp(5, new Timestamp(entry.getLastAccessDate()));
-            if(entry.getTtlSec() == null)
+            }
+            if (entry.getTtlSec() == null) {
                 ps.setNull(6, Types.INTEGER);
-            else
+            } else {
                 ps.setInt(6, entry.getTtlSec());
+            }
             ps.setLong(7, entry.getUid());
             ps.executeUpdate();
             putToLDataCache(entry, null);
@@ -474,10 +478,10 @@ public class JDBCatalogue extends MyDataSource {
                 if (i == (parts.length - 1)) {
                     try (PreparedStatement preparedStatement1 = connection.prepareStatement(
                             "SELECT uid, ownerId, datatype, createDate, modifiedDate, ldLength, "
-                                    + "contentTypesStr, pdriGroupRef, isSupervised, checksum, lastValidationDate, "
-                                    + "lockTokenId, lockScope, lockType, lockedByUser, lockDepth, lockTimeout, "
-                                    + "description, locationPreference, status, accessDate, ttlSec "
-                                    + "FROM ldata_table WHERE ldata_table.parentRef = ? AND ldata_table.ldName = ?")) {
+                            + "contentTypesStr, pdriGroupRef, isSupervised, checksum, lastValidationDate, "
+                            + "lockTokenId, lockScope, lockType, lockedByUser, lockDepth, lockTimeout, "
+                            + "description, locationPreference, status, accessDate, ttlSec "
+                            + "FROM ldata_table WHERE ldata_table.parentRef = ? AND ldata_table.ldName = ?")) {
                         preparedStatement1.setLong(1, parent);
                         preparedStatement1.setString(2, p);
                         ResultSet rs = preparedStatement1.executeQuery();
@@ -505,7 +509,7 @@ public class JDBCatalogue extends MyDataSource {
                             res.setDescription(rs.getString(18));
                             res.setDataLocationPreference(rs.getString(19));
                             res.setStatus(rs.getString(20));
-                            Timestamp ts =  rs.getTimestamp(21);
+                            Timestamp ts = rs.getTimestamp(21);
                             //Object ts = rs.getObject(21);
                             res.setLastAccessDate(ts != null ? ts.getTime() : null);
                             int ttl = rs.getInt(22);
@@ -1549,8 +1553,12 @@ public class JDBCatalogue extends MyDataSource {
 
             if (id != -1) {
                 averageSpeed = (averageSpeed + stats.getSpeed()) / 2.0;
-                maxSpeed = ((stats.getSpeed() > maxSpeed) ? stats.getSpeed() : maxSpeed);
-                minSpeed = ((stats.getSpeed() < minSpeed) ? stats.getSpeed() : minSpeed);
+                if (stats.getSpeed() > maxSpeed) {
+                    maxSpeed = stats.getSpeed();
+                }
+                if (stats.getSpeed() < minSpeed) {
+                    minSpeed = stats.getSpeed();
+                }
                 try (PreparedStatement ps2 = connection.prepareStatement("UPDATE speed_table SET `averageSpeed` = ?, `minSpeed` = ?, `maxSpeed` = ? WHERE id = ?")) {
                     ps2.setInt(1, id);
                     ps2.setDouble(2, averageSpeed);
@@ -1647,9 +1655,9 @@ public class JDBCatalogue extends MyDataSource {
         }
     }
 
-    public void updateAccessTime(@Nonnull Long uid)  throws SQLException {
-        try (Connection connection = getConnection()){
-            try(PreparedStatement ps = connection.prepareStatement("UPDATE ldata_table SET accessDate = ? WHERE uid = ?")) {
+    public void updateAccessTime(@Nonnull Long uid) throws SQLException {
+        try (Connection connection = getConnection()) {
+            try (PreparedStatement ps = connection.prepareStatement("UPDATE ldata_table SET accessDate = ? WHERE uid = ?")) {
                 ps.setTimestamp(1, new Timestamp(System.currentTimeMillis()));
                 ps.setLong(2, uid);
                 ps.executeUpdate();
