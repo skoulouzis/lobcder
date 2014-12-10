@@ -268,7 +268,8 @@ public class PropertiesHelper {
     public static Long getTmpDirUid() {
         Long result = null;
         try {
-            result = Long.valueOf(getProperties().getProperty("tmpdiruid", null));
+            String property = getProperties().getProperty("tmpdiruid", null);
+            result = (property == null) ? null : Long.valueOf(property);
         } catch (Throwable th){}
         return result;
     }
