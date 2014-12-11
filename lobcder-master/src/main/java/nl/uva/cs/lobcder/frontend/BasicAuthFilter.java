@@ -88,14 +88,17 @@ public class BasicAuthFilter implements Filter {
 //                        break;
 //                    }
 //                }
-                if (uname.equals(VPDRI.class.getName()) && request.getRemoteHost().equals("localhost") || request.getRemoteHost().equals("127.0.0.1")) {
-                    for (AuthI a : authList) {
-                        if (a instanceof AuthLobcderComponents) {
-                            authWorker = (AuthLobcderComponents) a;
-                            break;
+                if (uname.equals(VPDRI.class.getName())) {
+                    if (request.getRemoteHost().equals("localhost") || request.getRemoteHost().equals("127.0.0.1")) {
+                        for (AuthI a : authList) {
+                            if (a instanceof AuthLobcderComponents) {
+                                authWorker = (AuthLobcderComponents) a;
+                                break;
+                            }
                         }
+                        principal = authWorker.checkToken(uname, token);
                     }
-                    principal = authWorker.checkToken(uname, token);
+
                 } else if (PropertiesHelper.doRedirectGets() && workers != null
                         && workers.size() > 0 && uname.startsWith("worker-")) {
                     if (authWorker == null) {
