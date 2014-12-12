@@ -4,13 +4,9 @@
  */
 package nl.uva.cs.lobcder.tests;
 
-import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.GenericType;
 import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.config.ClientConfig;
-import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.json.JSONConfiguration;
-import com.sun.jersey.client.urlconnection.HTTPSProperties;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 import java.io.File;
 import java.io.IOException;
@@ -20,7 +16,6 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.net.ssl.SSLContext;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.xml.bind.annotation.XmlElement;
@@ -64,6 +59,7 @@ import java.io.OutputStream;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
+import org.apache.jackrabbit.webdav.DavException;
 
 /**
  *
@@ -83,6 +79,7 @@ public class TestREST {
     private String testResourceId;
     private String translatorURL;
     private String mrURL;
+    private Utils utils;
 
     @Before
     public void setUp() throws Exception {
@@ -141,46 +138,21 @@ public class TestREST {
         restClient = Client.create(clientConfig);
         restClient.addFilter(new com.sun.jersey.api.client.filter.HTTPBasicAuthFilter(username, password));
 
+
+        utils = new Utils(client);
+
     }
 
     @After
     public void tearDown() throws Exception {
     }
 
-    private void createCollection() throws IOException {
-        MkColMethod mkcol = new MkColMethod(testcol);
-        int status = this.client.executeMethod(mkcol);
-        assertEquals(HttpStatus.SC_CREATED, status);
-
-
-        PutMethod put = new PutMethod(this.root + testResourceId + "/file1");
-        put.setRequestEntity(new StringRequestEntity("foo", "text/plain", "UTF-8"));
-        status = this.client.executeMethod(put);
-        assertEquals(HttpStatus.SC_CREATED, status);
-
-        //Are you sure it's there ????
-        GetMethod get = new GetMethod(this.root + testResourceId + "/file1");
-        status = client.executeMethod(get);
-        assertEquals(HttpStatus.SC_OK, status);
-        assertEquals("foo", get.getResponseBodyAsString());
-
-//        put = new PutMethod(this.root + "testResourceId/file2");
-//        put.setRequestEntity(new StringRequestEntity("foo", "text/plain", "UTF-8"));
-//        status = this.client.executeMethod(put);
-//        assertEquals(HttpStatus.SC_CREATED, status);
-    }
-
-    private void deleteCollection() throws IOException {
-        DeleteMethod delete = new DeleteMethod(testcol);
-        int status = this.client.executeMethod(delete);
-        assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
-    }
-
     @Test
     public void testQueryItems() throws IOException {
         System.err.println("testQueryItems");
         try {
-            createCollection();
+            utils.createCollection(testcol, true);
+            utils.createFile(this.root + testResourceId + "/file1", true);
             WebResource webResource = restClient.resource(restURL);
 
             MultivaluedMap<String, String> params = new MultivaluedMapImpl();
@@ -198,7 +170,7 @@ public class TestREST {
             assertFalse(list.isEmpty());
             LogicalDataWrapped logicalDataWrapped = null;
             for (LogicalDataWrapped ldw : list) {
-                checkLogicalDataWrapped(ldw);
+                utils.checkLogicalDataWrapped(ldw);
                 if (ldw.path.equals("/" + testResourceId) && ldw.logicalData.type.equals("logical.folder")) {
                     logicalDataWrapped = ldw;
                     break;
@@ -218,34 +190,7 @@ public class TestREST {
             }
 
         } finally {
-            deleteCollection();
-        }
-    }
-
-    private void checkLogicalDataWrapped(LogicalDataWrapped ldw) {
-
-        assertNotNull(ldw.path);
-        assertTrue((ldw.logicalData.uid != 0));
-        if (ldw.logicalData.type.equals("logical.file")) {
-            assertTrue((ldw.logicalData.pdriGroupId != 0));
-            assertFalse(ldw.pdriList.isEmpty());
-            assertNotNull(ldw.logicalData.contentTypesAsString);
-            for (PDRIDesc pdri : ldw.pdriList) {
-                assertNotNull(pdri.name);
-                assertNotNull(pdri.password);
-                assertNotNull(pdri.resourceUrl);
-                assertNotNull(pdri.username);
-            }
-        }
-
-        assertNotNull(ldw.logicalData.createDate);
-        assertTrue((ldw.logicalData.createDate != 0));
-        assertNotNull(ldw.logicalData.modifiedDate);
-        assertTrue((ldw.logicalData.modifiedDate != 0));
-        assertNotNull(ldw.logicalData.name);
-
-        for (Permissions perm : ldw.permissions) {
-            assertNotNull(perm.owner);
+            utils.deleteResource(testcol, false);
         }
     }
 
@@ -253,7 +198,10 @@ public class TestREST {
     public void testQueryItem() throws IOException {
         System.err.println("testQueryItem");
         try {
-            createCollection();
+
+            utils.createCollection(testcol, true);
+            utils.createFile(this.root + testResourceId + "/file1", true);
+
             WebResource webResource = restClient.resource(restURL);
 
             MultivaluedMap<String, String> params = new MultivaluedMapImpl();
@@ -306,7 +254,7 @@ public class TestREST {
             assertEquals("text/plain; charset=UTF-8", theFile.logicalData.contentTypesAsString);
 
         } finally {
-            deleteCollection();
+            utils.deleteResource(testcol, false);
         }
     }
 
@@ -314,7 +262,8 @@ public class TestREST {
     public void testDataItem() throws IOException {
         System.err.println("testDataItem");
         try {
-            createCollection();
+            utils.createCollection(testcol, true);
+            utils.createFile(this.root + testResourceId + "/file1", true);
             WebResource webResource = restClient.resource(restURL);
 
             MultivaluedMap<String, String> params = new MultivaluedMapImpl();
@@ -329,7 +278,7 @@ public class TestREST {
             assertFalse(list.isEmpty());
             LogicalDataWrapped logicalDataWrapped = null;
             for (LogicalDataWrapped ldw : list) {
-                checkLogicalDataWrapped(ldw);
+                utils.checkLogicalDataWrapped(ldw);
                 if (ldw.logicalData.type.equals("logical.file") && ldw.logicalData.name.equals("file1")) {
                     logicalDataWrapped = ldw;
                 }
@@ -362,7 +311,7 @@ public class TestREST {
 //            assertEquals(new String(d), "foo");
 
         } finally {
-            deleteCollection();
+            utils.deleteResource(testcol, false);
         }
     }
 
@@ -461,7 +410,7 @@ public class TestREST {
 //        } catch (Exception ex) {
 //            Logger.getLogger(TestREST.class.getName()).log(Level.SEVERE, null, ex);
 //        } finally {
-//            deleteCollection();
+//            utils.deleteResource(testcol, false);
 //        }
 //    }
 //    @Test
@@ -490,14 +439,15 @@ public class TestREST {
 //
 //
 //        } finally {
-//            deleteCollection();
+//            utils.deleteResource(testcol, false);
 //        }
 //    }
     @Test
     public void testTicketTranslator() throws IOException {
         System.err.println("testTicketTranslator");
         try {
-            createCollection();
+            utils.createCollection(testcol, true);
+            utils.createFile(this.root + testResourceId + "/file1", true);
 
             ClientConfig clientConfig = new DefaultClientConfig();
             clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
@@ -530,7 +480,7 @@ public class TestREST {
             assertFalse(list.isEmpty());
 
         } finally {
-            deleteCollection();
+            utils.deleteResource(testcol, false);
         }
     }
 
@@ -538,7 +488,8 @@ public class TestREST {
     public void testMetadataService() throws IOException, JAXBException {
         System.err.println("testMetadataService");
         try {
-            createCollection();
+            utils.createCollection(testcol, true);
+            utils.createFile(this.root + testResourceId + "/file1", true);
             WebResource webResource = restClient.resource(restURL);
 
             MultivaluedMap<String, String> params = new MultivaluedMapImpl();
@@ -556,7 +507,7 @@ public class TestREST {
             Client mrClient = Client.create();
 
             for (LogicalDataWrapped ldw : list) {
-                checkLogicalDataWrapped(ldw);
+                utils.checkLogicalDataWrapped(ldw);
                 if (ldw.logicalData.type.equals("logical.file") && ldw.logicalData.name.equals("file1")) {
                     logicalDataWrapped = ldw;
                 }
@@ -585,7 +536,7 @@ public class TestREST {
         } catch (InterruptedException ex) {
             Logger.getLogger(TestREST.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
-            deleteCollection();
+            utils.deleteResource(testcol, false);
         }
 
     }
@@ -617,16 +568,13 @@ public class TestREST {
     }
 
     @Test
-    public void testArchiveService() throws JAXBException, IOException {
+    public void testArchiveService() throws JAXBException, IOException, DavException {
         System.err.println("testArchiveService");
         try {
-            createCollection();
-
-
-
-            //wait for replication
-            Thread.sleep(5000);
-
+            utils.createCollection(testcol, true);
+            utils.createFile(this.root + testResourceId + "/file1", true);
+            
+            utils.waitForReplication(this.root + testResourceId + "/file1");
 
             GetMethod get = new GetMethod(restURL + "/compress/getzip/" + testResourceId);
             int status = client.executeMethod(get);
@@ -635,7 +583,56 @@ public class TestREST {
         } catch (InterruptedException ex) {
             Logger.getLogger(TestREST.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
-            deleteCollection();
+            utils.deleteResource(testcol, false);
+        }
+    }
+
+    @Test
+    public void testTTLService() throws JAXBException, IOException, DavException, InterruptedException {
+        System.err.println("testTTLService");
+        try {
+            utils.createCollection(testcol, true);
+
+            Long uid = utils.getResourceUID(testcol);
+            WebResource webResource = restClient.resource(restURL);
+            WebResource res = webResource.path("ttl").path(String.valueOf(uid)).path("3");
+            ClientResponse response = res.put(ClientResponse.class);
+            assertTrue("status: " + response.getStatus(), response.getStatus() == HttpStatus.SC_OK || response.getStatus() == HttpStatus.SC_NO_CONTENT);
+//            PUT https://lobcder.vph.cyfronet.pl/lobcder/rest/ttl/{uid}/{ttl}
+
+            int count = 0;
+            while (utils.resourceExists(testcol)) {
+                count++;
+                if (count > 200) {
+                    fail("Resource " + testcol + " is not deleted. It should be gone");
+                    break;
+                }
+                Thread.sleep(20000);
+            }
+
+            utils.deleteResource(testcol, false);
+            utils.createCollection(testcol, true);
+            webResource = restClient.resource(restURL);
+            //PUT https://lobcder.vph.cyfronet.pl/lobcder/rest/ttl/{ttl}?path=/path/to/entry
+            MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+            params.add("path", "/" + testResourceId);
+            res = webResource.path("ttl").path(String.valueOf("3")).queryParams(params);
+            response = res.put(ClientResponse.class);
+            assertTrue("status: " + response.getStatus(), response.getStatus() == HttpStatus.SC_OK || response.getStatus() == HttpStatus.SC_NO_CONTENT);
+
+
+            count = 0;
+            while (utils.resourceExists(testcol)) {
+                count++;
+                if (count > 200) {
+                    fail("Resource " + testcol + " is not deleted. It should be gone");
+                    break;
+                }
+                Thread.sleep(20000);
+            }
+
+        } finally {
+            utils.deleteResource(testcol, false);
         }
     }
 
