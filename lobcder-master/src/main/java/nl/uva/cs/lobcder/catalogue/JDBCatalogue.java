@@ -1514,6 +1514,7 @@ public class JDBCatalogue extends MyDataSource {
     public void setSpeed(Stats stats) throws SQLException {
         try (Connection connection = getConnection()) {
             try {
+                connection.setAutoCommit(false);
                 setSpeed(stats, connection);
                 connection.commit();
             } catch (SQLException e) {
@@ -1524,10 +1525,9 @@ public class JDBCatalogue extends MyDataSource {
     }
 
     private void setSpeed(Stats stats, Connection connection) throws SQLException {
-
         try (PreparedStatement ps = connection.prepareStatement(
                 "select id, averageSpeed, minSpeed, maxSpeed from speed_table "
-                + "where src = ? AND dst = ? AND fSize = ?")) {
+                + "where src = ? AND dst = ? AND fSize = ?", ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE)) {
             ps.setString(1, stats.getSource());
             ps.setString(2, stats.getDestination());
             String size = "m";
@@ -1546,46 +1546,47 @@ public class JDBCatalogue extends MyDataSource {
             double averageSpeed = -1;
             double minSpeed = -1;
             double maxSpeed = -1;
-            if (rs.next()) {
+            while (rs.next()) {
                 id = rs.getInt(1);
                 averageSpeed = rs.getDouble(2);
                 minSpeed = rs.getDouble(3);
                 maxSpeed = rs.getDouble(4);
-            }
-
-            if (id != -1) {
-                averageSpeed = (averageSpeed + stats.getSpeed()) / 2.0;
+                double newAverageSpeed = (averageSpeed + stats.getSpeed()) / 2.0;
+                double newMaxSpeed;
                 if (stats.getSpeed() > maxSpeed) {
-                    maxSpeed = stats.getSpeed();
+                    newMaxSpeed = stats.getSpeed();
+                } else {
+                    newMaxSpeed = maxSpeed;
                 }
+                double newMinSpeed;
                 if (stats.getSpeed() < minSpeed) {
-                    minSpeed = stats.getSpeed();
+                    newMinSpeed = stats.getSpeed();
+                } else {
+                    newMinSpeed = minSpeed;
                 }
-                try (PreparedStatement ps2 = connection.prepareStatement("UPDATE speed_table SET `averageSpeed` = ?, `minSpeed` = ?, `maxSpeed` = ? WHERE id = ?")) {
-                    ps2.setInt(1, id);
-                    ps2.setDouble(2, averageSpeed);
-                    ps2.setDouble(3, minSpeed);
-                    ps2.setDouble(4, maxSpeed);
-                    ps2.executeUpdate();
-                }
-            } else {
+                rs.updateDouble(2, newAverageSpeed);
+                rs.updateDouble(3, newMinSpeed);
+                rs.updateDouble(4, newMaxSpeed);
+                rs.updateRow();
+                connection.commit();
+            }
+            if (id == -1) {
                 averageSpeed = stats.getSpeed();
                 maxSpeed = stats.getSpeed();
                 minSpeed = stats.getSpeed();
-                try (PreparedStatement ps2 = connection.prepareStatement("INSERT "
+                try (PreparedStatement ps3 = connection.prepareStatement("INSERT "
                         + "INTO speed_table (src, dst, fSize, averageSpeed, minSpeed, maxSpeed) "
                         + "VALUES (?, ?, ?, ?, ?, ?)")) {
-                    ps2.setString(1, stats.getSource());
-                    ps2.setString(2, stats.getDestination());
-                    ps2.setString(3, size);
-                    ps2.setDouble(4, averageSpeed);
-                    ps2.setDouble(5, minSpeed);
-                    ps2.setDouble(6, maxSpeed);
-                    ps2.executeUpdate();
+                    ps3.setString(1, stats.getSource());
+                    ps3.setString(2, stats.getDestination());
+                    ps3.setString(3, size);
+                    ps3.setDouble(4, averageSpeed);
+                    ps3.setDouble(5, minSpeed);
+                    ps3.setDouble(6, maxSpeed);
+                    ps3.executeUpdate();
                 }
             }
         }
-
     }
 
     public void setTTL(Long uid, Integer ttl) throws SQLException {
@@ -1595,7 +1596,8 @@ public class JDBCatalogue extends MyDataSource {
     }
 
     public void setTTL(Long uid, Integer ttl, Connection cn) throws SQLException {
-        try (PreparedStatement ps = cn.prepareStatement("SELECT uid, ownerId, ttlSec FROM ldata_table WHERE uid=?", ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE)) {
+        try (PreparedStatement ps = cn.prepareStatement("SELECT uid, ownerId, "
+                + "ttlSec FROM ldata_table WHERE uid=?", ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE)) {
             ps.setLong(1, uid);
             ResultSet rs = ps.executeQuery();
             if (!rs.next()) {
