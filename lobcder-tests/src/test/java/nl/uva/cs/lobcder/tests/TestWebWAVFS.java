@@ -12,16 +12,12 @@ import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.json.JSONConfiguration;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.Properties;
 import java.util.Random;
@@ -48,12 +44,7 @@ import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.contrib.ssl.EasySSLProtocolSocketFactory;
 import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.StringRequestEntity;
-import org.apache.commons.httpclient.methods.multipart.FilePart;
-import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
-import org.apache.commons.httpclient.methods.multipart.Part;
-import org.apache.commons.httpclient.methods.multipart.StringPart;
 import org.apache.commons.httpclient.params.HttpClientParams;
 import org.apache.commons.httpclient.protocol.Protocol;
 import org.apache.commons.httpclient.protocol.ProtocolSocketFactory;
@@ -87,6 +78,7 @@ public class TestWebWAVFS {
     private static Client restClient;
     private static String restURL;
     private static DefaultHttpClient httpclient;
+    private static Utils utils;
 
     static {
         try {
@@ -215,6 +207,9 @@ public class TestWebWAVFS {
         restClient.addFilter(new com.sun.jersey.api.client.filter.HTTPBasicAuthFilter(username1, password1));
         restURL = prop.getProperty(("rest.test.url"), "http://localhost:8080/lobcder-2.0-SNAPSHOT/rest/");
 
+
+        utils = new Utils(client1);
+
     }
 
     private VFSClient getVFSClient(String vrl, String username, String password) throws VlException {
@@ -300,27 +295,8 @@ public class TestWebWAVFS {
         assertEquals(HttpStatus.SC_CREATED, status);
 
 
-        delete(testFileURI1);
-        delete(testFileURI2);
-
-    }
-
-    /**
-     * Extracts properties from a server response
-     *
-     * @param statusResponse
-     * @return the properties
-     */
-    private DavPropertySet getProperties(MultiStatusResponse statusResponse) {
-        Status[] status = statusResponse.getStatus();
-
-        DavPropertySet allProp = new DavPropertySet();
-        for (int i = 0; i < status.length; i++) {
-            DavPropertySet pset = statusResponse.getProperties(status[i].getStatusCode());
-            allProp.addAll(pset);
-        }
-
-        return allProp;
+        utils.deleteResource(testFileURI1, true);
+        utils.deleteResource(testFileURI2, true);
     }
 
     @Test
@@ -338,7 +314,7 @@ public class TestWebWAVFS {
         MultiStatus multiStatus = propFind.getResponseBodyAsMultiStatus();
         MultiStatusResponse[] responses = multiStatus.getResponses();
         assertEquals(HttpStatus.SC_OK, responses[0].getStatus()[0].getStatusCode());
-        DavPropertySet allProp = getProperties(responses[0]);
+        DavPropertySet allProp = utils.getProperties(responses[0]);
 
 //        DavPropertyIterator iter = allProp.iterator();
 //        while (iter.hasNext()) {
@@ -353,7 +329,7 @@ public class TestWebWAVFS {
         assertEquals(Long.valueOf(lenStr), Long.valueOf(TestSettings.TEST_DATA.length()));
         String contentType = (String) allProp.get(DavPropertyName.GETCONTENTTYPE).getValue();
         assertEquals("text/plain; charset=UTF-8", contentType);
-        delete(testFileURI1);
+        utils.deleteResource(testFileURI1, true);
     }
 
     @Test
@@ -387,7 +363,7 @@ public class TestWebWAVFS {
             MultiStatus multiStatus = propFind.getResponseBodyAsMultiStatus();
             MultiStatusResponse[] responses = multiStatus.getResponses();
 
-            DavPropertySet allProp = getProperties(responses[0]);
+            DavPropertySet allProp = utils.getProperties(responses[0]);
 //        DavPropertyIterator iter = allProp.iterator();
 //        while (iter.hasNext()) {
 //            DavProperty<?> p = iter.nextProperty();
@@ -434,53 +410,53 @@ public class TestWebWAVFS {
             assertEquals(HttpStatus.SC_OK, status);
             assertEquals(content, get.getResponseBodyAsString());
         } finally {
-            delete(testFileURI1);
+            utils.deleteResource(testFileURI1, false);
         }
     }
-
-    @Test
-    public void testUploadFileOnRootWithoutAdminRole() throws IOException, DavException {
-        System.err.println("testUploadFileOnRootWithoutAdminRole");
-        String uname = prop.getProperty(("webdav.test.non.admin.username1"), "nonAdmin");
-        assertNotNull(uname);
-        String pass = prop.getProperty(("webdav.test.non.admin.password1"), "secret");
-        assertNotNull(pass);
-        HttpClient client = new HttpClient();
-
-        assertNotNull(uri.getHost());
-        assertNotNull(uri.getPort());
-        assertNotNull(client);
-
-        client.getState().setCredentials(
-                new AuthScope(uri.getHost(), uri.getPort()),
-                new UsernamePasswordCredentials(uname, pass));
-
-
-
-        String testFileURI1 = this.uri.toASCIIString() + TestSettings.TEST_FILE_NAME1 + ".txt";
-        PutMethod put = new PutMethod(testFileURI1);
-        put.setRequestEntity(new StringRequestEntity(TestSettings.TEST_DATA, "text/plain", "UTF-8"));
-        int status = client.executeMethod(put);
-        assertEquals(HttpStatus.SC_UNAUTHORIZED, status);
-    }
-
-    @Test
-    public void testUpDownloadFileWithSpace() throws IOException, DavException {
-        System.err.println("testUpDownloadFileWithSpace");
-//        String testFileURI1 = uri.toASCIIString() + "file with spaces";
+//
+//    @Test
+//    public void testUploadFileOnRootWithoutAdminRole() throws IOException, DavException {
+//        System.err.println("testUploadFileOnRootWithoutAdminRole");
+//        String uname = prop.getProperty(("webdav.test.non.admin.username1"), "nonAdmin");
+//        assertNotNull(uname);
+//        String pass = prop.getProperty(("webdav.test.non.admin.password1"), "secret");
+//        assertNotNull(pass);
+//        HttpClient client = new HttpClient();
+//
+//        assertNotNull(uri.getHost());
+//        assertNotNull(uri.getPort());
+//        assertNotNull(client);
+//
+//        client.getState().setCredentials(
+//                new AuthScope(uri.getHost(), uri.getPort()),
+//                new UsernamePasswordCredentials(uname, pass));
+//
+//
+//
+//        String testFileURI1 = this.uri.toASCIIString() + TestSettings.TEST_FILE_NAME1 + ".txt";
 //        PutMethod put = new PutMethod(testFileURI1);
 //        put.setRequestEntity(new StringRequestEntity(TestSettings.TEST_DATA, "text/plain", "UTF-8"));
-//        int status = client1.executeMethod(put);
-//        assertEquals(HttpStatus.SC_CREATED, status);
+//        int status = client.executeMethod(put);
+//        assertEquals(HttpStatus.SC_UNAUTHORIZED, status);
+//    }
 //
-//
-//        GetMethod get = new GetMethod(testFileURI1);
-//        status = client1.executeMethod(get);
-//        assertEquals(HttpStatus.SC_OK, status);
-//        assertEquals(TestSettings.TEST_DATA, get.getResponseBodyAsString());
-//
-//        delete(testFileURI1);
-    }
+//    @Test
+//    public void testUpDownloadFileWithSpace() throws IOException, DavException {
+//        System.err.println("testUpDownloadFileWithSpace");
+////        String testFileURI1 = uri.toASCIIString() + "file with spaces";
+////        PutMethod put = new PutMethod(testFileURI1);
+////        put.setRequestEntity(new StringRequestEntity(TestSettings.TEST_DATA, "text/plain", "UTF-8"));
+////        int status = client1.executeMethod(put);
+////        assertEquals(HttpStatus.SC_CREATED, status);
+////
+////
+////        GetMethod get = new GetMethod(testFileURI1);
+////        status = client1.executeMethod(get);
+////        assertEquals(HttpStatus.SC_OK, status);
+////        assertEquals(TestSettings.TEST_DATA, get.getResponseBodyAsString());
+////
+////        delete(testFileURI1);
+//    }
 
     @Test
     public void testPutGet() throws VlException, IOException {
@@ -503,9 +479,10 @@ public class TestWebWAVFS {
             assertTrue(content.equals(TestSettings.TEST_DATA));
 
         } finally {
-            delete(testFileURI1);
+            utils.deleteResource(testFileURI1, false);
         }
     }
+//
 
     @Test
     public void testFileConsistency() throws VlException, IOException {
@@ -532,9 +509,9 @@ public class TestWebWAVFS {
                 fos.flush();
                 fos.close();
 
-                postFile(file);
+                utils.postFile(file,uri.toASCIIString());
 
-                String localChecksum = getChecksum(file, "SHA1");
+                String localChecksum = utils.getChecksum(file, "SHA1");
 
                 Thread.sleep(40000);
 
@@ -558,20 +535,20 @@ public class TestWebWAVFS {
 
 
 
-                String fromLobChecksum = getChecksum(fromLob, "SHA1");
+                String fromLobChecksum = utils.getChecksum(fromLob, "SHA1");
 
                 assertEquals(fromLobChecksum, localChecksum);
 
 
                 System.out.println(j + " of " + size);
             }
-            
+
         } catch (Exception ex) {
             fail(ex.getMessage());
             Logger.getLogger(TestWebWAVFS.class.getName()).log(Level.SEVERE, null, ex);
 
         } finally {
-            delete(testFileURI1);
+            utils.deleteResource(testFileURI1, false);
         }
     }
 
@@ -586,16 +563,9 @@ public class TestWebWAVFS {
             assertEquals(HttpStatus.SC_CREATED, status);
 
             Set<PDRIDesc> pdris = null;
-            boolean done = false;
             //Wait for replication 
-            long sleepTime = 15000;
-//            while (!done) {
-            try {
-                Thread.sleep(sleepTime);
-            } catch (InterruptedException ex) {
-                fail(ex.getMessage());
-                Logger.getLogger(TestWebWAVFS.class.getName()).log(Level.SEVERE, null, ex);
-            }
+            utils.waitForReplication(testFileURI1);
+
             pdris = getPdris(TestSettings.TEST_FILE_NAME1 + ".txt");
 //                if(!pdris.equals(oldPdri)){
 //                    done = true;
@@ -631,7 +601,7 @@ public class TestWebWAVFS {
             Logger.getLogger(TestWebWAVFS.class.getName()).log(Level.SEVERE, null, ex);
             fail(ex.getMessage());
         } finally {
-            delete(testFileURI1);
+            utils.deleteResource(testFileURI1, false);
         }
     }
 
@@ -670,8 +640,8 @@ public class TestWebWAVFS {
             System.out.println(cont);
             assertEquals(TestSettings.TEST_DATA, cont);
         } finally {
-            delete(testcol);
-            delete(testFileURI1);
+            utils.deleteResource(testcol, false);
+            utils.deleteResource(testFileURI1, false);
         }
     }
 
@@ -699,13 +669,6 @@ public class TestWebWAVFS {
             fail(ex.getMessage());
             Logger.getLogger(TestWebWAVFS.class.getName()).log(Level.SEVERE, null, ex);
         }
-
-    }
-
-    private void delete(String testFileURI1) throws IOException {
-        DeleteMethod del = new DeleteMethod(testFileURI1);
-        int status = client1.executeMethod(del);
-        assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
     }
 
     private Set<PDRIDesc> getPdris(String testFileURI1) {
@@ -750,61 +713,6 @@ public class TestWebWAVFS {
             System.err.println("Deleting: " + vrl);
             cli.openLocation(vrl).delete();
         }
-    }
-
-    private String getChecksum(File file, String algorithm) throws NoSuchAlgorithmException, FileNotFoundException, IOException {
-        MessageDigest md = MessageDigest.getInstance(algorithm);
-
-
-        FileInputStream fis = new FileInputStream(file);
-        byte[] dataBytes = new byte[1024];
-
-        int nread = 0;
-
-        while ((nread = fis.read(dataBytes)) != -1) {
-            md.update(dataBytes, 0, nread);
-        };
-
-        byte[] mdbytes = md.digest();
-
-        //convert the byte to hex format
-        StringBuilder sb = new StringBuilder("");
-        for (int i = 0; i < mdbytes.length; i++) {
-            sb.append(Integer.toString((mdbytes[i] & 0xff) + 0x100, 16).substring(1));
-        }
-
-        return sb.toString();
-
-    }
-
-    private void postFile(File file) throws IOException {
-
-        System.err.println("post:" + file.getName());
-        PostMethod method = new PostMethod(uri.toASCIIString());
-
-        Part[] parts = {
-            new StringPart("param_name", "value"),
-            new FilePart(file.getName(), file)
-        };
-
-        MultipartRequestEntity requestEntity = new MultipartRequestEntity(parts, method.getParams());
-        method.setRequestEntity(requestEntity);
-
-        int status = client1.executeMethod(method);
-        assertTrue(status == HttpStatus.SC_CREATED || status == HttpStatus.SC_OK);
-
-//        HttpPost httppost = new HttpPost(uri.toASCIIString());
-//        MultipartEntity mpEntity = new MultipartEntity();
-//        ContentBody cbFile = new FileBody(file, "image/jpeg");
-//        mpEntity.addPart("userfile", cbFile);
-//
-//
-//        httppost.setEntity(mpEntity);
-//        System.out.println("executing request " + httppost.getRequestLine());
-//        CloseableHttpResponse response = httpclient.execute(httppost);
-//
-//
-//        System.out.println(response.getStatusLine());
     }
 
     private static class UserThread extends Thread {
