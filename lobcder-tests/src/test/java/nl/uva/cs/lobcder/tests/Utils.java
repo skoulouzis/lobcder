@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -28,6 +29,7 @@ import org.apache.jackrabbit.webdav.Status;
 import org.apache.jackrabbit.webdav.client.methods.DeleteMethod;
 import org.apache.jackrabbit.webdav.client.methods.MkColMethod;
 import org.apache.jackrabbit.webdav.client.methods.PropFindMethod;
+import org.apache.jackrabbit.webdav.client.methods.PropPatchMethod;
 import org.apache.jackrabbit.webdav.property.DavProperty;
 import org.apache.jackrabbit.webdav.property.DavPropertyIterator;
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
@@ -268,8 +270,8 @@ public class Utils {
             assertNotNull(perm.owner);
         }
     }
-    
-     public void postFile(File file,String url) throws IOException {
+
+    public void postFile(File file, String url) throws IOException {
 
         System.err.println("post:" + file.getName());
         PostMethod method = new PostMethod(url);
@@ -298,9 +300,8 @@ public class Utils {
 //
 //        System.out.println(response.getStatusLine());
     }
-     
-     
-     public String getChecksum(File file, String algorithm) throws NoSuchAlgorithmException, FileNotFoundException, IOException {
+
+    public String getChecksum(File file, String algorithm) throws NoSuchAlgorithmException, FileNotFoundException, IOException {
         MessageDigest md = MessageDigest.getInstance(algorithm);
 
 
@@ -323,5 +324,35 @@ public class Utils {
 
         return sb.toString();
 
+    }
+
+    public String checkChecksum(InputStream is) throws NoSuchAlgorithmException, FileNotFoundException, IOException {
+        MessageDigest md = MessageDigest.getInstance("MD5");
+
+        byte[] dataBytes = new byte[1024];
+
+        int nread = 0;
+        while ((nread = is.read(dataBytes)) != -1) {
+            md.update(dataBytes, 0, nread);
+        }
+        byte[] mdbytes = md.digest();
+
+        //convert the byte to hex format method 1
+        StringBuffer sb = new StringBuffer();
+        for (int i = 0; i < mdbytes.length; i++) {
+            sb.append(Integer.toString((mdbytes[i] & 0xff) + 0x100, 16).substring(1));
+        }
+        return sb.toString();
+    }
+
+    public void setProperty(String resource, DavProperty property, boolean mustSucceed) throws IOException {
+        DavPropertyNameSet commentNameSet = new DavPropertyNameSet();
+        DavPropertySet descriptionSet = new DavPropertySet();
+        descriptionSet.add(property);
+        PropPatchMethod proPatch = new PropPatchMethod(resource, descriptionSet, commentNameSet);
+        int status = client.executeMethod(proPatch);
+        if (mustSucceed) {
+            assertEquals(HttpStatus.SC_MULTI_STATUS, status);
+        }
     }
 }
