@@ -50,9 +50,7 @@ public class WebDAVSecurityTest {
     @BeforeClass
     public static void setUpClass() throws Exception {
 
-        String propBasePath = System.getProperty("user.home") + File.separator
-                + "workspace" + File.separator + "lobcder-tests"
-                + File.separator + "etc" + File.separator + "test.proprties";
+        String propBasePath = "etc" + File.separator + "test.proprties";
         Properties prop = TestSettings.getTestProperties(propBasePath);
 
         String testURL = prop.getProperty("webdav.test.url");
@@ -315,17 +313,5 @@ public class WebDAVSecurityTest {
 //                System.out.println("\tName: " + p.getName() + " Values " + p.getValue());
 //            }
 //        }
-    }
-
-    private DavPropertySet getProperties(MultiStatusResponse statusResponse) {
-        Status[] status = statusResponse.getStatus();
-
-        DavPropertySet allProp = new DavPropertySet();
-        for (int i = 0; i < status.length; i++) {
-            DavPropertySet pset = statusResponse.getProperties(status[i].getStatusCode());
-            allProp.addAll(pset);
-        }
-
-        return allProp;
     }
 }
