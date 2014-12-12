@@ -91,7 +91,7 @@ public class WebDataResource implements PropFindableResource, Resource,
         MyPrincipal principal = null;
 
         for (AuthI a : authList) {
-            principal = a.checkToken(user,token);
+            principal = a.checkToken(user, token);
             if (principal != null) {
                 break;
             }
@@ -359,44 +359,7 @@ public class WebDataResource implements PropFindableResource, Resource,
         try {
             log.log(Level.FINE, "qname: {0}", qname);
             if (qname.equals(Constants.DATA_DIST_PROP_NAME)) {
-                try (Connection connection = getCatalogue().getConnection()) {
-                    try {
-                        connection.commit();
-                        StringBuilder sb = new StringBuilder();
-                        if (getLogicalData().isFolder()) {
-                            List<? extends WebDataResource> children = (List<? extends WebDataResource>) ((WebDataDirResource) (this)).getChildren();
-                            sb.append("[");
-                            for (WebDataResource r : children) {
-                                if (r instanceof WebDataFileResource) {
-//                                    sb.append("'").append(r.getName()).append("' : [");
-                                    sb.append(r.getName()).append(" : [");
-                                    Collection<PDRIDescr> pdris = getCatalogue().getPdriDescrByGroupId(r.getLogicalData().getPdriGroupId(), connection);
-                                    for (PDRIDescr p : pdris) {
-//                                        sb.append("'").append(p.getResourceUrl()).append("/").append(p.getName()).append("',");
-                                        sb.append(p.getResourceUrl()).append("/").append(p.getName()).append(",");
-                                    }
-                                    sb.replace(sb.lastIndexOf(","), sb.length(), "").append("],");
-                                }
-                            }
-                        } else {
-                            Collection<PDRIDescr> pdris = getCatalogue().getPdriDescrByGroupId(getLogicalData().getPdriGroupId(), connection);
-                            sb.append("[");
-                            for (PDRIDescr p : pdris) {
-//                                sb.append("'").append(p.getResourceUrl()).append("/").append(p.getName()).append("'");
-                                sb.append(p.getResourceUrl()).append("/").append(p.getName());
-                                sb.append(",");
-                            }
-                        }
-                        if (sb.toString().contains(",")) {
-                            sb.replace(sb.lastIndexOf(","), sb.length(), "");
-                        }
-                        sb.append("]");
-                        return sb.toString();
-                    } catch (NotAuthorizedException | SQLException e) {
-                        connection.rollback();
-                    }
-                }
-
+                return getDataDistString();
             } else if (qname.equals(Constants.DRI_SUPERVISED_PROP_NAME)) {
                 return String.valueOf(getLogicalData().getSupervised());
             } else if (qname.equals(Constants.DRI_CHECKSUM_PROP_NAME)) {
@@ -416,57 +379,11 @@ public class WebDataResource implements PropFindableResource, Resource,
             } else if (qname.equals(Constants.DATA_LOC_PREF_NAME)) {
                 return getLogicalData().getDataLocationPreference();
             } else if (qname.equals(Constants.ENCRYPT_PROP_NAME)) {
-                try (Connection connection = getCatalogue().getConnection()) {
-                    StringBuilder sb = new StringBuilder();
-                    if (getLogicalData().isFolder()) {
-                        List<? extends WebDataResource> children = (List<? extends WebDataResource>) ((WebDataDirResource) (this)).getChildren();
-                        sb.append("[");
-                        for (WebDataResource r : children) {
-                            if (r instanceof WebDataFileResource) {
-                                sb.append("'").append(r.getName()).append("' : [");
-                                Collection<PDRIDescr> pdris = getCatalogue().getPdriDescrByGroupId(r.getLogicalData().getPdriGroupId(), connection);
-                                for (PDRIDescr p : pdris) {
-                                    sb.append("[");
-                                    sb.append(p.getResourceUrl()).append(",");
-                                    sb.append(p.getEncrypt());
-                                    sb.append("],");
-                                }
-                                sb.replace(sb.lastIndexOf(","), sb.length(), "").append("],");
-                            }
-                        }
-                    } else {
-                        Collection<PDRIDescr> pdris = getCatalogue().getPdriDescrByGroupId(getLogicalData().getPdriGroupId(), connection);
-                        sb.append("[");
-                        for (PDRIDescr p : pdris) {
-                            sb.append("[");
-                            sb.append(p.getResourceUrl());
-                            sb.append(",");
-                            sb.append(p.getEncrypt());
-                            sb.append("]");
-                            sb.append(",");
-                        }
-                    }
-                    if (sb.toString().contains(",")) {
-                        sb.replace(sb.lastIndexOf(","), sb.length(), "");
-                    }
-                    sb.append("]");
-                    connection.commit();
-                    return sb.toString();
-                }
+                return getEcryptionString();
             } else if (qname.equals(Constants.AVAIL_STORAGE_SITES_PROP_NAME)) {
-                try (Connection connection = getCatalogue().getConnection()) {
-                    connection.commit();
-                    Collection<StorageSite> ss = getCatalogue().getStorageSites(connection, Boolean.FALSE);
-                    StringBuilder sb = new StringBuilder();
-                    sb.append("[");
-                    for (StorageSite s : ss) {
-                        sb.append(s.getResourceURI()).append(",");
-                    }
-                    sb.replace(sb.lastIndexOf(","), sb.length(), "");
-                    sb.append("]");
-                    return sb.toString();
-                }
-
+                return getAvailStorageSitesString();
+            } else if (qname.equals(Constants.TTL)) {
+                return getLogicalData().getTtlSec();
             }
             return PropertySource.PropertyMetaData.UNKNOWN;
         } catch (Throwable th) {
@@ -505,46 +422,11 @@ public class WebDataResource implements PropFindableResource, Resource,
                         getLogicalData().setDataLocationPreference(v);
                         catalogue.setLocationPreference(getLogicalData().getUid(), v, connection);
                     } else if (qname.equals(Constants.ENCRYPT_PROP_NAME)) {
-//                        String v = value;
-//                        HashMap<String, Boolean> hostEncryptMap = new HashMap<>();
-//                        log.log(Level.FINE, "Value: {0}", v);
-//                        String[] parts = v.split("[\\[\\]]");
-//                        for (String p : parts) {
-//                            log.log(Level.FINE, "Parts: {0}", p);
-//                            if (!p.isEmpty()) {
-//                                String[] hostEncryptValue = p.split(",");
-//                                if (hostEncryptValue.length == 2) {
-//                                    String hostStr = hostEncryptValue[0];
-//                                    URI uri;
-//                                    try {
-//                                        uri = new URI(hostStr);
-//                                        String host = uri.getScheme();
-//                                        host += "://" + uri.getHost();
-//                                        String encrypt = hostEncryptValue[1];
-//                                        hostEncryptMap.put(host, Boolean.valueOf(encrypt));
-//                                    } catch (URISyntaxException ex) {
-//                                        //Wrong URI syntax, don't add it 
-//                                    }
-//                                }
-//                            }
-//                        }
-//                        List<PDRIDescr> pdris = getCatalogue().getPdriDescrByGroupId(getLogicalData().getPdriGroupId(), connection);
-//                        List<PDRIDescr> pdrisToUpdate = new ArrayList<PDRIDescr>();
-//                        for (PDRIDescr p : pdris) {
-//                            URI uri = new URI(p.getResourceUrl());
-//                            String host = uri.getScheme();
-//                            host += "://" + uri.getHost();
-//                            if (hostEncryptMap.containsKey(host)) {
-//                                p.setEncrypt(hostEncryptMap.get(host));
-//                                pdrisToUpdate.add(p);
-//                            }}
-//                        }
-//                        if (!hostEncryptMap.isEmpty()) {
-//                            getCatalogue().updateStorageSites(hostEncryptMap, connection);
-//                        }
-//                        if (!pdrisToUpdate.isEmpty()) {
-//                            getCatalogue().updatePdris(pdrisToUpdate, connection);
-//                        }
+                        setEncryptionPropertyValues(value);
+                    } else if (qname.equals(Constants.TTL)) {
+                        String v = value;
+                        getLogicalData().setTtlSec(Integer.valueOf(v));
+                        catalogue.setTTL(getLogicalData().getUid(), Integer.valueOf(v), connection);
                     }
                     connection.commit();
                 }
@@ -708,5 +590,146 @@ public class WebDataResource implements PropFindableResource, Resource,
     @Override
     public String checkRedirect(Request rqst) throws NotAuthorizedException, BadRequestException {
         return null;
+    }
+
+    private String getDataDistString() throws SQLException {
+        try (Connection connection = getCatalogue().getConnection()) {
+            try {
+                connection.commit();
+                StringBuilder sb = new StringBuilder();
+                if (getLogicalData().isFolder()) {
+                    List<? extends WebDataResource> children = (List<? extends WebDataResource>) ((WebDataDirResource) (this)).getChildren();
+                    sb.append("[");
+                    for (WebDataResource r : children) {
+                        if (r instanceof WebDataFileResource) {
+//                                    sb.append("'").append(r.getName()).append("' : [");
+                            sb.append(r.getName()).append(" : [");
+                            Collection<PDRIDescr> pdris = getCatalogue().getPdriDescrByGroupId(r.getLogicalData().getPdriGroupId(), connection);
+                            for (PDRIDescr p : pdris) {
+//                                        sb.append("'").append(p.getResourceUrl()).append("/").append(p.getName()).append("',");
+                                sb.append(p.getResourceUrl()).append("/").append(p.getName()).append(",");
+                            }
+                            sb.replace(sb.lastIndexOf(","), sb.length(), "").append("],");
+                        }
+                    }
+                } else {
+                    Collection<PDRIDescr> pdris = getCatalogue().getPdriDescrByGroupId(getLogicalData().getPdriGroupId(), connection);
+                    sb.append("[");
+                    for (PDRIDescr p : pdris) {
+//                                sb.append("'").append(p.getResourceUrl()).append("/").append(p.getName()).append("'");
+                        sb.append(p.getResourceUrl()).append("/").append(p.getName());
+                        sb.append(",");
+                    }
+                }
+                if (sb.toString().contains(",")) {
+                    sb.replace(sb.lastIndexOf(","), sb.length(), "");
+                }
+                sb.append("]");
+                sb.toString();
+                return sb.toString();
+            } catch (NotAuthorizedException | SQLException e) {
+                connection.rollback();
+            }
+        }
+        return null;
+    }
+
+    private String getEcryptionString() throws NotAuthorizedException, SQLException {
+        try (Connection connection = getCatalogue().getConnection()) {
+            StringBuilder sb = new StringBuilder();
+            if (getLogicalData().isFolder()) {
+                List<? extends WebDataResource> children = (List<? extends WebDataResource>) ((WebDataDirResource) (this)).getChildren();
+                sb.append("[");
+                for (WebDataResource r : children) {
+                    if (r instanceof WebDataFileResource) {
+                        sb.append("'").append(r.getName()).append("' : [");
+                        Collection<PDRIDescr> pdris = getCatalogue().getPdriDescrByGroupId(r.getLogicalData().getPdriGroupId(), connection);
+                        for (PDRIDescr p : pdris) {
+                            sb.append("[");
+                            sb.append(p.getResourceUrl()).append(",");
+                            sb.append(p.getEncrypt());
+                            sb.append("],");
+                        }
+                        sb.replace(sb.lastIndexOf(","), sb.length(), "").append("],");
+                    }
+                }
+            } else {
+                Collection<PDRIDescr> pdris = getCatalogue().getPdriDescrByGroupId(getLogicalData().getPdriGroupId(), connection);
+                sb.append("[");
+                for (PDRIDescr p : pdris) {
+                    sb.append("[");
+                    sb.append(p.getResourceUrl());
+                    sb.append(",");
+                    sb.append(p.getEncrypt());
+                    sb.append("]");
+                    sb.append(",");
+                }
+            }
+            if (sb.toString().contains(",")) {
+                sb.replace(sb.lastIndexOf(","), sb.length(), "");
+            }
+            sb.append("]");
+            connection.commit();
+
+            return sb.toString();
+        }
+    }
+
+    private String getAvailStorageSitesString() throws SQLException {
+        try (Connection connection = getCatalogue().getConnection()) {
+            connection.commit();
+            Collection<StorageSite> ss = getCatalogue().getStorageSites(connection, Boolean.FALSE);
+            StringBuilder sb = new StringBuilder();
+            sb.append("[");
+            for (StorageSite s : ss) {
+                sb.append(s.getResourceURI()).append(",");
+            }
+            sb.replace(sb.lastIndexOf(","), sb.length(), "");
+            sb.append("]");
+            return sb.toString();
+        }
+    }
+
+    private void setEncryptionPropertyValues(String value) {
+        String v = value;
+//                        HashMap<String, Boolean> hostEncryptMap = new HashMap<>();
+//                        log.log(Level.FINE, "Value: {0}", v);
+//                        String[] parts = v.split("[\\[\\]]");
+//                        for (String p : parts) {
+//                            log.log(Level.FINE, "Parts: {0}", p);
+//                            if (!p.isEmpty()) {
+//                                String[] hostEncryptValue = p.split(",");
+//                                if (hostEncryptValue.length == 2) {
+//                                    String hostStr = hostEncryptValue[0];
+//                                    URI uri;
+//                                    try {
+//                                        uri = new URI(hostStr);
+//                                        String host = uri.getScheme();
+//                                        host += "://" + uri.getHost();
+//                                        String encrypt = hostEncryptValue[1];
+//                                        hostEncryptMap.put(host, Boolean.valueOf(encrypt));
+//                                    } catch (URISyntaxException ex) {
+//                                        //Wrong URI syntax, don't add it 
+//                                    }
+//                                }
+//                            }
+//                        }
+//                        List<PDRIDescr> pdris = getCatalogue().getPdriDescrByGroupId(getLogicalData().getPdriGroupId(), connection);
+//                        List<PDRIDescr> pdrisToUpdate = new ArrayList<PDRIDescr>();
+//                        for (PDRIDescr p : pdris) {
+//                            URI uri = new URI(p.getResourceUrl());
+//                            String host = uri.getScheme();
+//                            host += "://" + uri.getHost();
+//                            if (hostEncryptMap.containsKey(host)) {
+//                                p.setEncrypt(hostEncryptMap.get(host));
+//                                pdrisToUpdate.add(p);
+//                            }}
+//                        }
+//                        if (!hostEncryptMap.isEmpty()) {
+//                            getCatalogue().updateStorageSites(hostEncryptMap, connection);
+//                        }
+//                        if (!pdrisToUpdate.isEmpty()) {
+//                            getCatalogue().updatePdris(pdrisToUpdate, connection);
+//                        }
     }
 }

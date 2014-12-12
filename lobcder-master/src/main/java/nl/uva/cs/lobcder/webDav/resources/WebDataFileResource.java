@@ -191,6 +191,11 @@ public class WebDataFileResource extends WebDataResource implements
     }
 
     @Override
+    /**Specifies a lifetime for the information returned by this header. 
+     * A client MUST discard any information related to this header after the 
+     * specified amount of time. 
+     * 
+     */
     public Long getMaxAgeSeconds(Auth auth) {
         log.log(Level.FINE, "getMaxAgeSeconds() for {0}", getPath());
         return null;
@@ -221,6 +226,9 @@ public class WebDataFileResource extends WebDataResource implements
                 host = uri.getHost();
             }
             Double speed = weightPDRIMap.get(host);
+            if (speed == null) {
+                speed = 0.0;
+            }
             Logger.getLogger(WebDataFileResource.class.getName()).log(Level.FINE, "Speed: : {0}", speed);
             sumOfSpeed += speed;
         }

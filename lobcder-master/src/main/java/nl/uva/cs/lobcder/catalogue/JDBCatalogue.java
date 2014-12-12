@@ -15,6 +15,8 @@ import java.util.*;
 import java.util.logging.Level;
 import javax.annotation.Nonnull;
 import javax.naming.NamingException;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.java.Log;
@@ -1584,6 +1586,26 @@ public class JDBCatalogue extends MyDataSource {
             }
         }
 
+    }
+
+    public void setTTL(Long uid, Integer ttl) throws SQLException {
+        try (Connection cn = getConnection()) {
+            setTTL(uid, ttl, cn);
+        }
+    }
+
+    public void setTTL(Long uid, Integer ttl, Connection cn) throws SQLException {
+        try (PreparedStatement ps = cn.prepareStatement("SELECT uid, ownerId, ttlSec FROM ldata_table WHERE uid=?", ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE)) {
+            ps.setLong(1, uid);
+            ResultSet rs = ps.executeQuery();
+            if (!rs.next()) {
+                throw new WebApplicationException(Response.Status.NOT_FOUND);
+            } else {
+                rs.updateInt(3, ttl);
+                rs.updateRow();
+                cn.commit();
+            }
+        }
     }
 
     @Data
