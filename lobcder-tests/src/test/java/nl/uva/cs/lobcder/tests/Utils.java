@@ -205,9 +205,9 @@ public class Utils {
 //        assertEquals(HttpStatus.SC_CREATED, status);
     }
 
-    boolean resourceExists(String testResourceId) throws IOException, DavException {
+    boolean resourceExists(String resource) throws IOException, DavException {
         try {
-            MultiStatus multiStatus = this.getProperty(testResourceId, DavPropertyName.DISPLAYNAME, false);
+            MultiStatus multiStatus = this.getProperty(resource, DavPropertyName.DISPLAYNAME, false);
             MultiStatusResponse[] responses = multiStatus.getResponses();
             String value = null;
 //        for (MultiStatusResponse r : responses) {

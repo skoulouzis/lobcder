@@ -799,7 +799,6 @@ public class WebDAVTest {
             assertTrue("status: " + status, status == HttpStatus.SC_NOT_FOUND);
 
         } finally {
-            utils.deleteResource(testcol, true);
             utils.deleteResource(testuri, false);
 
         }
@@ -1739,6 +1738,34 @@ public class WebDAVTest {
     }
 
     @Test
+    public void testGetSetTTL() throws IOException, DavException, InterruptedException {
+        System.out.println("testGetSetTTL");
+        String testcol1 = root + "testResourceId/";
+        try {
+            utils.deleteResource(testcol1, false);
+            utils.createCollection(testcol1, true);
+
+            DavPropertyName dataLocationPreferenceName = DavPropertyName.create("ttl", Namespace.getNamespace("custom:"));
+            DavProperty dataLocationPreference = new DefaultDavProperty(dataLocationPreferenceName, "3");
+            utils.setProperty(testcol1, dataLocationPreference, true);
+
+
+            int count = 0;
+            while (utils.resourceExists(testcol1)) {
+                count++;
+                if (count > 200) {
+                    fail("Resource " + testcol1 + " is not deleted. It should be gone");
+                    break;
+                }
+                Thread.sleep(20000);
+            }
+        } finally {
+            utils.deleteResource(testcol1, false);
+        }
+
+    }
+
+    @Test
     public void testGetSetLocationPreference() throws UnsupportedEncodingException, IOException, DavException, InterruptedException {
         System.out.println("testGetSetCustomComment");
         String testcol1 = root + "testResourceId/";
@@ -2160,10 +2187,6 @@ public class WebDAVTest {
             }
         }
         return s;
-    }
-
-    private void debug(String msg) {
-        System.err.println(this.getClass().getName() + ": " + msg);
     }
 
 //    @Test
