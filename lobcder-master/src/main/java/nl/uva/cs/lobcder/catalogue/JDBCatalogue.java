@@ -1551,22 +1551,17 @@ public class JDBCatalogue extends MyDataSource {
                 averageSpeed = rs.getDouble(2);
                 minSpeed = rs.getDouble(3);
                 maxSpeed = rs.getDouble(4);
-                double newAverageSpeed = (averageSpeed + stats.getSpeed()) / 2.0;
-                double newMaxSpeed;
+                double a = 0.7;
+                averageSpeed = a * averageSpeed + (1 - a) * stats.getSpeed();
                 if (stats.getSpeed() > maxSpeed) {
-                    newMaxSpeed = stats.getSpeed();
-                } else {
-                    newMaxSpeed = maxSpeed;
+                    maxSpeed = stats.getSpeed();
                 }
-                double newMinSpeed;
                 if (stats.getSpeed() < minSpeed) {
-                    newMinSpeed = stats.getSpeed();
-                } else {
-                    newMinSpeed = minSpeed;
+                    minSpeed = stats.getSpeed();
                 }
-                rs.updateDouble(2, newAverageSpeed);
-                rs.updateDouble(3, newMinSpeed);
-                rs.updateDouble(4, newMaxSpeed);
+                rs.updateDouble(2, averageSpeed);
+                rs.updateDouble(3, minSpeed);
+                rs.updateDouble(4, maxSpeed);
                 rs.updateRow();
                 connection.commit();
             }
