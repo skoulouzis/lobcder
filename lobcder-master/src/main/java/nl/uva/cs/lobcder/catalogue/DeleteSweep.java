@@ -81,7 +81,7 @@ class DeleteSweep implements Runnable {
                     }
                 }
             } catch ( Exception e) {
-                if(e.getMessage().contains("No route to host")){
+                if(e.getMessage().contains("No route to host") || e.getMessage().contains("Moved Permanently") || e instanceof java.net.UnknownHostException){
                      DeleteSweep.log.log(Level.WARNING, null, e);
                 }else{
                     try {
