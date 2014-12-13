@@ -256,7 +256,7 @@ public class WebDataFileResource extends WebDataResource implements
         return array[index];
     }
 
-    private PDRI transferer(List<PDRIDescr> pdris, OutputStream out, int tryCount, boolean doCircularStreamBufferTransferer) throws IOException, NotFoundException {
+    private PDRI transfer(List<PDRIDescr> pdris, OutputStream out, int tryCount, boolean doCircularStreamBufferTransferer) throws IOException, NotFoundException {
         InputStream in = null;
         PDRI pdri = null;
         try {
@@ -294,11 +294,11 @@ public class WebDataFileResource extends WebDataResource implements
                 sleepTime = sleepTime + 20;
                 Thread.sleep(sleepTime);
                 if (ex instanceof nl.uva.vlet.exception.VlInterruptedException && ++tryCount < Constants.RECONNECT_NTRY) {
-                    transferer(pdris, out, tryCount, false);
+                    transfer(pdris, out, tryCount, false);
                 } else if (++tryCount < Constants.RECONNECT_NTRY) {
-                    transferer(pdris, out, tryCount, false);
+                    transfer(pdris, out, tryCount, false);
                 } else {
-                    transferer(pdris, out, 0, false);
+                    transfer(pdris, out, 0, false);
                 }
             } catch (InterruptedException ex1) {
                 sleepTime = 5;
@@ -313,7 +313,7 @@ public class WebDataFileResource extends WebDataResource implements
         return pdri;
     }
 
-//    private PDRI transferer(Iterator<PDRIDescr> it, OutputStream out, int tryCount, PDRI pdri, boolean doCircularStreamBufferTransferer) throws IOException, NotFoundException {
+//    private PDRI transfer(Iterator<PDRIDescr> it, OutputStream out, int tryCount, PDRI pdri, boolean doCircularStreamBufferTransferer) throws IOException, NotFoundException {
 //        InputStream in;
 //        try {
 //            boolean reconnect;
@@ -356,11 +356,11 @@ public class WebDataFileResource extends WebDataResource implements
 //                sleepTime = sleepTime + 20;
 //                Thread.sleep(sleepTime);
 //                if (ex instanceof nl.uva.vlet.exception.VlInterruptedException && ++tryCount < Constants.RECONNECT_NTRY) {
-//                    transferer(it, out, tryCount, pdri, false);
+//                    transfer(it, out, tryCount, pdri, false);
 //                } else if (++tryCount < Constants.RECONNECT_NTRY) {
-//                    transferer(it, out, tryCount, pdri, false);
+//                    transfer(it, out, tryCount, pdri, false);
 //                } else {
-//                    transferer(it, out, 0, null, true);
+//                    transfer(it, out, 0, null, true);
 //                }
 //            } catch (InterruptedException ex1) {
 //                sleepTime = 5;
@@ -437,8 +437,8 @@ public class WebDataFileResource extends WebDataResource implements
                 WebDataFileResource.log.log(Level.FINE, "Start: {0} end: {1} range: {2}", new Object[]{range.getStart(), range.getFinish(), range.getRange()});
                 pdri = transfererRange(it, out, 0, null, range);
             } else {
-//                pdri = transferer(it, out, 0, null, false);
-                pdri = transferer(pdris, out, 0, false);
+//                pdri = transfer(it, out, 0, null, false);
+                pdri = transfer(pdris, out, 0, false);
             }
         } catch (SQLException ex) {
             throw new BadRequestException(this, ex.getMessage());
