@@ -125,6 +125,7 @@ class ReplicateSweep implements Runnable {
         try (Statement s = connection.createStatement()) {
             ResultSet rs = s.executeQuery("SELECT st.src, st.dst, MAX(st.averageSpeed) "
                     + "FROM speed_table AS st GROUP BY  st.fSize");
+            Map<String, StorageSite> tmp = new HashMap<>();
             Map<String, StorageSite> res = new HashMap<>();
             while (rs.next()) {
                 String src = rs.getString(1);
@@ -132,14 +133,19 @@ class ReplicateSweep implements Runnable {
                 Set<String> keys = availableStorage.keySet();
                 for (String k : keys) {
                     if (k.contains(src) || k.contains(dst)) {
-                        res.put(k, availableStorage.get(k));
+                        tmp.put(k, availableStorage.get(k));
                     }
                 }
             }
-            if (res.isEmpty()) {
+            if (tmp.isEmpty()) {
                 ArrayList<String> keysAsArray = new ArrayList<>(availableStorage.keySet());
                 Random r = new Random();
                 StorageSite randomValue = availableStorage.get(keysAsArray.get(r.nextInt(keysAsArray.size())));
+                res.put(randomValue.getResourceURI(), randomValue);
+            } else {
+                ArrayList<String> keysAsArray = new ArrayList<>(tmp.keySet());
+                Random r = new Random();
+                StorageSite randomValue = tmp.get(keysAsArray.get(r.nextInt(keysAsArray.size())));
                 res.put(randomValue.getResourceURI(), randomValue);
             }
             return res;
