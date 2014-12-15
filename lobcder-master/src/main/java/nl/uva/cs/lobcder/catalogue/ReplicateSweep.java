@@ -5,9 +5,13 @@ import java.math.BigInteger;
 import java.security.NoSuchAlgorithmException;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.Random;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.naming.NamingException;
@@ -51,7 +55,7 @@ class ReplicateSweep implements Runnable {
             case aggressive:
                 return availableStorage;
             case fastest:
-                return getFastestSites(connection,1);
+                return getFastestSites(connection);
             default:
                 sites = new HashMap<>();
                 if (it == null || !it.hasNext()) {
@@ -116,28 +120,27 @@ class ReplicateSweep implements Runnable {
 
     }
 
-    private Map<String, StorageSite> getFastestSites(Connection connection, int i) throws SQLException {
-         try (Statement s = connection.createStatement()) {
-            ResultSet rs = s.executeQuery("SELECT storageSiteId, resourceURI, "
-                    + "currentNum, currentSize, quotaNum, quotaSize, username, "
-                    + "password, encrypt FROM storage_site_table JOIN credential_table ON "
-                    + "credentialRef = credintialId WHERE isCache != TRUE");
+    private Map<String, StorageSite> getFastestSites(Connection connection) throws SQLException {
+
+        try (Statement s = connection.createStatement()) {
+            ResultSet rs = s.executeQuery("SELECT st.src, st.dst, MAX(st.averageSpeed) "
+                    + "FROM speed_table AS st GROUP BY  st.fSize");
             Map<String, StorageSite> res = new HashMap<>();
             while (rs.next()) {
-                Credential c = new Credential();
-                c.setStorageSiteUsername(rs.getString(7));
-                c.setStorageSitePassword(rs.getString(8));
-                StorageSite ss = new StorageSite();
-                ss.setStorageSiteId(rs.getLong(1));
-                ss.setCredential(c);
-                String uri = rs.getString(2);
-                ss.setResourceURI(uri);
-                ss.setCurrentNum(rs.getLong(3));
-                ss.setCurrentSize(rs.getLong(4));
-                ss.setQuotaNum(rs.getLong(5));
-                ss.setQuotaSize(rs.getLong(6));
-                ss.setEncrypt(rs.getBoolean(9));
-                res.put(uri, ss);
+                String src = rs.getString(1);
+                String dst = rs.getString(2);
+                Set<String> keys = availableStorage.keySet();
+                for (String k : keys) {
+                    if (k.contains(src) || k.contains(dst)) {
+                        res.put(k, availableStorage.get(k));
+                    }
+                }
+            }
+            if (res.isEmpty()) {
+                ArrayList<String> keysAsArray = new ArrayList<>(availableStorage.keySet());
+                Random r = new Random();
+                StorageSite randomValue = availableStorage.get(keysAsArray.get(r.nextInt(keysAsArray.size())));
+                res.put(randomValue.getResourceURI(), randomValue);
             }
             return res;
         }
@@ -174,7 +177,10 @@ class ReplicateSweep implements Runnable {
         try (Connection connection = datasource.getConnection()) {
             try {
                 connection.setAutoCommit(false);
-                availableStorage = getStorageSites(connection);
+                if (availableStorage == null || availableStorage.isEmpty()) {
+                    availableStorage = getStorageSites(connection);
+                }
+
                 ArrayList<PDRIDescr> toReplicate = new ArrayList<>();
                 Map<Long, String> locationPerMap = new HashMap<>();
                 try (Statement statement = connection.createStatement()) {

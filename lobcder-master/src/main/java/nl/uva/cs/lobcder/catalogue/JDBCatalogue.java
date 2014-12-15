@@ -1526,7 +1526,7 @@ public class JDBCatalogue extends MyDataSource {
 
     private void setSpeed(Stats stats, Connection connection) throws SQLException {
         try (PreparedStatement ps = connection.prepareStatement(
-                "select id, averageSpeed, minSpeed, maxSpeed from speed_table "
+                "select id, averageSpeed, minSpeed, maxSpeed, offlineCount from speed_table "
                 + "where src = ? AND dst = ? AND fSize = ?", ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE)) {
             ps.setString(1, stats.getSource());
             ps.setString(2, stats.getDestination());
@@ -1551,6 +1551,7 @@ public class JDBCatalogue extends MyDataSource {
                 averageSpeed = rs.getDouble(2);
                 minSpeed = rs.getDouble(3);
                 maxSpeed = rs.getDouble(4);
+                int offLineCount = rs.getInt(5);
                 double a = 0.7;
                 averageSpeed = a * averageSpeed + (1 - a) * stats.getSpeed();
                 if (stats.getSpeed() > maxSpeed) {
