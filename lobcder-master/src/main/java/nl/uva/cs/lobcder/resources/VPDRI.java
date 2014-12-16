@@ -4,6 +4,13 @@
  */
 package nl.uva.cs.lobcder.resources;
 
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.api.client.config.ClientConfig;
+import com.sun.jersey.api.client.config.DefaultClientConfig;
+import com.sun.jersey.api.json.JSONConfiguration;
+import com.sun.jersey.client.urlconnection.HTTPSProperties;
 import io.milton.http.Range;
 import java.io.*;
 import java.math.BigInteger;
@@ -12,16 +19,30 @@ import java.net.UnknownHostException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+import javax.ws.rs.core.MediaType;
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.rest.wrappers.Stats;
 import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.cs.lobcder.util.DesEncrypter;
 import nl.uva.cs.lobcder.util.GridHelper;
+import nl.uva.cs.lobcder.util.PropertiesHelper;
 import nl.uva.vlet.GlobalConfig;
 import nl.uva.vlet.data.StringUtil;
 import nl.uva.vlet.exception.ResourceNotFoundException;
@@ -67,6 +88,8 @@ public class VPDRI implements PDRI {
 //    private static final Map<String, GridProxy> proxyCache = new HashMap<>();
     private boolean destroyCert;
     private long length = -1;
+    private Client restClient;
+    private static final String restURL = "http://localhost:8080/lobcder/rest/";
 
     public VPDRI(String fileName, Long storageSiteId, String resourceUrl,
             String username, String password, boolean encrypt, BigInteger keyInt,
@@ -84,8 +107,15 @@ public class VPDRI implements PDRI {
             this.encrypt = encrypt;
             this.keyInt = keyInt;
             this.doChunked = doChunkUpload;
-            VPDRI.log.log(Level.FINE, "fileName: {0}, storageSiteId: {1}, username: {2}, password: {3}, VRL: {4}", new Object[]{fileName, storageSiteId, username, password, vrl});
+            VPDRI.log.log(Level.FINE, "fileName: {0}, storageSiteId: {1}, username: {2}, password: {3}, VRL: {4}", new Object[]{fileName, storageSiteId, "username", "password", vrl});
             initVFS();
+
+            ClientConfig clientConfig = configureClient();
+//        SSLContext ctx = SSLContext.getInstance("SSL");
+//        clientConfig.getProperties().put(HTTPSProperties.PROPERTY_HTTPS_PROPERTIES, new HTTPSProperties(hostnameVerifier, ctx));
+            clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
+            restClient = Client.create(clientConfig);
+            restClient.addFilter(new com.sun.jersey.api.client.filter.HTTPBasicAuthFilter(getClass().getName(), PropertiesHelper.getLobComponentToken()));
         } catch (Exception ex) {
             throw new IOException(ex);
         }
@@ -569,7 +599,7 @@ public class VPDRI implements PDRI {
             stats.setDestination(getHost());
             stats.setSpeed(speed);
             stats.setSize(getLength());
-//            setSpeed(stats);
+            setSpeed(stats);
 
             String msg = "Source: " + source.getHost() + " Destination: " + vrl.getScheme() + "://" + getHost() + " Replication_Speed: " + speed + " Kbites/sec Repl_Size: " + (getLength()) + " bytes";
             VPDRI.log.log(Level.INFO, msg);
@@ -579,6 +609,8 @@ public class VPDRI implements PDRI {
 
         } catch (VlException ex) {
             throw new IOException(ex);
+        } catch (JAXBException ex) {
+            Logger.getLogger(VPDRI.class.getName()).log(Level.WARNING, null, ex);
         }
     }
 
@@ -647,5 +679,60 @@ public class VPDRI implements PDRI {
         } catch (VlException ex) {
             throw new IOException(ex);
         }
+    }
+
+    private void setSpeed(Stats stats) throws JAXBException {
+        JAXBContext context = JAXBContext.newInstance(Stats.class);
+        Marshaller m = context.createMarshaller();
+        m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+        OutputStream out = new ByteArrayOutputStream();
+        m.marshal(stats, out);
+
+        WebResource webResource = restClient.resource(restURL);
+        String stringStats = String.valueOf(out);
+
+        ClientResponse response = webResource.path("lob_statistics").path("set")
+                .type(MediaType.APPLICATION_XML).put(ClientResponse.class, stringStats);
+    }
+
+    public static ClientConfig configureClient() {
+        TrustManager[] certs = new TrustManager[]{
+            new X509TrustManager() {
+                @Override
+                public X509Certificate[] getAcceptedIssuers() {
+                    return null;
+                }
+
+                @Override
+                public void checkServerTrusted(X509Certificate[] chain, String authType)
+                        throws CertificateException {
+                }
+
+                @Override
+                public void checkClientTrusted(X509Certificate[] chain, String authType)
+                        throws CertificateException {
+                }
+            }
+        };
+        SSLContext ctx = null;
+        try {
+            ctx = SSLContext.getInstance("TLS");
+            ctx.init(null, certs, new SecureRandom());
+        } catch (java.security.GeneralSecurityException ex) {
+        }
+        HttpsURLConnection.setDefaultSSLSocketFactory(ctx.getSocketFactory());
+        ClientConfig config = new DefaultClientConfig();
+        try {
+            config.getProperties().put(HTTPSProperties.PROPERTY_HTTPS_PROPERTIES, new HTTPSProperties(
+                    new HostnameVerifier() {
+                @Override
+                public boolean verify(String hostname, SSLSession session) {
+                    return true;
+                }
+            },
+                    ctx));
+        } catch (Exception e) {
+        }
+        return config;
     }
 }

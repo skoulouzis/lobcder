@@ -19,7 +19,7 @@ import io.milton.resource.CollectionResource;
 import io.milton.resource.FileResource;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.auth.AuthI;
-import nl.uva.cs.lobcder.auth.AuthWorker;
+import nl.uva.cs.lobcder.auth.AuthLobcderComponents;
 import nl.uva.cs.lobcder.auth.Permissions;
 import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
 import nl.uva.cs.lobcder.optimization.SDNControllerClient;
@@ -191,6 +191,11 @@ public class WebDataFileResource extends WebDataResource implements
     }
 
     @Override
+    /**Specifies a lifetime for the information returned by this header. 
+     * A client MUST discard any information related to this header after the 
+     * specified amount of time. 
+     * 
+     */
     public Long getMaxAgeSeconds(Auth auth) {
         log.log(Level.FINE, "getMaxAgeSeconds() for {0}", getPath());
         return null;
@@ -221,6 +226,9 @@ public class WebDataFileResource extends WebDataResource implements
                 host = uri.getHost();
             }
             Double speed = weightPDRIMap.get(host);
+            if (speed == null) {
+                speed = 0.0;
+            }
             Logger.getLogger(WebDataFileResource.class.getName()).log(Level.FINE, "Speed: : {0}", speed);
             sumOfSpeed += speed;
         }
@@ -248,7 +256,7 @@ public class WebDataFileResource extends WebDataResource implements
         return array[index];
     }
 
-    private PDRI transferer(List<PDRIDescr> pdris, OutputStream out, int tryCount, boolean doCircularStreamBufferTransferer) throws IOException, NotFoundException {
+    private PDRI transfer(List<PDRIDescr> pdris, OutputStream out, int tryCount, boolean doCircularStreamBufferTransferer) throws IOException, NotFoundException {
         InputStream in = null;
         PDRI pdri = null;
         try {
@@ -286,11 +294,11 @@ public class WebDataFileResource extends WebDataResource implements
                 sleepTime = sleepTime + 20;
                 Thread.sleep(sleepTime);
                 if (ex instanceof nl.uva.vlet.exception.VlInterruptedException && ++tryCount < Constants.RECONNECT_NTRY) {
-                    transferer(pdris, out, tryCount, false);
+                    transfer(pdris, out, tryCount, false);
                 } else if (++tryCount < Constants.RECONNECT_NTRY) {
-                    transferer(pdris, out, tryCount, false);
+                    transfer(pdris, out, tryCount, false);
                 } else {
-                    transferer(pdris, out, 0, false);
+                    transfer(pdris, out, 0, false);
                 }
             } catch (InterruptedException ex1) {
                 sleepTime = 5;
@@ -305,7 +313,7 @@ public class WebDataFileResource extends WebDataResource implements
         return pdri;
     }
 
-//    private PDRI transferer(Iterator<PDRIDescr> it, OutputStream out, int tryCount, PDRI pdri, boolean doCircularStreamBufferTransferer) throws IOException, NotFoundException {
+//    private PDRI transfer(Iterator<PDRIDescr> it, OutputStream out, int tryCount, PDRI pdri, boolean doCircularStreamBufferTransferer) throws IOException, NotFoundException {
 //        InputStream in;
 //        try {
 //            boolean reconnect;
@@ -348,11 +356,11 @@ public class WebDataFileResource extends WebDataResource implements
 //                sleepTime = sleepTime + 20;
 //                Thread.sleep(sleepTime);
 //                if (ex instanceof nl.uva.vlet.exception.VlInterruptedException && ++tryCount < Constants.RECONNECT_NTRY) {
-//                    transferer(it, out, tryCount, pdri, false);
+//                    transfer(it, out, tryCount, pdri, false);
 //                } else if (++tryCount < Constants.RECONNECT_NTRY) {
-//                    transferer(it, out, tryCount, pdri, false);
+//                    transfer(it, out, tryCount, pdri, false);
 //                } else {
-//                    transferer(it, out, 0, null, true);
+//                    transfer(it, out, 0, null, true);
 //                }
 //            } catch (InterruptedException ex1) {
 //                sleepTime = 5;
@@ -429,8 +437,8 @@ public class WebDataFileResource extends WebDataResource implements
                 WebDataFileResource.log.log(Level.FINE, "Start: {0} end: {1} range: {2}", new Object[]{range.getStart(), range.getFinish(), range.getRange()});
                 pdri = transfererRange(it, out, 0, null, range);
             } else {
-//                pdri = transferer(it, out, 0, null, false);
-                pdri = transferer(pdris, out, 0, false);
+//                pdri = transfer(it, out, 0, null, false);
+                pdri = transfer(pdris, out, 0, false);
             }
         } catch (SQLException ex) {
             throw new BadRequestException(this, ex.getMessage());
@@ -563,7 +571,7 @@ public class WebDataFileResource extends WebDataResource implements
             String worker = workers.get(workerIndex++);
             String w = worker + "/" + getLogicalData().getUid();
             String token = UUID.randomUUID().toString();
-            AuthWorker.setTicket(worker, token);
+            AuthLobcderComponents.setTicket(worker, token);
             return w + "/" + token;
         } else {
             return null;
@@ -652,7 +660,7 @@ public class WebDataFileResource extends WebDataResource implements
         String worker = workersMap.get(workerIP);
         String w = worker + "/" + getLogicalData().getUid();
         String token = UUID.randomUUID().toString();
-        AuthWorker.setTicket(worker, token);
+        AuthLobcderComponents.setTicket(worker, token);
 //        w = "http://localhost:8080/lobcder-worker/"+getLogicalData().getUid();
         return w + "/" + token;
     }
@@ -665,7 +673,7 @@ public class WebDataFileResource extends WebDataResource implements
         String worker = workers.get(workerIndex++);
         String w = worker + "/" + getLogicalData().getUid();
         String token = UUID.randomUUID().toString();
-        AuthWorker.setTicket(worker, token);
+        AuthLobcderComponents.setTicket(worker, token);
         return w + "/" + token;
     }
 
@@ -675,7 +683,7 @@ public class WebDataFileResource extends WebDataResource implements
         String worker = workers.get(randomIndex);
         String w = worker + "/" + getLogicalData().getUid();
         String token = UUID.randomUUID().toString();
-        AuthWorker.setTicket(worker, token);
+        AuthLobcderComponents.setTicket(worker, token);
         return w + "/" + token;
     }
 }

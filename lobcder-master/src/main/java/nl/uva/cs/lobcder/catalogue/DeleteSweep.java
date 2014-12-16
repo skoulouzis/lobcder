@@ -3,6 +3,7 @@ package nl.uva.cs.lobcder.catalogue;
 import java.io.IOException;
 import java.sql.*;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.sql.DataSource;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.resources.PDRI;
@@ -64,12 +65,8 @@ class DeleteSweep implements Runnable {
                                         String password = rs3.getString(3);
                                         //For deleteing we don't care for encryption 
                                         PDRIDescr pdriDescr = new PDRIDescr(fileName, storageSiteRef, resourceUri, username, password, false, null, null, null);
-                                        DeleteSweep.log.log(Level.FINE, "PDRI Description: {0}, {1}, {2}, {3}, {4}", new Object[]{fileName, storageSiteRef, resourceUri, username, password});
-                                        DeleteSweep.log.log(Level.FINE, "PDRI pdriDescr: {0}", new Object[]{pdriDescr});
                                         factory = PDRIFactory.getFactory();
-                                        DeleteSweep.log.log(Level.FINE, "PDRIFactory: {0}", factory);
                                         PDRI pdri = factory.createInstance(pdriDescr, false);
-                                        DeleteSweep.log.log(Level.FINE, "pdri: {0}", pdri);
                                         DeleteSweep.log.log(Level.FINE, "PDRI Instance file name: {0}", new Object[]{pdri.getFileName()});
                                         pdri.delete();
                                         DeleteSweep.log.log(Level.FINE, "DELETE:", pdri.getURI());
@@ -83,8 +80,16 @@ class DeleteSweep implements Runnable {
                         }
                     }
                 }
-            } catch (SQLException | IOException e) {
-                DeleteSweep.log.log(Level.SEVERE, null, e);
+            } catch ( Exception e) {
+                if(e.getMessage().contains("No route to host") || e.getMessage().contains("Moved Permanently") || e instanceof java.net.UnknownHostException){
+                     DeleteSweep.log.log(Level.WARNING, null, e);
+                }else{
+                    try {
+                        throw e;
+                    } catch (Exception ex) {
+                        Logger.getLogger(DeleteSweep.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
                 connection.rollback();
             }
         } catch (SQLException e) {

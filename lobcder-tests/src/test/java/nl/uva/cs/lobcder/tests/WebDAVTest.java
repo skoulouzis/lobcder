@@ -16,7 +16,6 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -81,6 +80,7 @@ public class WebDAVTest {
     private static HttpClient client;
     private static Client restClient;
     private static String restURL;
+    private static Utils utils;
 
     static {
         try {
@@ -166,6 +166,9 @@ public class WebDAVTest {
         restClient = Client.create(clientConfig);
         restClient.addFilter(new com.sun.jersey.api.client.filter.HTTPBasicAuthFilter(username, password));
         restURL = prop.getProperty(("rest.test.url"), "http://localhost:8080/lobcder/dav/rest/");
+
+
+        utils = new Utils(client);
 
     }
 
@@ -273,9 +276,7 @@ public class WebDAVTest {
 //            URI resourceId2 = getResourceId(testuri2);
 //            assertEquals(resourceId, resourceId2);
         } finally {
-            DeleteMethod delete = new DeleteMethod(testcol);
-            status = client.executeMethod(delete);
-            assertTrue("DeleteMethod status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
+            utils.deleteResource(testcol, true);
         }
     }
 
@@ -346,9 +347,7 @@ public class WebDAVTest {
 //            assertEquals(HttpStatus.SC_OK, status);
 //            assertEquals("bar", get.getResponseBodyAsString());
         } finally {
-            DeleteMethod delete = new DeleteMethod(testcol);
-            status = client.executeMethod(delete);
-            assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
+            utils.deleteResource(testcol, true);
         }
     }
 
@@ -409,9 +408,7 @@ public class WebDAVTest {
 //            status = client.executeMethod(head);
 //            assertEquals(HttpStatus.SC_NOT_FOUND, status);
         } finally {
-            DeleteMethod delete = new DeleteMethod(testcol);
-            status = client.executeMethod(delete);
-            assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
+            utils.deleteResource(testcol, true);
         }
     }
 
@@ -475,9 +472,7 @@ public class WebDAVTest {
 //            status = client.executeMethod(head);
 //            assertEquals(HttpStatus.SC_OK, status);
         } finally {
-            DeleteMethod delete = new DeleteMethod(testcol);
-            status = client.executeMethod(delete);
-            assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
+            utils.deleteResource(testcol, true);
         }
     }
 
@@ -547,9 +542,7 @@ public class WebDAVTest {
 //            status = client.executeMethod(head);
 //            assertEquals(HttpStatus.SC_NOT_FOUND, status);
         } finally {
-            DeleteMethod delete = new DeleteMethod(testcol);
-            status = client.executeMethod(delete);
-            assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
+            utils.deleteResource(testcol, true);
         }
     }
     //No bind yet
@@ -619,9 +612,7 @@ public class WebDAVTest {
 //            assertEquals(hrefs1, hrefs2);
 //            assertEquals(segments1, segments2);
         } finally {
-            DeleteMethod delete = new DeleteMethod(testcol);
-            status = client.executeMethod(delete);
-            assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
+            utils.deleteResource(testcol, true);
         }
     }
 
@@ -694,9 +685,7 @@ public class WebDAVTest {
 //            assertTrue(ps instanceof List);
 //            assertEquals(2, ((List) ps).size());
         } finally {
-            DeleteMethod delete = new DeleteMethod(testcol);
-            status = client.executeMethod(delete);
-            assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
+            utils.deleteResource(testcol, true);
         }
     }
 
@@ -749,9 +738,7 @@ public class WebDAVTest {
 //            status = client.executeMethod(head);
 //            assertEquals(HttpStatus.SC_OK, status);
         } finally {
-            DeleteMethod delete = new DeleteMethod(testcol);
-            status = client.executeMethod(delete);
-            assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
+            utils.deleteResource(testcol, true);
         }
     }
 
@@ -812,17 +799,7 @@ public class WebDAVTest {
             assertTrue("status: " + status, status == HttpStatus.SC_NOT_FOUND);
 
         } finally {
-            DeleteMethod delete = new DeleteMethod(testuri);
-            status = client.executeMethod(delete);
-            assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT || status == HttpStatus.SC_NOT_FOUND);
-
-            status = client.executeMethod(delete);
-            assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT || status == HttpStatus.SC_NOT_FOUND);
-
-
-            delete = new DeleteMethod(testcol);
-            status = client.executeMethod(delete);
-            assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT || status == HttpStatus.SC_NOT_FOUND);
+            utils.deleteResource(testuri, false);
 
         }
     }
@@ -845,9 +822,8 @@ public class WebDAVTest {
             status = client.executeMethod(put);
             assertEquals("status: " + status, HttpStatus.SC_PRECONDITION_FAILED, status);
         } finally {
-            DeleteMethod delete = new DeleteMethod(testuri);
-            status = client.executeMethod(delete);
-            assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT || status == HttpStatus.SC_NOT_FOUND);
+            utils.deleteResource(testuri, true);
+
         }
     }
 
@@ -966,9 +942,7 @@ public class WebDAVTest {
             //No comments yet
 //            assertTrue(found.contains(DeltaVConstants.COMMENT) || notfound.contains(DeltaVConstants.COMMENT));
         } finally {
-            DeleteMethod delete = new DeleteMethod(testcol);
-            status = client.executeMethod(delete);
-            assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT || status == HttpStatus.SC_NOT_FOUND);
+            utils.deleteResource(testcol, true);
         }
     }
 
@@ -1031,7 +1005,7 @@ public class WebDAVTest {
 
             for (MultiStatusResponse r : responses) {
 //                System.out.println("Response: " + r.getHref());
-                DavPropertySet allProp = getProperties(r);
+                DavPropertySet allProp = utils.getProperties(r);
 
                 DavPropertyIterator iter = allProp.iterator();
                 while (iter.hasNext()) {
@@ -1046,9 +1020,7 @@ public class WebDAVTest {
             }
 
         } finally {
-            DeleteMethod delete = new DeleteMethod(testcol1);
-            int status = client.executeMethod(delete);
-            assertTrue("DeleteMethod status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
+            utils.deleteResource(testcol1, true);
         }
     }
 
@@ -1060,7 +1032,7 @@ public class WebDAVTest {
             put.setRequestEntity(new StringRequestEntity(TestSettings.TEST_DATA, "text/plain", "UTF-8"));
             int status = client.executeMethod(put);
             assertEquals(HttpStatus.SC_CREATED, status);
-            String[] sites = getAvailableStorageSites(testuri1);
+            String[] sites = utils.getAvailableStorageSites(testuri1);
 
             assertNotNull(sites);
             for (String s : sites) {
@@ -1069,14 +1041,12 @@ public class WebDAVTest {
 
 
         } finally {
-            DeleteMethod delete = new DeleteMethod(testuri1);
-            int status = client.executeMethod(delete);
-            assertTrue("DeleteMethod status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
+            utils.deleteResource(testuri1, true);
         }
     }
 
     @Test
-    public void testGetSetEncryptedProp() throws DavException, VlException {
+    public void testGetSetEncryptedProp() throws DavException, VlException, InterruptedException {
         String testuri1 = root + TestSettings.TEST_FILE_NAME1 + ".txt";
         try {
             PutMethod put = new PutMethod(testuri1);
@@ -1107,7 +1077,7 @@ public class WebDAVTest {
 
             String oldValue = null;
             for (MultiStatusResponse r : responses) {
-                DavPropertySet allProp = getProperties(r);
+                DavPropertySet allProp = utils.getProperties(r);
                 DavPropertyIterator iter = allProp.iterator();
                 while (iter.hasNext()) {
                     DavProperty<?> p = iter.nextProperty();
@@ -1164,7 +1134,7 @@ public class WebDAVTest {
             String newValue = null;
             for (MultiStatusResponse r : responses) {
 
-                DavPropertySet allProp = getProperties(r);
+                DavPropertySet allProp = utils.getProperties(r);
 
                 DavPropertyIterator iter = allProp.iterator();
                 while (iter.hasNext()) {
@@ -1202,7 +1172,7 @@ public class WebDAVTest {
             assertEquals(newHost, oldHost);
             assertNotSame(newEncrypt, oldEncrypt);
 
-            String[] sites = getAvailableStorageSites(testuri1);
+            String[] sites = utils.getAvailableStorageSites(testuri1);
 
             DeleteMethod delete = new DeleteMethod(testuri1);
             status = client.executeMethod(delete);
@@ -1233,13 +1203,8 @@ public class WebDAVTest {
 
             //The server says it is, but is it in realety ? 
             Set<PDRIDesc> pdris = null;
-            boolean done = false;
-            //Wait for replication 
-            try {
-                Thread.sleep(15000);
-            } catch (InterruptedException ex) {
-                Logger.getLogger(TestWebWAVFS.class.getName()).log(Level.SEVERE, null, ex);
-            }
+
+            utils.waitForReplication(testuri1);
 
             pdris = getPdris(TestSettings.TEST_FILE_NAME1 + ".txt");
 
@@ -1269,10 +1234,7 @@ public class WebDAVTest {
             Logger.getLogger(WebDAVTest.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
             try {
-                DeleteMethod delete = new DeleteMethod(testuri1);
-                int status = client.executeMethod(delete);
-                assertTrue("DeleteMethod status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
-
+                utils.deleteResource(testuri1, true);
             } catch (IOException ex) {
                 Logger.getLogger(WebDAVTest.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -1408,7 +1370,7 @@ public class WebDAVTest {
 
             for (MultiStatusResponse r : responses) {
 //                System.out.println("Response: " + r.getHref());
-                DavPropertySet allProp = getProperties(r);
+                DavPropertySet allProp = utils.getProperties(r);
 
                 DavPropertyIterator iter = allProp.iterator();
                 while (iter.hasNext()) {
@@ -1433,7 +1395,7 @@ public class WebDAVTest {
 //
 //            for (MultiStatusResponse r : responses) {
 //                System.out.println("Response: " + r.getHref());
-//                DavPropertySet allProp = getProperties(r);
+//                DavPropertySet allProp = utils.getProperties(r);
 //
 //                DavPropertyIterator iter = allProp.iterator();
 //                while (iter.hasNext()) {
@@ -1453,7 +1415,7 @@ public class WebDAVTest {
 
             for (MultiStatusResponse r : responses) {
 
-                DavPropertySet allProp = getProperties(r);
+                DavPropertySet allProp = utils.getProperties(r);
 
                 DavPropertyIterator iter = allProp.iterator();
                 while (iter.hasNext()) {
@@ -1472,9 +1434,7 @@ public class WebDAVTest {
 
 
         } finally {
-            DeleteMethod delete = new DeleteMethod(testcol1);
-            int status = client.executeMethod(delete);
-            assertTrue("DeleteMethod status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
+            utils.deleteResource(testcol1, true);
         }
     }
 
@@ -1537,7 +1497,7 @@ public class WebDAVTest {
 
             for (MultiStatusResponse r : responses) {
 //                System.out.println("Response: " + r.getHref());
-                DavPropertySet allProp = getProperties(r);
+                DavPropertySet allProp = utils.getProperties(r);
 
                 DavPropertyIterator iter = allProp.iterator();
                 while (iter.hasNext()) {
@@ -1565,7 +1525,7 @@ public class WebDAVTest {
             responses = multiStatus.getResponses();
 
             for (MultiStatusResponse r : responses) {
-                DavPropertySet allProp = getProperties(r);
+                DavPropertySet allProp = utils.getProperties(r);
 
                 DavPropertyIterator iter = allProp.iterator();
                 while (iter.hasNext()) {
@@ -1581,9 +1541,8 @@ public class WebDAVTest {
 
 
         } finally {
-            DeleteMethod delete = new DeleteMethod(testcol1);
-            int status = client.executeMethod(delete);
-            assertTrue("DeleteMethod status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
+            utils.deleteResource(testcol1, true);
+
         }
     }
 
@@ -1646,7 +1605,7 @@ public class WebDAVTest {
 
             for (MultiStatusResponse r : responses) {
 //                System.out.println("Response: " + r.getHref());
-                DavPropertySet allProp = getProperties(r);
+                DavPropertySet allProp = utils.getProperties(r);
 
                 DavPropertyIterator iter = allProp.iterator();
                 while (iter.hasNext()) {
@@ -1676,7 +1635,7 @@ public class WebDAVTest {
 
             for (MultiStatusResponse r : responses) {
 //                System.out.println("Response: " + r.getHref());
-                DavPropertySet allProp = getProperties(r);
+                DavPropertySet allProp = utils.getProperties(r);
 
                 DavPropertyIterator iter = allProp.iterator();
                 while (iter.hasNext()) {
@@ -1691,9 +1650,7 @@ public class WebDAVTest {
                 }
             }
         } finally {
-            DeleteMethod delete = new DeleteMethod(testcol1);
-            int status = client.executeMethod(delete);
-            assertTrue("DeleteMethod status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
+            utils.deleteResource(testcol1, true);
         }
     }
 
@@ -1731,7 +1688,7 @@ public class WebDAVTest {
 
             for (MultiStatusResponse r : responses) {
 //                System.out.println("Response: " + r.getHref());
-                DavPropertySet allProp = getProperties(r);
+                DavPropertySet allProp = utils.getProperties(r);
 
                 DavPropertyIterator iter = allProp.iterator();
                 while (iter.hasNext()) {
@@ -1761,7 +1718,7 @@ public class WebDAVTest {
 
             for (MultiStatusResponse r : responses) {
                 System.out.println("Response: " + r.getHref());
-                DavPropertySet allProp = getProperties(r);
+                DavPropertySet allProp = utils.getProperties(r);
 
                 DavPropertyIterator iter = allProp.iterator();
                 while (iter.hasNext()) {
@@ -1776,10 +1733,36 @@ public class WebDAVTest {
                 }
             }
         } finally {
-            DeleteMethod delete = new DeleteMethod(testcol1);
-            int status = client.executeMethod(delete);
-            assertTrue("DeleteMethod status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
+            utils.deleteResource(testcol1, true);
         }
+    }
+
+    @Test
+    public void testGetSetTTL() throws IOException, DavException, InterruptedException {
+        System.out.println("testGetSetTTL");
+        String testcol1 = root + "testResourceId/";
+        try {
+            utils.deleteResource(testcol1, false);
+            utils.createCollection(testcol1, true);
+
+            DavPropertyName dataLocationPreferenceName = DavPropertyName.create("ttl", Namespace.getNamespace("custom:"));
+            DavProperty dataLocationPreference = new DefaultDavProperty(dataLocationPreferenceName, "3");
+            utils.setProperty(testcol1, dataLocationPreference, true);
+
+
+            int count = 0;
+            while (utils.resourceExists(testcol1)) {
+                count++;
+                if (count > 200) {
+                    fail("Resource " + testcol1 + " is not deleted. It should be gone");
+                    break;
+                }
+                Thread.sleep(20000);
+            }
+        } finally {
+            utils.deleteResource(testcol1, false);
+        }
+
     }
 
     @Test
@@ -1799,14 +1782,14 @@ public class WebDAVTest {
             assertEquals(HttpStatus.SC_CREATED, status);
 
             DavPropertyName availStorageSitesName = DavPropertyName.create("avail-storage-sites", Namespace.getNamespace("custom:"));
-            MultiStatus multiStatus = getProperty(testcol1, availStorageSitesName);
+            MultiStatus multiStatus = utils.getProperty(testcol1, availStorageSitesName, true);
 
 
             MultiStatusResponse[] responses = multiStatus.getResponses();
             String availStorageSitesStr = null;
             for (MultiStatusResponse r : responses) {
 //                System.out.println("Response: " + r.getHref());
-                DavPropertySet allProp = getProperties(r);
+                DavPropertySet allProp = utils.getProperties(r);
                 DavPropertyIterator iter = allProp.iterator();
                 while (iter.hasNext()) {
                     DavProperty<?> p = iter.nextProperty();
@@ -1824,13 +1807,13 @@ public class WebDAVTest {
 
             DavPropertyName dataLocationPreferenceName = DavPropertyName.create("data-location-preference", Namespace.getNamespace("custom:"));
             DavProperty dataLocationPreference = new DefaultDavProperty(dataLocationPreferenceName, location);
-            setProperty(testcol1, dataLocationPreference);
+            utils.setProperty(testcol1, dataLocationPreference, true);
 
-            multiStatus = getProperty(testcol1, dataLocationPreferenceName);
+            multiStatus = utils.getProperty(testcol1, dataLocationPreferenceName, true);
             responses = multiStatus.getResponses();
             for (MultiStatusResponse r : responses) {
 //                System.out.println("Response: " + r.getHref());
-                DavPropertySet allProp = getProperties(r);
+                DavPropertySet allProp = utils.getProperties(r);
 
                 DavPropertyIterator iter = allProp.iterator();
                 while (iter.hasNext()) {
@@ -1854,12 +1837,12 @@ public class WebDAVTest {
             int count = 0;
             while (!done) {
                 DavPropertyName dataDistributionName = DavPropertyName.create("data-distribution", Namespace.getNamespace("custom:"));
-                multiStatus = getProperty(testuri1, dataDistributionName);
+                multiStatus = utils.getProperty(testuri1, dataDistributionName, true);
                 responses = multiStatus.getResponses();
                 String dataDist = null;
                 for (MultiStatusResponse r : responses) {
-                    System.out.println("Response: " + r.getHref());
-                    DavPropertySet allProp = getProperties(r);
+//                    System.out.println("Response: " + r.getHref());
+                    DavPropertySet allProp = utils.getProperties(r);
 
                     DavPropertyIterator iter = allProp.iterator();
 
@@ -1895,12 +1878,12 @@ public class WebDAVTest {
             String nowhere = "Going_nowhere";
             dataLocationPreferenceName = DavPropertyName.create("data-location-preference", Namespace.getNamespace("custom:"));
             dataLocationPreference = new DefaultDavProperty(dataLocationPreferenceName, nowhere);
-            setProperty(testcol1, dataLocationPreference);
+            utils.setProperty(testcol1, dataLocationPreference, true);
 
-            multiStatus = getProperty(testcol1, dataLocationPreferenceName);
+            multiStatus = utils.getProperty(testcol1, dataLocationPreferenceName, true);
             responses = multiStatus.getResponses();
             for (MultiStatusResponse r : responses) {
-                DavPropertySet allProp = getProperties(r);
+                DavPropertySet allProp = utils.getProperties(r);
                 DavPropertyIterator iter = allProp.iterator();
                 while (iter.hasNext()) {
                     DavProperty<?> p = iter.nextProperty();
@@ -1918,18 +1901,17 @@ public class WebDAVTest {
             status = client.executeMethod(put);
             assertEquals(HttpStatus.SC_CREATED, status);
 
-
-
+            utils.waitForReplication(testuri1);
             done = false;
             count = 0;
             while (!done) {
                 DavPropertyName dataDistributionName = DavPropertyName.create("data-distribution", Namespace.getNamespace("custom:"));
-                multiStatus = getProperty(testuri1, dataDistributionName);
+                multiStatus = utils.getProperty(testuri1, dataDistributionName, true);
                 responses = multiStatus.getResponses();
                 String dataDist = null;
                 for (MultiStatusResponse r : responses) {
                     System.out.println("Response: " + r.getHref());
-                    DavPropertySet allProp = getProperties(r);
+                    DavPropertySet allProp = utils.getProperties(r);
                     DavPropertyIterator iter = allProp.iterator();
 
                     while (iter.hasNext()) {
@@ -1960,9 +1942,7 @@ public class WebDAVTest {
 
 
         } finally {
-            DeleteMethod delete = new DeleteMethod(testcol1);
-            int status = client.executeMethod(delete);
-            assertTrue("DeleteMethod status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
+            utils.deleteResource(testcol1, true);
         }
     }
 
@@ -1986,23 +1966,21 @@ public class WebDAVTest {
             int status = client.executeMethod(method);
             assertEquals(HttpStatus.SC_CREATED, status);
 
-            String localMD5 = checkChecksum(new FileInputStream(testUploadFile));
+            String localMD5 = utils.checkChecksum(new FileInputStream(testUploadFile));
             GetMethod get = new GetMethod(lobcderFilePath);
             status = client.executeMethod(get);
             assertEquals(HttpStatus.SC_OK, status);
 
             InputStream in = get.getResponseBodyAsStream();
-            String remoteMD5 = checkChecksum(in);
+            String remoteMD5 = utils.checkChecksum(in);
             assertEquals(localMD5, remoteMD5);
         } finally {
-            DeleteMethod delete = new DeleteMethod(lobcderFilePath);
-            int status = client.executeMethod(delete);
-            assertTrue("DeleteMethod status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
+            utils.deleteResource(lobcderFilePath, true);
         }
     }
 
     @Test
-    public void testGetSigleRange() {
+    public void testGetSigleRange() throws DavException {
         String testcol1 = root + "testCollection/";
         String testuri1 = testcol1 + "file1";
         try {
@@ -2011,8 +1989,7 @@ public class WebDAVTest {
             int status = client.executeMethod(put);
             assertEquals(HttpStatus.SC_CREATED, status);
 
-            //wait for replication
-            Thread.sleep(15000);
+            utils.waitForReplication(testuri1);
 
             int start = 0;
             int end = 9;
@@ -2072,9 +2049,7 @@ public class WebDAVTest {
             Logger.getLogger(WebDAVTest.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
             try {
-                DeleteMethod delete = new DeleteMethod(testcol1);
-                int status = client.executeMethod(delete);
-                assertTrue("DeleteMethod status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
+                utils.deleteResource(testcol1, true);
             } catch (IOException ex) {
                 Logger.getLogger(WebDAVTest.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -2091,8 +2066,7 @@ public class WebDAVTest {
             int status = client.executeMethod(put);
             assertEquals(HttpStatus.SC_CREATED, status);
 
-            //wait for replication
-            Thread.sleep(15000);
+            utils.waitForReplication(testuri1);
 
 
 
@@ -2109,7 +2083,7 @@ public class WebDAVTest {
             MultiStatusResponse[] responses = multiStatus.getResponses();
 
 
-            DavPropertySet prop = getProperties(responses[0]);
+            DavPropertySet prop = utils.getProperties(responses[0]);
             DavPropertyName[] names = prop.getPropertyNames();
             for (int i = 0; i < names.length; i++) {
 //                System.err.println(names[i] + " : " + prop.get(names[i]));
@@ -2171,32 +2145,11 @@ public class WebDAVTest {
             Logger.getLogger(WebDAVTest.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
             try {
-                DeleteMethod delete = new DeleteMethod(testcol1);
-                int status = client.executeMethod(delete);
-                assertTrue("DeleteMethod status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
+                utils.deleteResource(testcol1, true);
             } catch (IOException ex) {
                 Logger.getLogger(WebDAVTest.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-    }
-
-    private String checkChecksum(InputStream is) throws NoSuchAlgorithmException, FileNotFoundException, IOException {
-        MessageDigest md = MessageDigest.getInstance("MD5");
-
-        byte[] dataBytes = new byte[1024];
-
-        int nread = 0;
-        while ((nread = is.read(dataBytes)) != -1) {
-            md.update(dataBytes, 0, nread);
-        }
-        byte[] mdbytes = md.digest();
-
-        //convert the byte to hex format method 1
-        StringBuffer sb = new StringBuffer();
-        for (int i = 0; i < mdbytes.length; i++) {
-            sb.append(Integer.toString((mdbytes[i] & 0xff) + 0x100, 16).substring(1));
-        }
-        return sb.toString();
     }
 
     // utility methods
@@ -2226,32 +2179,6 @@ public class WebDAVTest {
         return resid;
     }
 
-    private DavProperty getParentSet(String uri) throws IOException, DavException, URISyntaxException {
-        DavPropertyNameSet names = new DavPropertyNameSet();
-        names.add(BindConstants.PARENTSET);
-        PropFindMethod propfind = new PropFindMethod(uri, names, 0);
-        int status = client.executeMethod(propfind);
-        assertEquals(207, status);
-        MultiStatus multistatus = propfind.getResponseBodyAsMultiStatus();
-        MultiStatusResponse[] responses = multistatus.getResponses();
-        assertEquals(1, responses.length);
-        DavProperty parentset = responses[0].getProperties(HttpStatus.SC_OK).get(BindConstants.PARENTSET);
-        assertNotNull(parentset);
-        return parentset;
-    }
-
-    private DavPropertySet getProperties(MultiStatusResponse statusResponse) {
-        Status[] status = statusResponse.getStatus();
-
-        DavPropertySet allProp = new DavPropertySet();
-        for (int i = 0; i < status.length; i++) {
-            DavPropertySet pset = statusResponse.getProperties(status[i].getStatusCode());
-            allProp.addAll(pset);
-        }
-
-        return allProp;
-    }
-
     private String getUri(Element href) {
         String s = "";
         for (Node c = href.getFirstChild(); c != null; c = c.getNextSibling()) {
@@ -2262,38 +2189,6 @@ public class WebDAVTest {
         return s;
     }
 
-    private void debug(String msg) {
-        System.err.println(this.getClass().getName() + ": " + msg);
-    }
-
-    private String[] getAvailableStorageSites(String testuri1) throws IOException, DavException {
-        DavPropertyNameSet availableStorageSitesNameSet = new DavPropertyNameSet();
-        DavPropertyName availableStorageSitesName = DavPropertyName.create("avail-storage-sites", Namespace.getNamespace("custom:"));
-        availableStorageSitesNameSet.add(availableStorageSitesName);
-
-
-        PropFindMethod propFind = new PropFindMethod(testuri1, availableStorageSitesNameSet, DavConstants.DEPTH_INFINITY);
-        int status = client.executeMethod(propFind);
-        assertEquals(HttpStatus.SC_MULTI_STATUS, status);
-
-        MultiStatus multiStatus = propFind.getResponseBodyAsMultiStatus();
-        MultiStatusResponse[] responses = multiStatus.getResponses();
-
-        String value = null;
-        for (MultiStatusResponse r : responses) {
-            DavPropertySet allProp = getProperties(r);
-            DavPropertyIterator iter = allProp.iterator();
-            while (iter.hasNext()) {
-                DavProperty<?> p = iter.nextProperty();
-                assertEquals(p.getName(), availableStorageSitesName);
-                assertNotNull(p.getValue());
-                value = (String) p.getValue();
-            }
-        }
-
-        String sites = value.replaceAll("[\\[\\]]", "");
-        return sites.split(",");
-    }
 //    @Test
 //    public void testWrongRanges() throws IOException {
 //
@@ -2401,26 +2296,6 @@ public class WebDAVTest {
 //        // exhausted reader without reaching end of headers
 //        fail("Unexpected end of data");
 //    }
-
-    private MultiStatus getProperty(String resource, DavPropertyName propertyName) throws IOException, DavException {
-        DavPropertyNameSet commentNameSet1 = new DavPropertyNameSet();
-        commentNameSet1.add(propertyName);
-
-        PropFindMethod propFind = new PropFindMethod(resource, commentNameSet1, DavConstants.DEPTH_INFINITY);
-        int status = client.executeMethod(propFind);
-        assertEquals(HttpStatus.SC_MULTI_STATUS, status);
-        return propFind.getResponseBodyAsMultiStatus();
-    }
-
-    private void setProperty(String resource, DavProperty property) throws IOException {
-        DavPropertyNameSet commentNameSet = new DavPropertyNameSet();
-        DavPropertySet descriptionSet = new DavPropertySet();
-        descriptionSet.add(property);
-        PropPatchMethod proPatch = new PropPatchMethod(resource, descriptionSet, commentNameSet);
-        int status = client.executeMethod(proPatch);
-        assertEquals(HttpStatus.SC_MULTI_STATUS, status);
-    }
-
     private static class GetRunnable implements Runnable {
 
         private final GetMethod get;

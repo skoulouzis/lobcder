@@ -283,6 +283,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
             stats.setSource(fromAddress);
             stats.setDestination(pdri.getHost());
             stats.setSpeed(speed);
+
             stats.setSize(resource.getContentLength());
             getCatalogue().setSpeed(stats);
             msg = "Source: " + fromAddress + " Destination: " + new URI(pdri.getURI()).getScheme() + "://" + pdri.getHost() + " Rx_Speed: " + speed + " Kbites/sec Rx_Size: " + (resource.getContentLength()) + " bytes";

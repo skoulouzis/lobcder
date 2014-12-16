@@ -159,12 +159,12 @@ public class AuthTicket implements AuthI {
         }
     }
 
-    public static void main(String[] args) {
-        AuthI au = null;
-        try {
-            au = new AuthTicket();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
+//    public static void main(String[] args) {
+//        AuthI au = null;
+//        try {
+//            au = new AuthTicket();
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//    }
 }

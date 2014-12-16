@@ -151,7 +151,8 @@ CREATE TABLE speed_table (
   fSize ENUM('S', 'M','L','XL'), INDEX(fSize),
   averageSpeed DOUBLE,
   minSpeed DOUBLE,
-  maxSpeed DOUBLE
+  maxSpeed DOUBLE,
+  offlineCount BIGINT UNSIGNED
 ) ENGINE=InnoDB;
 
 

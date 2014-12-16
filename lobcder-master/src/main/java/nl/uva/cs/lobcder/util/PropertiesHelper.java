@@ -35,15 +35,14 @@ public class PropertiesHelper {
         resource,
         state
     }
-    
-        public static enum ReplicationPolicy {
+
+    public static enum ReplicationPolicy {
 
         aggressive,
-        firstSite
-        
+        firstSite,
+        fastest,
+        demand
     }
-        
-    
 
     private static Properties getProperties() throws IOException {
         InputStream in = null;
@@ -114,12 +113,12 @@ public class PropertiesHelper {
         return agants;
     }
 
-    public static String getWorkerToken() throws IOException {
+    public static String getLobComponentToken() throws IOException {
         return getProperties().getProperty("worker.token");
     }
 
     public static ReplicationPolicy getReplicationPolicy() throws IOException {
-        return ReplicationPolicy.valueOf( getProperties().getProperty("replication.policy", "firstSite"));
+        return ReplicationPolicy.valueOf(getProperties().getProperty("replication.policy", "firstSite"));
     }
 
     public static boolean doRedirectGets() throws IOException {
@@ -223,7 +222,7 @@ public class PropertiesHelper {
     public static String getSchedulingAlg() throws IOException {
         return getProperties().getProperty("worker.selection.algorithm");
     }
-    
+
     public static Boolean useSDN() throws IOException {
         return Boolean.valueOf(getProperties().getProperty("sdn.controller.use", "false"));
     }
@@ -259,16 +258,15 @@ public class PropertiesHelper {
     public static PREDICTION_TYPE getPredictionType() throws IOException {
         return PREDICTION_TYPE.valueOf(getProperties().getProperty("predictor.type", "state"));
     }
-    
-    
-        public static String getBackendWorkingFolderName() throws IOException {
+
+    public static String getBackendWorkingFolderName() throws IOException {
         return getProperties().getProperty("backend.working.folder.name", "LOBCDER-REPLICA-vTEST");
     }
 
     public static Long getTmpDirUid() {
         Long result = null;
         try {
-            String property = getProperties().getProperty("tmpdiruid", null);
+            String property = getProperties().getProperty("tmp.dir.uid", null);
             result = (property == null) ? null : Long.valueOf(property);
         } catch (Throwable th){}
         return result;

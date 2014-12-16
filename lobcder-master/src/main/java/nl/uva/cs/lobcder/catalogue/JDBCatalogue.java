@@ -15,6 +15,8 @@ import java.util.*;
 import java.util.logging.Level;
 import javax.annotation.Nonnull;
 import javax.naming.NamingException;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.java.Log;
@@ -132,10 +134,11 @@ public class JDBCatalogue extends MyDataSource {
             preparedStatement.setTimestamp(5, new Timestamp(entry.getCreateDate()));
             preparedStatement.setTimestamp(6, new Timestamp(entry.getModifiedDate()));
             preparedStatement.setTimestamp(7, new Timestamp(entry.getLastAccessDate()));
-            if(entry.getTtlSec() == null)
+            if (entry.getTtlSec() == null) {
                 preparedStatement.setNull(8, Types.INTEGER);
-            else
+            } else {
                 preparedStatement.setInt(8, entry.getTtlSec());
+            }
 
             preparedStatement.executeUpdate();
             ResultSet rs = preparedStatement.getGeneratedKeys();
@@ -181,10 +184,11 @@ public class JDBCatalogue extends MyDataSource {
             preparedStatement.setString(19, entry.getDataLocationPreference());
             preparedStatement.setString(20, entry.getName());
             preparedStatement.setTimestamp(21, new Timestamp(entry.getLastAccessDate()));
-            if(entry.getTtlSec() == null)
+            if (entry.getTtlSec() == null) {
                 preparedStatement.setNull(22, Types.INTEGER);
-            else
+            } else {
                 preparedStatement.setInt(22, entry.getTtlSec());
+            }
             preparedStatement.executeUpdate();
             ResultSet rs = preparedStatement.getGeneratedKeys();
             rs.next();
@@ -208,14 +212,16 @@ public class JDBCatalogue extends MyDataSource {
             ps.setLong(2, entry.getLength());
             ps.setString(3, entry.getContentTypesAsString());
             ps.setLong(4, entry.getPdriGroupId());
-            if(entry.getLastAccessDate() == null)
+            if (entry.getLastAccessDate() == null) {
                 ps.setNull(5, Types.TIMESTAMP);
-            else
+            } else {
                 ps.setTimestamp(5, new Timestamp(entry.getLastAccessDate()));
-            if(entry.getTtlSec() == null)
+            }
+            if (entry.getTtlSec() == null) {
                 ps.setNull(6, Types.INTEGER);
-            else
+            } else {
                 ps.setInt(6, entry.getTtlSec());
+            }
             ps.setLong(7, entry.getUid());
             ps.executeUpdate();
             putToLDataCache(entry, null);
@@ -474,10 +480,10 @@ public class JDBCatalogue extends MyDataSource {
                 if (i == (parts.length - 1)) {
                     try (PreparedStatement preparedStatement1 = connection.prepareStatement(
                             "SELECT uid, ownerId, datatype, createDate, modifiedDate, ldLength, "
-                                    + "contentTypesStr, pdriGroupRef, isSupervised, checksum, lastValidationDate, "
-                                    + "lockTokenId, lockScope, lockType, lockedByUser, lockDepth, lockTimeout, "
-                                    + "description, locationPreference, status, accessDate, ttlSec "
-                                    + "FROM ldata_table WHERE ldata_table.parentRef = ? AND ldata_table.ldName = ?")) {
+                            + "contentTypesStr, pdriGroupRef, isSupervised, checksum, lastValidationDate, "
+                            + "lockTokenId, lockScope, lockType, lockedByUser, lockDepth, lockTimeout, "
+                            + "description, locationPreference, status, accessDate, ttlSec "
+                            + "FROM ldata_table WHERE ldata_table.parentRef = ? AND ldata_table.ldName = ?")) {
                         preparedStatement1.setLong(1, parent);
                         preparedStatement1.setString(2, p);
                         ResultSet rs = preparedStatement1.executeQuery();
@@ -505,7 +511,7 @@ public class JDBCatalogue extends MyDataSource {
                             res.setDescription(rs.getString(18));
                             res.setDataLocationPreference(rs.getString(19));
                             res.setStatus(rs.getString(20));
-                            Timestamp ts =  rs.getTimestamp(21);
+                            Timestamp ts = rs.getTimestamp(21);
                             //Object ts = rs.getObject(21);
                             res.setLastAccessDate(ts != null ? ts.getTime() : null);
                             int ttl = rs.getInt(22);
@@ -1508,6 +1514,7 @@ public class JDBCatalogue extends MyDataSource {
     public void setSpeed(Stats stats) throws SQLException {
         try (Connection connection = getConnection()) {
             try {
+                connection.setAutoCommit(false);
                 setSpeed(stats, connection);
                 connection.commit();
             } catch (SQLException e) {
@@ -1518,10 +1525,9 @@ public class JDBCatalogue extends MyDataSource {
     }
 
     private void setSpeed(Stats stats, Connection connection) throws SQLException {
-
         try (PreparedStatement ps = connection.prepareStatement(
-                "select id, averageSpeed, minSpeed, maxSpeed from speed_table "
-                + "where src = ? AND dst = ? AND fSize = ?")) {
+                "select id, averageSpeed, minSpeed, maxSpeed, offlineCount from speed_table "
+                + "where src = ? AND dst = ? AND fSize = ?", ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE)) {
             ps.setString(1, stats.getSource());
             ps.setString(2, stats.getDestination());
             String size = "m";
@@ -1540,42 +1546,64 @@ public class JDBCatalogue extends MyDataSource {
             double averageSpeed = -1;
             double minSpeed = -1;
             double maxSpeed = -1;
-            if (rs.next()) {
+            while (rs.next()) {
                 id = rs.getInt(1);
                 averageSpeed = rs.getDouble(2);
                 minSpeed = rs.getDouble(3);
                 maxSpeed = rs.getDouble(4);
-            }
-
-            if (id != -1) {
-                averageSpeed = (averageSpeed + stats.getSpeed()) / 2.0;
-                maxSpeed = ((stats.getSpeed() > maxSpeed) ? stats.getSpeed() : maxSpeed);
-                minSpeed = ((stats.getSpeed() < minSpeed) ? stats.getSpeed() : minSpeed);
-                try (PreparedStatement ps2 = connection.prepareStatement("UPDATE speed_table SET `averageSpeed` = ?, `minSpeed` = ?, `maxSpeed` = ? WHERE id = ?")) {
-                    ps2.setInt(1, id);
-                    ps2.setDouble(2, averageSpeed);
-                    ps2.setDouble(3, minSpeed);
-                    ps2.setDouble(4, maxSpeed);
-                    ps2.executeUpdate();
+                int offLineCount = rs.getInt(5);
+                double a = 0.7;
+                averageSpeed = a * averageSpeed + (1 - a) * stats.getSpeed();
+                if (stats.getSpeed() > maxSpeed) {
+                    maxSpeed = stats.getSpeed();
                 }
-            } else {
+                if (stats.getSpeed() < minSpeed) {
+                    minSpeed = stats.getSpeed();
+                }
+                rs.updateDouble(2, averageSpeed);
+                rs.updateDouble(3, minSpeed);
+                rs.updateDouble(4, maxSpeed);
+                rs.updateRow();
+                connection.commit();
+            }
+            if (id == -1) {
                 averageSpeed = stats.getSpeed();
                 maxSpeed = stats.getSpeed();
                 minSpeed = stats.getSpeed();
-                try (PreparedStatement ps2 = connection.prepareStatement("INSERT "
+                try (PreparedStatement ps3 = connection.prepareStatement("INSERT "
                         + "INTO speed_table (src, dst, fSize, averageSpeed, minSpeed, maxSpeed) "
                         + "VALUES (?, ?, ?, ?, ?, ?)")) {
-                    ps2.setString(1, stats.getSource());
-                    ps2.setString(2, stats.getDestination());
-                    ps2.setString(3, size);
-                    ps2.setDouble(4, averageSpeed);
-                    ps2.setDouble(5, minSpeed);
-                    ps2.setDouble(6, maxSpeed);
-                    ps2.executeUpdate();
+                    ps3.setString(1, stats.getSource());
+                    ps3.setString(2, stats.getDestination());
+                    ps3.setString(3, size);
+                    ps3.setDouble(4, averageSpeed);
+                    ps3.setDouble(5, minSpeed);
+                    ps3.setDouble(6, maxSpeed);
+                    ps3.executeUpdate();
                 }
             }
         }
+    }
 
+    public void setTTL(Long uid, Integer ttl) throws SQLException {
+        try (Connection cn = getConnection()) {
+            setTTL(uid, ttl, cn);
+        }
+    }
+
+    public void setTTL(Long uid, Integer ttl, Connection cn) throws SQLException {
+        try (PreparedStatement ps = cn.prepareStatement("SELECT uid, ownerId, "
+                + "ttlSec FROM ldata_table WHERE uid=?", ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE)) {
+            ps.setLong(1, uid);
+            ResultSet rs = ps.executeQuery();
+            if (!rs.next()) {
+                throw new WebApplicationException(Response.Status.NOT_FOUND);
+            } else {
+                rs.updateInt(3, ttl);
+                rs.updateRow();
+                cn.commit();
+            }
+        }
     }
 
     @Data
@@ -1647,9 +1675,9 @@ public class JDBCatalogue extends MyDataSource {
         }
     }
 
-    public void updateAccessTime(@Nonnull Long uid)  throws SQLException {
-        try (Connection connection = getConnection()){
-            try(PreparedStatement ps = connection.prepareStatement("UPDATE ldata_table SET accessDate = ? WHERE uid = ?")) {
+    public void updateAccessTime(@Nonnull Long uid) throws SQLException {
+        try (Connection connection = getConnection()) {
+            try (PreparedStatement ps = connection.prepareStatement("UPDATE ldata_table SET accessDate = ? WHERE uid = ?")) {
                 ps.setTimestamp(1, new Timestamp(System.currentTimeMillis()));
                 ps.setLong(2, uid);
                 ps.executeUpdate();

@@ -5,9 +5,13 @@ import java.math.BigInteger;
 import java.security.NoSuchAlgorithmException;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.Random;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.naming.NamingException;
@@ -38,7 +42,7 @@ class ReplicateSweep implements Runnable {
     private Map<String, StorageSite> availableStorage = null;
     private Iterator<StorageSite> it = null;
 
-    private Map<String, StorageSite> findBestSites() {
+    private Map<String, StorageSite> findBestSites(Connection connection) throws SQLException {
         switch (replicatePolicy) {
             case firstSite:
                 Map<String, StorageSite> sites = new HashMap<>();
@@ -50,6 +54,8 @@ class ReplicateSweep implements Runnable {
                 return sites;
             case aggressive:
                 return availableStorage;
+            case fastest:
+                return getFastestSites(connection);
             default:
                 sites = new HashMap<>();
                 if (it == null || !it.hasNext()) {
@@ -114,20 +120,43 @@ class ReplicateSweep implements Runnable {
 
     }
 
+    private Map<String, StorageSite> getFastestSites(Connection connection) throws SQLException {
+
+        try (Statement s = connection.createStatement()) {
+            ResultSet rs = s.executeQuery("SELECT st.src, st.dst, MAX(st.averageSpeed) "
+                    + "FROM speed_table AS st GROUP BY  st.fSize");
+            Map<String, StorageSite> tmp = new HashMap<>();
+            Map<String, StorageSite> res = new HashMap<>();
+            while (rs.next()) {
+                String src = rs.getString(1);
+                String dst = rs.getString(2);
+                Set<String> keys = availableStorage.keySet();
+                for (String k : keys) {
+                    if (k.contains(src) || k.contains(dst)) {
+                        tmp.put(k, availableStorage.get(k));
+                    }
+                }
+            }
+            if (tmp.isEmpty()) {
+                ArrayList<String> keysAsArray = new ArrayList<>(availableStorage.keySet());
+                Random r = new Random();
+                StorageSite randomValue = availableStorage.get(keysAsArray.get(r.nextInt(keysAsArray.size())));
+                res.put(randomValue.getResourceURI(), randomValue);
+            } else {
+                ArrayList<String> keysAsArray = new ArrayList<>(tmp.keySet());
+                Random r = new Random();
+                StorageSite randomValue = tmp.get(keysAsArray.get(r.nextInt(keysAsArray.size())));
+                res.put(randomValue.getResourceURI(), randomValue);
+            }
+            return res;
+        }
+    }
+
     class CacheDescr {
 
         Long pdriId;
         String name;
         Long pdriGroupRef;
-    }
-
-    private void onCacheReplicate(CacheDescr cd, CachePDRI cpdri, Connection connection) throws SQLException, IOException {
-        try (PreparedStatement ps = connection.prepareStatement("DELETE FROM pdri_table WHERE pdriId = ?")) {
-            cpdri.delete();
-            ps.setLong(1, cd.pdriId);
-            ps.executeUpdate();
-            // PDRIDescrCache.
-        }
     }
 
     private void onCacheReplicate(PDRIDescr cd, PDRI cpdri, Connection connection) throws SQLException, IOException {
@@ -154,7 +183,10 @@ class ReplicateSweep implements Runnable {
         try (Connection connection = datasource.getConnection()) {
             try {
                 connection.setAutoCommit(false);
-                availableStorage = getStorageSites(connection);
+                if (availableStorage == null || availableStorage.isEmpty()) {
+                    availableStorage = getStorageSites(connection);
+                }
+
                 ArrayList<PDRIDescr> toReplicate = new ArrayList<>();
                 Map<Long, String> locationPerMap = new HashMap<>();
                 try (Statement statement = connection.createStatement()) {
@@ -220,7 +252,7 @@ class ReplicateSweep implements Runnable {
                             + "(fileName, storageSiteRef, pdriGroupRef,isEncrypted, encryptionKey) VALUES(?, ?, ?, ?, ?)")) {
                         sourcePDRI = new PDRIFactory().createInstance(sourceDescr, false);
                         //                        StorageSite ss = findBestSite();
-                        Map<String, StorageSite> ss = findBestSites();
+                        Map<String, StorageSite> ss = findBestSites(connection);
                         boolean failed = false;
                         //Get the prefered store location for file
                         String loclPrefStr = locationPerMap.get(sourceDescr.getPdriGroupRef());
