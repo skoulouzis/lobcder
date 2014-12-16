@@ -180,6 +180,20 @@ class ReplicateSweep implements Runnable {
                             + "JOIN credential_table on credential_table.credintialId = storage_site_table.credentialRef "
                             + " JOIN ldata_table on (ldata_table.pdriGroupRef =  pdri_table.pdriGroupRef AND ldata_table.lockTokenId is NULL)"
                             + "WHERE refcnt >= 1 AND isCache LIMIT 100";
+
+/*
+// Change to this SQL if we want to keep temporary files in the cache without staging them to the backend
+
+                    String sql = "SELECT fileName, storageSiteId, storage_site_table.resourceUri, username, password, encrypt, encryptionKey, pdri_table.pdriGroupRef, "
+                            + "pdri_table.pdriId, ldata_table.locationPreference "
+                            + "FROM pdri_table JOIN (SELECT  pdriGroupRef, count(pdri_table.storageSiteRef) AS refcnt "
+                            + "FROM pdri_table GROUP BY pdriGroupRef)  AS t ON pdri_table.pdriGroupRef = t.pdriGroupRef "
+                            + "JOIN storage_site_table ON pdri_table.storageSiteRef = storage_site_table.storageSiteId "
+                            + "JOIN credential_table on credential_table.credintialId = storage_site_table.credentialRef "
+                            + " JOIN ldata_table on (ldata_table.pdriGroupRef =  pdri_table.pdriGroupRef AND ldata_table.lockTokenId is NULL)"
+                            + "WHERE refcnt >= 1 AND isCache AND ttlSec is NULL LIMIT 100";
+*/
+
                     ResultSet rs = statement.executeQuery(sql);
                     while (rs.next()) {
                         name = rs.getString(1);
