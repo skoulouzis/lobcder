@@ -52,4 +52,6 @@ public interface PDRI {
     public void setLength(long length);
 
     public boolean exists(String fileName) throws IOException;
+
+    public boolean isCahce();
 }

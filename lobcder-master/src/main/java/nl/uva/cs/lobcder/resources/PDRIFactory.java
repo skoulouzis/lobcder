@@ -19,10 +19,13 @@ public class PDRIFactory {
     }
 
     public PDRI createInstance(PDRIDescr descr, boolean isCahce) throws IOException {
+        VPDRI pdri;
         if (isCahce && descr.getResourceUrl().contains("swift")) {
-            return new VPDRI(descr.getName(), descr.getStorageSiteId(), descr.getResourceUrl(), descr.getUsername(), descr.getPassword(), descr.getEncrypt(), descr.getKey(), true);
+            pdri = new VPDRI(descr.getName(), descr.getStorageSiteId(), descr.getResourceUrl(), descr.getUsername(), descr.getPassword(), descr.getEncrypt(), descr.getKey(), true);
         } else {
-            return new VPDRI(descr.getName(), descr.getStorageSiteId(), descr.getResourceUrl(), descr.getUsername(), descr.getPassword(), descr.getEncrypt(), descr.getKey(), false);
+            pdri = new VPDRI(descr.getName(), descr.getStorageSiteId(), descr.getResourceUrl(), descr.getUsername(), descr.getPassword(), descr.getEncrypt(), descr.getKey(), false);
         }
+        pdri.setIsCahce(isCahce);
+        return pdri;
     }
 }

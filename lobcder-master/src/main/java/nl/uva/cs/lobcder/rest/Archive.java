@@ -39,8 +39,9 @@ import nl.uva.cs.lobcder.rest.wrappers.Stats;
 
 /**
  *
- * Generates archives given a folder path. Each file and folder is added at runtime 
- * from the backend to the archive 
+ * Generates archives given a folder path. Each file and folder is added at
+ * runtime from the backend to the archive
+ *
  * @author S. Koulouzis, D. Vasyunin
  */
 @Log
@@ -50,11 +51,11 @@ public class Archive extends CatalogueHelper {
     @Context
     HttpServletRequest request;
 
-    
     /**
-     * Generates a zip archive of folder 
-     * @param path the folder name 
-     * @return the stream of the archive 
+     * Generates a zip archive of folder
+     *
+     * @param path the folder name
+     * @return the stream of the archive
      */
     @GET
     @Path("/getzip/{name:.+}")
@@ -183,7 +184,9 @@ public class Archive extends CatalogueHelper {
                 stats.setSize(total);
                 String msg = "Source: " + stats.getSource() + " Destination: " + stats.getDestination() + " Tx_Speed: " + speed + " Kbites/sec Tx_Size: " + total + " bytes";
                 try {
-                    getCatalogue().setSpeed(stats);
+                    if (!pdri.isCahce()) {
+                        getCatalogue().setSpeed(stats);
+                    }
                 } catch (SQLException ex) {
                     Logger.getLogger(Archive.class.getName()).log(Level.SEVERE, null, ex);
                 }

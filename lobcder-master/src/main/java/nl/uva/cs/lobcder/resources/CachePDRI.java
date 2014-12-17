@@ -202,4 +202,9 @@ public class CachePDRI implements PDRI {
     public boolean exists(String fileName) throws IOException {
         return new File(new File(this.file_name).getParentFile().getAbsoluteFile() + "/" + fileName).exists();
     }
+
+    @Override
+    public boolean isCahce() {
+        return true;
+    }
 }

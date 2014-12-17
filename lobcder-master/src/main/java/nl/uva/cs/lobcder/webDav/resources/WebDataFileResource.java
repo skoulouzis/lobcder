@@ -191,10 +191,11 @@ public class WebDataFileResource extends WebDataResource implements
     }
 
     @Override
-    /**Specifies a lifetime for the information returned by this header. 
-     * A client MUST discard any information related to this header after the 
-     * specified amount of time. 
-     * 
+    /**
+     * Specifies a lifetime for the information returned by this header. A
+     * client MUST discard any information related to this header after the
+     * specified amount of time.
+     *
      */
     public Long getMaxAgeSeconds(Auth auth) {
         log.log(Level.FINE, "getMaxAgeSeconds() for {0}", getPath());
@@ -485,7 +486,9 @@ public class WebDataFileResource extends WebDataResource implements
         stats.setSize(getContentLength());
         String msg = "Source: " + stats.getSource() + " Destination: " + stats.getDestination() + " Tx_Speed: " + speed + " Kbites/sec Tx_Size: " + getContentLength() + " bytes";
         try {
-            getCatalogue().setSpeed(stats);
+            if (!pdri.isCahce()) {
+                getCatalogue().setSpeed(stats);
+            }
         } catch (SQLException ex) {
             Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, ex);
         }

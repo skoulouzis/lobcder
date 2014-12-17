@@ -90,6 +90,7 @@ public class VPDRI implements PDRI {
     private long length = -1;
     private Client restClient;
     private static final String restURL = "http://localhost:8080/lobcder/rest/";
+    private boolean isCache = false;
 
     public VPDRI(String fileName, Long storageSiteId, String resourceUrl,
             String username, String password, boolean encrypt, BigInteger keyInt,
@@ -192,7 +193,7 @@ public class VPDRI implements PDRI {
             //Maybe it's from assimilation. We must remove the baseDir
             if (ex instanceof ResourceNotFoundException || ex.getMessage().contains("Couldn open location. Get NULL object for location")) {
                 try {
-                    //                    VRL assimilationVRL = new VRL(resourceUrl).append(URLEncoder.encode(fileName, "UTF-8").replace("+", "%20"));
+                    // VRL assimilationVRL = new VRL(resourceUrl).append(URLEncoder.encode(fileName, "UTF-8").replace("+", "%20"));
 //                    String encoded = VRL.encode(fileName);
                     VRL assimilationVRL = new VRL(resourceUrl).append(fileName);
                     getVfsClient().openLocation(assimilationVRL).delete();
@@ -601,6 +602,7 @@ public class VPDRI implements PDRI {
             stats.setSize(getLength());
             setSpeed(stats);
 
+
             String msg = "Source: " + source.getHost() + " Destination: " + vrl.getScheme() + "://" + getHost() + " Replication_Speed: " + speed + " Kbites/sec Repl_Size: " + (getLength()) + " bytes";
             VPDRI.log.log(Level.INFO, msg);
 
@@ -734,5 +736,14 @@ public class VPDRI implements PDRI {
         } catch (Exception e) {
         }
         return config;
+    }
+
+    @Override
+    public boolean isCahce() {
+        return isCache;
+    }
+
+    void setIsCahce(boolean isCache) {
+        this.isCache = isCache;
     }
 }

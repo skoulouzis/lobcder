@@ -125,8 +125,9 @@ public class JDBCatalogue extends MyDataSource {
 //    }
     public LogicalData registerDirLogicalData(LogicalData entry, @Nonnull Connection connection) throws SQLException {
         try (PreparedStatement preparedStatement = connection.prepareStatement(
-                "INSERT INTO ldata_table(parentRef, ownerId, datatype, ldName, createDate, modifiedDate, accessDate, ttlSec)"
-                + " VALUES (?, ?, ?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS)) {
+                "INSERT INTO ldata_table(parentRef, ownerId, datatype, ldName, "
+                + "createDate, modifiedDate, accessDate, ttlSec,locationPreference)"
+                + " VALUES (?, ?, ?, ?, ?, ?, ?, ?,?)", Statement.RETURN_GENERATED_KEYS)) {
             preparedStatement.setLong(1, entry.getParentRef());
             preparedStatement.setString(2, entry.getOwner());
             preparedStatement.setString(3, Constants.LOGICAL_FOLDER);
@@ -139,7 +140,7 @@ public class JDBCatalogue extends MyDataSource {
             } else {
                 preparedStatement.setInt(8, entry.getTtlSec());
             }
-
+            preparedStatement.setString(9, entry.getDataLocationPreference());
             preparedStatement.executeUpdate();
             ResultSet rs = preparedStatement.getGeneratedKeys();
             rs.next();
