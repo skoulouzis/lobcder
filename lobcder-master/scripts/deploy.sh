@@ -93,8 +93,13 @@ rm -r target/lobcder
 mv target/lobcder-master-2.4 target/lobcder
 rm -r target/lobcder/manage*.jsp
 cd ../../
+
+
+jdbcDefult=url=\"jdbc:mysql:\/\/localhost:3306\/lobcderDB2\?zeroDateTimeBehavior=convertToNull
+jdbcDBName=url=\"jdbc:mysql:\/\/localhost:3306\/$dbName\?zeroDateTimeBehavior=convertToNull
+
 sed -i "s#<res-ref-name>jdbc\/lobcderDB2<\/res-ref-name>#<res-ref-name>jdbc\/$dbName<\/res-ref-name>#g" lobcder/lobcder-master/target/lobcder/WEB-INF/web.xml
-sed -i "s#url=\"jdbc:mysql:\/\/localhost:3306\/lobcderDB2\"#url=\"jdbc:mysql:\/\/localhost:3306\/$dbName\"#g" lobcder/lobcder-master/target/lobcder/META-INF/context.xml
+sed -i "s#$jdbcDefult#jdbcDBName#g" lobcder/lobcder-master/target/lobcder/META-INF/context.xml
 sed -i "s#password=\"RoomC3156\"#password=\"$dbPasswd\"#g" lobcder/lobcder-master/target/lobcder/META-INF/context.xml
 
 
