@@ -96,8 +96,9 @@ public class Utils {
             }
             if (done) {
                 break;
+            } else {
+                Thread.sleep(7000);
             }
-            Thread.sleep(7000);
         }
     }
 
@@ -276,7 +277,7 @@ public class Utils {
 
     public void postFile(File file, String url) throws IOException {
 
-        System.err.println("post:" + file.getName()+ " to: "+url);
+        System.err.println("post:" + file.getName() + " to: " + url);
         PostMethod method = new PostMethod(url);
 
         Part[] parts = {
