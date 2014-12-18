@@ -1,6 +1,8 @@
 #!/bin/bash
 # Argument = -t test -r server -p password -v
 
+lobGitDir=lobcder-git
+
 usage()
 {
 cat << EOF
@@ -85,9 +87,15 @@ mysql -u$sqlUser -p$sqlPass -s -N -e  "GRANT ALL PRIVILEGES on $dbName.* to lobc
 mysql -u$sqlUser -p$sqlPass -s -N -e  "GRANT SUPER ON *.* to lobcder@localhost IDENTIFIED by '$dbPasswd';"
 
 
+if [ -d "$lobGitDir" ]; then
+  cd $lobGitDir git pull
+else
+    git clone https://github.com/skoulouzis/lobcder.git lobcder-git
+fi
 
-git clone https://github.com/skoulouzis/lobcder.git
-cd lobcder/lobcder-master
+
+
+cd $lobGitDir/lobcder-master
 mvn install 
 rm -r target/lobcder
 mv target/lobcder-master-2.4 target/lobcder
@@ -122,7 +130,7 @@ INSERT INTO $dbName.auth_roles_tables(roleName, unameRef) VALUES  ('admin',     
                                                           ('megarole',  @authUserNamesRef);"
 
 
-cp -r lobcder/lobcder-master/target/lobcder $catalinaLocation/webapps/
+cp -r $lobGitDir/lobcder-master/target/lobcder $catalinaLocation/webapps/
 
 
 echo "-------------------------------------------------------"
