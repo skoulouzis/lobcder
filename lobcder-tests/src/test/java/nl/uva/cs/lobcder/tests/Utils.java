@@ -7,13 +7,16 @@ package nl.uva.cs.lobcder.tests;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Random;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpStatus;
+import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.PutMethod;
 import org.apache.commons.httpclient.methods.StringRequestEntity;
@@ -354,5 +357,46 @@ public class Utils {
         if (mustSucceed) {
             assertEquals(HttpStatus.SC_MULTI_STATUS, status);
         }
+    }
+
+    File createRandomFile(String string, int sizeInMB) throws FileNotFoundException, IOException {
+        File file = new File("/tmp/" + TestSettings.TEST_FILE_NAME1);
+
+
+        FileOutputStream fos = new FileOutputStream(file);
+        byte[] buffer = new byte[1024 * 1024]; //1MB
+        Random r = new Random();
+
+        for (int i = 0; i < 2; i++) {
+            r.nextBytes(buffer);
+            fos.write(buffer);
+            if (i % 100 == 0) {
+                System.err.println(i + " of " + sizeInMB);
+            }
+        }
+        fos.flush();
+        fos.close();
+        return file;
+    }
+
+    File DownloadFile(String resource, String dest, boolean mustSucceed) throws IOException {
+        GetMethod get = new GetMethod(resource);
+        client.executeMethod(get);
+        int status = get.getStatusCode();
+        if (mustSucceed) {
+            assertEquals(HttpStatus.SC_OK, status);
+        }
+        InputStream in = get.getResponseBodyAsStream();
+        File fromLob = new File(dest);
+        FileOutputStream fos = new FileOutputStream(fromLob);
+
+        byte buf[] = new byte[1024];
+        int len;
+        while ((len = in.read(buf)) > 0) {
+            fos.write(buf, 0, len);
+        }
+        fos.close();
+        in.close();
+        return fromLob;
     }
 }

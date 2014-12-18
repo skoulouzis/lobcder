@@ -18,6 +18,7 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.Properties;
 import java.util.Random;
@@ -509,7 +510,7 @@ public class TestWebWAVFS {
                 fos.flush();
                 fos.close();
 
-                utils.postFile(file,uri.toASCIIString());
+                utils.postFile(file, uri.toASCIIString());
 
                 String localChecksum = utils.getChecksum(file, "SHA1");
 
@@ -522,8 +523,6 @@ public class TestWebWAVFS {
                 InputStream in = get.getResponseBodyAsStream();
                 File fromLob = new File("/tmp/fromLob");
                 fos = new FileOutputStream(fromLob);
-
-
 
                 byte buf[] = new byte[1024];
                 int len;
@@ -641,6 +640,34 @@ public class TestWebWAVFS {
             assertEquals(TestSettings.TEST_DATA, cont);
         } finally {
             utils.deleteResource(testcol, false);
+            utils.deleteResource(testFileURI1, false);
+        }
+    }
+
+    @Test
+    public void testUpdateFile() throws VlException, IOException, NoSuchAlgorithmException, DavException, InterruptedException {
+        System.err.println("testUpdateFile");
+        String testFileURI1 = this.uri.toASCIIString() + TestSettings.TEST_FILE_NAME1 + ".txt";
+//        String testcol = root + "testResourceId/";
+        try {
+
+            File file = utils.createRandomFile("/tmp/" + TestSettings.TEST_FILE_NAME1, 2);
+            utils.postFile(file, uri.toASCIIString());
+            String firstLocalChecksum = utils.getChecksum(file, "SHA1");
+            utils.waitForReplication(testFileURI1);
+            File fromLOB = utils.DownloadFile(testFileURI1, "/tmp/FromLOB", true);
+            String firstRemoteChecksum = utils.getChecksum(fromLOB, "SHA1");
+            assertEquals(firstLocalChecksum, firstRemoteChecksum);
+
+            file = utils.createRandomFile("/tmp/" + TestSettings.TEST_FILE_NAME1, 2);
+            utils.postFile(file, uri.toASCIIString());
+            String secondLocalChecksum = utils.getChecksum(file, "SHA1");
+            utils.waitForReplication(testFileURI1);
+            fromLOB = utils.DownloadFile(testFileURI1, "/tmp/FromLOB", true);
+            String secondRemoteChecksum = utils.getChecksum(fromLOB, "SHA1");
+            assertEquals(secondLocalChecksum, secondRemoteChecksum);
+
+        } finally {
             utils.deleteResource(testFileURI1, false);
         }
     }
