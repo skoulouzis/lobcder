@@ -1767,9 +1767,11 @@ public class WebDAVTest {
 
     @Test
     public void testGetSetLocationPreference() throws UnsupportedEncodingException, IOException, DavException, InterruptedException {
-        System.out.println("testGetSetCustomComment");
+        System.out.println("testGetSetLocationPreference");
         String testcol1 = root + "testResourceId/";
+        String testcol2 = root + "testResourceId/testResourceId2";
         String testuri1 = testcol1 + "file1";
+        String testuri2 = testcol2 + "file2";
         try {
 
 
@@ -1865,7 +1867,9 @@ public class WebDAVTest {
                     fail(testuri1 + " is not replicated in " + location + " it is in " + dataDist);
                     break;
                 }
-                Thread.sleep(7000);
+                if (!done) {
+                    Thread.sleep(7000);
+                }
             }
 
 
@@ -1937,17 +1941,98 @@ public class WebDAVTest {
                     fail(testuri1 + " is not replicated in " + availStorageSites[0] + " or " + availStorageSites[1] + " it is in " + dataDist);
                     break;
                 }
-                Thread.sleep(7000);
+                if (!done) {
+                    Thread.sleep(7000);
+                }
             }
 
 
+
+
+            utils.deleteResource(testcol1, true);
+            utils.createCollection(testcol1, true);
+
+            dataLocationPreferenceName = DavPropertyName.create("data-location-preference", Namespace.getNamespace("custom:"));
+            dataLocationPreference = new DefaultDavProperty(dataLocationPreferenceName, location);
+            utils.setProperty(testcol1, dataLocationPreference, true);
+
+            utils.createCollection(testcol2, true);
+            utils.createFile(testuri2, true);
+
+            multiStatus = utils.getProperty(testcol2, dataLocationPreferenceName, true);
+            responses = multiStatus.getResponses();
+            for (MultiStatusResponse r : responses) {
+                String resource = r.getHref();
+                System.out.println("Resource: " + resource);
+                DavPropertySet allProp = utils.getProperties(r);
+
+                DavPropertyIterator iter = allProp.iterator();
+                while (iter.hasNext()) {
+                    DavProperty<?> p = iter.nextProperty();
+                    assertEquals(p.getName(), dataLocationPreferenceName);
+                    System.out.println(p.getName() + " : " + p.getValue());
+                    assertNotNull(p.getValue());
+                    String path = new URL(testcol2).getPath();
+                    System.out.println("Resource: " + resource + " path: " + path);
+                    if (path.equals(resource)) {
+                        String val = p.getValue().toString();
+                        assertEquals(location, val);
+                    }
+                }
+            }
+
+
+            utils.waitForReplication(testuri2);
+
+
+            done = false;
+            count = 0;
+            while (!done) {
+                DavPropertyName dataDistributionName = DavPropertyName.create("data-distribution", Namespace.getNamespace("custom:"));
+                multiStatus = utils.getProperty(testuri2, dataDistributionName, true);
+                responses = multiStatus.getResponses();
+                String dataDist = null;
+                for (MultiStatusResponse r : responses) {
+//                    System.out.println("Response: " + r.getHref());
+                    DavPropertySet allProp = utils.getProperties(r);
+
+                    DavPropertyIterator iter = allProp.iterator();
+
+                    while (iter.hasNext()) {
+                        DavProperty<?> p = iter.nextProperty();
+                        assertEquals(p.getName(), dataDistributionName);
+                        assertNotNull(p.getValue());
+                        dataDist = (String) p.getValue();
+                        if (dataDist.contains(location)) {
+                            done = true;
+                            assertTrue(dataDist.contains(location));
+                            break;
+                        } else {
+                            count++;
+                        }
+                        System.out.println(p.getName() + " : " + p.getValue());
+                    }
+                }
+                if (count > 100) {
+                    fail(testuri1 + " is not replicated in " + location + " it is in " + dataDist);
+                    break;
+                }
+                if (!done) {
+                    Thread.sleep(7000);
+                }
+            }
+
+
+
         } finally {
+            utils.deleteResource(testcol2, true);
             utils.deleteResource(testcol1, true);
         }
     }
 
     @Test
     public void testFileConsistency() throws IOException, NoSuchAlgorithmException {
+        System.out.println("testFileConsistency");
         File testUploadFile = File.createTempFile("tmp", null);
         Random generator = new Random();
         byte buffer[] = new byte[1024];
@@ -1981,6 +2066,7 @@ public class WebDAVTest {
 
     @Test
     public void testGetSigleRange() throws DavException {
+        System.out.println("testGetSigleRange");
         String testcol1 = root + "testCollection/";
         String testuri1 = testcol1 + "file1";
         try {
@@ -2058,6 +2144,7 @@ public class WebDAVTest {
 
     @Test
     public void testConcurrentGet() throws DavException {
+        System.out.println("testConcurrentGet");
         String testcol1 = root + "testCollection/";
         String testuri1 = testcol1 + "file1";
         try {
