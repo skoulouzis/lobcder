@@ -485,71 +485,71 @@ public class TestWebWAVFS {
     }
 //
 
-//    @Test
-//    public void testFileConsistency() throws VlException, IOException {
-//        System.err.println("testFileConsistency");
-//        String testFileURI1 = uri.toASCIIString() + TestSettings.TEST_FILE_NAME1;
-//        try {
-//            int size = 110;
-//            for (int j = 100; j < size; j += 5) {
-//
-//                File file = new File("/tmp/" + TestSettings.TEST_FILE_NAME1);
-//
-//
-//                FileOutputStream fos = new FileOutputStream(file);
-//                byte[] buffer = new byte[1024 * 1024]; //1MB
-//                Random r = new Random();
-//
-//                for (int i = 0; i < j; i++) {
-//                    r.nextBytes(buffer);
-//                    fos.write(buffer);
-//                    if (i % 100 == 0) {
-//                        System.err.println(i + " of " + j);
-//                    }
-//                }
-//                fos.flush();
-//                fos.close();
-//
-//                utils.postFile(file, uri.toASCIIString());
-//
-//                String localChecksum = utils.getChecksum(file, "SHA1");
-//
-//                Thread.sleep(40000);
-//
-//                GetMethod get = new GetMethod(testFileURI1);
-//                client1.executeMethod(get);
-//                int status = get.getStatusCode();
-//                assertEquals(HttpStatus.SC_OK, status);
-//                InputStream in = get.getResponseBodyAsStream();
-//                File fromLob = new File("/tmp/fromLob");
-//                fos = new FileOutputStream(fromLob);
-//
-//                byte buf[] = new byte[1024];
-//                int len;
-//                while ((len = in.read(buf)) > 0) {
-//                    fos.write(buf, 0, len);
-//                }
-//                fos.close();
-//                in.close();
-//
-//
-//
-//                String fromLobChecksum = utils.getChecksum(fromLob, "SHA1");
-//
-//                assertEquals(fromLobChecksum, localChecksum);
-//
-//
-//                System.out.println(j + " of " + size);
-//            }
-//
-//        } catch (Exception ex) {
-//            fail(ex.getMessage());
-//            Logger.getLogger(TestWebWAVFS.class.getName()).log(Level.SEVERE, null, ex);
-//
-//        } finally {
-//            utils.deleteResource(testFileURI1, false);
-//        }
-//    }
+    @Test
+    public void testFileConsistency() throws VlException, IOException {
+        System.err.println("testFileConsistency");
+        String testFileURI1 = uri.toASCIIString() + TestSettings.TEST_FILE_NAME1;
+        try {
+            int size = 110;
+            for (int j = 100; j < size; j += 5) {
+
+                File file = new File("/tmp/" + TestSettings.TEST_FILE_NAME1);
+
+
+                FileOutputStream fos = new FileOutputStream(file);
+                byte[] buffer = new byte[1024 * 1024]; //1MB
+                Random r = new Random();
+
+                for (int i = 0; i < j; i++) {
+                    r.nextBytes(buffer);
+                    fos.write(buffer);
+                    if (i % 100 == 0) {
+                        System.err.println(i + " of " + j);
+                    }
+                }
+                fos.flush();
+                fos.close();
+
+                utils.postFile(file, uri.toASCIIString());
+
+                String localChecksum = utils.getChecksum(file, "SHA1");
+
+                Thread.sleep(40000);
+
+                GetMethod get = new GetMethod(testFileURI1);
+                client1.executeMethod(get);
+                int status = get.getStatusCode();
+                assertEquals(HttpStatus.SC_OK, status);
+                InputStream in = get.getResponseBodyAsStream();
+                File fromLob = new File("/tmp/fromLob");
+                fos = new FileOutputStream(fromLob);
+
+                byte buf[] = new byte[1024];
+                int len;
+                while ((len = in.read(buf)) > 0) {
+                    fos.write(buf, 0, len);
+                }
+                fos.close();
+                in.close();
+
+
+
+                String fromLobChecksum = utils.getChecksum(fromLob, "SHA1");
+
+                assertEquals(fromLobChecksum, localChecksum);
+
+
+                System.out.println(j + " of " + size);
+            }
+
+        } catch (Exception ex) {
+            fail(ex.getMessage());
+            Logger.getLogger(TestWebWAVFS.class.getName()).log(Level.SEVERE, null, ex);
+
+        } finally {
+            utils.deleteResource(testFileURI1, false);
+        }
+    }
     @Test
     public void testInconsistency() throws VlException, IOException {
         System.err.println("testInconsistency");
