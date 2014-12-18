@@ -276,7 +276,7 @@ public class Utils {
 
     public void postFile(File file, String url) throws IOException {
 
-        System.err.println("post:" + file.getName());
+        System.err.println("post:" + file.getName()+ " to: "+url);
         PostMethod method = new PostMethod(url);
 
         Part[] parts = {
