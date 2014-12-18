@@ -1117,7 +1117,8 @@ public class JDBCatalogue extends MyDataSource {
     }
 
     public void setLocationPreference(Long uid, String locationPreference, Connection connection) throws SQLException {
-        try (PreparedStatement ps = connection.prepareStatement("UPDATE ldata_table SET locationPreference = ? WHERE uid = ?")) {
+        try (PreparedStatement ps = connection.prepareStatement("UPDATE ldata_table "
+                + "SET locationPreference = ? WHERE uid = ?")) {
             ps.setString(1, locationPreference);
             ps.setLong(2, uid);
             ps.executeUpdate();

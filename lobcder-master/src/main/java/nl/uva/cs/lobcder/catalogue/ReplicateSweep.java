@@ -1,13 +1,16 @@
 package nl.uva.cs.lobcder.catalogue;
 
+import com.mysql.jdbc.Util;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.security.NoSuchAlgorithmException;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -20,6 +23,7 @@ import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.resources.*;
 import nl.uva.cs.lobcder.util.DesEncrypter;
 import nl.uva.cs.lobcder.util.PropertiesHelper;
+import org.apache.commons.math3.distribution.EnumeratedIntegerDistribution;
 
 /**
  * User: dvasunin Date: 25.02.13 Time: 17:28 To change this template use File |
@@ -42,7 +46,7 @@ class ReplicateSweep implements Runnable {
     private Map<String, StorageSite> availableStorage = null;
     private Iterator<StorageSite> it = null;
 
-    private Map<String, StorageSite> findBestSites(Connection connection) throws SQLException {
+    private Map<String, StorageSite> findBestSites(Connection connection) throws SQLException, IOException {
         switch (replicatePolicy) {
             case firstSite:
                 Map<String, StorageSite> sites = new HashMap<>();
@@ -55,7 +59,9 @@ class ReplicateSweep implements Runnable {
             case aggressive:
                 return availableStorage;
             case fastest:
-                return getFastestSites(connection);
+                return getFastestSites(connection, PropertiesHelper.getNumberOfSites());
+            case random:
+                return getRandomStorageSite(PropertiesHelper.getNumberOfSites());
             default:
                 sites = new HashMap<>();
                 if (it == null || !it.hasNext()) {
@@ -120,44 +126,69 @@ class ReplicateSweep implements Runnable {
 
     }
 
-    private Map<String, StorageSite> getFastestSites(Connection connection) throws SQLException {
+    private Map<String, StorageSite> getFastestSites(Connection connection, int number) throws SQLException {
+        //Every now and then (20/80) go random
+        int[] numsToGenerate = new int[]{1, 2};
+        double[] discreteProbabilities = new double[]{0.85, 0.15};
+        EnumeratedIntegerDistribution distribution = new EnumeratedIntegerDistribution(numsToGenerate, discreteProbabilities);
+        int random = distribution.sample();
+        Map<String, StorageSite> res = new HashMap<>();
+        if (random <= 1) {
+            try (Statement s = connection.createStatement()) {
+                ResultSet rs = s.executeQuery("SELECT src, dst FROM speed_table "
+                        + "GROUP BY averageSpeed DESC LIMIT " + number);
+                Map<String, StorageSite> tmp = new HashMap<>();
 
-        try (Statement s = connection.createStatement()) {
-            ResultSet rs = s.executeQuery("SELECT st.src, st.dst, MAX(st.averageSpeed) "
-                    + "FROM speed_table AS st GROUP BY  st.fSize");
-            Map<String, StorageSite> tmp = new HashMap<>();
-            Map<String, StorageSite> res = new HashMap<>();
-            while (rs.next()) {
-                String src = rs.getString(1);
-                String dst = rs.getString(2);
-                Set<String> keys = availableStorage.keySet();
-                for (String k : keys) {
-                    if (k.contains(src) || k.contains(dst)) {
-                        tmp.put(k, availableStorage.get(k));
+                while (rs.next()) {
+                    String src = rs.getString(1);
+                    String dst = rs.getString(2);
+                    Set<String> keys = availableStorage.keySet();
+                    for (String k : keys) {
+                        if (k.contains(src) || k.contains(dst)) {
+                            tmp.put(k, availableStorage.get(k));
+                        }
                     }
                 }
+                if (tmp.isEmpty()) {
+                    ArrayList<String> keysAsArray = new ArrayList<>(availableStorage.keySet());
+                    Random r = new Random();
+                    StorageSite randomValue = availableStorage.get(keysAsArray.get(r.nextInt(keysAsArray.size())));
+                    res.put(randomValue.getResourceURI(), randomValue);
+                } else {
+                    ArrayList<String> keysAsArray = new ArrayList<>(tmp.keySet());
+                    Random r = new Random();
+                    StorageSite randomValue = tmp.get(keysAsArray.get(r.nextInt(keysAsArray.size())));
+                    res.put(randomValue.getResourceURI(), randomValue);
+                }
             }
-            if (tmp.isEmpty()) {
-                ArrayList<String> keysAsArray = new ArrayList<>(availableStorage.keySet());
-                Random r = new Random();
-                StorageSite randomValue = availableStorage.get(keysAsArray.get(r.nextInt(keysAsArray.size())));
-                res.put(randomValue.getResourceURI(), randomValue);
-            } else {
-                ArrayList<String> keysAsArray = new ArrayList<>(tmp.keySet());
-                Random r = new Random();
-                StorageSite randomValue = tmp.get(keysAsArray.get(r.nextInt(keysAsArray.size())));
-                res.put(randomValue.getResourceURI(), randomValue);
-            }
-            return res;
+        } else {
+            return getRandomStorageSite(number);
         }
+        return res;
+
+
     }
 
-    class CacheDescr {
-
-        Long pdriId;
-        String name;
-        Long pdriGroupRef;
+    private Map<String, StorageSite> getRandomStorageSite(int number) {
+        Map<String, StorageSite> res = new HashMap<>();
+        List<StorageSite> copy = new LinkedList<>(availableStorage.values());
+        Collections.shuffle(copy);
+        if (number > availableStorage.size()) {
+            number = availableStorage.size();
+        }
+        List<StorageSite> rand = copy.subList(0, number);
+        for (StorageSite s : rand) {
+            res.put(s.getResourceURI(), s);
+        }
+        return res;
     }
+
+//    class CacheDescr {
+//
+//        Long pdriId;
+//        String name;
+//        Long pdriGroupRef;
+//    }
 
     private void onCacheReplicate(PDRIDescr cd, PDRI cpdri, Connection connection) throws SQLException, IOException {
         try (PreparedStatement ps = connection.prepareStatement("DELETE FROM pdri_table WHERE pdriId = ?")) {
@@ -203,7 +234,7 @@ class ReplicateSweep implements Runnable {
 //                        sourceDescr.pdriGroupRef = rs.getLong(3);
 //                        toReplicate.add(sourceDescr);
 //                    }
-
+                    
                     String sql = "SELECT fileName, storageSiteId, storage_site_table.resourceUri, username, password, encrypt, encryptionKey, pdri_table.pdriGroupRef, "
                             + "pdri_table.pdriId, ldata_table.locationPreference "
                             + "FROM pdri_table JOIN (SELECT  pdriGroupRef, count(pdri_table.storageSiteRef) AS refcnt "
@@ -213,18 +244,18 @@ class ReplicateSweep implements Runnable {
                             + " JOIN ldata_table on (ldata_table.pdriGroupRef =  pdri_table.pdriGroupRef AND ldata_table.lockTokenId is NULL)"
                             + "WHERE refcnt >= 1 AND isCache LIMIT 100";
 
-/*
-// Change to this SQL if we want to keep temporary files in the cache without staging them to the backend
+                    /*
+                     // Change to this SQL if we want to keep temporary files in the cache without staging them to the backend
 
-                    String sql = "SELECT fileName, storageSiteId, storage_site_table.resourceUri, username, password, encrypt, encryptionKey, pdri_table.pdriGroupRef, "
-                            + "pdri_table.pdriId, ldata_table.locationPreference "
-                            + "FROM pdri_table JOIN (SELECT  pdriGroupRef, count(pdri_table.storageSiteRef) AS refcnt "
-                            + "FROM pdri_table GROUP BY pdriGroupRef)  AS t ON pdri_table.pdriGroupRef = t.pdriGroupRef "
-                            + "JOIN storage_site_table ON pdri_table.storageSiteRef = storage_site_table.storageSiteId "
-                            + "JOIN credential_table on credential_table.credintialId = storage_site_table.credentialRef "
-                            + " JOIN ldata_table on (ldata_table.pdriGroupRef =  pdri_table.pdriGroupRef AND ldata_table.lockTokenId is NULL)"
-                            + "WHERE refcnt >= 1 AND isCache AND ttlSec is NULL LIMIT 100";
-*/
+                     String sql = "SELECT fileName, storageSiteId, storage_site_table.resourceUri, username, password, encrypt, encryptionKey, pdri_table.pdriGroupRef, "
+                     + "pdri_table.pdriId, ldata_table.locationPreference "
+                     + "FROM pdri_table JOIN (SELECT  pdriGroupRef, count(pdri_table.storageSiteRef) AS refcnt "
+                     + "FROM pdri_table GROUP BY pdriGroupRef)  AS t ON pdri_table.pdriGroupRef = t.pdriGroupRef "
+                     + "JOIN storage_site_table ON pdri_table.storageSiteRef = storage_site_table.storageSiteId "
+                     + "JOIN credential_table on credential_table.credintialId = storage_site_table.credentialRef "
+                     + " JOIN ldata_table on (ldata_table.pdriGroupRef =  pdri_table.pdriGroupRef AND ldata_table.lockTokenId is NULL)"
+                     + "WHERE refcnt >= 1 AND isCache AND ttlSec is NULL LIMIT 100";
+                     */
 
                     ResultSet rs = statement.executeQuery(sql);
                     while (rs.next()) {

@@ -41,6 +41,7 @@ public class PropertiesHelper {
         aggressive,
         firstSite,
         fastest,
+        random,
         demand
     }
 
@@ -268,7 +269,12 @@ public class PropertiesHelper {
         try {
             String property = getProperties().getProperty("tmp.dir.uid", null);
             result = (property == null) ? null : Long.valueOf(property);
-        } catch (Throwable th){}
+        } catch (Throwable th) {
+        }
         return result;
+    }
+
+    public static int getNumberOfSites() throws IOException {
+        return Integer.valueOf(getProperties().getProperty("replication.number.of.sites", "2"));
     }
 }
