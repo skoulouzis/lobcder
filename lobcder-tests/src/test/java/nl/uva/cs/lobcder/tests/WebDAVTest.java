@@ -1974,6 +1974,12 @@ public class WebDAVTest {
                     assertNotNull(p.getValue());
                     String path = new URL(testcol2).getPath();
                     System.out.println("Resource: " + resource + " path: " + path);
+                    if (!resource.endsWith("/")) {
+                        resource += "/";
+                    }
+                    if (!path.endsWith("/")) {
+                        path += "/";
+                    }
                     if (path.equals(resource)) {
                         String val = p.getValue().toString();
                         assertEquals(location, val);
