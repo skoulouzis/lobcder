@@ -98,7 +98,7 @@ fi
 cd $lobGitDir/lobcder-master
 mvn install 
 rm -r target/lobcder
-mv target/lobcder-master-2.4 target/lobcder
+mv target/lobcder-master-2.5 target/lobcder
 rm -r target/lobcder/manage*.jsp
 cd ../../
 
