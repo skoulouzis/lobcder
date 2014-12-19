@@ -1895,7 +1895,7 @@ public class WebDAVTest {
                     assertNotNull(p.getValue());
                     if (new URL(testcol1).getPath().equals(r.getHref())) {
                         String val = p.getValue().toString();
-                        assertEquals(nowhere, val);
+                        assertNotSame(nowhere, val);
                     }
                 }
             }
@@ -2025,7 +2025,6 @@ public class WebDAVTest {
 
 
         } finally {
-            utils.deleteResource(testcol2, true);
             utils.deleteResource(testcol1, true);
         }
     }

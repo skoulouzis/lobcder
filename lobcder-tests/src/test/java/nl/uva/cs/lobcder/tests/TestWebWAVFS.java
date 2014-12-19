@@ -487,8 +487,18 @@ public class TestWebWAVFS {
         System.err.println("testFileConsistency");
         String testFileURI1 = uri.toASCIIString() + TestSettings.TEST_FILE_NAME1;
         try {
-            int size = 110;
-            for (int j = 100; j < size; j += 5) {
+            int from;
+            int size;
+            if (this.root.contains("localhost")) {
+                from = 100;
+                size = 200;
+
+            } else {
+                from = 10;
+                size = 20;
+            }
+
+            for (int j = from; j < size; j += 5) {
 
                 File file = new File("/tmp/" + TestSettings.TEST_FILE_NAME1);
 
@@ -547,6 +557,7 @@ public class TestWebWAVFS {
             utils.deleteResource(testFileURI1, false);
         }
     }
+
     @Test
     public void testInconsistency() throws VlException, IOException {
         System.err.println("testInconsistency");
