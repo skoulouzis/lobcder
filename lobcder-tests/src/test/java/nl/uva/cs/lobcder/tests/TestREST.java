@@ -85,8 +85,8 @@ public class TestREST {
     public void setUp() throws Exception {
 //        String propBasePath = System.getProperty("user.home") + File.separator
 //                + "workspace" + File.separator + "lobcder-tests"
-//                + File.separator + "etc" + File.separator + "test.proprties";
-        String propBasePath = "etc" + File.separator + "test.proprties";
+//                + File.separator + "etc" + File.separator + "test.properties";
+        String propBasePath = "etc" + File.separator + "test.properties";
 
         Properties prop = TestSettings.getTestProperties(propBasePath);
 

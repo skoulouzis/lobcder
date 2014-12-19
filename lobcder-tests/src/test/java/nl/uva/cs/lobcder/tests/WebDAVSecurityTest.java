@@ -50,7 +50,7 @@ public class WebDAVSecurityTest {
     @BeforeClass
     public static void setUpClass() throws Exception {
 
-        String propBasePath = "etc" + File.separator + "test.proprties";
+        String propBasePath = "etc" + File.separator + "test.properties";
         Properties prop = TestSettings.getTestProperties(propBasePath);
 
         String testURL = prop.getProperty("webdav.test.url");

@@ -117,7 +117,7 @@ public class TestWebWAVFS {
     @BeforeClass
     public static void setUpClass() throws Exception {
 
-        String propBasePath = "etc" + File.separator + "test.proprties";
+        String propBasePath = "etc" + File.separator + "test.properties";
 
         prop = TestSettings.getTestProperties(propBasePath);
 
@@ -185,9 +185,6 @@ public class TestWebWAVFS {
         org.apache.http.auth.Credentials defaultcreds = new org.apache.http.auth.UsernamePasswordCredentials(username1, password1);
         httpclient.getCredentialsProvider().setCredentials(org.apache.http.auth.AuthScope.ANY, (org.apache.http.auth.Credentials) defaultcreds);
 //        httpclient.getParams().setParameter(CoreProtocolPNames.PROTOCOL_VERSION, HttpVersion.HTTP_1_1);
-
-
-        HttpClient cl = new HttpClient();
 
 
         client2 = new HttpClient();
