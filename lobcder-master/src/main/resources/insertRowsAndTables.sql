@@ -12,6 +12,8 @@
  ALTER TABLE ldata_table ADD description VARCHAR(255);
  ALTER TABLE ldata_table ADD locationPreference VARCHAR(255);
  ALTER TABLE ldata_table ADD status enum('unavailable', 'corrupted', 'OK');
+ ALTER TABLE ldata_table ADD accessDate DATETIME;
+ ALTER TABLE ldata_table ADD ttlSec int;
 
 
 # Here we createtables for built-in user IDs/roles
