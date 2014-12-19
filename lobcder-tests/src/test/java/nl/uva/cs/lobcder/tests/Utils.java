@@ -13,7 +13,13 @@ import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.List;
 import java.util.Random;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
+import java.util.zip.ZipInputStream;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.methods.GetMethod;
@@ -399,5 +405,51 @@ public class Utils {
         fos.close();
         in.close();
         return fromLob;
+    }
+
+    void saveFile(InputStream responseBodyAsStream, String string) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    List<File> unzipFile(File inFile) throws FileNotFoundException, IOException {
+        ZipFile zipFile = new ZipFile(inFile);
+        Enumeration<?> enu = zipFile.entries();
+        List<File> files = new ArrayList();
+        while (enu.hasMoreElements()) {
+            ZipEntry zipEntry = (ZipEntry) enu.nextElement();
+
+            String name = zipEntry.getName();
+            long size = zipEntry.getSize();
+            long compressedSize = zipEntry.getCompressedSize();
+            System.out.printf("name: %-20s | size: %6d | compressed size: %6d\n",
+                    name, size, compressedSize);
+
+            File file = new File(name);
+            if (name.endsWith("/")) {
+                file.mkdirs();
+                continue;
+            }
+
+            File parent = file.getParentFile();
+            if (parent != null) {
+                parent.mkdirs();
+            }
+
+            InputStream is = zipFile.getInputStream(zipEntry);
+            FileOutputStream fos = new FileOutputStream(file);
+            byte[] bytes = new byte[1024];
+            int length;
+            while ((length = is.read(bytes)) >= 0) {
+                fos.write(bytes, 0, length);
+            }
+            is.close();
+            fos.close();
+            if(file.isFile()){
+                files.add(file);
+            }
+
+        }
+        zipFile.close();
+        return files;
     }
 }

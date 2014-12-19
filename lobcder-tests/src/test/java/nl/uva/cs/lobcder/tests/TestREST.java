@@ -55,7 +55,13 @@ import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.client.urlconnection.HTTPSProperties;
 import java.io.ByteArrayOutputStream;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.io.OutputStream;
+import java.security.NoSuchAlgorithmException;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
@@ -568,22 +574,42 @@ public class TestREST {
     }
 
     @Test
-    public void testArchiveService() throws JAXBException, IOException, DavException {
+    public void testArchiveService() throws JAXBException, IOException, DavException, NoSuchAlgorithmException {
         System.err.println("testArchiveService");
+        String testFileURI1 = testcol + TestSettings.TEST_FILE_NAME1;
+        List<File> unzipedFiles = null;
+        File randomFile = null;
         try {
             utils.createCollection(testcol, true);
-            utils.createFile(this.root + testResourceId + "/file1", true);
-            
-            utils.waitForReplication(this.root + testResourceId + "/file1");
+            randomFile = utils.createRandomFile("/tmp/" + TestSettings.TEST_FILE_NAME1, 1);
+            //If the destination is set to this.root+testResourceId + "/file1" someone is asking for /login.html ???!!!!
+            utils.postFile(randomFile, this.root + testResourceId);
 
-            GetMethod get = new GetMethod(restURL + "/compress/getzip/" + testResourceId);
-            int status = client.executeMethod(get);
-            assertEquals(HttpStatus.SC_OK, status);
+            String localFileChecksum = utils.getChecksum(randomFile, "SHA1");
+            utils.waitForReplication(testFileURI1);
+
+
+            File zipFile = utils.DownloadFile(restURL + "/compress/getzip/" + testResourceId, "/tmp/" + testResourceId + ".zip", true);
+            unzipedFiles = utils.unzipFile(zipFile);
+            for (File f : unzipedFiles) {
+                String checksumFromDownloaded = utils.getChecksum(f, "SHA1");
+                assertEquals(localFileChecksum, checksumFromDownloaded);
+            }
+
+
 
         } catch (InterruptedException ex) {
             Logger.getLogger(TestREST.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
             utils.deleteResource(testcol, false);
+            for (File f : unzipedFiles) {
+                if (f != null) {
+                    f.delete();
+                }
+            }
+            if (randomFile != null) {
+                randomFile.delete();
+            }
         }
     }
 
