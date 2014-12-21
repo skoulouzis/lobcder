@@ -19,9 +19,9 @@
             <button id="btnInsert" class="yui3-button">Insert New Row</button>
             <button id="btnDelete" class="yui3-button">Delete Selections</button>
         </div>
-        <script src="http://yui.yahooapis.com/3.10.3/build/yui/yui-min.js"></script>
+        <!--<script src="http://yui.yahooapis.com/3.10.3/build/yui/yui-min.js"></script>-->
 
-        <script type="text/javascript">
+<!--        <script type="text/javascript">
             YUI().use( 
             "datatable", 
             "datatype",  
@@ -247,7 +247,7 @@
                             quotaSize:'-1',currentSize:'-1'}] );
                 });
             });
-        </script>
+        </script>-->
 
 
     </body>

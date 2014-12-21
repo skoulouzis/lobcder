@@ -19,7 +19,7 @@
             <button id="btnInsert" class="yui3-button">Insert New Row</button>
             <button id="btnDelete" class="yui3-button">Delete Selections</button>
         </div>
-        <script src="http://yui.yahooapis.com/3.10.3/build/yui/yui-min.js"></script>
+<!--        <script src="http://yui.yahooapis.com/3.10.3/build/yui/yui-min.js"></script>
 
         <script type="text/javascript">
             YUI().use( 
@@ -241,6 +241,6 @@
                             username:'uname',roles:'role1,role2',token:'secret'}] );
                 });
             });
-        </script>
+        </script>-->
     </body>
 </html>
