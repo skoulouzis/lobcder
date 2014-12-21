@@ -188,7 +188,8 @@ public class VPDRI implements PDRI {
     @Override
     public void delete() throws IOException {
         try {
-            getVfsClient().openLocation(vrl).delete();
+//            getVfsClient().openLocation(vrl).delete();
+            getVfsClient().getFile(vrl).delete();
         } catch (VlException ex) {
             //Maybe it's from assimilation. We must remove the baseDir
             if (ex instanceof ResourceNotFoundException || ex.getMessage().contains("Couldn open location. Get NULL object for location")) {
@@ -196,7 +197,8 @@ public class VPDRI implements PDRI {
                     // VRL assimilationVRL = new VRL(resourceUrl).append(URLEncoder.encode(fileName, "UTF-8").replace("+", "%20"));
 //                    String encoded = VRL.encode(fileName);
                     VRL assimilationVRL = new VRL(resourceUrl).append(fileName);
-                    getVfsClient().openLocation(assimilationVRL).delete();
+                    getVfsClient().getFile(assimilationVRL).delete();
+//                    getVfsClient().openLocation(assimilationVRL).delete();
 
                 } catch (IOException | VlException ex1) {
                     Logger.getLogger(VPDRI.class.getName()).log(Level.SEVERE, null, ex1);
@@ -215,7 +217,8 @@ public class VPDRI implements PDRI {
     public void copyRange(Range range, OutputStream out) throws IOException {
         VFile file;
         try {
-            file = (VFile) getVfsClient().openLocation(vrl);
+//            file = (VFile) getVfsClient().openLocation(vrl);
+            file = getVfsClient().getFile(vrl);
             doCopy(file, range, out, getEncrypted());
         } catch (Exception ex) {
             if (ex instanceof ResourceNotFoundException
@@ -223,7 +226,8 @@ public class VPDRI implements PDRI {
                 try {
 //                    VRL assimilationVRL = new VRL(resourceUrl).append(URLEncoder.encode(fileName, "UTF-8"));
                     VRL assimilationVRL = new VRL(resourceUrl).append(fileName);
-                    file = (VFile) getVfsClient().openLocation(assimilationVRL);
+//                    file = (VFile) getVfsClient().openLocation(assimilationVRL);
+                    file = getVfsClient().getFile(assimilationVRL);
                     doCopy(file, range, out, getEncrypted());
 
                     sleeTime = 5;
@@ -345,7 +349,8 @@ public class VPDRI implements PDRI {
         VFile file;
         int read;
         try {
-            file = (VFile) getVfsClient().openLocation(vrl);
+//            file = (VFile) getVfsClient().openLocation(vrl);
+            file = getVfsClient().getFile(vrl);
             in = file.getInputStream();
         } catch (Exception ex) {
             if (ex instanceof ResourceNotFoundException
@@ -353,7 +358,8 @@ public class VPDRI implements PDRI {
                 try {
 //                    VRL assimilationVRL = new VRL(resourceUrl).append(URLEncoder.encode(fileName, "UTF-8"));
                     VRL assimilationVRL = new VRL(resourceUrl).append(fileName);
-                    in = ((VFile) getVfsClient().openLocation(assimilationVRL)).getInputStream();
+//                    in = ((VFile) getVfsClient().openLocation(assimilationVRL)).getInputStream();
+                    in = (getVfsClient().getFile(assimilationVRL)).getInputStream();
                     sleeTime = 5;
                 } catch (VRLSyntaxException ex1) {
                     throw new IOException(ex1);

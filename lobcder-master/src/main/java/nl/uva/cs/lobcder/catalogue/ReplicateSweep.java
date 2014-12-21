@@ -1,12 +1,10 @@
 package nl.uva.cs.lobcder.catalogue;
 
-import com.mysql.jdbc.Util;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.security.NoSuchAlgorithmException;
 import java.sql.*;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -189,7 +187,6 @@ class ReplicateSweep implements Runnable {
 //        String name;
 //        Long pdriGroupRef;
 //    }
-
     private void onCacheReplicate(PDRIDescr cd, PDRI cpdri, Connection connection) throws SQLException, IOException {
         try (PreparedStatement ps = connection.prepareStatement("DELETE FROM pdri_table WHERE pdriId = ?")) {
             cpdri.delete();
@@ -234,7 +231,7 @@ class ReplicateSweep implements Runnable {
 //                        sourceDescr.pdriGroupRef = rs.getLong(3);
 //                        toReplicate.add(sourceDescr);
 //                    }
-                    
+
                     String sql = "SELECT fileName, storageSiteId, storage_site_table.resourceUri, username, password, encrypt, encryptionKey, pdri_table.pdriGroupRef, "
                             + "pdri_table.pdriId, ldata_table.locationPreference "
                             + "FROM pdri_table JOIN (SELECT  pdriGroupRef, count(pdri_table.storageSiteRef) AS refcnt "
