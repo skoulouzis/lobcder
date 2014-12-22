@@ -277,4 +277,8 @@ public class PropertiesHelper {
     public static int getNumberOfSites() throws IOException {
         return Integer.valueOf(getProperties().getProperty("replication.number.of.sites", "2"));
     }
+
+    public static long getSweepersInterval() throws IOException {
+        return Long.valueOf(getProperties().getProperty("sweepers.interval", "10000"));
+    }
 }

@@ -32,6 +32,7 @@ import nl.uva.cs.lobcder.rest.wrappers.Stats;
 import nl.uva.cs.lobcder.rest.wrappers.UsersWrapper;
 import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.cs.lobcder.util.MyDataSource;
+import nl.uva.cs.lobcder.util.PropertiesHelper;
 
 /**
  *
@@ -53,7 +54,7 @@ public class JDBCatalogue extends MyDataSource {
     public void startSweep() throws IOException, NamingException {
         TimerTask gcTask = new SweeprsTimerTask(getDatasource());
         timer = new Timer(true);
-        timer.schedule(gcTask, 7000, 7000); //once in 10 sec
+        timer.schedule(gcTask, PropertiesHelper.getSweepersInterval(), PropertiesHelper.getSweepersInterval());
     }
 
     public void stopSweep() {
