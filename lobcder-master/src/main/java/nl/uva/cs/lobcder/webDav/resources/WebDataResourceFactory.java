@@ -15,6 +15,7 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.commons.lang.StringEscapeUtils;
 
 @Log
 public class WebDataResourceFactory implements ResourceFactory {
@@ -36,14 +37,15 @@ public class WebDataResourceFactory implements ResourceFactory {
         if (strPath.equals("/login.html")) {
             return null;
         }
-        
+
         Path ldri = Path.path(strPath);
         String first;
         do {
             first = ldri.getFirst();
             ldri = ldri.getStripFirst();
         } while (!first.equals("dav"));
-
+        String escaedPath = StringEscapeUtils.escapeSql(strPath);
+        strPath = StringEscapeUtils.escapeHtml(escaedPath);
 //        try (Connection cn = catalogue.getConnection()) {
         try {
             WebDataResourceFactory.log.log(Level.FINE, "getResource:  strPath: {0} path: {1} ldri: {2}" + "\n" + "\tgetResource:  host: {3} path: {4}", new Object[]{strPath, Path.path(strPath), ldri, host, ldri});
