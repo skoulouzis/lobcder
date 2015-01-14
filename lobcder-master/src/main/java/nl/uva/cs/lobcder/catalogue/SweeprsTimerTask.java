@@ -53,7 +53,6 @@ class SweeprsTimerTask extends TimerTask {
             }
         } catch (Throwable th) {
             log.log(Level.SEVERE, "One of the sweepers encountered and error.", th);
-            throw th;
         }
     }
 
