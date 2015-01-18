@@ -606,7 +606,11 @@ public class VPDRI implements PDRI {
             stats.setDestination(getHost());
             stats.setSpeed(speed);
             stats.setSize(getLength());
-            setSpeed(stats);
+            try {
+                setSpeed(stats);
+            } catch (JAXBException ex) {
+                Logger.getLogger(VPDRI.class.getName()).log(Level.WARNING, null, ex);
+            }
 
 
             String msg = "Source: " + source.getHost() + " Destination: " + vrl.getScheme() + "://" + getHost() + " Replication_Speed: " + speed + " Kbites/sec Repl_Size: " + (getLength()) + " bytes";
@@ -617,8 +621,6 @@ public class VPDRI implements PDRI {
 
         } catch (VlException ex) {
             throw new IOException(ex);
-        } catch (JAXBException ex) {
-            Logger.getLogger(VPDRI.class.getName()).log(Level.WARNING, null, ex);
         }
     }
 
