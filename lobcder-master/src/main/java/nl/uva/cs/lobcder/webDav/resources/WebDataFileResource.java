@@ -48,6 +48,7 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import nl.uva.cs.lobcder.resources.VPDRI;
 import nl.uva.cs.lobcder.rest.wrappers.Stats;
 import org.jgrapht.graph.DefaultWeightedEdge;
 
@@ -260,10 +261,12 @@ public class WebDataFileResource extends WebDataResource implements
     private PDRI transfer(List<PDRIDescr> pdris, OutputStream out, int tryCount, boolean doCircularStreamBufferTransferer) throws IOException, NotFoundException {
         InputStream in = null;
         PDRI pdri = null;
+        double start = 0;
         try {
             PDRIDescr pdriDescr = selectBestPDRI(pdris);
             pdri = PDRIFactory.getFactory().createInstance(pdriDescr, false);
             if (pdri != null) {
+                start = System.currentTimeMillis();
                 in = pdri.getData();
                 if (!pdri.getEncrypted()) {
                     if (doCircularStreamBufferTransferer) {
@@ -311,6 +314,13 @@ public class WebDataFileResource extends WebDataResource implements
             }
         }
         sleepTime = 5;
+        double elapsed = System.currentTimeMillis() - start;
+        double speed = ((pdri.getLength() * 8.0) * 1000.0) / (elapsed * 1000.0);
+        try {
+            String msg = "File: " + pdri.getFileName() + " Destination: " + new URI(pdri.getURI()).getScheme() + "://" + pdri.getHost() + " Rx_Speed: " + speed + " Kbites/sec Rx_Size: " + (pdri.getLength()) + " bytes Elapsed_Time: " + elapsed + " ms";
+            WebDataFileResource.log.log(Level.INFO, msg);
+        } catch (URISyntaxException ex) {
+        }
         return pdri;
     }
 
@@ -484,7 +494,7 @@ public class WebDataFileResource extends WebDataResource implements
         stats.setDestination(fromAddress);
         stats.setSpeed(speed);
         stats.setSize(getContentLength());
-        String msg = "Source: " + stats.getSource() + " Destination: " + stats.getDestination() + " Tx_Speed: " + speed + " Kbites/sec Tx_Size: " + getContentLength() + " bytes";
+        String msg = "Source: " + stats.getSource() + " Destination: " + stats.getDestination() + " Tx_Speed: " + speed + " Kbites/sec Tx_Size: " + getContentLength() + " bytes Elapsed_Time: " + elapsed + " ms";
         try {
             if (!pdri.isCahce()) {
                 getCatalogue().setSpeed(stats);

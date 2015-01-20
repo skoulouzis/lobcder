@@ -289,7 +289,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
             if (!pdri.isCahce()) {
                 getCatalogue().setSpeed(stats);
             }
-            msg = "Source: " + fromAddress + " Destination: " + new URI(pdri.getURI()).getScheme() + "://" + pdri.getHost() + " Rx_Speed: " + speed + " Kbites/sec Rx_Size: " + (resource.getContentLength()) + " bytes";
+            msg = "Source: " + fromAddress + " Destination: " + new URI(pdri.getURI()).getScheme() + "://" + pdri.getHost() + " Rx_Speed: " + speed + " Kbites/sec Rx_Size: " + (resource.getContentLength()) + " bytes Elapsed_Time: " + elapsed + " ms";
         } catch (URISyntaxException | SQLException ex) {
             Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, ex);
         }

@@ -15,6 +15,8 @@ import io.milton.http.Range;
 import java.io.*;
 import java.math.BigInteger;
 import java.net.InetAddress;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
@@ -404,7 +406,8 @@ public class VPDRI implements PDRI {
     @Override
     public void putData(InputStream in) throws IOException {
         OutputStream out = null;
-        VPDRI.log.log(Level.FINE, "putData:");
+//        VPDRI.log.log(Level.FINE, "putData:");
+        double start = System.currentTimeMillis();
 //        VFile tmpFile = null;
         try {
             //            upload(in);
@@ -462,6 +465,14 @@ public class VPDRI implements PDRI {
                 in.close();
             }
         }
+        double elapsed = System.currentTimeMillis() - start;
+        double speed = ((getLength() * 8.0) * 1000.0) / (elapsed * 1000.0);
+        try {
+            String msg = "File: "+this.getFileName()+ " Destination: " + new URI(getURI()).getScheme() + "://" + getHost() + " Rx_Speed: " + speed + " Kbites/sec Rx_Size: " + (getLength()) + " bytes Elapsed_Time: "+elapsed+" ms";
+            VPDRI.log.log(Level.INFO, msg);
+        } catch (URISyntaxException ex) {
+        }
+
     }
 
     @Override
