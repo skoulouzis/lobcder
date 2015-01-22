@@ -665,6 +665,35 @@ public class TestWebWAVFS {
     }
 
     @Test
+    public void testFileNames() throws IOException, DavException, InterruptedException {
+        System.err.println("testFileNames");
+        String name = "a'b";
+        String testFileURI1 = this.uri.toASCIIString() + name;
+        try {
+            utils.deleteResource(testFileURI1, false);
+
+            utils.createFile(testFileURI1, true);
+
+            utils.waitForReplication(testFileURI1);
+            File file = utils.DownloadFile(testFileURI1, "/tmp/" + name, true);
+
+            assertEquals(name, file.getName());
+            utils.deleteResource(testFileURI1, false);
+
+            name = "~!@#$%^&*()_+' \'/<>}]]{[";
+            utils.createFile(testFileURI1, true);
+
+            utils.waitForReplication(testFileURI1);
+            file = utils.DownloadFile(testFileURI1, "/tmp/" + name, true);
+
+            assertEquals(name, file.getName());
+            utils.deleteResource(testFileURI1, false);
+        } finally {
+            utils.deleteResource(testFileURI1, false);
+        }
+    }
+
+    @Test
     public void testMultiThread() throws IOException, DavException {
         System.err.println("testMultiThread");
         try {
