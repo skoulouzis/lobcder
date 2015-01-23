@@ -207,8 +207,10 @@ class WP4Sweep implements Runnable {
     private void create(Connection connection, WP4ConnectorI wp4Connector) throws Exception {
         try (Statement s1 = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY,
                 ResultSet.CONCUR_READ_ONLY)) {
-            try (PreparedStatement s2 = connection.prepareStatement("UPDATE wp4_table SET need_create = FALSE, global_id = ?, global_id_dev = ? WHERE id = ?")) {
-                ResultSet rs = s1.executeQuery("SELECT uid, ownerId, datatype, ldName, id FROM ldata_table JOIN wp4_table ON uid=local_id WHERE need_create=TRUE");
+            try (PreparedStatement s2 = connection.prepareStatement("UPDATE wp4_table SET need_create = FALSE, "
+                    + "global_id = ?, global_id_dev = ? WHERE id = ?")) {
+                ResultSet rs = s1.executeQuery("SELECT uid, ownerId, datatype, "
+                        + "ldName, id FROM ldata_table JOIN wp4_table ON uid=local_id WHERE need_create=TRUE LIMIT 10");
                 while (rs.next()) {
                     ResourceMetadata rm = new ResourceMetadata();
                     rm.setLocalId(rs.getLong(1));
@@ -242,7 +244,9 @@ class WP4Sweep implements Runnable {
         try (Statement s1 = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY,
                 ResultSet.CONCUR_READ_ONLY)) {
             try (PreparedStatement s2 = connection.prepareStatement("UPDATE wp4_table SET need_update = FALSE WHERE id = ?")) {
-                ResultSet rs = s1.executeQuery("SELECT ownerId, ldName, global_id, views, id, global_id_dev, local_id FROM ldata_table JOIN wp4_table ON uid=local_id WHERE need_update=TRUE");
+                ResultSet rs = s1.executeQuery("SELECT ownerId, ldName, global_id, "
+                        + "views, id, global_id_dev, local_id FROM ldata_table "
+                        + "JOIN wp4_table ON uid=local_id WHERE need_update=TRUE LIMIT 10");
                 while (rs.next()) {
                     ResourceMetadata rm = new ResourceMetadata();
                     rm.setAuthor(rs.getString(1));
@@ -276,7 +280,7 @@ class WP4Sweep implements Runnable {
     private void delete(Connection connection, WP4ConnectorI wp4Connector) throws Exception {
         try (Statement s1 = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY,
                 ResultSet.CONCUR_UPDATABLE)) {
-            ResultSet rs = s1.executeQuery("SELECT global_id, id, global_id_dev FROM wp4_table WHERE local_id IS NULL");
+            ResultSet rs = s1.executeQuery("SELECT global_id, id, global_id_dev FROM wp4_table WHERE local_id IS NULL LIMIT 10");
             while (rs.next()) {
                 try {
                     String global_id = rs.getString(1);
