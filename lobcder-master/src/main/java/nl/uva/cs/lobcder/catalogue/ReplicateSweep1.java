@@ -21,7 +21,7 @@ public class ReplicateSweep1 implements Runnable {
     return null;
   }
 
-  void replicate(Collection<PDRIDescr> pdriDescrs, ReplicationPolicy){
+  void replicate(Collection<PDRIDescr> pdriDescrs, ReplicationPolicy policy){
 
   }
 
