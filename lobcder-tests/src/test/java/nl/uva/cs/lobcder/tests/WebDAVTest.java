@@ -81,6 +81,7 @@ public class WebDAVTest {
     private static Client restClient;
     private static String restURL;
     private static Utils utils;
+    private static Boolean quckTest;
 
     static {
         try {
@@ -138,6 +139,9 @@ public class WebDAVTest {
         assertTrue(username != null);
         password = prop.getProperty(("webdav.test.password1"), "token0");
         assertTrue(password != null);
+
+
+        quckTest = Boolean.valueOf(prop.getProperty(("test.quick"), "true"));
 
         int port = uri.getPort();
         if (port == -1) {
@@ -239,6 +243,8 @@ public class WebDAVTest {
         String testuri2 = testcol + "bindtest2";
         int status;
         try {
+            utils.deleteResource(testcol, false);
+
             MkColMethod mkcol = new MkColMethod(testcol);
             status = client.executeMethod(mkcol);
             assertEquals(HttpStatus.SC_CREATED, status);
@@ -1739,6 +1745,9 @@ public class WebDAVTest {
 
     @Test
     public void testGetSetTTL() throws IOException, DavException, InterruptedException {
+        if (quckTest) {
+            return;
+        }
         System.out.println("testGetSetTTL");
         String testcol1 = root + "testResourceId/";
         try {
