@@ -102,13 +102,13 @@ class ReplicateSweep implements Runnable {
         PDRI destinationPDRI = PDRIFactory.getFactory().createInstance(destinationDescr, false);
         PDRI sourcePDRI = new PDRIFactory().createInstance(sourceDescr, false);
         //                            destinationPDRI.setLength(length);
-
         if (!destinationPDRI.exists(sourcePDRI.getFileName())) {
             destinationPDRI.replicate(sourcePDRI);
         }
         try (Statement s2 = connection.createStatement()) {
+            String name = sourceDescr.getName().replaceAll("'", "''");
             ResultSet rs = s2.executeQuery("select * from pdri_table WHERE "
-                    + "(fileName LIKE '" + sourceDescr.getName() + "'"
+                    + "(fileName LIKE '" + name + "'"
                     + " AND storageSiteRef = " + destinationPDRI.getStorageSiteId()
                     + " AND pdriGroupRef = " + destinationDescr.getPdriGroupRef()
                     + " AND isEncrypted = " + destinationPDRI.getEncrypted() + ")");
