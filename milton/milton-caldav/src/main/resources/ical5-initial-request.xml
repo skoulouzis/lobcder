@@ -1,0 +1,32 @@
+<!--
+PROPFIND / HTTP/1.1
+
+Host: demo.sabredav.org
+
+User-Agent: CoreDAV/106.1 (11B26)
+
+Content-Length: 181
+
+Accept: */*
+
+Accept-Language: en-us
+
+Accept-Encoding: gzip, deflate
+
+Content-Type: text/xml
+
+Depth: 0
+
+Authorization: Digest username="testuser", realm="SabreDAV", nonce="4edc8525da174", uri="/", response="5962042ffbc5b919b9eedd0c7d1550fe", opaque="df58bdff8cf60599c939187d0b5c54de", cnonce="1d6dbc09c553532222f513d0fe04f516", nc=00000001, qop="auth"
+
+Connection: keep-alive
+-->
+
+<?xml version="1.0" encoding="UTF-8"?>
+<A:propfind xmlns:A="DAV:">
+	<A:prop>
+		<A:current-user-principal/>
+		<A:principal-URL/>
+		<A:resourcetype/>
+	</A:prop>
+</A:propfind>

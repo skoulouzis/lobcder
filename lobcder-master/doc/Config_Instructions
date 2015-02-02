@@ -1,0 +1,77 @@
+This is are some basic instruction on how to configure and deploy LOBCDER 
+
+
+1. How to create MySQL DB
+
+Connect to the local database server as user root
+You will be prompted for a password.
+
+$mysql -h localhost  -u root -p
+$mysql> create database mydb;
+
+Now we create the user 'username' and give him full permissions on the new 
+database
+
+$mysql> grant CREATE,INSERT,DELETE,UPDATE,SELECT on mydb.* to username@localhost identified by 'password';
+
+
+2. LOBCDER configuration files
+
+All configuration files should be located at ~/.lobcder/ or in some cases in 
+~/.lobcder-test/ (this is defined in the code in nl.uva.cs.lobcder.util.Constants) 
+In there we have 3 types of files: 
+a) lobcder.prop 
+b)~datanucleus.properties
+c) STORAGE_SITE_FILE.prop
+
+The lobcder.prop is the main configuration file. It defines the following values:
+    a)lobcder.storage.prefix=LOBCDER-REPLICA-v1.1
+    This is the name of the folder which LOBCDER will create on the storage site
+    and use for storing the physical data.
+    So if for example we use as a storage site with the endpoint 
+    sftp://host/path any data stored by LOBCDER will be located in 
+    sftp://host/path/LOBCDER-REPLICA-v1.1/
+
+    b)lobcder.storage.site.prop.files=/home/user/.lobcder/storage1.prop,
+    /home/user/.lobcder/storage2.prop,/home/user/.lobcder/storage3.prop
+    This property specifies the location of storage sites property files.
+    They must be comma separated absolute paths.
+
+    c)datanucleus.properties 
+    This file configures datanucleus 
+    (see http://www.datanucleus.org/products/datanucleus/guides/jdo/tutorial.html)
+
+    The most important values for this file are: 
+    datanucleus.ConnectionDriverName=com.mysql.jdbc.Driver
+    datanucleus.ConnectionURL=jdbc:mysql://localhost/lobcderFSTest
+    datanucleus.ConnectionUserName=lobcder
+    datanucleus.ConnectionPassword=password
+
+    d)storageX.prop
+    This is a file describing the storage site LOBCDER may use. It has the 
+    following form:
+    vph.users=uname1,uname2,uname2,unameN   #The name of vph users that have the 
+                                            right to use this storage site (may 
+                                            be deprecated )
+    storage.site.username=user              #The username for the credentials 
+                                            for this storage site 
+    storage.site.password=password          #The password for the credentials 
+                                            for this storage site 
+    storage.site.grid.proxy=notyet          #Not implemented yet
+    storage.site.endpoint=sftp://host/      #The host endpoint. At the moment we 
+                                            accept these schemas: file://, 
+                                            swift://, sftp:// 
+
+3. Deploy LOBCDER
+
+3.1 Using NetBeans
+    Build the project and run it (Right click on the project and select run ). 
+    To specify an application server see 
+    (http://wiki.netbeans.org/AddExternalTomcat) 
+    
+3.2 Using command line
+    run: 
+    $mvn install
+
+    then deploy the war workspace/lobcder/target/lobcder-X-SNAPSHOT.war in 
+    apache or glassfish 

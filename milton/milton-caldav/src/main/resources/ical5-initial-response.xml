@@ -1,0 +1,38 @@
+<!--
+HTTP/1.1 207 Multi-Status
+Server: Apache/2.2.3 (CentOS)
+DAV: 1, 3, extended-mkcol, 2, calendar-access, calendar-proxy, addressbook, access-control
+Expires: Wed, 07 Dec 2011 08:47:34 GMT
+Content-Type: application/xml; charset=utf-8
+Date: Mon, 05 Dec 2011 08:47:34 GMT
+X-Varnish: 1193388758
+Age: 0
+Via: 1.1 varnish
+Cache-Control: max-age=172800, proxy-revalidate
+Content-Length: 609
+Connection: Keep-Alive
+-->
+<?xml version="1.0" encoding="utf-8"?>
+<d:multistatus xmlns:d="DAV:" xmlns:s="http://sabredav.org/ns" xmlns:cal="urn:ietf:params:xml:ns:caldav" xmlns:cs="http://calendarserver.org/ns/" xmlns:card="urn:ietf:params:xml:ns:carddav">
+	<d:response>
+		<d:href>/</d:href>
+		<d:propstat>
+			<d:prop>
+				<d:current-user-principal>
+					<d:href>/principals/testuser/</d:href>
+				</d:current-user-principal>
+				<d:resourcetype>
+					<d:collection/>
+				</d:resourcetype>
+			</d:prop>
+			<d:status>HTTP/1.1 200 OK</d:status>
+		</d:propstat>
+		<d:propstat>
+			<d:prop>
+				<d:principal-URL/>
+			</d:prop>
+			<d:status>HTTP/1.1 404 Not Found</d:status>
+		</d:propstat>
+	</d:response>
+</d:multistatus>
+
