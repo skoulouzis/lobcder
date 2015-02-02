@@ -579,6 +579,7 @@ public class TestREST {
         List<File> unzipedFiles = null;
         File randomFile = null;
         try {
+            utils.deleteResource(testcol, false);
             utils.createCollection(testcol, true);
             randomFile = utils.createRandomFile("/tmp/" + TestSettings.TEST_FILE_NAME1, 1);
             //If the destination is set to this.root+testResourceId + "/file1" someone is asking for /login.html ???!!!!
