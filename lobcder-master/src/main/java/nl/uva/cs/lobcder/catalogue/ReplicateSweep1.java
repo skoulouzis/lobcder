@@ -1,29 +1,277 @@
 package nl.uva.cs.lobcder.catalogue;
 
-import nl.uva.cs.lobcder.resources.PDRIDescr;
+import lombok.extern.java.Log;
+import nl.uva.cs.lobcder.resources.*;
+import nl.uva.cs.lobcder.util.DesEncrypter;
 
+import javax.naming.NamingException;
+import javax.sql.DataSource;
+import java.math.BigInteger;
+import java.sql.*;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Random;
+import java.util.logging.Level;
 
 /**
  * Created by dvasunin on 14.01.15.
  */
-public class ReplicateSweep1 implements Runnable {
-    @Override
-    public void run() {
 
+@Log
+public class ReplicateSweep1 implements Runnable {
+    private final DataSource datasource;
+
+
+    public ReplicateSweep1(DataSource datasource) throws NamingException {
+        this.datasource = datasource;
     }
 
-  Collection<Long> selectPDRIGroupsWhichNeedToBeUpdated(){
-    return null;
-  }
+    @Override
+    public void run() {
+        boolean successFlag = true;
+        try (Connection connection = datasource.getConnection())
+        {
+            connection.setAutoCommit(true);
+            try (PreparedStatement preparedStatement = connection.prepareStatement(
+                    "UPDATE pdrigroup_table SET needCheck=FALSE WHERE pdriGroupId=?"))
+            {
+                for (Long pdriGroup : selectPdriGroupsToRelocate(connection)) {
+                    for (Long logicalDataId : getFilesByPdriGroup(pdriGroup, connection)) {
+                        Collection<Long> preferences = getPreferencesForFile(logicalDataId, connection);
+                        if (!preferences.isEmpty()) {
+                            for (PDRIDescr pdriDescr : getPdriDescrForGroup(pdriGroup, connection)) {
+                                preferences.remove(pdriDescr.getStorageSiteId());
+                            }
+                            successFlag &= replicate(pdriGroup, preferences);
+                        }
+                    }
+                    Collection<Long> removingStorage = getRemovingStorage(connection);
+                    Collection<PDRIDescr> wantRemove = new ArrayList<>();
+                    Collection<PDRIDescr> pdriDescrs = getPdriDescrForGroup(pdriGroup, connection);
+                    for(PDRIDescr pdriDescr: pdriDescrs){
+                        if(removingStorage.contains(pdriDescr.getStorageSiteId())){
+                            wantRemove.add(pdriDescr);
+                        }
+                    }
+                    if(pdriDescrs.containsAll(wantRemove)) {
+                        successFlag &= replicate(pdriGroup, getReplicationPolicy().getSitesToReplicate());
+                    }
+                    if(successFlag) {
+                        successFlag &= removePdris(wantRemove);
+                    }
+                    if(successFlag){
+                        preparedStatement.setLong(1, pdriGroup);
+                        preparedStatement.executeUpdate();
+                    }
+                }
+            }
+        } catch(Exception e) {
+            ReplicateSweep1.log.log(Level.SEVERE, null, e);
+        }
+    }
 
-  Collection<PDRIDescr> getPDRIDescrForGroup(Long GroupId){
-    return null;
-  }
+    private boolean removePdris(Collection<PDRIDescr> wantRemove) {
+        if(wantRemove.isEmpty())
+            return true;
+        boolean result = true;
+        try (Connection connection = datasource.getConnection()) {
+            connection.setAutoCommit(true);
+            try (PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM pdri_table WHERE pdriId=?")) {
+                for (PDRIDescr pdriDescr : wantRemove) {
+                    try {
+                        PDRI pdri = PDRIFactory.getFactory().createInstance(pdriDescr);
+                        pdri.delete();
+                        log.log(Level.FINE, "PDRI Instance file name: {0}", new Object[]{pdri.getFileName()});
+                        pdri.delete();
+                        preparedStatement.setLong(1, pdriDescr.getId());
+                        preparedStatement.executeUpdate();
+                        log.log(Level.FINE, "DELETE:", pdri.getURI());
+                    } catch (Exception e) {
+                        log.log(Level.SEVERE, null, e);
+                        result = false;
+                    }
+                }
+                return result;
+            }
+        } catch (Exception e) {
+            log.log(Level.SEVERE, null, e);
+            return false;
+        }
+    }
 
-  void replicate(Collection<PDRIDescr> pdriDescrs, ReplicationPolicy){
+    private Collection<Long> getRemovingStorage(Connection connection) throws SQLException {
+        try(Statement statement = connection.createStatement()) {
+            Collection<Long> result = new ArrayList<>();
+            ResultSet resultSet = statement.executeQuery("SELECT storageSiteId FROM storage_site_table WHERE removing=TRUE");
+            while (resultSet.next()) {
+                result.add(resultSet.getLong(1));
+            }
+            return result;
+        }
+    }
 
-  }
+    private Collection<Long> getPreferencesForFile(Long uid, Connection connection) throws SQLException {
+        try(PreparedStatement preparedStatement = connection.prepareStatement("SELECT storageSiteRef FROM pref_table WHERE ld_uid=?")) {
+            Collection<Long> result = new ArrayList<>();
+            preparedStatement.setLong(1, uid);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            while (resultSet.next()) {
+                result.add(resultSet.getLong(1));
+            }
+            return result;
+        }
+    }
+
+    private Collection<Long> getFilesByPdriGroup(Long pdriGroup, Connection connection) throws SQLException {
+        try(PreparedStatement preparedStatement = connection.prepareStatement("SELECT uid FROM ldata_table WHERE pdriGroupRef=?")) {
+            Collection<Long> result = new ArrayList<>();
+            preparedStatement.setLong(1, pdriGroup);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            while (resultSet.next()) {
+                result.add(resultSet.getLong(1));
+            }
+            return result;
+        }
+    }
+
+    private ReplicationPolicy getReplicationPolicy() {
+        return null;
+    }
+
+    private Collection<Long> selectPdriGroupsToRelocate(Connection connection) throws SQLException {
+        try(Statement statement = connection.createStatement()) {
+            Collection<Long> result = new ArrayList<>();
+            ResultSet resultSet = statement.executeQuery("SELECT pdriGroupId FROM pdrigroup_table WHERE needCheck=TRUE LIMIT 10");
+            while (resultSet.next()) {
+                result.add(resultSet.getLong(1));
+            }
+            return result;
+        }
+    }
+
+    private Collection<PDRIDescr> getPdriDescrForGroup(Long groupId, Connection connection) throws SQLException {
+        Collection<PDRIDescr> res = new ArrayList<>();
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT fileName, storageSiteRef, storage_site_table.resourceUri, username, password, isEncrypted, encryptionKey, pdri_table.pdriId FROM pdri_table JOIN storage_site_table ON storageSiteRef = storageSiteId JOIN credential_table ON credentialRef = credintialId WHERE pdri_table.pdriGroupRef=? AND isCache=FALSE" ))
+        {
+            ps.setLong(1, groupId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                String fileName = rs.getString(1);
+                long ssID = rs.getLong(2);
+                String resourceURI = rs.getString(3);
+                String uName = rs.getString(4);
+                String passwd = rs.getString(5);
+                boolean encrypt = rs.getBoolean(6);
+                long key = rs.getLong(7);
+                long pdriId = rs.getLong(8);
+                res.add(new PDRIDescr(fileName, ssID, resourceURI, uName, passwd, encrypt, BigInteger.valueOf(key), groupId, pdriId));
+            }
+            return res;
+        }
+    }
+
+    private PDRIDescr getSourcePdriDescrForGroup(Long groupId, Connection connection) throws SQLException {
+        Collection<PDRIDescr> res = new ArrayList<>();
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT fileName, storageSiteRef, storage_site_table.resourceUri, username, password, isEncrypted, encryptionKey, pdri_table.pdriId FROM pdri_table JOIN storage_site_table ON storageSiteRef = storageSiteId JOIN credential_table ON credentialRef = credintialId WHERE pdri_table.pdriGroupRef=? AND isCache=TRUE LIMIT 1" ))
+        {
+            ps.setLong(1, groupId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                String fileName = rs.getString(1);
+                long ssID = rs.getLong(2);
+                String resourceURI = rs.getString(3);
+                String uName = rs.getString(4);
+                String passwd = rs.getString(5);
+                boolean encrypt = rs.getBoolean(6);
+                long key = rs.getLong(7);
+                long pdriId = rs.getLong(8);
+                return new PDRIDescr(fileName, ssID, resourceURI, uName, passwd, encrypt, BigInteger.valueOf(key), groupId, pdriId);
+            } else {
+                PDRIDescr[] pdriDescrs = getPdriDescrForGroup(groupId, connection).toArray(new PDRIDescr[0]);
+                return pdriDescrs[new Random().nextInt(pdriDescrs.length)];
+            }
+        }
+    }
+
+    private StorageSite getStorageSiteById(Long storageSiteId, Connection connection) throws SQLException {
+        try (PreparedStatement s = connection.prepareStatement(
+                "SELECT storageSiteId, resourceURI, currentNum, currentSize, quotaNum, quotaSize, username, password, encrypt, isCache FROM storage_site_table JOIN credential_table ON credentialRef = credintialId WHERE storageSiteId=?")) {
+            StorageSite ss = null;
+            s.setLong(1, storageSiteId);
+            ResultSet rs = s.executeQuery();
+            if (rs.next()) {
+                ss.setStorageSiteId(rs.getLong(1));
+                ss.setResourceURI(rs.getString(2));
+                ss.setCurrentNum(rs.getLong(3));
+                ss.setCurrentSize(rs.getLong(4));
+                ss.setQuotaNum(rs.getLong(5));
+                ss.setQuotaSize(rs.getLong(6));
+                Credential c = new Credential();
+                c.setStorageSiteUsername(rs.getString(7));
+                c.setStorageSitePassword(rs.getString(8));
+                ss.setCredential(c);
+                ss.setEncrypt(rs.getBoolean(9));
+                ss.setCache(rs.getBoolean(10));
+            }
+            return ss;
+        }
+    }
+
+    private String generateFileName(PDRIDescr pdriDescr){
+        return pdriDescr.getName();
+    }
+
+    private boolean replicate(Long pdriGroupId, Collection<Long> toReplicate) {
+        if(toReplicate.isEmpty())
+            return true;
+        boolean result = true;
+        try (Connection connection = datasource.getConnection())
+        {
+            connection.setAutoCommit(true);
+            try (PreparedStatement preparedStatement = connection.prepareStatement(
+                    "INSERT INTO pdri_table (fileName, storageSiteRef, pdriGroupRef, isEncrypted, encryptionKey) VALUES (?,?,?,?,?)" ))
+            {
+                PDRIDescr sourceDescr = getSourcePdriDescrForGroup(pdriGroupId, connection);
+                PDRI sourcePdri = PDRIFactory.getFactory().createInstance(sourceDescr);
+
+                for (Long site : toReplicate) {
+                    try {
+                        StorageSite ss = getStorageSiteById(site, connection);
+                        BigInteger pdriKey = DesEncrypter.generateKey();
+                        PDRIDescr destinationDescr = new PDRIDescr(
+                                generateFileName(sourceDescr),
+                                ss.getStorageSiteId(),
+                                ss.getResourceURI(),
+                                ss.getCredential().getStorageSiteUsername(),
+                                ss.getCredential().getStorageSitePassword(),
+                                ss.isEncrypt(),
+                                pdriKey,
+                                pdriGroupId,
+                                null);
+                        PDRI destinationPdri = PDRIFactory.getFactory().createInstance(destinationDescr);
+                        if (!destinationPdri.exists(destinationPdri.getFileName())) {
+                            destinationPdri.replicate(sourcePdri);
+                        }
+                        preparedStatement.setString(1, destinationDescr.getName());
+                        preparedStatement.setLong(2, destinationDescr.getStorageSiteId());
+                        preparedStatement.setLong(3, destinationDescr.getPdriGroupRef());
+                        preparedStatement.setBoolean(4, destinationDescr.getEncrypt());
+                        preparedStatement.setLong(5, destinationDescr.getKey().longValue());
+                        preparedStatement.executeUpdate();
+                    } catch (Exception e) {
+                        log.log(Level.SEVERE, null, e);
+                        result = false;
+                    }
+                }
+                return result;
+            }
+        } catch (Exception e) {
+            log.log(Level.SEVERE, null, e);
+            return false;
+        }
+    }
 
 }
 
