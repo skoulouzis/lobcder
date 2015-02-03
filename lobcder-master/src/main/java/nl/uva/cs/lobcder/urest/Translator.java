@@ -38,7 +38,9 @@ public class Translator {
             try (Connection cn = SingletonesHelper.getInstance().getDataSource().getConnection()) {
                 String shortId = null;
                 String longId = null;
-                try(PreparedStatement ps = cn.prepareStatement("SELECT short_tkt, userId, long_tkt, exp_date FROM tokens_table WHERE userId = ?", ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE)) {
+                try(PreparedStatement ps = cn.prepareStatement("SELECT short_tkt, "
+                        + "userId, long_tkt, exp_date FROM tokens_table WHERE userId = ?", 
+                        ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE)) {
                     ps.setString(1, userId);
                     try(ResultSet rs = ps.executeQuery()){
                         if(rs.next())   {

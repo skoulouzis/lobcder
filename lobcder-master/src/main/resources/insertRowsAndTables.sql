@@ -14,6 +14,7 @@
  ALTER TABLE ldata_table ADD status enum('unavailable', 'corrupted', 'OK');
  ALTER TABLE ldata_table ADD accessDate DATETIME;
  ALTER TABLE ldata_table ADD ttlSec int;
+ ALTER TABLE tokens_table ADD userId VARCHAR(255), INDEX(userId);
 
 
 # Here we createtables for built-in user IDs/roles

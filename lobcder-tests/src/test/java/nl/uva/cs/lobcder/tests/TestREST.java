@@ -86,6 +86,7 @@ public class TestREST {
     private String translatorURL;
     private String mrURL;
     private Utils utils;
+    private Boolean quckTest;
 
     @Before
     public void setUp() throws Exception {
@@ -135,6 +136,9 @@ public class TestREST {
         translatorURL = prop.getProperty(("translator.test.url"), "http://localhost:8080/lobcder/urest/");
 
         mrURL = prop.getProperty(("metadata.repository.url"), "http://vphshare.atosresearch.eu/metadata-extended/rest/metadata");
+
+        quckTest = Boolean.valueOf(prop.getProperty(("test.quick"), "true"));
+
 
 
         ClientConfig clientConfig = configureClient();
@@ -492,6 +496,9 @@ public class TestREST {
 
     @Test
     public void testMetadataService() throws IOException, JAXBException {
+        if (quckTest) {
+            return;
+        }
         System.err.println("testMetadataService");
         try {
             utils.createCollection(testcol, true);
@@ -532,19 +539,11 @@ public class TestREST {
 
             }
             assertNotNull(logicalDataWrapped);
-
-
-
-
-
-
-
         } catch (InterruptedException ex) {
             Logger.getLogger(TestREST.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
             utils.deleteResource(testcol, false);
         }
-
     }
 
     @Test
@@ -580,6 +579,7 @@ public class TestREST {
         List<File> unzipedFiles = null;
         File randomFile = null;
         try {
+            utils.deleteResource(testcol, false);
             utils.createCollection(testcol, true);
             randomFile = utils.createRandomFile("/tmp/" + TestSettings.TEST_FILE_NAME1, 1);
             //If the destination is set to this.root+testResourceId + "/file1" someone is asking for /login.html ???!!!!
@@ -615,6 +615,9 @@ public class TestREST {
 
     @Test
     public void testTTLService() throws JAXBException, IOException, DavException, InterruptedException {
+        if (quckTest) {
+            return;
+        }
         System.err.println("testTTLService");
         try {
             utils.createCollection(testcol, true);

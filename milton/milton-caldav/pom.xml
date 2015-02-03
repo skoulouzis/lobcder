@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.ettrema</groupId>
+        <artifactId>milton</artifactId>
+        <version>1.8.0-SNAPSHOT</version>
+    </parent>
+    <groupId>com.ettrema</groupId>
+    <artifactId>milton-caldav</artifactId>
+    <packaging>jar</packaging>
+    <name>Milton Caldav</name>
+    <properties>
+        <skipTests>true</skipTests>
+    </properties>
+    <build>
+    </build>
+    <dependencies>
+        <dependency>
+            <groupId>com.ettrema</groupId>
+            <artifactId>milton-api</artifactId>
+            <version>1.8.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.easymock</groupId>
+            <artifactId>easymock</artifactId>
+            <version>3.1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <scope>test</scope>
+            <groupId>org.easymock</groupId>
+            <artifactId>easymockclassextension</artifactId>
+            <version>3.1</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>jdom</groupId>
+            <artifactId>jdom</artifactId>
+            <version>1.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>1.3.2</version>
+        </dependency>
+    </dependencies>
+    
+      <repositories>        
+        <repository>
+            <id>elab.lab.uvalight.net</id>
+            <name>elab.lab.uvalight.net-releases</name>
+            <url>https://elab.lab.uvalight.net:8444/artifactory/repo</url>
+        </repository>
+    </repositories>
+    
+</project>
+

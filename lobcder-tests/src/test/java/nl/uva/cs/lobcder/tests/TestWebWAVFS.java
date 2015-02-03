@@ -80,6 +80,7 @@ public class TestWebWAVFS {
     private static String restURL;
     private static DefaultHttpClient httpclient;
     private static Utils utils;
+    private static Boolean quckTest;
 
     static {
         try {
@@ -155,6 +156,7 @@ public class TestWebWAVFS {
         password2 = prop.getProperty(("webdav.test.password2"), "passwd2");
         assertTrue(password2 != null);
 
+        quckTest = Boolean.valueOf(prop.getProperty(("test.quick"), "true"));
 
         client1 = new HttpClient();
         HttpClientParams params = new HttpClientParams();
@@ -411,51 +413,47 @@ public class TestWebWAVFS {
             utils.deleteResource(testFileURI1, false);
         }
     }
-//
-//    @Test
-//    public void testUploadFileOnRootWithoutAdminRole() throws IOException, DavException {
-//        System.err.println("testUploadFileOnRootWithoutAdminRole");
-//        String uname = prop.getProperty(("webdav.test.non.admin.username1"), "nonAdmin");
-//        assertNotNull(uname);
-//        String pass = prop.getProperty(("webdav.test.non.admin.password1"), "secret");
-//        assertNotNull(pass);
-//        HttpClient client = new HttpClient();
-//
-//        assertNotNull(uri.getHost());
-//        assertNotNull(uri.getPort());
-//        assertNotNull(client);
-//
-//        client.getState().setCredentials(
-//                new AuthScope(uri.getHost(), uri.getPort()),
-//                new UsernamePasswordCredentials(uname, pass));
-//
-//
-//
-//        String testFileURI1 = this.uri.toASCIIString() + TestSettings.TEST_FILE_NAME1 + ".txt";
-//        PutMethod put = new PutMethod(testFileURI1);
-//        put.setRequestEntity(new StringRequestEntity(TestSettings.TEST_DATA, "text/plain", "UTF-8"));
-//        int status = client.executeMethod(put);
-//        assertEquals(HttpStatus.SC_UNAUTHORIZED, status);
-//    }
-//
+
+    @Test
+    public void testUploadFileOnRootWithoutAdminRole() throws IOException, DavException {
+        System.err.println("testUploadFileOnRootWithoutAdminRole");
+        String uname = prop.getProperty(("webdav.test.non.admin.username1"), "nonAdmin");
+        assertNotNull(uname);
+        String pass = prop.getProperty(("webdav.test.non.admin.password1"), "secret");
+        assertNotNull(pass);
+        HttpClient client = new HttpClient();
+
+        assertNotNull(uri.getHost());
+        assertNotNull(uri.getPort());
+        assertNotNull(client);
+
+        client.getState().setCredentials(
+                new AuthScope(uri.getHost(), uri.getPort()),
+                new UsernamePasswordCredentials(uname, pass));
+
+
+
+        String testFileURI1 = this.uri.toASCIIString() + TestSettings.TEST_FILE_NAME1 + ".txt";
+        PutMethod put = new PutMethod(testFileURI1);
+        put.setRequestEntity(new StringRequestEntity(TestSettings.TEST_DATA, "text/plain", "UTF-8"));
+        int status = client.executeMethod(put);
+        assertEquals(HttpStatus.SC_UNAUTHORIZED, status);
+    }
+
 //    @Test
 //    public void testUpDownloadFileWithSpace() throws IOException, DavException {
 //        System.err.println("testUpDownloadFileWithSpace");
-////        String testFileURI1 = uri.toASCIIString() + "file with spaces";
-////        PutMethod put = new PutMethod(testFileURI1);
-////        put.setRequestEntity(new StringRequestEntity(TestSettings.TEST_DATA, "text/plain", "UTF-8"));
-////        int status = client1.executeMethod(put);
-////        assertEquals(HttpStatus.SC_CREATED, status);
-////
-////
-////        GetMethod get = new GetMethod(testFileURI1);
-////        status = client1.executeMethod(get);
-////        assertEquals(HttpStatus.SC_OK, status);
-////        assertEquals(TestSettings.TEST_DATA, get.getResponseBodyAsString());
-////
-////        delete(testFileURI1);
+//        String testFileURI1 = uri.toASCIIString() + "file with spaces";
+//        
+//        utils.createFile(testFileURI1, true);
+//        
+//        GetMethod get = new GetMethod(testFileURI1);
+//        int status = client1.executeMethod(get);
+//        assertEquals(HttpStatus.SC_OK, status);
+//        assertEquals(TestSettings.TEST_DATA, get.getResponseBodyAsString());
+//
+//        utils.deleteResource(testFileURI1, false);
 //    }
-
     @Test
     public void testPutGet() throws VlException, IOException {
         System.err.println("testPutGet");
@@ -484,6 +482,9 @@ public class TestWebWAVFS {
 
     @Test
     public void testFileConsistency() throws VlException, IOException {
+        if (quckTest) {
+            return;
+        }
         System.err.println("testFileConsistency");
         String testFileURI1 = uri.toASCIIString() + TestSettings.TEST_FILE_NAME1;
         try {
@@ -666,9 +667,14 @@ public class TestWebWAVFS {
 
     @Test
     public void testFileNames() throws IOException, DavException, InterruptedException {
+//        if (quckTest) {
+//            return;
+//        }
         System.err.println("testFileNames");
         String name = "a'b";
         String testFileURI1 = this.uri.toASCIIString() + name;
+//        String name2 = "~!@#$%^&*()_+' '/<>}]]{[";
+//        String testFileURI2 = this.uri.toASCIIString() + name2;
         try {
             utils.deleteResource(testFileURI1, false);
 
@@ -680,16 +686,15 @@ public class TestWebWAVFS {
             assertEquals(name, file.getName());
             utils.deleteResource(testFileURI1, false);
 
-            name = "~!@#$%^&*()_+' \'/<>}]]{[";
-            utils.createFile(testFileURI1, true);
 
-            utils.waitForReplication(testFileURI1);
-            file = utils.DownloadFile(testFileURI1, "/tmp/" + name, true);
+//            utils.createFile(testFileURI2, true);
+//            utils.waitForReplication(testFileURI2);
+//            file = utils.DownloadFile(testFileURI2, "/tmp/" + name, true);
 
             assertEquals(name, file.getName());
-            utils.deleteResource(testFileURI1, false);
         } finally {
             utils.deleteResource(testFileURI1, false);
+//            utils.deleteResource(testFileURI2, false);
         }
     }
 
@@ -759,6 +764,7 @@ public class TestWebWAVFS {
                 endpoint = p.resourceUrl;
             }
             VRL vrl = new VRL(endpoint).append("LOBCDER-REPLICA-vTEST").append(p.name);
+//            VRL vrl = new VRL(endpoint).append(p.name);
             System.err.println("Deleting: " + vrl);
             cli.openLocation(vrl).delete();
         }

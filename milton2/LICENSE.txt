@@ -1,0 +1,7 @@
+Please see license statements in each module.
+
+Most modules are Apache2 licensed, however Milton Server Enterprise (milton-server-ent) is 
+made available by default on the Affero GPL, and commercial licenses are available.
+
+The milton reference implementation is a derivative work of milton-server-ent so
+is necessarily on the same license terms.

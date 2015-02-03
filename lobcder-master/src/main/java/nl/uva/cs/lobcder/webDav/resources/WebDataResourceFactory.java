@@ -46,6 +46,13 @@ public class WebDataResourceFactory implements ResourceFactory {
         } while (!first.equals("dav"));
         String escaedPath = StringEscapeUtils.escapeSql(strPath);
         strPath = StringEscapeUtils.escapeHtml(escaedPath);
+//        strPath  = strPath.replaceAll("'", "\'");
+//       strPath =  strPath.replaceAll ("#", "\\#" );
+//                ,    '%', '\%' )
+//                ,    '_', '\_' )
+//                ,    '[', '\[' )
+
+                
 //        try (Connection cn = catalogue.getConnection()) {
         try {
             WebDataResourceFactory.log.log(Level.FINE, "getResource:  strPath: {0} path: {1} ldri: {2}" + "\n" + "\tgetResource:  host: {3} path: {4}", new Object[]{strPath, Path.path(strPath), ldri, host, ldri});
