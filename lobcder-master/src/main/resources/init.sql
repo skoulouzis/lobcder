@@ -3,7 +3,10 @@ storage_site_table, credential_table, requests_table, successor_table, occurrenc
 
 CREATE TABLE pdrigroup_table (
   pdriGroupId SERIAL PRIMARY KEY,
-  refCount INT, INDEX(refCount)
+  refCount INT, INDEX(refCount),
+  needCheck BOOLEAN NOT NULL DEFAULT TRUE,
+  bound BOOLEAN NOT NULL DEFAULT FALSE,
+  INDEX(needCheck,bound)
 ) ENGINE=InnoDB;
 
 CREATE TABLE credential_table (
@@ -24,7 +27,10 @@ CREATE TABLE storage_site_table (
   quotaSize BIGINT,
   isCache BOOLEAN NOT NULL DEFAULT FALSE, INDEX(isCache),
   extra VARCHAR(512),
-  encrypt BOOLEAN NOT NULL DEFAULT FALSE, INDEX(encrypt)
+  encrypt BOOLEAN NOT NULL DEFAULT FALSE, INDEX(encrypt),
+  private BOOLEAN NOT NULL DEFAULT FALSE,
+  removing BOOLEAN NOT NULL DEFAULT FALSE, INDEX(removing),
+  INDEX (private,removing)
 ) ENGINE=InnoDB;
 
 CREATE TABLE pdri_table (
@@ -61,6 +67,12 @@ CREATE TABLE ldata_table (
  status enum('unavailable', 'corrupted', 'OK'),
  accessDate DATETIME,
  ttlSec int
+) ENGINE=InnoDB;
+
+CREATE TABLE pref_table (
+  id SERIAL PRIMARY KEY,
+  ld_uid BIGINT UNSIGNED, FOREIGN KEY(ld_uid) REFERENCES ldata_table(uid) ON DELETE CASCADE,
+  storageSiteRef BIGINT UNSIGNED, FOREIGN KEY(storageSiteRef) REFERENCES storage_site_table(storageSiteId) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
 CREATE TABLE wp4_table (
@@ -197,6 +209,28 @@ FOR EACH ROW BEGIN
   INSERT INTO wp4_table (local_id) VALUES(NEW.uid);
 END|
 
+DROP TRIGGER IF EXISTS on_ss_update |
+CREATE TRIGGER on_ss_update
+AFTER UPDATE ON storage_site_table
+FOR EACH ROW BEGIN
+  IF new.removing = TRUE THEN
+    DELETE FROM pref_table WHERE storageSiteRef=new.storageSiteId;
+  END IF;
+END|
+
+DROP TRIGGER IF EXISTS on_pref_insert |
+CREATE TRIGGER on_pref_insert
+AFTER INSERT ON pref_table
+FOR EACH ROW BEGIN
+    UPDATE pdrigroup_table SET needCheck=TRUE WHERE pdriGroupId IN (SELECT pdriGroupRef FROM ldata_table WHERE ld_uid=new.ld_uid);
+END|
+
+DROP TRIGGER IF EXISTS on_pref_delete |
+CREATE TRIGGER on_pref_delete
+AFTER DELETE ON pref_table
+FOR EACH ROW BEGIN
+  UPDATE pdrigroup_table SET needCheck=TRUE WHERE pdriGroupId IN (SELECT pdriGroupRef FROM ldata_table WHERE ld_uid=old.ld_uid);
+END|
 
 -- DROP TRIGGER IF EXISTS on_pdri_incert |
 -- CREATE TRIGGER on_pdri_incert
@@ -480,4 +514,4 @@ END
 |
 DELIMITER ;
 
-SET GLOBAL event_scheduler = ON;
+#SET GLOBAL event_scheduler = ON;
