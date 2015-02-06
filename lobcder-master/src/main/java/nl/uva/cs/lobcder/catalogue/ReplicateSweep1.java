@@ -97,12 +97,11 @@ public class ReplicateSweep1 implements Runnable {
                     PDRI pdri = PDRIFactory.getFactory().createInstance(pdriDescr);
                     pdri.delete();
                     log.log(Level.FINE, "PDRI Instance file name: {0}", new Object[]{pdri.getFileName()});
-                    pdri.delete();
                     preparedStatementDel.setLong(1, pdriDescr.getId());
                     preparedStatementDel.executeUpdate();
                     log.log(Level.FINE, "DELETE:", pdri.getURI());
                 } catch (Exception e) {
-                    log.log(Level.SEVERE, null, e);
+                    log.log(Level.WARNING, null, e);
                     result = false;
                 }
             }
@@ -121,7 +120,6 @@ public class ReplicateSweep1 implements Runnable {
             for (PDRIDescr pdriDescr : wantRemove) {
                 try {
                     PDRI pdri = PDRIFactory.getFactory().createInstance(pdriDescr);
-                    pdri.delete();
                     log.log(Level.FINE, "PDRI Instance file name: {0}", new Object[]{pdri.getFileName()});
                     pdri.delete();
                     preparedStatement.setLong(1, pdriDescr.getId());
@@ -227,7 +225,7 @@ public class ReplicateSweep1 implements Runnable {
                 long key = rs.getLong(7);
                 long pdriId = rs.getLong(8);
                 return new PDRIDescr(fileName, ssID, resourceURI, uName, passwd, encrypt, BigInteger.valueOf(key), groupId, pdriId);
-            } else {
+            } else {     // for optimization we better to use a smarter algorithm to pick up better source
                 Collection<PDRIDescr> var = getPdriDescrForGroup(groupId, connection);
                 PDRIDescr[] pdriDescrs = var.toArray(new PDRIDescr[var.size()]);
                 return pdriDescrs[new Random().nextInt(pdriDescrs.length)];
@@ -298,7 +296,7 @@ public class ReplicateSweep1 implements Runnable {
                     preparedStatement.setLong(5, destinationDescr.getKey().longValue());
                     preparedStatement.executeUpdate();
                 } catch (Exception e) {
-                    log.log(Level.SEVERE, null, e);
+                    log.log(Level.WARNING, null, e);
                     result = false;
                 }
             }
