@@ -16,7 +16,11 @@
 package nl.uva.cs.lobcder.catalogue;
 
 import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Random;
 
 /**
  *
@@ -29,7 +33,16 @@ class FirstSiteReplicationPolicy implements ReplicationPolicy {
 
     @Override
     public Collection<Long> getSitesToReplicate(Connection connection) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        try (Statement statement = connection.createStatement()) {
+            ArrayList<Long> queryResult = new ArrayList<>();
+            ResultSet resultSet = statement.executeQuery("SELECT storageSiteId FROM storage_site_table WHERE private=FALSE AND removing=FALSE AND isCache=FALSE");
+            while (resultSet.next()) {
+                queryResult.add(resultSet.getLong(1));
+            }
+            Long[] queryResArr = queryResult.toArray(new Long[queryResult.size()]);
+            ArrayList<Long> result = new ArrayList<>();
+            result.add(queryResArr[new Random().nextInt(queryResArr.length)]);
+            return result;
+        }
     }
-    
 }
