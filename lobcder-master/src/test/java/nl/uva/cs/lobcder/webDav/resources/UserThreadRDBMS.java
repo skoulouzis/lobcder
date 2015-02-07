@@ -28,7 +28,7 @@
 //
 ///**
 // *
-// * @author alogo
+// * @author S. Koulouzis
 // */
 //public class UserThreadRDBMS extends Thread {
 //

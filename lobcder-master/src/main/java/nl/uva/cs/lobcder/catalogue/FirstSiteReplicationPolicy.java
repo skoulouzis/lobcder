@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 S. Koulouzis.
+ * Copyright 2015 S. Koulouzis.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,20 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.uva.cs.lobcder.rest.wrappers;
+package nl.uva.cs.lobcder.catalogue;
 
-import javax.xml.bind.annotation.XmlRootElement;
-import lombok.Data;
+import java.sql.Connection;
+import java.util.Collection;
 
 /**
  *
  * @author S. Koulouzis
  */
-@XmlRootElement
-@Data
-public class Stats {
-    String source;
-    String destination;
-    Long size;
-    Double speed;
+class FirstSiteReplicationPolicy implements ReplicationPolicy {
+
+    public FirstSiteReplicationPolicy() {
+    }
+
+    @Override
+    public Collection<Long> getSitesToReplicate(Connection connection) throws Exception {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+    
 }

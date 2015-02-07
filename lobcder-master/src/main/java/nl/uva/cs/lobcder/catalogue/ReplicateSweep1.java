@@ -1,5 +1,6 @@
 package nl.uva.cs.lobcder.catalogue;
 
+import java.io.IOException;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.resources.*;
 import nl.uva.cs.lobcder.util.DesEncrypter;
@@ -9,6 +10,11 @@ import java.math.BigInteger;
 import java.sql.*;
 import java.util.*;
 import java.util.logging.Level;
+import nl.uva.cs.lobcder.util.PropertiesHelper;
+import static nl.uva.cs.lobcder.util.PropertiesHelper.ReplicationPolicy.redundant;
+import static nl.uva.cs.lobcder.util.PropertiesHelper.ReplicationPolicy.fastest;
+import static nl.uva.cs.lobcder.util.PropertiesHelper.ReplicationPolicy.firstSite;
+import static nl.uva.cs.lobcder.util.PropertiesHelper.ReplicationPolicy.random;
 
 /**
  * Created by dvasunin on 14.01.15.
@@ -17,10 +23,12 @@ import java.util.logging.Level;
 @Log
 public class ReplicateSweep1 implements Runnable {
     private final DataSource datasource;
+     private static PropertiesHelper.ReplicationPolicy replicatePolicy = PropertiesHelper.ReplicationPolicy.firstSite;
 
 
-    public ReplicateSweep1(DataSource datasource) {
+    public ReplicateSweep1(DataSource datasource) throws IOException {
         this.datasource = datasource;
+        replicatePolicy = PropertiesHelper.getReplicationPolicy();
     }
 
     @Override
@@ -173,7 +181,18 @@ public class ReplicateSweep1 implements Runnable {
     }
 
     private ReplicationPolicy getReplicationPolicy() {
-        return new RandomReplicationPolicy();
+           switch (replicatePolicy) {
+            case firstSite:
+return new FirstSiteReplicationPolicy();
+            case redundant:
+                return new RedundantReplicationPolicy();
+            case fastest:
+                return new FastestSiteReplicationPolicy();
+            case random:
+                return new RandomReplicationPolicy();
+            default:
+                return new RandomReplicationPolicy();
+        }
     }
 
     private Collection<Long> selectPdriGroupsToRelocate(Connection connection) throws SQLException {

@@ -1,7 +1,7 @@
 <%-- 
     Document   : index
     Created on : Sep 16, 2013, 3:05:12 PM
-    Author     : alogo
+    Author     : S. Koulouzis
 --%>
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
