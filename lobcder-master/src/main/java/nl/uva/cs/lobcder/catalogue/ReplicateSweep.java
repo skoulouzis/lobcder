@@ -163,8 +163,6 @@ class ReplicateSweep implements Runnable {
             return getRandomStorageSite(number);
         }
         return res;
-
-
     }
 
     private Map<String, StorageSite> getRandomStorageSite(int number) {

@@ -183,7 +183,7 @@ public class ReplicateSweep1 implements Runnable {
             case firstSite:
                 return new FirstSiteReplicationPolicy();
             case redundant:
-                return new RedundantReplicationPolicy();
+                return new FullRedundancyReplicationPolicy();
             case fastest:
                 return new FastestSiteReplicationPolicy();
             case random:

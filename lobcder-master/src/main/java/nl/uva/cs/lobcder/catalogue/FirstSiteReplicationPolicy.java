@@ -28,21 +28,19 @@ import java.util.Random;
  */
 class FirstSiteReplicationPolicy implements ReplicationPolicy {
 
-    public FirstSiteReplicationPolicy() {
-    }
+    private ArrayList<Long> queryResult = new ArrayList<>();
 
     @Override
     public Collection<Long> getSitesToReplicate(Connection connection) throws Exception {
-        try (Statement statement = connection.createStatement()) {
-            ArrayList<Long> queryResult = new ArrayList<>();
-            ResultSet resultSet = statement.executeQuery("SELECT storageSiteId FROM storage_site_table WHERE private=FALSE AND removing=FALSE AND isCache=FALSE");
-            while (resultSet.next()) {
-                queryResult.add(resultSet.getLong(1));
+        if (queryResult.isEmpty()) {
+            try (Statement statement = connection.createStatement()) {
+                ResultSet resultSet = statement.executeQuery("SELECT storageSiteId FROM storage_site_table WHERE private=FALSE AND removing=FALSE AND isCache=FALSE LIMIT 1");
+                while (resultSet.next()) {
+                    queryResult.add(resultSet.getLong(1));
+                }
             }
-            Long[] queryResArr = queryResult.toArray(new Long[queryResult.size()]);
-            ArrayList<Long> result = new ArrayList<>();
-            result.add(queryResArr[new Random().nextInt(queryResArr.length)]);
-            return result;
         }
+        return queryResult;
+
     }
 }
