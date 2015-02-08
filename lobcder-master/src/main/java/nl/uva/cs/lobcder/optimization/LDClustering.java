@@ -147,7 +147,7 @@ public class LDClustering extends DBMapPredictor implements Runnable {
                         res.setLockDepth(rs.getString(18));
                         res.setLockTimeout(rs.getLong(19));
                         res.setDescription(rs.getString(20));
-                        res.setDataLocationPreference(rs.getString(21));
+//                        res.setDataLocationPreference(rs.getString(21));
                         res.setStatus(rs.getString(22));
                         ArrayList<MyInstance> ins = getInstances(res, null);
                         for (MyInstance i : ins) {
@@ -257,7 +257,7 @@ public class LDClustering extends DBMapPredictor implements Runnable {
                 att = n.getContentTypesAsString();
                 instance.setValue((Attribute) metdataAttributes.elementAt(index++), (att != null) ? att : "NON");
                 instance.setValue((Attribute) metdataAttributes.elementAt(index++), n.getCreateDate());
-                att = n.getDataLocationPreference();
+//                att = n.getDataLocationPreference();
                 instance.setValue((Attribute) metdataAttributes.elementAt(index++), (att != null) ? att : "NON");
                 att = n.getDescription();
                 instance.setValue((Attribute) metdataAttributes.elementAt(index++), (att != null) ? att : "NON");
@@ -285,7 +285,7 @@ public class LDClustering extends DBMapPredictor implements Runnable {
             att = n.getContentTypesAsString();
             instance.setValue((Attribute) metdataAttributes.elementAt(index++), (att != null) ? att : "NON");
             instance.setValue((Attribute) metdataAttributes.elementAt(index++), n.getCreateDate());
-            att = n.getDataLocationPreference();
+//            att = n.getDataLocationPreference();
             instance.setValue((Attribute) metdataAttributes.elementAt(index++), (att != null) ? att : "NON");
             att = n.getDescription();
             instance.setValue((Attribute) metdataAttributes.elementAt(index++), (att != null) ? att : "NON");
@@ -339,7 +339,7 @@ public class LDClustering extends DBMapPredictor implements Runnable {
         att = n.getContentTypesAsString();
         instance.setValue((Attribute) metdataAttributes.elementAt(index++), (att != null) ? att : "NON");
         instance.setValue((Attribute) metdataAttributes.elementAt(index++), n.getCreateDate());
-        att = n.getDataLocationPreference();
+//        att = n.getDataLocationPreference();
         instance.setValue((Attribute) metdataAttributes.elementAt(index++), (att != null) ? att : "NON");
         att = n.getDescription();
         instance.setValue((Attribute) metdataAttributes.elementAt(index++), (att != null) ? att : "NON");

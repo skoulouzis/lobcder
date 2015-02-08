@@ -246,7 +246,7 @@ public class DBMapPredictor extends MyDataSource implements Predictor {
                             res.setLockDepth(rs.getString(16));
                             res.setLockTimeout(rs.getLong(17));
                             res.setDescription(rs.getString(18));
-                            res.setDataLocationPreference(rs.getString(19));
+//                            res.setDataLocationPreference(rs.getString(19));
                             res.setStatus(rs.getString(20));
                             return res;
                         } else {
@@ -302,7 +302,7 @@ public class DBMapPredictor extends MyDataSource implements Predictor {
                 res.setLockDepth(rs.getString(17));
                 res.setLockTimeout(rs.getLong(18));
                 res.setDescription(rs.getString(19));
-                res.setDataLocationPreference(rs.getString(20));
+//                res.setDataLocationPreference(rs.getString(20));
                 res.setStatus(rs.getString(21));
                 return res;
             } else {

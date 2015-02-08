@@ -94,7 +94,7 @@ class GraphPopulator implements Runnable {
                 element.setLockDepth(rs.getString(17));
                 element.setLockTimeout(rs.getLong(18));
                 element.setDescription(rs.getString(19));
-                element.setDataLocationPreference(rs.getString(20));
+//                element.setDataLocationPreference(rs.getString(20));
                 res.add(element);
             }
             return res;
@@ -132,7 +132,7 @@ class GraphPopulator implements Runnable {
                 res.setLockDepth(rs.getString(17));
                 res.setLockTimeout(rs.getLong(18));
                 res.setDescription(rs.getString(19));
-                res.setDataLocationPreference(rs.getString(20));
+//                res.setDataLocationPreference(rs.getString(20));
                 res.setStatus(rs.getString(21));
                 return res;
             } else {

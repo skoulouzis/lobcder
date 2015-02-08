@@ -14,6 +14,7 @@ import java.sql.*;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.annotation.Nonnull;
 import javax.naming.NamingException;
 import javax.ws.rs.WebApplicationException;
@@ -34,6 +35,8 @@ import nl.uva.cs.lobcder.rest.wrappers.UsersWrapper;
 import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.cs.lobcder.util.MyDataSource;
 import nl.uva.cs.lobcder.util.PropertiesHelper;
+import nl.uva.vlet.exception.VRLSyntaxException;
+import nl.uva.vlet.vrl.VRL;
 
 /**
  *
@@ -75,7 +78,6 @@ public class JDBCatalogue extends MyDataSource {
                     + "password, encrypt FROM storage_site_table "
                     + "JOIN credential_table ON credentialRef = credintialId "
                     + "WHERE isCache = " + isCache)) {
-
                 ArrayList<StorageSite> res = new ArrayList<>();
                 while (rs.next()) {
                     StorageSite ss = new StorageSite();
@@ -142,7 +144,9 @@ public class JDBCatalogue extends MyDataSource {
             } else {
                 preparedStatement.setInt(8, entry.getTtlSec());
             }
-            preparedStatement.setString(9, entry.getDataLocationPreference());
+
+//            preparedStatement.setString(9, entry.getDataLocationPreference());
+
             preparedStatement.executeUpdate();
             ResultSet rs = preparedStatement.getGeneratedKeys();
             rs.next();
@@ -184,7 +188,9 @@ public class JDBCatalogue extends MyDataSource {
             preparedStatement.setString(16, entry.getLockDepth());
             preparedStatement.setLong(17, entry.getLockTimeout());
             preparedStatement.setString(18, entry.getDescription());
-            preparedStatement.setString(19, entry.getDataLocationPreference());
+
+//            preparedStatement.setString(19, entry.getDataLocationPreference());
+
             preparedStatement.setString(20, entry.getName());
             preparedStatement.setTimestamp(21, new Timestamp(entry.getLastAccessDate()));
             if (entry.getTtlSec() == null) {
@@ -429,8 +435,12 @@ public class JDBCatalogue extends MyDataSource {
                 "SELECT uid, ownerId, datatype, createDate, modifiedDate, ldLength, "
                 + "contentTypesStr, pdriGroupRef, isSupervised, checksum, lastValidationDate, "
                 + "lockTokenId, lockScope, lockType, lockedByUser, lockDepth, lockTimeout, "
-                + "description, locationPreference, accessDate, ttlSec "
-                + "FROM ldata_table WHERE ldata_table.parentRef = " + parentRef + " AND ldata_table.ldName like '" + name + "'")) {
+                + "description, locationPreference, accessDate, ttlSec"
+                //                + ", resourceUri "
+                + "FROM ldata_table "
+                //                + "JOIN pref_table ON ld_uid = uid "
+                //                + "JOIN storage_site_table ON storageSiteId = storageSiteRef"
+                + "WHERE ldata_table.parentRef = " + parentRef + " AND ldata_table.ldName like '" + name + "'")) {
 //            preparedStatement.setLong(1, parentRef);
 //            preparedStatement.setString(2, name);
             ResultSet rs = preparedStatement.executeQuery();
@@ -456,11 +466,16 @@ public class JDBCatalogue extends MyDataSource {
                 res.setLockDepth(rs.getString(16));
                 res.setLockTimeout(rs.getLong(17));
                 res.setDescription(rs.getString(18));
-                res.setDataLocationPreference(rs.getString(19));
+
+//                res.setDataLocationPreference(rs.getString(19));
+
                 Timestamp ts = rs.getTimestamp(20);
                 res.setLastAccessDate(ts != null ? ts.getTime() : null);
                 int ttl = rs.getInt(21);
                 res.setTtlSec(rs.wasNull() ? null : ttl);
+//                Array array = rs.getArray(21);
+
+
                 return res;
             } else {
                 return null;
@@ -486,7 +501,11 @@ public class JDBCatalogue extends MyDataSource {
                             + "contentTypesStr, pdriGroupRef, isSupervised, checksum, lastValidationDate, "
                             + "lockTokenId, lockScope, lockType, lockedByUser, lockDepth, lockTimeout, "
                             + "description, locationPreference, status, accessDate, ttlSec "
-                            + "FROM ldata_table WHERE ldata_table.parentRef = ? AND ldata_table.ldName = ?")) {
+                            //                            + ", resourceUri "
+                            + "FROM ldata_table "
+                            //                            + "JOIN pref_table ON ld_uid = uid "
+                            //                            + "JOIN storage_site_table ON storageSiteId = storageSiteRef "
+                            + "WHERE ldata_table.parentRef = ? AND ldata_table.ldName = ?")) {
                         preparedStatement1.setLong(1, parent);
                         preparedStatement1.setString(2, p);
                         ResultSet rs = preparedStatement1.executeQuery();
@@ -512,13 +531,17 @@ public class JDBCatalogue extends MyDataSource {
                             res.setLockDepth(rs.getString(16));
                             res.setLockTimeout(rs.getLong(17));
                             res.setDescription(rs.getString(18));
-                            res.setDataLocationPreference(rs.getString(19));
+
+//                            res.setDataLocationPreference(rs.getString(19));
+
                             res.setStatus(rs.getString(20));
                             Timestamp ts = rs.getTimestamp(21);
                             //Object ts = rs.getObject(21);
                             res.setLastAccessDate(ts != null ? ts.getTime() : null);
                             int ttl = rs.getInt(22);
                             res.setTtlSec(rs.wasNull() ? null : ttl);
+//                            Array perf = rs.getArray(23);
+
                             return res;
                         } else {
                             return null;
@@ -557,8 +580,13 @@ public class JDBCatalogue extends MyDataSource {
         try (PreparedStatement ps = connection.prepareStatement("SELECT parentRef, ownerId, datatype, ldName, "
                 + "createDate, modifiedDate, ldLength, contentTypesStr, pdriGroupRef, "
                 + "isSupervised, checksum, lastValidationDate, lockTokenId, lockScope, "
-                + "lockType, lockedByUser, lockDepth, lockTimeout, description, locationPreference, status, accessDate, ttlSec "
-                + "FROM ldata_table WHERE ldata_table.uid = ?")) {
+                + "lockType, lockedByUser, lockDepth, lockTimeout, description, "
+                + "locationPreference, status, accessDate, ttlSec"
+                //                + ", resourceUri "
+                + "FROM ldata_table "
+                //                + "JOIN pref_table ON ld_uid = uid "
+                //                + "JOIN storage_site_table ON storageSiteId = storageSiteRef"
+                + "WHERE ldata_table.uid = ?")) {
             ps.setLong(1, UID);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
@@ -583,13 +611,16 @@ public class JDBCatalogue extends MyDataSource {
                 res.setLockDepth(rs.getString(17));
                 res.setLockTimeout(rs.getLong(18));
                 res.setDescription(rs.getString(19));
-                res.setDataLocationPreference(rs.getString(20));
+
+//                res.setDataLocationPreference(rs.getString(20));
+
                 res.setStatus(rs.getString(21));
                 res.setLastAccessDate(rs.getTimestamp(22) != null ? rs.getTimestamp(22).getTime() : null);
                 int ttl = rs.getInt(23);
                 res.setTtlSec(rs.wasNull() ? null : ttl);
 
                 putToLDataCache(res, null);
+//                Array pref = rs.getArray(24);
                 return res;
             } else {
                 return null;
@@ -706,7 +737,9 @@ public class JDBCatalogue extends MyDataSource {
                 element.setLockDepth(rs.getString(17));
                 element.setLockTimeout(rs.getLong(18));
                 element.setDescription(rs.getString(19));
-                element.setDataLocationPreference(rs.getString(20));
+
+//                element.setDataLocationPreference(rs.getString(20));
+
                 element.setLastAccessDate(rs.getTimestamp(21) != null ? rs.getTimestamp(21).getTime() : null);
                 int ttl = rs.getInt(22);
                 element.setTtlSec(rs.wasNull() ? null : ttl);
@@ -1118,18 +1151,54 @@ public class JDBCatalogue extends MyDataSource {
     public void registerStorageSite(String resourceURI, Credential credentials, int currentNum, int currentSize, int quotaNum, int quotaSize, Connection connection) throws CatalogueException {
     }
 
-    public void setLocationPreference(Long uid, String locationPreference, Connection connection) throws SQLException {
-        try (PreparedStatement ps = connection.prepareStatement("UPDATE ldata_table "
-                + "SET locationPreference = ? WHERE uid = ?")) {
-            ps.setString(1, locationPreference);
-            ps.setLong(2, uid);
-            ps.executeUpdate();
+    public List<String> setLocationPreferences(Long uid, List<String> locationPreferences, Connection connection) throws SQLException {
+        List<String> dataPref = getDataLocationPreferace(connection, uid);
+        if (dataPref != null && !dataPref.isEmpty() && locationPreferences != null && !locationPreferences.isEmpty()) {
+            while (locationPreferences.iterator().hasNext()) {
+                String uri = locationPreferences.iterator().next();
+                for (String s : dataPref) {
+                    if (s.equals(uri)) {
+                        locationPreferences.remove(s);
+                    }
+                }
+            }
         }
-        LogicalData cached = getFromLDataCache(uid, null);
-        if (cached != null) {
-            cached.setDataLocationPreference(locationPreference);
-            putToLDataCache(cached, null);
+
+
+        String storageSitesQuery = "select storageSiteId,resourceUri from storage_site_table "
+                + "WHERE resourceUri LIKE ";
+        List<String> sites = new ArrayList<>();
+
+        for (String site : locationPreferences) {
+            try {
+                new VRL(site);
+                storageSitesQuery += "'" + site + "' OR resourceUri LIKE ";
+            } catch (VRLSyntaxException ex) {
+                Logger.getLogger(JDBCatalogue.class.getName()).log(Level.WARNING, "Wrong VRL", ex);
+            }
         }
+        if (storageSitesQuery.endsWith(" OR resourceUri LIKE ")) {
+            storageSitesQuery = storageSitesQuery.substring(0, storageSitesQuery.lastIndexOf("OR")) + "";
+        }
+        if (locationPreferences != null && !locationPreferences.isEmpty()) {
+            storageSitesQuery += " AND isCache = 'false' AND private = 'false'";
+            List<Long> ids = new ArrayList<>();
+            try (Statement s = connection.createStatement()) {
+                try (ResultSet rs = s.executeQuery(storageSitesQuery)) {
+                    while (rs.next()) {
+                        ids.add(rs.getLong(1));
+                        sites.add(rs.getString(2));
+                    }
+                }
+                for (Long id : ids) {
+                    String query = "INSERT INTO pref_table (ld_uid, storageSiteRef) VALUES ('"
+                            + uid + "', '" + id + "')";
+                    s.addBatch(query);
+                }
+                s.executeBatch();
+            }
+        }
+        return dataPref;
     }
 
     public void updatePdris(List<PDRIDescr> pdrisToUpdate, Connection connection) throws SQLException {
@@ -1449,8 +1518,13 @@ public class JDBCatalogue extends MyDataSource {
                 + "contentTypesStr, pdriGroupRef, isSupervised, checksum, "
                 + "lastValidationDate, lockTokenID, lockScope, lockType, "
                 + "lockedByUser, lockDepth, lockTimeout, description, "
-                + "locationPreference, status "
-                + "FROM ldata_table WHERE ldata_table.ldName like '" + decodedLogicalFileName.toString() + "'")) {
+                + "locationPreference, status"
+                //                + ", resourceUri "
+                + "FROM ldata_table "
+                //                + "JOIN pref_table ON ld_uid = uid "
+                //                + "JOIN storage_site_table ON storageSiteId = storageSiteRef"
+                + "WHERE ldata_table.ldName like '" + decodedLogicalFileName.toString() + "'")) {
+
 //            ps.setString(1, fileName.toString());
             ResultSet rs = ps.executeQuery();
             List<LogicalData> results = new ArrayList<>();
@@ -1476,8 +1550,9 @@ public class JDBCatalogue extends MyDataSource {
                 res.setLockDepth(rs.getString(18));
                 res.setLockTimeout(rs.getLong(19));
                 res.setDescription(rs.getString(20));
-                res.setDataLocationPreference(rs.getString(21));
+//                res.setDataLocationPreference(rs.getString(21));
                 res.setStatus(rs.getString(22));
+//                Array locationPerf = rs.getArray(23);
 
                 putToLDataCache(res, null);
                 results.add(res);
@@ -1596,7 +1671,8 @@ public class JDBCatalogue extends MyDataSource {
 
     public void setTTL(Long uid, Integer ttl, Connection cn) throws SQLException {
         try (PreparedStatement ps = cn.prepareStatement("SELECT uid, ownerId, "
-                + "ttlSec FROM ldata_table WHERE uid=?", ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE)) {
+                + "ttlSec FROM ldata_table WHERE uid=?",
+                ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE)) {
             ps.setLong(1, uid);
             ResultSet rs = ps.executeQuery();
             if (!rs.next()) {
@@ -1607,6 +1683,23 @@ public class JDBCatalogue extends MyDataSource {
                 cn.commit();
             }
         }
+    }
+
+    public List<String> getDataLocationPreferace(Connection connection, Long uid) throws SQLException {
+        List<String> dataPref = new ArrayList<>();
+        try (PreparedStatement ps = connection.prepareStatement("SELECT resourceUri "
+                + "FROM ldata_table "
+                + "JOIN pref_table ON ld_uid = uid "
+                + "JOIN storage_site_table ON storageSiteId = storageSiteRef "
+                + "WHERE ldata_table.uid = ?",
+                ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE)) {
+            ps.setLong(1, uid);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                dataPref.add(rs.getString(1));
+            }
+        }
+        return dataPref;
     }
 
     @Data

@@ -119,7 +119,7 @@ public class RandomPredictor extends DBMapPredictor {
                 res.setLockDepth(rs.getString(18));
                 res.setLockTimeout(rs.getLong(19));
                 res.setDescription(rs.getString(20));
-                res.setDataLocationPreference(rs.getString(21));
+//                res.setDataLocationPreference(rs.getString(21));
                 res.setStatus(rs.getString(22));
                 return res;
             } else {

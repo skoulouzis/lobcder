@@ -1,12 +1,12 @@
 package nl.uva.cs.lobcder.resources;
 
-import io.milton.common.Path;
 import lombok.Data;
 import nl.uva.cs.lobcder.util.Constants;
 
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * User: dvasunin
@@ -50,7 +50,7 @@ public class LogicalData implements Cloneable {
     @XmlTransient
     private Long lockTimeout = Long.valueOf(0);
     private String description;
-    private String dataLocationPreference;
+    private List<String> dataLocationPreferences;
 
 //    @XmlElement
 //    public List<String> getContentTypes() {
@@ -77,6 +77,7 @@ public class LogicalData implements Cloneable {
         return type.equals(Constants.LOGICAL_FOLDER);
     }
 
+    @Override
     public LogicalData clone() throws CloneNotSupportedException {
         return (LogicalData) super.clone();
     }

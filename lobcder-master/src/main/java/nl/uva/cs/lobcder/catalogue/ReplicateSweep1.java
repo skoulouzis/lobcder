@@ -179,6 +179,7 @@ public class ReplicateSweep1 implements Runnable {
     }
 
     private ReplicationPolicy getReplicationPolicy() {
+        //TODO: use class loader
         switch (replicatePolicy) {
             case firstSite:
                 return new FirstSiteReplicationPolicy();
@@ -196,7 +197,8 @@ public class ReplicateSweep1 implements Runnable {
     private Collection<Long> selectPdriGroupsToRelocate(Connection connection) throws SQLException {
         try (Statement statement = connection.createStatement()) {
             Collection<Long> result = new ArrayList<>();
-            ResultSet resultSet = statement.executeQuery("SELECT pdriGroupId FROM pdrigroup_table WHERE needCheck=TRUE AND bound=FALSE LIMIT 10");
+            ResultSet resultSet = statement.executeQuery("SELECT pdriGroupId FROM "
+                    + "pdrigroup_table WHERE needCheck=TRUE AND bound=FALSE LIMIT 10");
             while (resultSet.next()) {
                 result.add(resultSet.getLong(1));
             }
@@ -207,7 +209,11 @@ public class ReplicateSweep1 implements Runnable {
     private Collection<PDRIDescr> getPdriDescrForGroup(Long groupId, Connection connection) throws SQLException {
         Collection<PDRIDescr> res = new ArrayList<>();
         try (PreparedStatement ps = connection.prepareStatement(
-                "SELECT fileName, storageSiteRef, storage_site_table.resourceUri, username, password, isEncrypted, encryptionKey, pdri_table.pdriId FROM pdri_table JOIN storage_site_table ON storageSiteRef = storageSiteId JOIN credential_table ON credentialRef = credintialId WHERE pdri_table.pdriGroupRef=? AND isCache=FALSE")) {
+                "SELECT fileName, storageSiteRef, storage_site_table.resourceUri, "
+                + "username, password, isEncrypted, encryptionKey, pdri_table.pdriId "
+                + "FROM pdri_table JOIN storage_site_table "
+                + "ON storageSiteRef = storageSiteId JOIN credential_table "
+                + "ON credentialRef = credintialId WHERE pdri_table.pdriGroupRef=? AND isCache=FALSE")) {
             ps.setLong(1, groupId);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -227,7 +233,11 @@ public class ReplicateSweep1 implements Runnable {
 
     private PDRIDescr getSourcePdriDescrForGroup(Long groupId, Connection connection) throws SQLException {
         try (PreparedStatement ps = connection.prepareStatement(
-                "SELECT fileName, storageSiteRef, storage_site_table.resourceUri, username, password, isEncrypted, encryptionKey, pdri_table.pdriId FROM pdri_table JOIN storage_site_table ON storageSiteRef = storageSiteId JOIN credential_table ON credentialRef = credintialId WHERE pdri_table.pdriGroupRef=? AND isCache=TRUE LIMIT 1")) {
+                "SELECT fileName, storageSiteRef, storage_site_table.resourceUri, "
+                + "username, password, isEncrypted, encryptionKey, pdri_table.pdriId "
+                + "FROM pdri_table JOIN storage_site_table ON storageSiteRef = storageSiteId "
+                + "JOIN credential_table ON credentialRef = credintialId "
+                + "WHERE pdri_table.pdriGroupRef=? AND isCache=TRUE LIMIT 1")) {
             ps.setLong(1, groupId);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {

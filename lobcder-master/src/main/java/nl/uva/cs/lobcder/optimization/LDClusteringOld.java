@@ -182,7 +182,7 @@ public class LDClusteringOld extends MyDataSource implements Runnable {
                 res.setLockDepth(rs.getString(17));
                 res.setLockTimeout(rs.getLong(18));
                 res.setDescription(rs.getString(19));
-                res.setDataLocationPreference(rs.getString(20));
+//                res.setDataLocationPreference(rs.getString(20));
                 res.setStatus(rs.getString(21));
                 return res;
             } else {
@@ -241,7 +241,7 @@ public class LDClusteringOld extends MyDataSource implements Runnable {
                 element.setLockDepth(rs.getString(17));
                 element.setLockTimeout(rs.getLong(18));
                 element.setDescription(rs.getString(19));
-                element.setDataLocationPreference(rs.getString(20));
+//                element.setDataLocationPreference(rs.getString(20));
                 res.add(element);
             }
             return res;
@@ -400,7 +400,7 @@ public class LDClusteringOld extends MyDataSource implements Runnable {
                             res.setLockDepth(rs.getString(16));
                             res.setLockTimeout(rs.getLong(17));
                             res.setDescription(rs.getString(18));
-                            res.setDataLocationPreference(rs.getString(19));
+//                            res.setDataLocationPreference(rs.getString(19));
                             res.setStatus(rs.getString(20));
                             return res;
                         } else {
@@ -434,7 +434,7 @@ public class LDClusteringOld extends MyDataSource implements Runnable {
                 att = n.getContentTypesAsString();
                 instance.setValue((Attribute) metdataAttributes.elementAt(1), (att != null) ? att : "NON");
                 instance.setValue((Attribute) metdataAttributes.elementAt(2), n.getCreateDate());
-                att = n.getDataLocationPreference();
+//                att = n.getDataLocationPreference();
                 instance.setValue((Attribute) metdataAttributes.elementAt(3), (att != null) ? att : "NON");
                 att = n.getDescription();
                 instance.setValue((Attribute) metdataAttributes.elementAt(4), (att != null) ? att : "NON");
@@ -469,7 +469,7 @@ public class LDClusteringOld extends MyDataSource implements Runnable {
             att = n.getContentTypesAsString();
             instance.setValue((Attribute) metdataAttributes.elementAt(1), (att != null) ? att : "NON");
             instance.setValue((Attribute) metdataAttributes.elementAt(2), n.getCreateDate());
-            att = n.getDataLocationPreference();
+//            att = n.getDataLocationPreference();
             instance.setValue((Attribute) metdataAttributes.elementAt(3), (att != null) ? att : "NON");
             att = n.getDescription();
             instance.setValue((Attribute) metdataAttributes.elementAt(4), (att != null) ? att : "NON");

@@ -377,7 +377,7 @@ public class WebDataResource implements PropFindableResource, Resource,
             } else if (qname.equals(Constants.DESCRIPTION_PROP_NAME)) {
                 return getLogicalData().getDescription();
             } else if (qname.equals(Constants.DATA_LOC_PREF_NAME)) {
-                return getLogicalData().getDataLocationPreference();
+                return getDataLocationPreferencesString();
             } else if (qname.equals(Constants.ENCRYPT_PROP_NAME)) {
                 return getEcryptionString();
             } else if (qname.equals(Constants.AVAIL_STORAGE_SITES_PROP_NAME)) {
@@ -418,9 +418,11 @@ public class WebDataResource implements PropFindableResource, Resource,
                         getLogicalData().setDescription(v);
                         catalogue.setDescription(getLogicalData().getUid(), v, connection);
                     } else if (qname.equals(Constants.DATA_LOC_PREF_NAME)) {
-                        String v = value;
-                        getLogicalData().setDataLocationPreference(v);
-                        catalogue.setLocationPreference(getLogicalData().getUid(), v, connection);
+                        String[] v = value.split(",");
+                        List<String> list = new ArrayList<>();
+                        list.addAll(Arrays.asList(v));                        
+                        List<String> sites = catalogue.setLocationPreferences(getLogicalData().getUid(), list, connection);
+                        getLogicalData().setDataLocationPreferences(sites);
                     } else if (qname.equals(Constants.ENCRYPT_PROP_NAME)) {
                         setEncryptionPropertyValues(value);
                     } else if (qname.equals(Constants.TTL)) {
@@ -731,5 +733,36 @@ public class WebDataResource implements PropFindableResource, Resource,
 //                        if (!pdrisToUpdate.isEmpty()) {
 //                            getCatalogue().updatePdris(pdrisToUpdate, connection);
 //                        }
+    }
+
+    private String getDataLocationPreferencesString() throws SQLException {
+        List<String> ss = getLogicalData().getDataLocationPreferences();
+        StringBuilder sb = null;
+        if (ss != null && !ss.isEmpty()) {
+            sb = new StringBuilder();
+            sb.append("[");
+            for (String s : ss) {
+                sb.append(s).append(",");
+            }
+            sb.replace(sb.lastIndexOf(","), sb.length(), "");
+            sb.append("]");
+        } else {
+            try (Connection connection = getCatalogue().getConnection()) {
+                List<String> dataLocPref = getCatalogue().getDataLocationPreferace(connection, getLogicalData().getUid());
+                getLogicalData().setDataLocationPreferences(dataLocPref);
+                if (dataLocPref == null || dataLocPref.isEmpty()) {
+                    return null;
+                }
+                sb = new StringBuilder();
+                sb.append("[");
+                for (String s : dataLocPref) {
+                    sb.append(s).append(",");
+                }
+                sb.replace(sb.lastIndexOf(","), sb.length(), "");
+                sb.append("]");
+                return sb.toString();
+            }
+        }
+        return null;
     }
 }

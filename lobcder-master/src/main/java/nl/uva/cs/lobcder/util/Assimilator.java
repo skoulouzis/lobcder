@@ -173,7 +173,7 @@ public class Assimilator {
             preparedStatement.setString(16, entry.getLockDepth());
             preparedStatement.setLong(17, entry.getLockTimeout());
             preparedStatement.setString(18, entry.getDescription());
-            preparedStatement.setString(19, entry.getDataLocationPreference());
+//            preparedStatement.setString(19, entry.getDataLocationPreference());
             preparedStatement.setString(20, entry.getName());
             preparedStatement.executeUpdate();
             ResultSet rs = preparedStatement.getGeneratedKeys();
@@ -310,7 +310,7 @@ public class Assimilator {
                 res.setLockDepth(rs.getString(16));
                 res.setLockTimeout(rs.getLong(17));
                 res.setDescription(rs.getString(18));
-                res.setDataLocationPreference(rs.getString(19));
+//                res.setDataLocationPreference(rs.getString(19));
                 return res;
             } else {
                 return null;
@@ -413,7 +413,7 @@ public class Assimilator {
                             res.setLockDepth(rs.getString(16));
                             res.setLockTimeout(rs.getLong(17));
                             res.setDescription(rs.getString(18));
-                            res.setDataLocationPreference(rs.getString(19));
+//                            res.setDataLocationPreference(rs.getString(19));
                             return res;
                         } else {
                             return null;

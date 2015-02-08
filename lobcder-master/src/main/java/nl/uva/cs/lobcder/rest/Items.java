@@ -103,7 +103,7 @@ public class Items extends CatalogueHelper {
                         logicalData.setLockDepth(resultSet.getString(18));
                         logicalData.setLockTimeout(resultSet.getLong(19));
                         logicalData.setDescription(resultSet.getString(20));
-                        logicalData.setDataLocationPreference(resultSet.getString(21));
+//                        logicalData.setDataLocationPreference(resultSet.getString(21));
                         logicalData.setStatus(resultSet.getString(22));
 
                         LogicalDataWrapped ldw = new LogicalDataWrapped();
