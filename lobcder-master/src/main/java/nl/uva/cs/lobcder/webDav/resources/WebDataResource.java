@@ -748,7 +748,7 @@ public class WebDataResource implements PropFindableResource, Resource,
             sb.append("]");
         } else {
             try (Connection connection = getCatalogue().getConnection()) {
-                List<String> dataLocPref = getCatalogue().getDataLocationPreferace(connection, getLogicalData().getUid(), getPrincipal().isAdmin());
+                List<String> dataLocPref = getCatalogue().getDataLocationPreferace(connection, getLogicalData().getUid());
                 getLogicalData().setDataLocationPreferences(dataLocPref);
                 if (dataLocPref == null || dataLocPref.isEmpty()) {
                     return null;
