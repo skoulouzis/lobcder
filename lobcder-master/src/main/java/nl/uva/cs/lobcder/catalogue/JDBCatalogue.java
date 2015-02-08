@@ -1151,8 +1151,8 @@ public class JDBCatalogue extends MyDataSource {
     public void registerStorageSite(String resourceURI, Credential credentials, int currentNum, int currentSize, int quotaNum, int quotaSize, Connection connection) throws CatalogueException {
     }
 
-    public List<String> setLocationPreferences(Long uid, List<String> locationPreferences, Connection connection) throws SQLException {
-        List<String> dataPref = getDataLocationPreferace(connection, uid);
+    public List<String> setLocationPreferences(Connection connection, Long uid, List<String> locationPreferences, Boolean includePrivate) throws SQLException {
+        List<String> dataPref = getDataLocationPreferace(connection, uid, includePrivate);
         if (dataPref != null && !dataPref.isEmpty() && locationPreferences != null && !locationPreferences.isEmpty()) {
             while (locationPreferences.iterator().hasNext()) {
                 String uri = locationPreferences.iterator().next();
@@ -1163,7 +1163,6 @@ public class JDBCatalogue extends MyDataSource {
                 }
             }
         }
-
 
         String storageSitesQuery = "select storageSiteId,resourceUri from storage_site_table "
                 + "WHERE resourceUri LIKE ";
@@ -1685,15 +1684,16 @@ public class JDBCatalogue extends MyDataSource {
         }
     }
 
-    public List<String> getDataLocationPreferace(Connection connection, Long uid) throws SQLException {
+    public List<String> getDataLocationPreferace(Connection connection, Long uid, Boolean includePrivate) throws SQLException {
         List<String> dataPref = new ArrayList<>();
         try (PreparedStatement ps = connection.prepareStatement("SELECT resourceUri "
                 + "FROM ldata_table "
                 + "JOIN pref_table ON ld_uid = uid "
                 + "JOIN storage_site_table ON storageSiteId = storageSiteRef "
-                + "WHERE ldata_table.uid = ?",
+                + "WHERE ldata_table.uid = ? AND storage_site_table.private = ?",
                 ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE)) {
             ps.setLong(1, uid);
+            ps.setBoolean(2, includePrivate);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 dataPref.add(rs.getString(1));

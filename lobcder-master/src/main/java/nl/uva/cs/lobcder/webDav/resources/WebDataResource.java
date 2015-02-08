@@ -420,8 +420,8 @@ public class WebDataResource implements PropFindableResource, Resource,
                     } else if (qname.equals(Constants.DATA_LOC_PREF_NAME)) {
                         String[] v = value.split(",");
                         List<String> list = new ArrayList<>();
-                        list.addAll(Arrays.asList(v));                        
-                        List<String> sites = catalogue.setLocationPreferences(getLogicalData().getUid(), list, connection);
+                        list.addAll(Arrays.asList(v));
+                        List<String> sites = catalogue.setLocationPreferences(connection, getLogicalData().getUid(), list, getPrincipal().isAdmin());
                         getLogicalData().setDataLocationPreferences(sites);
                     } else if (qname.equals(Constants.ENCRYPT_PROP_NAME)) {
                         setEncryptionPropertyValues(value);
@@ -748,7 +748,7 @@ public class WebDataResource implements PropFindableResource, Resource,
             sb.append("]");
         } else {
             try (Connection connection = getCatalogue().getConnection()) {
-                List<String> dataLocPref = getCatalogue().getDataLocationPreferace(connection, getLogicalData().getUid());
+                List<String> dataLocPref = getCatalogue().getDataLocationPreferace(connection, getLogicalData().getUid(), getPrincipal().isAdmin());
                 getLogicalData().setDataLocationPreferences(dataLocPref);
                 if (dataLocPref == null || dataLocPref.isEmpty()) {
                     return null;
