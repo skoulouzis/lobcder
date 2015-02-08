@@ -1197,6 +1197,11 @@ public class JDBCatalogue extends MyDataSource {
                 s.executeBatch();
             }
         }
+        LogicalData ldata = getFromLDataCache(uid, null);
+        if (ldata != null) {
+            ldata.setDataLocationPreferences(dataPref);
+            putToLDataCache(ldata, null);
+        }
         return dataPref;
     }
 
@@ -1685,7 +1690,15 @@ public class JDBCatalogue extends MyDataSource {
     }
 
     public List<String> getDataLocationPreferace(Connection connection, Long uid, Boolean includePrivate) throws SQLException {
-        List<String> dataPref = new ArrayList<>();
+        LogicalData lData = getFromLDataCache(uid, null);
+        List<String> dataPref = null;
+        if (lData != null) {
+            dataPref = lData.getDataLocationPreferences();
+            if (dataPref != null) {
+                return dataPref;
+            }
+        }
+        dataPref = new ArrayList<>();
         try (PreparedStatement ps = connection.prepareStatement("SELECT resourceUri "
                 + "FROM ldata_table "
                 + "JOIN pref_table ON ld_uid = uid "
@@ -1698,6 +1711,10 @@ public class JDBCatalogue extends MyDataSource {
             while (rs.next()) {
                 dataPref.add(rs.getString(1));
             }
+        }
+        if (lData != null) {
+            lData.setDataLocationPreferences(dataPref);
+            putToLDataCache(lData, null);
         }
         return dataPref;
     }
