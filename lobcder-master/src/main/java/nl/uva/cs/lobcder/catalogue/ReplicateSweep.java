@@ -54,7 +54,7 @@ class ReplicateSweep implements Runnable {
                 StorageSite site = it.next();
                 sites.put(site.getResourceURI(), site);
                 return sites;
-            case aggressive:
+            case redundant:
                 return availableStorage;
             case fastest:
                 return getFastestSites(connection, PropertiesHelper.getNumberOfSites());
@@ -163,8 +163,6 @@ class ReplicateSweep implements Runnable {
             return getRandomStorageSite(number);
         }
         return res;
-
-
     }
 
     private Map<String, StorageSite> getRandomStorageSite(int number) {

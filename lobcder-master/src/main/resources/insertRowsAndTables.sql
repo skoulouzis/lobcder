@@ -165,3 +165,48 @@ END
 $$
 
 DELIMITER ;
+
+
+ALTER TABLE pdrigroup_table ADD needCheck BOOLEAN NOT NULL DEFAULT TRUE;
+ALTER TABLE pdrigroup_table ADD bound BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE pdrigroup_table ADD INDEX(needCheck,bound);
+ALTER TABLE storage_site_table ADD private BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE storage_site_table ADD removing BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE storage_site_table ADD INDEX(removing);
+ALTER TABLE storage_site_table ADD INDEX (private,removing);
+ALTER TABLE storage_site_table ADD private BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE storage_site_table ADD removing BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE storage_site_table ADD INDEX(removing);
+
+
+CREATE TABLE IF NOT EXISTS  pref_table (
+  id SERIAL PRIMARY KEY,
+  ld_uid BIGINT UNSIGNED, FOREIGN KEY(ld_uid) REFERENCES ldata_table(uid) ON DELETE CASCADE,
+  storageSiteRef BIGINT UNSIGNED, FOREIGN KEY(storageSiteRef) REFERENCES storage_site_table(storageSiteId) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+DELIMITER |
+DROP TRIGGER IF EXISTS on_ss_update |
+CREATE TRIGGER on_ss_update
+AFTER UPDATE ON storage_site_table
+FOR EACH ROW BEGIN
+  IF new.removing = TRUE THEN
+    DELETE FROM pref_table WHERE storageSiteRef=new.storageSiteId;
+  END IF;
+END|
+
+DROP TRIGGER IF EXISTS on_pref_insert |
+CREATE TRIGGER on_pref_insert
+AFTER INSERT ON pref_table
+FOR EACH ROW BEGIN
+    UPDATE pdrigroup_table SET needCheck=TRUE WHERE pdriGroupId IN (SELECT pdriGroupRef FROM ldata_table WHERE ld_uid=new.ld_uid);
+END|
+
+DROP TRIGGER IF EXISTS on_pref_delete |
+CREATE TRIGGER on_pref_delete
+AFTER DELETE ON pref_table
+FOR EACH ROW BEGIN
+  UPDATE pdrigroup_table SET needCheck=TRUE WHERE pdriGroupId IN (SELECT pdriGroupRef FROM ldata_table WHERE ld_uid=old.ld_uid);
+END|
+
+DELIMITER ;

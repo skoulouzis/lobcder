@@ -38,7 +38,7 @@ public class PropertiesHelper {
 
     public static enum ReplicationPolicy {
 
-        aggressive,
+        redundant,
         firstSite,
         fastest,
         random,

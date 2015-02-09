@@ -9,7 +9,7 @@ import lombok.Data;
 
 /**
  *
- * @author alogo
+ * @author S. Koulouzis
  */
 @XmlRootElement
 @Data

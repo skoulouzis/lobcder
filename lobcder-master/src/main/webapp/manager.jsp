@@ -1,7 +1,7 @@
 <%-- 
     Document   : manager
     Created on : Sep 26, 2013, 3:59:39 PM
-    Author     : alogo
+    Author     : S. Koulouzis
 --%>
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
