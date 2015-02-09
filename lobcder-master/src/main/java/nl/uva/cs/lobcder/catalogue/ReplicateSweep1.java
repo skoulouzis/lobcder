@@ -1,5 +1,6 @@
 package nl.uva.cs.lobcder.catalogue;
 
+import nl.uva.cs.lobcder.replication.policy.*;
 import java.io.IOException;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.resources.*;

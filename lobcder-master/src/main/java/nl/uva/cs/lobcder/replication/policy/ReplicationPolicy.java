@@ -1,4 +1,4 @@
-package nl.uva.cs.lobcder.catalogue;
+package nl.uva.cs.lobcder.replication.policy;
 
 import java.sql.Connection;
 import java.util.Collection;

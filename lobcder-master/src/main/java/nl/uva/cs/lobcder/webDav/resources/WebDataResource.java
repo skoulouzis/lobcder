@@ -338,7 +338,7 @@ public class WebDataResource implements PropFindableResource, Resource,
 
     protected PDRI createPDRI(long fileLength, String fileName, Connection connection) throws SQLException, NoSuchAlgorithmException, IOException {
 //        Collection<StorageSite> cacheSS = getCatalogue().getCacheStorageSites(connection);
-        Collection<StorageSite> cacheSS = getCatalogue().getStorageSites(connection, Boolean.TRUE);
+        Collection<StorageSite> cacheSS = getCatalogue().getStorageSites(connection, Boolean.TRUE, getPrincipal().isAdmin());
         String nameWithoutSpace = fileName.replaceAll(" ", "_");
         if (cacheSS == null || cacheSS.isEmpty()) {
             return new CachePDRI(UUID.randomUUID().toString() + "-" + nameWithoutSpace);
@@ -381,7 +381,7 @@ public class WebDataResource implements PropFindableResource, Resource,
             } else if (qname.equals(Constants.ENCRYPT_PROP_NAME)) {
                 return getEcryptionString();
             } else if (qname.equals(Constants.AVAIL_STORAGE_SITES_PROP_NAME)) {
-                return getAvailStorageSitesString();
+                return getAvailStorageSitesString(getPrincipal().isAdmin());
             } else if (qname.equals(Constants.TTL)) {
                 return getLogicalData().getTtlSec();
             }
@@ -420,7 +420,11 @@ public class WebDataResource implements PropFindableResource, Resource,
                     } else if (qname.equals(Constants.DATA_LOC_PREF_NAME)) {
                         String[] v = value.split(",");
                         List<String> list = new ArrayList<>();
-                        list.addAll(Arrays.asList(v));
+                        if (v.length > 0) {
+                            list.addAll(Arrays.asList(v));
+                        } else {
+                            list.add(value);
+                        }
                         List<String> sites = catalogue.setLocationPreferences(connection, getLogicalData().getUid(), list, getPrincipal().isAdmin());
                         getLogicalData().setDataLocationPreferences(sites);
                     } else if (qname.equals(Constants.ENCRYPT_PROP_NAME)) {
@@ -677,10 +681,10 @@ public class WebDataResource implements PropFindableResource, Resource,
         }
     }
 
-    private String getAvailStorageSitesString() throws SQLException {
+    private String getAvailStorageSitesString(Boolean includePrivate) throws SQLException {
         try (Connection connection = getCatalogue().getConnection()) {
             connection.commit();
-            Collection<StorageSite> ss = getCatalogue().getStorageSites(connection, Boolean.FALSE);
+            Collection<StorageSite> ss = getCatalogue().getStorageSites(connection, Boolean.FALSE, includePrivate);
             StringBuilder sb = new StringBuilder();
             sb.append("[");
             for (StorageSite s : ss) {
@@ -746,6 +750,7 @@ public class WebDataResource implements PropFindableResource, Resource,
             }
             sb.replace(sb.lastIndexOf(","), sb.length(), "");
             sb.append("]");
+            return sb.toString();
         } else {
             try (Connection connection = getCatalogue().getConnection()) {
                 List<String> dataLocPref = getCatalogue().getDataLocationPreferace(connection, getLogicalData().getUid());
@@ -763,6 +768,5 @@ public class WebDataResource implements PropFindableResource, Resource,
                 return sb.toString();
             }
         }
-        return null;
     }
 }

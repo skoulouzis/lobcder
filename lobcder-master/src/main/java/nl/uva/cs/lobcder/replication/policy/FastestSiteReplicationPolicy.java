@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.uva.cs.lobcder.catalogue;
+package nl.uva.cs.lobcder.replication.policy;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -37,7 +37,7 @@ import org.apache.commons.math3.distribution.EnumeratedIntegerDistribution;
  *
  * @author S. Koulouzis
  */
-class FastestSiteReplicationPolicy implements ReplicationPolicy {
+public class FastestSiteReplicationPolicy implements ReplicationPolicy {
 
     private Map<String, StorageSite> availableStorage = null;
     private int number;

@@ -13,20 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.uva.cs.lobcder.catalogue;
+package nl.uva.cs.lobcder.replication.policy;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Random;
 
 /**
  *
  * @author S. Koulouzis
  */
-class FirstSiteReplicationPolicy implements ReplicationPolicy {
+public class FirstSiteReplicationPolicy implements ReplicationPolicy {
 
     private ArrayList<Long> queryResult = new ArrayList<>();
 
