@@ -101,8 +101,8 @@ public class ReplicateSweep1 implements Runnable {
             for (PDRIDescr pdriDescr : cachePdris) {
                 try {
                     PDRI pdri = PDRIFactory.getFactory().createInstance(pdriDescr);
-                    pdri.delete();
                     log.log(Level.FINE, "PDRI Instance file name: {0}", new Object[]{pdri.getFileName()});
+                    pdri.delete();
                     preparedStatementDel.setLong(1, pdriDescr.getId());
                     preparedStatementDel.executeUpdate();
                     log.log(Level.FINE, "DELETE:", pdri.getURI());
