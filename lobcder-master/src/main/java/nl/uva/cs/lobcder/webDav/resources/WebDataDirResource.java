@@ -115,12 +115,12 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                     newFolderEntry.setLastAccessDate(System.currentTimeMillis());
                     newFolderEntry.setTtlSec(getLogicalData().getTtlSec());
                     newFolderEntry.setOwner(getPrincipal().getUserId());
-                    newFolderEntry = inheritProperties(newFolderEntry, connection);
-                    WebDataDirResource res = new WebDataDirResource(newFolderEntry, newCollectionPath, getCatalogue(), authList);
                     getCatalogue().setPermissions(
                             getCatalogue().registerDirLogicalData(newFolderEntry, connection).getUid(),
                             new Permissions(getPrincipal(), getPermissions()), connection);
+                    newFolderEntry = inheritProperties(newFolderEntry, connection);
                     connection.commit();
+                    WebDataDirResource res = new WebDataDirResource(newFolderEntry, newCollectionPath, getCatalogue(), authList);
                     return res;
                 }
             } catch (SQLException e) {

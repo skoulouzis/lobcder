@@ -419,9 +419,6 @@ public class WebDataResource implements PropFindableResource, Resource,
                         catalogue.setDescription(getLogicalData().getUid(), v, connection);
                     } else if (qname.equals(Constants.DATA_LOC_PREF_NAME)) {
                         List<String> list = property2List(value);
-                        if (list.isEmpty()) {
-                            list.add(value);
-                        }
                         List<String> sites = catalogue.setLocationPreferences(connection, getLogicalData().getUid(), list, getPrincipal().isAdmin());
                         getLogicalData().setDataLocationPreferences(sites);
                     } else if (qname.equals(Constants.ENCRYPT_PROP_NAME)) {
