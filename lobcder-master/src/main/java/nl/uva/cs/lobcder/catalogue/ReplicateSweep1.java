@@ -37,7 +37,7 @@ public class ReplicateSweep1 implements Runnable {
         try (Connection connection = datasource.getConnection()) {
             connection.setAutoCommit(true);
             try (PreparedStatement preparedStatement = connection.prepareStatement(
-                    "UPDATE pdrigroup_table SET needCheck=FALSE WHERE pdriGroupId=?")) {
+                    "UPDATE pdrigroup_table SET needCheck = FALSE WHERE pdriGroupId=?")) {
                 for (Long pdriGroup : selectPdriGroupsToRelocate(connection)) {
                     Set<Long> preferences = new HashSet<>();
                     for (Long logicalDataId : getFilesByPdriGroup(pdriGroup, connection)) {

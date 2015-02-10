@@ -21,7 +21,7 @@ import lombok.extern.java.Log;
 class SweeprsTimerTask extends TimerTask {
 
     private final DeleteSweep deleteSweep;
-    private final ReplicateSweep replicateSweep;
+    private final ReplicateSweep1 replicateSweep;
     private final Boolean useRepo;
     private final Boolean useSDN;
     private WP4Sweep wp4Sweep = null;
@@ -29,7 +29,7 @@ class SweeprsTimerTask extends TimerTask {
 
     SweeprsTimerTask(DataSource datasource) throws IOException, NamingException {
         deleteSweep = new DeleteSweep(datasource);
-        replicateSweep = new ReplicateSweep(datasource);
+        replicateSweep = new ReplicateSweep1(datasource);
         useRepo = PropertiesHelper.useMetadataRepository();
         useSDN = PropertiesHelper.useSDN();
         if (useRepo) {
