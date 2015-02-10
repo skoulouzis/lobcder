@@ -77,7 +77,7 @@ public class JDBCatalogue extends MyDataSource {
                     + "currentNum, currentSize, quotaNum, quotaSize, username, "
                     + "password, encrypt, private FROM storage_site_table "
                     + "JOIN credential_table ON credentialRef = credintialId "
-                    + "WHERE isCache = " + isCache)) {
+                    + "WHERE isCache = "+isCache+" AND removing = FALSE")) {
                 ArrayList<StorageSite> res = new ArrayList<>();
                 while (rs.next()) {
                     StorageSite ss = new StorageSite();
@@ -1161,7 +1161,7 @@ public class JDBCatalogue extends MyDataSource {
     public List<String> setLocationPreferences(Connection connection, Long uid, List<String> locationPreferences, Boolean includePrivate) throws SQLException {
         if (locationPreferences != null && !locationPreferences.isEmpty()) {
             String storageSitesQuery = "select storageSiteId,resourceUri,private from storage_site_table "
-                    + "WHERE resourceUri LIKE ";
+                    + "WHERE resourceUri LIKE "; //use = 
             for (String site : locationPreferences) {
                 try {
                     new VRL(site);
@@ -1190,16 +1190,20 @@ public class JDBCatalogue extends MyDataSource {
                     preparedStatement.setLong(1, uid);
                     preparedStatement.executeUpdate();
                 }
-
-                for (Long id : ids) {
-                    String insertQuery = "INSERT INTO pref_table (ld_uid, storageSiteRef) VALUES ('"
-                            + uid + "', '" + id + "')";
-                    s.addBatch(insertQuery);
+//                connection.commit();
+                try (PreparedStatement preparedStatement = connection.prepareStatement(
+                        "INSERT INTO pref_table (ld_uid, storageSiteRef) VALUES(?,?)")) {
+                    for (Long id : ids) {
+                        preparedStatement.setLong(1, uid);
+                        preparedStatement.setLong(2, id);
+                        preparedStatement.addBatch();
+//                        preparedStatement.executeUpdate();
+                    }
+                    preparedStatement.executeBatch();
                 }
-                s.executeBatch();
-                connection.commit();
             }
         }
+        connection.commit();
         return getDataLocationPreferace(connection, uid);
     }
 
@@ -1424,8 +1428,8 @@ public class JDBCatalogue extends MyDataSource {
 
     public void insertOrUpdateStorageSites(Collection<StorageSite> sites, Connection connection, Boolean includePrivate) throws SQLException {
         Collection<Credential> credentials = getCredentials(connection);
-        Collection<StorageSite> existingSites = getStorageSites(connection, Boolean.FALSE,includePrivate);
-        existingSites.addAll(getStorageSites(connection, Boolean.TRUE,includePrivate));
+        Collection<StorageSite> existingSites = getStorageSites(connection, Boolean.FALSE, includePrivate);
+        existingSites.addAll(getStorageSites(connection, Boolean.TRUE, includePrivate));
         Collection<String> updatedSites = new ArrayList<>();
 
         for (StorageSite s : sites) {
@@ -1745,7 +1749,7 @@ public class JDBCatalogue extends MyDataSource {
         List<String> dataPref = null;
         if (lData != null) {
             dataPref = lData.getDataLocationPreferences();
-            if (dataPref != null) {
+            if (dataPref != null && !dataPref.isEmpty()) {
                 return dataPref;
             }
         }

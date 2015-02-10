@@ -105,7 +105,7 @@ public class ReplicateSweep1 implements Runnable {
                     pdri.delete();
                     preparedStatementDel.setLong(1, pdriDescr.getId());
                     preparedStatementDel.executeUpdate();
-                    log.log(Level.FINE, "DELETE:", pdri.getURI());
+                    log.log(Level.FINE, "DELETE: {0}", pdri.getURI());
                 } catch (Exception e) {
                     log.log(Level.WARNING, null, e);
                     result = false;
@@ -131,7 +131,7 @@ public class ReplicateSweep1 implements Runnable {
                     pdri.delete();
                     preparedStatement.setLong(1, pdriDescr.getId());
                     preparedStatement.executeUpdate();
-                    log.log(Level.FINE, "DELETE:", pdri.getURI());
+                    log.log(Level.FINE, "DELETE: {0}", pdri.getURI());
                 } catch (Exception e) {
                     log.log(Level.SEVERE, null, e);
                     result = false;
@@ -147,7 +147,8 @@ public class ReplicateSweep1 implements Runnable {
     private Collection<Long> getRemovingStorage(Connection connection) throws SQLException {
         try (Statement statement = connection.createStatement()) {
             Collection<Long> result = new ArrayList<>();
-            ResultSet resultSet = statement.executeQuery("SELECT storageSiteId FROM storage_site_table WHERE removing=TRUE");
+            ResultSet resultSet = statement.executeQuery("SELECT storageSiteId FROM storage_site_table "
+                    + "WHERE removing=TRUE");
             while (resultSet.next()) {
                 result.add(resultSet.getLong(1));
             }

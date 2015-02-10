@@ -222,12 +222,12 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                         contentType = mimeTypeMap.get(FilenameUtils.getExtension(newName));
                     }
                     fileLogicalData.addContentType(contentType);
-                    fileLogicalData = inheritProperties(fileLogicalData, connection);
                     //Create new
                     pdri = createPDRI(fileLogicalData.getLength(), newName, connection);
                     pdri.setLength(length);
                     pdri.putData(inputStream);
                     fileLogicalData = getCatalogue().updateLogicalDataAndPdri(fileLogicalData, pdri, connection);
+                    fileLogicalData = inheritProperties(fileLogicalData, connection);
                     connection.commit();
 //                    String md5 = pdri.getStringChecksum();
 //                    if (md5 != null) {
@@ -248,7 +248,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                     fileLogicalData.setLastAccessDate(System.currentTimeMillis());
                     fileLogicalData.setTtlSec(getLogicalData().getTtlSec());
                     fileLogicalData.addContentType(contentType);
-                    fileLogicalData = inheritProperties(fileLogicalData, connection);
+
                     pdri = createPDRI(length, newName, connection);
                     pdri.setLength(length);
                     pdri.putData(inputStream);
@@ -258,6 +258,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
 //                    }
                     fileLogicalData = getCatalogue().associateLogicalDataAndPdri(fileLogicalData, pdri, connection);
                     getCatalogue().setPermissions(fileLogicalData.getUid(), new Permissions(getPrincipal(), getPermissions()), connection);
+                    fileLogicalData = inheritProperties(fileLogicalData, connection);
                     connection.commit();
                     resource = new WebDataFileResource(fileLogicalData, Path.path(getPath(), newName), getCatalogue(), authList);
 //                    return new WebDataFileResource(fileLogicalData, Path.path(getPath(), newName), getCatalogue(), authList);
@@ -567,19 +568,13 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
 
     private LogicalData inheritProperties(LogicalData fileLogicalData, Connection connection) throws SQLException {
         String value = (String) getProperty(Constants.DATA_LOC_PREF_NAME);
-
         if (value != null) {
             List<String> list = property2List(value);
             list = getCatalogue().setLocationPreferences(connection, fileLogicalData.getUid(), list, getPrincipal().isAdmin());
             fileLogicalData.setDataLocationPreferences(list);
+        }else{
+            //trigger 
         }
         return fileLogicalData;
-    }
-
-    private List<String> property2List(String value) {
-        if (value.startsWith("[") && value.endsWith("]")) {
-            value = value.substring(1, value.length() - 1);
-        }
-        return Arrays.asList(value.split("\\s*,\\s*"));
     }
 }

@@ -186,6 +186,7 @@ CREATE TABLE IF NOT EXISTS  pref_table (
 ) ENGINE=InnoDB;
 
 DELIMITER |
+
 DROP TRIGGER IF EXISTS on_ss_update |
 CREATE TRIGGER on_ss_update
 AFTER UPDATE ON storage_site_table
@@ -206,7 +207,8 @@ DROP TRIGGER IF EXISTS on_pref_delete |
 CREATE TRIGGER on_pref_delete
 AFTER DELETE ON pref_table
 FOR EACH ROW BEGIN
-  UPDATE pdrigroup_table SET needCheck=TRUE WHERE pdriGroupId IN (SELECT pdriGroupRef FROM ldata_table WHERE pdriGroupId=old.ld_uid);
+  UPDATE pdrigroup_table SET needCheck=TRUE WHERE pdriGroupId IN (SELECT pdriGroupRef FROM ldata_table WHERE uid=old.ld_uid);
 END|
+
 
 DELIMITER ;

@@ -418,11 +418,8 @@ public class WebDataResource implements PropFindableResource, Resource,
                         getLogicalData().setDescription(v);
                         catalogue.setDescription(getLogicalData().getUid(), v, connection);
                     } else if (qname.equals(Constants.DATA_LOC_PREF_NAME)) {
-                        String[] v = value.split(",");
-                        List<String> list = new ArrayList<>();
-                        if (v.length > 0) {
-                            list.addAll(Arrays.asList(v));
-                        } else {
+                        List<String> list = property2List(value);
+                        if (list.isEmpty()) {
                             list.add(value);
                         }
                         List<String> sites = catalogue.setLocationPreferences(connection, getLogicalData().getUid(), list, getPrincipal().isAdmin());
@@ -768,5 +765,12 @@ public class WebDataResource implements PropFindableResource, Resource,
                 return sb.toString();
             }
         }
+    }
+
+    protected List<String> property2List(String value) {
+        if (value.startsWith("[") && value.endsWith("]")) {
+            value = value.substring(1, value.length() - 1);
+        }
+        return Arrays.asList(value.split("\\s*,\\s*"));
     }
 }
