@@ -229,7 +229,7 @@ DROP TRIGGER IF EXISTS on_pref_delete |
 CREATE TRIGGER on_pref_delete
 AFTER DELETE ON pref_table
 FOR EACH ROW BEGIN
-  UPDATE pdrigroup_table SET needCheck=TRUE WHERE pdriGroupId IN (SELECT pdriGroupRef FROM ldata_table WHERE ld_uid=old.ld_uid);
+  UPDATE pdrigroup_table SET needCheck=TRUE WHERE pdriGroupId IN (SELECT pdriGroupRef FROM ldata_table WHERE pdriGroupId=old.ld_uid);
 END|
 
 -- DROP TRIGGER IF EXISTS on_pdri_incert |
