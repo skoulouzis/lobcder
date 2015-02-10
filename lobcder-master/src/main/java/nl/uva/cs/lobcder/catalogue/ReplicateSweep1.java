@@ -1,21 +1,18 @@
 package nl.uva.cs.lobcder.catalogue;
 
-import nl.uva.cs.lobcder.replication.policy.*;
-import java.io.IOException;
+import lombok.SneakyThrows;
 import lombok.extern.java.Log;
+import nl.uva.cs.lobcder.replication.policy.ReplicationPolicy;
 import nl.uva.cs.lobcder.resources.*;
 import nl.uva.cs.lobcder.util.DesEncrypter;
+import nl.uva.cs.lobcder.util.PropertiesHelper;
 
 import javax.sql.DataSource;
+import java.io.IOException;
 import java.math.BigInteger;
 import java.sql.*;
 import java.util.*;
 import java.util.logging.Level;
-import nl.uva.cs.lobcder.util.PropertiesHelper;
-import static nl.uva.cs.lobcder.util.PropertiesHelper.ReplicationPolicy.redundant;
-import static nl.uva.cs.lobcder.util.PropertiesHelper.ReplicationPolicy.fastest;
-import static nl.uva.cs.lobcder.util.PropertiesHelper.ReplicationPolicy.firstSite;
-import static nl.uva.cs.lobcder.util.PropertiesHelper.ReplicationPolicy.random;
 
 /**
  * Created by dvasunin on 14.01.15.
@@ -24,11 +21,11 @@ import static nl.uva.cs.lobcder.util.PropertiesHelper.ReplicationPolicy.random;
 public class ReplicateSweep1 implements Runnable {
 
     private final DataSource datasource;
-    private static PropertiesHelper.ReplicationPolicy replicatePolicy = PropertiesHelper.ReplicationPolicy.firstSite;
+    private final Class<? extends ReplicationPolicy> replicationPolicyClass;
 
-    public ReplicateSweep1(DataSource datasource) throws IOException {
+    public ReplicateSweep1(DataSource datasource) throws IOException, ClassNotFoundException {
         this.datasource = datasource;
-        replicatePolicy = PropertiesHelper.getReplicationPolicy();
+        replicationPolicyClass = Class.forName(PropertiesHelper.getReplicationPolicy()).asSubclass(ReplicationPolicy.class);
     }
 
     @Override
@@ -180,20 +177,9 @@ public class ReplicateSweep1 implements Runnable {
         }
     }
 
+    @SneakyThrows
     private ReplicationPolicy getReplicationPolicy() {
-        //TODO: use class loader
-        switch (replicatePolicy) {
-            case firstSite:
-                return new FirstSiteReplicationPolicy();
-            case redundant:
-                return new FullRedundancyReplicationPolicy();
-            case fastest:
-                return new FastestSiteReplicationPolicy();
-            case random:
-                return new RandomReplicationPolicy();
-            default:
-                return new RandomReplicationPolicy();
-        }
+        return replicationPolicyClass.newInstance();
     }
 
     private Collection<Long> selectPdriGroupsToRelocate(Connection connection) throws SQLException {
