@@ -14,6 +14,7 @@ import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Random;
@@ -444,12 +445,19 @@ public class Utils {
             }
             is.close();
             fos.close();
-            if(file.isFile()){
+            if (file.isFile()) {
                 files.add(file);
             }
 
         }
         zipFile.close();
         return files;
+    }
+
+    List<String> lobProperty2List(String value) {
+        if (value.startsWith("[") && value.endsWith("]")) {
+            value = value.substring(1, value.length() - 1);
+        }
+        return Arrays.asList(value.split("\\s*,\\s*"));
     }
 }
