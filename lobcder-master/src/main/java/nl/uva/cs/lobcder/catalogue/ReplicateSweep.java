@@ -1,27 +1,19 @@
 package nl.uva.cs.lobcder.catalogue;
 
+import lombok.extern.java.Log;
+import nl.uva.cs.lobcder.resources.*;
+import nl.uva.cs.lobcder.util.DesEncrypter;
+import org.apache.commons.math3.distribution.EnumeratedIntegerDistribution;
+
+import javax.naming.NamingException;
+import javax.sql.DataSource;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.security.NoSuchAlgorithmException;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.naming.NamingException;
-import javax.sql.DataSource;
-import lombok.extern.java.Log;
-import nl.uva.cs.lobcder.resources.*;
-import nl.uva.cs.lobcder.util.DesEncrypter;
-import nl.uva.cs.lobcder.util.PropertiesHelper;
-import org.apache.commons.math3.distribution.EnumeratedIntegerDistribution;
 
 /**
  * User: dvasunin Date: 25.02.13 Time: 17:28 To change this template use File |
@@ -31,22 +23,15 @@ import org.apache.commons.math3.distribution.EnumeratedIntegerDistribution;
 class ReplicateSweep implements Runnable {
 
     private final DataSource datasource;
-    private static PropertiesHelper.ReplicationPolicy replicatePolicy = PropertiesHelper.ReplicationPolicy.firstSite;
+   // private static PropertiesHelper.ReplicationPolicy replicatePolicy = PropertiesHelper.ReplicationPolicy.firstSite;
 
     public ReplicateSweep(DataSource datasource) throws NamingException {
         this.datasource = datasource;
-        try {
-            replicatePolicy = PropertiesHelper.getReplicationPolicy();
-        } catch (IOException ex) {
-            Logger.getLogger(ReplicateSweep.class.getName()).log(Level.SEVERE, null, ex);
-        }
     }
     private Map<String, StorageSite> availableStorage = null;
     private Iterator<StorageSite> it = null;
 
     private Map<String, StorageSite> findBestSites(Connection connection) throws SQLException, IOException {
-        switch (replicatePolicy) {
-            case firstSite:
                 Map<String, StorageSite> sites = new HashMap<>();
                 if (it == null || !it.hasNext()) {
                     it = availableStorage.values().iterator();
@@ -54,21 +39,6 @@ class ReplicateSweep implements Runnable {
                 StorageSite site = it.next();
                 sites.put(site.getResourceURI(), site);
                 return sites;
-            case redundant:
-                return availableStorage;
-            case fastest:
-                return getFastestSites(connection, PropertiesHelper.getNumberOfSites());
-            case random:
-                return getRandomStorageSite(PropertiesHelper.getNumberOfSites());
-            default:
-                sites = new HashMap<>();
-                if (it == null || !it.hasNext()) {
-                    it = availableStorage.values().iterator();
-                }
-                site = it.next();
-                sites.put(site.getResourceURI(), site);
-                return sites;
-        }
     }
 
     private Map<String, StorageSite> getStorageSites(Connection connection) throws SQLException {

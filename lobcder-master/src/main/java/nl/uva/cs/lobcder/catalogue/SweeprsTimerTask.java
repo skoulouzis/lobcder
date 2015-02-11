@@ -4,14 +4,14 @@
  */
 package nl.uva.cs.lobcder.catalogue;
 
+import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.util.PropertiesHelper;
 
+import javax.naming.NamingException;
 import javax.sql.DataSource;
 import java.io.IOException;
 import java.util.TimerTask;
 import java.util.logging.Level;
-import javax.naming.NamingException;
-import lombok.extern.java.Log;
 
 /**
  *
@@ -27,7 +27,7 @@ class SweeprsTimerTask extends TimerTask {
     private WP4Sweep wp4Sweep = null;
     private SDNSweep sdnSweep = null;
 
-    SweeprsTimerTask(DataSource datasource) throws IOException, NamingException {
+    SweeprsTimerTask(DataSource datasource) throws IOException, NamingException, ClassNotFoundException {
         deleteSweep = new DeleteSweep(datasource);
         replicateSweep = new ReplicateSweep1(datasource);
         useRepo = PropertiesHelper.useMetadataRepository();

@@ -5,13 +5,7 @@
 package nl.uva.cs.lobcder.webDav.resources;
 
 import io.milton.common.Path;
-import io.milton.http.Auth;
-import io.milton.http.LockInfo;
-import io.milton.http.LockResult;
-import io.milton.http.LockTimeout;
-import io.milton.http.LockToken;
-import io.milton.http.Request;
-import io.milton.http.Response;
+import io.milton.http.*;
 import io.milton.http.exceptions.BadRequestException;
 import io.milton.http.exceptions.LockedException;
 import io.milton.http.exceptions.NotAuthorizedException;
@@ -20,19 +14,7 @@ import io.milton.http.values.HrefList;
 import io.milton.principal.DavPrincipals;
 import io.milton.principal.Principal;
 import io.milton.property.PropertySource;
-import io.milton.resource.AccessControlledResource;
-import io.milton.resource.LockableResource;
-import io.milton.resource.MultiNamespaceCustomPropertyResource;
-import io.milton.resource.PropFindableResource;
-import io.milton.resource.Resource;
-import java.io.IOException;
-import java.security.NoSuchAlgorithmException;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.*;
-import java.util.logging.Level;
-import javax.annotation.Nonnull;
-import javax.xml.namespace.QName;
+import io.milton.resource.*;
 import lombok.Getter;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.auth.AuthI;
@@ -43,6 +25,15 @@ import nl.uva.cs.lobcder.resources.*;
 import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.cs.lobcder.util.DesEncrypter;
 import org.apache.commons.codec.binary.Base64;
+
+import javax.annotation.Nonnull;
+import javax.xml.namespace.QName;
+import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
+import java.sql.*;
+import java.util.*;
+import java.util.Date;
+import java.util.logging.Level;
 
 /**
  * @author S. Koulouzis
@@ -677,18 +668,18 @@ public class WebDataResource implements PropFindableResource, Resource,
 
     private String getAvailStorageSitesString(Boolean includePrivate) throws SQLException {
         try (Connection connection = getCatalogue().getConnection()) {
-            connection.commit();
-            Collection<StorageSite> ss = getCatalogue().getStorageSites(connection, Boolean.FALSE, includePrivate);
             StringBuilder sb = new StringBuilder();
             sb.append("[");
-            for (StorageSite s : ss) {
-                sb.append(s.getResourceURI()).append(",");
+            for (String s : getAvailStorageSitesStr(includePrivate, connection)) {
+                sb.append(s).append(",");
             }
             sb.replace(sb.lastIndexOf(","), sb.length(), "");
             sb.append("]");
             return sb.toString();
         }
     }
+
+
 
     private void setEncryptionPropertyValues(String value) {
         String v = value;
@@ -734,33 +725,51 @@ public class WebDataResource implements PropFindableResource, Resource,
     }
 
     private String getDataLocationPreferencesString() throws SQLException {
-        List<String> ss = getLogicalData().getDataLocationPreferences();
-        StringBuilder sb = null;
-        if (ss != null && !ss.isEmpty()) {
-            sb = new StringBuilder();
+        try (Connection connection = getCatalogue().getConnection()) {
+            StringBuilder sb = new StringBuilder();
             sb.append("[");
-            for (String s : ss) {
+            for (String s : getLocationPrefStr(getLogicalData().getUid(), connection)) {
                 sb.append(s).append(",");
             }
             sb.replace(sb.lastIndexOf(","), sb.length(), "");
             sb.append("]");
             return sb.toString();
-        } else {
-            try (Connection connection = getCatalogue().getConnection()) {
-                List<String> dataLocPref = getCatalogue().getDataLocationPreferace(connection, getLogicalData().getUid());
-                getLogicalData().setDataLocationPreferences(dataLocPref);
-                if (dataLocPref == null || dataLocPref.isEmpty()) {
-                    return null;
-                }
-                sb = new StringBuilder();
-                sb.append("[");
-                for (String s : dataLocPref) {
-                    sb.append(s).append(",");
-                }
-                sb.replace(sb.lastIndexOf(","), sb.length(), "");
-                sb.append("]");
-                return sb.toString();
+        }
+    }
+
+    private Collection<Long> getLocationPrefLong(Long uid, Connection connection) throws SQLException {
+        try(PreparedStatement ps = connection.prepareStatement("SELECT storageSiteRef FROM pref_table WHERE ld_uid=?")) {
+            Collection<Long> result = new ArrayList<>();
+            ps.setLong(1,uid);
+            ResultSet rs = ps.executeQuery();
+            while(rs.next()){
+                result.add(rs.getLong(1));
             }
+            return result;
+        }
+    }
+
+    private Collection<String> getLocationPrefStr(Long uid, Connection connection) throws SQLException {
+        try(PreparedStatement ps = connection.prepareStatement("SELECT resourceUri FROM pref_table JOIN storage_site_table ON storageSiteRef=storageSiteId WHERE ld_uid=?")) {
+            Collection<String> result = new ArrayList<>();
+            ps.setLong(1,uid);
+            ResultSet rs = ps.executeQuery();
+            while(rs.next()){
+                result.add(rs.getString(1));
+            }
+            return result;
+        }
+    }
+
+    private Collection<String> getAvailStorageSitesStr(Boolean includePrivate, Connection connection) throws SQLException {
+        try(Statement statement = connection.createStatement()) {
+            Collection<String> result = new ArrayList<>();
+            ResultSet rs = includePrivate ? statement.executeQuery("SELECT resourceUri FROM storage_site_table WHERE isCache=FALSE AND removing=FALSE")
+                    : statement.executeQuery("SELECT resourceUri FROM storage_site_table WHERE isCache=FALSE AND removing=FALSE AND private=FALSE");
+            while(rs.next()){
+                result.add(rs.getString(1));
+            }
+            return result;
         }
     }
 
