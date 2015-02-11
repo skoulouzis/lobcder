@@ -4,21 +4,15 @@
  */
 package nl.uva.cs.lobcder.util;
 
+import nl.uva.cs.lobcder.webDav.resources.WebDataFileResource;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import nl.uva.cs.lobcder.webDav.resources.WebDataFileResource;
 
 /**
  *
@@ -34,15 +28,6 @@ public class PropertiesHelper {
         method,
         resource,
         state
-    }
-
-    public static enum ReplicationPolicy {
-
-        redundant,
-        firstSite,
-        fastest,
-        random,
-        demand
     }
 
     private static Properties getProperties() throws IOException {
@@ -118,8 +103,8 @@ public class PropertiesHelper {
         return getProperties().getProperty("worker.token");
     }
 
-    public static ReplicationPolicy getReplicationPolicy() throws IOException {
-        return ReplicationPolicy.valueOf(getProperties().getProperty("replication.policy", "firstSite"));
+    public static String getReplicationPolicy() throws IOException {
+        return getProperties().getProperty("replication.policy", "nl.uva.cs.lobcder.replication.policy.FirstSiteReplicationPolicy");
     }
 
     public static boolean doRedirectGets() throws IOException {
