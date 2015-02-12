@@ -731,10 +731,14 @@ public class WebDataResource implements PropFindableResource, Resource,
             for (String s : getLocationPrefStr(getLogicalData().getUid(), connection)) {
                 sb.append(s).append(",");
             }
-            sb.replace(sb.lastIndexOf(","), sb.length(), "");
+            if(sb.length() > 1){
+                            sb.replace(sb.lastIndexOf(","), sb.length(), "");
             sb.append("]");
             return sb.toString();
+            }
+
         }
+        return null;
     }
 
     private Collection<Long> getLocationPrefLong(Long uid, Connection connection) throws SQLException {
@@ -750,7 +754,11 @@ public class WebDataResource implements PropFindableResource, Resource,
     }
 
     private Collection<String> getLocationPrefStr(Long uid, Connection connection) throws SQLException {
-        try(PreparedStatement ps = connection.prepareStatement("SELECT resourceUri FROM pref_table JOIN storage_site_table ON storageSiteRef=storageSiteId WHERE ld_uid=?")) {
+        try(PreparedStatement ps = connection.prepareStatement("SELECT resourceUri "
+                + "FROM pref_table "
+                + "JOIN storage_site_table "
+                + "ON storageSiteRef=storageSiteId "
+                + "WHERE ld_uid=?")) {
             Collection<String> result = new ArrayList<>();
             ps.setLong(1,uid);
             ResultSet rs = ps.executeQuery();
