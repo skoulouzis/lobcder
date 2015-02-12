@@ -264,6 +264,6 @@ public class PropertiesHelper {
     }
 
     public static long getSweepersInterval() throws IOException {
-        return Long.valueOf(getProperties().getProperty("sweepers.interval", "10000"));
+        return Long.valueOf(getProperties().getProperty("sweepers.interval", "100"));
     }
 }
