@@ -322,15 +322,15 @@ class WP4Sweep implements Runnable {
 //                        runSweeper = false;
 //                    }
 //            } else {
-            sleepTime = sleepTime * 2;
+//            sleepTime = sleepTime * 2;
             Logger.getLogger(WP4Sweep.class.getName()).log(Level.SEVERE, null, ex);
-            Logger.getLogger(WP4Sweep.class.getName()).log(Level.SEVERE, "One of the sweepers throw an expetion. Thread will sleep for: {0} ms", sleepTime);
-            try {
-                Thread.sleep(sleepTime);
-
-            } catch (InterruptedException ex1) {
-                Logger.getLogger(WP4Sweep.class.getName()).log(Level.SEVERE, null, ex1);
-            }
+//            Logger.getLogger(WP4Sweep.class.getName()).log(Level.SEVERE, "One of the sweepers throw an expetion. Thread will sleep for: {0} ms", sleepTime);
+//            try {
+//                Thread.sleep(sleepTime);
+//
+//            } catch (InterruptedException ex1) {
+//                Logger.getLogger(WP4Sweep.class.getName()).log(Level.SEVERE, null, ex1);
+//            }
         }
 
 

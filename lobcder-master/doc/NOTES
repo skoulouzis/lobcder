@@ -279,6 +279,19 @@ curl "http://elab.lab.uvalight.net/elasticsearch/_all/_search?q=req_source:*&fro
 
 jq --raw-output '.hits.hits | .[] | ._source | "\(.logdate)\t\(.repl_source)\t\(.repl_destination)\t\(.repl_speed)\t\(.repl_size)"'
 
+
+
+for((i=0;i<=1000000;i+=1000)); do curl "http://localhost:9200/_all/_search?q=rx_size:*&from=$i&size=1000" | jq --raw-output '.hits.hits | .[] | ._source | "\(.logdate)\t\(.rx_source)\t\(.rx_destination)\t\(.rx_speed)\t\(.rx_size)\t\(.rx_sourceLoc.country_code2)\t\(.rx_sourceLoc.country_name)"'; done  >> rx_size.csv
+
+for((i=0;i<=1000000;i+=1000)); do curl "http://localhost:9200/_all/_search?q=tx_size:*&from=$i&size=1000" | jq --raw-output '.hits.hits | .[] | ._source | "\(.logdate)\t\(.tx_source)\t\(.tx_destination)\t\(.tx_speed)\t\(.tx_size)\t\(.tx_destinationLoc.country_code2)\t\(.tx_destinationLoc.country_name)"'; done  >> tx_size.csv
+
+for((i=0;i<=1000000;i+=1000)); do curl "http://localhost:9200/_all/_search?q=req_source:*&from=$i&size=1000" | jq --raw-output '.hits.hits | .[] | ._source | "\(.logdate)\t\(.req_sourceLoc.country_code2)\t\(.req_sourceLoc.country_name)\t\(.req_sourceLoc.city_name)\t\(.req_userAgent)\t\(.req_user)\t\(.req_verb)\t\(.req_contLen)\t\(.req_contType)\t\(.req_elapsed)\t\(.req_contType)\t\(.req_queryString)\t\(.req_URL)"'; done  >> req_size.csv
+
+for((i=0;i<=1000000;i+=1000)); do curl "http://localhost:9200/_all/_search?q=repl_source:*&from=$i&size=1000" | jq --raw-output '.hits.hits | .[] | ._source | "\(.logdate)\t\(.repl_source)\t\(.repl_destination)\t\(.repl_speed)\t\(.repl_size)"'; done >> repl_size.csvrepl_size.csv
+
+for((i=0;i<=100000;i+=1000)); do curl "http://localhost:9200/_all/_search?q=apache_startupTime:*&from=$i&size=1000" | jq --raw-output '.hits.hits | .[] | ._source | "\(.logdate)\t\(.apache_startupTime)"'; done  >> apache_startupTime.csv
+
+
 ---------------------Usare agents
 
 sed -i 's/Jakarta\ Commons-HttpClient.*/Jakarta\ Commons-HttpClient/' req.csv

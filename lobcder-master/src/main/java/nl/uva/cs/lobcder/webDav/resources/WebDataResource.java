@@ -679,8 +679,6 @@ public class WebDataResource implements PropFindableResource, Resource,
         }
     }
 
-
-
     private void setEncryptionPropertyValues(String value) {
         String v = value;
 //                        HashMap<String, Boolean> hostEncryptMap = new HashMap<>();
@@ -731,18 +729,22 @@ public class WebDataResource implements PropFindableResource, Resource,
             for (String s : getLocationPrefStr(getLogicalData().getUid(), connection)) {
                 sb.append(s).append(",");
             }
-            sb.replace(sb.lastIndexOf(","), sb.length(), "");
-            sb.append("]");
-            return sb.toString();
+            if (sb.length() > 1) {
+                sb.replace(sb.lastIndexOf(","), sb.length(), "");
+                sb.append("]");
+                return sb.toString();
+            }
+
         }
+        return null;
     }
 
     private Collection<Long> getLocationPrefLong(Long uid, Connection connection) throws SQLException {
-        try(PreparedStatement ps = connection.prepareStatement("SELECT storageSiteRef FROM pref_table WHERE ld_uid=?")) {
+        try (PreparedStatement ps = connection.prepareStatement("SELECT storageSiteRef FROM pref_table WHERE ld_uid=?")) {
             Collection<Long> result = new ArrayList<>();
-            ps.setLong(1,uid);
+            ps.setLong(1, uid);
             ResultSet rs = ps.executeQuery();
-            while(rs.next()){
+            while (rs.next()) {
                 result.add(rs.getLong(1));
             }
             return result;
@@ -750,11 +752,15 @@ public class WebDataResource implements PropFindableResource, Resource,
     }
 
     private Collection<String> getLocationPrefStr(Long uid, Connection connection) throws SQLException {
-        try(PreparedStatement ps = connection.prepareStatement("SELECT resourceUri FROM pref_table JOIN storage_site_table ON storageSiteRef=storageSiteId WHERE ld_uid=?")) {
+        try (PreparedStatement ps = connection.prepareStatement("SELECT resourceUri "
+                + "FROM pref_table "
+                + "JOIN storage_site_table "
+                + "ON storageSiteRef=storageSiteId "
+                + "WHERE ld_uid=?")) {
             Collection<String> result = new ArrayList<>();
-            ps.setLong(1,uid);
+            ps.setLong(1, uid);
             ResultSet rs = ps.executeQuery();
-            while(rs.next()){
+            while (rs.next()) {
                 result.add(rs.getString(1));
             }
             return result;
@@ -762,11 +768,11 @@ public class WebDataResource implements PropFindableResource, Resource,
     }
 
     private Collection<String> getAvailStorageSitesStr(Boolean includePrivate, Connection connection) throws SQLException {
-        try(Statement statement = connection.createStatement()) {
+        try (Statement statement = connection.createStatement()) {
             Collection<String> result = new ArrayList<>();
             ResultSet rs = includePrivate ? statement.executeQuery("SELECT resourceUri FROM storage_site_table WHERE isCache=FALSE AND removing=FALSE")
                     : statement.executeQuery("SELECT resourceUri FROM storage_site_table WHERE isCache=FALSE AND removing=FALSE AND private=FALSE");
-            while(rs.next()){
+            while (rs.next()) {
                 result.add(rs.getString(1));
             }
             return result;

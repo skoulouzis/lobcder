@@ -48,7 +48,7 @@ public class JDBCatalogue extends MyDataSource {
     private Timer timer = null;
     private Map<Long, LogicalData> logicalDataCache = new HashMap<>();
     private Map<String, LogicalData> logicalDataCacheByPath = new HashMap<>();
-//    private Map<Long, Permissions> permissionsCache = new HashMap<>();
+    private Map<Long, Permissions> permissionsCache = new HashMap<>();
     private Map<Long, String> pathCache = new HashMap<>();
     Map<Long, List<PDRIDescr>> PDRIDescrCache = new HashMap<>();
 
@@ -77,7 +77,7 @@ public class JDBCatalogue extends MyDataSource {
                     + "currentNum, currentSize, quotaNum, quotaSize, username, "
                     + "password, encrypt, private FROM storage_site_table "
                     + "JOIN credential_table ON credentialRef = credintialId "
-                    + "WHERE isCache = "+isCache+" AND removing = FALSE")) {
+                    + "WHERE isCache = " + isCache + " AND removing = FALSE")) {
                 ArrayList<StorageSite> res = new ArrayList<>();
                 while (rs.next()) {
                     StorageSite ss = new StorageSite();
@@ -1333,14 +1333,13 @@ public class JDBCatalogue extends MyDataSource {
     }
 
     private void putToPermissionsCache(Long UID, Permissions perm) {
-//        checkPermissionsCacheSize();
-//        permissionsCache.put(UID, perm);
+        checkPermissionsCacheSize();
+        permissionsCache.put(UID, perm);
     }
 
     private Permissions getFromPermissionsCache(Long UID) {
-//        checkPermissionsCacheSize();
-//        return permissionsCache.get(UID);
-        return null;
+        checkPermissionsCacheSize();
+        return permissionsCache.get(UID);
     }
 
     private LogicalData getFromLDataCache(Long uid, String path) {
@@ -1372,10 +1371,10 @@ public class JDBCatalogue extends MyDataSource {
     }
 
     private void checkPermissionsCacheSize() {
-//        if (permissionsCache.size() >= Constants.CACHE_SIZE) {
-//            Long key = permissionsCache.keySet().iterator().next();
-//            permissionsCache.remove(key);
-//        }
+        if (permissionsCache.size() >= Constants.CACHE_SIZE) {
+            Long key = permissionsCache.keySet().iterator().next();
+            permissionsCache.remove(key);
+        }
     }
 
     private void checkPathCacheSize() {
