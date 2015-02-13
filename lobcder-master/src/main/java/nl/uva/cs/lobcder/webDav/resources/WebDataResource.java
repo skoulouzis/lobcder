@@ -348,7 +348,6 @@ public class WebDataResource implements PropFindableResource, Resource,
     @Override
     public Object getProperty(QName qname) {
         try {
-            log.log(Level.FINE, "qname: {0}", qname);
             if (qname.equals(Constants.DATA_DIST_PROP_NAME)) {
                 return getDataDistString();
             } else if (qname.equals(Constants.DRI_SUPERVISED_PROP_NAME)) {
@@ -409,9 +408,7 @@ public class WebDataResource implements PropFindableResource, Resource,
                         getLogicalData().setDescription(v);
                         catalogue.setDescription(getLogicalData().getUid(), v, connection);
                     } else if (qname.equals(Constants.DATA_LOC_PREF_NAME)) {
-                        List<String> list = property2List(value);
-                        List<String> sites = catalogue.setLocationPreferences(connection, getLogicalData().getUid(), list, getPrincipal().isAdmin());
-                        getLogicalData().setDataLocationPreferences(sites);
+                        setDataLocationPref(value, connection);
                     } else if (qname.equals(Constants.ENCRYPT_PROP_NAME)) {
                         setEncryptionPropertyValues(value);
                     } else if (qname.equals(Constants.TTL)) {
@@ -616,7 +613,6 @@ public class WebDataResource implements PropFindableResource, Resource,
                     sb.replace(sb.lastIndexOf(","), sb.length(), "");
                 }
                 sb.append("]");
-                sb.toString();
                 return sb.toString();
             } catch (NotAuthorizedException | SQLException e) {
                 connection.rollback();
@@ -784,5 +780,11 @@ public class WebDataResource implements PropFindableResource, Resource,
             value = value.substring(1, value.length() - 1);
         }
         return Arrays.asList(value.split("\\s*,\\s*"));
+    }
+
+    private void setDataLocationPref(String value, Connection connection) throws SQLException {
+        List<String> list = property2List(value);
+        List<String> sites = catalogue.setLocationPreferences(connection, getLogicalData().getUid(), list, getPrincipal().isAdmin());
+        getLogicalData().setDataLocationPreferences(sites);
     }
 }

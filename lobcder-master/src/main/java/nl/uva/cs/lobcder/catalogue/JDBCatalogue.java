@@ -1203,6 +1203,13 @@ public class JDBCatalogue extends MyDataSource {
                 }
             }
         }
+        Collection<LogicalData> children = getChildrenByParentRef(uid);
+        for (LogicalData child : children) {
+            if (!child.isFolder()) {
+                setLocationPreferences(connection, child.getUid(), locationPreferences, includePrivate);
+            }
+        }
+
         connection.commit();
         return getDataLocationPreferace(connection, uid);
     }
