@@ -1911,11 +1911,12 @@ public class WebDAVTest {
     public void testGetSetLocationPreferenceInheritFolders() throws IOException, DavException, InterruptedException, URISyntaxException {
         System.out.println("testGetSetLocationPreference");
         String testcol1 = root + "testResourceId/";
-        String testcol2 = root + "testResourceId/testResourceId2";
-        String testcol3 = root + "testResourceId/testResourceId2/testResourceId3";
-        String testcol4 = root + "testResourceId/testResourceId2/testResourceId3/testResourceId4";
-        String testcol5 = root + "testResourceId/testResourceId2/testResourceId21";
+        String testcol2 = root + "testResourceId/testResourceId2/";
+        String testcol3 = root + "testResourceId/testResourceId2/testResourceId3/";
+        String testcol4 = root + "testResourceId/testResourceId2/testResourceId3/testResourceId4/";
+        String testcol5 = root + "testResourceId/testResourceId2/testResourceId21/";
         String testuri1 = testcol1 + "file1";
+        String testuri4 = testcol4 + "file1";
 
         try {
             utils.deleteResource(testcol1, false);
@@ -1951,6 +1952,8 @@ public class WebDAVTest {
             utils.createCollection(testcol4, true);
             locationValue = testPropertyName(testcol4, DavPropertyName.create("data-location-preference", Namespace.getNamespace("custom:")));
             assertEquals("[" + location1 + "]", locationValue);
+            utils.createFile(testuri4, true);
+            testFileMovedToLocationPreference(testuri4, location1);
 
             utils.createCollection(testcol5, true);
             locationValue = testPropertyName(testcol5, DavPropertyName.create("data-location-preference", Namespace.getNamespace("custom:")));
@@ -1959,6 +1962,9 @@ public class WebDAVTest {
 
             setAndTestPoperty(testcol1, "data-location-preference", location2);
             testFileMovedToLocationPreference(testuri1, location2);
+
+            setAndTestPoperty(testcol4, "data-location-preference", location2);
+            testFileMovedToLocationPreference(testuri4, location2);
 
         } finally {
             utils.deleteResource(testcol1, true);
@@ -2659,13 +2665,31 @@ public class WebDAVTest {
     }
 
     private void testFileMovedToLocationPreference(String testuri1, String location) throws IOException, DavException, InterruptedException {
-        String locationValue = testPropertyName(testuri1, DavPropertyName.create("data-location-preference", Namespace.getNamespace("custom:")));
-        assertEquals("[" + location + "]", locationValue);
         utils.waitForReplication(testuri1);
-
         boolean done = false;
         boolean found = false;
         int count = 0;
+        while (!done) {
+            String locationValue = testPropertyName(testuri1, DavPropertyName.create("data-location-preference", Namespace.getNamespace("custom:")));
+            System.err.println("expecting: " + "[" + location + "]" + " got: " + locationValue + " count: " + count);
+            if (("[" + location + "]").equals(locationValue)) {
+                found = true;
+                done = true;
+            }
+            count++;
+            if (count >= 70) {
+                done = true;
+                break;
+            } else {
+                Thread.sleep(500);
+            }
+
+        }
+
+
+        done = false;
+        found = false;
+        count = 0;
         while (!done) {
             String dataDistValue = testPropertyName(testuri1, DavPropertyName.create("data-distribution", Namespace.getNamespace("custom:")));
 
@@ -2679,18 +2703,31 @@ public class WebDAVTest {
             if (!dataDistValue.endsWith("/")) {
                 dataDistValue += "/";
             }
-            System.err.println("expecting: " + cmpLocation + " got: " + dataDistValue + " count: " + count);
-            if (dataDistValue.equals(cmpLocation)) {
-                done = true;
-                found = true;
-                break;
+            String[] locations = dataDistValue.split(",");
+            if (locations.length <= 0) {
+                System.err.println("expecting: " + cmpLocation + " got: " + dataDistValue + " count: " + count);
+                if (dataDistValue.equals(cmpLocation)) {
+                    done = true;
+                    found = true;
+                    break;
+                }
+            } else {
+                for (String s : locations) {
+                    System.err.println("expecting: " + cmpLocation + " got: " + s + " count: " + count);
+                    if (s.equals(cmpLocation)) {
+                        done = true;
+                        found = true;
+                        break;
+                    }
+                }
             }
+
             count++;
             if (count >= 70) {
                 done = true;
                 break;
             } else {
-                Thread.sleep(100);
+                Thread.sleep(500);
             }
         }
         assertTrue(found);
