@@ -6,26 +6,11 @@ package nl.uva.cs.lobcder.webDav.resources;
 
 import io.milton.common.Path;
 import io.milton.http.*;
-import static io.milton.http.Request.Method.MKCOL;
 import io.milton.http.exceptions.BadRequestException;
 import io.milton.http.exceptions.ConflictException;
 import io.milton.http.exceptions.NotAuthorizedException;
 import io.milton.http.exceptions.PreConditionFailedException;
 import io.milton.resource.*;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.PrintStream;
-import java.io.UnsupportedEncodingException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.security.NoSuchAlgorithmException;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.annotation.Nonnull;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.auth.AuthI;
 import nl.uva.cs.lobcder.auth.Permissions;
@@ -35,8 +20,21 @@ import nl.uva.cs.lobcder.resources.PDRI;
 import nl.uva.cs.lobcder.rest.wrappers.Stats;
 import nl.uva.cs.lobcder.util.Constants;
 import org.apache.commons.io.FilenameUtils;
-import static org.rendersnake.HtmlAttributesFactory.*;
 import org.rendersnake.HtmlCanvas;
+
+import javax.annotation.Nonnull;
+import java.io.*;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.security.NoSuchAlgorithmException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import static org.rendersnake.HtmlAttributesFactory.*;
 
 /**
  *
@@ -227,7 +225,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                     pdri.setLength(length);
                     pdri.putData(inputStream);
                     fileLogicalData = getCatalogue().updateLogicalDataAndPdri(fileLogicalData, pdri, connection);
-                    fileLogicalData = inheritProperties(fileLogicalData, connection);
+                    //fileLogicalData = inheritProperties(fileLogicalData, connection);
                     connection.commit();
 //                    String md5 = pdri.getStringChecksum();
 //                    if (md5 != null) {
@@ -258,8 +256,10 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
 //                    }
                     fileLogicalData = getCatalogue().associateLogicalDataAndPdri(fileLogicalData, pdri, connection);
                     getCatalogue().setPermissions(fileLogicalData.getUid(), new Permissions(getPrincipal(), getPermissions()), connection);
-                    fileLogicalData = inheritProperties(fileLogicalData, connection);
+                    //fileLogicalData = inheritProperties(fileLogicalData, connection);
+                    setPreferencesOn(fileLogicalData.getUid(), getLogicalData().getUid(), connection);
                     connection.commit();
+                    fileLogicalData.setDataLocationPreferences(new ArrayList<String>(getLogicalData().getDataLocationPreferences()));
                     resource = new WebDataFileResource(fileLogicalData, Path.path(getPath(), newName), getCatalogue(), authList);
 //                    return new WebDataFileResource(fileLogicalData, Path.path(getPath(), newName), getCatalogue(), authList);
                 }
@@ -576,5 +576,16 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
             //trigger 
         }
         return newLogicalData;
+    }
+
+    private void setPreferencesOn(Long uidTo, Long uidFrom, Connection connection) throws SQLException {
+        try (PreparedStatement psDel = connection.prepareStatement("DELETE FROM pref_table WHERE ld_uid = ?");
+             PreparedStatement psIns = connection.prepareStatement("INSERT INTO pref_table (ld_uid, storageSiteRef) SELECT ?, storageSiteRef FROM pref_table WHERE ld_uid=?")) {
+            psDel.setLong(1, uidTo);
+            psIns.setLong(1, uidTo);
+            psIns.setLong(2, uidFrom);
+            psDel.executeUpdate();
+            psIns.executeUpdate();
+        }
     }
 }

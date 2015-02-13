@@ -186,7 +186,7 @@ public class ReplicateSweep1 implements Runnable {
         try (Statement statement = connection.createStatement()) {
             Collection<Long> result = new ArrayList<>();
             ResultSet resultSet = statement.executeQuery("SELECT pdriGroupId FROM "
-                    + "pdrigroup_table WHERE needCheck=TRUE AND bound=FALSE LIMIT 10");
+                    + "pdrigroup_table WHERE needCheck=TRUE AND bound=FALSE AND refCount>0 LIMIT 10");
             while (resultSet.next()) {
                 result.add(resultSet.getLong(1));
             }
