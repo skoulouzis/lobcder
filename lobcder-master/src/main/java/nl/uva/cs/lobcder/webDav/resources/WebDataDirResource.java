@@ -258,8 +258,9 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                     getCatalogue().setPermissions(fileLogicalData.getUid(), new Permissions(getPrincipal(), getPermissions()), connection);
                     //fileLogicalData = inheritProperties(fileLogicalData, connection);
                     setPreferencesOn(fileLogicalData.getUid(), getLogicalData().getUid(), connection);
+                    List<String> pref = getLogicalData().getDataLocationPreferences();
+                    fileLogicalData.setDataLocationPreferences(pref);
                     connection.commit();
-                    fileLogicalData.setDataLocationPreferences(new ArrayList<String>(getLogicalData().getDataLocationPreferences()));
                     resource = new WebDataFileResource(fileLogicalData, Path.path(getPath(), newName), getCatalogue(), authList);
 //                    return new WebDataFileResource(fileLogicalData, Path.path(getPath(), newName), getCatalogue(), authList);
                 }
@@ -580,7 +581,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
 
     private void setPreferencesOn(Long uidTo, Long uidFrom, Connection connection) throws SQLException {
         try (PreparedStatement psDel = connection.prepareStatement("DELETE FROM pref_table WHERE ld_uid = ?");
-             PreparedStatement psIns = connection.prepareStatement("INSERT INTO pref_table (ld_uid, storageSiteRef) SELECT ?, storageSiteRef FROM pref_table WHERE ld_uid=?")) {
+                PreparedStatement psIns = connection.prepareStatement("INSERT INTO pref_table (ld_uid, storageSiteRef) SELECT ?, storageSiteRef FROM pref_table WHERE ld_uid=?")) {
             psDel.setLong(1, uidTo);
             psIns.setLong(1, uidTo);
             psIns.setLong(2, uidFrom);
