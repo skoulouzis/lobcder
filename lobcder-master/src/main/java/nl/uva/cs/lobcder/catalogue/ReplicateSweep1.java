@@ -200,8 +200,11 @@ public class ReplicateSweep1 implements Runnable {
                 "SELECT fileName, storageSiteRef, storage_site_table.resourceUri, "
                 + "username, password, isEncrypted, encryptionKey, pdri_table.pdriId "
                 + "FROM pdri_table JOIN storage_site_table "
-                + "ON storageSiteRef = storageSiteId JOIN credential_table "
-                + "ON credentialRef = credintialId WHERE pdri_table.pdriGroupRef=? AND isCache=FALSE")) {
+                + "ON storageSiteRef = storageSiteId "
+                + "JOIN credential_table "
+                + "ON credentialRef = credintialId "
+                + "WHERE pdri_table.pdriGroupRef=? "
+                + "AND isCache=FALSE")) {
             ps.setLong(1, groupId);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -281,7 +284,8 @@ public class ReplicateSweep1 implements Runnable {
         }
         boolean result = true;
         try (PreparedStatement preparedStatement = connection.prepareStatement(
-                "INSERT INTO pdri_table (fileName, storageSiteRef, pdriGroupRef, isEncrypted, encryptionKey) VALUES (?,?,?,?,?)")) {
+                "INSERT INTO pdri_table (fileName, storageSiteRef, pdriGroupRef, "
+                + "isEncrypted, encryptionKey) VALUES (?,?,?,?,?)")) {
             PDRIDescr sourceDescr = getSourcePdriDescrForGroup(pdriGroupId, connection);
             PDRI sourcePdri = PDRIFactory.getFactory().createInstance(sourceDescr);
 

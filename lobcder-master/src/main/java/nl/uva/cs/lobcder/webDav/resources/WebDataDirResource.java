@@ -566,15 +566,15 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
         return null;
     }
 
-    private LogicalData inheritProperties(LogicalData fileLogicalData, Connection connection) throws SQLException {
+    private LogicalData inheritProperties(LogicalData newLogicalData, Connection connection) throws SQLException {
         String value = (String) getProperty(Constants.DATA_LOC_PREF_NAME);
         if (value != null) {
             List<String> list = property2List(value);
-            list = getCatalogue().setLocationPreferences(connection, fileLogicalData.getUid(), list, getPrincipal().isAdmin());
-            fileLogicalData.setDataLocationPreferences(list);
-        }else{
+            list = getCatalogue().setLocationPreferences(connection, newLogicalData.getUid(), list, getPrincipal().isAdmin());
+            newLogicalData.setDataLocationPreferences(list);
+        } else {
             //trigger 
         }
-        return fileLogicalData;
+        return newLogicalData;
     }
 }
