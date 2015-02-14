@@ -96,37 +96,28 @@ public class VPDRI implements PDRI {
 
     public VPDRI(String fileName, Long storageSiteId, String resourceUrl,
             String username, String password, boolean encrypt, BigInteger keyInt,
-            boolean doChunkUpload) throws IOException, VRLSyntaxException, Exception {
-
-        this.fileName = fileName;
-        this.resourceUrl = resourceUrl.replaceAll(" ", "");
-        baseDir = nl.uva.cs.lobcder.util.PropertiesHelper.getBackendWorkingFolderName();
-        String encoded = VRL.encode(fileName);
-        vrl = new VRL(this.resourceUrl).appendPath(baseDir).append(encoded);
-//            vrl = new VRL(resourceUrl).appendPath(baseDir).append(URLEncoder.encode(fileName, "UTF-8").replace("+", "%20"));
-        this.storageSiteId = storageSiteId;
-        this.username = username;
-        this.password = password;
-        this.encrypt = encrypt;
-        this.keyInt = keyInt;
-        this.doChunked = doChunkUpload;
-        VPDRI.log.log(Level.FINE, "fileName: {0}, storageSiteId: {1}, username: {2}, password: {3}, VRL: {4}", new Object[]{fileName, storageSiteId, "username", "password", vrl});
-        initVFS();
-
-
+            boolean doChunkUpload) throws IOException {
         try {
-            ClientConfig clientConfig = configureClient();
-//        SSLContext ctx = SSLContext.getInstance("SSL");
-//        clientConfig.getProperties().put(HTTPSProperties.PROPERTY_HTTPS_PROPERTIES, new HTTPSProperties(hostnameVerifier, ctx));
-            clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
-            restClient = Client.create(clientConfig);
-            restClient.addFilter(new com.sun.jersey.api.client.filter.HTTPBasicAuthFilter(getClass().getName(), PropertiesHelper.getLobComponentToken()));
-        } catch (IOException ex) {
-            //Not important. Just contenue 
-            Logger.getLogger(VPDRI.class.getName()).log(Level.WARNING, "Failed to initilize REST client", ex);
-            restClient = null;
-        }
+            this.fileName = fileName;
+            this.resourceUrl = resourceUrl.replaceAll(" ", "");
+            baseDir = nl.uva.cs.lobcder.util.PropertiesHelper.getBackendWorkingFolderName();
+            String encoded = VRL.encode(fileName);
+            vrl = new VRL(this.resourceUrl).appendPath(baseDir).append(encoded);
+//            vrl = new VRL(resourceUrl).appendPath(baseDir).append(URLEncoder.encode(fileName, "UTF-8").replace("+", "%20"));
+            this.storageSiteId = storageSiteId;
+            this.username = username;
+            this.password = password;
+            this.encrypt = encrypt;
+            this.keyInt = keyInt;
+            this.doChunked = doChunkUpload;
+            VPDRI.log.log(Level.FINE, "fileName: {0}, storageSiteId: {1}, username: {2}, password: {3}, VRL: {4}", new Object[]{fileName, storageSiteId, "username", "password", vrl});
+            initVFS();
+            initRESTClient();
 
+
+        } catch (Exception ex) {
+            throw new IOException(ex);
+        }
     }
 
     private void initVFS() throws Exception {
@@ -708,19 +699,17 @@ public class VPDRI implements PDRI {
     }
 
     private void setSpeed(Stats stats) throws JAXBException {
-        if (restClient != null) {
-            JAXBContext context = JAXBContext.newInstance(Stats.class);
-            Marshaller m = context.createMarshaller();
-            m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
-            OutputStream out = new ByteArrayOutputStream();
-            m.marshal(stats, out);
+        JAXBContext context = JAXBContext.newInstance(Stats.class);
+        Marshaller m = context.createMarshaller();
+        m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+        OutputStream out = new ByteArrayOutputStream();
+        m.marshal(stats, out);
 
-            WebResource webResource = restClient.resource(restURL);
-            String stringStats = String.valueOf(out);
+        WebResource webResource = restClient.resource(restURL);
+        String stringStats = String.valueOf(out);
 
-            ClientResponse response = webResource.path("lob_statistics").path("set")
-                    .type(MediaType.APPLICATION_XML).put(ClientResponse.class, stringStats);
-        }
+        ClientResponse response = webResource.path("lob_statistics").path("set")
+                .type(MediaType.APPLICATION_XML).put(ClientResponse.class, stringStats);
     }
 
     public static ClientConfig configureClient() {
@@ -771,5 +760,20 @@ public class VPDRI implements PDRI {
 
     void setIsCahce(boolean isCache) {
         this.isCache = isCache;
+    }
+
+    private void initRESTClient() {
+        try {
+            ClientConfig clientConfig = configureClient();
+//        SSLContext ctx = SSLContext.getInstance("SSL");
+//        clientConfig.getProperties().put(HTTPSProperties.PROPERTY_HTTPS_PROPERTIES, new HTTPSProperties(hostnameVerifier, ctx));
+            clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
+            restClient = Client.create(clientConfig);
+            restClient.addFilter(new com.sun.jersey.api.client.filter.HTTPBasicAuthFilter(getClass().getName(), PropertiesHelper.getLobComponentToken()));
+        } catch (IOException ex) {
+            //Not important. Just contenue 
+            Logger.getLogger(VPDRI.class.getName()).log(Level.WARNING, "Failed to initilize REST client", ex);
+            restClient = null;
+        }
     }
 }
