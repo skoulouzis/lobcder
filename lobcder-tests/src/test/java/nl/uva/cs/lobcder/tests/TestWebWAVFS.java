@@ -603,6 +603,8 @@ public class TestWebWAVFS {
         String testFileURI1 = this.uri.toASCIIString() + TestSettings.TEST_FILE_NAME1 + ".txt";
         String testcol = root + "testResourceId/";
         try {
+            
+            
             PutMethod put = new PutMethod(testFileURI1);
             put.setRequestEntity(new StringRequestEntity(TestSettings.TEST_DATA, "text/plain", "UTF-8"));
             int status = client1.executeMethod(put);
