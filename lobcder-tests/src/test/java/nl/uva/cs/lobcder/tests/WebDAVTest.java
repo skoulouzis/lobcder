@@ -1836,7 +1836,7 @@ public class WebDAVTest {
 
             availStorageSitesStr = availStorageSitesStr.substring(1, availStorageSitesStr.length() - 1);
 
-            DavPropertyName dataLocationPreferenceName = DavPropertyName.create("data-location1-preference", Namespace.getNamespace("custom:"));
+            DavPropertyName dataLocationPreferenceName = DavPropertyName.create("data-location-preference", Namespace.getNamespace("custom:"));
             DavProperty dataLocationPreference = new DefaultDavProperty(dataLocationPreferenceName, availStorageSitesStr);
             u.setProperty(testcol1, dataLocationPreference, true);
 
@@ -2012,7 +2012,7 @@ public class WebDAVTest {
 
             String location1 = availStorageSites[0];
 
-            DavPropertyName dataLocationPreferenceName = DavPropertyName.create("data-location1-preference", Namespace.getNamespace("custom:"));
+            DavPropertyName dataLocationPreferenceName = DavPropertyName.create("data-location-preference", Namespace.getNamespace("custom:"));
             DavProperty dataLocationPreference = new DefaultDavProperty(dataLocationPreferenceName, location1);
             utils.setProperty(testcol1, dataLocationPreference, true);
 
@@ -2083,7 +2083,7 @@ public class WebDAVTest {
 
 
             String nowhere = "Going_nowhere";
-            dataLocationPreferenceName = DavPropertyName.create("data-location1-preference", Namespace.getNamespace("custom:"));
+            dataLocationPreferenceName = DavPropertyName.create("data-location-preference", Namespace.getNamespace("custom:"));
             dataLocationPreference = new DefaultDavProperty(dataLocationPreferenceName, nowhere);
             utils.setProperty(testcol1, dataLocationPreference, true);
 
@@ -2155,7 +2155,7 @@ public class WebDAVTest {
             utils.deleteResource(testcol1, true);
             utils.createCollection(testcol1, true);
 
-            dataLocationPreferenceName = DavPropertyName.create("data-location1-preference", Namespace.getNamespace("custom:"));
+            dataLocationPreferenceName = DavPropertyName.create("data-location-preference", Namespace.getNamespace("custom:"));
             dataLocationPreference = new DefaultDavProperty(dataLocationPreferenceName, location1);
             utils.setProperty(testcol1, dataLocationPreference, true);
 
