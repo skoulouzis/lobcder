@@ -273,7 +273,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                 throw new BadRequestException(this, e.getMessage());
 //                throw new InternalError(e.getMessage());
             }
-        } catch (SQLException e1) {
+        } catch (SQLException | IOException e1) {
             WebDataDirResource.log.log(Level.SEVERE, null, e1);
             throw new BadRequestException(this, e1.getMessage());
 //            throw new InternalError(e1.getMessage());
@@ -581,7 +581,9 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
 
     private void setPreferencesOn(Long uidTo, Long uidFrom, Connection connection) throws SQLException {
         try (PreparedStatement psDel = connection.prepareStatement("DELETE FROM pref_table WHERE ld_uid = ?");
-                PreparedStatement psIns = connection.prepareStatement("INSERT INTO pref_table (ld_uid, storageSiteRef) SELECT ?, storageSiteRef FROM pref_table WHERE ld_uid=?")) {
+                PreparedStatement psIns = connection.prepareStatement("INSERT "
+                        + "INTO pref_table (ld_uid, storageSiteRef) "
+                        + "SELECT ?, storageSiteRef FROM pref_table WHERE ld_uid=?")) {
             psDel.setLong(1, uidTo);
             psIns.setLong(1, uidTo);
             psIns.setLong(2, uidFrom);
