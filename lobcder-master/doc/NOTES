@@ -319,3 +319,9 @@ sed -i 's/Transmit.*/Transmit/' req.csv
 
 ----------------------------------------swift 
 swift --os-auth-url http://10.100.0.24:5000/v2.0/ --os-username username --os-password pass --os-tenant-name username list
+
+
+
+-----------------------------Remove and clean storage site ---------------
+UPDATE storage_site_table SET `removing` = true WHERE storageSiteId = ?;
+UPDATE pdrigroup_table SET `needCheck` = true;
