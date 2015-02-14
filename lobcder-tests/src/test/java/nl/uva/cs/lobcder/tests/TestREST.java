@@ -25,13 +25,8 @@ import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.contrib.ssl.EasySSLProtocolSocketFactory;
-import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.methods.PutMethod;
-import org.apache.commons.httpclient.methods.StringRequestEntity;
 import org.apache.commons.httpclient.protocol.Protocol;
 import org.apache.commons.httpclient.protocol.ProtocolSocketFactory;
-import org.apache.jackrabbit.webdav.client.methods.DeleteMethod;
-import org.apache.jackrabbit.webdav.client.methods.MkColMethod;
 import org.junit.After;
 import static org.junit.Assert.*;
 import org.junit.Before;
@@ -55,13 +50,8 @@ import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.client.urlconnection.HTTPSProperties;
 import java.io.ByteArrayOutputStream;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.security.NoSuchAlgorithmException;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
@@ -79,10 +69,10 @@ public class TestREST {
     private HttpClient client;
     private String testres1;
     private String testres2;
-    private String testcol;
+//    private String testcol;
     private String restURL;
     private Client restClient;
-    private String testResourceId;
+//    private String testResourceId;
     private String translatorURL;
     private String mrURL;
     private Utils utils;
@@ -130,8 +120,8 @@ public class TestREST {
                 new UsernamePasswordCredentials(this.username, this.password));
 
         restURL = prop.getProperty(("rest.test.url"), "http://localhost:8080/lobcder/rest/");
-        testResourceId = "testResourceId";
-        testcol = this.root + testResourceId + "/";
+//        testResourceId = "testResourceId";
+//        testcol = this.root + testResourceId + "/";
 
         translatorURL = prop.getProperty(("translator.test.url"), "http://localhost:8080/lobcder/urest/");
 
@@ -160,13 +150,14 @@ public class TestREST {
     @Test
     public void testQueryItems() throws IOException {
         System.err.println("testQueryItems");
+        String testcol = root + "testResourceForQueryItems/";
         try {
             utils.createCollection(testcol, true);
-            utils.createFile(this.root + testResourceId + "/file1", true);
+            utils.createFile(this.root + "testResourceForQueryItems" + "/file1", true);
             WebResource webResource = restClient.resource(restURL);
 
             MultivaluedMap<String, String> params = new MultivaluedMapImpl();
-            params.add("path", "/" + testResourceId);
+            params.add("path", "/testResourceForQueryItems");
 
             WebResource res = webResource.path("items").path("query").queryParams(params);
 //            ClientResponse response = res.put(ClientResponse.class);
@@ -181,7 +172,7 @@ public class TestREST {
             LogicalDataWrapped logicalDataWrapped = null;
             for (LogicalDataWrapped ldw : list) {
                 utils.checkLogicalDataWrapped(ldw);
-                if (ldw.path.equals("/" + testResourceId) && ldw.logicalData.type.equals("logical.folder")) {
+                if (ldw.path.equals("/testResourceForQueryItems") && ldw.logicalData.type.equals("logical.folder")) {
                     logicalDataWrapped = ldw;
                     break;
                 }
@@ -207,10 +198,12 @@ public class TestREST {
     @Test
     public void testQueryItem() throws IOException {
         System.err.println("testQueryItem");
+        String testcol = root + "testResourceForQueryItem/";
+        String testURI1 = testcol + "file1";
         try {
 
             utils.createCollection(testcol, true);
-            utils.createFile(this.root + testResourceId + "/file1", true);
+            utils.createFile(this.root + testURI1, true);
 
             WebResource webResource = restClient.resource(restURL);
 
@@ -271,9 +264,11 @@ public class TestREST {
     @Test
     public void testDataItem() throws IOException {
         System.err.println("testDataItem");
+        String testcol = root + "testResourceForDataItem/";
+        String testURI1 = testcol + "file1";
         try {
             utils.createCollection(testcol, true);
-            utils.createFile(this.root + testResourceId + "/file1", true);
+            utils.createFile(this.root + testURI1, true);
             WebResource webResource = restClient.resource(restURL);
 
             MultivaluedMap<String, String> params = new MultivaluedMapImpl();
@@ -455,9 +450,11 @@ public class TestREST {
     @Test
     public void testTicketTranslator() throws IOException {
         System.err.println("testTicketTranslator");
+        String testcol = root + "testResourceForTicketTranslator/";
+        String testURI1 = testcol + "file1";
         try {
             utils.createCollection(testcol, true);
-            utils.createFile(this.root + testResourceId + "/file1", true);
+            utils.createFile(this.root + testURI1, true);
 
             ClientConfig clientConfig = new DefaultClientConfig();
             clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
@@ -500,9 +497,11 @@ public class TestREST {
             return;
         }
         System.err.println("testMetadataService");
+        String testcol = root + "testResourceForMetadataService/";
+        String testURI1 = testcol + "file1";
         try {
             utils.createCollection(testcol, true);
-            utils.createFile(this.root + testResourceId + "/file1", true);
+            utils.createFile(this.root + testURI1, true);
             WebResource webResource = restClient.resource(restURL);
 
             MultivaluedMap<String, String> params = new MultivaluedMapImpl();
@@ -575,6 +574,7 @@ public class TestREST {
     @Test
     public void testArchiveService() throws JAXBException, IOException, DavException, NoSuchAlgorithmException {
         System.err.println("testArchiveService");
+        String testcol = root + "testResourceForArchiveService/";
         String testFileURI1 = testcol + TestSettings.TEST_FILE_NAME1;
         List<File> unzipedFiles = null;
         File randomFile = null;
@@ -583,13 +583,13 @@ public class TestREST {
             utils.createCollection(testcol, true);
             randomFile = utils.createRandomFile("/tmp/" + TestSettings.TEST_FILE_NAME1, 1);
             //If the destination is set to this.root+testResourceId + "/file1" someone is asking for /login.html ???!!!!
-            utils.postFile(randomFile, this.root + testResourceId);
+            utils.postFile(randomFile, testcol);
 
             String localFileChecksum = utils.getChecksum(randomFile, "SHA1");
             utils.waitForReplication(testFileURI1);
 
 
-            File zipFile = utils.DownloadFile(restURL + "/compress/getzip/" + testResourceId, "/tmp/" + testResourceId + ".zip", true);
+            File zipFile = utils.DownloadFile(restURL + "/compress/getzip/testResourceForArchiveService", "/tmp/testResourceForArchiveService.zip", true);
             unzipedFiles = utils.unzipFile(zipFile);
             for (File f : unzipedFiles) {
                 String checksumFromDownloaded = utils.getChecksum(f, "SHA1");
@@ -602,11 +602,14 @@ public class TestREST {
             Logger.getLogger(TestREST.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
             utils.deleteResource(testcol, false);
-            for (File f : unzipedFiles) {
-                if (f != null) {
-                    f.delete();
+            if (unzipedFiles != null && !unzipedFiles.isEmpty()) {
+                for (File f : unzipedFiles) {
+                    if (f != null) {
+                        f.delete();
+                    }
                 }
             }
+
             if (randomFile != null) {
                 randomFile.delete();
             }
@@ -619,6 +622,7 @@ public class TestREST {
             return;
         }
         System.err.println("testTTLService");
+        String testcol = root + "testResourceForTTLService/";
         try {
             utils.createCollection(testcol, true);
 
@@ -644,7 +648,7 @@ public class TestREST {
             webResource = restClient.resource(restURL);
             //PUT https://lobcder.vph.cyfronet.pl/lobcder/rest/ttl/{ttl}?path=/path/to/entry
             MultivaluedMap<String, String> params = new MultivaluedMapImpl();
-            params.add("path", "/" + testResourceId);
+            params.add("path", "/testResourceForTTLService");
             res = webResource.path("ttl").path(String.valueOf("3")).queryParams(params);
             response = res.put(ClientResponse.class);
             assertTrue("status: " + response.getStatus(), response.getStatus() == HttpStatus.SC_OK || response.getStatus() == HttpStatus.SC_NO_CONTENT);
