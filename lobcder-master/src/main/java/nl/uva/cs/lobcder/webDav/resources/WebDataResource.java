@@ -410,7 +410,7 @@ public class WebDataResource implements PropFindableResource, Resource,
                     } else if (qname.equals(Constants.DATA_LOC_PREF_NAME)) {
                         setDataLocationPref(value, connection);
                     } else if (qname.equals(Constants.ENCRYPT_PROP_NAME)) {
-                        setEncryptionPropertyValues(value);
+                        setEncryptionPropertyValues(value, connection);
                     } else if (qname.equals(Constants.TTL)) {
                         String v = value;
                         getLogicalData().setTtlSec(Integer.valueOf(v));
@@ -675,10 +675,9 @@ public class WebDataResource implements PropFindableResource, Resource,
         }
     }
 
-    private void setEncryptionPropertyValues(String value) {
+    private void setEncryptionPropertyValues(String value, Connection connection) {
         String v = value;
-//                        HashMap<String, Boolean> hostEncryptMap = new HashMap<>();
-//                        log.log(Level.FINE, "Value: {0}", v);
+///                        HashMap<String, Boolean> hostEncryptMap = new HashMap<>();
 //                        String[] parts = v.split("[\\[\\]]");
 //                        for (String p : parts) {
 //                            log.log(Level.FINE, "Parts: {0}", p);
