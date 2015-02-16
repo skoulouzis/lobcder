@@ -208,7 +208,7 @@ public class TestREST {
             WebResource webResource = restClient.resource(restURL);
 
             MultivaluedMap<String, String> params = new MultivaluedMapImpl();
-            params.add("path", "/testResourceId");
+            params.add("path", "/testResourceForQueryItem");
 
             WebResource res = webResource.path("items").path("query").queryParams(params);
             List<LogicalDataWrapped> list = res.accept(MediaType.APPLICATION_XML).
@@ -272,7 +272,7 @@ public class TestREST {
             WebResource webResource = restClient.resource(restURL);
 
             MultivaluedMap<String, String> params = new MultivaluedMapImpl();
-            params.add("path", "/testResourceId");
+            params.add("path", "/testResourceForDataItem");
 
             WebResource res = webResource.path("items").path("query").queryParams(params);
             List<LogicalDataWrapped> list = res.accept(MediaType.APPLICATION_XML).
@@ -476,7 +476,7 @@ public class TestREST {
             webResource = shortAuthRestClient.resource(restURL);
 
             MultivaluedMap<String, String> params = new MultivaluedMapImpl();
-            params.add("path", "/testResourceId");
+            params.add("path", "/testResourceForTicketTranslator");
 
             res = webResource.path("items").path("query").queryParams(params);
             List<LogicalDataWrapped> list = res.accept(MediaType.APPLICATION_XML).
