@@ -1,5 +1,6 @@
-DROP TABLE IF EXISTS permission_table, wp4_table, ldata_table, pdri_table, pdrigroup_table, 
-storage_site_table, credential_table, requests_table, successor_table, occurrences_table, features_table, speed_table;
+-- DROP TABLE IF EXISTS permission_table, wp4_table, ldata_table, pdri_table, pdrigroup_table, 
+-- storage_site_table, credential_table, requests_table, successor_table, occurrences_table, features_table, speed_table, 
+-- auth_roles_tables, auth_usernames_table, myroles, myuid;
 
 CREATE TABLE pdrigroup_table (
   pdriGroupId SERIAL PRIMARY KEY,
@@ -28,9 +29,8 @@ CREATE TABLE storage_site_table (
   isCache BOOLEAN NOT NULL DEFAULT FALSE, INDEX(isCache),
   extra VARCHAR(512),
   encrypt BOOLEAN NOT NULL DEFAULT FALSE, INDEX(encrypt),
-  private BOOLEAN NOT NULL DEFAULT FALSE,
-  removing BOOLEAN NOT NULL DEFAULT FALSE, INDEX(removing),
-  INDEX (private,removing)
+  private BOOLEAN NOT NULL DEFAULT FALSE, INDEX (private),
+  removing BOOLEAN NOT NULL DEFAULT FALSE, INDEX(removing)
 ) ENGINE=InnoDB;
 
 CREATE TABLE pdri_table (
@@ -261,7 +261,7 @@ SET @ssRef = LAST_INSERT_ID();
 -- SET @ssRef = LAST_INSERT_ID();
 
 # Here we createtables for built-in user IDs/roles
-DROP TABLE IF EXISTS auth_roles_tables, auth_usernames_table;
+
 CREATE TABLE auth_usernames_table (
     id SERIAL PRIMARY KEY,
     token VARCHAR(1024), INDEX(token),
@@ -403,12 +403,12 @@ MAIN_BLOCK: BEGIN
   DECLARE isadmin INT DEFAULT 0;
   DECLARE str VARCHAR(255);
 
-  DROP TABLE IF EXISTS myroles;
+  
   CREATE TEMPORARY TABLE myroles (
     mrole VARCHAR(255)
   );
 
-  DROP TABLE IF EXISTS myuid;
+
   CREATE TEMPORARY TABLE myuid (
     muid BIGINT UNSIGNED
   );
@@ -514,4 +514,4 @@ END
 |
 DELIMITER ;
 
-#SET GLOBAL event_scheduler = ON;
+SET GLOBAL event_scheduler = ON;
