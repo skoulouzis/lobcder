@@ -340,6 +340,32 @@ INSERT INTO ldata_table SELECT * FROM ldata_table_copy;
 INSERT INTO credential_table SELECT * FROM credential_table_copy;
 INSERT INTO storage_site_table SELECT * FROM storage_site_table_copy;
 
+DELIMITER |
+
+DROP TRIGGER IF EXISTS on_ss_update |
+CREATE TRIGGER on_ss_update
+AFTER UPDATE ON storage_site_table
+FOR EACH ROW BEGIN
+  IF new.removing = TRUE THEN
+    DELETE FROM pref_table WHERE storageSiteRef=new.storageSiteId;
+  END IF;
+END|
+
+DROP TRIGGER IF EXISTS on_pref_insert |
+CREATE TRIGGER on_pref_insert
+AFTER INSERT ON pref_table
+FOR EACH ROW BEGIN
+    UPDATE pdrigroup_table SET needCheck=TRUE WHERE pdriGroupId IN (SELECT pdriGroupRef FROM ldata_table WHERE uid = new.ld_uid);
+END|
+
+DROP TRIGGER IF EXISTS on_pref_delete |
+CREATE TRIGGER on_pref_delete
+AFTER DELETE ON pref_table
+FOR EACH ROW BEGIN
+  UPDATE pdrigroup_table SET needCheck=TRUE WHERE pdriGroupId IN (SELECT pdriGroupRef FROM ldata_table WHERE uid=old.ld_uid);
+END|
+
+DELIMITER ;
 
 
 -- DROP TABLE ldata_table_copy;
