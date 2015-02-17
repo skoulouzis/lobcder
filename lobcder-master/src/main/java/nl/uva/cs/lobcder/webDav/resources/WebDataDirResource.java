@@ -571,7 +571,8 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
         String value = (String) getProperty(Constants.DATA_LOC_PREF_NAME);
         if (value != null) {
             List<String> list = property2List(value);
-            list = getCatalogue().setLocationPreferences(connection, newLogicalData.getUid(), list, getPrincipal().isAdmin());
+            getCatalogue().setLocationPreferences(connection, newLogicalData.getUid(), list, getPrincipal().isAdmin());
+            list = property2List(getDataLocationPreferencesString());
             newLogicalData.setDataLocationPreferences(list);
         } else {
             //trigger 

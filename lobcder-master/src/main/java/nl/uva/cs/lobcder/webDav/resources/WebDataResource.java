@@ -717,7 +717,7 @@ public class WebDataResource implements PropFindableResource, Resource,
 //                        }
     }
 
-    private String getDataLocationPreferencesString() throws SQLException {
+    protected String getDataLocationPreferencesString() throws SQLException {
         try (Connection connection = getCatalogue().getConnection()) {
             StringBuilder sb = new StringBuilder();
             sb.append("[");
@@ -783,8 +783,8 @@ public class WebDataResource implements PropFindableResource, Resource,
 
     private void setDataLocationPref(String value, Connection connection) throws SQLException {
         List<String> list = property2List(value);
-        List<String> sites = catalogue.setLocationPreferences(connection, getLogicalData().getUid(), list, getPrincipal().isAdmin());
-        sites = property2List( getDataLocationPreferencesString());
+        catalogue.setLocationPreferences(connection, getLogicalData().getUid(), list, getPrincipal().isAdmin());
+        List<String> sites = property2List(getDataLocationPreferencesString());
         getLogicalData().setDataLocationPreferences(sites);
     }
 }

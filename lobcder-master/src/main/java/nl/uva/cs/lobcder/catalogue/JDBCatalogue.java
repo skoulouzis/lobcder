@@ -1158,7 +1158,7 @@ public class JDBCatalogue extends MyDataSource {
     public void registerStorageSite(String resourceURI, Credential credentials, int currentNum, int currentSize, int quotaNum, int quotaSize, Connection connection) throws CatalogueException {
     }
 
-    public List<String> setLocationPreferences(Connection connection, Long uid, List<String> locationPreferences, Boolean includePrivate) throws SQLException {
+    public void setLocationPreferences(Connection connection, Long uid, List<String> locationPreferences, Boolean includePrivate) throws SQLException {
         if (locationPreferences != null && !locationPreferences.isEmpty()) {
             String storageSitesQuery = "select storageSiteId,resourceUri,private from storage_site_table "
                     + "WHERE resourceUri LIKE "; //use = 
@@ -1185,34 +1185,35 @@ public class JDBCatalogue extends MyDataSource {
                         }
                     }
                 }
-                try (PreparedStatement preparedStatement = connection.prepareStatement(
-                        "DELETE FROM pref_table WHERE ld_uid = ?")) {
-                    preparedStatement.setLong(1, uid);
-                    preparedStatement.executeUpdate();
-                }
-//                connection.commit();
-                try (PreparedStatement preparedStatement = connection.prepareStatement(
-                        "INSERT INTO pref_table (ld_uid, storageSiteRef) VALUES(?,?)")) {
-                    for (Long id : ids) {
+                if (!ids.isEmpty()) {
+                    try (PreparedStatement preparedStatement = connection.prepareStatement(
+                            "DELETE FROM pref_table WHERE ld_uid = ?")) {
                         preparedStatement.setLong(1, uid);
-                        preparedStatement.setLong(2, id);
-                        preparedStatement.addBatch();
-//                        preparedStatement.executeUpdate();
+                        preparedStatement.executeUpdate();
                     }
-                    preparedStatement.executeBatch();
+//                connection.commit();
+                    try (PreparedStatement preparedStatement = connection.prepareStatement(
+                            "INSERT INTO pref_table (ld_uid, storageSiteRef) VALUES(?,?)")) {
+                        for (Long id : ids) {
+                            preparedStatement.setLong(1, uid);
+                            preparedStatement.setLong(2, id);
+                            preparedStatement.addBatch();
+//                        preparedStatement.executeUpdate();
+                        }
+                        preparedStatement.executeBatch();
+                    }
                 }
             }
-        }
-        Collection<LogicalData> children = getChildrenByParentRef(uid);
-        for (LogicalData child : children) {
-            if (!child.isFolder()) {
-                setLocationPreferences(connection, child.getUid(), locationPreferences, includePrivate);
+            Collection<LogicalData> children = getChildrenByParentRef(uid);
+            for (LogicalData child : children) {
+                if (!child.isFolder()) {
+                    setLocationPreferences(connection, child.getUid(), locationPreferences, includePrivate);
+                }
             }
+            setNeedsCheck(uid, connection);
         }
-
-        setNeedsCheck(uid, connection);
         connection.commit();
-        return locationPreferences;//getDataLocationPreferace(connection, uid);
+//        return locationPreferences;//getDataLocationPreferace(connection, uid);
     }
 
 //    public List<String> setLocationPreferences(Connection connection, Long uid, List<String> locationPreferences, Boolean includePrivate) throws SQLException {
