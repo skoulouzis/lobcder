@@ -2473,6 +2473,7 @@ public class WebDAVTest {
 
     private void testFileMovedToLocationPreference(String testuri1, String location) throws IOException, DavException, InterruptedException {
         utils.waitForReplication(testuri1);
+
         boolean done = false;
         boolean found = false;
         int count = 0;
@@ -2484,7 +2485,7 @@ public class WebDAVTest {
                 done = true;
             }
             count++;
-            if (count >= 70) {
+            if (count >= 100) {
                 done = true;
                 break;
             } else {
@@ -2502,26 +2503,46 @@ public class WebDAVTest {
 
             dataDistValue = dataDistValue.substring(1);
             dataDistValue = dataDistValue.substring(0, dataDistValue.length() - 1);
-            dataDistValue = dataDistValue.substring(0, dataDistValue.lastIndexOf("/"));
             String cmpLocation = location;
             if (!cmpLocation.endsWith("/")) {
                 cmpLocation += "/";
             }
-            if (!dataDistValue.endsWith("/")) {
-                dataDistValue += "/";
-            }
             String[] locations = dataDistValue.split(",");
             if (locations.length <= 0) {
-                System.err.println("expecting: " + cmpLocation + " got: " + dataDistValue + " count: " + count);
-                if (dataDistValue.equals(cmpLocation)) {
+                int endIndex = dataDistValue.lastIndexOf("/");
+                String newstr = null;
+                if (endIndex != -1) {
+                    newstr = dataDistValue.substring(0, endIndex);
+                } else {
+                    endIndex = dataDistValue.lastIndexOf("//");
+                    newstr = dataDistValue.substring(0, endIndex);
+                }
+
+                if (!dataDistValue.endsWith("/")) {
+                    dataDistValue += "/";
+                }
+
+                System.err.println("expecting: " + cmpLocation + " got: " + newstr + " count: " + count);
+                if (newstr.equals(cmpLocation)) {
                     done = true;
                     found = true;
                     break;
                 }
             } else {
                 for (String s : locations) {
-                    System.err.println("expecting: " + cmpLocation + " got: " + s + " count: " + count);
-                    if (s.equals(cmpLocation)) {
+                    int endIndex = s.lastIndexOf("/");
+                    String newstr = null;
+                    if (endIndex != -1) {
+                        newstr = s.substring(0, endIndex);
+                    } else {
+                        endIndex = s.lastIndexOf("//");
+                        newstr = s.substring(0, endIndex);
+                    }
+                    if (!newstr.endsWith("/")) {
+                        newstr += "/";
+                    }
+                    System.err.println("expecting: " + cmpLocation + " got: " + newstr + " count: " + count);
+                    if (newstr.equals(cmpLocation)) {
                         done = true;
                         found = true;
                         break;
@@ -2530,7 +2551,7 @@ public class WebDAVTest {
             }
 
             count++;
-            if (count >= 70) {
+            if (count >= 100) {
                 done = true;
                 break;
             } else {
