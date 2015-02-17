@@ -1749,7 +1749,7 @@ public class WebDAVTest {
             String tmp1 = tmp.substring(0, tmp.length() - 1);
             String[] availStorageSites = tmp1.split(",");
             String location1 = availStorageSites[0];
-            String location2 = availStorageSites[2];
+            String location2 = availStorageSites[1];
 
             setAndTestPoperty(testcol1, DavPropertyName.create("data-location-preference", Namespace.getNamespace("custom:")), location1);
 
