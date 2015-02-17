@@ -784,6 +784,7 @@ public class WebDataResource implements PropFindableResource, Resource,
     private void setDataLocationPref(String value, Connection connection) throws SQLException {
         List<String> list = property2List(value);
         List<String> sites = catalogue.setLocationPreferences(connection, getLogicalData().getUid(), list, getPrincipal().isAdmin());
+        sites = property2List( getDataLocationPreferencesString());
         getLogicalData().setDataLocationPreferences(sites);
     }
 }

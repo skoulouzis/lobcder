@@ -238,7 +238,7 @@ public class JDBCatalogue extends MyDataSource {
             }
             ps.setLong(7, entry.getUid());
             ps.executeUpdate();
-            entry.setDataLocationPreferences(getDataLocationPreferace(connection, entry.getUid()));
+//            entry.setDataLocationPreferences(getDataLocationPreferace(connection, entry.getUid()));
             putToLDataCache(entry, null);
             return entry;
         }
@@ -624,7 +624,7 @@ public class JDBCatalogue extends MyDataSource {
                 res.setLastAccessDate(rs.getTimestamp(21) != null ? rs.getTimestamp(21).getTime() : null);
                 int ttl = rs.getInt(22);
                 res.setTtlSec(rs.wasNull() ? null : ttl);
-                res.setDataLocationPreferences(getDataLocationPreferace(connection, res.getUid()));
+//                res.setDataLocationPreferences(getDataLocationPreferace(connection, res.getUid()));
                 putToLDataCache(res, null);
 //                Array pref = rs.getArray(24);
                 return res;
@@ -1210,8 +1210,9 @@ public class JDBCatalogue extends MyDataSource {
             }
         }
 
+        setNeedsCheck(uid, connection);
         connection.commit();
-        return getDataLocationPreferace(connection, uid);
+        return locationPreferences;//getDataLocationPreferace(connection, uid);
     }
 
 //    public List<String> setLocationPreferences(Connection connection, Long uid, List<String> locationPreferences, Boolean includePrivate) throws SQLException {
@@ -1618,7 +1619,7 @@ public class JDBCatalogue extends MyDataSource {
 //                res.setDataLocationPreference(rs.getString(21));
                 res.setStatus(rs.getString(22));
                 //                Array locationPerf = rs.getArray(23);
-                res.setDataLocationPreferences(getDataLocationPreferace(connection, res.getUid()));
+//                res.setDataLocationPreferences(getDataLocationPreferace(connection, res.getUid()));
                 putToLDataCache(res, null);
                 results.add(res);
             }
@@ -1750,36 +1751,42 @@ public class JDBCatalogue extends MyDataSource {
         }
     }
 
-    public List<String> getDataLocationPreferace(Connection connection, Long uid) throws SQLException {
-        LogicalData lData = getFromLDataCache(uid, null);
-        List<String> dataPref = null;
-        if (lData != null) {
-            dataPref = lData.getDataLocationPreferences();
-            if (dataPref != null && !dataPref.isEmpty()) {
-                return dataPref;
-            }
+    private void setNeedsCheck(Long logicalDataUID, Connection connection) throws SQLException {
+        try (PreparedStatement ps = connection.prepareStatement("UPDATE pdrigroup_table JOIN ldata_table ON ldata_table.uid = ? SET needCheck = true WHERE pdriGroupId = ldata_table.pdriGroupRef;")) {
+            ps.setLong(1, logicalDataUID);
+            ps.executeUpdate();
         }
-        dataPref = new ArrayList<>();
-        try (PreparedStatement ps = connection.prepareStatement("SELECT resourceUri "
-                + "FROM ldata_table "
-                + "JOIN pref_table ON ld_uid = uid "
-                + "JOIN storage_site_table ON storageSiteId = storageSiteRef "
-                + "WHERE ldata_table.uid = ?",
-                ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE)) {
-            ps.setLong(1, uid);
-//            ps.setBoolean(2, includePrivate);
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                dataPref.add(rs.getString(1));
-            }
-        }
-        if (lData != null) {
-            lData.setDataLocationPreferences(dataPref);
-            putToLDataCache(lData, null);
-        }
-        return dataPref;
     }
 
+//    public List<String> getDataLocationPreferace(Connection connection, Long uid) throws SQLException {
+//        LogicalData lData = getFromLDataCache(uid, null);
+//        List<String> dataPref = null;
+//        if (lData != null) {
+//            dataPref = lData.getDataLocationPreferences();
+//            if (dataPref != null && !dataPref.isEmpty()) {
+//                return dataPref;
+//            }
+//        }
+//        dataPref = new ArrayList<>();
+//        try (PreparedStatement ps = connection.prepareStatement("SELECT resourceUri "
+//                + "FROM ldata_table "
+//                + "JOIN pref_table ON ld_uid = uid "
+//                + "JOIN storage_site_table ON storageSiteId = storageSiteRef "
+//                + "WHERE ldata_table.uid = ?",
+//                ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE)) {
+//            ps.setLong(1, uid);
+////            ps.setBoolean(2, includePrivate);
+//            ResultSet rs = ps.executeQuery();
+//            while (rs.next()) {
+//                dataPref.add(rs.getString(1));
+//            }
+//        }
+//        if (lData != null) {
+//            lData.setDataLocationPreferences(dataPref);
+//            putToLDataCache(lData, null);
+//        }
+//        return dataPref;
+//    }
     @Data
     @AllArgsConstructor
     public class PathInfo {
