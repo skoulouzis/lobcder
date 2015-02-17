@@ -1703,6 +1703,13 @@ public class WebDAVTest {
                     for (String dist : dataDistList) {
                         dist = dist.substring(0, dist.lastIndexOf('/'));
                         for (String pref : dataLocPrefList) {
+                            System.err.println("pref: " + pref + " dist:" + dist);
+                            if (!pref.endsWith("/")) {
+                                pref += "/";
+                            }
+                            if (!dist.endsWith("/")) {
+                                dist += "/";
+                            }
                             if (pref.equals(dist)) {
                                 count1++;
                             }
