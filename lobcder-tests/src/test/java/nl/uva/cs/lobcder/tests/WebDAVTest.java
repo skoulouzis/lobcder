@@ -1794,7 +1794,7 @@ public class WebDAVTest {
     public void testGetSetLocationPreference() throws UnsupportedEncodingException, IOException, DavException, InterruptedException {
         System.out.println("testGetSetLocationPreference");
         String testcol1 = root + "testResourceForLocationPreference/";
-        String testcol2 = root + testcol1 + "testResourceForLocationPreference2";
+        String testcol2 = root + testcol1 + "testResourceForLocationPreference2/";
         String testuri1 = testcol1 + "file1";
         String testuri2 = testcol2 + "file2";
         try {
