@@ -605,7 +605,11 @@ public class WebDataResource implements PropFindableResource, Resource,
                     sb.append("[");
                     for (PDRIDescr p : pdris) {
 //                                sb.append("'").append(p.getResourceUrl()).append("/").append(p.getName()).append("'");
-                        sb.append(p.getResourceUrl()).append("/").append(p.getName());
+                        sb.append(p.getResourceUrl());
+                        if (!sb.toString().endsWith("/")) {
+                            sb.append("/");
+                        }
+                        sb.append(p.getName());
                         sb.append(",");
                     }
                 }
