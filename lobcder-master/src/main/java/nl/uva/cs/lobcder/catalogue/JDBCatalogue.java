@@ -1202,15 +1202,16 @@ public class JDBCatalogue extends MyDataSource {
                         }
                         preparedStatement.executeBatch();
                     }
+                    Collection<LogicalData> children = getChildrenByParentRef(uid);
+                    for (LogicalData child : children) {
+                        if (!child.isFolder()) {
+                            setLocationPreferences(connection, child.getUid(), locationPreferences, includePrivate);
+                        }
+                    }
+                    setNeedsCheck(uid, connection);
                 }
             }
-            Collection<LogicalData> children = getChildrenByParentRef(uid);
-            for (LogicalData child : children) {
-                if (!child.isFolder()) {
-                    setLocationPreferences(connection, child.getUid(), locationPreferences, includePrivate);
-                }
-            }
-            setNeedsCheck(uid, connection);
+
         }
         connection.commit();
 //        return locationPreferences;//getDataLocationPreferace(connection, uid);
