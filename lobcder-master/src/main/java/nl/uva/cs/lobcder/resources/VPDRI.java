@@ -112,7 +112,7 @@ public class VPDRI implements PDRI {
             this.doChunked = doChunkUpload;
             VPDRI.log.log(Level.FINE, "fileName: {0}, storageSiteId: {1}, username: {2}, password: {3}, VRL: {4}", new Object[]{fileName, storageSiteId, "username", "password", vrl});
             initVFS();
-            initRESTClient();
+//            initRESTClient();
 
 
         } catch (Exception ex) {
@@ -699,17 +699,19 @@ public class VPDRI implements PDRI {
     }
 
     private void setSpeed(Stats stats) throws JAXBException {
-        JAXBContext context = JAXBContext.newInstance(Stats.class);
-        Marshaller m = context.createMarshaller();
-        m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
-        OutputStream out = new ByteArrayOutputStream();
-        m.marshal(stats, out);
+        if (this.restClient != null) {
+            JAXBContext context = JAXBContext.newInstance(Stats.class);
+            Marshaller m = context.createMarshaller();
+            m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+            OutputStream out = new ByteArrayOutputStream();
+            m.marshal(stats, out);
 
-        WebResource webResource = restClient.resource(restURL);
-        String stringStats = String.valueOf(out);
+            WebResource webResource = restClient.resource(restURL);
+            String stringStats = String.valueOf(out);
+            ClientResponse response = webResource.path("lob_statistics").path("set")
+                    .type(MediaType.APPLICATION_XML).put(ClientResponse.class, stringStats);
+        }
 
-        ClientResponse response = webResource.path("lob_statistics").path("set")
-                .type(MediaType.APPLICATION_XML).put(ClientResponse.class, stringStats);
     }
 
     public static ClientConfig configureClient() {
@@ -771,7 +773,7 @@ public class VPDRI implements PDRI {
             restClient = Client.create(clientConfig);
             restClient.addFilter(new com.sun.jersey.api.client.filter.HTTPBasicAuthFilter(getClass().getName(), PropertiesHelper.getLobComponentToken()));
         } catch (IOException ex) {
-            //Not important. Just contenue 
+            //Not important. Just continue 
             Logger.getLogger(VPDRI.class.getName()).log(Level.WARNING, "Failed to initilize REST client", ex);
             restClient = null;
         }
