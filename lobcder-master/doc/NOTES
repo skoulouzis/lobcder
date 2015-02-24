@@ -292,6 +292,69 @@ for((i=0;i<=2000000;i+=1000)); do curl "http://localhost:9200/_all/_search?q=rep
 for((i=0;i<=2000000;i+=1000)); do curl "http://localhost:9200/_all/_search?q=apache_startupTime:*&from=$i&size=1000" | jq --raw-output '.hits.hits | .[] | ._source | "\(.logdate)\t\(.apache_startupTime)"'; done  >> apache_startupTime.csv
 
 
+------------------------------------ Import data from csv-----------------------------------------
+CREATE TABLE  apache_startupTime (
+ logdate DATE,
+ apache_startupTime DOUBLE
+) ENGINE=InnoDB;
+
+LOAD DATA LOCAL INFILE 'apache_startupTime.csv' 
+INTO TABLE apache_startupTime FIELDS TERMINATED BY '\t' 
+LINES TERMINATED BY '\n' 
+(@var1,apache_startupTime)
+set logdate = STR_TO_DATE(@var1, '%M %d,%Y %h:%i:%s %p')
+
+
+
+CREATE TABLE  repl_stats (
+ logdate DATE,
+ repl_source VARCHAR(5240),
+ repl_destination VARCHAR(5240),
+ repl_speed DOUBLE, 
+ repl_SIZE DOUBLE
+) ENGINE=InnoDB;
+
+
+LOAD DATA LOCAL INFILE '/home/alogo/Downloads/repl_size.csv' 
+INTO TABLE repl_stats FIELDS TERMINATED BY '\t' 
+LINES TERMINATED BY '\n' 
+(@var1,repl_source,repl_destination,repl_speed,repl_size)
+set logdate = STR_TO_DATE(@var1, '%M %d,%Y %h:%i:%s %p')
+
+
+
+CREATE TABLE  req_stats (
+ logdate DATE,
+ req_source_country_code2 VARCHAR(5240),
+ req_source_country_name VARCHAR(5240),
+ req_source_city_name VARCHAR(5240),
+ req_userAgent VARCHAR(5240),
+ req_user VARCHAR(5240),
+ req_verb VARCHAR(5240),
+ req_contLen BIGINT,
+ req_contType VARCHAR(5240),
+ req_elapsed DOUBLE, 
+ req_contType1 VARCHAR(5240),
+ req_queryString VARCHAR(5240),
+ req_URL VARCHAR(5240)
+) ENGINE=InnoDB;
+
+LOAD DATA LOCAL INFILE '/home/alogo/Downloads/req_size.csv' 
+INTO TABLE repl_stats FIELDS TERMINATED BY '\t' 
+LINES TERMINATED BY '\n' 
+(@var1,req_source_country_code2,req_source_country_name,req_source_city_name,req_userAgent,req_user,req_verb,req_contLen,req_contType,
+req_elapsed,req_contType1,req_queryString,req_URL)
+set logdate = STR_TO_DATE(@var1, '%M %d,%Y %h:%i:%s %p')
+
+
+
+
+LOAD DATA LOCAL INFILE '/home/alogo/Downloads/tx_size.csv' 
+INTO TABLE tx_stats FIELDS TERMINATED BY '\t' 
+LINES TERMINATED BY '\n' 
+(@var1,tx_source,tx_destination,tx_speed,tx_size,tx_destination_country_code2,tx_destination_country_name)
+set logdate = STR_TO_DATE(@var1, '%M %d,%Y %h:%i:%s %p')
+
 ---------------------Usare agents
 
 sed -i 's/Jakarta\ Commons-HttpClient.*/Jakarta\ Commons-HttpClient/' req.csv

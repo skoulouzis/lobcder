@@ -46,11 +46,11 @@ import nl.uva.vlet.vrl.VRL;
 public class JDBCatalogue extends MyDataSource {
 
     private Timer timer = null;
-    private Map<Long, LogicalData> logicalDataCache = new HashMap<>();
-    private Map<String, LogicalData> logicalDataCacheByPath = new HashMap<>();
-    private Map<Long, Permissions> permissionsCache = new HashMap<>();
-    private Map<Long, String> pathCache = new HashMap<>();
-    Map<Long, List<PDRIDescr>> PDRIDescrCache = new HashMap<>();
+//    private Map<Long, LogicalData> logicalDataCache = new HashMap<>();
+//    private Map<String, LogicalData> logicalDataCacheByPath = new HashMap<>();
+//    private Map<Long, Permissions> permissionsCache = new HashMap<>();
+//    private Map<Long, String> pathCache = new HashMap<>();
+//    Map<Long, List<PDRIDescr>> PDRIDescrCache = new HashMap<>();
 
     public JDBCatalogue() throws NamingException {
     }
@@ -1320,83 +1320,85 @@ public class JDBCatalogue extends MyDataSource {
     }
 
     private void removeFromLDataCache(LogicalData entry, String path) {
-        logicalDataCache.remove(entry.getUid());
-        if (path != null) {
-            logicalDataCacheByPath.remove(path);
-        } else {
-            Iterator<Entry<String, LogicalData>> iter = logicalDataCacheByPath.entrySet().iterator();
-            while (iter.hasNext()) {
-                Entry<String, LogicalData> value = iter.next();
-                if (value.getValue().getUid() == entry.getUid()) {
-                    iter.remove();
-                }
-            }
-        }
+//        logicalDataCache.remove(entry.getUid());
+//        if (path != null) {
+//            logicalDataCacheByPath.remove(path);
+//        } else {
+//            Iterator<Entry<String, LogicalData>> iter = logicalDataCacheByPath.entrySet().iterator();
+//            while (iter.hasNext()) {
+//                Entry<String, LogicalData> value = iter.next();
+//                if (value.getValue().getUid() == entry.getUid()) {
+//                    iter.remove();
+//                }
+//            }
+//        }
     }
 
     private void putToLDataCache(LogicalData entry, String path) {
-        checkLDataCacheSize();
-        logicalDataCache.put(entry.getUid(), entry);
-        if (path != null) {
-            logicalDataCacheByPath.put(path, entry);
-        }
+//        checkLDataCacheSize();
+//        logicalDataCache.put(entry.getUid(), entry);
+//        if (path != null) {
+//            logicalDataCacheByPath.put(path, entry);
+//        }
     }
 
     private void putToPermissionsCache(Long UID, Permissions perm) {
-        checkPermissionsCacheSize();
-        permissionsCache.put(UID, perm);
+//        checkPermissionsCacheSize();
+//        permissionsCache.put(UID, perm);
     }
 
     private Permissions getFromPermissionsCache(Long UID) {
-        checkPermissionsCacheSize();
-        return permissionsCache.get(UID);
+//        checkPermissionsCacheSize();
+//        return permissionsCache.get(UID);
+        return null;
     }
 
     private LogicalData getFromLDataCache(Long uid, String path) {
-        checkLDataCacheSize();
-        if (uid != null) {
-            return logicalDataCache.get(uid);
-        }
-        if (path != null) {
-            return logicalDataCacheByPath.get(path);
-        }
+//        checkLDataCacheSize();
+//        if (uid != null) {
+//            return logicalDataCache.get(uid);
+//        }
+//        if (path != null) {
+//            return logicalDataCacheByPath.get(path);
+//        }
         return null;
     }
 
     private String getFromPathCache(Long uid) {
 //        checkPathCacheSize();
-        return pathCache.get(uid);
+//        return pathCache.get(uid);
+        return null;
     }
 
     private void checkLDataCacheSize() {
-        if (logicalDataCache.size() >= Constants.CACHE_SIZE) {
-            Long key = logicalDataCache.keySet().iterator().next();
-            logicalDataCache.remove(key);
-        }
-
-        if (logicalDataCacheByPath.size() >= Constants.CACHE_SIZE) {
-            String key = logicalDataCacheByPath.keySet().iterator().next();
-            logicalDataCacheByPath.remove(key);
-        }
+//        if (logicalDataCache.size() >= Constants.CACHE_SIZE) {
+//            Long key = logicalDataCache.keySet().iterator().next();
+//            logicalDataCache.remove(key);
+//        }
+//
+//        if (logicalDataCacheByPath.size() >= Constants.CACHE_SIZE) {
+//            String key = logicalDataCacheByPath.keySet().iterator().next();
+//            logicalDataCacheByPath.remove(key);
+//        }
     }
 
     private void checkPermissionsCacheSize() {
-        if (permissionsCache.size() >= Constants.CACHE_SIZE) {
-            Long key = permissionsCache.keySet().iterator().next();
-            permissionsCache.remove(key);
-        }
+//        if (permissionsCache.size() >= Constants.CACHE_SIZE) {
+//            Long key = permissionsCache.keySet().iterator().next();
+//            permissionsCache.remove(key);
+//        }
     }
 
     private void checkPathCacheSize() {
-        if (pathCache.size() >= Constants.CACHE_SIZE) {
-            Long key = pathCache.keySet().iterator().next();
-            pathCache.remove(key);
-        }
+//        if (pathCache.size() >= Constants.CACHE_SIZE) {
+//            Long key = pathCache.keySet().iterator().next();
+//            pathCache.remove(key);
+//        }
     }
 
     private void putToPathCache(Long uid, String res) {
-        checkPathCacheSize();
-        pathCache.put(uid, res);
+//        checkPathCacheSize();
+//        pathCache.put(uid, res);
     }
 
 //    public void recordRequest(Connection connection, HttpServletRequest httpServletRequest, double elapsed) throws SQLException, UnsupportedEncodingException {
