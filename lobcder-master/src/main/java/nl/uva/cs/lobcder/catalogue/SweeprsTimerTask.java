@@ -21,7 +21,7 @@ import java.util.logging.Level;
 class SweeprsTimerTask extends TimerTask {
 
     private final DeleteSweep deleteSweep;
-    private final ReplicateSweep1 replicateSweep;
+    private final ReplicateSweep replicateSweep;
     private final Boolean useRepo;
     private final Boolean useSDN;
     private WP4Sweep wp4Sweep = null;
@@ -29,7 +29,7 @@ class SweeprsTimerTask extends TimerTask {
 
     SweeprsTimerTask(DataSource datasource) throws IOException, NamingException, ClassNotFoundException {
         deleteSweep = new DeleteSweep(datasource);
-        replicateSweep = new ReplicateSweep1(datasource);
+        replicateSweep = new ReplicateSweep(datasource);
         useRepo = PropertiesHelper.useMetadataRepository();
         useSDN = PropertiesHelper.useSDN();
         if (useRepo) {
