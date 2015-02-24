@@ -24,7 +24,7 @@ class SweeprsTimerTask extends TimerTask {
     private final ReplicateSweep replicateSweep;
     private final Boolean useRepo;
     private final Boolean useSDN;
-    private WP4Sweep wp4Sweep = null;
+    private WP4SweepOLD wp4Sweep = null;
     private SDNSweep sdnSweep = null;
 
     SweeprsTimerTask(DataSource datasource) throws IOException, NamingException, ClassNotFoundException {
@@ -33,7 +33,8 @@ class SweeprsTimerTask extends TimerTask {
         useRepo = PropertiesHelper.useMetadataRepository();
         useSDN = PropertiesHelper.useSDN();
         if (useRepo) {
-            wp4Sweep = new WP4Sweep(datasource);
+            wp4Sweep = new WP4SweepOLD(datasource);
+
         }
         if (useSDN) {
             sdnSweep = new SDNSweep(datasource);
@@ -51,9 +52,15 @@ class SweeprsTimerTask extends TimerTask {
             if (sdnSweep != null) {
                 sdnSweep.run();
             }
-        } catch (Throwable th) {
-            log.log(Level.SEVERE, "One of the sweepers encountered and error.", th);
+
+        } catch (RuntimeException e) {
+            log.log(Level.SEVERE, "One of the sweepers encountered and error.", e);
+            return; // Keep working
+        } catch (Throwable e) {
+            log.log(Level.SEVERE, "One of the sweepers encountered and error.", e);
+            return; // Keep working
         }
+
     }
 
     @Override

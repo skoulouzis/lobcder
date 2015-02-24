@@ -5,13 +5,9 @@
 package nl.uva.cs.lobcder.rest;
 
 import java.io.IOException;
-import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
@@ -21,7 +17,6 @@ import javax.xml.bind.JAXBElement;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.auth.MyPrincipal;
 import nl.uva.cs.lobcder.optimization.SDNControllerClient;
-import nl.uva.cs.lobcder.rest.wrappers.Stats;
 import nl.uva.cs.lobcder.util.CatalogueHelper;
 import nl.uva.cs.lobcder.util.PropertiesHelper;
 import org.jgrapht.graph.DefaultWeightedEdge;
