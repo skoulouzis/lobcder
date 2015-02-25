@@ -38,7 +38,6 @@ import nl.uva.vlet.data.StringUtil;
 import nl.uva.vlet.exception.VlException;
 import nl.uva.vlet.util.cog.GridProxy;
 import nl.uva.vlet.vfs.VFSClient;
-import nl.uva.vlet.vfs.VFile;
 import nl.uva.vlet.vrl.VRL;
 import nl.uva.vlet.vrs.ServerInfo;
 import nl.uva.vlet.vrs.VRS;
@@ -1724,7 +1723,7 @@ public class WebDAVTest {
                     break;
                 }
                 if (!done) {
-                    Thread.sleep(7000);
+                    Thread.sleep(700);
                 }
             }
         } finally {
@@ -1734,7 +1733,7 @@ public class WebDAVTest {
 
     @Test
     public void testGetSetLocationPreferenceInheritFolders() throws IOException, DavException, InterruptedException, URISyntaxException {
-        System.out.println("testGetSetLocationPreference");
+        System.out.println("testGetSetLocationPreferenceInheritFolders");
         String testcol1 = root + "GetSetLocationPreferenceInheritFolders/";
         String testcol2 = root + "GetSetLocationPreferenceInheritFolders/GetSetLocationPreferenceInheritFolders2/";
         String testcol3 = root + "GetSetLocationPreferenceInheritFolders/GetSetLocationPreferenceInheritFolders2/GetSetLocationPreferenceInheritFolders3/";
@@ -1809,7 +1808,6 @@ public class WebDAVTest {
 
             utils.deleteResource(testcol1, false);
 
-
             utils.createCollection(testcol1, true);
 
             DavPropertyName availStorageSitesName = DavPropertyName.create("avail-storage-sites", Namespace.getNamespace("custom:"));
@@ -1859,10 +1857,7 @@ public class WebDAVTest {
                 }
             }
 
-            PutMethod put = new PutMethod(testuri1);
-            put.setRequestEntity(new StringRequestEntity("foo", "text/plain", "UTF-8"));
-            int status = client.executeMethod(put);
-            assertEquals(HttpStatus.SC_CREATED, status);
+            utils.createFile(testuri1, true);
 
             boolean done = false;
             int count = 0;
@@ -1915,10 +1910,8 @@ public class WebDAVTest {
             String dataLocationVal = testPropertyName(testcol1, dataLocationPreferenceName);
             assertNotSame(nowhere, dataLocationVal);
 
-            put = new PutMethod(testuri1);
-            put.setRequestEntity(new StringRequestEntity("foo", "text/plain", "UTF-8"));
-            status = client.executeMethod(put);
-            assertEquals(HttpStatus.SC_CREATED, status);
+
+            utils.createFile(testuri1, true);
 
             utils.waitForReplication(testuri1);
             done = false;
