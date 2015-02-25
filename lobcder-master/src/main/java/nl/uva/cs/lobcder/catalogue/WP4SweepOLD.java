@@ -225,7 +225,7 @@ class WP4SweepOLD implements Runnable {
     }
 
     private void create(Connection connection, WP4ConnectorI wp4Connector) throws SQLException {
-        
+
         try (Statement s1 = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY,
                 ResultSet.CONCUR_READ_ONLY)) {
             try (PreparedStatement s2 = connection.prepareStatement("UPDATE wp4_table SET need_create = FALSE, "
@@ -257,7 +257,7 @@ class WP4SweepOLD implements Runnable {
     }
 
     private void update(Connection connection, WP4ConnectorI wp4Connector) throws SQLException {
-        
+
         try (Statement s1 = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY,
                 ResultSet.CONCUR_READ_ONLY)) {
             try (PreparedStatement s2 = connection.prepareStatement("UPDATE wp4_table SET need_update = FALSE WHERE id = ?")) {
