@@ -18,7 +18,6 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @author S. Koulouzis
  */
 @Data
-@Data
 @AllArgsConstructor
 @NoArgsConstructor
 @XmlRootElement(name="site")
