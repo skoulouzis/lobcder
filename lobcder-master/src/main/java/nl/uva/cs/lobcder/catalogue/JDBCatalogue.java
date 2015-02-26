@@ -1762,6 +1762,10 @@ public class JDBCatalogue extends MyDataSource {
         }
     }
 
+    public Object getReplicationQueue() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
 //    public List<String> getDataLocationPreferace(Connection connection, Long uid) throws SQLException {
 //        LogicalData lData = getFromLDataCache(uid, null);
 //        List<String> dataPref = null;

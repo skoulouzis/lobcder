@@ -375,6 +375,9 @@ public class WebDataResource implements PropFindableResource, Resource,
             } else if (qname.equals(Constants.TTL)) {
                 return getLogicalData().getTtlSec();
             }
+            else if (qname.equals(Constants.REPLICATION_QUEUE)) {
+                return getCatalogue().getReplicationQueue();
+            }
             return PropertySource.PropertyMetaData.UNKNOWN;
         } catch (Throwable th) {
             WebDataResource.log.log(Level.SEVERE, "Exception in getProperty() for resource " + getPath(), th);
