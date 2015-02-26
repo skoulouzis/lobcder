@@ -48,8 +48,7 @@ public class WP4Sweep implements Runnable {
     }
 
     static enum FileType {
-
-        File, Folder;
+        File, Folder
     }
 
     @XmlAccessorType(XmlAccessType.FIELD)
@@ -129,6 +128,9 @@ public class WP4Sweep implements Runnable {
         public WP4Connector(String uri) {
             Logger.getLogger(WP4Connector.class.getName()).log(Level.INFO, "New  WP4Connector to: {0}", uri);
             this.uri = uri;
+            client = Client.create();
+            client.setReadTimeout(30000);
+            client.setConnectTimeout(30000);
         }
 
         @Override

@@ -5,6 +5,8 @@
 package nl.uva.cs.lobcder.catalogue;
 
 import lombok.extern.java.Log;
+import nl.uva.cs.lobcder.catalogue.delsweep.ConnectorJDBC;
+import nl.uva.cs.lobcder.catalogue.delsweep.DeleteSweep;
 import nl.uva.cs.lobcder.util.PropertiesHelper;
 
 import javax.naming.NamingException;
@@ -18,7 +20,7 @@ import java.util.logging.Level;
  * @author S. Koulouzis
  */
 @Log
-class SweeprsTimerTask extends TimerTask {
+class SweepersTimerTask extends TimerTask {
 
     private final DeleteSweep deleteSweep;
     private final ReplicateSweep replicateSweep;
@@ -27,8 +29,8 @@ class SweeprsTimerTask extends TimerTask {
     private WP4SweepOLD wp4Sweep = null;
     private SDNSweep sdnSweep = null;
 
-    SweeprsTimerTask(DataSource datasource) throws IOException, NamingException, ClassNotFoundException {
-        deleteSweep = new DeleteSweep(datasource);
+    SweepersTimerTask(DataSource datasource) throws IOException, NamingException, ClassNotFoundException {
+        deleteSweep = new DeleteSweep(new ConnectorJDBC(datasource, 10));
         replicateSweep = new ReplicateSweep(datasource);
         useRepo = PropertiesHelper.useMetadataRepository();
         useSDN = PropertiesHelper.useSDN();

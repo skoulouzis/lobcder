@@ -12,7 +12,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.*;
 import java.util.*;
-import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Nonnull;
@@ -56,7 +55,7 @@ public class JDBCatalogue extends MyDataSource {
     }
 
     public void startSweep() throws Exception {
-        TimerTask gcTask = new SweeprsTimerTask(getDatasource());                
+        TimerTask gcTask = new SweepersTimerTask(getDatasource());
         timer = new Timer(true);
         timer.schedule(gcTask, PropertiesHelper.getSweepersInterval(), PropertiesHelper.getSweepersInterval());     
     }
