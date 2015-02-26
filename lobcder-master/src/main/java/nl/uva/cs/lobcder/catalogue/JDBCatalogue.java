@@ -56,9 +56,9 @@ public class JDBCatalogue extends MyDataSource {
     }
 
     public void startSweep() throws Exception {
-        TimerTask gcTask = new SweeprsTimerTask(getDatasource());                
+        TimerTask gcTask = new SweeprsTimerTask(getDatasource());
         timer = new Timer(true);
-        timer.schedule(gcTask, PropertiesHelper.getSweepersInterval(), PropertiesHelper.getSweepersInterval());     
+        timer.schedule(gcTask, PropertiesHelper.getSweepersInterval(), PropertiesHelper.getSweepersInterval());
     }
 
     public void stopSweep() {
@@ -1761,9 +1761,76 @@ public class JDBCatalogue extends MyDataSource {
             ps.executeUpdate();
         }
     }
+    
+    
+    public int getReplicationQueueLen() throws SQLException {
+        return getReplicationQueueLen(getConnection());
+    }
 
-    public Object getReplicationQueue() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public int getReplicationQueueLen(Connection connection) throws SQLException {
+        try (PreparedStatement ps = connection.prepareStatement("SELECT count(uid)"
+                + "FROM pdri_table "
+                + "JOIN ldata_table ON pdri_table.pdriGroupRef = ldata_table.pdriGroupRef "
+                + "JOIN storage_site_table ON storage_site_table.storageSiteId = pdri_table.storageSiteRef "
+                + "WHERE isCache = true")) {
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+               return rs.getInt(1);
+            }
+
+        }
+        return -1;
+    }
+    
+
+    public List<LogicalData> getReplicationQueue() throws SQLException {
+        return getReplicationQueue(getConnection());
+    }
+
+    public List<LogicalData> getReplicationQueue(Connection connection) throws SQLException {
+        List<LogicalData> list = new ArrayList<>();
+        try (PreparedStatement ps = connection.prepareStatement("SELECT uid, parentRef, "
+                + "ownerId, datatype, ldName, createDate, modifiedDate, ldLength, "
+                + "contentTypesStr, pdri_table.pdriGroupRef, isSupervised, checksum, "
+                + "lastValidationDate, lockTokenID, lockScope, lockType, lockedByUser, "
+                + "lockDepth, lockTimeout, description, locationPreference, status, accessDate, ttlSec "
+                + "FROM pdri_table "
+                + "JOIN ldata_table ON pdri_table.pdriGroupRef = ldata_table.pdriGroupRef "
+                + "JOIN storage_site_table ON storage_site_table.storageSiteId = pdri_table.storageSiteRef "
+                + "WHERE isCache = true")) {
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                LogicalData res = new LogicalData();
+                res.setUid(rs.getLong(1));
+                res.setParentRef(rs.getLong(2));
+                res.setOwner(rs.getString(3));
+                res.setType(rs.getString(4));
+                res.setName(rs.getString(5));
+                res.setCreateDate(rs.getTimestamp(6).getTime());
+                res.setModifiedDate(rs.getTimestamp(7).getTime());
+                res.setLength(rs.getLong(8));
+                res.setContentTypesAsString(rs.getString(9));
+                res.setPdriGroupId(rs.getLong(10));
+                res.setSupervised(rs.getBoolean(11));
+                res.setChecksum(rs.getString(12));
+                res.setLastValidationDate(rs.getLong(13));
+                res.setLockTokenID(rs.getString(14));
+                res.setLockScope(rs.getString(15));
+                res.setLockType(rs.getString(16));
+                res.setLockedByUser(rs.getString(17));
+                res.setLockDepth(rs.getString(18));
+                res.setLockTimeout(rs.getLong(19));
+                res.setDescription(rs.getString(20));
+                res.setStatus(rs.getString(21));
+                res.setLastAccessDate(rs.getTimestamp(22) != null ? rs.getTimestamp(22).getTime() : null);
+                int ttl = rs.getInt(23);
+                res.setTtlSec(rs.wasNull() ? null : ttl);
+                list.add(res);
+                putToLDataCache(res, null);
+            }
+
+        }
+        return list;
     }
 
 //    public List<String> getDataLocationPreferace(Connection connection, Long uid) throws SQLException {

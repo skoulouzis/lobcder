@@ -374,9 +374,14 @@ public class WebDataResource implements PropFindableResource, Resource,
                 return getAvailStorageSitesString(getPrincipal().isAdmin());
             } else if (qname.equals(Constants.TTL)) {
                 return getLogicalData().getTtlSec();
-            }
-            else if (qname.equals(Constants.REPLICATION_QUEUE)) {
-                return getCatalogue().getReplicationQueue();
+            } else if (qname.equals(Constants.REPLICATION_QUEUE)) {
+                if (getPrincipal().isAdmin()) {
+                    return getReplicationQueueString();
+                }
+            } else if (qname.equals(Constants.REPLICATION_QUEUE_LEN)) {
+                if (getPrincipal().isAdmin()) {
+                    return getReplicationQueueLen();
+                }
             }
             return PropertySource.PropertyMetaData.UNKNOWN;
         } catch (Throwable th) {
@@ -432,7 +437,9 @@ public class WebDataResource implements PropFindableResource, Resource,
 
     @Override
     public PropertySource.PropertyMetaData getPropertyMetaData(QName qname) {
-        if (qname.equals(Constants.DATA_DIST_PROP_NAME)) {
+        if (qname.equals(Constants.DATA_DIST_PROP_NAME)
+                || qname.equals(Constants.REPLICATION_QUEUE)
+                || qname.equals(Constants.REPLICATION_QUEUE_LEN)) {
             return new PropertySource.PropertyMetaData(PropertySource.PropertyAccessibility.READ_ONLY, String.class);
         }
 //        if (qname.equals(Constants.DRI_CHECKSUM_PROP_NAME)) {
@@ -793,5 +800,25 @@ public class WebDataResource implements PropFindableResource, Resource,
         catalogue.setLocationPreferences(connection, getLogicalData().getUid(), list, getPrincipal().isAdmin());
         List<String> sites = property2List(getDataLocationPreferencesString());
         getLogicalData().setDataLocationPreferences(sites);
+    }
+
+    private String getReplicationQueueString() throws SQLException {
+        List<LogicalData> list = getCatalogue().getReplicationQueue();
+        if (list != null && !list.isEmpty()) {
+            StringBuilder sb = new StringBuilder();
+            sb.append("[");
+            for (LogicalData ld : getCatalogue().getReplicationQueue()) {
+                sb.append(ld.getName()).append(",");
+            }
+            sb.replace(sb.lastIndexOf(","), sb.length(), "").append("],");
+
+            return sb.toString();
+        }
+        return null;
+
+    }
+
+    private String getReplicationQueueLen() throws SQLException {
+        return String.valueOf(getCatalogue().getReplicationQueueLen());
     }
 }
