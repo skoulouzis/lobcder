@@ -56,7 +56,7 @@ public class JDBCatalogue extends MyDataSource {
     }
 
     public void startSweep() throws Exception {
-        TimerTask gcTask = new SweeprsTimerTask(getDatasource());
+        TimerTask gcTask = new SweepersTimerTask(getDatasource());
         timer = new Timer(true);
         timer.schedule(gcTask, PropertiesHelper.getSweepersInterval(), PropertiesHelper.getSweepersInterval());
     }

@@ -10,6 +10,11 @@ CREATE TABLE pdrigroup_table (
   INDEX(needCheck,bound)
 ) ENGINE=InnoDB;
 
+CREATE TABLE delete_table (
+   pdriGroupRef BIGINT UNSIGNED PRIMARY KEY, FOREIGN KEY(pdriGroupRef) REFERENCES pdrigroup_table(pdriGroupId) ON DELETE CASCADE,
+   selTimestamp DATETIME, INDEX(selTimestamp)
+) ENGINE=InnoDB;
+
 CREATE TABLE credential_table (
   credintialId SERIAL PRIMARY KEY,
   username VARCHAR(255),
@@ -479,11 +484,18 @@ CREATE TABLE IF NOT EXISTS tokens_table (
   exp_date DATETIME, INDEX(exp_date)
 ) ENGINE=InnoDB;
 
+
+DELIMITER |
 CREATE EVENT IF NOT EXISTS e_tokens_sweep
   ON SCHEDULE
     EVERY 600 SECOND
 DO
-  DELETE FROM tokens_table WHERE exp_date < NOW();
+  BEGIN
+    DELETE FROM tokens_table WHERE exp_date < NOW();
+    DELETE FROM delete_table WHERE timestampdiff(MINUTE, selTimestamp, now()) > 15;
+  END
+|
+DELIMITER ;
 
 
 DROP EVENT IF EXISTS ttl_sweep;
