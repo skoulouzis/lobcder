@@ -32,14 +32,10 @@ public class DeleteSweep implements Runnable {
             for (PdriGroupBean pdriGroupBean : connector.getPdriGroupsToProcess()) {
                 for (PdriBean pdriBean : pdriGroupBean.getPdri()) {
                     try {
-                        PDRIDescr pdriDescr = new PDRIDescr(
-                                pdriBean.getName(),
-                                pdriBean.getStorage().getId(),
-                                pdriBean.getStorage().getUri(),
-                                pdriBean.getStorage().getCredential().getUsername(),
-                                pdriBean.getStorage().getCredential().getPassword(),
-                                false, null, null, null);
-                        PDRIFactory.getFactory().createInstance(pdriDescr).delete();
+                        PDRI pdri = PDRIFactory.getFactory().createInstance(pdriBean);
+                        if (pdri.exists(pdri.getFileName())) {
+                            pdri.delete();
+                        }
                     } catch (Exception e) {
                         if (e.getMessage().contains("No route to host") || e.getMessage().contains("Moved Permanently") || e instanceof java.net.UnknownHostException) {
                             DeleteSweep.log.log(Level.WARNING, null, e);

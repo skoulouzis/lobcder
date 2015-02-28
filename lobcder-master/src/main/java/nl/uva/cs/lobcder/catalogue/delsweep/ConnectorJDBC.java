@@ -55,13 +55,13 @@ public class ConnectorJDBC implements ConnectorI {
                                     new PdriBean(
                                             rs.getLong(1),
                                             rs.getString(2),
+                                            null,
                                             new StorageSiteBean(
                                                     rs.getLong(3),
                                                     rs.getString(4),
-                                                    new CredentialBean(rs.getString(5), rs.getString(6)),
-                                                    null, null, null
-                                            ),
-                                            null
+                                                    null, null, null,
+                                                    new CredentialBean(rs.getString(5), rs.getString(6))
+                                            )
                                     )
                             );
                         } while (rs.next());
@@ -84,5 +84,4 @@ public class ConnectorJDBC implements ConnectorI {
             }
         }
     }
-
 }

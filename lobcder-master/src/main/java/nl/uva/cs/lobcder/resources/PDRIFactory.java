@@ -4,6 +4,8 @@
  */
 package nl.uva.cs.lobcder.resources;
 
+import nl.uva.cs.lobcder.catalogue.beans.PdriBean;
+
 import java.io.IOException;
 
 /**
@@ -20,6 +22,10 @@ public class PDRIFactory {
 
     public PDRI createInstance(PDRIDescr descr) throws IOException {
         return new VPDRI(descr.getName(), descr.getStorageSiteId(), descr.getResourceUrl(), descr.getUsername(), descr.getPassword(), descr.getEncrypt(), descr.getKey(), false);
+    }
+
+    public PDRI createInstance(PdriBean pdriBean) throws  IOException {
+        return new VPDRI(pdriBean.getName(), pdriBean.getStorage().getId(), pdriBean.getStorage().getUri(), pdriBean.getStorage().getCredential().getUsername(), pdriBean.getStorage().getCredential().getPassword(), pdriBean.getEncryptionKey() != null, pdriBean.getEncryptionKey(), false);
     }
 
     public PDRI createInstance(PDRIDescr descr, boolean isCahce) throws IOException {

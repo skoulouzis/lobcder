@@ -23,4 +23,5 @@ public class PdriGroupBean {
     private Boolean needCheck;
     private Boolean bound;
     private Collection<PdriBean> pdri;
+    private Collection<ItemBean> item;
 }
