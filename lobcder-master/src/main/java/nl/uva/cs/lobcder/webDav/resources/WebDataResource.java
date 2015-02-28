@@ -379,9 +379,9 @@ public class WebDataResource implements PropFindableResource, Resource,
                     return getReplicationQueueString();
                 }
             } else if (qname.equals(Constants.REPLICATION_QUEUE_LEN)) {
-                if (getPrincipal().isAdmin()) {
-                    return getReplicationQueueLen();
-                }
+//                if (getPrincipal().isAdmin()) {
+                return getReplicationQueueLen();
+//                }
             }
             return PropertySource.PropertyMetaData.UNKNOWN;
         } catch (Throwable th) {
