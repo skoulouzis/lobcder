@@ -6,7 +6,7 @@ file=file
 dir=dir
 
 host=localhost:8080
-url=http://$user:$pass@$host/lobcder/dav/dir
+url=http://$user:$pass@$host/lobcder/dav/$dir
 localdir=/tmp
 
 
@@ -14,9 +14,9 @@ STATE_OK=0
 STATE_WARNING=1
 STATE_CRITICAL=2
 STATE_UNKNOWN=3
-
-
 EXIT_STATE=$STATE_OK
+
+
 # ---------------------------PUT--------------------------
 #echo "Test PUT"
 curl -ks -X DELETE $url/$file > /dev/null
@@ -184,62 +184,68 @@ fi
 
 # ---------------------------Check backend--------------------------
 #echo "Test Backend"
-curl  -ks -X DELETE $url/$file > /dev/null
-echo "Safe to delete" > $localdir/$file 
-success=`curl  -iks -H "Content-Type:plain/text" -T $localdir/$file $url/$file | grep "HTTP/1.[01] 20.." 2>&1`
-if [ -z "$success" ]
-then
-  EXIT_STATE=$STATE_CRITICAL
-  echo "CRITICAL: PUT request failed"
-  exit $EXIT_STATE
-elif [ "$EXIT_STATE" -le "$STATE_OK" ]
-then
-#  echo "PUT Passed!"
-   availBackends=`curl -iks --request PROPFIND  --header "Content-Type: text/xml" --header "Brief:t" --data "<D:propfind xmlns:D='custom:'><D:prop><D:avail-storage-sites/></D:prop></D:propfind>"  $url/$file | grep -oPm1 "(?<=<ns1:avail-storage-sites>)[^<]+" 2>&1`
-   availBackendsArray=${availBackends#"["}
-   availBackendsArray=${availBackendsArray%"]"}
-   IFS=', ' read -a arrayBackend <<< "$availBackendsArray"
-   availBackendsArray=$array
-   
 
-   sleep 15
-   while true
-   do
-    dataDistribution=`curl -iks --request PROPFIND  --header "Content-Type: text/xml" --header "Brief:t" --data "<D:propfind xmlns:D='custom:'><D:prop><D:data-distribution/></D:prop></D:propfind>"  $url/$file | grep -oPm1 "(?<=<ns1:data-distribution>)[^<]+" 2>&1`
-    dataDistributionArray=${dataDistribution#"["}
-    dataDistributionArray=${dataDistributionArray%"]"}
-    IFS=', ' read -a arrayDistribution <<< "$dataDistributionArray"
+replLen=`curl -iks --request PROPFIND  --header "Content-Type: text/xml" --header "Brief:t" --data "<D:propfind xmlns:D='custom:'><D:prop><D:replication-queue-len/></D:prop></D:propfind>"  $url/$file | grep -oPm1 "(?<=<ns1:replication-queue-len>)[^<]+" 2>&1`
+
+
+if [ "$replLen" -lt 1 ]
+then
+  curl  -ks -X DELETE $url/$file > /dev/null
+  echo "Safe to delete" > $localdir/$file 
+  success=`curl  -iks -H "Content-Type:plain/text" -T $localdir/$file $url/$file | grep "HTTP/1.[01] 20.." 2>&1`
+  if [ -z "$success" ]
+  then
+    EXIT_STATE=$STATE_CRITICAL
+    echo "CRITICAL: PUT request failed"
+    exit $EXIT_STATE
+  elif [ "$EXIT_STATE" -le "$STATE_OK" ]
+  then
+  #  echo "PUT Passed!"
+    availBackends=`curl -iks --request PROPFIND  --header "Content-Type: text/xml" --header "Brief:t" --data "<D:propfind xmlns:D='custom:'><D:prop><D:avail-storage-sites/></D:prop></D:propfind>"  $url/$file | grep -oPm1 "(?<=<ns1:avail-storage-sites>)[^<]+" 2>&1`
+    availBackendsArray=${availBackends#"["}
+    availBackendsArray=${availBackendsArray%"]"}
+    IFS=', ' read -a arrayBackend <<< "$availBackendsArray"
+    availBackendsArray=$array
     
-   for backend in "${arrayBackend[@]}"
-   do
-      for dist in "${arrayDistribution[@]}"
-      do
-	if [[ $dist == *$backend* ]]
-	then
-	  done=true
-	  break;
-	else
-	  let counter+=1
-	fi
+
+    sleep 20
+    while true
+    do
+      dataDistribution=`curl -iks --request PROPFIND  --header "Content-Type: text/xml" --header "Brief:t" --data "<D:propfind xmlns:D='custom:'><D:prop><D:data-distribution/></D:prop></D:propfind>"  $url/$file | grep -oPm1 "(?<=<ns1:data-distribution>)[^<]+" 2>&1`
+      dataDistributionArray=${dataDistribution#"["}
+      dataDistributionArray=${dataDistributionArray%"]"}
+      IFS=', ' read -a arrayDistribution <<< "$dataDistributionArray"
+      
+    for backend in "${arrayBackend[@]}"
+    do
+	for dist in "${arrayDistribution[@]}"
+	do
+	  if [[ $dist == *$backend* ]]
+	  then
+	    done=true
+	    break;
+	  else
+	    let counter+=1
+	  fi
+	done
       done
+      if [ "$done" = true ] ; then
+	EXIT_STATE=$STATE_OK
+	break;
+      fi
+      
+      if [ "$counter" -gt 100 ]
+      then
+	echo "WARNING: Backend: $backend seems to be off-line"
+	EXIT_STATE=$STATE_WARNING
+	break;
+      fi
+      
+      sleep 10
     done
-    if [ "$done" = true ] ; then
-      EXIT_STATE=$STATE_OK
-      break;
-    fi
-    
-    if [ "$counter" -gt 60 ]
-    then
-      echo "WARNING: Backend seems to be off-line"
-      EXIT_STATE=$STATE_WARNING
-      break;
-    fi
-    
-    sleep 10
-   done
+  fi
+
 fi
-
-
 
 case "$EXIT_STATE" in
 
