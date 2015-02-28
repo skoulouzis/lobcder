@@ -12,7 +12,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.*;
 import java.util.*;
-import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Nonnull;
@@ -105,32 +104,6 @@ public class JDBCatalogue extends MyDataSource {
         }
     }
 
-//    public Collection<StorageSite> getCacheStorageSites(Connection connection) throws SQLException {
-//        try (Statement s = connection.createStatement()) {
-//            try (ResultSet rs = s.executeQuery("SELECT storageSiteId, resourceURI, "
-//                            + "currentNum, currentSize, quotaNum, quotaSize, username, "
-//                            + "password, encrypt FROM storage_site_table JOIN credential_table ON "
-//                            + "credentialRef = credintialId WHERE isCache = TRUE")) {
-//                ArrayList<StorageSite> res = new ArrayList<>();
-//                while (rs.next()) {
-//                    Credential c = new Credential();
-//                    c.setStorageSiteUsername(rs.getString(7));
-//                    c.setStorageSitePassword(rs.getString(8));
-//                    StorageSite ss = new StorageSite();
-//                    ss.setStorageSiteId(rs.getLong(1));
-//                    ss.setCredential(c);
-//                    ss.setResourceURI(rs.getString(2));
-//                    ss.setCurrentNum(rs.getLong(3));
-//                    ss.setCurrentSize(rs.getLong(4));
-//                    ss.setQuotaNum(rs.getLong(5));
-//                    ss.setQuotaSize(rs.getLong(6));
-//                    ss.setEncrypt(rs.getBoolean(7));
-//                    res.add(ss);
-//                }
-//                return res;
-//            }
-//        }
-//    }
     public LogicalData registerDirLogicalData(LogicalData entry, @Nonnull Connection connection) throws SQLException {
         try (PreparedStatement preparedStatement = connection.prepareStatement(
                 "INSERT INTO ldata_table(parentRef, ownerId, datatype, ldName, "
@@ -214,7 +187,6 @@ public class JDBCatalogue extends MyDataSource {
     }
 
     private LogicalData updateLogicalData(LogicalData entry, @Nonnull Connection connection) throws SQLException {
-//        "UPDATE lobcder.ldata_table SET ldName = testFileName1.txtsdsdsdd, ldLength = 23231 WHERE uid = 44"
         try (PreparedStatement ps = connection.prepareStatement("UPDATE ldata_table SET modifiedDate = ?, "
                 + "ldLength = ?, "
                 + "contentTypesStr = ?, "
@@ -245,10 +217,6 @@ public class JDBCatalogue extends MyDataSource {
     }
 
     public LogicalData updateLogicalDataAndPdri(LogicalData logicalData, PDRI pdri, @Nonnull Connection connection) throws SQLException {
-//        try (Statement statement = connection.createStatement(java.sql.ResultSet.TYPE_FORWARD_ONLY, java.sql.ResultSet.CONCUR_UPDATABLE)) {
-//            statement.executeUpdate("DELETE FROM pdri_table WHERE pdri_table.pdriId = " + groupId);
-//        }
-
         try (Statement statement = connection.createStatement(java.sql.ResultSet.TYPE_FORWARD_ONLY, java.sql.ResultSet.CONCUR_UPDATABLE)) {
             statement.executeUpdate("INSERT INTO pdrigroup_table (refCount) VALUES(0)", Statement.RETURN_GENERATED_KEYS);
             ResultSet rs = statement.getGeneratedKeys();
@@ -1761,8 +1729,7 @@ public class JDBCatalogue extends MyDataSource {
             ps.executeUpdate();
         }
     }
-    
-    
+
     public int getReplicationQueueLen() throws SQLException {
         return getReplicationQueueLen(getConnection());
     }
@@ -1775,13 +1742,12 @@ public class JDBCatalogue extends MyDataSource {
                 + "WHERE isCache = true")) {
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
-               return rs.getInt(1);
+                return rs.getInt(1);
             }
 
         }
         return -1;
     }
-    
 
     public List<LogicalData> getReplicationQueue() throws SQLException {
         return getReplicationQueue(getConnection());

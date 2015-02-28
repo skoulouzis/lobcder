@@ -1,14 +1,9 @@
 package nl.uva.cs.lobcder.catalogue.delsweep;
 
-import java.sql.*;
-import java.util.ArrayList;
 import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.sql.DataSource;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.catalogue.beans.PdriBean;
 import nl.uva.cs.lobcder.catalogue.beans.PdriGroupBean;
-import nl.uva.cs.lobcder.resources.PDRI;
 import nl.uva.cs.lobcder.resources.PDRIDescr;
 import nl.uva.cs.lobcder.resources.PDRIFactory;
 
@@ -18,7 +13,6 @@ import nl.uva.cs.lobcder.resources.PDRIFactory;
  */
 @Log
 public class DeleteSweep implements Runnable {
-
 
     private final ConnectorI connector;
 

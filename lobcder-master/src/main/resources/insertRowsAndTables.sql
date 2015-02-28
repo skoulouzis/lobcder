@@ -373,3 +373,10 @@ DELIMITER ;
 -- DROP TABLE storage_site_table_copy;
 
 -- -----------------------------------------------------------------------------
+
+
+CREATE TABLE delete_table (
+   pdriGroupRef BIGINT UNSIGNED PRIMARY KEY, FOREIGN KEY(pdriGroupRef) REFERENCES pdrigroup_table(pdriGroupId) ON DELETE CASCADE,
+   selTimestamp DATETIME, INDEX(selTimestamp)
+) ENGINE=InnoDB;
+
