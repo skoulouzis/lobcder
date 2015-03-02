@@ -29,7 +29,7 @@ public class ConnectorJDBC implements ConnectorI {
         try (Connection connection = datasource.getConnection()) {
             connection.setAutoCommit(true);
             ArrayList<Long> pdriGroups = new ArrayList<>();
-            try (CallableStatement s1 = connection.prepareCall("call GET_PDRI_GROUPS(?)")) {
+            try (CallableStatement s1 = connection.prepareCall("call GET_PDRI_GROUPS_FOR_DELETE(?)")) {
                 s1.setInt(1,limit);
                 ResultSet rs = s1.executeQuery();
                 while (rs.next()) {
