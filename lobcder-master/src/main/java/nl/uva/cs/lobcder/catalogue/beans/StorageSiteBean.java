@@ -25,8 +25,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class StorageSiteBean {
     private Long id;
     private String uri;
-    private CredentialBean credential;
     private Boolean encrypt;
     private Boolean cache;
     private String extra;
+    private CredentialBean credential;
 }

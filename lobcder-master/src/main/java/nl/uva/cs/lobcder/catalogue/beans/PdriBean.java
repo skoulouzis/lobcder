@@ -20,6 +20,6 @@ import java.math.BigInteger;
 public class PdriBean {
     private Long id;
     private String name;
-    private StorageSiteBean storage;
     private BigInteger encryptionKey;
+    private StorageSiteBean storage;
 }

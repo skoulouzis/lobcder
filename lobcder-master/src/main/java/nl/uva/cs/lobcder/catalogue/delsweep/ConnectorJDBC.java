@@ -6,10 +6,7 @@ import nl.uva.cs.lobcder.catalogue.beans.PdriGroupBean;
 import nl.uva.cs.lobcder.catalogue.beans.StorageSiteBean;
 
 import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -32,10 +29,9 @@ public class ConnectorJDBC implements ConnectorI {
         try (Connection connection = datasource.getConnection()) {
             connection.setAutoCommit(true);
             ArrayList<Long> pdriGroups = new ArrayList<>();
-            try (Statement s1 = connection.createStatement()) {
-                int retval[] = {1};
-                s1.executeUpdate("INSERT INTO delete_table (pdriGroupRef, selTimestamp) SELECT pdriGroupId, now() FROM pdrigroup_table LEFT OUTER JOIN delete_table ON pdrigroup_table.pdriGroupId = delete_table.pdriGroupRef WHERE delete_table.pdriGroupRef IS NULL AND pdrigroup_table.refCount = 0 LIMIT " + limit, retval);
-                ResultSet rs = s1.getGeneratedKeys();
+            try (CallableStatement s1 = connection.prepareCall("call GET_PDRI_GROUPS_FOR_DELETE(?)")) {
+                s1.setInt(1,limit);
+                ResultSet rs = s1.executeQuery();
                 while (rs.next()) {
                     pdriGroups.add(rs.getLong(1));
                 }
@@ -55,13 +51,13 @@ public class ConnectorJDBC implements ConnectorI {
                                     new PdriBean(
                                             rs.getLong(1),
                                             rs.getString(2),
+                                            null,
                                             new StorageSiteBean(
                                                     rs.getLong(3),
                                                     rs.getString(4),
-                                                    new CredentialBean(rs.getString(5), rs.getString(6)),
-                                                    null, null, null
-                                            ),
-                                            null
+                                                    null, null, null,
+                                                    new CredentialBean(rs.getString(5), rs.getString(6))
+                                            )
                                     )
                             );
                         } while (rs.next());
@@ -84,5 +80,4 @@ public class ConnectorJDBC implements ConnectorI {
             }
         }
     }
-
 }
