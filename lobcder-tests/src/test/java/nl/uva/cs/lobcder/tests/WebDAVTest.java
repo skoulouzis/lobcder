@@ -823,7 +823,7 @@ public class WebDAVTest {
             assertTrue("status: " + status, status == HttpStatus.SC_NOT_FOUND);
 
         } finally {
-            utils.deleteResource(testuri, false);
+            utils.deleteResource(testcol, false);
 
         }
     }
