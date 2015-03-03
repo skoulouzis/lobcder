@@ -29,4 +29,13 @@ public class StorageSiteBean {
     private Boolean cache;
     private String extra;
     private CredentialBean credential;
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == this) return true;
+        if (!(o instanceof StorageSiteBean)) return false;
+        StorageSiteBean other = (StorageSiteBean) o;
+        if (other.getId().equals(getId())) return true;
+        else return false;
+     }
 }
