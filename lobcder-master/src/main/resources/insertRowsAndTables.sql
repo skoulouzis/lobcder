@@ -374,9 +374,41 @@ DELIMITER ;
 
 -- -----------------------------------------------------------------------------
 
+DROP TABLE delete_table; 
+
 
 CREATE TABLE delete_table (
-   pdriGroupRef BIGINT UNSIGNED PRIMARY KEY, FOREIGN KEY(pdriGroupRef) REFERENCES pdrigroup_table(pdriGroupId) ON DELETE CASCADE,
-   selTimestamp DATETIME, INDEX(selTimestamp)
+  id BIGINT UNSIGNED, key(id),
+  pdriGroupRef BIGINT UNSIGNED PRIMARY KEY, FOREIGN KEY(pdriGroupRef) REFERENCES pdrigroup_table(pdriGroupId) ON DELETE CASCADE,
+  selTimestamp DATETIME, INDEX(selTimestamp)
 ) ENGINE=InnoDB;
 
+DROP PROCEDURE GET_PDRI_GROUPS_FOR_DELETE;
+
+DELIMITER |
+CREATE PROCEDURE GET_PDRI_GROUPS_FOR_DELETE (IN lim int)
+  BEGIN
+    DECLARE myid BIGINT UNSIGNED;
+    SET myid = UUID_SHORT();
+    INSERT INTO delete_table (id, pdriGroupRef, selTimestamp) SELECT myid, pdriGroupId, now() FROM pdrigroup_table LEFT OUTER JOIN delete_table ON pdrigroup_table.pdriGroupId = delete_table.pdriGroupRef WHERE delete_table.pdriGroupRef IS NULL AND pdrigroup_table.refCount = 0 LIMIT lim;
+    SELECT pdriGroupRef FROM delete_table WHERE id=myid;
+  END
+|
+DELIMITER ;
+
+GRANT SELECT ON mysql.proc TO  lobcder@localhost IDENTIFIED by 'RoomC3156';
+
+DROP EVENT e_tokens_sweep;  
+
+
+DELIMITER |
+CREATE EVENT e_tokens_sweep
+  ON SCHEDULE
+    EVERY 600 SECOND
+DO
+  BEGIN
+    DELETE FROM tokens_table WHERE exp_date < NOW();
+    DELETE FROM delete_table WHERE timestampdiff(MINUTE, selTimestamp, now()) > 15;
+  END
+|
+DELIMITER ;
