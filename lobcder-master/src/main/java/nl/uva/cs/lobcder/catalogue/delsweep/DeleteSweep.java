@@ -4,6 +4,7 @@ import java.util.logging.Level;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.catalogue.beans.PdriBean;
 import nl.uva.cs.lobcder.catalogue.beans.PdriGroupBean;
+import nl.uva.cs.lobcder.resources.PDRI;
 import nl.uva.cs.lobcder.resources.PDRIDescr;
 import nl.uva.cs.lobcder.resources.PDRIFactory;
 

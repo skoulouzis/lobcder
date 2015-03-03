@@ -62,6 +62,8 @@ useradd w -m -p $pass
 wget http://elab.lab.uvalight.net/~lobcder/apache-tomcat-6.0.36.tar.gz
 tar -xzvf apache-tomcat-6.0.36.tar.gz
 
+keytool -genkey -alias tomcat -keyalg RSA 
+
 
 cd /root
 wget http://elab.lab.uvalight.net/~lobcder/conf/settings.xml
@@ -75,7 +77,7 @@ mvn install
 rm -r target/lobcder-worker
 mv target/lobcder-worker-1.0-SNAPSHOT target/lobcder-worker
 cd /root
-cp -r lobcder-worker/target/lobcder-worker apache-tomcat-6.0.36/webapps/
+cp -r lobcder/lobcder-worker/target/lobcder-worker apache-tomcat-6.0.36/webapps/
 ./apache-tomcat-6.0.36/bin/startup.sh
 
 
