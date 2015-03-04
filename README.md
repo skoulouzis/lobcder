@@ -34,14 +34,14 @@ webdavssl://user@test.webdav.org/dav/ user pass
 sftp://user@itcsubmit.wustl.edu/ user pass
 
 ## Description
-This script takes the following steps: 
-	1.  creates the database specified in '-n' in the example  above that is  'lobcderDB'
-	2.  grands privileges to the lobcder user  named 'lobcder' with the password  specified in '-p' in the example  above that is  'lobcderDBPass'
-	3.  clones the code from the git reposetory 
-	4.  compiles the code 
-	5.  modifies the context.xml and web.xml files and sets the database name and password which in the example above is ' lobcderDB' and ' lobcderDBPass' 
-	6.  initializes the database by creating the necessary tables and triggers
-	7.  sets the storage backend locations and credentials according to the storage file set in '-f' 
-	8.  deploys lobcder on tomcat 
+This script takes the following steps:
+1.  creates the database specified in '-n' in the example  above that is  'lobcderDB'
+2.  grands privileges to the lobcder user  named 'lobcder' with the password  specified in '-p' in the example  above that is  'lobcderDBPass'
+3.  clones the code from the git reposetory 
+4.  compiles the code 
+5.  modifies the context.xml and web.xml files and sets the database name and password which in the example above is ' lobcderDB' and ' lobcderDBPass' 
+6.  initializes the database by creating the necessary tables and triggers
+7.  sets the storage backend locations and credentials according to the storage file set in '-f' 
+8.  deploys lobcder on tomcat 
 
 After execution is over you'll need to edit the lobcder.properties file. In that file you can find explanations for each property 
