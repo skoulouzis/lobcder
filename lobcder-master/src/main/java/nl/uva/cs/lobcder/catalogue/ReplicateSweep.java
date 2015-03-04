@@ -308,8 +308,12 @@ public class ReplicateSweep implements Runnable {
                             pdriGroupId,
                             null);
                     PDRI destinationPdri = PDRIFactory.getFactory().createInstance(destinationDescr);
+                    log.log(Level.FINE, "sourcePdri:" + sourcePdri.getURI() + " destinationPdri: " + destinationPdri.getURI());
                     if (!destinationPdri.exists(destinationPdri.getFileName())) {
                         destinationPdri.replicate(sourcePdri);
+                        log.log(Level.FINE, "Done with replication from:" + sourcePdri.getURI() + " to: " + destinationPdri.getURI());
+                    } else {
+                        log.log(Level.FINE, "Did not replicate from:" + sourcePdri.getURI() + " to: " + destinationPdri.getURI() + " " + destinationPdri.getFileName() + " was already there");
                     }
                     preparedStatement.setString(1, destinationDescr.getName());
                     preparedStatement.setLong(2, destinationDescr.getStorageSiteId());
