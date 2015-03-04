@@ -27,7 +27,7 @@ To deploy the LOBCDER master simply run the deployMaster.sh script. The argument
 
 ## Example
 An example running the script is: 
-./deployMaster.sh -n lobcderDB -p lobcderDBPass -u root -a mysqlRootPass -f storageFile -l admin -s admin -c ./apache-tomcat-7.0.59
+<./deployMaster.sh -n lobcderDB -p lobcderDBPass -u root -a mysqlRootPass -f storageFile -l admin -s admin -c ./apache-tomcat-7.0.59>
 
 An example for the storage file:
 webdavssl://user@test.webdav.org/dav/ user pass
