@@ -61,7 +61,10 @@ public class JDBCatalogue extends MyDataSource {
     }
 
     public void stopSweep() {
-        timer.cancel();
+        if (timer != null) {
+            timer.cancel();
+            timer.purge();
+        }
     }
 
     public Collection<StorageSite> getStorageSites(Boolean includeCache, Boolean includePrivate) throws SQLException {

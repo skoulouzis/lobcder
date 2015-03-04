@@ -38,7 +38,11 @@ public class ConnectorJDBC implements ConnectorI {
             }
             ArrayList<PdriGroupBean> result = new ArrayList<>(pdriGroups.size());
             try (PreparedStatement ps = connection.prepareStatement(
-                    "SELECT pdriId, fileName, storageSiteRef, resourceUri, username, password FROM pdri_table JOIN storage_site_table ON storage_site_table.storageSiteId = pdri_table.storageSiteRef JOIN credential_table ON credentialRef = credintialId WHERE pdriGroupRef = ?")) {
+                    "SELECT pdriId, fileName, storageSiteRef, resourceUri, username, password "
+                    + "FROM pdri_table "
+                    + "JOIN storage_site_table ON storage_site_table.storageSiteId = pdri_table.storageSiteRef "
+                    + "JOIN credential_table ON storage_site_table.credentialRef = credintialId "
+                    + "WHERE pdriGroupRef = ?")) {
                 for (Long pdrigrId : pdriGroups) {
                     ps.setLong(1, pdrigrId);
                     ResultSet rs = ps.executeQuery();
