@@ -98,21 +98,25 @@ fi
 cd $lobGitDir/lobcder-master
 mvn install 
 rm -r target/lobcder
-mv target/lobcder-master-2.5 target/lobcder
+mv target/lobcder-master-?.? target/lobcder
 rm -r target/lobcder/manage*.jsp
 cd ../../
 
 
-jdbcDefult=url=\"jdbc:mysql:\/\/localhost:3306\/lobcderDB2\?zeroDateTimeBehavior=convertToNull
-jdbcDBName=url=\"jdbc:mysql:\/\/localhost:3306\/$dbName\?zeroDateTimeBehavior=convertToNull
+# jdbcDefult=url=\"jdbc:mysql:\/\/localhost:3306\/lobcderDB2\?zeroDateTimeBehavior=convertToNull
+jdbcDefult=`grep "url=" $lobGitDir/lobcder-master/target/lobcder/META-INF/context.xml`
+jdbcDefultPass=`grep "password=" $lobGitDir/lobcder-master/target/lobcder/META-INF/context.xml`
 
-sed -i "s#<res-ref-name>jdbc\/lobcderDB2<\/res-ref-name>#<res-ref-name>jdbc\/$dbName<\/res-ref-name>#g" lobcder/lobcder-master/target/lobcder/WEB-INF/web.xml
-sed -i "s#$jdbcDefult#jdbcDBName#g" lobcder/lobcder-master/target/lobcder/META-INF/context.xml
-sed -i "s#password=\"RoomC3156\"#password=\"$dbPasswd\"#g" lobcder/lobcder-master/target/lobcder/META-INF/context.xml
+jdbcDBName=url=\"jdbc:mysql:\/\/localhost:3306\/$dbName\?zeroDateTimeBehavior=convertToNull\"
+jdbcPass="password=\"$dbPasswd\""
+
+sed -i "s#<res-ref-name>jdbc\/lobcderDB2<\/res-ref-name>#<res-ref-name>jdbc\/$dbName<\/res-ref-name>#g" $lobGitDir/lobcder-master/target/lobcder/WEB-INF/web.xml
+sed -i "s#$jdbcDefult#$jdbcDBName#g" $lobGitDir/lobcder-master/target/lobcder/META-INF/context.xml
+sed -i "s#$jdbcDefultPass#$jdbcPass#g" $lobGitDir/lobcder-master/target/lobcder/META-INF/context.xml
 
 
 #  --------------------- Build tables trigers and storage sites  --------------------
-mysql --user=lobcder --password=$dbPasswd $dbName < lobcder/lobcder-master/target/lobcder/WEB-INF/classes/init.sql
+mysql --user=lobcder --password=$dbPasswd $dbName < $lobGitDir/lobcder-master/target/lobcder/WEB-INF/classes/init.sql
 while read uri username pass
 do
   echo Adding $username":"$pass"@"$uri
