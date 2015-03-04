@@ -55,6 +55,12 @@ import javax.xml.bind.Marshaller;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import lombok.extern.java.Log;
+import nl.uva.cs.lobcder.resources.PDRI;
+import nl.uva.cs.lobcder.resources.PDRIDescr;
+import nl.uva.cs.lobcder.resources.VPDRI;
+import nl.uva.cs.lobcder.rest.Endpoints;
+import nl.uva.cs.lobcder.rest.wrappers.LogicalDataWrapped;
+import nl.uva.cs.lobcder.rest.wrappers.Stats;
 import nl.uva.vlet.data.StringUtil;
 import nl.uva.vlet.exception.VlException;
 import nl.uva.vlet.io.CircularStreamBufferTransferer;
@@ -153,7 +159,7 @@ public final class WorkerServlet extends HttpServlet {
         try {
             // Process request with content.
             processRequest(request, response, true);
-        } catch (Exception ex) {
+        } catch (IOException | InterruptedException | URISyntaxException | VlException | JAXBException ex) {
             Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, ex);
             handleError(ex, response);
         }
@@ -206,7 +212,7 @@ public final class WorkerServlet extends HttpServlet {
         // Prepare some variables. The ETag is an unique identifier of the file.
         String fileName = pdri.getFileName();
         long length = pdri.getLength();
-        long lastModified = logicalDataCache.get(fileUID).logicalData.modifiedDate;
+        long lastModified = logicalDataCache.get(fileUID).getLogicalData().getModifiedDate();
         String eTag = fileName + "_" + length + "_" + lastModified;
         long expires = System.currentTimeMillis() + DEFAULT_EXPIRE_TIME;
 
@@ -307,7 +313,7 @@ public final class WorkerServlet extends HttpServlet {
         // Get content type by file name and set default GZIP support and content disposition.
         String contentType = getServletContext().getMimeType(fileName);
         if (contentType == null) {
-            contentType = this.logicalDataCache.get(fileUID).logicalData.contentTypesAsString;
+            contentType = this.logicalDataCache.get(fileUID).getLogicalData().getContentTypesAsString();
         }
         boolean acceptsGzip = false;
         String disposition = "inline";
@@ -343,7 +349,8 @@ public final class WorkerServlet extends HttpServlet {
         response.setHeader("ETag", eTag);
         response.setDateHeader("Last-Modified", lastModified);
         response.setDateHeader("Expires", expires);
-        response.setContentLength((int) this.logicalDataCache.get(fileUID).logicalData.length);
+
+        response.setContentLength(safeLongToInt(logicalDataCache.get(fileUID).getLogicalData().getLength()));
 
         // Send requested file (part(s)) to client ------------------------------------------------
         // Prepare streams.
@@ -430,7 +437,7 @@ public final class WorkerServlet extends HttpServlet {
             if (elapsed <= 0) {
                 elapsed = 1;
             }
-            double speed = ((this.logicalDataCache.get(fileUID).logicalData.length * 8.0) * 1000.0) / (elapsed * 1000.0);
+            double speed = ((this.logicalDataCache.get(fileUID).getLogicalData().getLength() * 8.0) * 1000.0) / (elapsed * 1000.0);
             Double oldSpeed = weightPDRIMap.get(pdri.getHost());
             if (oldSpeed == null) {
                 oldSpeed = speed;
@@ -443,20 +450,20 @@ public final class WorkerServlet extends HttpServlet {
             numOfGetsMap.put(pdri.getHost(), numOfGets++);
             weightPDRIMap.put(pdri.getHost(), averagre);
             Stats stats = new Stats();
-            stats.source = request.getLocalAddr();
-            stats.destination = request.getRemoteAddr();
-            stats.speed = speed;
-            stats.size = this.logicalDataCache.get(fileUID).logicalData.length;
+            stats.setSource(request.getLocalAddr());
+            stats.setDestination(request.getRemoteAddr());
+            stats.setSpeed(speed);
+            stats.setSize(this.logicalDataCache.get(fileUID).getLogicalData().getLength());
             setSpeed(stats);
 
-            String speedMsg = "Source: " + request.getLocalAddr() + " Destination: " + request.getRemoteAddr() + " Tx_Speed: " + speed + " Kbites/sec Tx_Size: " + this.logicalDataCache.get(fileUID).logicalData.length + " bytes";
+            String speedMsg = "Source: " + request.getLocalAddr() + " Destination: " + request.getRemoteAddr() + " Tx_Speed: " + speed + " Kbites/sec Tx_Size: " + this.logicalDataCache.get(fileUID).getLogicalData().getLength() + " bytes";
             Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, speedMsg);
-            String averageSpeedMsg = "Average speed: Source: " + pdri.getHost() + " Destination: " + request.getLocalAddr() + " Rx_Speed: " + averagre + " Kbites/sec Rx_Size: " + this.logicalDataCache.get(fileUID).logicalData.length + " bytes";
+            String averageSpeedMsg = "Average speed: Source: " + pdri.getHost() + " Destination: " + request.getLocalAddr() + " Rx_Speed: " + averagre + " Kbites/sec Rx_Size: " + this.logicalDataCache.get(fileUID).getLogicalData().getLength() + " bytes";
             if (Util.getSendStats()) {
-                stats.source = pdri.getHost();
-                stats.destination = request.getLocalAddr();
-                stats.speed = speed;
-                stats.size = this.logicalDataCache.get(fileUID).logicalData.length;
+                stats.setSource(request.getLocalAddr());
+                stats.setDestination(request.getRemoteAddr());
+                stats.setSpeed(speed);
+                stats.setSize(this.logicalDataCache.get(fileUID).getLogicalData().getLength());
                 setSpeed(stats);
             }
             Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, averageSpeedMsg);
@@ -538,7 +545,9 @@ public final class WorkerServlet extends HttpServlet {
                     qoSCopy(buffer, output, length, request);
                 }
             } else {
-                input.copyRange(output, start, length);
+                io.milton.http.Range range = new io.milton.http.Range(start, length - start);
+                input.copyRange(range, output);
+//                input.copyRange(output, start, length);
             }
         } finally {
             output.flush();
@@ -563,7 +572,11 @@ public final class WorkerServlet extends HttpServlet {
             if (progress >= thresshold && Math.round(progress) % progressThresshold == 0 && !Util.dropConnection() && !Util.getOptimizeFlow()) {
                 long elapsed = System.currentTimeMillis() - startTime;
                 double a = 0.5;
-                speed = (total / elapsed);
+                if (elapsed < 1) {
+                    speed = Double.MAX_VALUE;
+                } else {
+                    speed = (total / elapsed);
+                }
                 if (averageSpeed <= 0) {
                     averageSpeed = speed;
                 }
@@ -579,7 +592,7 @@ public final class WorkerServlet extends HttpServlet {
                     if (Util.getOptimizeFlow()) {
                         optimizeFlow(request);
                         maxSpeed = averageSpeed;
-                        Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, "optimizeFlow: " + request);
+                        Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, "optimizeFlow: {0}", request);
                     }
 
                     //This works with export ec=18; while [ $ec -eq 18 ]; do curl -O -C - -L --request GET -u user:pass http://localhost:8080/lobcder/dav/large_file; export ec=$?; done
@@ -640,11 +653,11 @@ public final class WorkerServlet extends HttpServlet {
         try {
             config.getProperties().put(HTTPSProperties.PROPERTY_HTTPS_PROPERTIES, new HTTPSProperties(
                     new HostnameVerifier() {
-                        @Override
-                        public boolean verify(String hostname, SSLSession session) {
-                            return true;
-                        }
-                    },
+                @Override
+                public boolean verify(String hostname, SSLSession session) {
+                    return true;
+                }
+            },
                     ctx));
         } catch (Exception e) {
         }
@@ -652,7 +665,7 @@ public final class WorkerServlet extends HttpServlet {
     }
 
     private PDRI getPDRI(String fileUID) throws InterruptedException, IOException, URISyntaxException {
-        PDRIDesc pdriDesc = null;//new PDRIDesc();
+        PDRIDescr pdriDesc = null;//new PDRIDescr();
         LogicalDataWrapped logicalData = null;
 
         logicalData = logicalDataCache.get(fileUID);
@@ -667,15 +680,15 @@ public final class WorkerServlet extends HttpServlet {
             WebResource res = webResource.path("item").path("query").path(fileUID);
             logicalData = res.accept(MediaType.APPLICATION_XML).
                     get(new GenericType<LogicalDataWrapped>() {
-                    });
+            });
 
             if (logicalData != null) {
-                Set<PDRIDesc> pdris = logicalData.pdriList;
-                List<PDRIDesc> removeIt = new ArrayList<>();
+                List<PDRIDescr> pdris = logicalData.getPdriList();
+                List<PDRIDescr> removeIt = new ArrayList<>();
                 if (pdris != null && !pdris.isEmpty()) {
                     //Remove masters's cache pdris 
-                    for (PDRIDesc p : pdris) {
-                        if (p.resourceUrl.startsWith("file")) {
+                    for (PDRIDescr p : pdris) {
+                        if (p.getResourceUrl().startsWith("file")) {
                             removeIt.add(p);
                         }
                     }
@@ -688,22 +701,24 @@ public final class WorkerServlet extends HttpServlet {
                             throw new IOException("PDRIS from master is either empty or contains unreachable files");
                         }
                     }
-                    logicalData.pdriList = pdris;
+                    logicalData.setPdriList(pdris);
                 }
             }
             logicalDataCache.put(fileUID, logicalData);
         }
 
-        pdriDesc = selectBestPDRI(logicalData.pdriList);
+        pdriDesc = selectBestPDRI(logicalData.getPdriList());
 
-        Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "Selected pdri: {0}", pdriDesc.resourceUrl);
-        return new VPDRI(pdriDesc.name, pdriDesc.id, pdriDesc.resourceUrl, pdriDesc.username, pdriDesc.password, pdriDesc.encrypt, BigInteger.valueOf(Long.valueOf(pdriDesc.key)), false);
+        Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "Selected pdri: {0}", pdriDesc.getResourceUrl());
+
+        return new VPDRI(pdriDesc.getName(), pdriDesc.getId(), pdriDesc.getResourceUrl(), pdriDesc.getUsername(),
+                pdriDesc.getPassword(), pdriDesc.getEncrypt(), pdriDesc.getKey(), false);
     }
 
-    private PDRIDesc selectBestPDRI(Set<PDRIDesc> pdris) throws URISyntaxException, UnknownHostException, SocketException {
+    private PDRIDescr selectBestPDRI(List<PDRIDescr> pdris) throws URISyntaxException, UnknownHostException, SocketException {
         if (!pdris.isEmpty()) {
-            PDRIDesc p = pdris.iterator().next();
-            URI uri = new URI(p.resourceUrl);
+            PDRIDescr p = pdris.iterator().next();
+            URI uri = new URI(p.getResourceUrl());
             String resourceIP = Util.getIP(uri.getHost());
             List<String> ips = Util.getAllIPs();
             for (String i : ips) {
@@ -711,16 +726,16 @@ public final class WorkerServlet extends HttpServlet {
                 if (resourceIP != null && resourceIP.equals(i)
                         || uri.getHost().equals("localhost")
                         || uri.getHost().equals("127.0.0.1")) {
-                    String resURL = p.resourceUrl.replaceFirst(uri.getScheme(), "file");
-                    p.resourceUrl = resURL;
+                    String resURL = p.getResourceUrl().replaceFirst(uri.getScheme(), "file");
+                    p.setResourceUrl(resURL);
                     return p;
                 }
             }
 
         }
 
-        for (PDRIDesc p : pdris) {
-            URI uri = new URI(p.resourceUrl);
+        for (PDRIDescr p : pdris) {
+            URI uri = new URI(p.getResourceUrl());
             if (uri.getScheme().equals("file")) {
                 return p;
             }
@@ -729,8 +744,8 @@ public final class WorkerServlet extends HttpServlet {
             for (String i : ips) {
 //                Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, "Checking IP: {0}", i);
                 if (resourceIP.equals(i)) {
-                    String resURL = p.resourceUrl.replaceFirst(uri.getScheme(), "file");
-                    p.resourceUrl = resURL;
+                    String resURL = p.getResourceUrl().replaceFirst(uri.getScheme(), "file");
+                    p.setResourceUrl(resURL);
                     return p;
                 }
             }
@@ -739,14 +754,14 @@ public final class WorkerServlet extends HttpServlet {
         if (weightPDRIMap.isEmpty() || weightPDRIMap.size() < pdris.size()) {
             //Just return one at random;
             int index = new Random().nextInt(pdris.size());
-            PDRIDesc[] array = pdris.toArray(new PDRIDesc[pdris.size()]);
-            Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "Selecting Random: {0}", array[index].resourceUrl);
+            PDRIDescr[] array = pdris.toArray(new PDRIDescr[pdris.size()]);
+            Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "Selecting Random: {0}", array[index].getResourceUrl());
             return array[index];
         }
 
         long sumOfSpeed = 0;
-        for (PDRIDesc p : pdris) {
-            URI uri = new URI(p.resourceUrl);
+        for (PDRIDescr p : pdris) {
+            URI uri = new URI(p.getResourceUrl());
             String host;
             if (uri.getScheme().equals("file")
                     || StringUtil.isEmpty(uri.getHost())
@@ -762,26 +777,26 @@ public final class WorkerServlet extends HttpServlet {
         }
         if (sumOfSpeed <= 0) {
             int index = new Random().nextInt(pdris.size());
-            PDRIDesc[] array = pdris.toArray(new PDRIDesc[pdris.size()]);
+            PDRIDescr[] array = pdris.toArray(new PDRIDescr[pdris.size()]);
             return array[index];
         }
         int itemIndex = new Random().nextInt((int) sumOfSpeed);
 
-        for (PDRIDesc p : pdris) {
-            Double speed = weightPDRIMap.get(new URI(p.resourceUrl).getHost());
+        for (PDRIDescr p : pdris) {
+            Double speed = weightPDRIMap.get(new URI(p.getResourceUrl()).getHost());
             if (speed == null) {
                 speed = Double.valueOf(0);
             }
             if (itemIndex < speed) {
-                Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "Selecting:{0}  with speed: {1}", new Object[]{p.resourceUrl, speed});
+                Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "Selecting:{0}  with speed: {1}", new Object[]{p.getResourceUrl(), speed});
                 return p;
             }
             itemIndex -= speed;
         }
 
         int index = new Random().nextInt(pdris.size());
-        PDRIDesc[] array = pdris.toArray(new PDRIDesc[pdris.size()]);
-        PDRIDesc res = array[index];
+        PDRIDescr[] array = pdris.toArray(new PDRIDescr[pdris.size()]);
+        PDRIDescr res = array[index];
         return res;
     }
 
@@ -823,8 +838,8 @@ public final class WorkerServlet extends HttpServlet {
 
     private void optimizeFlow(HttpServletRequest request) throws JAXBException {
         Endpoints endpoints = new Endpoints();
-        endpoints.destination = request.getRemoteAddr();
-        endpoints.source = request.getLocalAddr();
+        endpoints.setDestination(request.getRemoteAddr());
+        endpoints.setSource(request.getLocalAddr());
 
         JAXBContext context = JAXBContext.newInstance(Endpoints.class);
         Marshaller m = context.createMarshaller();
@@ -841,77 +856,83 @@ public final class WorkerServlet extends HttpServlet {
         Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, "response: {0}", response);
     }
 
-    @XmlRootElement
-    public static class LogicalDataWrapped {
-
-        public LogicalData logicalData;
-        public String path;
-        public Set<PDRIDesc> pdriList;
-        public Set<Permissions> permissions;
+    private static int safeLongToInt(long l) {
+        if (l < Integer.MIN_VALUE || l > Integer.MAX_VALUE) {
+            throw new IllegalArgumentException(l + " cannot be cast to int without changing its value.");
+        }
+        return (int) l;
     }
 
-    @XmlRootElement
-    public static class LogicalData {
-
-        public int checksum;
-        public String contentTypesAsString;
-        public long createDate;
-        public long lastValidationDate;
-        public long length;
-        public int lockTimeout;
-        public long modifiedDate;
-        public String name;
-        public String owner;
-        public int parentRef;
-        public int pdriGroupId;
-        public boolean supervised;
-        public String type;
-        public int uid;
-    }
-
-    @XmlRootElement
-    public static class Permissions {
-
-        public String owner;
-        public Set<String> read;
-        public Set<String> write;
-    }
-
-    @XmlRootElement
-    public static class PDRIDesc {
-
-        public boolean encrypt;
-        public long id;
-        public String key;
-        public String name;
-        public String password;
-        public String pdriGroupRef;
-        public String resourceUrl;
-        public String username;
-    }
-
-    @XmlRootElement
-    public static class Stats {
-
-        @XmlElement(name = "source")
-        String source;
-        @XmlElement(name = "destination")
-        String destination;
-        @XmlElement(name = "size")
-        Long size;
-        @XmlElement(name = "speed")
-        Double speed;
-    }
-
-    @XmlRootElement
-    public static class Endpoints {
-
-        @XmlElement(name = "source")
-        String source;
-        @XmlElement(name = "destination")
-        String destination;
-    }
-
+//    @XmlRootElement
+//    public static class LogicalDataWrapped {
+//
+//        public LogicalData logicalData;
+//        public String path;
+//        public List<PDRIDescr> pdriList;
+//        public Set<Permissions> permissions;
+//    }
+//
+//    @XmlRootElement
+//    public static class LogicalData {
+//
+//        public int checksum;
+//        public String contentTypesAsString;
+//        public long createDate;
+//        public long lastValidationDate;
+//        public long length;
+//        public int lockTimeout;
+//        public long modifiedDate;
+//        public String name;
+//        public String owner;
+//        public int parentRef;
+//        public int pdriGroupId;
+//        public boolean supervised;
+//        public String type;
+//        public int uid;
+//    }
+//
+//    @XmlRootElement
+//    public static class Permissions {
+//
+//        public String owner;
+//        public Set<String> read;
+//        public Set<String> write;
+//    }
+//
+//    @XmlRootElement
+//    public static class PDRIDescr {
+//
+//        public boolean encrypt;
+//        public long id;
+//        public String key;
+//        public String name;
+//        public String password;
+//        public String pdriGroupRef;
+//        public String resourceUrl;
+//        public String username;
+//    }
+//
+//    @XmlRootElement
+//    public static class Stats {
+//
+//        @XmlElement(name = "source")
+//        String source;
+//        @XmlElement(name = "destination")
+//        String destination;
+//        @XmlElement(name = "size")
+//        Long size;
+//        @XmlElement(name = "speed")
+//        Double speed;
+//    }
+//
+//    @XmlRootElement
+//    public static class Endpoints {
+//
+//        @XmlElement(name = "source")
+//        String source;
+//        @XmlElement(name = "destination")
+//        String destination;
+//    }
     // Inner classes ------------------------------------------------------------------------------
     /**
      * This class represents a byte range.

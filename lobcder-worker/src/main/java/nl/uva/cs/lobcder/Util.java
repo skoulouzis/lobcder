@@ -30,7 +30,7 @@ class Util {
 
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         Properties prop;
-        try (InputStream in = classLoader.getResourceAsStream("/lobcder-worker.properties")) {
+        try (InputStream in = classLoader.getResourceAsStream("/lobcder.properties")) {
             prop = new Properties();
             prop.load(in);
         }
