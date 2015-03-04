@@ -25,17 +25,19 @@ public class DeleteSweep implements Runnable {
     public void run() {
         try {
             for (PdriGroupBean pdriGroupBean : connector.getPdriGroupsToProcess()) {
-                for (PdriBean pdriBean : pdriGroupBean.getPdri()) {
-                    try {
-                        PDRI pdri = PDRIFactory.getFactory().createInstance(pdriBean);
-                        if (pdri.exists(pdri.getFileName())) {
-                            pdri.delete();
-                        }
-                    } catch (Exception e) {
-                        if (e.getMessage().contains("No route to host") || e.getMessage().contains("Moved Permanently") || e instanceof java.net.UnknownHostException) {
-                            DeleteSweep.log.log(Level.WARNING, null, e);
-                        } else {
-                            throw e;
+                if(pdriGroupBean.getPdri() != null) {
+                    for (PdriBean pdriBean : pdriGroupBean.getPdri()) {
+                        try {
+                            PDRI pdri = PDRIFactory.getFactory().createInstance(pdriBean);
+                            if (pdri.exists(pdri.getFileName())) {
+                                pdri.delete();
+                            }
+                        } catch (Exception e) {
+                            if (e.getMessage().contains("No route to host") || e.getMessage().contains("Moved Permanently") || e instanceof java.net.UnknownHostException) {
+                                DeleteSweep.log.log(Level.WARNING, null, e);
+                            } else {
+                                throw e;
+                            }
                         }
                     }
                 }
