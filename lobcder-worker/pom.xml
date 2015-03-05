@@ -238,11 +238,35 @@
     </dependencies>
     
     <repositories>
+        
         <repository>
-            <id>elab.lab.uvalight.net</id>
-            <name>elab.lab.uvalight.net-releases</name>
-            <url>>http://elab.lab.uvalight.net/artifactory/local</url>
+            <snapshots />
+            <id>skoulouzis-snapshots</id>
+            <url>https://raw.github.com/skoulouzis/mvn-repo/master/snapshots</url>
         </repository>
+                
+                
+        <repository>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+            <id>releases</id>
+            <url>https://raw.github.com/skoulouzis/mvn-repo/master/releases</url>
+        </repository>
+                
+        
+        
+        <!--        <repository>
+            <id>skoulouzis-releases</id>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+            <url>https://raw.github.com/skoulouzis/mvn-repo/master/releases</url>
+        </repository>-->
+        
     </repositories>
 
     <build>
