@@ -133,6 +133,12 @@ public class WP4Sweep implements Runnable {
             client.setConnectTimeout(30000);
         }
 
+        /**
+         *
+         * @param resourceMetadataList
+         * @return
+         * @throws Exception
+         */
         @Override
         public ResourceMetadataList create(ResourceMetadataList resourceMetadataList) throws Exception {
             Logger.getLogger(WP4Connector.class.getName()).log(Level.INFO, "Start");
@@ -145,6 +151,12 @@ public class WP4Sweep implements Runnable {
             return response.getEntity(ResourceMetadataList.class);
         }
 
+        /**
+         *
+         * @param resourceMetadataList
+         * @return
+         * @throws Exception
+         */
         @Override
         public ResourceMetadataList update(ResourceMetadataList resourceMetadataList) throws Exception {
             Logger.getLogger(WP4Connector.class.getName()).log(Level.INFO, "Start");
@@ -157,6 +169,12 @@ public class WP4Sweep implements Runnable {
             return response.getEntity(ResourceMetadataList.class);
         }
 
+        /**
+         *
+         * @param globalIdCollection
+         * @return
+         * @throws Exception
+         */
         @Override
         public ResourceMetadataList delete(Collection<String> globalIdCollection) throws Exception {
             Logger.getLogger(WP4Connector.class.getName()).log(Level.INFO, "Start");

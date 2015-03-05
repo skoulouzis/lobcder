@@ -101,6 +101,7 @@ public final class WorkerServlet extends HttpServlet {
     private int warnings;
     private double progressThresshold;
     private double coefficient;
+    private String fileLogicalName;
 
     // Actions ------------------------------------------------------------------------------------
     /**
@@ -210,10 +211,9 @@ public final class WorkerServlet extends HttpServlet {
         }
 
         // Prepare some variables. The ETag is an unique identifier of the file.
-        String fileName = pdri.getFileName();
         long length = pdri.getLength();
         long lastModified = logicalDataCache.get(fileUID).getLogicalData().getModifiedDate();
-        String eTag = fileName + "_" + length + "_" + lastModified;
+        String eTag = fileLogicalName + "_" + length + "_" + lastModified;
         long expires = System.currentTimeMillis() + DEFAULT_EXPIRE_TIME;
 
         // Validate request headers for caching ---------------------------------------------------
@@ -311,7 +311,7 @@ public final class WorkerServlet extends HttpServlet {
 
         // Prepare and initialize response --------------------------------------------------------
         // Get content type by file name and set default GZIP support and content disposition.
-        String contentType = getServletContext().getMimeType(fileName);
+        String contentType = getServletContext().getMimeType(fileLogicalName);
         if (contentType == null) {
             contentType = this.logicalDataCache.get(fileUID).getLogicalData().getContentTypesAsString();
         }
@@ -344,7 +344,7 @@ public final class WorkerServlet extends HttpServlet {
             response.setBufferSize(bufferSize);
         }
         responseBufferSize = response.getBufferSize();
-        response.setHeader("Content-Disposition", disposition + ";filename=\"" + fileName + "\"");
+        response.setHeader("Content-Disposition", disposition + ";filename=\"" + fileLogicalName + "\"");
         response.setHeader("Accept-Ranges", "bytes");
         response.setHeader("ETag", eTag);
         response.setDateHeader("Last-Modified", lastModified);
@@ -681,7 +681,6 @@ public final class WorkerServlet extends HttpServlet {
             logicalData = res.accept(MediaType.APPLICATION_XML).
                     get(new GenericType<LogicalDataWrapped>() {
             });
-
             if (logicalData != null) {
                 List<PDRIDescr> pdris = logicalData.getPdriList();
                 List<PDRIDescr> removeIt = new ArrayList<>();
@@ -710,7 +709,7 @@ public final class WorkerServlet extends HttpServlet {
         pdriDesc = selectBestPDRI(logicalData.getPdriList());
 
         Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "Selected pdri: {0}", pdriDesc.getResourceUrl());
-
+        fileLogicalName = logicalData.getLogicalData().getName();
         return new VPDRI(pdriDesc.getName(), pdriDesc.getId(), pdriDesc.getResourceUrl(), pdriDesc.getUsername(),
                 pdriDesc.getPassword(), pdriDesc.getEncrypt(), pdriDesc.getKey(), false);
     }

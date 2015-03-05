@@ -646,7 +646,7 @@ public class TestWebWAVFS {
 //        String testcol = root + "testResourceId/";
         try {
             utils.deleteResource(testFileURI1, false);
-            File file = utils.createRandomFile("/tmp/" + TestSettings.TEST_FILE_NAME1, 2);
+            File file = utils.createRandomFile("/tmp/" + TestSettings.TEST_FILE_NAME1, 1);
             utils.postFile(file, uri.toASCIIString());
             String firstLocalChecksum = utils.getChecksum(file, "SHA1");
             utils.waitForReplication(testFileURI1);
@@ -654,7 +654,7 @@ public class TestWebWAVFS {
             String firstRemoteChecksum = utils.getChecksum(fromLOB, "SHA1");
             assertEquals(firstLocalChecksum, firstRemoteChecksum);
 
-            file = utils.createRandomFile("/tmp/" + TestSettings.TEST_FILE_NAME1, 2);
+            file = utils.createRandomFile("/tmp/" + TestSettings.TEST_FILE_NAME1, 1);
             utils.postFile(file, uri.toASCIIString());
             String secondLocalChecksum = utils.getChecksum(file, "SHA1");
             utils.waitForReplication(testFileURI1);

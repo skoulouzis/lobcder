@@ -75,7 +75,7 @@ git clone https://github.com/skoulouzis/lobcder.git
 cd lobcder/lobcder-worker/
 mvn install 
 rm -r target/lobcder-worker
-mv target/lobcder-worker-1.0-SNAPSHOT target/lobcder-worker
+mv target/lobcder-worker-?.?-SNAPSHOT target/lobcder-worker
 cd /root
 cp -r lobcder/lobcder-worker/target/lobcder-worker apache-tomcat-6.0.36/webapps/
 ./apache-tomcat-6.0.36/bin/startup.sh
