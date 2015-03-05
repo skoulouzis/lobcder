@@ -378,29 +378,19 @@
 
         
         <repository>
-            <id>elab.lab.uvalight.net</id>
-            <name>elab.lab.uvalight.net-releases</name>
-            <url>>http://elab.lab.uvalight.net/artifactory/local</url>
+            <snapshots />
+            <id>skoulouzis-snapshots</id>
+            <url>https://raw.github.com/skoulouzis/mvn-repo/master/snapshots</url>
         </repository>
-        
-        <!--        <repository>
-            <id>rendersnake-repo</id>
-            <name>Repository for rendersnake</name>
-            <url>http://rendersnake.googlecode.com/svn/repo</url>
-        </repository>-->
-
-        <!--       <repository>
+                
+                
+        <repository>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
             <id>releases</id>
-            <name>Releases</name>
-            <url>https://oss.sonatype.org/content/repositories/releases</url>
-        </repository>-->
-        
-        <!--        <repository>
-            <url>http://download.java.net/maven/2/</url>
-            <id>restapi</id>
-            <layout>default</layout>
-            <name>Repository for library Library[restapi]</name>
-        </repository>-->
+            <url>https://raw.github.com/skoulouzis/mvn-repo/master/releases</url>
+        </repository>
       
     </repositories>
 
