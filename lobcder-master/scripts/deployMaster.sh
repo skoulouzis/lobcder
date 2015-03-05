@@ -1,7 +1,8 @@
 #!/bin/bash
 # Argument = -t test -r server -p password -v
 
-lobGitDir=lobcder-git
+lobGitDir=lobcder
+version=v2.5
 
 usage()
 {
@@ -90,7 +91,8 @@ mysql -u$sqlUser -p$sqlPass -s -N -e  "GRANT SUPER ON *.* to lobcder@localhost I
 if [ -d "$lobGitDir" ]; then
   cd $lobGitDir git pull
 else
-    git clone https://github.com/skoulouzis/lobcder.git lobcder-git
+    git clone https://github.com/skoulouzis/lobcder.git $lobGitDir
+    git checkout $version
 fi
 
 
