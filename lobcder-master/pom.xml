@@ -484,19 +484,5 @@
             </plugin>-->
         </plugins>
     </reporting>
-    
-    
-    <distributionManagement>
-        <repository>
-            <id>elab.lab.uvalight.net</id>
-            <name>elab.lab.uvalight.net-releases</name>
-            <url>http://elab.lab.uvalight.net/artifactory/local</url>
-        </repository>
-        <snapshotRepository>
-            <id>elab.lab.uvalight.net</id>
-            <name>elab.lab.uvalight.net-snapshots</name>
-            <url>http://elab.lab.uvalight.net/artifactory/local</url>
-        </snapshotRepository>
-    </distributionManagement>
 
 </project>
