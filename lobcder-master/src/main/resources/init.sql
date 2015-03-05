@@ -245,14 +245,14 @@ DROP TRIGGER IF EXISTS on_pref_insert |
 CREATE TRIGGER on_pref_insert
 AFTER INSERT ON pref_table
 FOR EACH ROW BEGIN
-    UPDATE pdrigroup_table SET needCheck=TRUE WHERE pdriGroupId IN (SELECT pdriGroupRef FROM ldata_table WHERE uid = new.ld_uid);
+  UPDATE pdrigroup_table a JOIN ldata_table ON pdriGroupId=pdriGroupRef SET needCheck=TRUE WHERE uid=new.ld_uid;
 END|
 
 DROP TRIGGER IF EXISTS on_pref_delete |
 CREATE TRIGGER on_pref_delete
 AFTER DELETE ON pref_table
 FOR EACH ROW BEGIN
-  UPDATE pdrigroup_table SET needCheck=TRUE WHERE pdriGroupId IN (SELECT pdriGroupRef FROM ldata_table WHERE uid=old.ld_uid);
+  UPDATE pdrigroup_table a JOIN ldata_table ON pdriGroupId=pdriGroupRef SET needCheck=TRUE WHERE uid=old.ld_uid;
 END|
 
 -- DROP TRIGGER IF EXISTS on_pdri_incert |
