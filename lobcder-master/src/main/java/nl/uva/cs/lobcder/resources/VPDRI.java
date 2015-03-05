@@ -110,9 +110,9 @@ public class VPDRI implements PDRI {
             this.encrypt = encrypt;
             this.keyInt = keyInt;
             this.doChunked = doChunkUpload;
-            VPDRI.log.log(Level.FINE, "fileName: {0}, storageSiteId: {1}, username: {2}, password: {3}, VRL: {4}", new Object[]{fileName, storageSiteId, "username", "password", vrl});
             initVFS();
 //            initRESTClient();
+//            VPDRI.log.log(Level.FINE, "Done init. fileName: {0}, storageSiteId: {1}, username: {2}, password: {3}, VRL: {4}", new Object[]{fileName, storageSiteId, "username", "password", vrl});
         } catch (Exception ex) {
             throw new IOException(ex);
         }
@@ -179,6 +179,7 @@ public class VPDRI implements PDRI {
         context.setProperty("chunk.upload", doChunked);
 //        info.setAttribute(new VAttribute("chunk.upload", true));
         info.store();
+
     }
 
     @Override
@@ -400,7 +401,6 @@ public class VPDRI implements PDRI {
     @Override
     public void putData(InputStream in) throws IOException {
         OutputStream out = null;
-//        VPDRI.log.log(Level.FINE, "putData:");
         double start = System.currentTimeMillis();
 //        VFile tmpFile = null;
         try {

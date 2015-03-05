@@ -102,7 +102,7 @@ public class ReplicateSweep implements Runnable {
             for (PDRIDescr pdriDescr : cachePdris) {
                 try {
                     PDRI pdri = PDRIFactory.getFactory().createInstance(pdriDescr);
-                    log.log(Level.FINE, "PDRI Instance file name: {0}", new Object[]{pdri.getFileName()});
+//                    log.log(Level.FINE, "PDRI Instance file name: {0}", new Object[]{pdri.getFileName()});
                     pdri.delete();
                     preparedStatementDel.setLong(1, pdriDescr.getId());
                     preparedStatementDel.executeUpdate();
@@ -128,7 +128,7 @@ public class ReplicateSweep implements Runnable {
             for (PDRIDescr pdriDescr : wantRemove) {
                 try {
                     PDRI pdri = PDRIFactory.getFactory().createInstance(pdriDescr);
-                    log.log(Level.FINE, "PDRI Instance file name: {0}", new Object[]{pdri.getFileName()});
+//                    log.log(Level.FINE, "PDRI Instance file name: {0}", new Object[]{pdri.getFileName()});
                     pdri.delete();
                     preparedStatement.setLong(1, pdriDescr.getId());
                     preparedStatement.executeUpdate();
@@ -308,12 +308,8 @@ public class ReplicateSweep implements Runnable {
                             pdriGroupId,
                             null);
                     PDRI destinationPdri = PDRIFactory.getFactory().createInstance(destinationDescr);
-                    log.log(Level.FINE, "sourcePdri:" + sourcePdri.getURI() + " destinationPdri: " + destinationPdri.getURI());
                     if (!destinationPdri.exists(destinationPdri.getFileName())) {
                         destinationPdri.replicate(sourcePdri);
-                        log.log(Level.FINE, "Done with replication from:" + sourcePdri.getURI() + " to: " + destinationPdri.getURI());
-                    } else {
-                        log.log(Level.FINE, "Did not replicate from:" + sourcePdri.getURI() + " to: " + destinationPdri.getURI() + " " + destinationPdri.getFileName() + " was already there");
                     }
                     preparedStatement.setString(1, destinationDescr.getName());
                     preparedStatement.setLong(2, destinationDescr.getStorageSiteId());
