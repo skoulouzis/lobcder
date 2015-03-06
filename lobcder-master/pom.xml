@@ -361,6 +361,12 @@
         </dependency>
 
 
+        <dependency>
+            <groupId>com.maxmind.geoip</groupId>
+            <artifactId>geoip-api</artifactId>
+            <version>1.2.14</version>
+        </dependency>
+    
     </dependencies>
     
     <repositories>

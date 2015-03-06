@@ -4,6 +4,8 @@
  */
 package nl.uva.cs.lobcder.webDav.resources;
 
+import com.maxmind.geoip.Location;
+import com.maxmind.geoip.LookupService;
 import io.milton.common.ContentTypeUtils;
 import io.milton.common.Path;
 import io.milton.http.Auth;
@@ -17,6 +19,7 @@ import io.milton.http.exceptions.NotFoundException;
 import io.milton.resource.BufferingControlResource;
 import io.milton.resource.CollectionResource;
 import io.milton.resource.FileResource;
+import java.io.File;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.auth.AuthI;
 import nl.uva.cs.lobcder.auth.AuthLobcderComponents;
@@ -572,8 +575,13 @@ public class WebDataFileResource extends WebDataResource implements
                 return getWorkerRoundRobin();
             }
             if (PropertiesHelper.getSchedulingAlg().equals("random")) {
-                return getWorkerRandom();
+                return getRandomWorker();
             }
+            if (PropertiesHelper.getSchedulingAlg().equals("geolocation")) {
+                return getGeolocationWorker(reuSource);
+            }
+
+
 //            }
 
             workers = PropertiesHelper.getWorkers();
@@ -690,7 +698,7 @@ public class WebDataFileResource extends WebDataResource implements
         return w + "/" + token;
     }
 
-    private String getWorkerRandom() throws IOException {
+    private String getRandomWorker() throws IOException {
         workers = PropertiesHelper.getWorkers();
         int randomIndex = new Random().nextInt((workers.size() - 1 - 0) + 1) + 0;
         String worker = workers.get(randomIndex);
@@ -698,5 +706,21 @@ public class WebDataFileResource extends WebDataResource implements
         String token = UUID.randomUUID().toString();
         AuthLobcderComponents.setTicket(worker, token);
         return w + "/" + token;
+    }
+
+    private String getGeolocationWorker(String reuSource) throws IOException {
+        LookupService lookupService = new LookupService(PropertiesHelper.getGeoDB() );
+
+//        Location reuSourceLocation = lookupService.getLocation("82.157.235.6");
+////        String wip = workersMap.keySet().iterator().next();
+//        
+//        Location workerLocation = lookupService.getLocation("131.130.121.93");
+//
+//        System.out.println("Google is located on: " + reuSourceLocation.city);
+//
+//        System.out.println("Apple is located on: " + workerLocation.city);
+//
+//        System.out.print("Distance: " + reuSourceLocation.distance(workerLocation) + " kilometers");
+        return null;
     }
 }

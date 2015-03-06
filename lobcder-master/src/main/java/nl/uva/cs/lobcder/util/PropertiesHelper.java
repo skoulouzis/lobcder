@@ -7,9 +7,11 @@ package nl.uva.cs.lobcder.util;
 import nl.uva.cs.lobcder.webDav.resources.WebDataFileResource;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.URL;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -265,5 +267,12 @@ public class PropertiesHelper {
 
     public static long getSweepersInterval() throws IOException {
         return Long.valueOf(getProperties().getProperty("sweepers.interval", "100"));
+    }
+
+    public static File getGeoDB() {
+        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+        URL url = classLoader.getResource("GeoLiteCityv6.dat");
+        String dbPath = url.getPath();
+        return new File(dbPath);
     }
 }
