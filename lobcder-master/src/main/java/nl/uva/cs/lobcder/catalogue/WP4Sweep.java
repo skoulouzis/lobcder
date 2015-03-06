@@ -41,13 +41,14 @@ public class WP4Sweep implements Runnable {
     private final String metadataRepository;
 
     public WP4Sweep(DataSource datasource) throws IOException {
-        Logger.getLogger(WP4Sweep.class.getName()).log(Level.INFO, "Start");
+
         this.datasource = datasource;
         metadataRepository = PropertiesHelper.getMetadataRepositoryURL();
-        Logger.getLogger(WP4Sweep.class.getName()).log(Level.INFO, "Done");
+
     }
 
     static enum FileType {
+
         File, Folder
     }
 
@@ -99,7 +100,7 @@ public class WP4Sweep implements Runnable {
     }
 
     private static String getGlobalIdForDelete(Collection<String> globalIdCollection) {
-        Logger.getLogger(WP4Sweep.class.getName()).log(Level.INFO, "Start");
+
         StringBuilder sb = new StringBuilder();
         sb.append("<globalID_list>");
         for (String id : globalIdCollection) {
@@ -107,7 +108,7 @@ public class WP4Sweep implements Runnable {
         }
         sb.replace(sb.lastIndexOf(","), sb.length(), "");
         sb.append("</globalID_list>");
-        Logger.getLogger(WP4Sweep.class.getName()).log(Level.INFO, "Done");
+
         return sb.toString();
     }
 
@@ -126,7 +127,6 @@ public class WP4Sweep implements Runnable {
         private final String uri;
 
         public WP4Connector(String uri) {
-            Logger.getLogger(WP4Connector.class.getName()).log(Level.INFO, "New  WP4Connector to: {0}", uri);
             this.uri = uri;
             client = Client.create();
             client.setReadTimeout(30000);
@@ -141,13 +141,12 @@ public class WP4Sweep implements Runnable {
          */
         @Override
         public ResourceMetadataList create(ResourceMetadataList resourceMetadataList) throws Exception {
-            Logger.getLogger(WP4Connector.class.getName()).log(Level.INFO, "Start");
             WebResource webResource = client.resource(uri);
             ClientResponse response = webResource.type(MediaType.APPLICATION_XML).post(ClientResponse.class, resourceMetadataList);
             if (response.getClientResponseStatus() != ClientResponse.Status.OK) {
                 throw new Exception(uri + " responded with: " + response.getClientResponseStatus().toString() + ". Response Entity:" + response.getEntity(String.class));
             }
-            Logger.getLogger(WP4Connector.class.getName()).log(Level.INFO, "Done");
+            Logger.getLogger(WP4Connector.class.getName()).log(Level.INFO, "Send metadata to uri: {0}", new Object[]{uri});
             return response.getEntity(ResourceMetadataList.class);
         }
 
@@ -159,13 +158,12 @@ public class WP4Sweep implements Runnable {
          */
         @Override
         public ResourceMetadataList update(ResourceMetadataList resourceMetadataList) throws Exception {
-            Logger.getLogger(WP4Connector.class.getName()).log(Level.INFO, "Start");
             WebResource webResource = client.resource(uri);
             ClientResponse response = webResource.type(MediaType.APPLICATION_XML).post(ClientResponse.class, resourceMetadataList);
             if (response.getClientResponseStatus() != ClientResponse.Status.OK) {
                 throw new Exception(uri + " responded with: " + response.getClientResponseStatus().toString() + ". Response Entity:" + response.getEntity(String.class));
             }
-            Logger.getLogger(WP4Connector.class.getName()).log(Level.INFO, "Done");
+            Logger.getLogger(WP4Connector.class.getName()).log(Level.INFO, "Send metadata to uri: {0}", new Object[]{uri});
             return response.getEntity(ResourceMetadataList.class);
         }
 
@@ -177,19 +175,17 @@ public class WP4Sweep implements Runnable {
          */
         @Override
         public ResourceMetadataList delete(Collection<String> globalIdCollection) throws Exception {
-            Logger.getLogger(WP4Connector.class.getName()).log(Level.INFO, "Start");
             WebResource webResource = client.resource(uri);
             ClientResponse response = webResource.type(MediaType.APPLICATION_XML).delete(ClientResponse.class, getGlobalIdForDelete(globalIdCollection));
             if (response.getClientResponseStatus() != ClientResponse.Status.OK) {
                 throw new Exception(uri + " responded with: " + response.getClientResponseStatus().toString() + ". Response Entity:" + response.getEntity(String.class));
             }
-            Logger.getLogger(WP4Connector.class.getName()).log(Level.INFO, "Done");
+            Logger.getLogger(WP4Connector.class.getName()).log(Level.INFO, "Deleting metadata from uri: {0}", new Object[]{uri});
             return response.getEntity(ResourceMetadataList.class);
         }
     }
 
     private void create(Connection connection, WP4ConnectorI wp4Connector) throws Exception {
-        Logger.getLogger(WP4Sweep.class.getName()).log(Level.INFO, "Start");
         Collection<ResourceMetadata> resourceMetadataList;
         Map<Long, Long> resourceMetadataMap;
         try (Statement s1 = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY)) {
@@ -211,21 +207,23 @@ public class WP4Sweep implements Runnable {
                 resourceMetadataList.add(rm);
             }
         }
-        try (PreparedStatement s2 = connection.prepareStatement("UPDATE wp4_table SET need_create=FALSE, global_id=? WHERE id=?")) {
-            ResourceMetadataList param = new ResourceMetadataList();
-            param.setResourceMetadataList(resourceMetadataList);
-            for (ResourceMetadata rm : wp4Connector.create(param).getResourceMetadataList()) {
-                s2.setString(1, rm.getGlobalID());
-                s2.setLong(2, resourceMetadataMap.get(rm.getLocalID()));
-                s2.addBatch();
+        if (!resourceMetadataList.isEmpty()) {
+            try (PreparedStatement s2 = connection.prepareStatement("UPDATE wp4_table SET need_create=FALSE, global_id=? "
+                    + "WHERE id=?")) {
+                ResourceMetadataList param = new ResourceMetadataList();
+                param.setResourceMetadataList(resourceMetadataList);
+                for (ResourceMetadata rm : wp4Connector.create(param).getResourceMetadataList()) {
+                    s2.setString(1, rm.getGlobalID());
+                    s2.setLong(2, resourceMetadataMap.get(rm.getLocalID()));
+                    s2.addBatch();
+                }
+                s2.executeBatch();
             }
-            s2.executeBatch();
         }
-        Logger.getLogger(WP4Sweep.class.getName()).log(Level.INFO, "Done");
     }
 
     private void update(Connection connection, WP4ConnectorI wp4Connector) throws Exception {
-        Logger.getLogger(WP4Sweep.class.getName()).log(Level.INFO, "Start");
+
         Collection<ResourceMetadata> resourceMetadataList;
         Map<Long, Long> resourceMetadataMap;
         try (Statement s1 = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY)) {
@@ -245,20 +243,21 @@ public class WP4Sweep implements Runnable {
                 resourceMetadataList.add(rm);
             }
         }
-        try (PreparedStatement s2 = connection.prepareStatement("UPDATE wp4_table SET need_update=FALSE WHERE id=?")) {
-            ResourceMetadataList param = new ResourceMetadataList();
-            param.setResourceMetadataList(resourceMetadataList);
-            for (ResourceMetadata rm : wp4Connector.update(param).getResourceMetadataList()) {
-                s2.setLong(1, resourceMetadataMap.get(rm.getLocalID()));
-                s2.addBatch();
+        if (!resourceMetadataList.isEmpty()) {
+            try (PreparedStatement s2 = connection.prepareStatement("UPDATE wp4_table SET need_update=FALSE WHERE id=?")) {
+                ResourceMetadataList param = new ResourceMetadataList();
+                param.setResourceMetadataList(resourceMetadataList);
+                for (ResourceMetadata rm : wp4Connector.update(param).getResourceMetadataList()) {
+                    s2.setLong(1, resourceMetadataMap.get(rm.getLocalID()));
+                    s2.addBatch();
+                }
+                s2.executeBatch();
             }
-            s2.executeBatch();
         }
-        Logger.getLogger(WP4Sweep.class.getName()).log(Level.INFO, "Done");
     }
 
     private void delete(Connection connection, WP4ConnectorI wp4Connector) throws Exception {
-        Logger.getLogger(WP4Sweep.class.getName()).log(Level.INFO, "Start");
+
         Map<String, Long> deleteMetadataMap;
         try (Statement s1 = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY)) {
             ResultSet rs = s1.executeQuery("SELECT global_id, id FROM wp4_table WHERE local_id IS NULL LIMIT 1000");
@@ -268,22 +267,22 @@ public class WP4Sweep implements Runnable {
                 deleteMetadataMap.put(rs.getString(1), rs.getLong(2));
             }
         }
-        try (PreparedStatement s2 = connection.prepareStatement("DELETE FROM wp4_table WHERE id=?")) {
-            for (ResourceMetadata rm : wp4Connector.delete(deleteMetadataMap.keySet()).getResourceMetadataList()) {
-                s2.setLong(1, deleteMetadataMap.get(rm.getGlobalID()));
-                s2.addBatch();
+        if (!deleteMetadataMap.isEmpty()) {
+            try (PreparedStatement s2 = connection.prepareStatement("DELETE FROM wp4_table WHERE id=?")) {
+                for (ResourceMetadata rm : wp4Connector.delete(deleteMetadataMap.keySet()).getResourceMetadataList()) {
+                    s2.setLong(1, deleteMetadataMap.get(rm.getGlobalID()));
+                    s2.addBatch();
+                }
+                s2.executeBatch();
             }
-            s2.executeBatch();
         }
-        Logger.getLogger(WP4Sweep.class.getName()).log(Level.INFO, "Done");
     }
 
     @Override
     public void run() {
-        Logger.getLogger(WP4Sweep.class.getName()).log(Level.INFO, "Start");
+
         try (Connection connection = datasource.getConnection()) {
             connection.setAutoCommit(true);
-            Logger.getLogger(WP4Sweep.class.getName()).log(Level.INFO, "Creating WP4ConnectorI");
             WP4ConnectorI connector = new WP4Sweep.WP4Connector(metadataRepository);
             create(connection, connector);
             update(connection, connector);
@@ -291,25 +290,25 @@ public class WP4Sweep implements Runnable {
         } catch (Exception ex) {
             Logger.getLogger(WP4Sweep.class.getName()).log(Level.SEVERE, null, ex);
         }
-        Logger.getLogger(WP4Sweep.class.getName()).log(Level.INFO, "Done");
+
     }
 
     public void serialize(ResourceMetadataList rml) throws JAXBException {
-        Logger.getLogger(WP4Sweep.class.getName()).log(Level.INFO, "Start");
+
         JAXBContext jaxbContext = JAXBContext.newInstance(ResourceMetadataList.class);
         Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
         jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
         //Marshal the employees list in console
         jaxbMarshaller.marshal(rml, System.out);
-        Logger.getLogger(WP4Sweep.class.getName()).log(Level.INFO, "Done");
+
     }
 
     public ResourceMetadataList unmarchaling() throws JAXBException {
-        Logger.getLogger(WP4Sweep.class.getName()).log(Level.INFO, "Start");
+
         JAXBContext jaxbContext = JAXBContext.newInstance(ResourceMetadataList.class);
         Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
 
-        Logger.getLogger(WP4Sweep.class.getName()).log(Level.INFO, "Done");
+
         //We had written this file in marshalling example
         return (ResourceMetadataList) jaxbUnmarshaller.unmarshal(new File("C:\\tmp\\test.xml"));
 
