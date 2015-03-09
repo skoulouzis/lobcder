@@ -53,6 +53,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import nl.uva.cs.lobcder.resources.VPDRI;
 import nl.uva.cs.lobcder.rest.wrappers.Stats;
+import nl.uva.cs.lobcder.util.Network;
 import org.jgrapht.graph.DefaultWeightedEdge;
 
 /**
@@ -709,18 +710,28 @@ public class WebDataFileResource extends WebDataResource implements
     }
 
     private String getGeolocationWorker(String reuSource) throws IOException {
-        LookupService lookupService = new LookupService(PropertiesHelper.getGeoDB() );
-
+        LookupService lookupService = new LookupService(PropertiesHelper.getGeoDB());
 //        Location reuSourceLocation = lookupService.getLocation("82.157.235.6");
-////        String wip = workersMap.keySet().iterator().next();
-//        
-//        Location workerLocation = lookupService.getLocation("131.130.121.93");
-//
-//        System.out.println("Google is located on: " + reuSourceLocation.city);
-//
-//        System.out.println("Apple is located on: " + workerLocation.city);
-//
-//        System.out.print("Distance: " + reuSourceLocation.distance(workerLocation) + " kilometers");
-        return null;
+        Location reuSourceLocation = lookupService.getLocation(reuSource);
+
+        Iterator<String> iter = workersMap.keySet().iterator();
+        double dist = Double.MAX_VALUE;
+        String worker = null;
+        while (iter.hasNext()) {
+            String wip = iter.next();
+            Location workerLocation = lookupService.getLocation(wip);
+            if (reuSourceLocation != null && workerLocation != null && reuSourceLocation.distance(workerLocation) < dist) {
+                worker = workersMap.get(wip);
+                log.log(Level.INFO, "Src loc: {0} Dst loc: {1} dist: {2}", new Object[]{reuSourceLocation.city, workerLocation.city, dist});
+            }
+        }
+        for(String s: Network.getAllLocalIP() ){
+            Location workerLocation = lookupService.getLocation(s);
+            if (reuSourceLocation != null && workerLocation != null && reuSourceLocation.distance(workerLocation) < dist) {
+//                log.log(Level.INFO, "Src loc: {0} Dst loc: {1} dist: {2}", new Object[]{reuSourceLocation.city, workerLocation.city, dist});
+                worker = null;
+            }
+        }
+        return worker;
     }
 }

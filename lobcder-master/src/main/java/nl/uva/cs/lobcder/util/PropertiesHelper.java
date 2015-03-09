@@ -271,7 +271,9 @@ public class PropertiesHelper {
 
     public static File getGeoDB() {
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-        URL url = classLoader.getResource("GeoLiteCityv6.dat");
+//        URL url = classLoader.getResource("GeoLiteCityv6.dat");
+//                URL url = classLoader.getResource("GeoIP.dat"); 
+        URL url = classLoader.getResource("GeoLiteCity.dat");
         String dbPath = url.getPath();
         return new File(dbPath);
     }
