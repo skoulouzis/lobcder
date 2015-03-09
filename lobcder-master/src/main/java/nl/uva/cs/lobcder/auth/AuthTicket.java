@@ -4,6 +4,7 @@
  */
 package nl.uva.cs.lobcder.auth;
 
+import java.io.IOException;
 import lombok.Setter;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.util.PropertiesHelper;
@@ -11,9 +12,12 @@ import org.apache.commons.codec.binary.Base64;
 
 import javax.sql.DataSource;
 import java.io.InputStream;
+import java.security.InvalidKeyException;
 import java.security.KeyFactory;
+import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.Signature;
+import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -44,7 +48,7 @@ public class AuthTicket implements AuthI {
     }
 
     @Override
-    public MyPrincipal checkToken(String uname,String token) {
+    public MyPrincipal checkToken(String uname, String token) {
         MyPrincipal res = null;
         try {
             if (principalCache != null) {
@@ -80,30 +84,33 @@ public class AuthTicket implements AuthI {
     }
     Signature verifier = null;
 
-    public AuthTicket() throws Exception {
+    public AuthTicket() throws IOException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException {
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         InputStream in = classLoader.getResourceAsStream(PropertiesHelper.propertiesPath);
         Properties properties = new Properties();
         properties.load(in);
         String lpubKeyFile = properties.getProperty("mi.cert.pub.der", "mi_pub_key.der");
-        String pubKeyType = properties.getProperty("mi.cert.alg", "DSA");
-        in = classLoader.getResourceAsStream(lpubKeyFile);
-        byte[] keyBytes = new byte[in.available()];
-        in.read(keyBytes);
-        X509EncodedKeySpec spec = new X509EncodedKeySpec(keyBytes);
-        KeyFactory kf = null;
-        switch (pubKeyType) {
-            case "DSA":
-                kf = KeyFactory.getInstance("DSA");
-                verifier = Signature.getInstance("SHA1withDSA");
-                break;
-            case "RSA":
-                kf = KeyFactory.getInstance("RSA");
-                verifier = Signature.getInstance("SHA1withRSA");
-                break;
+        if (!lpubKeyFile.equals("NON")) {
+            String pubKeyType = properties.getProperty("mi.cert.alg", "DSA");
+            in = classLoader.getResourceAsStream(lpubKeyFile);
+            byte[] keyBytes = new byte[in.available()];
+            in.read(keyBytes);
+            X509EncodedKeySpec spec = new X509EncodedKeySpec(keyBytes);
+            KeyFactory kf = null;
+            switch (pubKeyType) {
+                case "DSA":
+                    kf = KeyFactory.getInstance("DSA");
+                    verifier = Signature.getInstance("SHA1withDSA");
+                    break;
+                case "RSA":
+                    kf = KeyFactory.getInstance("RSA");
+                    verifier = Signature.getInstance("SHA1withRSA");
+                    break;
+            }
+            PublicKey pubKey = kf.generatePublic(spec);
+            verifier.initVerify(pubKey);
         }
-        PublicKey pubKey = kf.generatePublic(spec);
-        verifier.initVerify(pubKey);
+
     }
 
     public User validateTicket(String token) {
@@ -158,7 +165,6 @@ public class AuthTicket implements AuthI {
             return null;
         }
     }
-
 //    public static void main(String[] args) {
 //        AuthI au = null;
 //        try {

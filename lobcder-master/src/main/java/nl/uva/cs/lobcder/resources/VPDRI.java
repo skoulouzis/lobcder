@@ -44,6 +44,7 @@ import nl.uva.cs.lobcder.rest.wrappers.Stats;
 import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.cs.lobcder.util.DesEncrypter;
 import nl.uva.cs.lobcder.util.GridHelper;
+import nl.uva.cs.lobcder.util.Network;
 import nl.uva.cs.lobcder.util.PropertiesHelper;
 import nl.uva.vlet.GlobalConfig;
 import nl.uva.vlet.data.StringUtil;
@@ -485,17 +486,9 @@ public class VPDRI implements PDRI {
                 || StringUtil.isEmpty(vrl.getHostname())
                 || vrl.getHostname().equals("localhost")
                 || vrl.getHostname().equals("127.0.0.1")) {
-            return getIP("localhost");
+            return Network.getIP("localhost");
         } else {
             return vrl.getHostname();
-        }
-    }
-
-    private String getIP(String hostName) {
-        try {
-            return InetAddress.getByName(hostName).getHostAddress();
-        } catch (UnknownHostException ex) {
-            return hostName;
         }
     }
 

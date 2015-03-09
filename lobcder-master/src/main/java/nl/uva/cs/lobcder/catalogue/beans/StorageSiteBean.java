@@ -7,7 +7,6 @@ package nl.uva.cs.lobcder.catalogue.beans;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import nl.uva.cs.lobcder.rest.wrappers.CredentialWrapped;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;

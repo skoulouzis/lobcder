@@ -4,6 +4,8 @@
  */
 package nl.uva.cs.lobcder.webDav.resources;
 
+import com.maxmind.geoip.Location;
+import com.maxmind.geoip.LookupService;
 import io.milton.common.ContentTypeUtils;
 import io.milton.common.Path;
 import io.milton.http.Auth;
@@ -17,6 +19,7 @@ import io.milton.http.exceptions.NotFoundException;
 import io.milton.resource.BufferingControlResource;
 import io.milton.resource.CollectionResource;
 import io.milton.resource.FileResource;
+import java.io.File;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.auth.AuthI;
 import nl.uva.cs.lobcder.auth.AuthLobcderComponents;
@@ -50,6 +53,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import nl.uva.cs.lobcder.resources.VPDRI;
 import nl.uva.cs.lobcder.rest.wrappers.Stats;
+import nl.uva.cs.lobcder.util.Network;
 import org.jgrapht.graph.DefaultWeightedEdge;
 
 /**
@@ -572,8 +576,13 @@ public class WebDataFileResource extends WebDataResource implements
                 return getWorkerRoundRobin();
             }
             if (PropertiesHelper.getSchedulingAlg().equals("random")) {
-                return getWorkerRandom();
+                return getRandomWorker();
             }
+            if (PropertiesHelper.getSchedulingAlg().equals("geolocation")) {
+                return getGeolocationWorker(reuSource);
+            }
+
+
 //            }
 
             workers = PropertiesHelper.getWorkers();
@@ -690,7 +699,7 @@ public class WebDataFileResource extends WebDataResource implements
         return w + "/" + token;
     }
 
-    private String getWorkerRandom() throws IOException {
+    private String getRandomWorker() throws IOException {
         workers = PropertiesHelper.getWorkers();
         int randomIndex = new Random().nextInt((workers.size() - 1 - 0) + 1) + 0;
         String worker = workers.get(randomIndex);
@@ -698,5 +707,31 @@ public class WebDataFileResource extends WebDataResource implements
         String token = UUID.randomUUID().toString();
         AuthLobcderComponents.setTicket(worker, token);
         return w + "/" + token;
+    }
+
+    private String getGeolocationWorker(String reuSource) throws IOException {
+        LookupService lookupService = new LookupService(PropertiesHelper.getGeoDB());
+//        Location reuSourceLocation = lookupService.getLocation("82.157.235.6");
+        Location reuSourceLocation = lookupService.getLocation(reuSource);
+
+        Iterator<String> iter = workersMap.keySet().iterator();
+        double dist = Double.MAX_VALUE;
+        String worker = null;
+        while (iter.hasNext()) {
+            String wip = iter.next();
+            Location workerLocation = lookupService.getLocation(wip);
+            if (reuSourceLocation != null && workerLocation != null && reuSourceLocation.distance(workerLocation) < dist) {
+                worker = workersMap.get(wip);
+                log.log(Level.INFO, "Src loc: {0} Dst loc: {1} dist: {2}", new Object[]{reuSourceLocation.city, workerLocation.city, dist});
+            }
+        }
+        for(String s: Network.getAllLocalIP() ){
+            Location workerLocation = lookupService.getLocation(s);
+            if (reuSourceLocation != null && workerLocation != null && reuSourceLocation.distance(workerLocation) < dist) {
+//                log.log(Level.INFO, "Src loc: {0} Dst loc: {1} dist: {2}", new Object[]{reuSourceLocation.city, workerLocation.city, dist});
+                worker = null;
+            }
+        }
+        return worker;
     }
 }
