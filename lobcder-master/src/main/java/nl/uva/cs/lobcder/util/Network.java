@@ -43,13 +43,15 @@ public class Network {
         Enumeration e = NetworkInterface.getNetworkInterfaces();
         if (ips == null) {
             ips = new ArrayList<>();
-
             while (e.hasMoreElements()) {
                 NetworkInterface n = (NetworkInterface) e.nextElement();
                 Enumeration ee = n.getInetAddresses();
                 while (ee.hasMoreElements()) {
                     InetAddress i = (InetAddress) ee.nextElement();
-                    System.out.println(i.getHostAddress());
+//                    System.out.println(i.getHostAddress());
+                    if (i.getHostAddress().contains(".")) {
+                        ips.add(i.getHostAddress());
+                    }
                 }
             }
         }

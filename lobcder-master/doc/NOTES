@@ -270,7 +270,7 @@ tc qdisc del root dev $1
 
 
 
------------------------------proccess usage data from elasticsearch
+-----------------------------process usage data from elasticsearch
 curl "http://elab.lab.uvalight.net/elasticsearch/_all/_search?q=rx_size:*&size=5" | jq --raw-output '.hits.hits | .[] | ._source | "\(.logdate)\t\(.rx_source)\t\(.rx_destination)\t\(.rx_speed)\t\(.rx_size)\t\(.rx_sourceLoc.country_code2)\t\(.rx_sourceLoc.country_name)"'
 
 curl "http://elab.lab.uvalight.net/elasticsearch/_all/_search?q=tx_size:*&size=5" | jq --raw-output '.hits.hits | .[] | ._source | "\(.logdate)\t\(.tx_source)\t\(.tx_destination)\t\(.tx_speed)\t\(.tx_size)\t\(.tx_destinationLoc.country_code2)\t\(.tx_destinationLoc.country_name)"'
@@ -342,7 +342,7 @@ CREATE TABLE  req_stats (
 ) ENGINE=InnoDB;
 
 LOAD DATA LOCAL INFILE '/home/alogo/Downloads/req_size.csv' 
-INTO TABLE repl_stats FIELDS TERMINATED BY '\t' 
+INTO TABLE req_stats FIELDS TERMINATED BY '\t' 
 LINES TERMINATED BY '\n' 
 (@var1,req_source_country_code2,req_source_country_name,req_source_city_name,req_userAgent,req_user,req_verb,req_contLen,req_contType,
 req_elapsed,req_contType1,req_queryString,req_URL)
@@ -355,6 +355,13 @@ LOAD DATA LOCAL INFILE '/home/alogo/Downloads/tx_size.csv'
 INTO TABLE tx_stats FIELDS TERMINATED BY '\t' 
 LINES TERMINATED BY '\n' 
 (@var1,tx_source,tx_destination,tx_speed,tx_size,tx_destination_country_code2,tx_destination_country_name)
+set logdate = STR_TO_DATE(@var1, '%M %d,%Y %h:%i:%s %p')
+
+
+LOAD DATA LOCAL INFILE '/home/alogo/Downloads/rx_size.csv' 
+INTO TABLE rx_stats FIELDS TERMINATED BY '\t' 
+LINES TERMINATED BY '\n' 
+(@var1,rx_source,rx_destination,rx_speed,rx_size,rx_destination_country_code2,rx_destination_country_name)
 set logdate = STR_TO_DATE(@var1, '%M %d,%Y %h:%i:%s %p')
 
 ---------------------Usare agents
