@@ -715,7 +715,7 @@ public class WebDataFileResource extends WebDataResource implements
         Location reuSourceLocation = lookupService.getLocation(reuSource);
 
         Iterator<String> iter = workersMap.keySet().iterator();
-        double dist = Double.MAX_VALUE;
+        double dist = 999.000;
         String worker = null;
         while (iter.hasNext()) {
             String wip = iter.next();
@@ -725,10 +725,10 @@ public class WebDataFileResource extends WebDataResource implements
                 log.log(Level.INFO, "Src loc: {0} Dst loc: {1} dist: {2}", new Object[]{reuSourceLocation.city, workerLocation.city, dist});
             }
         }
-        for(String s: Network.getAllLocalIP() ){
+        for (String s : Network.getAllLocalIP()) {
             Location workerLocation = lookupService.getLocation(s);
             if (reuSourceLocation != null && workerLocation != null && reuSourceLocation.distance(workerLocation) < dist) {
-//                log.log(Level.INFO, "Src loc: {0} Dst loc: {1} dist: {2}", new Object[]{reuSourceLocation.city, workerLocation.city, dist});
+                log.log(Level.INFO, "Src loc: {0} Dst loc: {1} dist: {2}", new Object[]{reuSourceLocation.city, workerLocation.city, dist});
                 worker = null;
             }
         }
