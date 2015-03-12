@@ -281,6 +281,13 @@ public class WP4Sweep implements Runnable {
                 rm.setCategory("General Metadata");
                 rm.setDescription("LOBCDER");
                 rm.setStatus("active");
+                rm.setLinkedTo("");
+                rm.setRating(0L);
+                rm.setRelatedResources("");
+                rm.setSemanticAnnotations("");
+                rm.setViews(0);
+                rm.setSubjectID("");
+                rm.setType("File");
 
                 resourceMetadataMap.put(localId, rs.getLong(5));
                 resourceMetadataList.add(rm);
@@ -319,6 +326,11 @@ public class WP4Sweep implements Runnable {
                 rm.setViews(rs.getInt(4));
                 Long localId = rs.getLong(5);
                 rm.setLocalID(localId);
+                rm.setCategory("General Metadata");
+                rm.setDescription("LOBCDER");
+                rm.setStatus("active");
+                rm.setSubjectID("");
+                rm.setType("File");
                 resourceMetadataMap.put(localId, rs.getLong(6));
                 resourceMetadataList.add(rm);
             }
@@ -403,36 +415,84 @@ public class WP4Sweep implements Runnable {
     public static void main(String arg[]) {
         try {
             WP4Sweep wp4 = new WP4Sweep(null);
-            /*
-             List<ResourceMetadata> resourceMetadataList = new ArrayList<>();
-             ResourceMetadata rm1 = new ResourceMetadata();
-             rm1.setName("File1");
-             rm1.setLocalId(42L);
-             rm1.setType(FileType.File);
-             resourceMetadataList.add(rm1);
 
-             ResourceMetadata rm2 = new ResourceMetadata();
-             rm2.setName("Folder2");
-             rm2.setLocalId(35L);
-             rm2.setType(FileType.Folder);
-             resourceMetadataList.add(rm2);
+             Collection<ResourceMetadata> rml = new ArrayList<>();
+                ResourceMetadata rm = new ResourceMetadata();
+                Long localId = 123L;
+                rm.setLocalID(localId);
+                rm.setAuthor("dmitry");
+                rm.setFileType(FileType.File);
+                rm.setName("my_file");
+                rm.setCategory("General Metadata");
+                rm.setDescription("LOBCDER");
+                rm.setStatus("active");
 
-             ResourceMetadataList rml = new ResourceMetadataList();
-             rml.setResourceMetadataList(resourceMetadataList);
-             */
-            //
-            ResourceMetadataList rml = wp4.unmarchaling();
+                rm.setLinkedTo("");
+                rm.setRating(0L);
+                rm.setRelatedResources("");
+                rm.setSemanticAnnotations("");
+                rm.setViews(0);
+                rm.setSubjectID("");
+                rm.setType("File");
 
+
+                rml.add(rm);
+
+                rm = new ResourceMetadata();
+                localId = 456L;
+                rm.setLocalID(localId);
+                rm.setAuthor("Spiros");
+                rm.setFileType(FileType.Folder);
+                rm.setName("my_file");
+                rm.setCategory("General Metadata");
+                rm.setDescription("LOBCDER");
+                rm.setStatus("active");
+
+                rm.setLinkedTo("");
+                rm.setRating(0L);
+                rm.setRelatedResources("");
+                rm.setSemanticAnnotations("");
+                rm.setViews(0);
+                rm.setSubjectID("");
+            rm.setType("File");
+
+
+            rml.add(rm);
+
+            ResourceMetadataList param = new ResourceMetadataList();
+            param.setResourceMetadataList(rml);
+
+            wp4.serialize(param);
 
             WP4Connector wp4Connector = new WP4Connector("http://vphshare.atosresearch.eu/metadata-extended/rest/metadata/lobcder");
 
-            ResourceMetadataList res = wp4Connector.create(rml);
-            wp4.serialize(rml);
+            ResourceMetadataList res = wp4Connector.create(param);
+
             wp4.serialize(res);
             Collection<String> globalIdCollection = new HashSet<>();
-            for(ResourceMetadata rm : res.getResourceMetadataList()) {
-                globalIdCollection.add(rm.getGlobalID());
+            for(ResourceMetadata rm1 : res.getResourceMetadataList()) {
+                globalIdCollection.add(rm1.getGlobalID());
+                System.out.println(rm1.getGlobalID());
+
+                rm1.setAuthor("Spiros");
+                //rm1.setFileType(FileType.Folder);
+                rm1.setName("my_file");
+                rm1.setCategory("General Metadata");
+                rm1.setDescription("LOBCDER");
+                rm1.setStatus("active");
+
+                //rm1.setLinkedTo("");
+                //rm1.setRating(0L);
+                //rm1.setRelatedResources("");
+                //rm1.setSemanticAnnotations("");
+                rm1.setViews(0);
+                rm1.setSubjectID("");
+                rm1.setType("File");
             }
+
+            wp4.serialize(res);
+            res = wp4Connector.update(res);
+
 
             wp4.serialize(wp4Connector.delete(globalIdCollection));
 
@@ -442,6 +502,9 @@ public class WP4Sweep implements Runnable {
 
         } catch (Exception e) {
             e.printStackTrace();
+            if(e instanceof HTTPException) {
+                System.out.println(((HTTPException) e).getStatusCode());
+            }
         }
     }
 }
