@@ -264,7 +264,7 @@ public class WP4Sweep implements Runnable {
         Collection<ResourceMetadata> resourceMetadataList;
         Map<Long, Long> resourceMetadataMap;
         try (Statement s1 = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY)) {
-            ResultSet rs = s1.executeQuery("SELECT uid, ownerId, datatype, ldName, id "
+            ResultSet rs = s1.executeQuery("SELECT uid, ownerId, datatype, ldName, id, views "
                     + "FROM ldata_table "
                     + "JOIN wp4_table ON uid=local_id "
                     + "WHERE need_create=TRUE LIMIT 1000");
@@ -285,7 +285,7 @@ public class WP4Sweep implements Runnable {
                 rm.setRating(0L);
                 rm.setRelatedResources("");
                 rm.setSemanticAnnotations("");
-                rm.setViews(0);
+                rm.setViews(rs.getInt(6));
                 rm.setSubjectID("");
                 rm.setType("File");
 
@@ -314,7 +314,7 @@ public class WP4Sweep implements Runnable {
         Collection<ResourceMetadata> resourceMetadataList;
         Map<Long, Long> resourceMetadataMap;
         try (Statement s1 = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY)) {
-            ResultSet rs = s1.executeQuery("SELECT ownerId, ldName, global_id, views, local_id, id FROM ldata_table JOIN wp4_table ON uid=local_id WHERE need_update=TRUE LIMIT 1000");
+            ResultSet rs = s1.executeQuery("SELECT ownerId, ldName, global_id, views, local_id, id FROM ldata_table JOIN wp4_table ON uid=local_id WHERE need_update=TRUE AND global_id IS NOT NULL LIMIT 1000");
             int size = rs.getFetchSize();
             resourceMetadataList = new ArrayList<>(size);
             resourceMetadataMap = new HashMap<>(size);
@@ -352,22 +352,32 @@ public class WP4Sweep implements Runnable {
 
     private void delete(Connection connection, WP4ConnectorI wp4Connector) throws Exception {
         Logger.getLogger(WP4Sweep.class.getName()).log(Level.INFO, "Start");
-        Map<String, Long> deleteMetadataMap;
+        Map<String, Long> deleteMetadataMap = new HashMap<>();
+        Set<Long> deleteMetadataSet = new HashSet<>();
         try (Statement s1 = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY)) {
             ResultSet rs = s1.executeQuery("SELECT global_id, id FROM wp4_table WHERE local_id IS NULL LIMIT 1000");
-            int size = rs.getFetchSize();
-            deleteMetadataMap = new HashMap<>(size);
             while (rs.next()) {
-                deleteMetadataMap.put(rs.getString(1), rs.getLong(2));
+                String globalId = rs.getString(1);
+                if(globalId == null) {
+                    deleteMetadataSet.add(rs.getLong(2));
+                } else {
+                    deleteMetadataMap.put(globalId, rs.getLong(2));
+                }
             }
         }
         try (PreparedStatement s2 = connection.prepareStatement("DELETE FROM wp4_table WHERE id=?")) {
             ResourceMetadataList rml = wp4Connector.delete(deleteMetadataMap.keySet());
-            if(rml != null && rml.getResourceMetadataList() != null) {
+            if(rml != null && rml.getResourceMetadataList() != null && !rml.getResourceMetadataList().isEmpty()) {
                 for (ResourceMetadata rm :rml.getResourceMetadataList()){
                     s2.setLong(1, deleteMetadataMap.get(rm.getGlobalID()));
                     s2.addBatch();
                 }
+            }
+            for(Long id : deleteMetadataSet) {
+                s2.setLong(1, id);
+                s2.addBatch();
+            }
+            if((rml != null && rml.getResourceMetadataList() != null && !rml.getResourceMetadataList().isEmpty()) || !deleteMetadataSet.isEmpty()) {
                 s2.executeBatch();
             }
         }
