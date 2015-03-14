@@ -37,9 +37,9 @@ public class ReplicateSweep implements Runnable {
                     "UPDATE pdrigroup_table SET needCheck = FALSE WHERE pdriGroupId=?")) {
                 for (Long pdriGroup : selectPdriGroupsToRelocate(connection)) {
                     Set<Long> preferences = new HashSet<>();
-                    for (Long logicalDataId : getFilesByPdriGroup(pdriGroup, connection)) {
-                        preferences.addAll(getPreferencesForFile(logicalDataId, connection));
-                    }
+//                    for (Long logicalDataId : getFilesByPdriGroup(pdriGroup, connection)) {
+//                        preferences.addAll(getPreferencesForFile(logicalDataId, connection));
+//                    }
                     if (!preferences.isEmpty()) {
                         for (PDRIDescr pdriDescr : getPdriDescrForGroup(pdriGroup, connection)) {
                             preferences.remove(pdriDescr.getStorageSiteId());
@@ -189,8 +189,17 @@ public class ReplicateSweep implements Runnable {
     private Collection<Long> selectPdriGroupsToRelocate(Connection connection) throws SQLException {
         try (Statement statement = connection.createStatement()) {
             Collection<Long> result = new ArrayList<>();
-            ResultSet resultSet = statement.executeQuery("SELECT pdriGroupId FROM "
-                    + "pdrigroup_table WHERE needCheck=TRUE AND bound=FALSE AND refCount>0 LIMIT 10");
+            ResultSet resultSet = statement.executeQuery(
+//                    "SELECT pdriGroupId FROM pdrigroup_table "
+//                    + "JOIN ldata_table ON ldata_table.parentRef = pdrigroup_table.pdriGroupId "
+//                    + "WHERE needCheck=TRUE AND bound=FALSE AND refCount>0 "
+//                    + "ORDER BY ldata_table.ldLength LIMIT 100"
+                    
+                    
+                    "SELECT pdriGroupId FROM "
+                    + "pdrigroup_table WHERE needCheck=TRUE AND bound=FALSE AND refCount>0 LIMIT 100"
+            
+            );
             while (resultSet.next()) {
                 result.add(resultSet.getLong(1));
             }
@@ -203,12 +212,13 @@ public class ReplicateSweep implements Runnable {
         try (PreparedStatement ps = connection.prepareStatement(
                 "SELECT fileName, storageSiteRef, storage_site_table.resourceUri, "
                 + "username, password, isEncrypted, encryptionKey, pdri_table.pdriId "
-                + "FROM pdri_table JOIN storage_site_table "
-                + "ON storageSiteRef = storageSiteId "
-                + "JOIN credential_table "
-                + "ON credentialRef = credintialId "
+                + "FROM pdri_table "
+                + "JOIN storage_site_table ON storageSiteRef = storageSiteId "
+                + "JOIN credential_table ON credentialRef = credintialId "
                 + "WHERE pdri_table.pdriGroupRef=? "
-                + "AND isCache=FALSE")) {
+                + "AND isCache=FALSE"
+                
+                )) {
             ps.setLong(1, groupId);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {

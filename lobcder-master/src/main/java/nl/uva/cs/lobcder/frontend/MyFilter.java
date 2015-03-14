@@ -8,6 +8,7 @@ import io.milton.common.Path;
 import io.milton.http.Request;
 import io.milton.http.Request.Method;
 import io.milton.servlet.MiltonFilter;
+import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
@@ -25,6 +26,7 @@ import java.util.logging.Logger;
 import javax.naming.InitialContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
 import nl.uva.cs.lobcder.optimization.Vertex;
@@ -68,8 +70,22 @@ public class MyFilter extends MiltonFilter {
     @Override
     public void doFilter(javax.servlet.ServletRequest req, javax.servlet.ServletResponse resp, javax.servlet.FilterChain fc) throws IOException, ServletException {
         double start = System.currentTimeMillis();
+
         String method = ((HttpServletRequest) req).getMethod();
         StringBuffer reqURL = ((HttpServletRequest) req).getRequestURL();
+
+        File file = new File(System.getProperty("user.home"));
+//        long totalSpace = file.getTotalSpace(); //total disk space in bytes.
+        long usableSpace = file.getUsableSpace(); ///unallocated / free disk space in bytes.
+        if (usableSpace < PropertiesHelper.getCacheFreeSpaceLimit()) {
+            if (((HttpServletRequest) req).getMethod().equals(Method.POST.toString())
+                    || ((HttpServletRequest) req).getMethod().equals(Method.PUT.toString())) {
+                HttpServletResponse response = (HttpServletResponse) resp;
+                response.setStatus(response.SC_SERVICE_UNAVAILABLE);
+                return;
+            }
+        }
+
 
         if (PropertiesHelper.doPrediction()) {
             try {
@@ -100,7 +116,7 @@ public class MyFilter extends MiltonFilter {
         if (authorizationHeader != null) {
             userNpasswd = authorizationHeader.split("Basic ")[1];
         }
-        
+
         if (PropertiesHelper.doRequestLoging()) {
             RequestWapper my = new RequestWapper();
             my.setMethod(method);

@@ -277,4 +277,8 @@ public class PropertiesHelper {
         String dbPath = url.getPath();
         return new File(dbPath);
     }
+
+    public static long getCacheFreeSpaceLimit() throws IOException {
+        return Long.valueOf(getProperties().getProperty("cache.size.limit", "2000000000"));
+    }
 }

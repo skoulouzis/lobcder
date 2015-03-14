@@ -39,10 +39,11 @@ public class Constants {
     public static final QName TTL = new QName("custom:", "ttl");
     public static final QName REPLICATION_QUEUE = new QName("custom:", "replication-queue");
     public static final QName REPLICATION_QUEUE_LEN = new QName("custom:", "replication-queue-len");
+    public static final QName REPLICATION_QUEUE_SIZE = new QName("custom:", "replication-queue-size");
     public static final QName[] PROP_NAMES = new QName[]{DATA_DIST_PROP_NAME, DRI_SUPERVISED_PROP_NAME,
         DRI_CHECKSUM_PROP_NAME, DRI_LAST_VALIDATION_DATE_PROP_NAME, DRI_STATUS_PROP_NANE, DESCRIPTION_PROP_NAME,
         DATA_LOC_PREF_NAME, ENCRYPT_PROP_NAME, AVAIL_STORAGE_SITES_PROP_NAME, DAV_LOCK_PROP_NAME, TTL,
-        REPLICATION_QUEUE, REPLICATION_QUEUE_LEN};
+        REPLICATION_QUEUE, REPLICATION_QUEUE_LEN, REPLICATION_QUEUE_SIZE};
     public static final int BUF_SIZE = 2 * 1024 * 1024;
     public static Long LOCK_TIME = new Long(60000);
     public static final int RECONNECT_NTRY = 20;

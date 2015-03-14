@@ -382,6 +382,10 @@ public class WebDataResource implements PropFindableResource, Resource,
 //                if (getPrincipal().isAdmin()) {
                 return getReplicationQueueLen();
 //                }
+            } else if (qname.equals(Constants.REPLICATION_QUEUE_SIZE)) {
+//                if (getPrincipal().isAdmin()) {
+                return getReplicationQueueSize();
+//                }
             }
             return PropertySource.PropertyMetaData.UNKNOWN;
         } catch (Throwable th) {
@@ -820,5 +824,9 @@ public class WebDataResource implements PropFindableResource, Resource,
 
     private String getReplicationQueueLen() throws SQLException {
         return String.valueOf(getCatalogue().getReplicationQueueLen());
+    }
+
+    private String getReplicationQueueSize() throws SQLException {
+        return String.valueOf(getCatalogue().getReplicationQueueSize());
     }
 }
