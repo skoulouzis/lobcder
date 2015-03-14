@@ -148,6 +148,16 @@ select count, prob, cumulativeSum(prob) from
 (select count, (count(*)/(select count(*) from graph_table)) as prob from graph_table group by count order by count) 
 as countProb
 
+
+
+select DATE_FORMAT(logdate, '%m/%y'), SUM(repl_size) as time from repl_stats GROUP BY YEAR(logdate), MONTH(logdate);
+
+select SUM(tx_size) as tx_size from tx_stats 
+where tx_destination_country_code2 = 'IE';
+
+select count(*) as Num_of_req from  lobStats.req_stats 
+where lobStats.req_stats.req_source_country_code2 = 'PL';
+
 ---------------------------------------------------------
 
 follow redirects and resume downloads 
@@ -364,7 +374,16 @@ LINES TERMINATED BY '\n'
 (@var1,rx_source,rx_destination,rx_speed,rx_size,rx_destination_country_code2,rx_destination_country_name)
 set logdate = STR_TO_DATE(@var1, '%M %d,%Y %h:%i:%s %p')
 
----------------------Usare agents
+
+-------------------------Frequency dist--------------------------
+SELECT ROUND(lobStats.tx_stats.tx_size, -6 )  / (1024*1024*1024)  AS bucket,
+       COUNT(*)                    AS COUNT,
+       RPAD('', LN(COUNT(*)), '*') AS bar
+FROM   lobStats.tx_stats
+GROUP  BY bucket;
+
+
+---------------------Usare agents-------------------------------
 
 sed -i 's/Jakarta\ Commons-HttpClient.*/Jakarta\ Commons-HttpClient/' req.csv
 sed -i 's/cadaver.*/cadaver/' req.csv

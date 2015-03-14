@@ -1727,7 +1727,8 @@ public class JDBCatalogue extends MyDataSource {
     }
 
     private void setNeedsCheck(Long logicalDataUID, Connection connection) throws SQLException {
-        try (PreparedStatement ps = connection.prepareStatement("UPDATE pdrigroup_table JOIN ldata_table ON ldata_table.uid = ? SET needCheck = true WHERE pdriGroupId = ldata_table.pdriGroupRef;")) {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "UPDATE pdrigroup_table JOIN ldata_table ON ldata_table.uid = ? SET needCheck = true WHERE pdriGroupId = ldata_table.pdriGroupRef")) {
             ps.setLong(1, logicalDataUID);
             ps.executeUpdate();
         }
@@ -1800,6 +1801,24 @@ public class JDBCatalogue extends MyDataSource {
 
         }
         return list;
+    }
+
+    public Long getReplicationQueueSize(Connection connection) throws SQLException {
+        try (PreparedStatement ps = connection.prepareStatement("SELECT sum(ldLength) "
+                + "FROM pdri_table "
+                + "JOIN ldata_table ON pdri_table.pdriGroupRef = ldata_table.pdriGroupRef "
+                + "JOIN storage_site_table ON storage_site_table.storageSiteId = pdri_table.storageSiteRef "
+                + "WHERE isCache = true")) {
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getLong(1);
+            }
+        }
+        return null;
+    }
+
+    public Long getReplicationQueueSize() throws SQLException {
+        return getReplicationQueueSize(getConnection());
     }
 
 //    public List<String> getDataLocationPreferace(Connection connection, Long uid) throws SQLException {

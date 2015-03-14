@@ -45,32 +45,32 @@ public class UsersService extends CatalogueHelper {
     @Context
     HttpServletResponse servletResponse;
 
-    @Path("query/")
-    @GET
-    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public UsersWrapperList getXml() throws FileNotFoundException, VlException, URISyntaxException, IOException, MalformedURLException, Exception {
-        MyPrincipal mp = (MyPrincipal) request.getAttribute("myprincipal");
-        if (mp.isAdmin()) {
-            try (Connection cn = getCatalogue().getConnection()) {
-                List<UsersWrapper> res = queryUsers(cn);
-                UsersWrapperList uwl = new UsersWrapperList();
-                uwl.setUsers(res);
-                return uwl;
-            } catch (SQLException ex) {
-                log.log(Level.SEVERE, null, ex);
-                throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
-            }
-        }
-        return null;
-    }
-
-    private List<UsersWrapper> queryUsers(Connection cn) throws SQLException {
-        MultivaluedMap<String, String> queryParameters = info.getQueryParameters();
-        List<String> ids = queryParameters.get("id");
-        List<UsersWrapper> users = null;
-        if (ids != null && ids.size() > 0 && ids.get(0).equals("all")) {
-            users = getCatalogue().getUsers(cn);
-        }
-        return users;
-    }
+//    @Path("query/")
+//    @GET
+//    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+//    public UsersWrapperList getXml() throws FileNotFoundException, VlException, URISyntaxException, IOException, MalformedURLException, Exception {
+//        MyPrincipal mp = (MyPrincipal) request.getAttribute("myprincipal");
+//        if (mp.isAdmin()) {
+//            try (Connection cn = getCatalogue().getConnection()) {
+//                List<UsersWrapper> res = queryUsers(cn);
+//                UsersWrapperList uwl = new UsersWrapperList();
+//                uwl.setUsers(res);
+//                return uwl;
+//            } catch (SQLException ex) {
+//                log.log(Level.SEVERE, null, ex);
+//                throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
+//            }
+//        }
+//        return null;
+//    }
+//
+//    private List<UsersWrapper> queryUsers(Connection cn) throws SQLException {
+//        MultivaluedMap<String, String> queryParameters = info.getQueryParameters();
+//        List<String> ids = queryParameters.get("id");
+//        List<UsersWrapper> users = null;
+//        if (ids != null && ids.size() > 0 && ids.get(0).equals("all")) {
+//            users = getCatalogue().getUsers(cn);
+//        }
+//        return users;
+//    }
 }

@@ -43,7 +43,7 @@ public class AuthTicket implements AuthI {
     public static class User {
 
         public String username;
-        public String role[];
+        public String roles[];
         public long validuntil;
     }
 
@@ -69,7 +69,7 @@ public class AuthTicket implements AuthI {
             User u = null;
             if (res == null) {
                 u = validateTicket(token);
-                res = new MyPrincipal(u.username, new HashSet(Arrays.asList(u.role)), token);
+                res = new MyPrincipal(u.username, new HashSet(Arrays.asList(u.roles)), token);
                 res.getRoles().add("other");
                 res.getRoles().add(u.username);
                 res.setValidUntil(u.validuntil);
@@ -147,7 +147,7 @@ public class AuthTicket implements AuthI {
                     } else if (fields[0].compareTo("validuntil") == 0) {
                         u.validuntil = Long.valueOf(fields[1]).longValue();
                     } else if (fields[0].compareTo("tokens") == 0) {
-                        u.role = fields[1].split(",");
+                        u.roles = fields[1].split(",");
                     }
                 }
                 long now = new Date().getTime() / 1000;
