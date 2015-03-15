@@ -382,6 +382,18 @@ SELECT ROUND(lobStats.tx_stats.tx_size, -6 )  / (1024*1024*1024)  AS bucket,
 FROM   lobStats.tx_stats
 GROUP  BY bucket;
 
+----------------------------Update pref table-----------------------
+INSERT INTO pref_table (ld_uid, storageSiteRef) SELECT uid, 3 AS prefblabla 
+FROM (select 
+  ld.uid
+, pr.ld_uid
+, pr.storageSiteRef
+FROM ldata_table AS ld
+LEFT JOIN pref_table AS pr ON pr.ld_uid = ld.uid
+WHERE 1 = 1
+AND ld.ownerid = 'mp1smw'
+AND pr.ld_uid is null) AS a
+;
 
 ---------------------Usare agents-------------------------------
 
@@ -408,7 +420,7 @@ sed -i 's/UCI\ DAV\ Explorer.*/UCI\ DAV\ Explorer/' req.csv
 sed -i 's/Wget.*/Wget/' req.csv
 sed -i 's/Transmit.*/Transmit/' req.csv
 
-----------------------------------------swift 
+----------------------------------------swift-----------------------------------------
 swift --os-auth-url http://10.100.0.24:5000/v2.0/ --os-username username --os-password pass --os-tenant-name username list
 
 

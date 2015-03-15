@@ -37,9 +37,9 @@ public class ReplicateSweep implements Runnable {
                     "UPDATE pdrigroup_table SET needCheck = FALSE WHERE pdriGroupId=?")) {
                 for (Long pdriGroup : selectPdriGroupsToRelocate(connection)) {
                     Set<Long> preferences = new HashSet<>();
-//                    for (Long logicalDataId : getFilesByPdriGroup(pdriGroup, connection)) {
-//                        preferences.addAll(getPreferencesForFile(logicalDataId, connection));
-//                    }
+                    for (Long logicalDataId : getFilesByPdriGroup(pdriGroup, connection)) {
+                        preferences.addAll(getPreferencesForFile(logicalDataId, connection));
+                    }
                     if (!preferences.isEmpty()) {
                         for (PDRIDescr pdriDescr : getPdriDescrForGroup(pdriGroup, connection)) {
                             preferences.remove(pdriDescr.getStorageSiteId());
@@ -197,7 +197,7 @@ public class ReplicateSweep implements Runnable {
                     
                     
                     "SELECT pdriGroupId FROM "
-                    + "pdrigroup_table WHERE needCheck=TRUE AND bound=FALSE AND refCount>0 LIMIT 100"
+                    + "pdrigroup_table WHERE needCheck=TRUE AND bound=FALSE AND refCount>0 LIMIT 50"
             
             );
             while (resultSet.next()) {
