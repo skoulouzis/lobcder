@@ -2,7 +2,6 @@ package nl.uva.cs.lobcder.catalogue;
 
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
 import lombok.Data;
 import lombok.Delegate;
 import lombok.Getter;
@@ -11,7 +10,6 @@ import nl.uva.cs.lobcder.util.PropertiesHelper;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
@@ -29,9 +27,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.ws.http.HTTPException;
 import java.io.*;
-import java.net.HttpURLConnection;
 import java.net.URI;
-import java.net.URL;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -39,11 +35,13 @@ import java.sql.Statement;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import lombok.extern.java.Log;
 
 /**
  * User: dvasunin Date: 13.02.2015 Time: 14:24 To change this template use File
  * | Settings | File Templates.
  */
+@Log
 public class WP4Sweep implements Runnable {
 
     private final DataSource datasource;
@@ -136,13 +134,13 @@ public class WP4Sweep implements Runnable {
             client.setConnectTimeout(30000);
 
             /*
-            HttpClient apacheClient = HttpClientBuilder.create().build();
-            client = new Client(new ApacheHttpClient4Handler(apacheClient,
-                    new BasicCookieStore(),
-                    true));
-            client.setReadTimeout(30000);
-            client.setConnectTimeout(30000);
-            */
+             HttpClient apacheClient = HttpClientBuilder.create().build();
+             client = new Client(new ApacheHttpClient4Handler(apacheClient,
+             new BasicCookieStore(),
+             true));
+             client.setReadTimeout(30000);
+             client.setConnectTimeout(30000);
+             */
             //WebResource webResource = client.resource("http://localhost:8080/path");
             //ClientResponse response = webResource.accept("application/json")
             //        .get(ClientResponse.class);   /home/dvasunin/.m2/repository/org/apache/httpcomponents/httpcore/4.3.3/httpcore-4.3.3.jar!/org/apache/http/impl/io/DefaultHttpRequestWriterFactory.class
@@ -164,7 +162,7 @@ public class WP4Sweep implements Runnable {
             if (response.getClientResponseStatus() != ClientResponse.Status.OK) {
                 throw new HTTPException(response.getStatus());
             }
-
+            log.log(Level.FINE, "Send metadata to uri: {0}", new Object[]{uri});
             return response.getEntity(ResourceMetadataList.class);
         }
 
@@ -184,54 +182,61 @@ public class WP4Sweep implements Runnable {
             if (response.getClientResponseStatus() != ClientResponse.Status.OK) {
                 throw new HTTPException(response.getStatus());
             }
-
+            log.log(Level.FINE, "Send metadata to uri: {0}", new Object[]{uri});
             return response.getEntity(ResourceMetadataList.class);
         }
 
         /*
 
-        @Override
-        public ResourceMetadataList delete(Collection<String> globalIdCollection) throws Exception {
-            Logger.getLogger(WP4Connector.class.getName()).log(Level.INFO, "Start");
-            WebResource webResource = client.resource(uri);
-            ClientResponse response = webResource.type(MediaType.APPLICATION_XML).delete(ClientResponse.class, getGlobalIdForDelete(globalIdCollection));
-            if (response.getClientResponseStatus() != ClientResponse.Status.OK) {
-                throw new Exception(uri + " responded with: " + response.getClientResponseStatus().toString() + ". Response Entity:" + response.getEntity(String.class));
-            }
-            Logger.getLogger(WP4Connector.class.getName()).log(Level.INFO, "Done");
-            return response.getEntity(ResourceMetadataList.class);
-        }
-      */
-
+         @Override
+         public ResourceMetadataList delete(Collection<String> globalIdCollection) throws Exception {
+         Logger.getLogger(WP4Connector.class.getName()).log(Level.INFO, "Start");
+         WebResource webResource = client.resource(uri);
+         ClientResponse response = webResource.type(MediaType.APPLICATION_XML).delete(ClientResponse.class, getGlobalIdForDelete(globalIdCollection));
+         if (response.getClientResponseStatus() != ClientResponse.Status.OK) {
+         throw new Exception(uri + " responded with: " + response.getClientResponseStatus().toString() + ". Response Entity:" + response.getEntity(String.class));
+         }
+         Logger.getLogger(WP4Connector.class.getName()).log(Level.INFO, "Done");
+         return response.getEntity(ResourceMetadataList.class);
+         }
+         */
         @Override
         public ResourceMetadataList delete(Collection<String> globalIdCollection) throws Exception {
             class HttpDeleteWithBody extends HttpEntityEnclosingRequestBase {
+
                 public static final String METHOD_NAME = "DELETE";
-                public String getMethod() { return METHOD_NAME; }
+
+                public String getMethod() {
+                    return METHOD_NAME;
+                }
 
                 public HttpDeleteWithBody(final String uri) {
                     super();
                     setURI(URI.create(uri));
                 }
+
                 public HttpDeleteWithBody(final URI uri) {
                     super();
                     setURI(uri);
                 }
-                public HttpDeleteWithBody() { super(); }
+
+                public HttpDeleteWithBody() {
+                    super();
+                }
             }
 
-           /* Logger.getLogger(WP4Connector.class.getName()).log(Level.INFO, "Start");
-            String jsonResponse = "";
+            /* Logger.getLogger(WP4Connector.class.getName()).log(Level.INFO, "Start");
+             String jsonResponse = "";
 
-            URL url = new URL(uri);
-            HttpURLConnection connection = null;
-            connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod("POST");
-// We have to override the post method so we can send data
-            connection.setRequestProperty("X-HTTP-Method-Override", "DELETE");
-            connection.setRequestProperty("Content-Type", "application/xml");
-            connection.setDoOutput(true);
-            */
+             URL url = new URL(uri);
+             HttpURLConnection connection = null;
+             connection = (HttpURLConnection) url.openConnection();
+             connection.setRequestMethod("POST");
+             // We have to override the post method so we can send data
+             connection.setRequestProperty("X-HTTP-Method-Override", "DELETE");
+             connection.setRequestProperty("Content-Type", "application/xml");
+             connection.setDoOutput(true);
+             */
 
             if (globalIdCollection == null || globalIdCollection.isEmpty()) {
                 return null;
@@ -247,16 +252,17 @@ public class WP4Sweep implements Runnable {
 
 // Send request
             /*
-            OutputStreamWriter wr = new OutputStreamWriter(
-                    connection.getOutputStream());
-            wr.write(getGlobalIdForDelete(globalIdCollection));
-            wr.flush();
-            */
+             OutputStreamWriter wr = new OutputStreamWriter(
+             connection.getOutputStream());
+             wr.write(getGlobalIdForDelete(globalIdCollection));
+             wr.flush();
+             */
 // Get Response
 
             if (response.getStatusLine().getStatusCode() != 200) {
                 throw new HTTPException(response.getStatusLine().getStatusCode());
             }
+            log.log(Level.FINE, "Send metadata to uri: {0}", new Object[]{uri});
             HttpEntity entity = response.getEntity();
             if (entity != null) {
                 BufferedReader rd = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
@@ -267,6 +273,7 @@ public class WP4Sweep implements Runnable {
             } else {
                 throw new Exception("ERROR in DELETE");
             }
+
         }
     }
 
@@ -368,7 +375,7 @@ public class WP4Sweep implements Runnable {
             ResultSet rs = s1.executeQuery("SELECT global_id, id FROM wp4_table WHERE local_id IS NULL LIMIT 1000");
             while (rs.next()) {
                 String globalId = rs.getString(1);
-                if(globalId == null) {
+                if (globalId == null) {
                     deleteMetadataSet.add(rs.getLong(2));
                 } else {
                     deleteMetadataMap.put(globalId, rs.getLong(2));
@@ -377,17 +384,17 @@ public class WP4Sweep implements Runnable {
         }
         try (PreparedStatement s2 = connection.prepareStatement("DELETE FROM wp4_table WHERE id=?")) {
             ResourceMetadataList rml = wp4Connector.delete(deleteMetadataMap.keySet());
-            if(rml != null && rml.getResourceMetadataList() != null && !rml.getResourceMetadataList().isEmpty()) {
-                for (ResourceMetadata rm :rml.getResourceMetadataList()){
+            if (rml != null && rml.getResourceMetadataList() != null && !rml.getResourceMetadataList().isEmpty()) {
+                for (ResourceMetadata rm : rml.getResourceMetadataList()) {
                     s2.setLong(1, deleteMetadataMap.get(rm.getGlobalID()));
                     s2.addBatch();
                 }
             }
-            for(Long id : deleteMetadataSet) {
+            for (Long id : deleteMetadataSet) {
                 s2.setLong(1, id);
                 s2.addBatch();
             }
-            if((rml != null && rml.getResourceMetadataList() != null && !rml.getResourceMetadataList().isEmpty()) || !deleteMetadataSet.isEmpty()) {
+            if ((rml != null && rml.getResourceMetadataList() != null && !rml.getResourceMetadataList().isEmpty()) || !deleteMetadataSet.isEmpty()) {
                 s2.executeBatch();
             }
         }
@@ -435,44 +442,44 @@ public class WP4Sweep implements Runnable {
         try {
             WP4Sweep wp4 = new WP4Sweep(null);
 
-             Collection<ResourceMetadata> rml = new ArrayList<>();
-                ResourceMetadata rm = new ResourceMetadata();
-                Long localId = 123L;
-                rm.setLocalID(localId);
-                rm.setAuthor("dmitry");
-                rm.setFileType(FileType.File);
-                rm.setName("my_file");
-                rm.setCategory("General Metadata");
-                rm.setDescription("LOBCDER");
-                rm.setStatus("active");
+            Collection<ResourceMetadata> rml = new ArrayList<>();
+            ResourceMetadata rm = new ResourceMetadata();
+            Long localId = 123L;
+            rm.setLocalID(localId);
+            rm.setAuthor("dmitry");
+            rm.setFileType(FileType.File);
+            rm.setName("my_file");
+            rm.setCategory("General Metadata");
+            rm.setDescription("LOBCDER");
+            rm.setStatus("active");
 
-                rm.setLinkedTo("");
-                rm.setRating(0L);
-                rm.setRelatedResources("");
-                rm.setSemanticAnnotations("");
-                rm.setViews(0);
-                rm.setSubjectID("");
-                rm.setType("File");
+            rm.setLinkedTo("");
+            rm.setRating(0L);
+            rm.setRelatedResources("");
+            rm.setSemanticAnnotations("");
+            rm.setViews(0);
+            rm.setSubjectID("");
+            rm.setType("File");
 
 
-                rml.add(rm);
+            rml.add(rm);
 
-                rm = new ResourceMetadata();
-                localId = 456L;
-                rm.setLocalID(localId);
-                rm.setAuthor("Spiros");
-                rm.setFileType(FileType.Folder);
-                rm.setName("my_file");
-                rm.setCategory("General Metadata");
-                rm.setDescription("LOBCDER");
-                rm.setStatus("active");
+            rm = new ResourceMetadata();
+            localId = 456L;
+            rm.setLocalID(localId);
+            rm.setAuthor("Spiros");
+            rm.setFileType(FileType.Folder);
+            rm.setName("my_file");
+            rm.setCategory("General Metadata");
+            rm.setDescription("LOBCDER");
+            rm.setStatus("active");
 
-                rm.setLinkedTo("");
-                rm.setRating(0L);
-                rm.setRelatedResources("");
-                rm.setSemanticAnnotations("");
-                rm.setViews(0);
-                rm.setSubjectID("");
+            rm.setLinkedTo("");
+            rm.setRating(0L);
+            rm.setRelatedResources("");
+            rm.setSemanticAnnotations("");
+            rm.setViews(0);
+            rm.setSubjectID("");
             rm.setType("File");
 
 
@@ -489,7 +496,7 @@ public class WP4Sweep implements Runnable {
 
             wp4.serialize(res);
             Collection<String> globalIdCollection = new HashSet<>();
-            for(ResourceMetadata rm1 : res.getResourceMetadataList()) {
+            for (ResourceMetadata rm1 : res.getResourceMetadataList()) {
                 globalIdCollection.add(rm1.getGlobalID());
                 System.out.println(rm1.getGlobalID());
 
@@ -521,7 +528,7 @@ public class WP4Sweep implements Runnable {
 
         } catch (Exception e) {
             e.printStackTrace();
-            if(e instanceof HTTPException) {
+            if (e instanceof HTTPException) {
                 System.out.println(((HTTPException) e).getStatusCode());
             }
         }
