@@ -15,6 +15,8 @@ import com.sun.jersey.client.urlconnection.HTTPSProperties;
 import io.milton.common.Path;
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -33,7 +35,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.GZIPOutputStream;
@@ -52,8 +53,6 @@ import javax.ws.rs.core.MediaType;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.resources.PDRI;
 import nl.uva.cs.lobcder.resources.PDRIDescr;
@@ -64,6 +63,7 @@ import nl.uva.cs.lobcder.rest.wrappers.Stats;
 import nl.uva.vlet.data.StringUtil;
 import nl.uva.vlet.exception.VlException;
 import nl.uva.vlet.io.CircularStreamBufferTransferer;
+import org.apache.commons.io.output.TeeOutputStream;
 
 /**
  * A file servlet supporting resume of downloads and client-side caching and
@@ -84,14 +84,14 @@ public final class WorkerServlet extends HttpServlet {
     // Properties ---------------------------------------------------------------------------------
     private Integer bufferSize;
     private Boolean setResponseBufferSize;
-    private Boolean useCircularBuffer;
+//    private Boolean useCircularBuffer;
     private String restURL;
     private String token;
     private ClientConfig clientConfig;
     private String fileUID;
     private final Map<String, LogicalDataWrapped> logicalDataCache = new HashMap<>();
     private Client restClient;
-    private long sleepTime = 2;
+//    private long sleepTime = 2;
     private static final Map<String, Double> weightPDRIMap = new HashMap<>();
     private static final HashMap<String, Integer> numOfGetsMap = new HashMap<>();
     private InputStream in;
@@ -102,6 +102,8 @@ public final class WorkerServlet extends HttpServlet {
     private double progressThresshold;
     private double coefficient;
     private String fileLogicalName;
+    private File cacheDir;
+    private File cacheFile;
 
     // Actions ------------------------------------------------------------------------------------
     /**
@@ -113,7 +115,7 @@ public final class WorkerServlet extends HttpServlet {
     public void init() throws ServletException {
         try {
             setResponseBufferSize = Util.isResponseBufferSize();
-            useCircularBuffer = Util.isCircularBuffer();
+//            useCircularBuffer = Util.isCircularBuffer();
             qosCopy = Util.doQosCopy();
             bufferSize = Util.getBufferSize();
 
@@ -126,6 +128,10 @@ public final class WorkerServlet extends HttpServlet {
             warnings = Util.getNumOfWarnings();
             progressThresshold = Util.getProgressThresshold();
             coefficient = Util.getProgressThressholdCoefficient();
+            cacheDir = new File(System.getProperty("java.io.tmpdir") + File.separator + Util.getBackendWorkingFolderName());
+            if (!cacheDir.exists()) {
+                cacheDir.mkdirs();
+            }
         } catch (IOException ex) {
             Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -193,7 +199,6 @@ public final class WorkerServlet extends HttpServlet {
         Path pathAndToken = Path.path(requestedFile);
 //            token = pathAndToken.getName();
         fileUID = pathAndToken.getParent().toString();
-//            cacheFile = new File(baseDir, "lobcder-cache" + request.getLocalName());
         Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "token: {0} fileUID: {1}", new Object[]{token, fileUID});
 
         long startGetPDRI = System.currentTimeMillis();
@@ -529,20 +534,27 @@ public final class WorkerServlet extends HttpServlet {
      */
     private void copy(PDRI input, OutputStream output, long start, long length, HttpServletRequest request)
             throws IOException, VlException, JAXBException {
+        OutputStream tos = null;
         try {
             if (input.getLength() == length) {
                 // Write full range.
                 in = input.getData();
                 byte[] buffer = new byte[bufferSize];
+                cacheFile = new File(cacheDir, input.getFileName());
+                if (!cacheFile.exists()) {
+                    tos = new TeeOutputStream(new FileOutputStream(cacheFile), output);
+                } else {
+                    tos = output;
+                }
                 if (!qosCopy) {
-                    CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((bufferSize), in, output);
+                    CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((bufferSize), in, tos);
                     cBuff.setMaxReadChunkSize(bufferSize);
                     if (responseBufferSize > 0) {
                         cBuff.setMaxWriteChunkSize(responseBufferSize);
                     }
                     cBuff.startTransfer(new Long(-1));
                 } else {
-                    qoSCopy(buffer, output, length, request);
+                    qoSCopy(buffer, tos, length, request);
                 }
             } else {
                 io.milton.http.Range range = new io.milton.http.Range(start, length - start);
@@ -550,6 +562,9 @@ public final class WorkerServlet extends HttpServlet {
 //                input.copyRange(output, start, length);
             }
         } finally {
+            if (tos != null) {
+                tos.flush();
+            }
             output.flush();
         }
     }
@@ -700,9 +715,24 @@ public final class WorkerServlet extends HttpServlet {
                             throw new IOException("PDRIS from master is either empty or contains unreachable files");
                         }
                     }
+                    cacheFile = new File(cacheDir, pdris.get(0).getName());
+                    if (cacheFile.exists()) {
+                        String fileName = cacheFile.getName();
+                        long ssID = -1;
+                        String resourceURI = "file:///" + cacheFile.getAbsoluteFile().getParentFile().getParent();
+                        String uName = "fake";
+                        String passwd = "fake";
+                        boolean encrypt = false;
+                        long key = -1;
+                        long pdriId = -1;
+                        Long groupId = Long.valueOf(-1);
+                        pdris.add(new PDRIDescr(fileName, ssID, resourceURI, uName, passwd, encrypt, BigInteger.valueOf(key), groupId, pdriId));
+                    }
+
                     logicalData.setPdriList(pdris);
                 }
             }
+
             logicalDataCache.put(fileUID, logicalData);
         }
 
@@ -771,7 +801,10 @@ public final class WorkerServlet extends HttpServlet {
                 host = uri.getHost();
             }
             Double speed = weightPDRIMap.get(host);
-            Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "Speed: : {0}", speed);
+            if(speed==null){
+                speed = Double.valueOf(0);
+            }
+            Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "Speed: {0}", speed);
             sumOfSpeed += speed;
         }
         if (sumOfSpeed <= 0) {
