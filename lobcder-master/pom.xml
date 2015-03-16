@@ -367,6 +367,12 @@
             <version>1.2.14</version>
         </dependency>
     
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>1.4</version>
+        </dependency>
+    
     </dependencies>
     
     <repositories>

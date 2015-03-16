@@ -363,61 +363,20 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                         .th().content("Type")
                         .th().content("Is Supervised")
                         .th().content("Uid");
-
-
-//            html.a(href("#top").class_("toplink")).content("top");
-//            ps.println(html.toHtml());
-
-//            ps.println("<HTML>\n"
-//                    + "\n"
-//                    + "<HEAD>\n"
-//                    + "<TITLE>" + getPath() + "</TITLE>\n"
-//                    + "</HEAD>\n"
-//                    + "<BODY BGCOLOR=\"#FFFFFF\" TEXT=\"#000000\">");
-//            ps.println("<dl>");
                 String ref;
-//            Path first = getPath().getStripFirst();
-//            if(!first.equals(Path.path("/dav"))){
-//                ref= "../dav" + getPath();
-//            }else{
-//                ref= "../" + getPath();
-//            }
-//            html._tr()
-//                    .tr()
-//                    .td()
-//                    .a(href(ref))
-//                    .img(src("").alt("../"))
-//                    ._a()
-//                    ._td();
+
                 for (LogicalData ld : getCatalogue().getChildrenByParentRef(getLogicalData().getUid(), connection)) {
                     if (ld.isFolder()) {
                         ref = "../dav" + getPath() + "/" + ld.getName();
-                        if (ld.getUid() != 1) {
-//                        ps.println("<dt>\t<a href=\"../dav" + getPath() + "/" + ld.getName() + "\">" + ld.getName() + "</a><a>\t" + ld.getLength() + "</a></dt>");
-                        } else {
-//                        html._tr()
-//                                .tr()
-//                                .td().content("/")
-//                                .td().content(String.valueOf(getChildren().size()))
-//                                .td().content(new Date(ld.getModifiedDate()).toString());
-//                        html._tr()
-//                                .tr()
-//                                .td()
-//                                .a(href("../dav" + getPath() + "/" + ld.getName()))
-//                                .img(src("").alt("/"))
-//                                ._a()
-//                                ._td()
-//                                .td().content(String.valueOf(getChildren().size()))
-//                                .td().content(new Date(ld.getModifiedDate()).toString());
-                        }
+//                        if (ld.getUid() != 1) {
+//                        } else {
+//                        }
                     } else {
                         ref = "../dav" + getPath() + "/" + ld.getName();
-//                    ps.println("<dd>\t<a href=\"../dav" + getPath() + "/" + ld.getName() + "\">" + ld.getName() + "</a>\t" + ld.getLength() + "</a></dd>");
                     }
                     html._tr()
                             .tr()
                             .td()
-                            //                        .a(href("../dav" + getPath() + "/" + ld.getName()))
                             .a(href(ref))
                             .img(src("").alt(ld.getName()))
                             ._a()
@@ -431,19 +390,8 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                             .td().content(ld.getSupervised().toString())
                             .td().content(ld.getUid().toString());
                 }
-//            ps.println("</dl>");
-//            ps.println("</BODY>\n"
-//                    + "\n"
-//                    + "</HTML>");
                 html._tr()
                         ._table();
-
-
-//            html.
-//                    form()
-//                    .input();
-
-
                 ps.println(html.toHtml());
                 getCatalogue().addViewForRes(getLogicalData().getUid(), connection);
                 connection.commit();
@@ -583,8 +531,8 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
     private void setPreferencesOn(Long uidTo, Long uidFrom, Connection connection) throws SQLException {
         try (PreparedStatement psDel = connection.prepareStatement("DELETE FROM pref_table WHERE ld_uid = ?");
                 PreparedStatement psIns = connection.prepareStatement("INSERT "
-                        + "INTO pref_table (ld_uid, storageSiteRef) "
-                        + "SELECT ?, storageSiteRef FROM pref_table WHERE ld_uid=?")) {
+                + "INTO pref_table (ld_uid, storageSiteRef) "
+                + "SELECT ?, storageSiteRef FROM pref_table WHERE ld_uid=?")) {
             psDel.setLong(1, uidTo);
             psIns.setLong(1, uidTo);
             psIns.setLong(2, uidFrom);

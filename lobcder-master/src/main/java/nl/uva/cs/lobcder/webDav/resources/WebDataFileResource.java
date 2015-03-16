@@ -19,7 +19,7 @@ import io.milton.http.exceptions.NotFoundException;
 import io.milton.resource.BufferingControlResource;
 import io.milton.resource.CollectionResource;
 import io.milton.resource.FileResource;
-import java.io.File;
+import java.io.FileOutputStream;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.auth.AuthI;
 import nl.uva.cs.lobcder.auth.AuthLobcderComponents;
@@ -51,7 +51,6 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import nl.uva.cs.lobcder.resources.VPDRI;
 import nl.uva.cs.lobcder.rest.wrappers.Stats;
 import nl.uva.cs.lobcder.util.Network;
 import org.jgrapht.graph.DefaultWeightedEdge;
@@ -272,6 +271,7 @@ public class WebDataFileResource extends WebDataResource implements
             if (pdri != null) {
                 start = System.currentTimeMillis();
                 in = pdri.getData();
+
                 if (!pdri.getEncrypted()) {
                     if (doCircularStreamBufferTransferer) {
                         CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((Constants.BUF_SIZE), in, out);
@@ -279,8 +279,10 @@ public class WebDataFileResource extends WebDataResource implements
                     } else {
                         int read;
                         byte[] copyBuffer = new byte[Constants.BUF_SIZE];
+//                        TeeOutputStream tos = new TeeOutputStream(new FileOutputStream(""), out);
                         while ((read = in.read(copyBuffer, 0, copyBuffer.length)) != -1) {
                             out.write(copyBuffer, 0, read);
+//                            tos.write(copyBuffer, 0, read);
                         }
                     }
                 } else {
@@ -715,12 +717,13 @@ public class WebDataFileResource extends WebDataResource implements
         Location reuSourceLocation = lookupService.getLocation(reuSource);
 
         Iterator<String> iter = workersMap.keySet().iterator();
-        double dist = 999.000;
+        double dist = 9999999999.0;
         String worker = null;
         while (iter.hasNext()) {
             String wip = iter.next();
             Location workerLocation = lookupService.getLocation(wip);
             if (reuSourceLocation != null && workerLocation != null && reuSourceLocation.distance(workerLocation) < dist) {
+                dist = reuSourceLocation.distance(workerLocation);
                 worker = workersMap.get(wip);
                 log.log(Level.INFO, "Src loc: {0} Dst loc: {1} dist: {2}", new Object[]{reuSourceLocation.city, workerLocation.city, dist});
             }
@@ -728,10 +731,17 @@ public class WebDataFileResource extends WebDataResource implements
         for (String s : Network.getAllLocalIP()) {
             Location workerLocation = lookupService.getLocation(s);
             if (reuSourceLocation != null && workerLocation != null && reuSourceLocation.distance(workerLocation) < dist) {
+                dist = reuSourceLocation.distance(workerLocation);
                 log.log(Level.INFO, "Src loc: {0} Dst loc: {1} dist: {2}", new Object[]{reuSourceLocation.city, workerLocation.city, dist});
                 worker = null;
             }
         }
-        return worker;
+        if (worker != null) {
+            String w = worker + "/" + getLogicalData().getUid();
+            String token = UUID.randomUUID().toString();
+            AuthLobcderComponents.setTicket(worker, token);
+            return w + "/" + token;
+        }
+        return null;
     }
 }
