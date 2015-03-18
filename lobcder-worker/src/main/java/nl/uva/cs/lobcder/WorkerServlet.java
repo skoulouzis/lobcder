@@ -35,6 +35,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
+import java.util.SortedMap;
+import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.GZIPOutputStream;
@@ -54,6 +57,8 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import lombok.extern.java.Log;
+import static nl.uva.cs.lobcder.Util.ChacheEvictionAlgorithm.LRU;
+import static nl.uva.cs.lobcder.Util.ChacheEvictionAlgorithm.MRU;
 import nl.uva.cs.lobcder.resources.PDRI;
 import nl.uva.cs.lobcder.resources.PDRIDescr;
 import nl.uva.cs.lobcder.resources.VPDRI;
@@ -90,6 +95,7 @@ public final class WorkerServlet extends HttpServlet {
     private ClientConfig clientConfig;
     private String fileUID;
     private final Map<String, LogicalDataWrapped> logicalDataCache = new HashMap<>();
+    private final Map<String, Long> fileAccessMap = new HashMap<>();
     private Client restClient;
 //    private long sleepTime = 2;
     private static final Map<String, Double> weightPDRIMap = new HashMap<>();
@@ -543,6 +549,10 @@ public final class WorkerServlet extends HttpServlet {
                 cacheFile = new File(cacheDir, input.getFileName());
                 if (!cacheFile.exists()) {
                     tos = new TeeOutputStream(new FileOutputStream(cacheFile), output);
+                    File file = new File(System.getProperty("user.home"));
+                    while (file.getUsableSpace() < Util.getCacheFreeSpaceLimit()) {
+                        evictCache();
+                    }
                 } else {
                     tos = output;
                 }
@@ -728,7 +738,21 @@ public final class WorkerServlet extends HttpServlet {
                         Long groupId = Long.valueOf(-1);
                         pdris.add(new PDRIDescr(fileName, ssID, resourceURI, uName, passwd, encrypt, BigInteger.valueOf(key), groupId, pdriId));
                     }
-
+                    switch (Util.getCacheEvictionPolicy()) {
+                        case LRU:
+                        case MRU:
+                        case RR:
+                            fileAccessMap.put(cacheFile.getAbsolutePath(), System.currentTimeMillis());
+                            break;
+                        case LFU:
+                        case MFU:
+                            Long count = fileAccessMap.get(cacheFile.getAbsolutePath());
+                            if (count == null) {
+                                count = Long.valueOf(0);
+                            }
+                            fileAccessMap.put(cacheFile.getAbsolutePath(), count++);
+                            break;
+                    }
                     logicalData.setPdriList(pdris);
                 }
             }
@@ -801,7 +825,7 @@ public final class WorkerServlet extends HttpServlet {
                 host = uri.getHost();
             }
             Double speed = weightPDRIMap.get(host);
-            if(speed==null){
+            if (speed == null) {
                 speed = Double.valueOf(0);
             }
             Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "Speed: {0}", speed);
@@ -895,77 +919,43 @@ public final class WorkerServlet extends HttpServlet {
         return (int) l;
     }
 
-//    @XmlRootElement
-//    public static class LogicalDataWrapped {
-//
-//        public LogicalData logicalData;
-//        public String path;
-//        public List<PDRIDescr> pdriList;
-//        public Set<Permissions> permissions;
-//    }
-//
-//    @XmlRootElement
-//    public static class LogicalData {
-//
-//        public int checksum;
-//        public String contentTypesAsString;
-//        public long createDate;
-//        public long lastValidationDate;
-//        public long length;
-//        public int lockTimeout;
-//        public long modifiedDate;
-//        public String name;
-//        public String owner;
-//        public int parentRef;
-//        public int pdriGroupId;
-//        public boolean supervised;
-//        public String type;
-//        public int uid;
-//    }
-//
-//    @XmlRootElement
-//    public static class Permissions {
-//
-//        public String owner;
-//        public Set<String> read;
-//        public Set<String> write;
-//    }
-//
-//    @XmlRootElement
-//    public static class PDRIDescr {
-//
-//        public boolean encrypt;
-//        public long id;
-//        public String key;
-//        public String name;
-//        public String password;
-//        public String pdriGroupRef;
-//        public String resourceUrl;
-//        public String username;
-//    }
-//
-//    @XmlRootElement
-//    public static class Stats {
-//
-//        @XmlElement(name = "source")
-//        String source;
-//        @XmlElement(name = "destination")
-//        String destination;
-//        @XmlElement(name = "size")
-//        Long size;
-//        @XmlElement(name = "speed")
-//        Double speed;
-//    }
-//
-//    @XmlRootElement
-//    public static class Endpoints {
-//
-//        @XmlElement(name = "source")
-//        String source;
-//        @XmlElement(name = "destination")
-//        String destination;
-//    }
-    // Inner classes ------------------------------------------------------------------------------
+    private void evictCache() throws IOException {
+        String key = null;
+        switch (Util.getCacheEvictionPolicy()) {
+            case LRU:
+            case LFU:
+                Set<Map.Entry<String, Long>> set = fileAccessMap.entrySet();
+                Long min = Long.MAX_VALUE;
+                for (Map.Entry<String, Long> e : set) {
+                    if (e.getValue() < min) {
+                        min = e.getValue();
+                        key = e.getKey();
+                    }
+                }
+                break;
+            case MRU:
+            case MFU:
+                set = fileAccessMap.entrySet();
+                Long max = Long.MIN_VALUE;
+                for (Map.Entry<String, Long> e : set) {
+                    if (e.getValue() > max) {
+                        max = e.getValue();
+                        key = e.getKey();
+                    }
+                }
+                break;
+            case RR:
+            default:
+                Random random = new Random();
+                List<String> keys = new ArrayList(fileAccessMap.keySet());
+                key = keys.get(random.nextInt(keys.size()));
+                break;
+
+        }
+        new File(key).delete();
+        fileAccessMap.remove(key);
+    }
+
     /**
      * This class represents a byte range.
      */

@@ -14,8 +14,6 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Properties;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.util.PropertiesHelper;
 
@@ -25,6 +23,12 @@ import nl.uva.cs.lobcder.util.PropertiesHelper;
  */
 @Log
 class Util extends PropertiesHelper {
+    
+        static enum ChacheEvictionAlgorithm {
+
+        LRU, MRU,RR,LFU,MFU
+    }
+    
 
     public static Properties getProperties()
             throws IOException {
@@ -112,5 +116,9 @@ class Util extends PropertiesHelper {
 
     static boolean getOptimizeFlow() throws IOException {
         return Boolean.valueOf(getProperties().getProperty(("optimize.flow"), "true"));
+    }
+
+    static ChacheEvictionAlgorithm getCacheEvictionPolicy() throws IOException {
+        return ChacheEvictionAlgorithm.valueOf(getProperties().getProperty(("cache.eviction.alg"), "LRU"));
     }
 }

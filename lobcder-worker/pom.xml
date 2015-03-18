@@ -223,11 +223,9 @@
         
         <dependency>
             <groupId>com.mycompany</groupId>
-            <artifactId>lobcder-master</artifactId>
+            <artifactId>lobcder-master-classes</artifactId>
             <version>2.5</version>
         </dependency>  
-        
-        
         
         <dependency>
             <groupId>commons-io</groupId>
