@@ -19,7 +19,6 @@ import io.milton.http.exceptions.NotFoundException;
 import io.milton.resource.BufferingControlResource;
 import io.milton.resource.CollectionResource;
 import io.milton.resource.FileResource;
-import java.io.FileOutputStream;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.auth.AuthI;
 import nl.uva.cs.lobcder.auth.AuthLobcderComponents;
@@ -279,7 +278,6 @@ public class WebDataFileResource extends WebDataResource implements
                     } else {
                         int read;
                         byte[] copyBuffer = new byte[Constants.BUF_SIZE];
-//                        TeeOutputStream tos = new TeeOutputStream(new FileOutputStream(""), out);
                         while ((read = in.read(copyBuffer, 0, copyBuffer.length)) != -1) {
                             out.write(copyBuffer, 0, read);
 //                            tos.write(copyBuffer, 0, read);

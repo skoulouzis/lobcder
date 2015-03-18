@@ -458,43 +458,5 @@
 
     </build>
     
-    <!--NOT WORKING     -->
-    <reporting>
-        <plugins>
-            <!--            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <reportSets>
-                    <reportSet>
-                        <id>uml</id>
-                        <configuration>
-                            <doclet>gr.spinellis.umlgraph.doclet.UmlGraph</doclet>
-                            <docletPath>${project.basedir}/src/main/webapp/WEB-INF/lib/UmlGraph-5.4.jar</docletPath>
-                            <docletArtifact>
-                                <groupId>gr.spinellis</groupId>
-                                <artifactId>UmlGraph</artifactId>
-                                <version>5.4</version>
-                            </docletArtifact>
-                            <additionalparam>-views</additionalparam>
-                            <destDir>target/uml</destDir>
-                            <show>private</show>
-                        </configuration>
-                        <reports>
-                            <report>javadoc</report>
-                        </reports>
-                    </reportSet>
-                    <reportSet>
-                        <id>html</id>
-                        <configuration>
-                            <show>private</show>
-                        </configuration>
-                        <reports>
-                            <report>javadoc</report>
-                        </reports>
-                    </reportSet>
-                </reportSets>
-            </plugin>-->
-        </plugins>
-    </reporting>
-
+ 
 </project>

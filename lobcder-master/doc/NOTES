@@ -422,3 +422,8 @@ swift --os-auth-url http://10.100.0.24:5000/v2.0/ --os-username username --os-pa
 -----------------------------Remove and clean storage site ---------------
 UPDATE storage_site_table SET `removing` = true WHERE storageSiteId = ?;
 UPDATE pdrigroup_table SET `needCheck` = true;
+
+
+
+--------------------Deploy lobcder-master as dependency----------------------
+mvn deploy:deploy-file -DgroupId=com.mycompany -DartifactId=lobcder-master-classes -Dversion=2.5 -Dpackaging=jar -Dfile="./lobcder/lobcder-master/target/lobcder-master-2.5-classes.jar" -Durl=file:..//mvn-repo/snapshots/
