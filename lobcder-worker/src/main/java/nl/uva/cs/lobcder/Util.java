@@ -23,12 +23,11 @@ import nl.uva.cs.lobcder.util.PropertiesHelper;
  */
 @Log
 class Util extends PropertiesHelper {
-    
-        static enum ChacheEvictionAlgorithm {
 
-        LRU, MRU,RR,LFU,MFU
+    static enum ChacheEvictionAlgorithm {
+
+        LRU, MRU, RR, LFU, MFU
     }
-    
 
     public static Properties getProperties()
             throws IOException {

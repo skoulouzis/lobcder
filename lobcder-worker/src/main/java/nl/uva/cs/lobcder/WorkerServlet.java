@@ -547,7 +547,7 @@ public final class WorkerServlet extends HttpServlet {
                 in = input.getData();
                 byte[] buffer = new byte[bufferSize];
                 cacheFile = new File(cacheDir, input.getFileName());
-                if (!cacheFile.exists()) {
+                if (!cacheFile.exists() || input.getLength() != cacheFile.length()) {
                     tos = new TeeOutputStream(new FileOutputStream(cacheFile), output);
                     File file = new File(System.getProperty("user.home"));
                     while (file.getUsableSpace() < Util.getCacheFreeSpaceLimit()) {
@@ -557,12 +557,17 @@ public final class WorkerServlet extends HttpServlet {
                     tos = output;
                 }
                 if (!qosCopy) {
-                    CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((bufferSize), in, tos);
-                    cBuff.setMaxReadChunkSize(bufferSize);
-                    if (responseBufferSize > 0) {
-                        cBuff.setMaxWriteChunkSize(responseBufferSize);
+                    int len;
+                    while ((len = in.read(buffer)) != -1) {
+                        tos.write(buffer, 0, len);
                     }
-                    cBuff.startTransfer(new Long(-1));
+
+//                    CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((bufferSize), in, tos);
+//                    cBuff.setMaxReadChunkSize(bufferSize);
+//                    if (responseBufferSize > 0) {
+//                        cBuff.setMaxWriteChunkSize(responseBufferSize);
+//                    }
+//                    cBuff.startTransfer(new Long(-1));
                 } else {
                     qoSCopy(buffer, tos, length, request);
                 }
@@ -574,8 +579,9 @@ public final class WorkerServlet extends HttpServlet {
         } finally {
             if (tos != null) {
                 tos.flush();
+            } else {
+                output.flush();
             }
-            output.flush();
         }
     }
 
