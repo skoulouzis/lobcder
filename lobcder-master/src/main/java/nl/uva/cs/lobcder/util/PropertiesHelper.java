@@ -281,4 +281,8 @@ public class PropertiesHelper {
     public static long getCacheFreeSpaceLimit() throws IOException {
         return Long.valueOf(getProperties().getProperty("cache.size.limit", "2000000000"));
     }
+
+    public static Long getLocalCacheId() throws IOException {
+          return Long.valueOf(getProperties().getProperty("localcache.id"));
+    }
 }

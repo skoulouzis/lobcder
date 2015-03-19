@@ -17,7 +17,7 @@ CREATE TABLE delete_table (
 ) ENGINE=InnoDB;
 
 DELIMITER |
-CREATE PROCEDURE GET_PDRI_GROUPS_FOR_DELETE (IN lim int)
+CREATE PROCEDURE GET_PDRI_GROUPS_FOR_DELETE (IN lim INT UNSIGNED)
   BEGIN
     DECLARE myid BIGINT UNSIGNED;
     SET myid = UUID_SHORT();
@@ -29,9 +29,23 @@ DELIMITER ;
 
 
 CREATE TABLE replicate_table (
+  id BIGINT UNSIGNED, key(id),
   pdriGroupRef BIGINT UNSIGNED PRIMARY KEY, FOREIGN KEY(pdriGroupRef) REFERENCES pdrigroup_table(pdriGroupId) ON DELETE CASCADE,
   selTimestamp DATETIME, INDEX(selTimestamp)
 ) ENGINE=InnoDB;
+
+DELIMITER |
+CREATE PROCEDURE GET_PDRI_GROUPS_FOR_REPLICATE (IN cacheId BIGINT UNSIGNED, IN lim INT UNSIGNED)
+  BEGIN
+    DECLARE myid BIGINT UNSIGNED;
+    DECLARE mynow DATETIME;
+    SET myid = UUID_SHORT();
+    SET mynow = now();
+    INSERT INTO replicate_table (id, pdriGroupRef, selTimestamp) SELECT DISTINCT myid, pdriGroupId, mynow FROM pdrigroup_table WHERE bound=FALSE AND refCount>0 AND (EXISTS(SELECT * FROM pdri_table WHERE pdri_table.pdriGroupRef=pdrigroup_table.pdriGroupId AND pdri_table.storageSiteRef=cacheId) OR NOT EXISTS(SELECT * FROM pdri_table JOIN storage_site_table ON pdri_table.storageSiteRef=storage_site_table.storageSiteId WHERE pdri_table.pdriGroupRef=pdrigroup_table.pdriGroupId AND storage_site_table.isCache=TRUE)) LIMIT lim;
+    SELECT pdriGroupRef FROM replicate_table WHERE id=myid;
+  END
+|
+DELIMITER ;
 
 CREATE TABLE credential_table (
   credintialId SERIAL PRIMARY KEY,
@@ -511,6 +525,7 @@ DO
   BEGIN
     DELETE FROM tokens_table WHERE exp_date < NOW();
     DELETE FROM delete_table WHERE timestampdiff(MINUTE, selTimestamp, now()) > 15;
+    DELETE FROM replicate_table WHERE timestampdiff(MINUTE, selTimestamp, now()) > 30;
   END
 |
 DELIMITER ;
@@ -544,4 +559,4 @@ END
 |
 DELIMITER ;
 
-SET GLOBAL event_scheduler = ON;
+SET GLOBAL event_scheduldNa   ler = ON;

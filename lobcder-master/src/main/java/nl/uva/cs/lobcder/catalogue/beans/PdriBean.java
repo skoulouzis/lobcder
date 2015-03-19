@@ -22,4 +22,17 @@ public class PdriBean {
     private String name;
     private BigInteger encryptionKey;
     private StorageSiteBean storage;
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == this) return true;
+        if (!(o instanceof PdriBean)) return false;
+        PdriBean other = (PdriBean) o;
+        if (other.id.equals(id)) return true;
+        else return false;
+    }
+    @Override
+    public int hashCode() {
+        return id.hashCode();
+    }
 }

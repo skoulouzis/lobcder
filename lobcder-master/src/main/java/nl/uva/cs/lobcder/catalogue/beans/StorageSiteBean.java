@@ -36,5 +36,9 @@ public class StorageSiteBean {
         StorageSiteBean other = (StorageSiteBean) o;
         if (other.getId().equals(getId())) return true;
         else return false;
-     }
+    }
+    @Override
+    public int hashCode() {
+        return id.hashCode();
+    }
 }

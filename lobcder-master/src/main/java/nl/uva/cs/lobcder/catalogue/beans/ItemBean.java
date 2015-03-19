@@ -65,6 +65,19 @@ public class ItemBean {
         return type.equals(Type.FOLDER);
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (o == this) return true;
+        if (!(o instanceof ItemBean)) return false;
+        ItemBean other = (ItemBean) o;
+        if (other.uid.equals(uid)) return true;
+        else return false;
+    }
+    @Override
+    public int hashCode() {
+        return uid.hashCode();
+    }
+
     /// test
     public static void main(String[] args) {
         try {

@@ -24,4 +24,17 @@ public class PdriGroupBean {
     private Boolean bound;
     private Collection<PdriBean> pdri;
     private Collection<ItemBean> item;
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == this) return true;
+        if (!(o instanceof PdriGroupBean)) return false;
+        PdriGroupBean other = (PdriGroupBean) o;
+        if (other.getId().equals(getId())) return true;
+        else return false;
+    }
+    @Override
+    public int hashCode() {
+        return id.hashCode();
+    }
 }

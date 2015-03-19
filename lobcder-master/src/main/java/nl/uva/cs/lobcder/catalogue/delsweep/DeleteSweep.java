@@ -7,6 +7,7 @@ import nl.uva.cs.lobcder.catalogue.beans.PdriGroupBean;
 import nl.uva.cs.lobcder.resources.PDRI;
 import nl.uva.cs.lobcder.resources.PDRIDescr;
 import nl.uva.cs.lobcder.resources.PDRIFactory;
+import nl.uva.cs.lobcder.util.DeleteHelper;
 
 /**
  * User: dvasunin Date: 25.02.13 Time: 16:31 To change this template use File |
@@ -27,18 +28,7 @@ public class DeleteSweep implements Runnable {
             for (PdriGroupBean pdriGroupBean : connector.getPdriGroupsToProcess()) {
                 if(pdriGroupBean.getPdri() != null) {
                     for (PdriBean pdriBean : pdriGroupBean.getPdri()) {
-                        try {
-                            PDRI pdri = PDRIFactory.getFactory().createInstance(pdriBean);
-                            if (pdri.exists(pdri.getFileName())) {
-                                pdri.delete();
-                            }
-                        } catch (Exception e) {
-                            if (e.getMessage().contains("No route to host") || e.getMessage().contains("Moved Permanently") || e instanceof java.net.UnknownHostException) {
-                                DeleteSweep.log.log(Level.WARNING, null, e);
-                            } else {
-                                throw e;
-                            }
-                        }
+                        DeleteHelper.delete(pdriBean);
                     }
                 }
                 connector.confirmPdriGroup(pdriGroupBean.getId());
