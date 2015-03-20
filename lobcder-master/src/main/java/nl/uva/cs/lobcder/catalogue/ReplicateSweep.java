@@ -36,7 +36,7 @@ public class ReplicateSweep implements Runnable {
             try (PreparedStatement preparedStatement = connection.prepareStatement(
                     "UPDATE pdrigroup_table SET needCheck = FALSE WHERE pdriGroupId=?")) {
                 Collection<Long> pdriGroupToRelocate = selectPdriGroupsToRelocate(connection);
-                int count = 0;
+//                int count = 0;
                 for (Long pdriGroup : pdriGroupToRelocate) {
                     Set<Long> preferences = new HashSet<>();
                     for (Long logicalDataId : getFilesByPdriGroup(pdriGroup, connection)) {
@@ -62,7 +62,7 @@ public class ReplicateSweep implements Runnable {
                     }
                     if (pdriDescrs.isEmpty()) {
                         successFlag &= replicate(pdriGroup, getReplicationPolicy().getSitesToReplicate(connection), connection);
-                        log.log(Level.FINE, "Done with replicate from local");
+//                        log.log(Level.FINE, "Done with replicate from local");
                     }
                     if (successFlag) {
                         successFlag = removePdris(wantRemove, connection);
@@ -74,9 +74,9 @@ public class ReplicateSweep implements Runnable {
                         preparedStatement.setLong(1, pdriGroup);
                         preparedStatement.executeUpdate();
                     }
-                    count++;
-                    int per = count * 100 / pdriGroupToRelocate.size();
-                    log.log(Level.FINE, "Processed :{0}% {1}/{2}", new Object[]{per, count, pdriGroupToRelocate.size()});
+//                    count++;
+//                    int per = count * 100 / pdriGroupToRelocate.size();
+//                    log.log(Level.FINE, "Processed :{0}% {1}/{2}", new Object[]{per, count, pdriGroupToRelocate.size()});
                 }
 
             }
