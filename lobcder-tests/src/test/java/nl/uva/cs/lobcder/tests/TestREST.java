@@ -493,19 +493,20 @@ public class TestREST {
 
     @Test
     public void testMetadataService() throws IOException, JAXBException {
-        if (quckTest) {
-            return;
-        }
+//        if (quckTest) {
+//            return;
+//        }
         System.err.println("testMetadataService");
         String testcol = root + "testResourceForMetadataService/";
         String testURI1 = testcol + "file1";
         try {
+            utils.deleteResource(testcol, false);
             utils.createCollection(testcol, true);
             utils.createFile(this.root + testURI1, true);
             WebResource webResource = restClient.resource(restURL);
 
             MultivaluedMap<String, String> params = new MultivaluedMapImpl();
-            params.add("path", "/testResourceId");
+            params.add("path", "/testResourceForMetadataService");
 
             WebResource res = webResource.path("items").path("query").queryParams(params);
             List<LogicalDataWrapped> list = res.accept(MediaType.APPLICATION_XML).
