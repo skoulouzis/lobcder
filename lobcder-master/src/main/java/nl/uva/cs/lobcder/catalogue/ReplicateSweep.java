@@ -207,12 +207,12 @@ public class ReplicateSweep implements Runnable {
                     
 //                    "SELECT pdriGroupId FROM "
 //                    + "pdrigroup_table WHERE needCheck=TRUE AND bound=FALSE AND refCount>0 LIMIT 50"
-                    "SELECT pdriGroupId FROM pdrigroup_table "
+                    "SELECT pdriGroupId, ldata_table.ldLength FROM pdrigroup_table "
                     + "JOIN pdri_table ON pdri_table.pdriGroupRef = pdriGroupId "
                     + "JOIN ldata_table ON pdri_table.pdriGroupRef = ldata_table.pdriGroupRef "
                     + "JOIN storage_site_table ON storage_site_table.storageSiteId = pdri_table.storageSiteRef "
                     + "WHERE needCheck=TRUE AND bound=FALSE AND refCount>0 "
-                    + "ORDER BY isCache DESC LIMIT 50"
+                    + "ORDER BY isCache, ldata_table.ldLength DESC LIMIT 50"
                     
                     
                     );
