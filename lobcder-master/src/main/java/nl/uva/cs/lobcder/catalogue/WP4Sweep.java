@@ -178,7 +178,9 @@ public class WP4Sweep implements Runnable {
                 return null;
             }
 
-            ClientResponse response = client.resource(uri).type(MediaType.APPLICATION_XML_TYPE).accept(MediaType.APPLICATION_XML_TYPE, MediaType.APPLICATION_JSON_TYPE).put(ClientResponse.class, resourceMetadataList);
+            ClientResponse response = client.resource(uri).type(MediaType.APPLICATION_XML_TYPE)
+                    .accept(MediaType.APPLICATION_XML_TYPE, MediaType.APPLICATION_JSON_TYPE)
+                    .put(ClientResponse.class, resourceMetadataList);
             if (response.getClientResponseStatus() != ClientResponse.Status.OK) {
                 throw new HTTPException(response.getStatus());
             }

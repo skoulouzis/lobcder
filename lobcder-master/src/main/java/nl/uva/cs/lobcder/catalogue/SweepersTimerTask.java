@@ -27,7 +27,7 @@ class SweepersTimerTask extends TimerTask {
     private final ReplicateSweep replicateSweep;
     private final Boolean useRepo;
     private final Boolean useSDN;
-    private WP4SweepOLD wp4Sweep = null;
+    private WP4Sweep wp4Sweep = null;
     private SDNSweep sdnSweep = null;
 //    private ThreadPoolExecutor executorService;
     private ArrayBlockingQueue<Runnable> queue;
@@ -39,7 +39,7 @@ class SweepersTimerTask extends TimerTask {
         useRepo = PropertiesHelper.useMetadataRepository();
         useSDN = PropertiesHelper.useSDN();
         if (useRepo) {
-            wp4Sweep = new WP4SweepOLD(datasource);
+            wp4Sweep = new WP4Sweep(datasource);
 
         }
         if (useSDN) {
