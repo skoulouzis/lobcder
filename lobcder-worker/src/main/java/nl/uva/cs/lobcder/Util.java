@@ -120,4 +120,8 @@ class Util extends PropertiesHelper {
     static ChacheEvictionAlgorithm getCacheEvictionPolicy() throws IOException {
         return ChacheEvictionAlgorithm.valueOf(getProperties().getProperty(("cache.eviction.alg"), "LRU"));
     }
+
+    public static long getCacheFreeSpaceLimit() throws IOException {
+        return Long.valueOf(getProperties().getProperty("cache.size.limit", "2000000000"));
+    }
 }
