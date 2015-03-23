@@ -691,6 +691,7 @@ public class WebDataFileResource extends WebDataResource implements
         workers = PropertiesHelper.getWorkers();
         if (workerIndex >= workers.size()) {
             workerIndex = 0;
+            return null;
         }
         String worker = workers.get(workerIndex++);
         String w = worker + "/" + getLogicalData().getUid();
@@ -717,6 +718,15 @@ public class WebDataFileResource extends WebDataResource implements
         Iterator<String> iter = workersMap.keySet().iterator();
         double dist = 9999999999.0;
         String worker = null;
+        for (String s : Network.getAllLocalIP()) {
+            Location masterLocation = lookupService.getLocation(s);
+            if (reuSourceLocation != null && masterLocation != null && reuSourceLocation.distance(masterLocation) < dist) {
+                dist = reuSourceLocation.distance(masterLocation);
+                log.log(Level.INFO, "Src loc: {0} Dst loc: {1} dist: {2}", new Object[]{reuSourceLocation.city, masterLocation.city, dist});
+                worker = null;
+            }
+        }
+
         while (iter.hasNext()) {
             String wip = iter.next();
             Location workerLocation = lookupService.getLocation(wip);
@@ -724,14 +734,6 @@ public class WebDataFileResource extends WebDataResource implements
                 dist = reuSourceLocation.distance(workerLocation);
                 worker = workersMap.get(wip);
                 log.log(Level.INFO, "Src loc: {0} Dst loc: {1} dist: {2}", new Object[]{reuSourceLocation.city, workerLocation.city, dist});
-            }
-        }
-        for (String s : Network.getAllLocalIP()) {
-            Location workerLocation = lookupService.getLocation(s);
-            if (reuSourceLocation != null && workerLocation != null && reuSourceLocation.distance(workerLocation) < dist) {
-                dist = reuSourceLocation.distance(workerLocation);
-                log.log(Level.INFO, "Src loc: {0} Dst loc: {1} dist: {2}", new Object[]{reuSourceLocation.city, workerLocation.city, dist});
-                worker = null;
             }
         }
         if (worker != null) {
