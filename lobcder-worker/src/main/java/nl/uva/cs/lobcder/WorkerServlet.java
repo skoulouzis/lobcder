@@ -548,6 +548,10 @@ public final class WorkerServlet extends HttpServlet {
                 byte[] buffer = new byte[bufferSize];
                 cacheFile = new File(cacheDir, input.getFileName());
                 if (!cacheFile.exists() || input.getLength() != cacheFile.length()) {
+                    cacheDir = new File(System.getProperty("java.io.tmpdir") + File.separator + Util.getBackendWorkingFolderName());
+                    if (!cacheDir.exists()) {
+                        cacheDir.mkdirs();
+                    }
                     tos = new TeeOutputStream(new FileOutputStream(cacheFile), output);
                     File file = new File(System.getProperty("user.home"));
                     while (file.getUsableSpace() < Util.getCacheFreeSpaceLimit()) {
@@ -712,59 +716,17 @@ public final class WorkerServlet extends HttpServlet {
             logicalData = res.accept(MediaType.APPLICATION_XML).
                     get(new GenericType<LogicalDataWrapped>() {
             });
-            if (logicalData != null) {
-                List<PDRIDescr> pdris = logicalData.getPdriList();
-                List<PDRIDescr> removeIt = new ArrayList<>();
-                if (pdris != null && !pdris.isEmpty()) {
-                    //Remove masters's cache pdris 
-                    for (PDRIDescr p : pdris) {
-                        if (p.getResourceUrl().startsWith("file")) {
-                            removeIt.add(p);
-                        }
-                    }
 
-                    if (!removeIt.isEmpty()) {
-                        pdris.removeAll(removeIt);
-                        if (pdris.isEmpty()) {
-                            Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, "PDRIS from master is either empty or contains unreachable files");
-                            logicalDataCache.remove(fileUID);
-                            throw new IOException("PDRIS from master is either empty or contains unreachable files");
-                        }
-                    }
-                    cacheFile = new File(cacheDir, pdris.get(0).getName());
-                    if (cacheFile.exists()) {
-                        String fileName = cacheFile.getName();
-                        long ssID = -1;
-                        String resourceURI = "file:///" + cacheFile.getAbsoluteFile().getParentFile().getParent();
-                        String uName = "fake";
-                        String passwd = "fake";
-                        boolean encrypt = false;
-                        long key = -1;
-                        long pdriId = -1;
-                        Long groupId = Long.valueOf(-1);
-                        pdris.add(new PDRIDescr(fileName, ssID, resourceURI, uName, passwd, encrypt, BigInteger.valueOf(key), groupId, pdriId));
-                    }
-                    switch (Util.getCacheEvictionPolicy()) {
-                        case LRU:
-                        case MRU:
-                        case RR:
-                            fileAccessMap.put(cacheFile.getAbsolutePath(), System.currentTimeMillis());
-                            break;
-                        case LFU:
-                        case MFU:
-                            Long count = fileAccessMap.get(cacheFile.getAbsolutePath());
-                            if (count == null) {
-                                count = Long.valueOf(0);
-                            }
-                            fileAccessMap.put(cacheFile.getAbsolutePath(), count++);
-                            break;
-                    }
-                    logicalData.setPdriList(pdris);
-                }
-            }
 
-            logicalDataCache.put(fileUID, logicalData);
+            logicalData = removeFilePDRIs(logicalData);
         }
+
+        logicalData = addCacheToPDRIDescr(logicalData);
+
+
+
+
+
 
         pdriDesc = selectBestPDRI(logicalData.getPdriList());
 
@@ -960,6 +922,66 @@ public final class WorkerServlet extends HttpServlet {
         }
         new File(key).delete();
         fileAccessMap.remove(key);
+    }
+
+    private LogicalDataWrapped addCacheToPDRIDescr(LogicalDataWrapped logicalData) throws IOException {
+        List<PDRIDescr> pdris = logicalData.getPdriList();
+        cacheFile = new File(cacheDir, pdris.get(0).getName());
+        logicalData = removeFilePDRIs(logicalData);
+        if (cacheFile.exists()) {
+            String fileName = cacheFile.getName();
+            long ssID = -1;
+            String resourceURI = "file:///" + cacheFile.getAbsoluteFile().getParentFile().getParent();
+            String uName = "fake";
+            String passwd = "fake";
+            boolean encrypt = false;
+            long key = -1;
+            long pdriId = -1;
+            Long groupId = Long.valueOf(-1);
+            pdris.add(new PDRIDescr(fileName, ssID, resourceURI, uName, passwd, encrypt, BigInteger.valueOf(key), groupId, pdriId));
+            switch (Util.getCacheEvictionPolicy()) {
+                case LRU:
+                case MRU:
+                case RR:
+                    fileAccessMap.put(cacheFile.getAbsolutePath(), System.currentTimeMillis());
+                    break;
+                case LFU:
+                case MFU:
+                    Long count = fileAccessMap.get(cacheFile.getAbsolutePath());
+                    if (count == null) {
+                        count = Long.valueOf(0);
+                    }
+                    fileAccessMap.put(cacheFile.getAbsolutePath(), count++);
+                    break;
+            }
+            logicalData.setPdriList(pdris);
+        }
+        return logicalData;
+    }
+
+    private LogicalDataWrapped removeFilePDRIs(LogicalDataWrapped logicalData) throws IOException {
+        List<PDRIDescr> pdris = logicalData.getPdriList();
+        if (logicalData != null) {
+            List<PDRIDescr> removeIt = new ArrayList<>();
+            if (pdris != null && !pdris.isEmpty()) {
+                //Remove masters's cache pdris 
+                for (PDRIDescr p : pdris) {
+                    if (p.getResourceUrl().startsWith("file")) {
+                        removeIt.add(p);
+                    }
+                }
+                if (!removeIt.isEmpty()) {
+                    pdris.removeAll(removeIt);
+                    if (pdris.isEmpty()) {
+                        Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, "PDRIS from master is either empty or contains unreachable files");
+                        logicalDataCache.remove(fileUID);
+                        throw new IOException("PDRIS from master is either empty or contains unreachable files");
+                    }
+                }
+            }
+            logicalDataCache.put(fileUID, logicalData);
+        }
+        return logicalData;
     }
 
     /**
