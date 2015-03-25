@@ -35,9 +35,8 @@ mvn clean install
 rm -r target/lobcder
 mv target/lobcder-master-?.?  target/lobcder
 #Keep old configuration 
-rm target/lobcder/manage* target/lobcder/WEB-INF/web.xml target/lobcder/META-INF/context.xml target/lobcder/WEB-INF/classes/lobcder.properties
+rm target/lobcder/manage* target/lobcder/WEB-INF/classes/workers target/lobcder/WEB-INF/web.xml target/lobcder/META-INF/context.xml target/lobcder/WEB-INF/classes/lobcder.properties
 cd /root
-
 cp -r lobcder/lobcder-master/target/lobcder apache-tomcat-*/webapps/
 ./apache-tomcat-6.0.36/bin/startup.sh
 

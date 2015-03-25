@@ -186,6 +186,7 @@ public class VPDRI implements PDRI {
     @Override
     public void delete() throws IOException {
         try {
+            VPDRI.log.log(Level.INFO, "Start deleting {0}", new Object[]{vrl});
 //            getVfsClient().openLocation(vrl).delete();
             getVfsClient().getFile(vrl).delete();
         } catch (VlException ex) {
