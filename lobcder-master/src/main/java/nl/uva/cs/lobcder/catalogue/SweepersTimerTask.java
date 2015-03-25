@@ -50,7 +50,7 @@ class SweepersTimerTask extends TimerTask {
     @Override
     public void run() {
         try {
-            log.log(Level.FINE, "Start deleteSweep");
+//            log.log(Level.FINE, "Start deleteSweep");
             deleteSweep.run();
         } catch (RuntimeException e) {
             log.log(Level.SEVERE, deleteSweep.getClass().getName() + " encountered and error.", e);
@@ -59,7 +59,7 @@ class SweepersTimerTask extends TimerTask {
         }
 
         try {
-            log.log(Level.FINE, "Start replicateSweep");
+//            log.log(Level.FINE, "Start replicateSweep");
             replicateSweep.run();
         } catch (RuntimeException e) {
             log.log(Level.SEVERE, replicateSweep.getClass().getName() + " encountered and error.", e);
@@ -70,7 +70,7 @@ class SweepersTimerTask extends TimerTask {
 
         try {
             if (wp4Sweep != null) {
-                log.log(Level.FINE, "Start wp4Sweep");
+//                log.log(Level.FINE, "Start wp4Sweep");
                 wp4Sweep.run();
 //                initExecutor();
 //                executorService.submit(wp4Sweep);
