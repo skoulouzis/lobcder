@@ -27,7 +27,7 @@ class SweepersTimerTask extends TimerTask {
     private final ReplicateSweep replicateSweep;
     private final Boolean useRepo;
     private final Boolean useSDN;
-    private WP4Sweep wp4Sweep = null;
+    private WP4SweepOLD wp4Sweep = null;
     private SDNSweep sdnSweep = null;
 //    private ThreadPoolExecutor executorService;
     private ArrayBlockingQueue<Runnable> queue;
@@ -39,7 +39,7 @@ class SweepersTimerTask extends TimerTask {
         useRepo = PropertiesHelper.useMetadataRepository();
         useSDN = PropertiesHelper.useSDN();
         if (useRepo) {
-            wp4Sweep = new WP4Sweep(datasource);
+            wp4Sweep = new WP4SweepOLD(datasource);
 
         }
         if (useSDN) {
@@ -50,6 +50,7 @@ class SweepersTimerTask extends TimerTask {
     @Override
     public void run() {
         try {
+            log.log(Level.FINE, "Start deleteSweep");
             deleteSweep.run();
         } catch (RuntimeException e) {
             log.log(Level.SEVERE, deleteSweep.getClass().getName() + " encountered and error.", e);
@@ -58,6 +59,7 @@ class SweepersTimerTask extends TimerTask {
         }
 
         try {
+            log.log(Level.FINE, "Start replicateSweep");
             replicateSweep.run();
         } catch (RuntimeException e) {
             log.log(Level.SEVERE, replicateSweep.getClass().getName() + " encountered and error.", e);
@@ -68,6 +70,7 @@ class SweepersTimerTask extends TimerTask {
 
         try {
             if (wp4Sweep != null) {
+                log.log(Level.FINE, "Start wp4Sweep");
                 wp4Sweep.run();
 //                initExecutor();
 //                executorService.submit(wp4Sweep);

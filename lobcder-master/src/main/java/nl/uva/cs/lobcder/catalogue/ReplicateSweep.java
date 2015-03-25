@@ -47,7 +47,6 @@ public class ReplicateSweep implements Runnable {
                             preferences.remove(pdriDescr.getStorageSiteId());
                         }
                         successFlag = replicate(pdriGroup, preferences, connection);
-                        log.log(Level.FINE, "Done with  preferences");
                     }
                     Collection<Long> removingStorage = getRemovingStorage(connection);
                     Collection<PDRIDescr> wantRemove = new ArrayList<>();

@@ -71,6 +71,7 @@ public class WebDataFileResource extends WebDataResource implements
     private static final Map<String, Integer> numOfGetsMap = new HashMap<>();
     private static final Map<String, Integer> numOfWorkerTransfersMap = new HashMap<>();
     private SDNControllerClient sdnClient;
+    private LookupService lookupService;
 
     public WebDataFileResource(@Nonnull LogicalData logicalData, Path path, @Nonnull JDBCatalogue catalogue, @Nonnull List<AuthI> authList) {
         super(logicalData, path, catalogue, authList);
@@ -711,22 +712,15 @@ public class WebDataFileResource extends WebDataResource implements
     }
 
     private String getGeolocationWorker(String reuSource) throws IOException {
-        LookupService lookupService = new LookupService(PropertiesHelper.getGeoDB());
-//        Location reuSourceLocation = lookupService.getLocation("82.157.235.6");
+        if (lookupService == null) {
+            lookupService = new LookupService(PropertiesHelper.getGeoDB());
+        }
+//        Location reuSourceLocation = lookupService.getLocation("145.18.168.228");
         Location reuSourceLocation = lookupService.getLocation(reuSource);
 
         Iterator<String> iter = workersMap.keySet().iterator();
         double dist = 9999999999.0;
         String worker = null;
-        for (String s : Network.getAllLocalIP()) {
-            Location masterLocation = lookupService.getLocation(s);
-            if (reuSourceLocation != null && masterLocation != null && reuSourceLocation.distance(masterLocation) < dist) {
-                dist = reuSourceLocation.distance(masterLocation);
-                log.log(Level.INFO, "Src loc: {0} Dst loc: {1} dist: {2}", new Object[]{reuSourceLocation.city, masterLocation.city, dist});
-                worker = null;
-            }
-        }
-
         while (iter.hasNext()) {
             String wip = iter.next();
             Location workerLocation = lookupService.getLocation(wip);
@@ -736,6 +730,16 @@ public class WebDataFileResource extends WebDataResource implements
                 log.log(Level.INFO, "Src loc: {0} Dst loc: {1} dist: {2}", new Object[]{reuSourceLocation.city, workerLocation.city, dist});
             }
         }
+
+        for (String s : Network.getAllLocalIP()) {
+            Location masterLocation = lookupService.getLocation(s);
+            if (reuSourceLocation != null && masterLocation != null && reuSourceLocation.distance(masterLocation) < dist) {
+                dist = reuSourceLocation.distance(masterLocation);
+                log.log(Level.INFO, "Src loc: {0} Dst loc: {1} dist: {2}", new Object[]{reuSourceLocation.city, masterLocation.city, dist});
+                worker = null;
+            }
+        }
+
         if (worker != null) {
             String w = worker + "/" + getLogicalData().getUid();
             String token = UUID.randomUUID().toString();
