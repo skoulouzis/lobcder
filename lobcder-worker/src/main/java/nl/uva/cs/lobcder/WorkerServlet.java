@@ -20,15 +20,19 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -36,8 +40,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
-import java.util.SortedMap;
-import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.GZIPOutputStream;
@@ -59,15 +61,21 @@ import javax.xml.bind.Marshaller;
 import lombok.extern.java.Log;
 import static nl.uva.cs.lobcder.Util.ChacheEvictionAlgorithm.LRU;
 import static nl.uva.cs.lobcder.Util.ChacheEvictionAlgorithm.MRU;
+import nl.uva.cs.lobcder.auth.AuthI;
+import nl.uva.cs.lobcder.auth.AuthLobcderComponents;
+import nl.uva.cs.lobcder.auth.AuthTicket;
+import nl.uva.cs.lobcder.auth.MyPrincipal;
+import nl.uva.cs.lobcder.frontend.BasicAuthFilter;
 import nl.uva.cs.lobcder.resources.PDRI;
 import nl.uva.cs.lobcder.resources.PDRIDescr;
 import nl.uva.cs.lobcder.resources.VPDRI;
 import nl.uva.cs.lobcder.rest.Endpoints;
 import nl.uva.cs.lobcder.rest.wrappers.LogicalDataWrapped;
 import nl.uva.cs.lobcder.rest.wrappers.Stats;
+import nl.uva.cs.lobcder.util.PropertiesHelper;
 import nl.uva.vlet.data.StringUtil;
 import nl.uva.vlet.exception.VlException;
-import nl.uva.vlet.io.CircularStreamBufferTransferer;
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.output.TeeOutputStream;
 
 /**
@@ -168,13 +176,20 @@ public final class WorkerServlet extends HttpServlet {
      */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
+            throws ServletException, IOException, UnsupportedEncodingException {
         try {
             // Process request with content.
+//            authenticate(request, response);
             processRequest(request, response, true);
         } catch (IOException | InterruptedException | URISyntaxException | VlException | JAXBException ex) {
             Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, ex);
             handleError(ex, response);
+//        } catch (NoSuchAlgorithmException ex) {
+//            Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, ex);
+//        } catch (InvalidKeySpecException ex) {
+//            Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, ex);
+//        } catch (InvalidKeyException ex) {
+//            Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -982,6 +997,56 @@ public final class WorkerServlet extends HttpServlet {
             logicalDataCache.put(fileUID, logicalData);
         }
         return logicalData;
+    }
+
+    private void authenticate(HttpServletRequest request, HttpServletResponse response) throws UnsupportedEncodingException, IOException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException {
+        final HttpServletRequest httpRequest = (HttpServletRequest) request;
+        final HttpServletResponse httpResponse = (HttpServletResponse) response;
+
+        final String autheader = httpRequest.getHeader("Authorization");
+        if (autheader != null) {
+
+            final int index = autheader.indexOf(' ');
+            if (index > 0) {
+                final String credentials = new String(Base64.decodeBase64(autheader.substring(index).getBytes()), "UTF8");
+//                final String credentials = new String(Base64.decodeBase64(autheader.substring(index)), "UTF8");
+                final String uname = credentials.substring(0, credentials.indexOf(":"));
+                final String token = credentials.substring(credentials.indexOf(":") + 1);
+
+
+                double start = System.currentTimeMillis();
+
+                AuthTicket a = new AuthTicket();
+                MyPrincipal principal = a.checkToken(uname, token);
+
+
+                String method = ((HttpServletRequest) httpRequest).getMethod();
+                StringBuffer reqURL = ((HttpServletRequest) httpRequest).getRequestURL();
+                double elapsed = System.currentTimeMillis() - start;
+
+                String userAgent = ((HttpServletRequest) httpRequest).getHeader("User-Agent");
+
+                String from = ((HttpServletRequest) httpRequest).getRemoteAddr();
+//        String user = ((HttpServletRequest) httpRequest).getRemoteUser();
+                int contentLen = ((HttpServletRequest) httpRequest).getContentLength();
+                String contentType = ((HttpServletRequest) httpRequest).getContentType();
+
+                String authorizationHeader = ((HttpServletRequest) httpRequest).getHeader("authorization");
+                String userNpasswd = "";
+                if (authorizationHeader != null) {
+                    userNpasswd = authorizationHeader.split("Basic ")[1];
+                }
+                String queryString = ((HttpServletRequest) httpRequest).getQueryString();
+
+                if (principal != null) {
+                    httpRequest.setAttribute("myprincipal", principal);
+                    return;
+                }
+            }
+        }
+        String _realm = "SECRET";
+        httpResponse.setHeader("WWW-Authenticate", "Basic realm=\"" + _realm + "\"");
+        httpResponse.sendError(HttpServletResponse.SC_UNAUTHORIZED);
     }
 
     /**
