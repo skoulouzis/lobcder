@@ -68,6 +68,7 @@ CREATE TABLE storage_site_table (
   encrypt BOOLEAN NOT NULL DEFAULT FALSE, INDEX(encrypt),
   private BOOLEAN NOT NULL DEFAULT FALSE, INDEX (private),
   removing BOOLEAN NOT NULL DEFAULT FALSE, INDEX(removing)
+  readOnly BOOLEAN NOT NULL DEFAULT FALSE, INDEX(readOnly)
 ) ENGINE=InnoDB;
 
 CREATE TABLE pdri_table (
