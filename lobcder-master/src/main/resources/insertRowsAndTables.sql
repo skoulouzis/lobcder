@@ -173,6 +173,8 @@ ALTER TABLE pdrigroup_table ADD INDEX(needCheck,bound);
 ALTER TABLE storage_site_table ADD private BOOLEAN NOT NULL DEFAULT FALSE;
 ALTER TABLE storage_site_table ADD removing BOOLEAN NOT NULL DEFAULT FALSE;
 ALTER TABLE storage_site_table ADD INDEX (private,removing);
+ALTER TABLE storage_site_table ADD readOnly BOOLEAN NOT NULL DEFAULT FALSE
+ALTER TABLE storage_site_table ADD INDEX (readOnly);
 
 
 CREATE TABLE IF NOT EXISTS  pref_table (

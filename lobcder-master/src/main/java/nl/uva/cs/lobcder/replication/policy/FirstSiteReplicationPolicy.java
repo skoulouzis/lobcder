@@ -36,9 +36,8 @@ public class FirstSiteReplicationPolicy implements ReplicationPolicy {
                 ResultSet resultSet = statement.executeQuery("SELECT "
                         + "storageSiteId "
                         + "FROM storage_site_table "
-                        + "WHERE private=FALSE "
-                        + "AND removing=FALSE "
-                        + "AND isCache=FALSE LIMIT 1");
+                        + "WHERE private=FALSE AND removing=FALSE AND isCache=FALSE AND readOnly != TRUE"
+                        + "LIMIT 1");
                 while (resultSet.next()) {
                     queryResult.add(resultSet.getLong(1));
                 }

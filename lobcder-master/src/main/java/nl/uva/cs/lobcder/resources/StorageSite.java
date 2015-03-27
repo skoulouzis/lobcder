@@ -25,6 +25,9 @@ public class StorageSite implements Cloneable {
         clone.setResourceURI(resourceURI);
         clone.setEncrypt(encrypt);
         clone.setCache(cache);
+        clone.setPrivateSite(privateSite);
+        clone.setReadOnly(readOnly);
+        clone.setRemoving(removing);
         return clone;
     }
     private Long storageSiteId;
@@ -36,4 +39,7 @@ public class StorageSite implements Cloneable {
     private Credential credential;
     private boolean encrypt;
     private boolean cache;
+    private boolean privateSite;
+    private boolean readOnly;
+    private boolean removing;
 }

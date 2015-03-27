@@ -118,7 +118,8 @@ public class FastestSiteReplicationPolicy implements ReplicationPolicy {
             ResultSet rs = s.executeQuery("SELECT storageSiteId, resourceURI, "
                     + "currentNum, currentSize, quotaNum, quotaSize, username, "
                     + "password, encrypt FROM storage_site_table JOIN credential_table ON "
-                    + "credentialRef = credintialId WHERE isCache != TRUE");
+                    + "credentialRef = credintialId "
+                    + "WHERE private=FALSE AND removing=FALSE AND isCache=FALSE AND readOnly != TRUE");
             Map<String, StorageSite> res = new HashMap<>();
             while (rs.next()) {
                 Credential c = new Credential();

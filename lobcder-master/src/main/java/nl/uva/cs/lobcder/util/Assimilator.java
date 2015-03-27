@@ -26,6 +26,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import nl.uva.vlet.vfs.VFSClient;
+import nl.uva.vlet.vrs.VComposite;
+import nl.uva.vlet.vrs.VNode;
+import nl.uva.vlet.vrs.VRSClient;
 
 /**
  *
@@ -33,12 +37,12 @@ import java.util.logging.Logger;
  */
 public class Assimilator {
 
-    static final String dbName = "";
+    static final String dbName = "lobcderDB2";
     static final String JDBC_DRIVER = "com.mysql.jdbc.Driver";
-    static final String DB_URL = "jdbc:mysql://localhost/"+dbName;
+    static final String DB_URL = "jdbc:mysql://localhost/" + dbName;
     //  Database credentials
-    static final String USER = "";
-    static final String PASS = "";
+    static final String USER = "lobcder";
+    static final String PASS = "RoomC3156";
     private final Connection conn;
     private static String importingOwner;
 
@@ -56,7 +60,7 @@ public class Assimilator {
         long id;
 //        try (Connection connection = getConnection()) {
         try (PreparedStatement ps = connection.prepareStatement("INSERT INTO "
-                        + "credential_table (username, password) VALUES (?, ?)", Statement.RETURN_GENERATED_KEYS)) {
+                + "credential_table (username, password) VALUES (?, ?)", Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, username);
             ps.setString(2, password);
             ps.executeUpdate();
@@ -76,26 +80,30 @@ public class Assimilator {
 
     private long addStorageSite(Connection connection, StorageSite site, long credentialRef, boolean isCache) throws SQLException {
         long ssID;
-        String uri;
+        String resourceUri;
         if (!site.getResourceURI().endsWith("/")) {
-            uri = site.getResourceURI() + "/";
+            resourceUri = site.getResourceURI() + "/";
         } else {
-            uri = site.getResourceURI();
+            resourceUri = site.getResourceURI();
         }
 //        try (Connection connection = getConnection()) {
+
         try (PreparedStatement ps = connection.prepareStatement("INSERT INTO "
-                        + "storage_site_table (resourceUri, credentialRef, "
-                        + "currentNum, currentSize, quotaNum, quotaSize, "
-                        + "isCache, encrypt) "
-                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS)) {
-            ps.setString(1, uri);
+                + "storage_site_table (resourceUri, credentialRef, currentNum, "
+                + "currentSize, quotaNum, quotaSize, isCache, extra, encrypt, private, removing, readOnly) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?,?,?,?,?)", Statement.RETURN_GENERATED_KEYS)) {
+            ps.setString(1, resourceUri);
             ps.setLong(2, credentialRef);
             ps.setLong(3, site.getCurrentNum());
             ps.setLong(4, site.getCurrentSize());
             ps.setLong(5, site.getQuotaNum());
             ps.setLong(6, site.getQuotaSize());
             ps.setBoolean(7, isCache);
-            ps.setBoolean(8, site.isEncrypt());
+            ps.setString(8, "");
+            ps.setBoolean(9, site.isEncrypt());
+            ps.setBoolean(10, site.isPrivateSite());
+            ps.setBoolean(11, site.isRemoving());
+            ps.setBoolean(12, site.isReadOnly());
             ps.executeUpdate();
             ResultSet rs = ps.getGeneratedKeys();
             rs.next();
@@ -125,8 +133,8 @@ public class Assimilator {
         long pdriID;
 //        try (Connection connection = getConnection()) {
         try (PreparedStatement ps = connection.prepareStatement("INSERT INTO pdri_table "
-                        + "(fileName, storageSiteRef, pdriGroupRef, isEncrypted, encryptionKey) "
-                        + "VALUES (?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS)) {
+                + "(fileName, storageSiteRef, pdriGroupRef, isEncrypted, encryptionKey) "
+                + "VALUES (?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, fileName);
             ps.setLong(2, storageSiteRef);
             ps.setLong(3, pdriGroupRef);
@@ -147,14 +155,14 @@ public class Assimilator {
 
 //        try (Connection connection = getConnection()) {
         try (PreparedStatement preparedStatement = connection.prepareStatement(
-                        "INSERT INTO ldata_table(parentRef, ownerId, datatype, "
-                        + "createDate, modifiedDate, ldLength, "
-                        + "contentTypesStr, pdriGroupRef, isSupervised, "
-                        + "checksum, lastValidationDate, lockTokenId, "
-                        + "lockScope, lockType, lockedByUser, lockDepth, "
-                        + "lockTimeout, description, locationPreference, "
-                        + "ldName) "
-                        + "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS)) {
+                "INSERT INTO ldata_table(parentRef, ownerId, datatype, "
+                + "createDate, modifiedDate, ldLength, "
+                + "contentTypesStr, pdriGroupRef, isSupervised, "
+                + "checksum, lastValidationDate, lockTokenId, "
+                + "lockScope, lockType, lockedByUser, lockDepth, "
+                + "lockTimeout, description, locationPreference, "
+                + "ldName) "
+                + "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS)) {
             preparedStatement.setLong(1, entry.getParentRef());
             preparedStatement.setString(2, entry.getOwner());
             preparedStatement.setString(3, entry.getType());
@@ -196,7 +204,7 @@ public class Assimilator {
         String query = "select storageSiteId from storage_site_table where resourceUri = '"
                 + ssURI + "' and isCache = false";
         try (PreparedStatement preparedStatement = connection.prepareStatement(
-                        query)) {
+                query)) {
             ResultSet rs = preparedStatement.executeQuery();
             if (rs.next()) {
                 ssID = rs.getLong(1);
@@ -208,7 +216,7 @@ public class Assimilator {
                 query = "select storageSiteId from storage_site_table where resourceUri = '"
                         + ssURI + "' and isCache = false";
                 try (PreparedStatement preparedStatement = connection.prepareStatement(
-                                query)) {
+                        query)) {
                     ResultSet rs = preparedStatement.executeQuery();
                     if (rs.next()) {
                         ssID = rs.getLong(1);
@@ -247,13 +255,17 @@ public class Assimilator {
 
 //
             ssClient = new StorageSiteClient(username, password, ssURI);
-            VDir dir = ssClient.getStorageSiteClient().openDir(new VRL(ssURI));
-            //build folders first 
-            add(dir, dir.getPath(), c, ssID, false);
 
-            VFSNode[] nodes = dir.list();
-            for (VFSNode n : nodes) {
-                if (n.isFile()) {
+
+            VNode dir = ssClient.getStorageSiteClient().getNode(new VRL(ssURI));
+
+//                VFSClient client = (VFSClient) ssClient.getStorageSiteClient();
+//                VDir dir = client.openDir(new VRL(ssURI));
+            //build folders first 
+            add((VComposite) dir, dir.getPath(), c, ssID, false);
+            VNode[] nodes = ((VComposite) dir).getNodes();
+            for (VNode n : nodes) {
+                if (!n.isComposite()) {
                     VFile f = (VFile) n;
                     String fileName = n.getName();
                     VRL currentPath = new VRL(f.getPath().replaceFirst(dir.getPath(), ""));
@@ -273,6 +285,9 @@ public class Assimilator {
                     }
                 }
             }
+
+
+
         }
         c.commit();
         c.close();
@@ -280,11 +295,11 @@ public class Assimilator {
 
     public LogicalData getLogicalDataByParentRefAndName(Long parentRef, String name, @Nonnull Connection connection) throws SQLException {
         try (PreparedStatement preparedStatement = connection.prepareStatement(
-                        "SELECT uid, ownerId, datatype, createDate, modifiedDate, ldLength, "
-                        + "contentTypesStr, pdriGroupRef, isSupervised, checksum, lastValidationDate, "
-                        + "lockTokenID, lockScope, lockType, lockedByUser, lockDepth, lockTimeout, "
-                        + "description, locationPreference "
-                        + "FROM ldata_table WHERE ldata_table.parentRef = ? AND ldata_table.ldName = ?")) {
+                "SELECT uid, ownerId, datatype, createDate, modifiedDate, ldLength, "
+                + "contentTypesStr, pdriGroupRef, isSupervised, checksum, lastValidationDate, "
+                + "lockTokenID, lockScope, lockType, lockedByUser, lockDepth, lockTimeout, "
+                + "description, locationPreference "
+                + "FROM ldata_table WHERE ldata_table.parentRef = ? AND ldata_table.ldName = ?")) {
             preparedStatement.setLong(1, parentRef);
             preparedStatement.setString(2, name);
             ResultSet rs = preparedStatement.executeQuery();
@@ -321,8 +336,8 @@ public class Assimilator {
 
     public LogicalData registerDirLogicalData(LogicalData entry, @Nonnull Connection connection) throws SQLException {
         try (PreparedStatement preparedStatement = connection.prepareStatement(
-                        "INSERT INTO ldata_table(parentRef, ownerId, datatype, ldName, createDate, modifiedDate)"
-                        + " VALUES (?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS)) {
+                "INSERT INTO ldata_table(parentRef, ownerId, datatype, ldName, createDate, modifiedDate)"
+                + " VALUES (?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS)) {
             preparedStatement.setLong(1, entry.getParentRef());
             preparedStatement.setString(2, entry.getOwner());
             preparedStatement.setString(3, Constants.LOGICAL_FOLDER);
@@ -337,9 +352,9 @@ public class Assimilator {
         }
     }
 
-    public void add(VDir dir, String base, Connection connection, long ssid, boolean addFiles) throws MalformedURLException, VlException, SQLException, NoSuchAlgorithmException {
-        VFSNode[] nodes = dir.list();
-        for (VFSNode f : nodes) {
+    public void add(VComposite dir, String base, Connection connection, long ssid, boolean addFiles) throws MalformedURLException, VlException, SQLException, NoSuchAlgorithmException {
+        VNode[] nodes = dir.getNodes();
+        for (VNode f : nodes) {
             VRL currentPath = new VRL(f.getPath().replaceFirst(base, ""));
             LogicalData register = getLogicalDataByPath(Path.path(currentPath.getPath()), connection);
             LogicalData parent = getLogicalDataByPath(Path.path(currentPath.getPath()).getParent(), connection);
@@ -350,18 +365,25 @@ public class Assimilator {
                 parentRef = parent.getUid();
             }
 
-            if (f.isDir()) {
+            if (f.isComposite()) {
                 if (register == null) {
                     LogicalData entry = new LogicalData();
-                    entry.setCreateDate(f.getModificationTime());
-                    entry.setModifiedDate(f.getModificationTime());
+                    if (f instanceof VDir) {
+                        VDir d = (VDir) f;
+                        entry.setCreateDate(d.getModificationTime());
+                        entry.setModifiedDate(d.getModificationTime());
+                    } else {
+                        entry.setCreateDate(System.currentTimeMillis());
+                        entry.setModifiedDate(System.currentTimeMillis());
+                    }
+
                     entry.setName(f.getName());
                     entry.setOwner(importingOwner);
                     entry.setParentRef(parentRef);
 
                     register = registerDirLogicalData(entry, connection);
                 }
-                add((VDir) f, base, connection, ssid, addFiles);
+                add((VComposite) f, base, connection, ssid, addFiles);
             } else if (addFiles) {
                 if (register == null) {
                     System.err.println(f.getVRL());
@@ -373,7 +395,7 @@ public class Assimilator {
 
     public LogicalData getLogicalDataByPath(Path logicalResourceName, @Nonnull Connection connection) throws SQLException {
         try (PreparedStatement preparedStatement = connection.prepareStatement(
-                        "SELECT uid FROM ldata_table WHERE ldata_table.parentRef = ? AND ldata_table.ldName = ?")) {
+                "SELECT uid FROM ldata_table WHERE ldata_table.parentRef = ? AND ldata_table.ldName = ?")) {
             long parent = 1;
             String parts[] = logicalResourceName.getParts();
             if (parts.length == 0) {
@@ -383,11 +405,11 @@ public class Assimilator {
                 String p = parts[i];
                 if (i == (parts.length - 1)) {
                     try (PreparedStatement preparedStatement1 = connection.prepareStatement(
-                                    "SELECT uid, ownerId, datatype, createDate, modifiedDate, ldLength, "
-                                    + "contentTypesStr, pdriGroupRef, isSupervised, checksum, lastValidationDate, "
-                                    + "lockTokenID, lockScope, lockType, lockedByUser, lockDepth, lockTimeout, "
-                                    + "description, locationPreference "
-                                    + "FROM ldata_table WHERE ldata_table.parentRef = ? AND ldata_table.ldName = ?")) {
+                            "SELECT uid, ownerId, datatype, createDate, modifiedDate, ldLength, "
+                            + "contentTypesStr, pdriGroupRef, isSupervised, checksum, lastValidationDate, "
+                            + "lockTokenID, lockScope, lockType, lockedByUser, lockDepth, lockTimeout, "
+                            + "description, locationPreference "
+                            + "FROM ldata_table WHERE ldata_table.parentRef = ? AND ldata_table.ldName = ?")) {
                         preparedStatement1.setLong(1, parent);
                         preparedStatement1.setString(2, p);
                         ResultSet rs = preparedStatement1.executeQuery();
@@ -436,12 +458,12 @@ public class Assimilator {
 
     public static void main(String args[]) throws SQLException, MalformedURLException, VlException, NoSuchAlgorithmException, Exception {
         try {
-            importingOwner = "no-one";
+            importingOwner = "admin";
             List<StorageSite> sites = new ArrayList<>();
 
             Credential credential = new Credential();
-            credential.setStorageSiteUsername("vphdemo");
-            credential.setStorageSitePassword("demo");
+            credential.setStorageSiteUsername("fake");
+            credential.setStorageSitePassword("fake");
 
 //            StorageSite ss1 = new StorageSite();
 //            ss1.setCredential(credential);
@@ -465,16 +487,30 @@ public class Assimilator {
 //            sites.add(ss2);
 
 
-            StorageSite ss3 = new StorageSite();
-            ss3.setCredential(credential);
-            ss3.setResourceURI("file:///" + System.getProperty("user.home") + "/Downloads/lobcderUsageData");
-//            ss3.setResourceURI("srm://tbn18.nikhef.nl:8446/dpm/nikhef.nl/home/biomed/lobcder");
-            ss3.setCurrentNum(Long.valueOf("-1"));
-            ss3.setCurrentSize(Long.valueOf("-1"));
-            ss3.setEncrypt(false);
-            ss3.setQuotaNum(Long.valueOf("-1"));
-            ss3.setQuotaSize(Long.valueOf("-1"));
-            sites.add(ss3);
+//            StorageSite ss3 = new StorageSite();
+//            ss3.setCredential(credential);
+//            ss3.setResourceURI("file:///" + System.getProperty("user.home") + "/Downloads/lobcderUsageData");
+////            ss3.setResourceURI("srm://tbn18.nikhef.nl:8446/dpm/nikhef.nl/home/biomed/lobcder");
+//            ss3.setCurrentNum(Long.valueOf("-1"));
+//            ss3.setCurrentSize(Long.valueOf("-1"));
+//            ss3.setEncrypt(false);
+//            ss3.setQuotaNum(Long.valueOf("-1"));
+//            ss3.setQuotaSize(Long.valueOf("-1"));
+//            sites.add(ss3);
+
+
+            StorageSite ss4 = new StorageSite();
+            ss4.setCredential(credential);
+            ss4.setResourceURI("http://data.sdss3.org/sas/dr12/apogee/spectro/redux/r5/apo1m/calibration/56357/plots/");
+            ss4.setCurrentNum(Long.valueOf("-1"));
+            ss4.setCurrentSize(Long.valueOf("-1"));
+            ss4.setEncrypt(false);
+            ss4.setQuotaNum(Long.valueOf("-1"));
+            ss4.setQuotaSize(Long.valueOf("-1"));
+            ss4.setPrivateSite(false);
+            ss4.setReadOnly(true);
+
+            sites.add(ss4);
 
             Assimilator a = new Assimilator();
             a.assimilate(sites);

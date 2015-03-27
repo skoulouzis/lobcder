@@ -22,7 +22,8 @@ public class RandomReplicationPolicy implements ReplicationPolicy {
     public Collection<Long> getSitesToReplicate(Connection connection) throws Exception {
         if (queryResult.isEmpty()) {
             try (Statement statement = connection.createStatement()) {
-                ResultSet resultSet = statement.executeQuery("SELECT storageSiteId FROM storage_site_table WHERE private=FALSE AND removing=FALSE AND isCache=FALSE");
+                ResultSet resultSet = statement.executeQuery("SELECT storageSiteId FROM storage_site_table "
+                        + "WHERE private=FALSE AND removing=FALSE AND isCache=FALSE AND readOnly != TRUE");
                 while (resultSet.next()) {
                     queryResult.add(resultSet.getLong(1));
                 }
