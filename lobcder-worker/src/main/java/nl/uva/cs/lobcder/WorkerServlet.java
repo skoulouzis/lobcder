@@ -115,6 +115,7 @@ public final class WorkerServlet extends HttpServlet {
     private File cacheDir;
     private File cacheFile;
     private boolean sendStats;
+    private WebResource webResource;
 
     // Actions ------------------------------------------------------------------------------------
     /**
@@ -720,10 +721,11 @@ public final class WorkerServlet extends HttpServlet {
         if (logicalData == null) {
             if (restClient == null) {
                 restClient = Client.create(clientConfig);
+                restClient.removeAllFilters();
+                restClient.addFilter(new com.sun.jersey.api.client.filter.HTTPBasicAuthFilter("worker-", token));
+                webResource = restClient.resource(restURL);
+
             }
-            restClient.removeAllFilters();
-            restClient.addFilter(new com.sun.jersey.api.client.filter.HTTPBasicAuthFilter("worker-", token));
-            WebResource webResource = restClient.resource(restURL);
             Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "Asking master. Token: {0}", token);
             WebResource res = webResource.path("item").path("query").path(fileUID);
             logicalData = res.accept(MediaType.APPLICATION_XML).
@@ -735,10 +737,6 @@ public final class WorkerServlet extends HttpServlet {
         }
 
         logicalData = addCacheToPDRIDescr(logicalData);
-
-
-
-
 
 
         pdriDesc = selectBestPDRI(logicalData.getPdriList());
