@@ -863,10 +863,11 @@ public final class WorkerServlet extends HttpServlet {
 
             if (restClient == null) {
                 restClient = Client.create(clientConfig);
+                restClient.removeAllFilters();
+                restClient.addFilter(new com.sun.jersey.api.client.filter.HTTPBasicAuthFilter("worker-", token));
+                webResource = restClient.resource(restURL);
             }
-            restClient.removeAllFilters();
-            restClient.addFilter(new com.sun.jersey.api.client.filter.HTTPBasicAuthFilter("worker-", token));
-            WebResource webResource = restClient.resource(restURL);
+
             ClientResponse response = webResource.path("lob_statistics").path("set")
                     .type(MediaType.APPLICATION_XML).put(ClientResponse.class, stringStats);
         }
