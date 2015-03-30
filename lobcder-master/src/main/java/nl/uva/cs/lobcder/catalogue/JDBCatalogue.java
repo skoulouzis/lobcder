@@ -12,6 +12,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.*;
 import java.util.*;
+import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Nonnull;
@@ -45,11 +46,12 @@ import nl.uva.vlet.vrl.VRL;
 public class JDBCatalogue extends MyDataSource {
 
     private Timer timer = null;
-//    private Map<Long, LogicalData> logicalDataCache = new HashMap<>();
-//    private Map<String, LogicalData> logicalDataCacheByPath = new HashMap<>();
-//    private Map<Long, Permissions> permissionsCache = new HashMap<>();
-//    private Map<Long, String> pathCache = new HashMap<>();
-//    Map<Long, List<PDRIDescr>> PDRIDescrCache = new HashMap<>();
+    private Map<Long, LogicalData> logicalDataCache = new HashMap<>();
+    private Map<String, LogicalData> logicalDataCacheByPath = new HashMap<>();
+    private Map<Long, Permissions> permissionsCache = new HashMap<>();
+    private Map<Long, String> pathCache = new HashMap<>();
+    Map<Long, List<PDRIDescr>> PDRIDescrCache = new HashMap<>();
+    private Map<Long, String> globalIDCache = new HashMap<>();
 
     public JDBCatalogue() throws NamingException {
     }
@@ -316,11 +318,11 @@ public class JDBCatalogue extends MyDataSource {
     }
 
     public List<PDRIDescr> getPdriDescrByGroupId(Long groupId, @Nonnull Connection connection) throws SQLException {
-        //        List<PDRIDescr> res = PDRIDescrCache.get(groupId);
-        //        if (res != null) {
-        //            return res;
-        //        }
-        ArrayList<PDRIDescr> res = new ArrayList<>();
+        List<PDRIDescr> res = PDRIDescrCache.get(groupId);
+        if (res != null) {
+            return res;
+        }
+//        ArrayList<PDRIDescr> res = new ArrayList<>();
         long pdriGroupRef;
         long pdriId;
         try (PreparedStatement ps = connection.prepareStatement("SELECT fileName, storageSiteRef, storage_site_table.resourceUri, "
@@ -1291,85 +1293,102 @@ public class JDBCatalogue extends MyDataSource {
     }
 
     private void removeFromLDataCache(LogicalData entry, String path) {
-//        logicalDataCache.remove(entry.getUid());
-//        if (path != null) {
-//            logicalDataCacheByPath.remove(path);
-//        } else {
-//            Iterator<Entry<String, LogicalData>> iter = logicalDataCacheByPath.entrySet().iterator();
-//            while (iter.hasNext()) {
-//                Entry<String, LogicalData> value = iter.next();
-//                if (value.getValue().getUid() == entry.getUid()) {
-//                    iter.remove();
-//                }
-//            }
-//        }
+        logicalDataCache.remove(entry.getUid());
+        if (path != null) {
+            logicalDataCacheByPath.remove(path);
+        } else {
+            Iterator<Entry<String, LogicalData>> iter = logicalDataCacheByPath.entrySet().iterator();
+            while (iter.hasNext()) {
+                Entry<String, LogicalData> value = iter.next();
+                if (value.getValue().getUid() == entry.getUid()) {
+                    iter.remove();
+                }
+            }
+        }
     }
 
     private void putToLDataCache(LogicalData entry, String path) {
-//        checkLDataCacheSize();
-//        logicalDataCache.put(entry.getUid(), entry);
-//        if (path != null) {
-//            logicalDataCacheByPath.put(path, entry);
-//        }
+        checkLDataCacheSize();
+        logicalDataCache.put(entry.getUid(), entry);
+        if (path != null) {
+            logicalDataCacheByPath.put(path, entry);
+        }
     }
 
     private void putToPermissionsCache(Long UID, Permissions perm) {
-//        checkPermissionsCacheSize();
-//        permissionsCache.put(UID, perm);
+        checkPermissionsCacheSize();
+        permissionsCache.put(UID, perm);
     }
 
     private Permissions getFromPermissionsCache(Long UID) {
 //        checkPermissionsCacheSize();
-//        return permissionsCache.get(UID);
-        return null;
+        return permissionsCache.get(UID);
+//        return null;
     }
 
     private LogicalData getFromLDataCache(Long uid, String path) {
 //        checkLDataCacheSize();
-//        if (uid != null) {
-//            return logicalDataCache.get(uid);
-//        }
-//        if (path != null) {
-//            return logicalDataCacheByPath.get(path);
-//        }
+        if (uid != null) {
+            return logicalDataCache.get(uid);
+        }
+        if (path != null) {
+            return logicalDataCacheByPath.get(path);
+        }
         return null;
     }
 
     private String getFromPathCache(Long uid) {
 //        checkPathCacheSize();
-//        return pathCache.get(uid);
-        return null;
+        return pathCache.get(uid);
+//        return null;
     }
 
     private void checkLDataCacheSize() {
-//        if (logicalDataCache.size() >= Constants.CACHE_SIZE) {
-//            Long key = logicalDataCache.keySet().iterator().next();
-//            logicalDataCache.remove(key);
-//        }
-//
-//        if (logicalDataCacheByPath.size() >= Constants.CACHE_SIZE) {
-//            String key = logicalDataCacheByPath.keySet().iterator().next();
-//            logicalDataCacheByPath.remove(key);
-//        }
+        if (logicalDataCache.size() >= Constants.CACHE_SIZE) {
+            Long key = logicalDataCache.keySet().iterator().next();
+            logicalDataCache.remove(key);
+        }
+
+        if (logicalDataCacheByPath.size() >= Constants.CACHE_SIZE) {
+            String key = logicalDataCacheByPath.keySet().iterator().next();
+            logicalDataCacheByPath.remove(key);
+        }
     }
 
     private void checkPermissionsCacheSize() {
-//        if (permissionsCache.size() >= Constants.CACHE_SIZE) {
-//            Long key = permissionsCache.keySet().iterator().next();
-//            permissionsCache.remove(key);
-//        }
+        if (permissionsCache.size() >= Constants.CACHE_SIZE) {
+            Long key = permissionsCache.keySet().iterator().next();
+            permissionsCache.remove(key);
+        }
     }
 
     private void checkPathCacheSize() {
-//        if (pathCache.size() >= Constants.CACHE_SIZE) {
-//            Long key = pathCache.keySet().iterator().next();
-//            pathCache.remove(key);
-//        }
+        if (pathCache.size() >= Constants.CACHE_SIZE) {
+            Long key = pathCache.keySet().iterator().next();
+            pathCache.remove(key);
+        }
     }
 
     private void putToPathCache(Long uid, String res) {
 //        checkPathCacheSize();
-//        pathCache.put(uid, res);
+        pathCache.put(uid, res);
+    }
+
+    private String getFromGlobalIDCache(Long uid) {
+//        checkGlobalIDCacheSize();
+        return globalIDCache.get(uid);
+    }
+
+    private void checkGlobalIDCacheSize() {
+        if (globalIDCache.size() >= Constants.CACHE_SIZE) {
+            Long key = globalIDCache.keySet().iterator().next();
+            globalIDCache.remove(key);
+        }
+    }
+
+    private void setToGlobalIDCache(Long uid, String res) {
+        checkGlobalIDCacheSize();
+        globalIDCache.put(uid, res);
     }
 
 //    public void recordRequest(Connection connection, HttpServletRequest httpServletRequest, double elapsed) throws SQLException, UnsupportedEncodingException {
@@ -1821,35 +1840,6 @@ public class JDBCatalogue extends MyDataSource {
         return getReplicationQueueSize(getConnection());
     }
 
-//    public List<String> getDataLocationPreferace(Connection connection, Long uid) throws SQLException {
-//        LogicalData lData = getFromLDataCache(uid, null);
-//        List<String> dataPref = null;
-//        if (lData != null) {
-//            dataPref = lData.getDataLocationPreferences();
-//            if (dataPref != null && !dataPref.isEmpty()) {
-//                return dataPref;
-//            }
-//        }
-//        dataPref = new ArrayList<>();
-//        try (PreparedStatement ps = connection.prepareStatement("SELECT resourceUri "
-//                + "FROM ldata_table "
-//                + "JOIN pref_table ON ld_uid = uid "
-//                + "JOIN storage_site_table ON storageSiteId = storageSiteRef "
-//                + "WHERE ldata_table.uid = ?",
-//                ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE)) {
-//            ps.setLong(1, uid);
-////            ps.setBoolean(2, includePrivate);
-//            ResultSet rs = ps.executeQuery();
-//            while (rs.next()) {
-//                dataPref.add(rs.getString(1));
-//            }
-//        }
-//        if (lData != null) {
-//            lData.setDataLocationPreferences(dataPref);
-//            putToLDataCache(lData, null);
-//        }
-//        return dataPref;
-//    }
     @Data
     @AllArgsConstructor
     public class PathInfo {
@@ -1958,16 +1948,21 @@ public class JDBCatalogue extends MyDataSource {
     }
 
     public String getGlobalID(Long uid, Connection connection) throws SQLException {
-        String res = null;
-        try (PreparedStatement ps = connection.prepareStatement("SELECT global_id FROM wp4_table WHERE local_id = ?")) {
-            ps.setLong(1, uid);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                res = rs.getString(1);
+        String res = getFromGlobalIDCache(uid);
+        if (res == null) {
+            //        String res = null;
+            try (PreparedStatement ps = connection.prepareStatement("SELECT global_id FROM wp4_table WHERE local_id = ?")) {
+                ps.setLong(1, uid);
+                ResultSet rs = ps.executeQuery();
+                if (rs.next()) {
+                    res = rs.getString(1);
+                    setToGlobalIDCache(uid, res);
+                }
+
             }
-            return res;
         }
 
+        return res;
     }
 
     public String getGlobalID(Long uid) throws SQLException {

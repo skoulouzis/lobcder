@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import nl.uva.vlet.data.VAttribute;
 import nl.uva.vlet.vfs.VFSClient;
 import nl.uva.vlet.vrs.VComposite;
 import nl.uva.vlet.vrs.VNode;
@@ -258,6 +259,7 @@ public class Assimilator {
 
 
             VNode dir = ssClient.getStorageSiteClient().getNode(new VRL(ssURI));
+
 
 //                VFSClient client = (VFSClient) ssClient.getStorageSiteClient();
 //                VDir dir = client.openDir(new VRL(ssURI));
