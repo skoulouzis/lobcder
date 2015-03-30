@@ -61,18 +61,14 @@ import javax.xml.bind.Marshaller;
 import lombok.extern.java.Log;
 import static nl.uva.cs.lobcder.Util.ChacheEvictionAlgorithm.LRU;
 import static nl.uva.cs.lobcder.Util.ChacheEvictionAlgorithm.MRU;
-import nl.uva.cs.lobcder.auth.AuthI;
-import nl.uva.cs.lobcder.auth.AuthLobcderComponents;
 import nl.uva.cs.lobcder.auth.AuthTicket;
 import nl.uva.cs.lobcder.auth.MyPrincipal;
-import nl.uva.cs.lobcder.frontend.BasicAuthFilter;
 import nl.uva.cs.lobcder.resources.PDRI;
 import nl.uva.cs.lobcder.resources.PDRIDescr;
 import nl.uva.cs.lobcder.resources.VPDRI;
 import nl.uva.cs.lobcder.rest.Endpoints;
 import nl.uva.cs.lobcder.rest.wrappers.LogicalDataWrapped;
 import nl.uva.cs.lobcder.rest.wrappers.Stats;
-import nl.uva.cs.lobcder.util.PropertiesHelper;
 import nl.uva.vlet.data.StringUtil;
 import nl.uva.vlet.exception.VlException;
 import org.apache.commons.codec.binary.Base64;
@@ -118,6 +114,7 @@ public final class WorkerServlet extends HttpServlet {
     private String fileLogicalName;
     private File cacheDir;
     private File cacheFile;
+    private boolean sendStats;
 
     // Actions ------------------------------------------------------------------------------------
     /**
@@ -135,6 +132,7 @@ public final class WorkerServlet extends HttpServlet {
 
             restURL = Util.getRestURL();
             token = Util.getRestPassword();
+            sendStats = Util.sendStats();
 //            lim = Util.getRateOfChangeLim();
             //        uname = prop.getProperty(("rest.uname"));
             clientConfig = configureClient();
@@ -856,23 +854,24 @@ public final class WorkerServlet extends HttpServlet {
     }
 
     private void setSpeed(Stats stats) throws JAXBException {
+        if (sendStats) {
+            JAXBContext context = JAXBContext.newInstance(Stats.class);
+            Marshaller m = context.createMarshaller();
+            m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+            OutputStream out = new ByteArrayOutputStream();
+            m.marshal(stats, out);
 
-        JAXBContext context = JAXBContext.newInstance(Stats.class);
-        Marshaller m = context.createMarshaller();
-        m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
-        OutputStream out = new ByteArrayOutputStream();
-        m.marshal(stats, out);
+            String stringStats = String.valueOf(out);
 
-        String stringStats = String.valueOf(out);
-
-        if (restClient == null) {
-            restClient = Client.create(clientConfig);
+            if (restClient == null) {
+                restClient = Client.create(clientConfig);
+            }
+            restClient.removeAllFilters();
+            restClient.addFilter(new com.sun.jersey.api.client.filter.HTTPBasicAuthFilter("worker-", token));
+            WebResource webResource = restClient.resource(restURL);
+            ClientResponse response = webResource.path("lob_statistics").path("set")
+                    .type(MediaType.APPLICATION_XML).put(ClientResponse.class, stringStats);
         }
-        restClient.removeAllFilters();
-        restClient.addFilter(new com.sun.jersey.api.client.filter.HTTPBasicAuthFilter("worker-", token));
-        WebResource webResource = restClient.resource(restURL);
-        ClientResponse response = webResource.path("lob_statistics").path("set")
-                .type(MediaType.APPLICATION_XML).put(ClientResponse.class, stringStats);
     }
 
     private void optimizeFlow(HttpServletRequest request) throws JAXBException {

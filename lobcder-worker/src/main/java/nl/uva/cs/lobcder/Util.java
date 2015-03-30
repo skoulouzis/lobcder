@@ -117,6 +117,10 @@ class Util extends PropertiesHelper {
         return Boolean.valueOf(getProperties().getProperty(("optimize.flow"), "true"));
     }
 
+    static boolean sendStats() throws IOException {
+        return Boolean.valueOf(getProperties().getProperty(("stats.send"), "false"));
+    }
+
     static ChacheEvictionAlgorithm getCacheEvictionPolicy() throws IOException {
         return ChacheEvictionAlgorithm.valueOf(getProperties().getProperty(("cache.eviction.alg"), "LRU"));
     }
