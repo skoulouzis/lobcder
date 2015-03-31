@@ -12,6 +12,7 @@ import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.json.JSONConfiguration;
 import com.sun.jersey.client.urlconnection.HTTPSProperties;
+import com.sun.jersey.core.util.MultivaluedMapImpl;
 import io.milton.common.Path;
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
@@ -55,6 +56,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
@@ -145,6 +147,7 @@ public final class WorkerServlet extends HttpServlet {
             if (!cacheDir.exists()) {
                 cacheDir.mkdirs();
             }
+            getPDRIs();
         } catch (IOException ex) {
             Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -1045,6 +1048,29 @@ public final class WorkerServlet extends HttpServlet {
         String _realm = "SECRET";
         httpResponse.setHeader("WWW-Authenticate", "Basic realm=\"" + _realm + "\"");
         httpResponse.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+    }
+
+    private void getPDRIs() throws IOException {
+        if (restClient == null) {
+            restClient = Client.create(clientConfig);
+            restClient.removeAllFilters();
+            restClient.addFilter(new com.sun.jersey.api.client.filter.HTTPBasicAuthFilter("worker-", token));
+            webResource = restClient.resource(restURL);
+
+            MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+            params.add("path", "/");
+            WebResource res = webResource.path("items").path("query").queryParams(params);
+
+            List<LogicalDataWrapped> logicalDataList = res.accept(MediaType.APPLICATION_XML).
+                    get(new GenericType<List<LogicalDataWrapped>>() {
+            });
+            for (LogicalDataWrapped ldw : logicalDataList) {
+                if (!ldw.getLogicalData().isFolder()) {
+                    LogicalDataWrapped ld = removeFilePDRIs(ldw);
+                    this.logicalDataCache.put(String.valueOf(ld.getLogicalData().getUid()), ld);
+                }
+            }
+        }
     }
 
     /**
