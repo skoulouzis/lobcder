@@ -871,6 +871,12 @@ public class WebDAVTest {
             locktoken = lock.getLockToken();
             assertNotNull(locktoken);
 
+            //try to read without lock token
+            GetMethod get = new GetMethod(testuri);
+            status = client.executeMethod(get);
+            assertEquals("status", HttpStatus.SC_OK, status);
+
+
             // try to overwrite without lock token
             put = new PutMethod(testuri);
             put.setRequestEntity(new StringRequestEntity("2"));
@@ -890,6 +896,13 @@ public class WebDAVTest {
             put.setRequestHeader("If", "(<" + locktoken + ">)");
             status = client.executeMethod(put);
             assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_CREATED);
+
+
+            get = new GetMethod(testuri);
+            status = client.executeMethod(get);
+            assertEquals("status", HttpStatus.SC_OK, status);
+            String responce = get.getResponseBodyAsString();
+            assertEquals("2", responce);
 
             // try to overwrite using correct lock token, using Tagged-list format
             // and full URI
