@@ -322,7 +322,7 @@ public class JDBCatalogue extends MyDataSource {
         if (res != null) {
             return res;
         }
-//        ArrayList<PDRIDescr> res = new ArrayList<>();
+        res = new ArrayList<>();
         long pdriGroupRef;
         long pdriId;
         try (PreparedStatement ps = connection.prepareStatement("SELECT fileName, storageSiteRef, storage_site_table.resourceUri, "

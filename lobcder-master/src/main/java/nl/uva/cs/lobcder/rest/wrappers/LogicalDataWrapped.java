@@ -22,4 +22,5 @@ public class LogicalDataWrapped {
     private String path;
     private Permissions permissions;
     private List<PDRIDescr> pdriList = null;
+    private Long uid;
 }
