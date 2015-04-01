@@ -4,6 +4,8 @@
  */
 package nl.uva.cs.lobcder.tests;
 
+import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.core.util.MultivaluedMapImpl;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -18,6 +20,7 @@ import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
@@ -251,7 +254,7 @@ public class Utils {
         if (mustSucceed) {
             assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT);
         } else {
-            assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT || status == HttpStatus.SC_NOT_FOUND );
+            assertTrue("status: " + status, status == HttpStatus.SC_OK || status == HttpStatus.SC_NO_CONTENT || status == HttpStatus.SC_NOT_FOUND);
         }
     }
 
@@ -459,5 +462,34 @@ public class Utils {
             value = value.substring(1, value.length() - 1);
         }
         return Arrays.asList(value.split("\\s*,\\s*"));
+    }
+
+    void checkPermissions(List<TestREST.LogicalDataWrapped> list, TestREST.Permissions perm) {
+        assertNotNull(list);
+        for (TestREST.LogicalDataWrapped ldw : list) {
+            Set<TestREST.Permissions> perSet = ldw.permissions;
+            for (TestREST.Permissions p : perSet) {
+                assertEquals(perm.owner, p.owner);
+                boolean foundWrite = false, foundRead = false;
+                for (String s : p.read) {
+                    for (String init : perm.read) {
+                        if (s.equals(init)) {
+                            foundRead = true;
+                            break;
+                        }
+                    }
+                }
+                for (String s : p.write) {
+                    for (String init : perm.write) {
+                        if (s.equals(init)) {
+                            foundWrite = true;
+                            break;
+                        }
+                    }
+                }
+                assertTrue(foundRead);
+                assertTrue(foundWrite);
+            }
+        }
     }
 }

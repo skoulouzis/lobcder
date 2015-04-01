@@ -156,6 +156,128 @@ public class TestREST {
     }
 
     @Test
+    public void testPermissionsManyOwners() throws IOException, DavException {
+        System.err.println("testPermissionsManyOwners");
+        String testcolName = "testPermissionsManyOwners";
+        String rootcol = root + testcolName + "/";
+        String owner1col = rootcol + "owner1";
+        String owner2col = rootcol + "owner2";
+
+        String owner1Subcol = owner1col + "/sub";
+        String owner2Subcol = owner2col + "/sub";
+
+        String owner1SubSub = owner1Subcol + "/sub";
+        String owner2SubSub = owner2Subcol + "/sub";
+        try {
+            utils.createCollection(rootcol, true);
+            utils.createCollection(owner1col, true);
+            utils.createCollection(owner2col, true);
+            utils.createCollection(owner1Subcol, true);
+            utils.createCollection(owner2Subcol, true);
+            utils.createCollection(owner1SubSub, true);
+            utils.createCollection(owner2SubSub, true);
+
+            utils.createFile(owner1col + "file", true);
+            utils.createFile(owner2col + "/file", true);
+            utils.createFile(owner1Subcol + "/file", true);
+            utils.createFile(owner2Subcol + "/file", true);
+            utils.createFile(owner1SubSub + "/file", true);
+            utils.createFile(owner2SubSub + "/file", true);
+
+
+
+            WebResource webResource = restClient.resource(restURL);
+            Long uid = utils.getResourceUID(rootcol);
+            WebResource res = webResource.path("item").path("permissions").path(String.valueOf(uid));
+            Permissions perm = res.accept(MediaType.APPLICATION_XML).
+                    get(new GenericType<Permissions>() {
+            });
+            assertNotNull(perm);
+            assertNotNull(perm.read);
+            assertNotNull(perm.write);
+
+            MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+            params.add("path", "/" + testcolName);
+
+            res = webResource.path("items").path("query").queryParams(params);
+
+            List<LogicalDataWrapped> list = res.accept(MediaType.APPLICATION_XML).
+                    get(new GenericType<List<LogicalDataWrapped>>() {
+            });
+
+            utils.checkPermissions(list, perm);
+
+
+
+
+
+            Permissions owner1 = new Permissions();
+            owner1.owner = "owner1";
+            Set<String> canRead = new HashSet();
+            canRead.add(owner1.owner);
+            Set<String> canWrite = new HashSet();
+            canWrite.add(owner1.owner);
+            owner1.read = canRead;
+            owner1.write = canWrite;
+
+            params = new MultivaluedMapImpl();
+            params.add("path", "/" + testcolName + "/owner1");
+            res = webResource.path("items").path("permissions").queryParams(params);
+
+            ClientResponse response = res.put(ClientResponse.class, owner1);
+            assertEquals(response.getStatus(), HttpStatus.SC_NO_CONTENT);
+
+
+
+
+
+            Permissions owner2 = new Permissions();
+            owner2.owner = "owner2";
+            canRead = new HashSet();
+            canRead.add(owner2.owner);
+            canWrite = new HashSet();
+            canWrite.add(owner2.owner);
+            owner2.read = canRead;
+            owner2.write = canWrite;
+
+            params = new MultivaluedMapImpl();
+            params.add("path", "/" + testcolName + "/owner2");
+            res = webResource.path("items").path("permissions").queryParams(params);
+            response = res.put(ClientResponse.class, owner2);
+            assertEquals(response.getStatus(), HttpStatus.SC_NO_CONTENT);
+
+
+            params = new MultivaluedMapImpl();
+            params.add("path", "/" + testcolName + "/owner1");
+            res = webResource.path("items").path("query").queryParams(params);
+
+
+            List<LogicalDataWrapped> listOwner1 = res.accept(MediaType.APPLICATION_XML).
+                    get(new GenericType<List<LogicalDataWrapped>>() {
+            });
+
+            utils.checkPermissions(listOwner1, owner1);
+
+
+
+            params = new MultivaluedMapImpl();
+            params.add("path", "/" + testcolName + "/owner2");
+            res = webResource.path("items").path("query").queryParams(params);
+
+
+            List<LogicalDataWrapped> listOwner2 = res.accept(MediaType.APPLICATION_XML).
+                    get(new GenericType<List<LogicalDataWrapped>>() {
+            });
+
+            utils.checkPermissions(listOwner2, owner2);
+
+
+        } finally {
+            utils.deleteResource(rootcol, false);
+        }
+    }
+
+    @Test
     public void testPermissions() throws IOException, DavException {
         System.err.println("testPermissions");
         String testcolName = "testResourceForPermissions";
@@ -203,35 +325,7 @@ public class TestREST {
                     get(new GenericType<List<LogicalDataWrapped>>() {
             });
 
-            assertNotNull(list);
-            for (LogicalDataWrapped ldw : list) {
-                Set<Permissions> perSet = ldw.permissions;
-                for (Permissions p : perSet) {
-                    assertEquals(initialOwner, p.owner);
-                    boolean foundWrite = false, foundRead = false;
-                    for (String s : p.read) {
-                        for (String init : initialRead) {
-                            if (s.equals(init)) {
-                                foundRead = true;
-                                break;
-                            }
-                        }
-                    }
-                    for (String s : p.write) {
-                        for (String init : initialWrite) {
-                            if (s.equals(init)) {
-                                foundWrite = true;
-                                break;
-                            }
-                        }
-                    }
-                    assertTrue(foundRead);
-                    assertTrue(foundWrite);
-//                    assertArrayEquals(p.read.toArray(new String[p.read.size()]), initialReadArray);
-//                    assertArrayEquals(p.write.toArray(new String[p.read.size()]), initialWriteArray);
-                }
-            }
-
+            utils.checkPermissions(list, perm);
 
 //            http://host.com/lobcder/rest/items/permissions?path={path}
             params = new MultivaluedMapImpl();
@@ -251,6 +345,7 @@ public class TestREST {
             canWrite.add(newPerm.owner);
             newPerm.read = canRead;
             newPerm.write = canWrite;
+
             String[] newPermReadArray = newPerm.read.toArray(new String[newPerm.read.size()]);
             String[] newPermWriteArray = newPerm.write.toArray(new String[newPerm.write.size()]);
 
@@ -266,36 +361,8 @@ public class TestREST {
             list = res.accept(MediaType.APPLICATION_XML).
                     get(new GenericType<List<LogicalDataWrapped>>() {
             });
-            assertNotNull(list);
-            for (LogicalDataWrapped ldw : list) {
-                Set<Permissions> perSet = ldw.permissions;
-                for (Permissions p : perSet) {
-                    assertEquals(newPerm.owner, p.owner);
 
-                    boolean foundWrite = false, foundRead = false;
-                    for (String s : p.read) {
-                        for (String init : initialRead) {
-                            if (s.equals(init)) {
-                                foundRead = true;
-                                break;
-                            }
-                        }
-                    }
-                    for (String s : p.write) {
-                        for (String init : initialWrite) {
-                            if (s.equals(init)) {
-                                foundWrite = true;
-                                break;
-                            }
-                        }
-                    }
-                    assertTrue(foundRead);
-                    assertTrue(foundWrite);
-
-                    assertArrayEquals(p.read.toArray(new String[p.read.size()]), newPermReadArray);
-                    assertArrayEquals(p.write.toArray(new String[p.read.size()]), newPermWriteArray);
-                }
-            }
+            utils.checkPermissions(list, newPerm);
 
         } finally {
             utils.deleteResource(testcol, false);
