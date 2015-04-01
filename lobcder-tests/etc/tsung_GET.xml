@@ -22,7 +22,7 @@
   
     <load>
         <arrivalphase phase="1" duration="20" unit="second">
-            <users maxnumber="10" arrivalrate="10" unit="second"/>
+            <users maxnumber="10" arrivalrate="5" unit="second"/>
         </arrivalphase>
     </load>
 
@@ -40,7 +40,7 @@
     <sessions>
         <session name="http-example" probability="100" type="ts_http">
             <request> 
-                <http url="/lobcder/dav/Downloads/montage/DSS2R/DSS2R.3.fits" method="GET" version="1.1" >
+                <http url="/lobcder/dav/DSS2R.3_area.fits" method="GET" version="1.1" >
                     <www_authenticate userid="user" passwd="pass"/>
                 </http> 
             </request>
