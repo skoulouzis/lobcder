@@ -246,9 +246,9 @@ public class WebDAVTest {
         assertTrue("Allow header should include OPTIONS method", allow.contains("OPTIONS"));
         assertTrue("Allow header should include MOVE method", allow.contains("MOVE"));
         assertTrue("Allow header should include PUT method", allow.contains("PUT"));
-        assertTrue("Allow header should include PUT method", allow.contains("POST"));
-        assertTrue("Allow header should include PUT method", allow.contains("UNLOCK"));
-        assertTrue("Allow header should include PUT method", allow.contains("LOCK"));
+        assertTrue("Allow header should include POST method", allow.contains("POST"));
+        assertTrue("Allow header should include UNLOCK method", allow.contains("UNLOCK"));
+        assertTrue("Allow header should include LOCK method", allow.contains("LOCK"));
 
     }
     //     create test resource, make it referenceable, check resource id, move resource, check again
