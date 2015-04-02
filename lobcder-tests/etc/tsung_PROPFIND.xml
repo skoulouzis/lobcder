@@ -21,8 +21,8 @@
 
   
     <load>
-        <arrivalphase phase="1" duration="20" unit="second">
-            <users maxnumber="10" arrivalrate="5" unit="second"/>
+        <arrivalphase phase="1" duration="30" unit="second">
+            <users maxnumber="200" arrivalrate="20" unit="second"/>
         </arrivalphase>
     </load>
 
@@ -38,11 +38,11 @@
     probabilities must be 100 -->
 
     <sessions>
-        <session name="http-example" probability="100" type="ts_http">
-            <request> 
-                <http url="/lobcder/dav/DSS2R.3_area.fits" method="GET" version="1.1" >
-                    <www_authenticate userid="user" passwd="pass"/>
-                </http> 
+        <session name='rec20150402-1830' probability='100'  type='ts_webdav'>
+            <request>
+                <http url='/lobcder/dav/dss2r.3_area.fits' version='1.1' method='PROPFIND'>
+                    <www_authenticate userid="user" passwd="pass" />
+                </http>
             </request>
         </session>
     </sessions>
