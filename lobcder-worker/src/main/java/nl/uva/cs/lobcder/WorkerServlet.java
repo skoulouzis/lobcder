@@ -487,7 +487,7 @@ public final class WorkerServlet extends HttpServlet {
             String speedMsg = "Source: " + request.getLocalAddr() + " Destination: " + request.getRemoteAddr() + " Tx_Speed: " + speed + " Kbites/sec Tx_Size: " + this.logicalDataCache.get(fileUID).getLogicalData().getLength() + " bytes";
             Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, speedMsg);
             String averageSpeedMsg = "Average speed: Source: " + pdri.getHost() + " Destination: " + request.getLocalAddr() + " Rx_Speed: " + averagre + " Kbites/sec Rx_Size: " + this.logicalDataCache.get(fileUID).getLogicalData().getLength() + " bytes";
-            if (Util.getSendStats()) {
+            if (Util.sendStats() ) {
                 stats.setSource(request.getLocalAddr());
                 stats.setDestination(request.getRemoteAddr());
                 stats.setSpeed(speed);

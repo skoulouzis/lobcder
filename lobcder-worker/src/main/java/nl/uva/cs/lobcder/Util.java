@@ -105,10 +105,6 @@ class Util extends PropertiesHelper {
         return Double.valueOf(getProperties().getProperty(("progress.thresshold.coefficient"), "-0.0024"));
     }
 
-    static Boolean getSendStats() throws IOException {
-        return Boolean.valueOf(getProperties().getProperty(("send.stats"), "false"));
-    }
-
     static boolean dropConnection() throws IOException {
         return Boolean.valueOf(getProperties().getProperty(("drop.connection"), "false"));
     }
