@@ -600,7 +600,7 @@ public class WebDataResource implements PropFindableResource, Resource,
 
                 String redirect = "http://njdsndcij:8080/" + request.getAbsolutePath();
                 WebDataResource.log.log(Level.FINE, "Redirect? " + request.getAbsolutePath());
-                return redirect;
+                return null;
             default:
                 return null;
         }
