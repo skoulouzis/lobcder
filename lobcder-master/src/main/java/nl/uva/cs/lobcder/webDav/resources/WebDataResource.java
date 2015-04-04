@@ -6,6 +6,9 @@ package nl.uva.cs.lobcder.webDav.resources;
 
 import io.milton.common.Path;
 import io.milton.http.*;
+import static io.milton.http.Request.Method.GET;
+import static io.milton.http.Request.Method.POST;
+import static io.milton.http.Request.Method.PUT;
 import io.milton.http.exceptions.BadRequestException;
 import io.milton.http.exceptions.LockedException;
 import io.milton.http.exceptions.NotAuthorizedException;
@@ -590,8 +593,18 @@ public class WebDataResource implements PropFindableResource, Resource,
     }
 
     @Override
-    public String checkRedirect(Request rqst) throws NotAuthorizedException, BadRequestException {
-        return null;
+    public String checkRedirect(Request request) throws NotAuthorizedException, BadRequestException {
+        switch (request.getMethod()) {
+            case PUT:
+            case POST:
+
+                String redirect = "http://njdsndcij:8080/" + request.getAbsolutePath();
+                WebDataResource.log.log(Level.FINE, "Redirect? " + request.getAbsolutePath());
+                return redirect;
+            default:
+                return null;
+        }
+//        return null;
     }
 
     private String getDataDistString() throws SQLException {

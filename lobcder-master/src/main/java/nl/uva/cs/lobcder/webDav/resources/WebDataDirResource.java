@@ -6,6 +6,7 @@ package nl.uva.cs.lobcder.webDav.resources;
 
 import io.milton.common.Path;
 import io.milton.http.*;
+import static io.milton.http.Request.Method.PUT;
 import io.milton.http.exceptions.BadRequestException;
 import io.milton.http.exceptions.ConflictException;
 import io.milton.http.exceptions.NotAuthorizedException;
