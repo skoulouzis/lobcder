@@ -1,0 +1,39 @@
+---------------------------------Plot folder profile -----------------------------
+
+SELECT requestURL,
+COUNT(IF(methodName = 'PUT',1,NULL) OR IF(methodName = 'POST',1,NULL) OR IF(methodName = 'DELETE',1,NULL))  'Data Write',
+       COUNT(IF(methodName = 'GET',1,NULL)) 'Data Read',
+       COUNT(IF(methodName = 'PROPFIND',1,NULL) OR IF(methodName = 'OPTIONS',1,NULL) OR IF(methodName = 'HEAD',1,NULL)) 'Metadata Read', 
+       COUNT(IF(methodName = 'PROPPATCH',1,NULL) OR IF(methodName = 'COPY',1,NULL) OR IF(methodName = 'MOVE',1,NULL) OR IF(methodName = 'LOCK',1,NULL) OR IF(methodName = 'UNLOCK',1,NULL) OR IF(methodName = 'MKCOL',1,NULL)) 'Metadata Write'
+from imported.requests_table 
+where 
+-- (requestURL LIKE '%/dav/home%')
+-- (requestURL LIKE '%/dav/Y3Review/%')
+-- (requestURL LIKE '%/dav/workflows/%')
+-- (requestURL LIKE '%/dav/STH/ReviewDemo/%')
+-- (requestURL LIKE '%/dav/STH/STHAneuristImages/%')
+-- (requestURL LIKE '%/dav/dare/%')
+-- (requestURL LIKE '%/dav/VPHDare_Data/%')
+--  (requestURL LIKE '%/dav/MySpine/%')
+ (requestURL LIKE '%/dav/aneurist/%')
+
+
+---------------------------------Plot folder profile time series-----------------------------
+SELECT DATE_FORMAT(timeStamp, '%d/%m'), 
+COUNT(IF(methodName = 'PUT',1,NULL) OR IF(methodName = 'POST',1,NULL) OR IF(methodName = 'DELETE',1,NULL))  'Data Write',
+       COUNT(IF(methodName = 'GET',1,NULL)) 'Data Read',
+       COUNT(IF(methodName = 'PROPFIND',1,NULL) OR IF(methodName = 'OPTIONS',1,NULL) OR IF(methodName = 'HEAD',1,NULL)) 'Metadata Read', 
+       COUNT(IF(methodName = 'PROPPATCH',1,NULL) OR IF(methodName = 'COPY',1,NULL) OR IF(methodName = 'MOVE',1,NULL) OR IF(methodName = 'LOCK',1,NULL) OR IF(methodName = 'UNLOCK',1,NULL) OR IF(methodName = 'MKCOL',1,NULL)) 'Metadata Write'
+from imported.requests_table 
+where 
+-- (requestURL LIKE '%/dav/home%')
+-- (requestURL LIKE '%/dav/Y3Review/%')
+-- (requestURL LIKE '%/dav/workflows/%')
+-- (requestURL LIKE '%/dav/STH/ReviewDemo/%')
+-- (requestURL LIKE '%/dav/STH/STHAneuristImages/%')
+-- (requestURL LIKE '%/dav/dare/%')
+-- (requestURL LIKE '%/dav/VPHDare_Data/%')
+--  (requestURL LIKE '%/dav/MySpine/%')
+ (requestURL LIKE '%/dav/aneurist/%')
+GROUP BY YEAR(timeStamp), MONTH(timeStamp), DAY(timeStamp)
+ORDER BY `timeStamp`

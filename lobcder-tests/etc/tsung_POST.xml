@@ -22,7 +22,7 @@
   
     <load>
         <arrivalphase phase="1" duration="120" unit="second">
-            <users maxnumber="100" arrivalrate="8" unit="second"/>
+            <users maxnumber="30" arrivalrate="10" unit="second"/>
         </arrivalphase>
     </load>
 
@@ -39,16 +39,25 @@
 
     <sessions> 
         <session name="http-example" probability="100" type="ts_http">
-            <setdynvars sourcetype="random_number" start="1" end="10000">
-                <var name="room"/>
-            </setdynvars>
-        
-            <request subst="true">
-                <http url="/lobcder/dav/%%_room%%" method="PUT" version="1.1" 
-                      contents_from_file='/home/alogo/Downloads/tmp.csv' >
+            
+
+            <request>
+                <dyn_variable name="redirect" re="Location: (http://.*)\r"/>
+                <http url="/lobcder/dav/dir" method="POST" version="1.1" 
+                      contents_from_file='/home/alogo/Downloads/replayRequests.out' 
+                      content_type='multipart/form-data;
+boundary=---------------------------16971744722411115601747364611'
+                >
                     <www_authenticate userid="user" passwd="pass"/>
                 </http> 
             </request>
+            
+            
+
+            <request subst="true">
+                <http url="%%_redirect%%" method="POST"></http>
+            </request>
+
         </session>
     </sessions>
 </tsung>
