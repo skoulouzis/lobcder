@@ -133,9 +133,9 @@ do
   echo Adding $username":"$pass"@"$uri
   if [[ -z $sqlPass ]] 
   then 
-    mysql -u$sqlUser -p$sqlPass -s -N -e  "INSERT INTO  $dbName.credential_table(username, password) VALUES ('$username', '$pass'); 
+    mysql -u$sqlUser -p$sqlPass -s -N -e  "INSERT INTO  $dbName.credential_table(username, password) VALUES ('$username', '$pass');"
   else
-    mysql -u$sqlUser -s -N -e  "INSERT INTO  $dbName.credential_table(username, password) VALUES ('$username', '$pass'); 
+    mysql -u$sqlUser -s -N -e "INSERT INTO  $dbName.credential_table(username, password) VALUES ('$username', '$pass');"
   fi
   SET @credRef = LAST_INSERT_ID();
   INSERT INTO $dbName.storage_site_table(resourceUri, credentialRef, currentNum, currentSize, quotaNum, quotaSize, isCache) VALUES('$uri', @credRef, -1, -1, -1, -1, FALSE);"
@@ -143,11 +143,12 @@ done < $ssFile
 
 
   if [[ -z $sqlPass ]] 
-then
-mysql -u$sqlUser -s -N -e  "INSERT INTO $dbName.auth_usernames_table(token, uname) VALUES ('$lobAdmin', '$lobPass');
-else
-mysql -u$sqlUser -p$sqlPass -s -N -e  "INSERT INTO $dbName.auth_usernames_table(token, uname) VALUES ('$lobAdmin', '$lobPass');
-fi
+    then
+        mysql -u$sqlUser -s -N -e  "INSERT INTO $dbName.auth_usernames_table(token, uname) VALUES ('$lobAdmin', '$lobPass');"
+    else
+        mysql -u$sqlUser -p$sqlPass -s -N -e  "INSERT INTO $dbName.auth_usernames_table(token, uname) VALUES ('$lobAdmin', '$lobPass');"
+    fi
+
 SET @authUserNamesRef = LAST_INSERT_ID();
 INSERT INTO $dbName.auth_roles_tables(roleName, unameRef) VALUES  ('admin',     @authUserNamesRef),
                                                           ('other',     @authUserNamesRef),
