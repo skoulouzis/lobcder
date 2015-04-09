@@ -67,7 +67,7 @@ CREATE TABLE storage_site_table (
   extra VARCHAR(512),
   encrypt BOOLEAN NOT NULL DEFAULT FALSE, INDEX(encrypt),
   private BOOLEAN NOT NULL DEFAULT FALSE, INDEX (private),
-  removing BOOLEAN NOT NULL DEFAULT FALSE, INDEX(removing)
+  removing BOOLEAN NOT NULL DEFAULT FALSE, INDEX(removing),
   readOnly BOOLEAN NOT NULL DEFAULT FALSE, INDEX(readOnly)
 ) ENGINE=InnoDB;
 
