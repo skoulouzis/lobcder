@@ -74,7 +74,7 @@ do
      esac
 done
 
-if [[ -z $dbName ]] || [[ -z $dbPasswd ]] || [[ -z $sqlUser ]] || [[ -z $sqlPass ]] || [[ -z $ssFile  ]] || [[ -z $catalinaLocation  ]] || [[ -z $lobAdmin  ]] || [[ -z $lobPass ]]
+if [[ -z $dbName ]] || [[ -z $dbPasswd ]] || [[ -z $sqlUser ]] || [[ -z $ssFile  ]] || [[ -z $catalinaLocation  ]] || [[ -z $lobAdmin  ]] || [[ -z $lobPass ]]
 then
      usage
      exit 1
@@ -83,9 +83,18 @@ fi
 
 
 #  ------------------------- Init DB------------------------------
+if [[ -z $sqlPass ]] 
+then 
+mysql -u$sqlUser -s -N -e  "create database $dbName;"
+mysql -u$sqlUser -s -N -e  "GRANT ALL PRIVILEGES on $dbName.* to lobcder@localhost IDENTIFIED by '$dbPasswd';"
+mysql -u$sqlUser -s -N -e  "GRANT SUPER ON *.* to lobcder@localhost IDENTIFIED by '$dbPasswd';"
+else 
 mysql -u$sqlUser -p$sqlPass -s -N -e  "create database $dbName;"
 mysql -u$sqlUser -p$sqlPass -s -N -e  "GRANT ALL PRIVILEGES on $dbName.* to lobcder@localhost IDENTIFIED by '$dbPasswd';"
 mysql -u$sqlUser -p$sqlPass -s -N -e  "GRANT SUPER ON *.* to lobcder@localhost IDENTIFIED by '$dbPasswd';"
+fi
+
+
 
 
 if [ -d "$lobGitDir" ]; then
@@ -122,14 +131,23 @@ mysql --user=lobcder --password=$dbPasswd $dbName < $lobGitDir/lobcder-master/ta
 while read uri username pass
 do
   echo Adding $username":"$pass"@"$uri
-  mysql -u$sqlUser -p$sqlPass -s -N -e  "INSERT INTO  $dbName.credential_table(username, password) VALUES ('$username', '$pass'); 
+  if [[ -z $sqlPass ]] 
+  then 
+    mysql -u$sqlUser -p$sqlPass -s -N -e  "INSERT INTO  $dbName.credential_table(username, password) VALUES ('$username', '$pass'); 
+  else
+    mysql -u$sqlUser -s -N -e  "INSERT INTO  $dbName.credential_table(username, password) VALUES ('$username', '$pass'); 
+  fi
   SET @credRef = LAST_INSERT_ID();
   INSERT INTO $dbName.storage_site_table(resourceUri, credentialRef, currentNum, currentSize, quotaNum, quotaSize, isCache) VALUES('$uri', @credRef, -1, -1, -1, -1, FALSE);"
 done < $ssFile
 
 
-
+  if [[ -z $sqlPass ]] 
+then
+mysql -u$sqlUser -s -N -e  "INSERT INTO $dbName.auth_usernames_table(token, uname) VALUES ('$lobAdmin', '$lobPass');
+else
 mysql -u$sqlUser -p$sqlPass -s -N -e  "INSERT INTO $dbName.auth_usernames_table(token, uname) VALUES ('$lobAdmin', '$lobPass');
+fi
 SET @authUserNamesRef = LAST_INSERT_ID();
 INSERT INTO $dbName.auth_roles_tables(roleName, unameRef) VALUES  ('admin',     @authUserNamesRef),
                                                           ('other',     @authUserNamesRef),
