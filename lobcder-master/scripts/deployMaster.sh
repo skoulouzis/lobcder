@@ -101,7 +101,7 @@ if [ -d "$lobGitDir" ]; then
   cd $lobGitDir git pull
 else
     git clone https://github.com/skoulouzis/lobcder.git $lobGitDir
-    git checkout $version
+    #git checkout $version
 fi
 
 
