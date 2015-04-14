@@ -19,7 +19,13 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Created by dvasunin on 09.12.14.
+ *
+ *
+ * Sets an expiring temporary directory to store data. This is to stop having
+ * unused directories lying in LOBCDER. When using this after TTL time has 
+ * elapsed since the last access, the directory is automatically removed by the system.
+ *
+ * @author dvasunin
  */
 @Log
 @Path("ttl/")
@@ -28,6 +34,11 @@ public class TTL extends CatalogueHelper {
     @Context
     HttpServletRequest request;
 
+    /**
+     * Sets the time to live for a folder 
+     * @param uid the uid of the folder
+     * @param ttl the time to live in sec
+     */
     @Path("{uid}/{ttl}")
     @PUT
     public void setTTL(@PathParam("uid") Long uid, @PathParam("ttl") Integer ttl) {
@@ -77,6 +88,12 @@ public class TTL extends CatalogueHelper {
         }
     }
 
+    /**
+     * Sets the time to live for a folder 
+     * 
+     * @param pathStr the path of the folder
+     * @param ttl the time to live in sec
+     */
     @Path("{ttl}")
     @PUT
     public void setTTL(@QueryParam("path") String pathStr, @PathParam("ttl") Integer ttl) {

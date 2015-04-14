@@ -287,7 +287,7 @@ public class WP4Sweep implements Runnable {
             ResultSet rs = s1.executeQuery("SELECT uid, ownerId, datatype, ldName, id, views "
                     + "FROM ldata_table "
                     + "JOIN wp4_table ON uid=local_id "
-                    + "WHERE need_create=TRUE LIMIT 1000");
+                    + "WHERE need_create=TRUE LIMIT 2000");
             int size = rs.getFetchSize();
             resourceMetadataList = new ArrayList<>(size);
             resourceMetadataMap = new HashMap<>(size);
@@ -334,7 +334,7 @@ public class WP4Sweep implements Runnable {
         Collection<ResourceMetadata> resourceMetadataList;
         Map<Long, Long> resourceMetadataMap;
         try (Statement s1 = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY)) {
-            ResultSet rs = s1.executeQuery("SELECT ownerId, ldName, global_id, views, local_id, id FROM ldata_table JOIN wp4_table ON uid=local_id WHERE need_update=TRUE AND global_id IS NOT NULL LIMIT 1000");
+            ResultSet rs = s1.executeQuery("SELECT ownerId, ldName, global_id, views, local_id, id FROM ldata_table JOIN wp4_table ON uid=local_id WHERE need_update=TRUE AND global_id IS NOT NULL LIMIT 2000");
             int size = rs.getFetchSize();
             resourceMetadataList = new ArrayList<>(size);
             resourceMetadataMap = new HashMap<>(size);
@@ -374,7 +374,7 @@ public class WP4Sweep implements Runnable {
         Map<String, Long> deleteMetadataMap = new HashMap<>();
         Set<Long> deleteMetadataSet = new HashSet<>();
         try (Statement s1 = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY)) {
-            ResultSet rs = s1.executeQuery("SELECT global_id, id FROM wp4_table WHERE local_id IS NULL LIMIT 1000");
+            ResultSet rs = s1.executeQuery("SELECT global_id, id FROM wp4_table WHERE local_id IS NULL LIMIT 2000");
             while (rs.next()) {
                 String globalId = rs.getString(1);
                 if (globalId == null) {

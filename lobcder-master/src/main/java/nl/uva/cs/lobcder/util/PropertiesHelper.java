@@ -269,11 +269,12 @@ public class PropertiesHelper {
         return Long.valueOf(getProperties().getProperty("sweepers.interval", "100"));
     }
 
-    public static File getGeoDB() {
+    public static File getGeoDB() throws IOException {
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 //        URL url = classLoader.getResource("GeoLiteCityv6.dat");
 //                URL url = classLoader.getResource("GeoIP.dat"); 
-        URL url = classLoader.getResource("GeoLiteCity.dat");
+        
+        URL url = classLoader.getResource(getProperties().getProperty("geolocation.db.file", "GeoLiteCity.dat"));
         String dbPath = url.getPath();
         return new File(dbPath);
     }

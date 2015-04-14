@@ -16,21 +16,21 @@ echo debconf shared/accepted-oracle-license-v1-1 seen true | sudo debconf-set-se
 
 apt-get -q -y --force-yes  install mysql-server mysql-client oracle-java7-installer git maven2 erlang wget makepasswd nmap bwm-ng
 
+cd 
 
 
-cd /root
+wget http://apache.mirror.triple-it.nl/tomcat/tomcat-6/v6.0.43/bin/apache-tomcat-6.0.43.tar.gz
+tar -xavf apache-tomcat-6.0.43.tar.gz
 
-mysql --user=root < /root/lobcder/src/main/resources/initLOBDB.sql
-wget http://elab.lab.uvalight.net/~lobcder/conf/init.sql
-mysql --user=lobcder --password=RoomC3156 lobcderDB2 < init.sql
+wget https://raw.githubusercontent.com/skoulouzis/lobcder/dev/lobcder-master/scripts/deployMaster.sh
+chmod +x deployMaster.sh
+wget https://github.com/skoulouzis/lobcder/blob/dev/lobcder-master/scripts/storageFile
+./deployMaster.sh -n lobcderDB -p pass -u root -a mysqlRootPassword -f storageFile -l lobcderAdmin -s lobcderAdmin -c ./apache-tomcat-6.0.43
 
-
-wget http://elab.lab.uvalight.net/~lobcder/apache-tomcat-6.0.36.tar.gz
-tar -xzvf apache-tomcat-6.0.36.tar.gz
 
 
 git clone https://github.com/skoulouzis/lobcder.git
-cd lobcder
+cd lobcder/lobcder-master
 mvn clean install 
 rm -r target/lobcder
 mv target/lobcder-master-?.?  target/lobcder

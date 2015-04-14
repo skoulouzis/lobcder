@@ -75,6 +75,7 @@ then
      usage
      exit 1
 fi
+
 #  ------------------------- Init DB------------------------------
 if  [[ -z $sqlPass ]]
 then

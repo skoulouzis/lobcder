@@ -38,10 +38,8 @@ import java.util.zip.ZipOutputStream;
 import nl.uva.cs.lobcder.rest.wrappers.Stats;
 
 /**
- *
  * Generates archives given a folder path. Each file and folder is added at
  * runtime from the backend to the archive
- *
  * @author S. Koulouzis, D. Vasyunin
  */
 @Log
@@ -53,7 +51,6 @@ public class Archive extends CatalogueHelper {
 
     /**
      * Generates a zip archive of folder
-     *
      * @param path the folder name
      * @return the stream of the archive
      */
