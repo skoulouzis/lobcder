@@ -37,3 +37,128 @@ where
  (requestURL LIKE '%/dav/aneurist/%')
 GROUP BY YEAR(timeStamp), MONTH(timeStamp), DAY(timeStamp)
 ORDER BY `timeStamp`
+
+
+-------------------------------Average time between 1st upload and 1st download------------
+INSERT INTO imported.upload_download_timeDiff (requestURL, firstUpload,firstDownload,timeDiff)
+
+
+SELECT
+    upload.requestURL, upload.min_ts as firstUpload,
+    download.min_ts  as firstDownload,
+    timestampdiff(SECOND, upload.min_ts, download.min_ts) as timeDiff
+FROM
+    (select
+        requestURL, 
+        MIN(timeStamp) AS min_ts, 
+        methodName
+    from
+        imported.copy_requests_table
+    where 
+        methodName = 'GET'
+    and  
+(
+
+        requestURL != '/' 
+        and requestURL != ''
+--         and requestURL NOT LIKE '%/skoulouz%'
+--         and requestURL NOT LIKE '%/lobcderUsage%'
+--         and requestURL NOT LIKE '%/test%'
+--         and requestURL NOT LIKE '%/University_of_Sheffield_logo.png'
+--         and requestURL NOT LIKE '%/file_%'
+--         and requestURL NOT LIKE '%/tmp%'
+--         and requestURL NOT LIKE '%/aneurist/aneuristServices.xml'
+--         and requestURL NOT LIKE '%/aneurist/RingCut_outputSurfaceMesh.gmi'
+--         and requestURL NOT LIKE '%_outputSurfaceMesh.%'
+--         and requestURL NOT LIKE '%/aneurysm/AneuristVPHShareServiceSet.xml'
+--         and requestURL NOT LIKE '%/biascorrection/inputs/atlasImage.mha'
+--         and requestURL NOT LIKE '%/biascorrection/inputs/T2-PD.nii.gz'
+--         and requestURL NOT LIKE '%/biascorrection/inputs/atlasMask.mha'
+--         and requestURL NOT LIKE '%/CardiacMechanics/Case%'
+
+)
+    GROUP BY requestURL ) AS download
+LEFT JOIN (
+select
+    requestURL, 
+    MIN(timeStamp) AS min_ts, 
+    methodName
+from
+    imported.copy_requests_table
+where 
+methodName = 'PUT' 
+and  
+(
+       requestURL != '/' 
+        and requestURL != '' 
+--         and requestURL NOT LIKE '%/skoulouz%'
+--         and requestURL NOT LIKE '%/lobcderUsage%'
+--         and requestURL NOT LIKE '%/test%'
+--         and requestURL NOT LIKE '%/University_of_Sheffield_logo.png'
+--         and requestURL NOT LIKE '%/file_%'
+--         and requestURL NOT LIKE '%/tmp%'
+--         and requestURL NOT LIKE '%/aneurist/aneuristServices.xml'
+--         and requestURL NOT LIKE '%/aneurist/RingCut_outputSurfaceMesh.gmi'
+--         and requestURL NOT LIKE '%_outputSurfaceMesh.%'
+--         and requestURL NOT LIKE '%/aneurysm/AneuristVPHShareServiceSet.xml'
+--         and requestURL NOT LIKE '%/biascorrection/inputs/atlasImage.mha'
+--         and requestURL NOT LIKE '%/biascorrection/inputs/T2-PD.nii.gz'
+--         and requestURL NOT LIKE '%/biascorrection/inputs/atlasMask.mha'
+--         and requestURL NOT LIKE '%/CardiacMechanics/Case%'
+
+)
+GROUP BY requestURL 
+)AS upload 
+ON 
+download.requestURL = upload.requestURL 
+
+where  upload.min_ts < download.min_ts
+
+
+
+
+-------------------------remove hostname from urls----------------------------
+CREATE TABLE imported.copy_requests_table  LIKE imported.requests_table; 
+INSERT imported.copy_requests_table SELECT * FROM imported.requests_table ;
+
+
+UPDATE  imported.copy_requests_table
+SET imported.copy_requests_table.requestURL = SUBSTRING_INDEX(imported.copy_requests_table.requestURL, 'lobcder/dav', -1)
+------------------------------------------
+
+
+
+----------------------Get frequency --------------------------------------
+SELECT ROUND(imported.upload_download_timeDiff.timeDiff ) AS bucket,
+       COUNT(*)                    AS COUNT,
+       RPAD('', LN(COUNT(*)), '*') AS bar
+FROM   imported.upload_download_timeDiff
+WHERE requestURL NOT LIKE '/test%'
+GROUP  BY bucket;
+
+
+
+
+-- drop table ref;
+-- CREATE TEMPORARY TABLE ref (score INT);
+-- 
+-- drop PROCEDURE myFunction;
+-- delimiter $$
+-- 
+-- CREATE PROCEDURE myFunction()
+--  BEGIN
+--         DECLARE i INT DEFAULT 1;
+--         WHILE (i<=39426293) DO
+--                INSERT INTO ref VALUES(i);
+--                SET i=i+1;
+--                SELECT @i;
+--         END WHILE;
+--  END$$
+-- 
+-- 
+-- delimiter ;
+-- call myFunction();
+
+SELECT ref.score, COUNT(testscore.score) AS occurrences
+FROM ref LEFT JOIN testscore ON ref.score = testscore.score
+GROUP BY ref.score;     
