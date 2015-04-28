@@ -23,7 +23,7 @@ import java.util.logging.Logger;
 public class PropertiesHelper {
 
     public static final String propertiesPath = "lobcder.properties";
-    public static final String cachePropertiesPath = "cache.properties";
+//    public static final String cachePropertiesPath = "cache.properties";
 
     public static enum PREDICTION_TYPE {
 
@@ -126,6 +126,10 @@ public class PropertiesHelper {
 
     public static Boolean useMetadataRepository() throws IOException {
         return Boolean.valueOf(getProperties().getProperty("metadata.repository.use", "true"));
+    }
+
+    public static Boolean useBulckMetadataRepository() throws IOException {
+        return Boolean.valueOf(getProperties().getProperty("metadata.repository.bulck", "true"));
     }
 
 //    public static String getAuthRemoteURL() throws IOException {
@@ -273,7 +277,7 @@ public class PropertiesHelper {
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 //        URL url = classLoader.getResource("GeoLiteCityv6.dat");
 //                URL url = classLoader.getResource("GeoIP.dat"); 
-        
+
         URL url = classLoader.getResource(getProperties().getProperty("geolocation.db.file", "GeoLiteCity.dat"));
         String dbPath = url.getPath();
         return new File(dbPath);
@@ -284,6 +288,6 @@ public class PropertiesHelper {
     }
 
     public static Long getLocalCacheId() throws IOException {
-          return Long.valueOf(getProperties().getProperty("localcache.id"));
+        return Long.valueOf(getProperties().getProperty("localcache.id"));
     }
 }

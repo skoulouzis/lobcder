@@ -32,15 +32,19 @@ class SweepersTimerTask extends TimerTask {
 //    private ThreadPoolExecutor executorService;
     private ArrayBlockingQueue<Runnable> queue;
     private int maxThreads = 5;
+    private final Boolean useBulckRepo;
+    private WP4SweepOLD wp4SweepOld;
 
     SweepersTimerTask(DataSource datasource) throws IOException, NamingException, ClassNotFoundException {
         deleteSweep = new DeleteSweep(new ConnectorJDBC(datasource, 10));
         replicateSweep = new ReplicateSweep(datasource);
         useRepo = PropertiesHelper.useMetadataRepository();
         useSDN = PropertiesHelper.useSDN();
-        if (useRepo) {
+        useBulckRepo = PropertiesHelper.useBulckMetadataRepository();
+        if (useRepo && useBulckRepo) {
             wp4Sweep = new WP4Sweep(datasource);
-
+        }else if (useRepo && !useBulckRepo) {
+            wp4SweepOld = new WP4SweepOLD(datasource);
         }
         if (useSDN) {
             sdnSweep = new SDNSweep(datasource);
@@ -74,6 +78,8 @@ class SweepersTimerTask extends TimerTask {
                 wp4Sweep.run();
 //                initExecutor();
 //                executorService.submit(wp4Sweep);
+            }else if (wp4SweepOld !=null){
+                wp4SweepOld.run();
             }
         } catch (RuntimeException e) {
             log.log(Level.SEVERE, wp4Sweep.getClass().getName() + " encountered and error.", e);
