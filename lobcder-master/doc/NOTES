@@ -432,3 +432,14 @@ mvn deploy:deploy-file -DgroupId=com.mycompany -DartifactId=lobcder-master-class
 git add .
 git commit -m "New"
 git push origin master
+
+
+
+-------------------------------- Manually replicate to new backend-------------------
+
+-- CREATE TEMPORARY TABLE tmptable_1 SELECT * FROM pdri_table where storageSiteRef = 8;
+-- ALTER TABLE tmptable_1 drop pdriId;
+-- 
+-- UPDATE tmptable_1 SET storageSiteRef = 9;
+-- INSERT INTO pdri_table SELECT 0,tmptable_1.* FROM tmptable_1;
+-- DROP TEMPORARY TABLE IF EXISTS tmptable_1;
