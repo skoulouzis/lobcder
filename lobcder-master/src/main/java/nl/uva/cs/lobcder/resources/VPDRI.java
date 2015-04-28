@@ -79,7 +79,7 @@ public class VPDRI implements PDRI {
     private final String username;
     private final String password;
     private final Long storageSiteId;
-    private String baseDir; //= "LOBCDER-REPLICA-vTEST";//"LOBCDER-REPLICA-v2.0";
+    private static String baseDir; //= "LOBCDER-REPLICA-vTEST";//"LOBCDER-REPLICA-v2.0";
     private final String fileName;
     private int reconnectAttemts = 0;
     private BigInteger keyInt;
@@ -101,8 +101,9 @@ public class VPDRI implements PDRI {
             this.fileName = fileName;
             this.resourceUrl = resourceUrl.replaceAll(" ", "");
             baseDir = nl.uva.cs.lobcder.util.PropertiesHelper.getBackendWorkingFolderName();
-            String encoded = VRL.encode(fileName);
-            vrl = new VRL(this.resourceUrl).appendPath(baseDir).append(encoded);
+//            String encoded = VRL.encode(fileName);
+            vrl = new VRL(this.resourceUrl).appendPath(baseDir).append(fileName);
+//            vrl= new VRL(vrl.toNormalizedString());
 //            vrl = new VRL(resourceUrl).appendPath(baseDir).append(URLEncoder.encode(fileName, "UTF-8").replace("+", "%20"));
             this.storageSiteId = storageSiteId;
             this.username = username;
@@ -378,7 +379,7 @@ public class VPDRI implements PDRI {
                         throw new IOException(ex1);
                     }
                 }
-            } else if (reconnectAttemts < Constants.RECONNECT_NTRY) {
+            } else if (reconnectAttemts < Constants.RECONNECT_NTRY-2) {
                 if (ex instanceof org.globus.common.ChainedIOException) {
                     destroyCert = true;
                 }
@@ -500,6 +501,17 @@ public class VPDRI implements PDRI {
             }
             return getVfsClient().getFile(vrl).getLength();
         } catch (Exception ex) {
+            if(ex.getMessage().contains("Couldn open location.") && ex.getMessage().contains("%")){
+                try {
+                    return getVfsClient().getFile( new VRL(vrl.toNormalizedString())).getLength();
+//                    this.vrl = new VRL(vrl.toNormalizedString());
+//                     getLength();
+                } catch (VRLSyntaxException ex1) {
+                    Logger.getLogger(VPDRI.class.getName()).log(Level.SEVERE, null, ex1);
+                } catch (VlException ex1) {
+                    Logger.getLogger(VPDRI.class.getName()).log(Level.SEVERE, null, ex1);
+                }
+            }
             if (reconnectAttemts < Constants.RECONNECT_NTRY) {
                 reconnect();
                 getLength();
@@ -568,8 +580,7 @@ public class VPDRI implements PDRI {
             CloudFile uFile = (CloudFile) file;
             VFile sourceFile = getVfsClient().openFile(new VRL(source.getURI()));
             uFile.uploadFrom(sourceFile);
-        }
-        if (file instanceof WebdavFile) {
+        }else if (file instanceof WebdavFile) {
             WebdavFile wFile = (WebdavFile) file;
             VFile sourceFile = getVfsClient().openFile(new VRL(source.getURI()));
             wFile.uploadFrom(sourceFile);

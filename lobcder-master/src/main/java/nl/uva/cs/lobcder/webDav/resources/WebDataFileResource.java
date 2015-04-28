@@ -214,6 +214,14 @@ public class WebDataFileResource extends WebDataResource implements
             //Just return one at random;
             int index = new Random().nextInt(pdris.size());
             PDRIDescr[] array = pdris.toArray(new PDRIDescr[pdris.size()]);
+            if (weightPDRIMap.containsKey(new URI(array[index].getResourceUrl()).getHost())
+                    && weightPDRIMap.get(new URI(array[index].getResourceUrl()).getHost()) <= 1) {
+                if (index >= (pdris.size() - 1)) {
+                    index--;
+                } else {
+                    index++;
+                }
+            }
             Logger.getLogger(WebDataFileResource.class.getName()).log(Level.FINE, "Selecting Random: {0}", array[index].getResourceUrl());
             return array[index];
         }
@@ -234,12 +242,20 @@ public class WebDataFileResource extends WebDataResource implements
             if (speed == null) {
                 speed = 0.0;
             }
-            Logger.getLogger(WebDataFileResource.class.getName()).log(Level.FINE, "Speed: : {0}", speed);
             sumOfSpeed += speed;
         }
         if (sumOfSpeed <= 0) {
             int index = new Random().nextInt(pdris.size());
             PDRIDescr[] array = pdris.toArray(new PDRIDescr[pdris.size()]);
+            if (weightPDRIMap.containsKey(new URI(array[index].getResourceUrl()).getHost())
+                    && weightPDRIMap.get(new URI(array[index].getResourceUrl()).getHost()) <= 1) {
+                if (index >= (pdris.size() - 1)) {
+                    index--;
+                } else {
+                    index++;
+                }
+            }
+            Logger.getLogger(WebDataFileResource.class.getName()).log(Level.FINE, "Selecting:{0}", new Object[]{array[index]});
             return array[index];
         }
         int itemIndex = new Random().nextInt((int) sumOfSpeed);
@@ -258,6 +274,15 @@ public class WebDataFileResource extends WebDataResource implements
 
         int index = new Random().nextInt(pdris.size());
         PDRIDescr[] array = pdris.toArray(new PDRIDescr[pdris.size()]);
+        if (weightPDRIMap.containsKey(new URI(array[index].getResourceUrl()).getHost())
+                && weightPDRIMap.get(new URI(array[index].getResourceUrl()).getHost()) <= 1) {
+            if (index >= (pdris.size() - 1)) {
+                index--;
+            } else {
+                index++;
+            }
+        }
+
         return array[index];
     }
 
@@ -299,8 +324,17 @@ public class WebDataFileResource extends WebDataResource implements
             if (ex.getMessage().contains("Resource not found")) {
                 throw new NotFoundException(ex.getMessage());
             }
+            if (pdri != null) {
+                Double speed = weightPDRIMap.get(pdri.getHost());
+                if (speed != null) {
+                    speed = speed - 10;
+                } else {
+                    speed = Double.valueOf(-10);
+                }
+                weightPDRIMap.put(pdri.getHost(), speed);
+            }
             try {
-                sleepTime = sleepTime + 20;
+                sleepTime = sleepTime + 5;
                 Thread.sleep(sleepTime);
                 if (ex instanceof nl.uva.vlet.exception.VlInterruptedException && ++tryCount < Constants.RECONNECT_NTRY) {
                     transfer(pdris, out, tryCount, false);

@@ -46,7 +46,7 @@ public class Constants {
         REPLICATION_QUEUE, REPLICATION_QUEUE_LEN, REPLICATION_QUEUE_SIZE};
     public static final int BUF_SIZE = 2 * 1024 * 1024;
     public static Long LOCK_TIME = new Long(60000);
-    public static final int RECONNECT_NTRY = 20;
+    public static final int RECONNECT_NTRY = 2;
     public static final String RANGE_HEADER_NAME = "range";
     public static final String CERT_LOCATION = System.getProperty("user.home") + "/.globus/certificates/";
     public static final String PROXY_FILE = "/tmp/myProxy";
