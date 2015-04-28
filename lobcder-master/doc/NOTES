@@ -428,3 +428,7 @@ UPDATE pdrigroup_table SET `needCheck` = true;
 
 --------------------Deploy lobcder-master as dependency----------------------
 mvn deploy:deploy-file -DgroupId=com.mycompany -DartifactId=lobcder-master-classes -Dversion=2.5 -Dpackaging=jar -Dfile="./lobcder/lobcder-master/target/lobcder-master-2.5-classes.jar" -Durl=file:..//mvn-repo/snapshots/
+
+git add .
+git commit -m "New
+git push origin master
