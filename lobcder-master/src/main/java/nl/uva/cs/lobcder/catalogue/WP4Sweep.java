@@ -61,7 +61,7 @@ public class WP4Sweep implements Runnable {
     @Data
     @XmlAccessorType(XmlAccessType.FIELD)
     static class FileWP4 {
-
+        
         private String author;
         private String globalID;
         private String category;

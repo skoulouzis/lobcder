@@ -1578,6 +1578,8 @@ public class JDBCatalogue extends MyDataSource {
                 return rs.getInt(1);
             }
 
+        }finally{
+            connection.close();
         }
         return -1;
     }
