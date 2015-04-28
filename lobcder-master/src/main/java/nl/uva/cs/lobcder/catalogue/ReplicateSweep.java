@@ -203,18 +203,15 @@ public class ReplicateSweep implements Runnable {
                     //                    + "WHERE needCheck=TRUE AND bound=FALSE AND refCount>0 "
                     //                    + "ORDER BY ldata_table.ldLength "
                     //                    + "LIMIT 20" 
-                    
-//                    "SELECT pdriGroupId FROM "
-//                    + "pdrigroup_table WHERE needCheck=TRUE AND bound=FALSE AND refCount>0 LIMIT 50"
+
+                    //                    "SELECT pdriGroupId FROM "
+                    //                    + "pdrigroup_table WHERE needCheck=TRUE AND bound=FALSE AND refCount>0 LIMIT 50"
                     "SELECT pdriGroupId, ldata_table.ldLength FROM pdrigroup_table "
                     + "JOIN pdri_table ON pdri_table.pdriGroupRef = pdriGroupId "
                     + "JOIN ldata_table ON pdri_table.pdriGroupRef = ldata_table.pdriGroupRef "
                     + "JOIN storage_site_table ON storage_site_table.storageSiteId = pdri_table.storageSiteRef "
                     + "WHERE needCheck=TRUE AND bound=FALSE AND refCount>0 "
-                    + "ORDER BY isCache, ldata_table.ldLength DESC LIMIT 50"
-                    
-                    
-                    );
+                    + "ORDER BY isCache, ldata_table.ldLength DESC LIMIT 50");
             while (resultSet.next()) {
                 result.add(resultSet.getLong(1));
             }
@@ -341,6 +338,9 @@ public class ReplicateSweep implements Runnable {
                     preparedStatement.setLong(5, destinationDescr.getKey().longValue());
                     preparedStatement.executeUpdate();
                 } catch (Exception e) {
+                    log.log(Level.WARNING, null, e);
+                    result = false;
+                } catch (Throwable e) {
                     log.log(Level.WARNING, null, e);
                     result = false;
                 }
