@@ -15,7 +15,6 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.apache.commons.lang.StringEscapeUtils;
 
 @Log
 public class WebDataResourceFactory implements ResourceFactory {
@@ -44,8 +43,8 @@ public class WebDataResourceFactory implements ResourceFactory {
             first = ldri.getFirst();
             ldri = ldri.getStripFirst();
         } while (!first.equals("dav"));
-        String escaedPath = StringEscapeUtils.escapeSql(strPath);
-        strPath = StringEscapeUtils.escapeHtml(escaedPath);
+//        String escaedPath = StringEscapeUtils.escapeSql(strPath);
+//        strPath = StringEscapeUtils.escapeHtml(escaedPath);
 //        strPath  = strPath.replaceAll("'", "\'");
 //       strPath =  strPath.replaceAll ("#", "\\#" );
 //                ,    '%', '\%' )
