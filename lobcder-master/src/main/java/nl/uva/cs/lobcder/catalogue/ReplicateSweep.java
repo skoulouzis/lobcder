@@ -332,6 +332,9 @@ public class ReplicateSweep implements Runnable {
                         destinationPdri.replicate(sourcePdri);
                     }
                     result = destinationPdri.exists(destinationPdri.getFileName());
+                    if (!result) {
+                        log.log(Level.WARNING, "Failed to replicate {0}/{1} to {2}/{3}", new Object[]{sourcePdri.getURI(), sourcePdri.getFileName(), destinationPdri.getURI(), destinationPdri.getFileName()});
+                    }
                     preparedStatement.setString(1, destinationDescr.getName());
                     preparedStatement.setLong(2, destinationDescr.getStorageSiteId());
                     preparedStatement.setLong(3, destinationDescr.getPdriGroupRef());
@@ -346,6 +349,7 @@ public class ReplicateSweep implements Runnable {
                     result = false;
                 }
             }
+
             return result;
         } catch (Exception e) {
             log.log(Level.SEVERE, null, e);

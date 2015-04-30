@@ -379,7 +379,7 @@ public class VPDRI implements PDRI {
                         throw new IOException(ex1);
                     }
                 }
-            } else if (reconnectAttemts < Constants.RECONNECT_NTRY-2) {
+            } else if (reconnectAttemts < Constants.RECONNECT_NTRY - 2) {
                 if (ex instanceof org.globus.common.ChainedIOException) {
                     destroyCert = true;
                 }
@@ -501,9 +501,9 @@ public class VPDRI implements PDRI {
             }
             return getVfsClient().getFile(vrl).getLength();
         } catch (Exception ex) {
-            if(ex.getMessage().contains("Couldn open location.") && ex.getMessage().contains("%")){
+            if (ex.getMessage().contains("Couldn open location.") && ex.getMessage().contains("%")) {
                 try {
-                    return getVfsClient().getFile( new VRL(vrl.toNormalizedString())).getLength();
+                    return getVfsClient().getFile(new VRL(vrl.toNormalizedString())).getLength();
 //                    this.vrl = new VRL(vrl.toNormalizedString());
 //                     getLength();
                 } catch (VRLSyntaxException ex1) {
@@ -576,14 +576,24 @@ public class VPDRI implements PDRI {
             reconnect();
         }
         VFile file = getVfsClient().createFile(vrl, true);
-        if (file instanceof CloudFile) {
-            CloudFile uFile = (CloudFile) file;
-            VFile sourceFile = getVfsClient().openFile(new VRL(source.getURI()));
-            uFile.uploadFrom(sourceFile);
-        }else if (file instanceof WebdavFile) {
-            WebdavFile wFile = (WebdavFile) file;
-            VFile sourceFile = getVfsClient().openFile(new VRL(source.getURI()));
-            wFile.uploadFrom(sourceFile);
+        try {
+            if (file instanceof CloudFile) {
+                CloudFile uFile = (CloudFile) file;
+                VFile sourceFile = getVfsClient().openFile(new VRL(source.getURI()));
+                uFile.uploadFrom(sourceFile);
+            } else if (file instanceof WebdavFile) {
+                WebdavFile wFile = (WebdavFile) file;
+                VFile sourceFile = getVfsClient().openFile(new VRL(source.getURI()));
+                wFile.uploadFrom(sourceFile);
+            }
+            reconnectAttemts = 0;
+        } catch (Exception ex) {
+            if (reconnectAttemts < Constants.RECONNECT_NTRY) {
+                reconnect();
+                upload(source);
+            } else {
+                throw ex;
+            }
         }
     }
 
