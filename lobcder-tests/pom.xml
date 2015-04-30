@@ -40,6 +40,14 @@
         </dependency>
         
         
+        <dependency>
+            <groupId>nl.uva.vlet</groupId>
+            <artifactId>vlet-vfs.webdav</artifactId>
+            <version>2.3</version>
+        </dependency>
+        
+        
+        
         <!-- The JCR API --> 
         <dependency> 
             <groupId>javax.jcr</groupId> 
