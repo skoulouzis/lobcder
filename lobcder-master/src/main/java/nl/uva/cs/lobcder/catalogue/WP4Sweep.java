@@ -130,8 +130,8 @@ public class WP4Sweep implements Runnable {
             this.uri = uri;
 
             client = Client.create();
-            client.setReadTimeout(30000);
-            client.setConnectTimeout(30000);
+            client.setReadTimeout(120000);
+            client.setConnectTimeout(120000);
 
             /*
              HttpClient apacheClient = HttpClientBuilder.create().build();
@@ -287,7 +287,7 @@ public class WP4Sweep implements Runnable {
             ResultSet rs = s1.executeQuery("SELECT uid, ownerId, datatype, ldName, id, views "
                     + "FROM ldata_table "
                     + "JOIN wp4_table ON uid=local_id "
-                    + "WHERE need_create=TRUE LIMIT 2000");
+                    + "WHERE need_create=TRUE LIMIT 100");
             int size = rs.getFetchSize();
             resourceMetadataList = new ArrayList<>(size);
             resourceMetadataMap = new HashMap<>(size);
