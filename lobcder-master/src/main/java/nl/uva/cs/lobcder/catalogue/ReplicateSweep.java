@@ -331,6 +331,7 @@ public class ReplicateSweep implements Runnable {
                     if (!destinationPdri.exists(destinationPdri.getFileName())) {
                         destinationPdri.replicate(sourcePdri);
                     }
+                    result = destinationPdri.exists(destinationPdri.getFileName());
                     preparedStatement.setString(1, destinationDescr.getName());
                     preparedStatement.setLong(2, destinationDescr.getStorageSiteId());
                     preparedStatement.setLong(3, destinationDescr.getPdriGroupRef());
