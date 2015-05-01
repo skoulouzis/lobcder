@@ -435,6 +435,7 @@ git push origin master
 
 
 
+
 -------------------------------- Manually replicate to new backend-------------------
 
 -- CREATE TEMPORARY TABLE tmptable_1 SELECT * FROM pdri_table where storageSiteRef = 8;

@@ -12,6 +12,7 @@ import nl.uva.cs.lobcder.util.PropertiesHelper;
 import javax.naming.NamingException;
 import javax.sql.DataSource;
 import java.io.IOException;
+import java.util.Set;
 import java.util.TimerTask;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.logging.Level;
@@ -43,7 +44,7 @@ class SweepersTimerTask extends TimerTask {
         useBulckRepo = PropertiesHelper.useBulckMetadataRepository();
         if (useRepo && useBulckRepo) {
             wp4Sweep = new WP4Sweep(datasource);
-        }else if (useRepo && !useBulckRepo) {
+        } else if (useRepo && !useBulckRepo) {
             wp4SweepOld = new WP4SweepOLD(datasource);
         }
         if (useSDN) {
@@ -78,7 +79,7 @@ class SweepersTimerTask extends TimerTask {
                 wp4Sweep.run();
 //                initExecutor();
 //                executorService.submit(wp4Sweep);
-            }else if (wp4SweepOld !=null){
+            } else if (wp4SweepOld != null) {
                 wp4SweepOld.run();
             }
         } catch (RuntimeException e) {

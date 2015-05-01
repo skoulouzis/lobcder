@@ -13,6 +13,7 @@ import javax.naming.Context;
 import javax.naming.InitialContext;
 import java.util.List;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import nl.uva.vlet.vrs.VRS;
 
 @Log
@@ -83,8 +84,12 @@ public class MyMiltonConfigurator extends DefaultMiltonConfigurator {
     @Override
     public void shutdown() {
         super.shutdown();
-        catalogue.stopSweep();
-//        VRS.exit();
+        try {
+            catalogue.stopSweep();
+            //        VRS.exit();
+        } catch (InterruptedException ex) {
+            Logger.getLogger(MyMiltonConfigurator.class.getName()).log(Level.WARNING, null, ex);
+        }
     }
 //    private void loadOptimizers(Context envContext) throws NamingException {
 //        FileAccessPredictor fap = (FileAccessPredictor) envContext.lookup("bean/Predictor");

@@ -13,6 +13,7 @@ import com.sun.jersey.api.json.JSONConfiguration;
 import com.sun.jersey.client.urlconnection.HTTPSProperties;
 import io.milton.http.Range;
 import java.io.*;
+import java.lang.reflect.InvocationTargetException;
 import java.math.BigInteger;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -575,9 +576,6 @@ public class VPDRI implements PDRI {
 //        }
 //    }
     private void upload(PDRI source) throws VlException, IOException {
-        if (getVfsClient() == null) {
-            reconnect();
-        }
         VFile file = getVfsClient().createFile(vrl, true);
         try {
             if (file instanceof CloudFile) {

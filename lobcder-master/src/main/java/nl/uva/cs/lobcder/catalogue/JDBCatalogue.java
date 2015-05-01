@@ -12,7 +12,9 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.*;
 import java.util.*;
-import java.util.Map.Entry;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Nonnull;
@@ -45,21 +47,28 @@ import nl.uva.vlet.vrl.VRL;
 @Log
 public class JDBCatalogue extends MyDataSource {
 
-    private Timer timer = null;
+    private ScheduledFuture timer = null;
 
     public JDBCatalogue() throws NamingException {
     }
 
     public void startSweep() throws Exception {
         TimerTask gcTask = new SweepersTimerTask(getDatasource());
-        timer = new Timer(true);
-        timer.schedule(gcTask, PropertiesHelper.getSweepersInterval(), PropertiesHelper.getSweepersInterval());
+//        timer = new Timer(true);
+//        timer.schedule(gcTask, PropertiesHelper.getSweepersInterval(), PropertiesHelper.getSweepersInterval());
+
+        ScheduledThreadPoolExecutor exec = new ScheduledThreadPoolExecutor(1);
+        timer = exec.scheduleWithFixedDelay(gcTask, PropertiesHelper.getSweepersInterval(), PropertiesHelper.getSweepersInterval(), TimeUnit.MILLISECONDS);
+
     }
 
-    public void stopSweep() {
+    public void stopSweep() throws InterruptedException {
         if (timer != null) {
-            timer.cancel();
-            timer.purge();
+            if (!timer.isDone()) {
+                Thread.sleep(500);
+            }
+            timer.cancel(true);
+            timer = null;
         }
     }
 
@@ -1578,7 +1587,7 @@ public class JDBCatalogue extends MyDataSource {
                 return rs.getInt(1);
             }
 
-        }finally{
+        } finally {
             connection.close();
         }
         return -1;
