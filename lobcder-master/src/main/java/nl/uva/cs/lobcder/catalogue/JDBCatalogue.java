@@ -12,9 +12,13 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.*;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Nonnull;
@@ -46,28 +50,30 @@ import nl.uva.vlet.vrl.VRL;
  */
 @Log
 public class JDBCatalogue extends MyDataSource {
-
-    private ScheduledFuture timer = null;
-
+    private Timer timer;
+    
     public JDBCatalogue() throws NamingException {
     }
 
     public void startSweep() throws Exception {
         TimerTask gcTask = new SweepersTimerTask(getDatasource());
-//        timer = new Timer(true);
-//        timer.schedule(gcTask, PropertiesHelper.getSweepersInterval(), PropertiesHelper.getSweepersInterval());
-
-        ScheduledThreadPoolExecutor exec = new ScheduledThreadPoolExecutor(1);
-        timer = exec.scheduleWithFixedDelay(gcTask, PropertiesHelper.getSweepersInterval(), PropertiesHelper.getSweepersInterval(), TimeUnit.MILLISECONDS);
-
+        timer = new Timer(true);
+        timer.schedule(gcTask, PropertiesHelper.getSweepersInterval(), PropertiesHelper.getSweepersInterval());
+//        ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+//        timer = scheduler.scheduleWithFixedDelay(gcTask, PropertiesHelper.getSweepersInterval(), PropertiesHelper.getSweepersInterval(), TimeUnit.MILLISECONDS);
+//        ScheduledThreadPoolExecutor exec = new ScheduledThreadPoolExecutor(1);
+//        timer = exec.scheduleWithFixedDelay(gcTask, PropertiesHelper.getSweepersInterval(), PropertiesHelper.getSweepersInterval(), TimeUnit.MILLISECONDS);
     }
 
-    public void stopSweep() throws InterruptedException {
+    public void stopSweep() throws ExecutionException, TimeoutException, InterruptedException {
         if (timer != null) {
-            if (!timer.isDone()) {
-                Thread.sleep(500);
-            }
-            timer.cancel(true);
+//            if (!timer.isDone()) {
+//                Thread.sleep(500);
+//            }
+//            timer.get(500, TimeUnit.MICROSECONDS);
+//            timer.cancel(true);
+            timer.purge();
+            timer.cancel();
             timer = null;
         }
     }

@@ -12,6 +12,8 @@ import nl.uva.cs.lobcder.webDav.resources.WebDataResourceFactory;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import nl.uva.vlet.vrs.VRS;
@@ -87,7 +89,7 @@ public class MyMiltonConfigurator extends DefaultMiltonConfigurator {
         try {
             catalogue.stopSweep();
             //        VRS.exit();
-        } catch (InterruptedException ex) {
+        } catch (InterruptedException | ExecutionException | TimeoutException ex) {
             Logger.getLogger(MyMiltonConfigurator.class.getName()).log(Level.WARNING, null, ex);
         }
     }
