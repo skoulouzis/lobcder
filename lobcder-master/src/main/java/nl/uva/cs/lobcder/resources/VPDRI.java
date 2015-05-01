@@ -189,6 +189,7 @@ public class VPDRI implements PDRI {
             VPDRI.log.log(Level.INFO, "Start deleting {0}", new Object[]{vrl});
 //            getVfsClient().openLocation(vrl).delete();
             getVfsClient().getFile(vrl).delete();
+            reconnectAttemts = 0;
         } catch (VlException ex) {
             //Maybe it's from assimilation. We must remove the baseDir
             if (ex instanceof ResourceNotFoundException || ex.getMessage().contains("Couldn open location. Get NULL object for location")) {
@@ -203,13 +204,15 @@ public class VPDRI implements PDRI {
                     Logger.getLogger(VPDRI.class.getName()).log(Level.SEVERE, null, ex1);
                 }
             } else {
-                Logger.getLogger(VPDRI.class.getName()).log(Level.SEVERE, null, ex);
+                if (reconnectAttemts < Constants.RECONNECT_NTRY) {
+                    reconnect();
+                    delete();
+                } else {
+                    Logger.getLogger(VPDRI.class.getName()).log(Level.SEVERE, null, ex);
+                }
+
             }
-        } finally {
         }
-        //        //it's void so do it asynchronously
-        //        Runnable asyncDel = getAsyncDelete(this.vfsClient, vrl);
-        //        asyncDel.run();
     }
 
     @Override
@@ -588,6 +591,13 @@ public class VPDRI implements PDRI {
             }
             reconnectAttemts = 0;
         } catch (Exception ex) {
+            if (reconnectAttemts < Constants.RECONNECT_NTRY) {
+                reconnect();
+                upload(source);
+            } else {
+                throw ex;
+            }
+        } catch (Throwable ex) {
             if (reconnectAttemts < Constants.RECONNECT_NTRY) {
                 reconnect();
                 upload(source);
