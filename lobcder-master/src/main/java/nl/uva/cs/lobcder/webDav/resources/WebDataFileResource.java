@@ -685,6 +685,7 @@ public class WebDataFileResource extends WebDataResource implements
         List<String> nonRedirectableUserAgents = PropertiesHelper.getNonRedirectableUserAgents();
         for (String s : nonRedirectableUserAgents) {
             if (userAgent.contains(s)) {
+                 WebDataFileResource.log.log(Level.FINE, "Will not redirect for: {0}", s);
                 return false;
             }
         }
