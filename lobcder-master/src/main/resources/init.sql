@@ -560,4 +560,5 @@ END
 |
 DELIMITER ;
 
-SET GLOBAL event_scheduldNa   ler = ON;
+SET GLOBAL event_scheduler = ON;
+
