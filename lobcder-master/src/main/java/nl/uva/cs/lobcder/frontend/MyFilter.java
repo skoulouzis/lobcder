@@ -63,7 +63,7 @@ public class MyFilter extends MiltonFilter {
     private JDBCatalogue catalogue;
     private static Predictor predictor;
     private static Vertex prevState;
-    private static final BlockingQueue queue = new ArrayBlockingQueue(3500);
+    private static final BlockingQueue queue = new ArrayBlockingQueue(6000);
     private static RequestEventRecorder recorder;
     private Timer recordertimer;
     private Vertex prevPrediction;
@@ -133,7 +133,10 @@ public class MyFilter extends MiltonFilter {
             my.setRequestURL(reqURL.toString());
             my.setUserAgent(userAgent);
             my.setUserNpasswd(getUserName((HttpServletRequest) req));
-            queue.add(my);
+            if (queue.size() < 5999) {
+                queue.add(my);
+            }
+
             startRecorder();
         }
 
