@@ -119,7 +119,7 @@ public class FastestSiteReplicationPolicy implements ReplicationPolicy {
                     + "currentNum, currentSize, quotaNum, quotaSize, username, "
                     + "password, encrypt FROM storage_site_table JOIN credential_table ON "
                     + "credentialRef = credintialId "
-                    + "WHERE private=FALSE AND removing=FALSE AND isCache=FALSE AND readOnly != TRUE");
+                    + "WHERE private=FALSE AND removing=FALSE AND isCache=FALSE AND readOnly = FALSE");
             Map<String, StorageSite> res = new HashMap<>();
             while (rs.next()) {
                 Credential c = new Credential();

@@ -264,6 +264,9 @@ public class Assimilator {
 //                VFSClient client = (VFSClient) ssClient.getStorageSiteClient();
 //                VDir dir = client.openDir(new VRL(ssURI));
             //build folders first 
+            nl.uva.vlet.vdriver.vrs.http.HTTPNode k = (nl.uva.vlet.vdriver.vrs.http.HTTPNode) dir;
+//            k.getInputStream()
+                    
             add((VComposite) dir, dir.getPath(), c, ssID, false);
             VNode[] nodes = ((VComposite) dir).getNodes();
             for (VNode n : nodes) {
