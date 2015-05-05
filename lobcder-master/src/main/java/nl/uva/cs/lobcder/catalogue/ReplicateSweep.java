@@ -334,14 +334,15 @@ public class ReplicateSweep implements Runnable {
                     if (result == false || destinationPdri.getLength() != srcLen) {
                         log.log(Level.WARNING, "Failed to replicate {0}/{1} to {2}/{3}", new Object[]{sourcePdri.getURI(), sourcePdri.getFileName(), destinationPdri.getURI(), destinationPdri.getFileName()});
                         result = false;
-                    } else {
+                    } 
+//                    else {
                         preparedStatement.setString(1, destinationDescr.getName());
                         preparedStatement.setLong(2, destinationDescr.getStorageSiteId());
                         preparedStatement.setLong(3, destinationDescr.getPdriGroupRef());
                         preparedStatement.setBoolean(4, destinationDescr.getEncrypt());
                         preparedStatement.setLong(5, destinationDescr.getKey().longValue());
                         preparedStatement.executeUpdate();
-                    }
+//                    }
 
                 } catch (Exception e) {
                     log.log(Level.WARNING, null, e);

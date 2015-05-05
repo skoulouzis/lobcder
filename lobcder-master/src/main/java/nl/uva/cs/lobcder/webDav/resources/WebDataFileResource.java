@@ -481,7 +481,7 @@ public class WebDataFileResource extends WebDataResource implements
 //            it = getCatalogue().getPdriDescrByGroupId(getLogicalData().getPdriGroupId()).iterator();
             if (range != null) {
                 if (range.getFinish() == null) {
-                    range = new Range(range.getStart(), (getContentLength() - 1));
+                    range = new Range(range.getStart(), (getLogicalData().getLength() - 1));
                 }
                 it = pdris.iterator();
                 WebDataFileResource.log.log(Level.FINE, "Start: {0} end: {1} range: {2}", new Object[]{range.getStart(), range.getFinish(), range.getRange()});
@@ -511,7 +511,7 @@ public class WebDataFileResource extends WebDataResource implements
         if (range != null) {
             len = range.getFinish() - range.getStart() + 1;
         } else {
-            len = getContentLength();
+            len = this.getLogicalData().getLength();
         }
         double speed = ((len * 8.0) * 1000.0) / (elapsed * 1000.0);
         Double oldSpeed = weightPDRIMap.get(pdri.getHost());
@@ -532,8 +532,8 @@ public class WebDataFileResource extends WebDataResource implements
         stats.setSource(pdri.getHost());
         stats.setDestination(fromAddress);
         stats.setSpeed(speed);
-        stats.setSize(getContentLength());
-        String msg = "Source: " + stats.getSource() + " Destination: " + stats.getDestination() + " Tx_Speed: " + speed + " Kbites/sec Tx_Size: " + getContentLength() + " bytes Elapsed_Time: " + elapsed + " ms";
+        stats.setSize(getLogicalData().getLength());
+        String msg = "Source: " + stats.getSource() + " Destination: " + stats.getDestination() + " Tx_Speed: " + speed + " Kbites/sec Tx_Size: " + getLogicalData().getLength() + " bytes Elapsed_Time: " + elapsed + " ms";
         try {
             if (!pdri.isCahce()) {
                 getCatalogue().setSpeed(stats);
