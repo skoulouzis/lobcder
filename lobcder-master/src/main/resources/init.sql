@@ -155,7 +155,7 @@ CREATE TABLE successor_table (
 
 CREATE TABLE occurrences_table (
  uid SERIAL PRIMARY KEY,
- keyVal VARCHAR(1024), --INDEX(keyVal),
+ keyVal VARCHAR(1024), -- INDEX(keyVal),
  occurrences BIGINT
 ) ENGINE=InnoDB;
 
