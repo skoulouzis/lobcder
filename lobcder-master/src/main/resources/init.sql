@@ -148,7 +148,7 @@ CREATE TABLE requests_table (
 
 CREATE TABLE successor_table (
  uid SERIAL PRIMARY KEY,
- keyVal VARCHAR(1024), --INDEX(keyVal),
+ keyVal VARCHAR(1024), -- INDEX(keyVal),
  lobStateID VARCHAR(1024),
  weight DOUBLE
 ) ENGINE=InnoDB;
