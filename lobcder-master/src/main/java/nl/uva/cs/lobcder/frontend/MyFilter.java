@@ -8,18 +8,14 @@ import io.milton.common.Path;
 import io.milton.http.Request;
 import io.milton.http.Request.Method;
 import io.milton.servlet.MiltonFilter;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -29,7 +25,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.naming.InitialContext;
 import javax.servlet.ServletException;
-import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import lombok.extern.java.Log;
@@ -63,7 +58,7 @@ public class MyFilter extends MiltonFilter {
     private JDBCatalogue catalogue;
     private static Predictor predictor;
     private static Vertex prevState;
-    private static final BlockingQueue queue = new ArrayBlockingQueue(6000);
+    private static final BlockingQueue queue = new ArrayBlockingQueue(7000);
     private static RequestEventRecorder recorder;
     private Timer recordertimer;
     private Vertex prevPrediction;
@@ -133,7 +128,7 @@ public class MyFilter extends MiltonFilter {
             my.setRequestURL(reqURL.toString());
             my.setUserAgent(userAgent);
             my.setUserNpasswd(getUserName((HttpServletRequest) req));
-            if (queue.size() < 5999) {
+            if (queue.size() < 6999) {
                 queue.add(my);
             }
 

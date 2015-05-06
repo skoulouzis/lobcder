@@ -12,6 +12,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import nl.uva.cs.lobcder.catalogue.SDNSweep;
 import nl.uva.cs.lobcder.catalogue.SDNSweep.Port;
+import nl.uva.cs.lobcder.rest.wrappers.AttachmentPoint;
+import nl.uva.cs.lobcder.rest.wrappers.Link;
+import nl.uva.cs.lobcder.rest.wrappers.NetworkEntity;
 import org.jgrapht.alg.DijkstraShortestPath;
 import org.jgrapht.graph.DefaultWeightedEdge;
 import org.jgrapht.graph.SimpleWeightedGraph;
@@ -77,11 +80,11 @@ public class SDNControllerClient {
             graph.addVertex(dest);
         }
 
-        SDNSweep.NetworkEntity destinationEntityArray = SDNSweep.getNetworkEntity(dest);
+        NetworkEntity destinationEntityArray = SDNSweep.getNetworkEntity(dest);
 //        List<NetworkEntity> destinationEntityArray = getNetworkEntity(dest);
 //        for (SDNSweep.NetworkEntity ne : destinationEntityArray) {
-        for (SDNSweep.AttachmentPoint ap : destinationEntityArray.attachmentPoint) {
-            String vertex = ap.switchDPID + "-" + ap.port;
+        for (AttachmentPoint ap : destinationEntityArray.getAttachmentPoint()) {
+            String vertex = ap.getSwitchDPID() + "-" + ap.getPort();
 //            Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, "vertex: {0}", new Object[]{vertex});
             if (!graph.containsVertex(vertex)) {
                 graph.addVertex(vertex);
@@ -102,14 +105,14 @@ public class SDNControllerClient {
 
 //        List<NetworkEntity> sourceEntityArray = getNetworkEntity(sources);
         for (String s : sources) {
-            SDNSweep.NetworkEntity ne = SDNSweep.getNetworkEntity(s);
-            for (String ip : ne.ipv4) {
+            NetworkEntity ne = SDNSweep.getNetworkEntity(s);
+            for (String ip : ne.getIpv4()) {
                 if (!graph.containsVertex(ip)) {
                     graph.addVertex(ip);
                 }
 
-                for (SDNSweep.AttachmentPoint ap : ne.attachmentPoint) {
-                    String vertex = ap.switchDPID + "-" + ap.port;
+                for (AttachmentPoint ap : ne.getAttachmentPoint()) {
+                    String vertex = ap.getSwitchDPID() + "-" + ap.getPort();
                     if (!graph.containsVertex(vertex)) {
                         graph.addVertex(vertex);
                     }
@@ -125,9 +128,9 @@ public class SDNControllerClient {
             }
         }
 
-        List<SDNSweep.Link> links = SDNSweep.getSwitchLinks();
-        for (SDNSweep.Link l : links) {
-            String srcVertex = l.srcSwitch + "-" + l.srcPort;
+        List<Link> links = SDNSweep.getSwitchLinks();
+        for (Link l : links) {
+            String srcVertex = l.srcSwitch+ "-" + l.srcPort;
             if (!graph.containsVertex(srcVertex)) {
                 graph.addVertex(srcVertex);
             }
@@ -180,7 +183,7 @@ public class SDNControllerClient {
             dpi = v2;
         }
 
-        //        SDNSweep.FloodlightStats[] stats = getFloodlightPortStats(dpi, port);
+        //        SDNSweep.FloodlightStats[] stats = getFloodlightPortStats(dpi, getPort());
         Double rpps = SDNSweep.getReceivePacketsMap().get(dpi);
         Double tpps = SDNSweep.getTransmitPacketsMap().get(dpi);
 
@@ -195,7 +198,7 @@ public class SDNControllerClient {
         Double tbytes = SDNSweep.getTransmitBytesMap().get(dpi);
         double rbps = rbytes / SDNSweep.interval;
         double tbps = tbytes / SDNSweep.interval;
-        double cost = 1.0 /((rbps + tbps) / 2.0 );
+        double cost = 1.0 / ((rbps + tbps) / 2.0);
 
 
         if (rbytes <= 0) {
@@ -250,10 +253,10 @@ public class SDNControllerClient {
                     String pair = e.toString().substring(1, e.toString().length() - 1);
                     String[] workerSwitch = pair.toString().split(" : ");
                     String srcIP = workerSwitch[0];
-                    String srcMac = SDNSweep.getNetworkEntity(srcIP).mac.get(0);
+                    String srcMac = SDNSweep.getNetworkEntity(srcIP).getMac().get(0);
                     String srcSwitchAndPort = workerSwitch[1];
                     String srcSwitch = srcSwitchAndPort.split("-")[0];
-                    String srcIngressPort = String.valueOf(SDNSweep.getNetworkEntity(srcIP).attachmentPoint.get(0).port);
+                    String srcIngressPort = String.valueOf(SDNSweep.getNetworkEntity(srcIP).getAttachmentPoint().get(0).getPort());
                     String srcOutput;
 
                     e = shortestPath.get(1);
@@ -269,10 +272,10 @@ public class SDNControllerClient {
                     pair = e.toString().substring(1, e.toString().length() - 1);
                     workerSwitch = pair.toString().split(" : ");
                     String dstIP = workerSwitch[0];
-                    String dstMac = SDNSweep.getNetworkEntity(dstIP).mac.get(0);
+                    String dstMac = SDNSweep.getNetworkEntity(dstIP).getMac().get(0);
                     String dstSwitchAndPort = workerSwitch[1];
                     String dstSwitch = dstSwitchAndPort.split("-")[0];
-                    String dstOutput = String.valueOf(SDNSweep.getNetworkEntity(dstIP).attachmentPoint.get(0).port);
+                    String dstOutput = String.valueOf(SDNSweep.getNetworkEntity(dstIP).getAttachmentPoint().get(0).getPort());
 
 
                     e = shortestPath.get(shortestPath.size() - 2);
@@ -290,25 +293,25 @@ public class SDNControllerClient {
 
 
 //                    String rulesrcToSw = "{\"switch\": \"" + srcSwitch + "\", \"name\":\"tmp\", \"cookie\":\"0\", \"priority\":\"5\", "
-//                            + "\"src-ip\":\"" + srcIP + "\", \"ingress-port\":\"" + srcIngressPort + "\", "
+//                            + "\"src-ip\":\"" + srcIP + "\", \"ingress-getPort()\":\"" + srcIngressPort + "\", "
 //                            + "\"dst-ip\": \"" + dstIP + "\", \"active\":\"true\",\"ether-type\":\"0x0800\", "
 //                            + "\"actions\":\"output=" + srcOutput + "\"}";
 //
 //
 //                    String ruleSwTodst = "{\"switch\": \"" + dstSwitch + "\", \"name\":\"tmp\", \"cookie\":\"0\", \"priority\":\"5\", "
-//                            + "\"src-ip\":\"" + srcIP + "\", \"ingress-port\":\"" + dstIngressPort + "\", "
+//                            + "\"src-ip\":\"" + srcIP + "\", \"ingress-getPort()\":\"" + dstIngressPort + "\", "
 //                            + "\"dst-ip\": \"" + dstIP + "\", \"active\":\"true\",\"ether-type\":\"0x0800\", "
 //                            + "\"actions\":\"output=" + dstOutput + "\"}";
 
                     String rule11 = "{\"switch\": \"" + srcSwitch + "\", \"name\":\"tmp1-1\", \"cookie\":\"0\", \"priority\":\"5\", "
-                            + "\"src-mac\":\"" + srcMac + "\", \"ingress-port\":\"" + srcIngressPort + "\", "
-                            + "\"dst-mac\": \"" + dstMac + "\", \"active\":\"true\",\"vlan-id\":\"-1\", "
+                            + "\"src-getMac()\":\"" + srcMac + "\", \"ingress-getPort()\":\"" + srcIngressPort + "\", "
+                            + "\"dst-getMac()\": \"" + dstMac + "\", \"active\":\"true\",\"vlan-id\":\"-1\", "
                             + "\"actions\":\"output=" + srcOutput + "\"}";
 
 
                     String rule12 = "{\"switch\": \"" + srcSwitch + "\", \"name\":\"tmp1-2\", \"cookie\":\"0\", \"priority\":\"5\", "
-                            + "\"src-mac\":\"" + dstMac + "\", \"ingress-port\":\"" + srcOutput + "\", "
-                            + "\"dst-mac\": \"" + srcMac + "\", \"active\":\"true\",\"vlan-id\":\"-1\", "
+                            + "\"src-getMac()\":\"" + dstMac + "\", \"ingress-getPort()\":\"" + srcOutput + "\", "
+                            + "\"dst-getMac()\": \"" + srcMac + "\", \"active\":\"true\",\"vlan-id\":\"-1\", "
                             + "\"actions\":\"output=" + srcIngressPort + "\"}";
 
 
@@ -317,14 +320,14 @@ public class SDNControllerClient {
 
 
                     String rule21 = "{\"switch\": \"" + dstSwitch + "\", \"name\":\"tmp2-1\", \"cookie\":\"0\", \"priority\":\"5\", "
-                            + "\"src-mac\":\"" + srcMac + "\", \"ingress-port\":\"" + dstIngressPort + "\", "
-                            + "\"dst-mac\": \"" + dstMac + "\", \"active\":\"true\",\"vlan-id\":\"-1\", "
+                            + "\"src-getMac()\":\"" + srcMac + "\", \"ingress-getPort()\":\"" + dstIngressPort + "\", "
+                            + "\"dst-getMac()\": \"" + dstMac + "\", \"active\":\"true\",\"vlan-id\":\"-1\", "
                             + "\"actions\":\"output=" + dstOutput + "\"}";
 
 
                     String rule22 = "{\"switch\": \"" + dstSwitch + "\", \"name\":\"tmp2-2\", \"cookie\":\"0\", \"priority\":\"5\", "
-                            + "\"src-mac\":\"" + dstMac + "\", \"ingress-port\":\"" + dstOutput + "\", "
-                            + "\"dst-mac\": \"" + srcMac + "\", \"active\":\"true\",\"vlan-id\":\"-1\", "
+                            + "\"src-getMac()\":\"" + dstMac + "\", \"ingress-getPort()\":\"" + dstOutput + "\", "
+                            + "\"dst-getMac()\": \"" + srcMac + "\", \"active\":\"true\",\"vlan-id\":\"-1\", "
                             + "\"actions\":\"output=" + dstIngressPort + "\"}";
 
 
@@ -349,7 +352,7 @@ public class SDNControllerClient {
         thread.start();
 
     }
-//    private SDNSweep.FloodlightStats[] getFloodlightPortStats(String dpi, int port) throws IOException, InterruptedException {
+//    private SDNSweep.FloodlightStats[] getFloodlightPortStats(String dpi, int getPort()) throws IOException, InterruptedException {
 //        SDNSweep.FloodlightStats stats1 = null;
 //        SDNSweep.FloodlightStats stats2 = null;
 //        //        List<FloodlightStats> stats1 = getFloodlightPortStats(dpi);
@@ -357,7 +360,7 @@ public class SDNControllerClient {
 //        //        List<FloodlightStats> stats2 = getFloodlightPortStats(dpi);
 //        Map<String, SDNSweep.StatsHolder> map = SDNSweep.getStatsMap();
 //        if (map != null) {
-//            SDNSweep.StatsHolder h = map.get(dpi+"-"+port);
+//            SDNSweep.StatsHolder h = map.get(dpi+"-"+getPort());
 //            if (h != null) {
 //                stats1 = h.getStats1();
 //                stats2 = h.getStats2();
@@ -365,7 +368,7 @@ public class SDNControllerClient {
 //        }
 //        SDNSweep.FloodlightStats stat1 = null;
 //        for (SDNSweep.FloodlightStats s : stats1) {
-//            if (s.portNumber == port) {
+//            if (s.portNumber == getPort()) {
 //                stat1 = s;
 //                break;
 //            }
@@ -373,7 +376,7 @@ public class SDNControllerClient {
 //
 //        SDNSweep.FloodlightStats stat2 = null;
 //        for (SDNSweep.FloodlightStats s : stats2) {
-//            if (s.portNumber == port) {
+//            if (s.portNumber == getPort()) {
 //                stat2 = s;
 //                break;
 //            }
@@ -401,7 +404,7 @@ public class SDNControllerClient {
 //                    }
 //                }
 //            }
-////            Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, "Host: " + switch1IP + " port: " + sFlowHostPortMap.get(switch1IP));
+////            Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, "Host: " + switch1IP + " getPort(): " + sFlowHostPortMap.get(switch1IP));
 //            tuple[0] = switch1IP;
 //            tuple[1] = String.valueOf(sFlowHostPortMap.get(switch1IP));
 //            return tuple;
@@ -426,7 +429,7 @@ public class SDNControllerClient {
 //                    }
 //                }
 //            }
-//            Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, "Host: " + hostIP + " is attached to: " + switchIP + " port: " + sFlowHostPortMap.get(hostIP));
+//            Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, "Host: " + hostIP + " is attached to: " + switchIP + " getPort(): " + sFlowHostPortMap.get(hostIP));
 //            tuple[0] = switchIP;
 //            tuple[1] = String.valueOf(sFlowHostPortMap.get(hostIP));
 //            return tuple;
@@ -459,8 +462,8 @@ public class SDNControllerClient {
 //
 //    private boolean isAttached(String from, String dpi) {
 //        for (NetworkEntity ne : getNetworkEntity(from)) {
-//            for (AttachmentPoint ap : ne.attachmentPoint) {
-//                if (ap.switchDPID.equals(dpi)) {
+//            for (AttachmentPoint ap : ne.getAttachmentPoint()) {
+//                if (ap.getSwitchDPID().equals(dpi)) {
 //                    return true;
 //                }
 //            }
@@ -475,11 +478,11 @@ public class SDNControllerClient {
 //            WebResource webResource = client.resource(uri + ":" + floodlightPort);
 //            WebResource res = null;
 //            if (address.contains(".")) {
-//                // http://145.100.133.131:8080/wm/device/?ipv4=192.168.100.1
-//                res = webResource.path("wm").path("device/").queryParam("ipv4", address);
+//                // http://145.100.133.131:8080/wm/device/?getIpv4()=192.168.100.1
+//                res = webResource.path("wm").path("device/").queryParam("getIpv4()", address);
 //            } else {
-//                // http://145.100.133.131:8080/wm/device/?mac=fe:16:3e:00:26:b1
-//                res = webResource.path("wm").path("device/").queryParam("mac", address);
+//                // http://145.100.133.131:8080/wm/device/?getMac()=fe:16:3e:00:26:b1
+//                res = webResource.path("wm").path("device/").queryParam("getMac()", address);
 //            }
 //            List<NetworkEntity> ne = res.get(new GenericType<List<NetworkEntity>>() {
 //            });
@@ -526,7 +529,7 @@ public class SDNControllerClient {
 //        }
 //        if (!networkEntitySwitchMap.containsKey(address)) {
 //            List<NetworkEntity> ne = getNetworkEntity(address);
-//            String dpi = ne.get(0).attachmentPoint.get(0).switchDPID;
+//            String dpi = ne.get(0).getAttachmentPoint().get(0).getSwitchDPID();
 //            for (Switch sw : getSwitches()) {
 //                if (sw.dpid.equals(dpi)) {
 //                    String ip = sw.inetAddress.split(":")[0].substring(1);
@@ -556,17 +559,17 @@ public class SDNControllerClient {
 //        });
 //    }
 //
-//    private List<Ifpkts> getifoutpktsMetric(String agent, int port) {
+//    private List<Ifpkts> getifoutpktsMetric(String agent, int getPort()) {
 //        WebResource webResource = client.resource(uri + ":" + sflowRTPrt);
-//        WebResource res = webResource.path("metric").path(agent).path(port + ".ifoutpkts").path("json");
+//        WebResource res = webResource.path("metric").path(agent).path(getPort() + ".ifoutpkts").path("json");
 //        return res.get(new GenericType<List<Ifpkts>>() {
 //        });
 //    }
 //
 //    private List<FloodlightStats> getFloodlightPortStats(String dpi) throws IOException {
-//        //http://145.100.133.130:8080/wm/core/switch/00:00:4e:cd:a6:8d:c9:44/port/json
+//        //http://145.100.133.130:8080/wm/core/switch/00:00:4e:cd:a6:8d:c9:44/getPort()/json
 //        WebResource webResource = client.resource(uri + ":" + floodlightPort);
-//        WebResource res = webResource.path("wm").path("core").path("switch").path(dpi).path("port").path("json");
+//        WebResource res = webResource.path("wm").path("core").path("switch").path(dpi).path("getPort()").path("json");
 //
 //
 //        String output = res.get(String.class);
@@ -636,26 +639,26 @@ public class SDNControllerClient {
 //        String entityClass;
 //        @XmlElement(name = "lastSeen")
 //        String lastSeen;
-//        @XmlElement(name = "ipv4")
-//        List<String> ipv4;
+//        @XmlElement(name = "getIpv4()")
+//        List<String> getIpv4();
 //        @XmlElement(name = "vlan")
 //        List<String> vlan;
-//        @XmlElement(name = "mac")
-//        List<String> mac;
-//        @XmlElement(name = "attachmentPoint")
-//        List<AttachmentPoint> attachmentPoint;
+//        @XmlElement(name = "getMac()")
+//        List<String> getMac();
+//        @XmlElement(name = "getAttachmentPoint()")
+//        List<AttachmentPoint> getAttachmentPoint();
 //    }
 //
 //    @XmlRootElement
 //    @XmlAccessorType(XmlAccessType.FIELD)
 //    public static class AttachmentPoint {
 //
-//        @XmlElement(name = "port")
-//        int port;
+//        @XmlElement(name = "getPort()")
+//        int getPort();
 //        @XmlElement(name = "errorStatus")
 //        String errorStatus;
-//        @XmlElement(name = "switchDPID")
-//        String switchDPID;
+//        @XmlElement(name = "getSwitchDPID()")
+//        String getSwitchDPID();
 //    }
 //
 //    @XmlRootElement
@@ -664,11 +667,11 @@ public class SDNControllerClient {
 //
 //        @XmlElement(name = "src-switch")
 //        String srcSwitch;
-//        @XmlElement(name = "src-port")
-//        int srcPort;
+//        @XmlElement(name = "src-getPort()")
+//        int getSrcPort();
 //        @XmlElement(name = "dst-switch")
 //        String dstSwitch;
-//        @XmlElement(name = "dst-port")
+//        @XmlElement(name = "dst-getPort()")
 //        int dstPort;
 //        @XmlElement(name = "type")
 //        String type;

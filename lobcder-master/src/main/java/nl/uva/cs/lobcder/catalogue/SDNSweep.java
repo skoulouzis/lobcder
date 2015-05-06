@@ -38,6 +38,8 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import lombok.Getter;
 import lombok.extern.java.Log;
+import nl.uva.cs.lobcder.rest.wrappers.Link;
+import nl.uva.cs.lobcder.rest.wrappers.NetworkEntity;
 import nl.uva.cs.lobcder.util.PropertiesHelper;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -312,7 +314,8 @@ public class SDNSweep implements Runnable {
         WebResource webResource = client.resource(uri + ":" + floodlightPort);
         WebResource res = webResource.path("wm").path("core").path("switch").path(dpi).path("port").path("json");
         String output = res.get(String.class);
-        String out = output.substring(27, output.length() - 1);
+//        String out = output.substring(27, output.length() - 1);
+          String out = output.substring(output.indexOf("[{"), output.length() - 1);
         ObjectMapper mapper = new ObjectMapper();
         return mapper.readValue(out, mapper.getTypeFactory().constructCollectionType(List.class, FloodlightStats.class));
     }
@@ -333,14 +336,14 @@ public class SDNSweep implements Runnable {
         if (networkEntitesCache.isEmpty() || iterations % 5 == 0) {
             WebResource webResource = client.resource(uri + ":" + floodlightPort);
             WebResource res = null;
-            // http://145.100.133.131:8080/wm/device/?ipv4=192.168.100.1
+            // http://145.100.133.131:8080/wm/device/?getIpv4()=192.168.100.1
             res = webResource.path("wm").path("device/");
             List<NetworkEntity> neList = res.get(new GenericType<List<NetworkEntity>>() {
             });
 
             for (NetworkEntity ne : neList) {
-                if (!ne.ipv4.isEmpty() && !networkEntitesCache.containsKey(ne.ipv4.get(0))) {
-                    networkEntitesCache.put(ne.ipv4.get(0), ne);
+                if (!ne.getIpv4().isEmpty() && !networkEntitesCache.containsKey(ne.getIpv4().get(0))) {
+                    networkEntitesCache.put(ne.getIpv4().get(0), ne);
                 }
             }
         }
@@ -383,8 +386,8 @@ public class SDNSweep implements Runnable {
 
         String s1 = getAllSwitches().get(0).dpid;
         String s2 = getAllSwitches().get(1).dpid;
-        int s1ToS2Port = 0;
-        int s2ToS1Port = 0;
+        Number s1ToS2Port = 0;
+        Number s2ToS1Port = 0;
         for (Link l : getAllSwitchLinks()) {
             if (l.srcSwitch.equals(s1)) {
                 s1ToS2Port = l.srcPort;
@@ -401,10 +404,10 @@ public class SDNSweep implements Runnable {
         List<String> s2Hosts = new ArrayList<>();
 
         for (NetworkEntity ne : getAllNetworkEntites()) {
-            if (ne.attachmentPoint.get(0).switchDPID.equals(s1)) {
-                s1Hosts.add(ne.ipv4.get(0));
-            } else if (ne.attachmentPoint.get(0).switchDPID.equals(s2)) {
-                s2Hosts.add(ne.ipv4.get(0));
+            if (ne.getAttachmentPoint().get(0).getSwitchDPID().equals(s1)) {
+                s1Hosts.add(ne.getIpv4().get(0));
+            } else if (ne.getAttachmentPoint().get(0).getSwitchDPID().equals(s2)) {
+                s2Hosts.add(ne.getIpv4().get(0));
             }
         }
 
@@ -415,8 +418,8 @@ public class SDNSweep implements Runnable {
         for (String h1 : s1Hosts) {
             for (String h2 : s2Hosts) {
                 String rule1To2 = "{\"switch\": \"" + s1 + "\", \"name\":\"" + h1 + "To" + h2 + "\", \"cookie\":\"0\", \"priority\":\"10\", "
-                        + "\"src-mac\":\"" + networkEntitesCache.get(h1).mac.get(0) + "\", \"ingress-port\":\"" + networkEntitesCache.get(h1).attachmentPoint.get(0).port + "\", "
-                        + "\"dst-mac\": \"" + networkEntitesCache.get(h2).mac.get(0) + "\", \"active\":\"true\","
+                        + "\"src-mac\":\"" + networkEntitesCache.get(h1).getMac().get(0) + "\", \"ingress-port\":\"" + networkEntitesCache.get(h1).getAttachmentPoint().get(0).getPort() + "\", "
+                        + "\"dst-mac\": \"" + networkEntitesCache.get(h2).getMac().get(0) + "\", \"active\":\"true\","
                         + "\"actions\":\"output=" + s1ToS2Port + "\"}";
                 rules.add(rule1To2);
                 Logger.getLogger(SDNSweep.class.getName()).log(Level.INFO, rule1To2);
@@ -427,8 +430,8 @@ public class SDNSweep implements Runnable {
         for (String h1 : s2Hosts) {
             for (String h2 : s1Hosts) {
                 String rule2To1 = "{\"switch\": \"" + s2 + "\", \"name\":\"" + h1 + "To" + h2 + "\", \"cookie\":\"0\", \"priority\":\"10\", "
-                        + "\"src-mac\":\"" +networkEntitesCache.get(h1).mac.get(0)+ "\", \"ingress-port\":\"" + networkEntitesCache.get(h1).attachmentPoint.get(0).port + "\", "
-                        + "\"dst-mac\": \"" + networkEntitesCache.get(h2).mac.get(0) + "\", \"active\":\"true\","
+                        + "\"src-mac\":\"" +networkEntitesCache.get(h1).getMac().get(0)+ "\", \"ingress-port\":\"" + networkEntitesCache.get(h1).getAttachmentPoint().get(0).getPort() + "\", "
+                        + "\"dst-mac\": \"" + networkEntitesCache.get(h2).getMac().get(0) + "\", \"active\":\"true\","
                         + "\"actions\":\"output=" + s2ToS1Port + "\"}";
 
                 rules.add(rule2To1);
@@ -491,58 +494,57 @@ public class SDNSweep implements Runnable {
         public double value;
     }
 
-    @XmlRootElement
-    @XmlAccessorType(XmlAccessType.FIELD)
-    public static class NetworkEntity {
-
-        @XmlElement(name = "entityClass")
-        public String entityClass;
-        @XmlElement(name = "lastSeen")
-        public String lastSeen;
-        @XmlElement(name = "ipv4")
-        public List<String> ipv4;
-        @XmlElement(name = "vlan")
-        public List<String> vlan;
-        @XmlElement(name = "mac")
-        public List<String> mac;
-        @XmlElement(name = "attachmentPoint")
-        public List<AttachmentPoint> attachmentPoint;
-    }
-
-    @XmlRootElement
-    @XmlAccessorType(XmlAccessType.FIELD)
-    public static class AttachmentPoint {
-
-        @XmlElement(name = "port")
-        public int port;
-        @XmlElement(name = "errorStatus")
-        public String errorStatus;
-        @XmlElement(name = "switchDPID")
-        public String switchDPID;
-    }
-
-    @XmlRootElement
-    @XmlAccessorType(XmlAccessType.FIELD)
-    public static class Link {
-
-        @XmlElement(name = "src-switch")
-        public String srcSwitch;
-        @XmlElement(name = "src-port")
-        public int srcPort;
-        @XmlElement(name = "dst-switch")
-        public String dstSwitch;
-        @XmlElement(name = "dst-port")
-        public int dstPort;
-        @XmlElement(name = "type")
-        public String type;
-        @XmlElement(name = "direction")
-        public String direction;
-    }
+//    @XmlRootElement
+//    @XmlAccessorType(XmlAccessType.FIELD)
+//    public static class NetworkEntity {
+//
+//        @XmlElement(name = "entityClass")
+//        public String entityClass;
+//        @XmlElement(name = "lastSeen")
+//        public String lastSeen;
+//        @XmlElement(name = "getIpv4()")
+//        public List<String> getIpv4();
+//        @XmlElement(name = "vlan")
+//        public List<String> vlan;
+//        @XmlElement(name = "mac")
+//        public List<String> mac;
+//        @XmlElement(name = "getAttachmentPoint()")
+//        public List<AttachmentPoint> getAttachmentPoint();
+//    }
+//
+//    @XmlRootElement
+//    @XmlAccessorType(XmlAccessType.FIELD)
+//    public static class AttachmentPoint {
+//
+//        @XmlElement(name = "port")
+//        public int port;
+//        @XmlElement(name = "errorStatus")
+//        public String errorStatus;
+//        @XmlElement(name = "getSwitchDPID()")
+//        public String getSwitchDPID();
+//    }
+//
+//    @XmlRootElement
+//    @XmlAccessorType(XmlAccessType.FIELD)
+//    public static class Link {
+//
+//        @XmlElement(name = "src-switch")
+//        public String srcSwitch;
+//        @XmlElement(name = "src-port")
+//        public int srcPort;
+//        @XmlElement(name = "dst-switch")
+//        public String dstSwitch;
+//        @XmlElement(name = "dst-port")
+//        public int dstPort;
+//        @XmlElement(name = "type")
+//        public String type;
+//        @XmlElement(name = "direction")
+//        public String direction;
+//    }
 
     @XmlRootElement
     @XmlAccessorType(XmlAccessType.FIELD)
     public static class Switch {
-
         @XmlElement(name = "actions")
         public int actions;
         @XmlElement(name = "attributes")
@@ -559,7 +561,7 @@ public class SDNSweep implements Runnable {
         public String inetAddress;
         @XmlElement(name = "connectedSince")
         public long connectedSince;
-        @XmlElement(name = "dpid")
+        @XmlElement(name = "switchDPID")
         public String dpid;
         @XmlElement(name = "harole")
         public String harole;
@@ -622,9 +624,8 @@ public class SDNSweep implements Runnable {
     @XmlRootElement
     @XmlAccessorType(XmlAccessType.FIELD)
     public static class FloodlightStats {
-
         @JsonProperty("portNumber")
-        public int portNumber;
+        public String portNumber;
         @JsonProperty("receivePackets")
         public long receivePackets;
         @JsonProperty("transmitPackets")
