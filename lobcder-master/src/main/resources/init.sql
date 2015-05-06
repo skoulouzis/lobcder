@@ -196,8 +196,8 @@ CREATE TABLE features_table (
 
 CREATE TABLE speed_table (
   id SERIAL PRIMARY KEY,
-  src VARCHAR(1024),--INDEX(src),
-  dst VARCHAR(1024),--INDEX(dst),
+  src VARCHAR(1024), -- INDEX(src),
+  dst VARCHAR(1024), -- INDEX(dst),
   fSize ENUM('S', 'M','L','XL'), INDEX(fSize),
   averageSpeed DOUBLE,
   minSpeed DOUBLE,
