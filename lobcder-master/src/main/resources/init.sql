@@ -148,14 +148,14 @@ CREATE TABLE requests_table (
 
 CREATE TABLE successor_table (
  uid SERIAL PRIMARY KEY,
- keyVal VARCHAR(1024), -- INDEX(keyVal),
+ keyVal VARCHAR(1024), INDEX(keyVal),
  lobStateID VARCHAR(1024),
  weight DOUBLE
 ) ENGINE=InnoDB;
 
 CREATE TABLE occurrences_table (
  uid SERIAL PRIMARY KEY,
- keyVal VARCHAR(1024), -- INDEX(keyVal),
+ keyVal VARCHAR(1024), INDEX(keyVal),
  occurrences BIGINT
 ) ENGINE=InnoDB;
 
@@ -196,8 +196,8 @@ CREATE TABLE features_table (
 
 CREATE TABLE speed_table (
   id SERIAL PRIMARY KEY,
-  src VARCHAR(1024), -- INDEX(src),
-  dst VARCHAR(1024), -- INDEX(dst),
+  src VARCHAR(1024), INDEX(src),
+  dst VARCHAR(1024), INDEX(dst),
   fSize ENUM('S', 'M','L','XL'), INDEX(fSize),
   averageSpeed DOUBLE,
   minSpeed DOUBLE,
@@ -302,7 +302,7 @@ SET @ssRef = LAST_INSERT_ID();
 
 CREATE TABLE auth_usernames_table (
     id SERIAL PRIMARY KEY,
-    token VARCHAR(1024), -- INDEX(token),
+    token VARCHAR(1024), INDEX(token),
     uname VARCHAR(255), INDEX(uname)
 );
 CREATE TABLE auth_roles_tables (
