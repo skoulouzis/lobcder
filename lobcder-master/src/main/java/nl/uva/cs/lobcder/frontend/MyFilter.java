@@ -353,16 +353,19 @@ public class MyFilter extends MiltonFilter {
                 return false;
             }
         }
-        synchronized (_lock) {
-            if (_current < _maximum) {
-                _current++;
-                return true;
+        if (_maximum > 0) {
+            synchronized (_lock) {
+                if (_current < _maximum) {
+                    _current++;
+                    return true;
+                }
             }
+            if (_current >= _maximum) {
+                log.log(Level.WARNING, "Reached limit of requests :{0}", _current);
+            }
+        } else {
+            return true;
         }
-        if (_current >= _maximum) {
-            log.log(Level.WARNING, "Reached limit of requests :{0}", _current);
-        }
-
         return false;
     }
 
