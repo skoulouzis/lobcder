@@ -279,6 +279,10 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
 //                    return new WebDataFileResource(fileLogicalData, Path.path(getPath(), newName), getCatalogue(), authList);
                 }
             } catch (NoSuchAlgorithmException ex) {
+                if (connection != null && !connection.isClosed()) {
+                    connection.rollback();
+                    connection.close();
+                }
                 WebDataDirResource.log.log(Level.SEVERE, null, ex);
                 throw new InternalError(ex.getMessage());
             } catch (SQLException e) {

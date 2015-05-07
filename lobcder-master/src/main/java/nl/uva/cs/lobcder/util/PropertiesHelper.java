@@ -290,4 +290,8 @@ public class PropertiesHelper {
     public static Long getLocalCacheId() throws IOException {
         return Long.valueOf(getProperties().getProperty("localcache.id"));
     }
+
+    public static Integer getMaximumNumberOfRequests() throws IOException {
+        return Integer.valueOf(getProperties().getProperty("maximum.num.requests", "15"));
+    }
 }

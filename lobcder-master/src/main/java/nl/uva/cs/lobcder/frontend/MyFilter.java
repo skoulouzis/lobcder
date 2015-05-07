@@ -62,30 +62,27 @@ public class MyFilter extends MiltonFilter {
     private static RequestEventRecorder recorder;
     private Timer recordertimer;
     private Vertex prevPrediction;
+    private final Object _lock = new Object();
+    private int _current = 0;
+    private int _maximum = 15;
 
     public MyFilter() throws Exception {
         type = PropertiesHelper.getPredictionType();
+        _maximum = PropertiesHelper.getMaximumNumberOfRequests();
     }
 
     @Override
     public void doFilter(javax.servlet.ServletRequest req, javax.servlet.ServletResponse resp, javax.servlet.FilterChain fc) throws IOException, ServletException {
         double start = System.currentTimeMillis();
-
+        if (!acceptRequest(req)) {
+            HttpServletResponse response = (HttpServletResponse) resp;
+            response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+            return;
+        }
         String method = ((HttpServletRequest) req).getMethod();
         StringBuffer reqURL = ((HttpServletRequest) req).getRequestURL();
 
-        File file = new File(System.getProperty("user.home"));
-//        long totalSpace = file.getTotalSpace(); //total disk space in bytes.
-        long usableSpace = file.getUsableSpace(); ///unallocated / free disk space in bytes.
-        if (usableSpace < PropertiesHelper.getCacheFreeSpaceLimit()) {
-            if (((HttpServletRequest) req).getMethod().equals(Method.POST.toString())
-                    || ((HttpServletRequest) req).getMethod().equals(Method.PUT.toString())) {
-                HttpServletResponse response = (HttpServletResponse) resp;
-                response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
-                log.log(Level.WARNING, "Limited free space for cache: {0} bytes", usableSpace);
-                return;
-            }
-        }
+
 
 
         if (PropertiesHelper.doPrediction()) {
@@ -135,7 +132,7 @@ public class MyFilter extends MiltonFilter {
 
             startRecorder();
         }
-
+        releaseRequest();
         log.log(Level.INFO, "Req_Source: {0} Method: {1} Content_Len: {2} Content_Type: {3} Elapsed_Time: {4} sec EncodedUser: {5} UserAgent: {6} path:{7}", new Object[]{from, method, contentLen, contentType, elapsed / 1000.0, userNpasswd, userAgent, reqURL.toString()});
     }
 
@@ -342,6 +339,36 @@ public class MyFilter extends MiltonFilter {
                     Logger.getLogger(MyFilter.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
+        }
+    }
+
+    private boolean acceptRequest(javax.servlet.ServletRequest req) throws IOException {
+        File file = new File(System.getProperty("user.home"));
+//        long totalSpace = file.getTotalSpace(); //total disk space in bytes.
+        long usableSpace = file.getUsableSpace(); ///unallocated / free disk space in bytes.
+        if (usableSpace < PropertiesHelper.getCacheFreeSpaceLimit()) {
+            if (((HttpServletRequest) req).getMethod().equals(Method.POST.toString())
+                    || ((HttpServletRequest) req).getMethod().equals(Method.PUT.toString())) {
+                log.log(Level.WARNING, "Limited free space for cache: {0} bytes", usableSpace);
+                return false;
+            }
+        }
+        synchronized (_lock) {
+            if (_current < _maximum) {
+                _current++;
+                return true;
+            }
+        }
+        if (_current >= _maximum) {
+            log.log(Level.WARNING, "Reached limit of requests :{0}", _current);
+        }
+
+        return false;
+    }
+
+    private void releaseRequest() {
+        synchronized (_lock) {
+            _current--;
         }
     }
 }

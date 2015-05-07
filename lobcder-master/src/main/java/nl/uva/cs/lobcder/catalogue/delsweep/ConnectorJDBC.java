@@ -17,8 +17,6 @@ public class ConnectorJDBC implements ConnectorI {
 
     private final DataSource datasource;
     private final Integer limit;
-    private int reconnectAttemts = 0;
-    private int sleeTime = 100;
 
     public ConnectorJDBC(DataSource datasource, Integer limit) {
         this.datasource = datasource;
@@ -68,8 +66,6 @@ public class ConnectorJDBC implements ConnectorI {
                     result.add(pdriGroupBean);
                 }
             }
-            reconnectAttemts = 0;
-            sleeTime = 100;
             return result;
         }
 //        catch (Exception ex) {
@@ -94,8 +90,6 @@ public class ConnectorJDBC implements ConnectorI {
                 ps.setLong(1, pdriGroupId);
                 ps.executeUpdate();
             }
-            reconnectAttemts = 0;
-            sleeTime = 50;
         }
 //        catch (Exception ex) {
 //            reconnectAttemts++;

@@ -1,10 +1,12 @@
 package nl.uva.cs.lobcder.catalogue.delsweep;
 
+import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.catalogue.beans.PdriBean;
 import nl.uva.cs.lobcder.catalogue.beans.PdriGroupBean;
+import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.cs.lobcder.util.DeleteHelper;
 
 /**
@@ -15,6 +17,7 @@ import nl.uva.cs.lobcder.util.DeleteHelper;
 public class DeleteSweep implements Runnable {
 
     private final ConnectorI connector;
+//    private int sleeTime = 10;
 
     public DeleteSweep(ConnectorI connector) {
         this.connector = connector;
@@ -24,20 +27,23 @@ public class DeleteSweep implements Runnable {
     public void run() {
         try {
             for (PdriGroupBean pdriGroupBean : connector.getPdriGroupsToProcess()) {
-                if(pdriGroupBean.getPdri() != null) {
+                if (pdriGroupBean.getPdri() != null) {
                     for (PdriBean pdriBean : pdriGroupBean.getPdri()) {
                         DeleteHelper.delete(pdriBean);
                     }
                 }
                 connector.confirmPdriGroup(pdriGroupBean.getId());
             }
+//            sleeTime = 10;
         } catch (Exception e) {
             DeleteSweep.log.log(Level.SEVERE, null, e);
-            try {
-                Thread.sleep(50);
-            } catch (InterruptedException ex) {
-                Logger.getLogger(DeleteSweep.class.getName()).log(Level.SEVERE, null, ex);
-            }
+//            try {
+//                sleeTime = sleeTime * 2;
+//                Thread.sleep(sleeTime);
+//            } catch (InterruptedException ex2) {
+//            }
+
+
         }
     }
 }
