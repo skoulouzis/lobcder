@@ -16,8 +16,9 @@ import java.util.Collection;
 public class ConnectorJDBC implements ConnectorI {
 
     private final DataSource datasource;
-
     private final Integer limit;
+    private int reconnectAttemts = 0;
+    private int sleeTime = 100;
 
     public ConnectorJDBC(DataSource datasource, Integer limit) {
         this.datasource = datasource;
@@ -30,7 +31,7 @@ public class ConnectorJDBC implements ConnectorI {
             connection.setAutoCommit(true);
             ArrayList<Long> pdriGroups = new ArrayList<>();
             try (CallableStatement s1 = connection.prepareCall("call GET_PDRI_GROUPS_FOR_DELETE(?)")) {
-                s1.setInt(1,limit);
+                s1.setInt(1, limit);
                 ResultSet rs = s1.executeQuery();
                 while (rs.next()) {
                     pdriGroups.add(rs.getLong(1));
@@ -53,25 +54,36 @@ public class ConnectorJDBC implements ConnectorI {
                         do {
                             pdriBeans.add(
                                     new PdriBean(
-                                            rs.getLong(1),
-                                            rs.getString(2),
-                                            null,
-                                            new StorageSiteBean(
-                                                    rs.getLong(3),
-                                                    rs.getString(4),
-                                                    null, null, null,
-                                                    new CredentialBean(rs.getString(5), rs.getString(6))
-                                            )
-                                    )
-                            );
+                                    rs.getLong(1),
+                                    rs.getString(2),
+                                    null,
+                                    new StorageSiteBean(
+                                    rs.getLong(3),
+                                    rs.getString(4),
+                                    null, null, null,
+                                    new CredentialBean(rs.getString(5), rs.getString(6)))));
                         } while (rs.next());
                         pdriGroupBean.setPdri(pdriBeans);
                     }
                     result.add(pdriGroupBean);
                 }
             }
+            reconnectAttemts = 0;
+            sleeTime = 100;
             return result;
         }
+//        catch (Exception ex) {
+//            reconnectAttemts++;
+//            if (reconnectAttemts < Constants.RECONNECT_NTRY) {
+//                sleeTime = sleeTime * 2;
+//                Thread.sleep(sleeTime);
+//                return getPdriGroupsToProcess();
+//            } else {
+//                reconnectAttemts = 0;
+//                sleeTime = 100;
+//                throw ex;
+//            }
+//        }
     }
 
     @Override
@@ -79,9 +91,22 @@ public class ConnectorJDBC implements ConnectorI {
         try (Connection connection = datasource.getConnection()) {
             connection.setAutoCommit(true);
             try (PreparedStatement ps = connection.prepareStatement("DELETE FROM pdrigroup_table WHERE pdriGroupId=?")) {
-                ps.setLong(1,pdriGroupId);
+                ps.setLong(1, pdriGroupId);
                 ps.executeUpdate();
             }
+            reconnectAttemts = 0;
+            sleeTime = 50;
         }
+//        catch (Exception ex) {
+//            reconnectAttemts++;
+//            if (reconnectAttemts < Constants.RECONNECT_NTRY) {
+//                sleeTime = sleeTime * 2;
+//                Thread.sleep(sleeTime);
+//                confirmPdriGroup(pdriGroupId);
+//            } else {
+//                reconnectAttemts = 0;
+//                throw ex;
+//            }
+//        }
     }
 }

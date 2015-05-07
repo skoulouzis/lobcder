@@ -6,7 +6,6 @@ package nl.uva.cs.lobcder.webDav.resources;
 
 import io.milton.common.Path;
 import io.milton.http.*;
-import static io.milton.http.Request.Method.PUT;
 import io.milton.http.exceptions.BadRequestException;
 import io.milton.http.exceptions.ConflictException;
 import io.milton.http.exceptions.NotAuthorizedException;
@@ -119,12 +118,16 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                             new Permissions(getPrincipal(), getPermissions()), connection);
                     newFolderEntry = inheritProperties(newFolderEntry, connection);
                     connection.commit();
+                    connection.close();
                     WebDataDirResource res = new WebDataDirResource(newFolderEntry, newCollectionPath, getCatalogue(), authList);
                     return res;
                 }
             } catch (SQLException e) {
                 WebDataDirResource.log.log(Level.SEVERE, null, e);
-                connection.rollback();
+                if (connection != null && !connection.isClosed()) {
+                    connection.rollback();
+                    connection.close();
+                }
                 throw new BadRequestException(this, e.getMessage());
             }
         } catch (SQLException e1) {
@@ -140,6 +143,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
             try {
                 LogicalData childLD = getCatalogue().getLogicalDataByParentRefAndName(getLogicalData().getUid(), childName, connection);
                 connection.commit();
+                connection.close();
                 if (childLD != null) {
                     if (childLD.getType().equals(Constants.LOGICAL_FOLDER)) {
                         return new WebDataDirResource(childLD, Path.path(getPath(), childName), getCatalogue(), authList);
@@ -151,7 +155,10 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                 }
             } catch (SQLException e) {
                 WebDataDirResource.log.log(Level.SEVERE, null, e);
-                connection.rollback();
+                if (connection != null && !connection.isClosed()) {
+                    connection.rollback();
+                    connection.close();
+                }
                 return null;
             }
         } catch (SQLException e1) {
@@ -179,9 +186,13 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                     }
                     getCatalogue().addViewForRes(getLogicalData().getUid(), connection);
                     connection.commit();
+                    connection.close();
                     return children;
                 } catch (Exception e) {
-                    connection.rollback();
+                    if (connection != null && !connection.isClosed()) {
+                        connection.rollback();
+                        connection.close();
+                    }
                     throw e;
                 }
             }
@@ -193,7 +204,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
 
     @Override
     public Resource createNew(String newName, InputStream inputStream, Long length, String contentType) throws IOException,
-            ConflictException, NotAuthorizedException, BadRequestException {
+            ConflictException, NotAuthorizedException, BadRequestException, InternalError {
         WebDataDirResource.log.log(Level.FINE, "createNew. for {0}\n\t newName:\t{1}\n\t length:\t{2}\n\t contentType:\t{3}", new Object[]{getPath(), newName, length, contentType});
         LogicalData fileLogicalData;
 //        List<PDRIDescr> pdriDescrList;
@@ -228,6 +239,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                     fileLogicalData = getCatalogue().updateLogicalDataAndPdri(fileLogicalData, pdri, connection);
                     //fileLogicalData = inheritProperties(fileLogicalData, connection);
                     connection.commit();
+                    connection.close();
 //                    String md5 = pdri.getStringChecksum();
 //                    if (md5 != null) {
 //                        fileLogicalData.setChecksum(md5);
@@ -262,6 +274,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                     List<String> pref = getLogicalData().getDataLocationPreferences();
                     fileLogicalData.setDataLocationPreferences(pref);
                     connection.commit();
+                    connection.close();
                     resource = new WebDataFileResource(fileLogicalData, Path.path(getPath(), newName), getCatalogue(), authList);
 //                    return new WebDataFileResource(fileLogicalData, Path.path(getPath(), newName), getCatalogue(), authList);
                 }
@@ -270,9 +283,11 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                 throw new InternalError(ex.getMessage());
             } catch (SQLException e) {
                 WebDataDirResource.log.log(Level.SEVERE, null, e);
-                connection.rollback();
+                if (connection != null && !connection.isClosed()) {
+                    connection.rollback();
+                    connection.close();
+                }
                 throw new BadRequestException(this, e.getMessage());
-//                throw new InternalError(e.getMessage());
             }
         } catch (SQLException | IOException e1) {
             WebDataDirResource.log.log(Level.SEVERE, null, e1);
@@ -312,9 +327,13 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                 }
                 getCatalogue().copyFolder(getLogicalData(), toWDDR.getLogicalData(), name, getPrincipal(), connection);
                 connection.commit();
+                connection.close();
             } catch (SQLException e) {
                 WebDataDirResource.log.log(Level.SEVERE, null, e);
-                connection.rollback();
+                if (connection != null && !connection.isClosed()) {
+                    connection.rollback();
+                    connection.close();
+                }
                 throw new BadRequestException(this, e.getMessage());
             }
         } catch (SQLException e1) {
@@ -333,9 +352,13 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
             try {
                 getCatalogue().remove(getLogicalData(), getPrincipal(), connection);
                 connection.commit();
+                connection.close();
             } catch (SQLException e) {
                 WebDataDirResource.log.log(Level.SEVERE, null, e);
-                connection.rollback();
+                if (connection != null && !connection.isClosed()) {
+                    connection.rollback();
+                    connection.close();
+                }
                 throw new BadRequestException(this, e.getMessage());
             }
         } catch (SQLException e1) {
@@ -396,8 +419,12 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                 ps.println(html.toHtml());
                 getCatalogue().addViewForRes(getLogicalData().getUid(), connection);
                 connection.commit();
+                connection.close();
             } catch (Exception e) {
-                connection.rollback();
+                if (connection != null && !connection.isClosed()) {
+                    connection.rollback();
+                    connection.close();
+                }
                 throw e;
             }
         } catch (Exception e) {
@@ -438,9 +465,13 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                 }
                 getCatalogue().moveEntry(getLogicalData(), toWDDR.getLogicalData(), name, connection);
                 connection.commit();
+                connection.close();
             } catch (SQLException e) {
                 WebDataDirResource.log.log(Level.SEVERE, null, e);
-                connection.rollback();
+                if (connection != null && !connection.isClosed()) {
+                    connection.rollback();
+                    connection.close();
+                }
                 throw new BadRequestException(this, e.getMessage());
             }
         } catch (SQLException e1) {
@@ -540,5 +571,9 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
             psDel.executeUpdate();
             psIns.executeUpdate();
         }
+    }
+
+    private Connection checkConnection(Connection connection) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }

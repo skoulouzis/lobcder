@@ -1,12 +1,10 @@
 package nl.uva.cs.lobcder.catalogue.delsweep;
 
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.catalogue.beans.PdriBean;
 import nl.uva.cs.lobcder.catalogue.beans.PdriGroupBean;
-import nl.uva.cs.lobcder.resources.PDRI;
-import nl.uva.cs.lobcder.resources.PDRIDescr;
-import nl.uva.cs.lobcder.resources.PDRIFactory;
 import nl.uva.cs.lobcder.util.DeleteHelper;
 
 /**
@@ -35,6 +33,11 @@ public class DeleteSweep implements Runnable {
             }
         } catch (Exception e) {
             DeleteSweep.log.log(Level.SEVERE, null, e);
+            try {
+                Thread.sleep(50);
+            } catch (InterruptedException ex) {
+                Logger.getLogger(DeleteSweep.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
     }
 }

@@ -50,8 +50,9 @@ import nl.uva.vlet.vrl.VRL;
  */
 @Log
 public class JDBCatalogue extends MyDataSource {
+
     private Timer timer;
-    
+
     public JDBCatalogue() throws NamingException {
     }
 
@@ -258,6 +259,7 @@ public class JDBCatalogue extends MyDataSource {
     }
 
     public LogicalData associateLogicalDataAndPdri(LogicalData logicalData, PDRI pdri, @Nonnull Connection connection) throws SQLException {
+        connection = checkConnection(connection);
         try (Statement statement = connection.createStatement(java.sql.ResultSet.TYPE_FORWARD_ONLY, java.sql.ResultSet.CONCUR_UPDATABLE)) {
             statement.executeUpdate("INSERT INTO pdrigroup_table (refCount) VALUES(1)", Statement.RETURN_GENERATED_KEYS);
             ResultSet rs = statement.getGeneratedKeys();
@@ -610,6 +612,7 @@ public class JDBCatalogue extends MyDataSource {
     }
 
     public void setPermissions(Long UID, Permissions perm, @Nonnull Connection connection) throws SQLException {
+        connection = checkConnection(connection);
         try (Statement s = connection.createStatement(java.sql.ResultSet.TYPE_FORWARD_ONLY,
                 java.sql.ResultSet.CONCUR_UPDATABLE)) {
             s.addBatch("DELETE FROM permission_table WHERE permission_table.ldUidRef = " + UID);
@@ -1664,6 +1667,14 @@ public class JDBCatalogue extends MyDataSource {
 
     public Long getReplicationQueueSize() throws SQLException {
         return getReplicationQueueSize(getConnection());
+    }
+
+    private Connection checkConnection(Connection connection) throws SQLException {
+        if (connection == null || connection.isClosed()) {
+            return getConnection();
+        } else {
+            return connection;
+        }
     }
 
     @Data

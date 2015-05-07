@@ -81,7 +81,8 @@ public class MyFilter extends MiltonFilter {
             if (((HttpServletRequest) req).getMethod().equals(Method.POST.toString())
                     || ((HttpServletRequest) req).getMethod().equals(Method.PUT.toString())) {
                 HttpServletResponse response = (HttpServletResponse) resp;
-                response.setStatus(response.SC_SERVICE_UNAVAILABLE);
+                response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+                log.log(Level.WARNING, "Limited free space for cache: {0} bytes", usableSpace);
                 return;
             }
         }
