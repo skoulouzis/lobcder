@@ -10,16 +10,16 @@ lobPass=admin
 basePath=$HOME/Downloads/
 CATALINA_HOME=servers/apache-tomcat-6.0.36
 
-t0=`mysql -u$sqlUser -p$sqlPass -s -N -e "select unix_timestamp(timeStamp) from $dbName.requests_table limit 1"`
-mysql -u$sqlUser -p$sqlPass -s -N -e  "select methodName, requestURL, unix_timestamp(timeStamp)-$t0, userAgent, contentLen from $dbName.requests_table" > /tmp/result.csv
+#t0=`mysql -u$sqlUser -p$sqlPass -s -N -e "select unix_timestamp(timeStamp) from $dbName.requests_table limit 1"`
+#mysql -u$sqlUser -p$sqlPass -s -N -e  "select methodName, requestURL, unix_timestamp(timeStamp)-$t0, userAgent, contentLen from $dbName.requests_table" > /tmp/result.csv
 
 
 numOfReq=`wc -l < /tmp/result.csv`
 #prepere files 
 while IFS=$'\t' read method url timestamp userAgent contentLen
 do
-#   if [ $method = 'GET' ] || [ $method = 'PUT' ] ; then  
-  if [ $method = 'PUT' ] ; then  
+ #if [ $method = 'GET' ] || [ $method = 'PUT' ] ; then  
+ if [ $method = 'PUT' ] ; then  
     xpath=${url%/*}
     path=`echo $xpath | sed "s/^http:\/\///g"`
     fileName=${url##*/}
@@ -29,7 +29,7 @@ do
       echo "mkdir -p $absPath"
       mkdir -p $absPath
       echo "dd if=/dev/urandom of=$absPath/$fileName bs=1 count=$(($contentLen/10))"
-      dd if=/dev/urandom of=$absPath/$fileName bs=1 count=$(($contentLen/10))
+      dd if=/dev/urandom of=$absPath/$fileName bs=1 count=$(($contentLen))
     fi
   fi
      counter=$(( $counter + 1 ))

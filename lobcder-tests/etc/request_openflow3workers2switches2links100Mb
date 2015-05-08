@@ -24,8 +24,8 @@
     xmlns:topology="http://geni-orca.renci.org/owl/topology.owl#"
     xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#" > 
   <rdf:Description rdf:about="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Controller">
-    <topology:hasInterface rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link3-Controller"/>
     <topology:hasInterface rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link2-Controller"/>
+    <topology:hasInterface rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link3-Controller"/>
     <request-schema:postBootScript rdf:datatype="http://www.w3.org/2001/XMLSchema#string">echo "deb http://ppa.launchpad.net/webupd8team/java/ubuntu precise main" | tee -a /etc/apt/sources.list
 echo "deb-src http://ppa.launchpad.net/webupd8team/java/ubuntu precise main" | tee -a /etc/apt/sources.list
 apt-key adv --keyserver keyserver.ubuntu.com --recv-keys EEA14886
@@ -63,7 +63,7 @@ echo "deb-src http://ppa.launchpad.net/webupd8team/java/ubuntu precise main" | t
 apt-key adv --keyserver keyserver.ubuntu.com --recv-keys EEA14886
 apt-get update
 
-apt-get -q -y --force-yes  install oracle-java7-installer subversion maven2 erlang wget makepasswd nmap cadaver curl iperf tsung bwm-ng
+apt-get -q -y --force-yes  install oracle-java7-installer subversion maven2 erlang wget makepasswd nmap cadaver curl iperf tsung bwm-ng git
 
 dd if=/dev/urandom of=file1MB bs=1M count=1
 dd if=/dev/urandom of=file10MB bs=10M count=1
@@ -108,7 +108,6 @@ chmod +x buildAndDeployWorker.sh
     <collections:element rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Switch1"/>
     <collections:element rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link2"/>
     <collections:element rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Worker1-3"/>
-    <collections:element rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link7"/>
     <collections:element rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link3"/>
     <collections:element rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link22"/>
     <collections:element rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Client-1"/>
@@ -153,35 +152,9 @@ chmod +x buildAndDeployWorker.sh
   </rdf:Description>
   <rdf:Description rdf:about="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Worker2-5">
     <topology:hasInterface rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link23-Worker2-5"/>
-    <request-schema:postBootScript rdf:datatype="http://www.w3.org/2001/XMLSchema#string">echo "deb http://ppa.launchpad.net/webupd8team/java/ubuntu precise main" | tee -a /etc/apt/sources.list
-echo "deb-src http://ppa.launchpad.net/webupd8team/java/ubuntu precise main" | tee -a /etc/apt/sources.list
-apt-key adv --keyserver keyserver.ubuntu.com --recv-keys EEA14886
-apt-get update
+    <request-schema:postBootScript rdf:datatype="http://www.w3.org/2001/XMLSchema#string">wget https://raw.githubusercontent.com/skoulouzis/lobcder/dev/lobcder-worker/scripts/buildAndDeployWorker.sh
 
-export DEBIAN_FRONTEND=noninteractive
-echo debconf shared/accepted-oracle-license-v1-1 select true | sudo debconf-set-selections
-echo debconf shared/accepted-oracle-license-v1-1 seen true | sudo debconf-set-selections
-apt-get -q -y --force-yes  install oracle-java7-installer subversion maven2 erlang wget makepasswd nmap iperf
-
-password="pass"
-pass=$(perl -e 'print crypt($ARGV[0], "password")' $password)
-useradd w -m -p $pass
-
-cd /root
-wget http://elab.lab.uvalight.net/~lobcder/conf/settings.xml
-mkdir /root/.m2/
-mv settings.xml /root/.m2/
-svn checkout --trust-server-cert --non-interactive --username anonsvn --password anonsvn https://gforge.cyfronet.pl/svn/lobcder/trunk/lobcder-worker/
-cd lobcder-worker/
-mvn install 
-rm -r target/lobcder-worker
-mv target/lobcder-worker-1.0-SNAPSHOT target/lobcder-worker
-cd /root
-
-wget http://elab.lab.uvalight.net/~lobcder/apache-tomcat-6.0.36.tar.gz
-tar -xzvf apache-tomcat-6.0.36.tar.gz
-cp -r lobcder-worker/target/lobcder-worker apache-tomcat-6.0.36/webapps/
-./apache-tomcat-6.0.36/bin/startup.sh</request-schema:postBootScript>
+chmod +x buildAndDeployWorker.sh</request-schema:postBootScript>
     <compute:diskImage rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#req1"/>
     <domain:hasResourceType rdf:resource="http://geni-orca.renci.org/owl/compute.owl#VM"/>
     <rdf:type rdf:resource="http://geni-orca.renci.org/owl/compute.owl#ComputeElement"/>
@@ -201,11 +174,10 @@ cp -r lobcder-worker/target/lobcder-worker apache-tomcat-6.0.36/webapps/
     <rdf:type rdf:resource="http://geni-orca.renci.org/owl/topology.owl#Interface"/>
   </rdf:Description>
   <rdf:Description rdf:about="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Switch1">
-    <topology:hasInterface rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link7-Switch1"/>
-    <topology:hasInterface rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link22-Switch1"/>
-    <topology:hasInterface rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link5-Switch1"/>
-    <topology:hasInterface rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link1-Switch1"/>
     <topology:hasInterface rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link2-Switch1"/>
+    <topology:hasInterface rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link5-Switch1"/>
+    <topology:hasInterface rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link22-Switch1"/>
+    <topology:hasInterface rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link1-Switch1"/>
     <request-schema:postBootScript rdf:datatype="http://www.w3.org/2001/XMLSchema#string">#!/bin/bash
 
 # Wait for interfaces to be configured. This value should be tweaked.
@@ -280,9 +252,6 @@ chmod +x buildAndDeployMaster1.sh
     <layer:bandwidth rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">100000000</layer:bandwidth>
     <rdf:type rdf:resource="http://geni-orca.renci.org/owl/topology.owl#NetworkConnection"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link7-Switch2">
-    <rdf:type rdf:resource="http://geni-orca.renci.org/owl/topology.owl#Interface"/>
-  </rdf:Description>
   <rdf:Description rdf:about="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link1-Switch2">
     <rdf:type rdf:resource="http://geni-orca.renci.org/owl/topology.owl#Interface"/>
   </rdf:Description>
@@ -330,9 +299,6 @@ chmod +x buildAndDeployMaster1.sh
   <rdf:Description rdf:about="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link1-Switch1">
     <rdf:type rdf:resource="http://geni-orca.renci.org/owl/topology.owl#Interface"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link7-Switch1">
-    <rdf:type rdf:resource="http://geni-orca.renci.org/owl/topology.owl#Interface"/>
-  </rdf:Description>
   <rdf:Description rdf:about="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link23-Switch2">
     <rdf:type rdf:resource="http://geni-orca.renci.org/owl/topology.owl#Interface"/>
   </rdf:Description>
@@ -359,44 +325,12 @@ chmod +x buildAndDeployMaster1.sh
     <ip4:localIPAddress rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link4-Master-2-ip-192-168-100-2"/>
     <rdf:type rdf:resource="http://geni-orca.renci.org/owl/topology.owl#Interface"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link7">
-    <topology:hasInterface rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link7-Switch2"/>
-    <topology:hasInterface rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link7-Switch1"/>
-    <layer:atLayer rdf:resource="http://geni-orca.renci.org/owl/ethernet.owl#EthernetNetworkElement"/>
-    <layer:bandwidth rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">100000000</layer:bandwidth>
-    <rdf:type rdf:resource="http://geni-orca.renci.org/owl/topology.owl#NetworkConnection"/>
-  </rdf:Description>
   <rdf:Description rdf:about="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Worker-2-4">
     <topology:hasInterface rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link22-Worker-2-4"/>
-    <request-schema:postBootScript rdf:datatype="http://www.w3.org/2001/XMLSchema#string">echo "deb http://ppa.launchpad.net/webupd8team/java/ubuntu precise main" | tee -a /etc/apt/sources.list
-echo "deb-src http://ppa.launchpad.net/webupd8team/java/ubuntu precise main" | tee -a /etc/apt/sources.list
-apt-key adv --keyserver keyserver.ubuntu.com --recv-keys EEA14886
-apt-get update
+    <request-schema:postBootScript rdf:datatype="http://www.w3.org/2001/XMLSchema#string">cd 
+wget https://raw.githubusercontent.com/skoulouzis/lobcder/dev/lobcder-worker/scripts/buildAndDeployWorker.sh
 
-export DEBIAN_FRONTEND=noninteractive
-echo debconf shared/accepted-oracle-license-v1-1 select true | sudo debconf-set-selections
-echo debconf shared/accepted-oracle-license-v1-1 seen true | sudo debconf-set-selections
-apt-get -q -y --force-yes  install oracle-java7-installer subversion maven2 erlang wget makepasswd nmap iperf
-
-password="pass"
-pass=$(perl -e 'print crypt($ARGV[0], "password")' $password)
-useradd w -m -p $pass
-
-cd /root
-wget http://elab.lab.uvalight.net/~lobcder/conf/settings.xml
-mkdir /root/.m2/
-mv settings.xml /root/.m2/
-svn checkout --trust-server-cert --non-interactive --username anonsvn --password anonsvn https://gforge.cyfronet.pl/svn/lobcder/trunk/lobcder-worker/
-cd lobcder-worker/
-mvn install 
-rm -r target/lobcder-worker
-mv target/lobcder-worker-1.0-SNAPSHOT target/lobcder-worker
-cd /root
-
-wget http://elab.lab.uvalight.net/~lobcder/apache-tomcat-6.0.36.tar.gz
-tar -xzvf apache-tomcat-6.0.36.tar.gz
-cp -r lobcder-worker/target/lobcder-worker apache-tomcat-6.0.36/webapps/
-./apache-tomcat-6.0.36/bin/startup.sh</request-schema:postBootScript>
+chmod +x buildAndDeployWorker.sh</request-schema:postBootScript>
     <compute:diskImage rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#req4"/>
     <domain:hasResourceType rdf:resource="http://geni-orca.renci.org/owl/compute.owl#VM"/>
     <rdf:type rdf:resource="http://geni-orca.renci.org/owl/compute.owl#ComputeElement"/>
@@ -412,12 +346,11 @@ cp -r lobcder-worker/target/lobcder-worker apache-tomcat-6.0.36/webapps/
     <rdf:type rdf:resource="http://geni-orca.renci.org/owl/topology.owl#Interface"/>
   </rdf:Description>
   <rdf:Description rdf:about="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Switch2">
-    <topology:hasInterface rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link1-Switch2"/>
-    <rdf:type rdf:resource="http://geni-orca.renci.org/owl/compute.owl#ComputeElement"/>
-    <topology:hasInterface rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link3-Switch2"/>
-    <topology:hasInterface rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link7-Switch2"/>
-    <domain:hasResourceType rdf:resource="http://geni-orca.renci.org/owl/compute.owl#VM"/>
+    <topology:hasInterface rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link23-Switch2"/>
     <topology:hasInterface rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link4-Switch2"/>
+    <topology:hasInterface rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link21-Switch2"/>
+    <topology:hasInterface rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link1-Switch2"/>
+    <topology:hasInterface rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link3-Switch2"/>
     <request-schema:postBootScript rdf:datatype="http://www.w3.org/2001/XMLSchema#string">#!/bin/bash
 
 # Wait for interfaces to be configured. This value should be tweaked.
@@ -446,8 +379,8 @@ POLLING=1
 
 ovs-vsctl -- --id=@sflow create sflow agent=${AGENT} target=\"${COLLECTOR_IP}:${COLLECTOR_PORT}\" header=${HEADER} sampling=${SAMPLING} polling=${POLLING} -- set bridge br0 sflow=@sflow</request-schema:postBootScript>
     <compute:diskImage rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#OVS"/>
-    <topology:hasInterface rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link21-Switch2"/>
-    <topology:hasInterface rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link23-Switch2"/>
+    <domain:hasResourceType rdf:resource="http://geni-orca.renci.org/owl/compute.owl#VM"/>
+    <rdf:type rdf:resource="http://geni-orca.renci.org/owl/compute.owl#ComputeElement"/>
   </rdf:Description>
   <rdf:Description rdf:about="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link1">
     <topology:hasInterface rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link1-Switch1"/>
