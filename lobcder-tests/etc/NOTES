@@ -95,3 +95,9 @@ count(tx_size) AS tx_size
 from rx_tx_table
 GROUP BY logdate
 ORDER by logdate;
+
+
+
+------------------------------------tsung----------------------------------
+
+tsung-recorder -u -I 193.40.xxx.xxx -P 3128 start
