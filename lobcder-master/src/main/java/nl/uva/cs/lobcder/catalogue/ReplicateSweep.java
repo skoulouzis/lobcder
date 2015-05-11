@@ -60,6 +60,7 @@ public class ReplicateSweep implements Runnable {
                         }
                     }
                     if (pdriDescrs.isEmpty()) {
+                        Collection<Long> ss = getReplicationPolicy().getSitesToReplicate(connection);
                         successFlag &= replicate(pdriGroup, getReplicationPolicy().getSitesToReplicate(connection), connection);
                     }
                     if (successFlag) {
@@ -303,6 +304,7 @@ public class ReplicateSweep implements Runnable {
 
     private boolean replicate(Long pdriGroupId, Collection<Long> toReplicate, Connection connection) {
         if (toReplicate.isEmpty()) {
+//            log.log(Level.FINE, "toReplicate.isEmpty()");
             return true;
         }
         boolean result = true;
@@ -329,6 +331,7 @@ public class ReplicateSweep implements Runnable {
                     PDRI destinationPdri = PDRIFactory.getFactory().createInstance(destinationDescr);
                     destinationPdri.replicate(sourcePdri);
                     result = destinationPdri.exists(destinationPdri.getFileName());
+                    log.log(Level.FINE, "result: " + result);
                     long srcLen = sourcePdri.getLength();
                     if (result == false || destinationPdri.getLength() != srcLen) {
                         log.log(Level.WARNING, "Failed to replicate {0}/{1} to {2}/{3}", new Object[]{sourcePdri.getURI(), sourcePdri.getFileName(), destinationPdri.getURI(), destinationPdri.getFileName()});

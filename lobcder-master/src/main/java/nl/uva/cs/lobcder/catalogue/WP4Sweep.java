@@ -36,6 +36,7 @@ import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import lombok.extern.java.Log;
+import nl.uva.cs.lobcder.util.Constants;
 
 /**
  * User: dvasunin Date: 13.02.2015 Time: 14:24 To change this template use File
@@ -61,7 +62,7 @@ public class WP4Sweep implements Runnable {
     @Data
     @XmlAccessorType(XmlAccessType.FIELD)
     static class FileWP4 {
-        
+
         private String author;
         private String globalID;
         private String category;
@@ -182,6 +183,14 @@ public class WP4Sweep implements Runnable {
                     .accept(MediaType.APPLICATION_XML_TYPE, MediaType.APPLICATION_JSON_TYPE)
                     .put(ClientResponse.class, resourceMetadataList);
             if (response.getClientResponseStatus() != ClientResponse.Status.OK) {
+//                InputStream in = response.getEntityInputStream();
+//                int read;
+//                StringBuilder sb = new StringBuilder();
+//                byte[] copyBuffer = new byte[Constants.BUF_SIZE];
+//                while ((read = in.read(copyBuffer, 0, copyBuffer.length)) != -1) {
+//                    sb.append(new String(copyBuffer, 0, read));
+//                }
+//                log.log(Level.SEVERE, sb.toString());
                 throw new HTTPException(response.getStatus());
             }
             log.log(Level.FINE, "Send metadata to uri: {0}", new Object[]{uri});
