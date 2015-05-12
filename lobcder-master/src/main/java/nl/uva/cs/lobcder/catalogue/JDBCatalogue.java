@@ -13,11 +13,6 @@ import java.net.URISyntaxException;
 import java.sql.*;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -1056,9 +1051,6 @@ public class JDBCatalogue extends MyDataSource {
         }
     }
 
-    public void registerStorageSite(String resourceURI, Credential credentials, int currentNum, int currentSize, int quotaNum, int quotaSize, Connection connection) throws CatalogueException {
-    }
-
     public void setLocationPreferences(Connection connection, Long uid, List<String> locationPreferences, Boolean includePrivate) throws SQLException {
         if (locationPreferences != null && !locationPreferences.isEmpty()) {
             String storageSitesQuery = "select storageSiteId,resourceUri,private from storage_site_table "
@@ -1582,7 +1574,10 @@ public class JDBCatalogue extends MyDataSource {
     }
 
     public int getReplicationQueueLen() throws SQLException {
-        return getReplicationQueueLen(getConnection());
+        try (Connection connection = getConnection()) {
+            return getReplicationQueueLen(connection);
+        }
+
     }
 
     public int getReplicationQueueLen(Connection connection) throws SQLException {
@@ -1603,7 +1598,9 @@ public class JDBCatalogue extends MyDataSource {
     }
 
     public List<LogicalData> getReplicationQueue() throws SQLException {
-        return getReplicationQueue(getConnection());
+        try (Connection connection = getConnection()) {
+            return getReplicationQueue(connection);
+        }
     }
 
     public List<LogicalData> getReplicationQueue(Connection connection) throws SQLException {
@@ -1661,12 +1658,16 @@ public class JDBCatalogue extends MyDataSource {
             if (rs.next()) {
                 return rs.getLong(1);
             }
+        } finally {
+//            connection.close();
         }
         return null;
     }
 
     public Long getReplicationQueueSize() throws SQLException {
-        return getReplicationQueueSize(getConnection());
+        try (Connection connection = getConnection()) {
+            return getReplicationQueueSize(connection);
+        }
     }
 
     private Connection checkConnection(Connection connection) throws SQLException {

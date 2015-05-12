@@ -15,10 +15,8 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
-import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.crypto.KeyGenerator;
 import javax.crypto.NoSuchPaddingException;
 import javax.naming.NamingException;
 import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
@@ -86,7 +84,7 @@ public class RegisterSRMSites {
         String resourceURI = "";
         Credential credentials = new Credential();
 
-        cat.registerStorageSite(resourceURI, credentials, -1, -1, -1, -1, null);
+//        cat.registerStorageSite(resourceURI, credentials, -1, -1, -1, -1, null);
     }
 
     private static void debug(String msg) {
