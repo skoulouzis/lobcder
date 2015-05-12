@@ -614,31 +614,37 @@ public class WebDataResource implements PropFindableResource, Resource,
                 StringBuilder sb = new StringBuilder();
                 if (getLogicalData().isFolder()) {
                     List<? extends WebDataResource> children = (List<? extends WebDataResource>) ((WebDataDirResource) (this)).getChildren();
-                    sb.append("[");
-                    for (WebDataResource r : children) {
-                        if (r instanceof WebDataFileResource) {
+                    if (children != null) {
+                        sb.append("[");
+                        for (WebDataResource r : children) {
+                            if (r instanceof WebDataFileResource) {
 //                                    sb.append("'").append(r.getName()).append("' : [");
-                            sb.append(r.getName()).append(" : [");
-                            Collection<PDRIDescr> pdris = getCatalogue().getPdriDescrByGroupId(r.getLogicalData().getPdriGroupId(), connection);
-                            for (PDRIDescr p : pdris) {
+                                sb.append(r.getName()).append(" : [");
+                                Collection<PDRIDescr> pdris = getCatalogue().getPdriDescrByGroupId(r.getLogicalData().getPdriGroupId(), connection);
+                                for (PDRIDescr p : pdris) {
 //                                        sb.append("'").append(p.getResourceUrl()).append("/").append(p.getName()).append("',");
-                                sb.append(p.getResourceUrl()).append("/").append(p.getName()).append(",");
+                                    sb.append(p.getResourceUrl()).append("/").append(p.getName()).append(",");
+                                }
+                                sb.replace(sb.lastIndexOf(","), sb.length(), "").append("],");
                             }
-                            sb.replace(sb.lastIndexOf(","), sb.length(), "").append("],");
                         }
                     }
+
                 } else {
                     Collection<PDRIDescr> pdris = getCatalogue().getPdriDescrByGroupId(getLogicalData().getPdriGroupId(), connection);
-                    sb.append("[");
-                    for (PDRIDescr p : pdris) {
+                    if (pdris != null) {
+                        sb.append("[");
+                        for (PDRIDescr p : pdris) {
 //                                sb.append("'").append(p.getResourceUrl()).append("/").append(p.getName()).append("'");
-                        sb.append(p.getResourceUrl());
-                        if (!sb.toString().endsWith("/")) {
-                            sb.append("/");
+                            sb.append(p.getResourceUrl());
+                            if (!sb.toString().endsWith("/")) {
+                                sb.append("/");
+                            }
+                            sb.append(p.getName());
+                            sb.append(",");
                         }
-                        sb.append(p.getName());
-                        sb.append(",");
                     }
+
                 }
                 if (sb.toString().contains(",")) {
                     sb.replace(sb.lastIndexOf(","), sb.length(), "");
@@ -658,17 +664,19 @@ public class WebDataResource implements PropFindableResource, Resource,
             if (getLogicalData().isFolder()) {
                 List<? extends WebDataResource> children = (List<? extends WebDataResource>) ((WebDataDirResource) (this)).getChildren();
                 sb.append("[");
-                for (WebDataResource r : children) {
-                    if (r instanceof WebDataFileResource) {
-                        sb.append("'").append(r.getName()).append("' : [");
-                        Collection<PDRIDescr> pdris = getCatalogue().getPdriDescrByGroupId(r.getLogicalData().getPdriGroupId(), connection);
-                        for (PDRIDescr p : pdris) {
-                            sb.append("[");
-                            sb.append(p.getResourceUrl()).append(",");
-                            sb.append(p.getEncrypt());
-                            sb.append("],");
+                if (children != null && !children.isEmpty()) {
+                    for (WebDataResource r : children) {
+                        if (r instanceof WebDataFileResource) {
+                            sb.append("'").append(r.getName()).append("' : [");
+                            Collection<PDRIDescr> pdris = getCatalogue().getPdriDescrByGroupId(r.getLogicalData().getPdriGroupId(), connection);
+                            for (PDRIDescr p : pdris) {
+                                sb.append("[");
+                                sb.append(p.getResourceUrl()).append(",");
+                                sb.append(p.getEncrypt());
+                                sb.append("],");
+                            }
+                            sb.replace(sb.lastIndexOf(","), sb.length(), "").append("],");
                         }
-                        sb.replace(sb.lastIndexOf(","), sb.length(), "").append("],");
                     }
                 }
             } else {
