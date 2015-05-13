@@ -169,7 +169,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
 
     @Override
     public List<? extends Resource> getChildren() throws NotAuthorizedException {
-        WebDataDirResource.log.log(Level.FINE, "getChildren() for {0}", getPath());
+//        WebDataDirResource.log.log(Level.FINE, "getChildren() for {0}", getPath());
         try {
             try (Connection connection = getCatalogue().getConnection()) {
                 try {
@@ -348,7 +348,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
 
     @Override
     public void delete() throws NotAuthorizedException, ConflictException, BadRequestException {
-        WebDataDirResource.log.log(Level.FINE, "delete() for {0}", getPath());
+//        WebDataDirResource.log.log(Level.FINE, "delete() for {0}", getPath());
         if (getPath().isRoot()) {
             throw new ConflictException(this, "Cannot delete root");
         }
@@ -439,19 +439,19 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
 
     @Override
     public Long getMaxAgeSeconds(Auth auth) {
-        WebDataDirResource.log.log(Level.FINE, "getMaxAgeSeconds() for {0}", getPath());
+//        WebDataDirResource.log.log(Level.FINE, "getMaxAgeSeconds() for {0}", getPath());
         return null;
     }
 
     @Override
     public String getContentType(String accepts) {
-        WebDataDirResource.log.log(Level.FINE, "getContentType({0}) for {1}", new Object[]{accepts, getPath()});
+//        WebDataDirResource.log.log(Level.FINE, "getContentType({0}) for {1}", new Object[]{accepts, getPath()});
         return "text/html";
     }
 
     @Override
     public Long getContentLength() {
-        WebDataDirResource.log.log(Level.FINE, "getContentLength() for {0}", getPath());
+//        WebDataDirResource.log.log(Level.FINE, "getContentLength() for {0}", getPath());
         return null;
     }
 
@@ -487,7 +487,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
     @Override
     public Date getCreateDate() {
         Date date = new Date(getLogicalData().getCreateDate());
-        WebDataDirResource.log.log(Level.FINE, "getCreateDate() for {0} date: " + date, getPath());
+//        WebDataDirResource.log.log(Level.FINE, "getCreateDate() for {0} date: " + date, getPath());
         return new Date(getLogicalData().getCreateDate());
     }
 
