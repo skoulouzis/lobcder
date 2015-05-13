@@ -101,7 +101,7 @@ public class WebDataResource implements PropFindableResource, Resource,
             principalHolder.set(principal);
 //            WebDataResource.log.log(Level.FINE, "getUserId: {0}", principal.getUserId());
 //            WebDataResource.log.log(Level.FINE, "getRolesStr: {0}", principal.getRolesStr());
-            String msg = "From: " + fromAddress + " user: " + principal.getUserId() + " password: " + Base64.encodeBase64String(password.getBytes()) + " roles:" + principal.getRolesStr();
+            String msg = "From: " + fromAddress + " user: " + principal.getUserId() + " password: XXXX" + " roles:" + principal.getRolesStr();
             WebDataResource.log.log(Level.INFO, msg);
         }
         return principal;
