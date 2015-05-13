@@ -331,7 +331,6 @@ public class ReplicateSweep implements Runnable {
                     PDRI destinationPdri = PDRIFactory.getFactory().createInstance(destinationDescr);
                     destinationPdri.replicate(sourcePdri);
                     result = destinationPdri.exists(destinationPdri.getFileName());
-                    log.log(Level.FINE, "result: " + result);
                     long srcLen = sourcePdri.getLength();
                     if (result == false || destinationPdri.getLength() != srcLen) {
                         log.log(Level.WARNING, "Failed to replicate {0}/{1} to {2}/{3}", new Object[]{sourcePdri.getURI(), sourcePdri.getFileName(), destinationPdri.getURI(), destinationPdri.getFileName()});
