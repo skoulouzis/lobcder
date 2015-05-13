@@ -101,7 +101,7 @@ public class WebDataResource implements PropFindableResource, Resource,
             principalHolder.set(principal);
 //            WebDataResource.log.log(Level.FINE, "getUserId: {0}", principal.getUserId());
 //            WebDataResource.log.log(Level.FINE, "getRolesStr: {0}", principal.getRolesStr());
-            String msg = "From: " + fromAddress + " user: " + principal.getUserId() + " password: XXXX" + " roles:" + principal.getRolesStr();
+            String msg = "From: " + fromAddress + " user: " + principal.getUserId() + " password: XXXX";
             WebDataResource.log.log(Level.INFO, msg);
         }
         return principal;
@@ -598,8 +598,8 @@ public class WebDataResource implements PropFindableResource, Resource,
             case PUT:
             case POST:
 
-                String redirect = "http://njdsndcij:8080/" + request.getAbsolutePath();
-                WebDataResource.log.log(Level.FINE, "Redirect? " + request.getAbsolutePath());
+//                String redirect = "http://njdsndcij:8080/" + request.getAbsolutePath();
+//                WebDataResource.log.log(Level.FINE, "Redirect? " + request.getAbsolutePath());
                 return null;
             default:
                 return null;
