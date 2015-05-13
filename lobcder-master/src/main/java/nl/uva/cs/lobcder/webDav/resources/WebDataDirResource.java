@@ -49,7 +49,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
 
     public WebDataDirResource(@Nonnull LogicalData logicalData, Path path, @Nonnull JDBCatalogue catalogue, @Nonnull List<AuthI> authList) {
         super(logicalData, path, catalogue, authList);
-        WebDataDirResource.log.log(Level.FINE, "Init. WebDataDirResource:  {0}", getPath());
+//        WebDataDirResource.log.log(Level.FINE, "Init. WebDataDirResource:  {0}", getPath());
         mimeTypeMap.put("mp4", "video/mp4");
         mimeTypeMap.put("pdf", "application/pdf");
         mimeTypeMap.put("tex", "application/x-tex");
