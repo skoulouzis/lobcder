@@ -171,7 +171,7 @@ public class BasicAuthFilter implements Filter {
                 int contentLen = ((HttpServletRequest) httpRequest).getContentLength();
                 String contentType = ((HttpServletRequest) httpRequest).getContentType();
 
-                String authorizationHeader = ((HttpServletRequest) httpRequest).getHeader("authorization");
+//                String authorizationHeader = ((HttpServletRequest) httpRequest).getHeader("authorization");
 //                String userNpasswd = "";
 //                if (authorizationHeader != null) {
 //                    userNpasswd = authorizationHeader.split("Basic ")[1];

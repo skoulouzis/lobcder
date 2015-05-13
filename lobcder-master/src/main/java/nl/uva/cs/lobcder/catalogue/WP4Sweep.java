@@ -131,8 +131,8 @@ public class WP4Sweep implements Runnable {
             this.uri = uri;
 
             client = Client.create();
-            client.setReadTimeout(120000);
-            client.setConnectTimeout(120000);
+            client.setReadTimeout(240000);
+            client.setConnectTimeout(240000);
 
             /*
              HttpClient apacheClient = HttpClientBuilder.create().build();
