@@ -101,3 +101,23 @@ ORDER by logdate;
 ------------------------------------tsung----------------------------------
 
 tsung-recorder -u -I 193.40.xxx.xxx -P 3128 start
+
+
+
+--------------------------Install test gridFTP------------
+ sudo apt-get update && sudo apt-get upgrade && sudo apt-get install wget
+ wget http://toolkit.globus.org/ftppub/gt6/installers/repo/globus-toolkit-repo_latest_all.deb
+sudo dpkg -i globus-toolkit-repo_latest_all.deb
+sudo apt-get update && sudo apt-get install globus-gridftp globus-simple-ca
+
+#CA certs 
+ls /etc/grid-security/certificates/*.0
+/etc/grid-security/certificates/*.signing_policy
+
+grid-cert-request
+sudo grid-ca-sign -in ~/.globus/usercert_request.pem -out ~/.globus/usercert.pem
+
+grid-proxy-init
+
+sudo /etc/init.d/globus-gridftp-server stop
+globus-url-copy -v file:/etc/group gsiftp://127.0.0.1/tmp/group
