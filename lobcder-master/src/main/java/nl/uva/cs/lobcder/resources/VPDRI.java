@@ -130,31 +130,6 @@ public class VPDRI implements PDRI {
 
         if (StringUtil.equals(authScheme, ServerInfo.GSI_AUTH)) {
             GridHelper.initGridProxy(username, password, context, destroyCert);
-//            copyVomsAndCerts();
-//            GridProxy gridProxy = context.getGridProxy();
-//            if (destroyCert) {
-//                gridProxy.destroy();
-//                gridProxy = null;
-//            }
-//            if (gridProxy == null || gridProxy.isValid() == false) {
-//                context.setProperty("grid.proxy.location", Constants.PROXY_FILE);
-//                // Default to $HOME/.globus
-//                context.setProperty("grid.certificate.location", Global.getUserHome() + "/.globus");
-//                String vo = username;
-//                context.setProperty("grid.proxy.voName", vo);
-//                context.setProperty("grid.proxy.lifetime", "200");
-//                gridProxy = context.getGridProxy();
-//                if (gridProxy.isValid() == false) {
-//                    gridProxy.setEnableVOMS(true);
-//                    gridProxy.setDefaultVOName(vo);
-//                    gridProxy.createWithPassword(password);
-//                    if (gridProxy.isValid() == false) {
-//                        throw new VlException("Created Proxy is not Valid!");
-//                    }
-//                    gridProxy.saveProxyTo(Constants.PROXY_FILE);
-////                    proxyCache.put(password, gridProxy);
-//                }
-//            }
         }
 
         if (StringUtil.equals(authScheme, ServerInfo.PASSWORD_AUTH)

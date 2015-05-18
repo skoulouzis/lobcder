@@ -119,11 +119,11 @@ public class GridHelper {
 //            context.setProperty("grid.proxy.location", Constants.PROXY_FILE);
 //            context.setProperty("grid.certificate.location", Global.getUserHome() + "/.globus");
 //            context.setProperty("grid.proxy.lifetime", "100");
-            context.setProperty("grid.proxy.voName", vo);
+//            context.setProperty("grid.proxy.voName", vo);
             gridProxy = context.getGridProxy();
 //            if (gridProxy.isValid() == false) {
-            gridProxy.setEnableVOMS(true);
-            gridProxy.setDefaultVOName(vo);
+//            gridProxy.setEnableVOMS(true);
+//            gridProxy.setDefaultVOName(vo);
             gridProxy.createWithPassword(password);
             if (gridProxy.isValid() == false) {
                 throw new VlException("Created Proxy is not Valid!");
