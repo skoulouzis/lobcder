@@ -15,8 +15,8 @@ apt-get -q -y --force-yes  install mysql-server mysql-client oracle-java7-instal
 cd 
 
 
-wget http://apache.mirror.triple-it.nl/tomcat/tomcat-6/v6.0.43/bin/apache-tomcat-6.0.43.tar.gz
-tar -xavf apache-tomcat-6.0.43.tar.gz
+wget http://apache.mirror.triple-it.nl/tomcat/tomcat-6/v6.0.44/bin/apache-tomcat-6.0.44.tar.gz
+tar -xavf apache-tomcat-6.0.??.tar.gz
 
 wget https://raw.githubusercontent.com/skoulouzis/lobcder/dev/lobcder-master/scripts/deployMaster.sh
 chmod +x deployMaster.sh
