@@ -16,24 +16,25 @@ useradd w -m -p $pass
 
 
 wget http://apache.mirror.triple-it.nl/tomcat/tomcat-6/v6.0.44/bin/apache-tomcat-6.0.44.tar.gz
-tar -xavf apache-tomcat-6.0.??.tar.gz
+tar -xavf apache-tomcat-6.0.44.tar.gz
+catalina=apache-tomcat-6.0.44
 
-./apache-tomcat-6.0.43/bin/shutdown.sh
+./$catalina/bin/shutdown.sh
 git clone https://github.com/skoulouzis/lobcder.git
 cd lobcder/lobcder-worker/
 mvn install 
 rm -r target/lobcder-worker
 mv target/lobcder-worker-?.?-SNAPSHOT target/lobcder-worker
 cd 
-cp -r lobcder/lobcder-worker/target/lobcder-worker apache-tomcat-6.0.43/webapps/
-./apache-tomcat-6.0.43/bin/startup.sh
+cp -r lobcder/lobcder-worker/target/lobcder-worker $catalina/webapps/
+./$catalina/bin/startup.sh
 
 
-sleep 70 
-for i in {1..6}; do ping -c 1 192.168.100.$i; done
+#sleep 70 
+#for i in {1..6}; do ping -c 1 192.168.100.$i; done
 
 
-for i in {1..7}; do wget http://localhost:8080/lobcder-worker/2/1; ./apache-tomcat-6.0.43/bin/shutdown.sh; ./apache-tomcat-6.0.43/bin/startup.sh;  done
+#for i in {1..7}; do wget http://localhost:8080/lobcder-worker/2/1; ./$catalina/bin/shutdown.sh; ./$$catalina/bin/startup.sh;  done
 
 
 
