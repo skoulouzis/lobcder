@@ -15,8 +15,8 @@ pass=$(perl -e 'print crypt($ARGV[0], "password")' $password)
 useradd w -m -p $pass
 
 
-wget http://apache.mirror.triple-it.nl/tomcat/tomcat-6/v6.0.43/bin/apache-tomcat-6.0.43.tar.gz
-tar -xavf apache-tomcat-6.0.43.tar.gz
+wget http://apache.mirror.triple-it.nl/tomcat/tomcat-6/v6.0.44/bin/apache-tomcat-6.0.44.tar.gz
+tar -xavf apache-tomcat-6.0.??.tar.gz
 
 ./apache-tomcat-6.0.43/bin/shutdown.sh
 git clone https://github.com/skoulouzis/lobcder.git
