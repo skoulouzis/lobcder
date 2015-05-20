@@ -25,6 +25,8 @@ public class PropertiesHelper {
     public static final String propertiesPath = "lobcder.properties";
 //    public static final String cachePropertiesPath = "cache.properties";
 
+
+
     public static enum PREDICTION_TYPE {
 
         method,
@@ -130,6 +132,10 @@ public class PropertiesHelper {
 
     public static Boolean useBulckMetadataRepository() throws IOException {
         return Boolean.valueOf(getProperties().getProperty("metadata.repository.bulck", "true"));
+    }
+    
+        public static int getMetadataRepositoryNumOfElem() throws IOException {
+        return Integer.valueOf(getProperties().getProperty("metadata.repository.num.of.elements", "500"));
     }
 
 //    public static String getAuthRemoteURL() throws IOException {

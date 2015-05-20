@@ -48,11 +48,12 @@ public class WP4Sweep implements Runnable {
 
     private final DataSource datasource;
     private final String metadataRepository;
+    private static int limit;
 
     public WP4Sweep(DataSource datasource) throws IOException {
         this.datasource = datasource;
         metadataRepository = PropertiesHelper.getMetadataRepositoryURL();
-
+        limit = PropertiesHelper.getMetadataRepositoryNumOfElem();
     }
 
     static enum FileType {
@@ -297,7 +298,7 @@ public class WP4Sweep implements Runnable {
             ResultSet rs = s1.executeQuery("SELECT uid, ownerId, datatype, ldName, id, views "
                     + "FROM ldata_table "
                     + "JOIN wp4_table ON uid=local_id "
-                    + "WHERE need_create=TRUE LIMIT 1000");
+                    + "WHERE need_create=TRUE LIMIT "+limit);
             int size = rs.getFetchSize();
             resourceMetadataList = new ArrayList<>(size);
             resourceMetadataMap = new HashMap<>(size);
@@ -345,7 +346,7 @@ public class WP4Sweep implements Runnable {
         Map<Long, Long> resourceMetadataMap;
         try (Statement s1 = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY)) {
             ResultSet rs = s1.executeQuery("SELECT ownerId, ldName, global_id, views, local_id, id FROM ldata_table "
-                    + "JOIN wp4_table ON uid=local_id WHERE need_update=TRUE AND global_id IS NOT NULL LIMIT 1000");
+                    + "JOIN wp4_table ON uid=local_id WHERE need_update=TRUE AND global_id IS NOT NULL LIMIT "+limit);
             int size = rs.getFetchSize();
             resourceMetadataList = new ArrayList<>(size);
             resourceMetadataMap = new HashMap<>(size);
@@ -385,7 +386,7 @@ public class WP4Sweep implements Runnable {
         Map<String, Long> deleteMetadataMap = new HashMap<>();
         Set<Long> deleteMetadataSet = new HashSet<>();
         try (Statement s1 = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY)) {
-            ResultSet rs = s1.executeQuery("SELECT global_id, id FROM wp4_table WHERE local_id IS NULL LIMIT 1000");
+            ResultSet rs = s1.executeQuery("SELECT global_id, id FROM wp4_table WHERE local_id IS NULL LIMIT  "+limit);
             while (rs.next()) {
                 String globalId = rs.getString(1);
                 if (globalId == null) {
@@ -398,27 +399,27 @@ public class WP4Sweep implements Runnable {
         try (PreparedStatement s2 = connection.prepareStatement("DELETE FROM wp4_table WHERE id=?")) {
             ResourceMetadataList rml = wp4Connector.delete(deleteMetadataMap.keySet());
             if (rml != null) {
-                for(Long id : deleteMetadataMap.values()){
+                for (Long id : deleteMetadataMap.values()) {
                     s2.setLong(1, id);
                     s2.addBatch();
                 }
                 /*
-                for (ResourceMetadata rm : rml.getResourceMetadataList()) {
-                    s2.setLong(1, deleteMetadataMap.get(rm.getGlobalID()));
-                    s2.addBatch();
-                }
-                */
+                 for (ResourceMetadata rm : rml.getResourceMetadataList()) {
+                 s2.setLong(1, deleteMetadataMap.get(rm.getGlobalID()));
+                 s2.addBatch();
+                 }
+                 */
             }
             for (Long id : deleteMetadataSet) {
                 s2.setLong(1, id);
                 s2.addBatch();
             }
             /*
-            if ((rml != null && rml.getResourceMetadataList() != null && !rml.getResourceMetadataList().isEmpty()) || !deleteMetadataSet.isEmpty()) {
-                s2.executeBatch();
-            }
-            */
-            if((rml != null) && (!deleteMetadataMap.isEmpty() || !deleteMetadataSet.isEmpty())) {
+             if ((rml != null && rml.getResourceMetadataList() != null && !rml.getResourceMetadataList().isEmpty()) || !deleteMetadataSet.isEmpty()) {
+             s2.executeBatch();
+             }
+             */
+            if ((rml != null) && (!deleteMetadataMap.isEmpty() || !deleteMetadataSet.isEmpty())) {
                 s2.executeBatch();
             }
         }
