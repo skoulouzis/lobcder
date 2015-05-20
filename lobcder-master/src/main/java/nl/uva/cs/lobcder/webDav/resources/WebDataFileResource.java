@@ -255,7 +255,7 @@ public class WebDataFileResource extends WebDataResource implements
                     index++;
                 }
             }
-            Logger.getLogger(WebDataFileResource.class.getName()).log(Level.FINE, "Selecting:{0}", new Object[]{array[index]});
+            Logger.getLogger(WebDataFileResource.class.getName()).log(Level.FINEST, "Selecting:{0}", new Object[]{array[index]});
             return array[index];
         }
         int itemIndex = new Random().nextInt((int) sumOfSpeed);
@@ -266,7 +266,7 @@ public class WebDataFileResource extends WebDataResource implements
                 speed = Double.valueOf(0);
             }
             if (itemIndex < speed) {
-                Logger.getLogger(WebDataFileResource.class.getName()).log(Level.FINE, "Selecting:{0}  with speed: {1}", new Object[]{p.getResourceUrl(), speed});
+                Logger.getLogger(WebDataFileResource.class.getName()).log(Level.FINEST, "Selecting:{0}  with speed: {1}", new Object[]{p.getResourceUrl(), speed});
                 return p;
             }
             itemIndex -= speed;
@@ -282,7 +282,7 @@ public class WebDataFileResource extends WebDataResource implements
                 index++;
             }
         }
-
+        Logger.getLogger(WebDataFileResource.class.getName()).log(Level.FINEST, "Selecting: " + array[index].getResourceUrl());
         return array[index];
     }
 
@@ -290,9 +290,11 @@ public class WebDataFileResource extends WebDataResource implements
         InputStream in = null;
         PDRI pdri = null;
         double start = 0;
+        WebDataFileResource.log.log(Level.INFO, "Start for " + getLogicalData().getName());
         try {
             PDRIDescr pdriDescr = selectBestPDRI(pdris);
             pdri = PDRIFactory.getFactory().createInstance(pdriDescr, false);
+            WebDataFileResource.log.log(Level.INFO, "pdri: " + pdri.getURI());
             if (pdri != null) {
                 start = System.currentTimeMillis();
                 in = pdri.getData();
@@ -478,6 +480,9 @@ public class WebDataFileResource extends WebDataResource implements
         Iterator<PDRIDescr> it;
         try {
             List<PDRIDescr> pdris = getCatalogue().getPdriDescrByGroupId(getLogicalData().getPdriGroupId());
+            if(pdris.size()<=0){
+                throw new NotFoundException("File inconsistency! Could not find physical file!");
+            }
 //            it = getCatalogue().getPdriDescrByGroupId(getLogicalData().getPdriGroupId()).iterator();
             if (range != null) {
                 if (range.getFinish() == null) {
