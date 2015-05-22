@@ -6,7 +6,9 @@ package nl.uva.cs.lobcder.optimization;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -49,7 +51,14 @@ public class SDNControllerClient {
         if (graph == null) {
             graph = new SimpleWeightedGraph<>(DefaultWeightedEdge.class);
         }
-        List<SDNSweep.Switch> switches = SDNSweep.getSwitches();
+        Collection<SDNSweep.Switch> switchesColl = SDNSweep.getSwitches();
+
+        List<SDNSweep.Switch> switches;
+        if (switchesColl instanceof List) {
+            switches = (List) switchesColl;
+        } else {
+            switches = new ArrayList(switchesColl);
+        }
         for (int i = 0; i < switches.size(); i++) {
             List<Port> ports = switches.get(i).ports;
             if (ports != null) {
@@ -78,7 +87,7 @@ public class SDNControllerClient {
             }
         }
 
-//        dest = "192.168.100.1";
+        dest = "192.168.100.1";
 //        Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, "Destination: {0}", new Object[]{dest});
         if (!graph.containsVertex(dest)) {
             graph.addVertex(dest);
@@ -126,7 +135,7 @@ public class SDNControllerClient {
                     } else {
                         e2 = graph.getEdge(ip, vertex);
                     }
-//                    Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, "vertex: {0}", new Object[]{vertex});
+                    Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, "vertex: {0}", new Object[]{vertex});
                     graph.setEdgeWeight(e2, getCost(ip, vertex));
                 }
             }

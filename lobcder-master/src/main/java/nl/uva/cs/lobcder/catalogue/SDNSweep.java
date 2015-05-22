@@ -24,6 +24,7 @@ import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.json.JSONConfiguration;
 import java.io.IOException;
 import java.net.URL;
+import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -41,6 +42,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import lombok.Getter;
 import lombok.extern.java.Log;
+import nl.uva.cs.lobcder.rest.wrappers.AttachmentPoint;
 import nl.uva.cs.lobcder.rest.wrappers.Link;
 import nl.uva.cs.lobcder.rest.wrappers.NetworkEntity;
 import nl.uva.cs.lobcder.util.PropertiesHelper;
@@ -71,8 +73,8 @@ public class SDNSweep implements Runnable {
     private static Map<String, NetworkEntity> networkEntitesCache;
     @Getter
     private static List<Link> switchLinks;
-    @Getter
-    private static List<Switch> switches;
+    private static Map<String, Switch> switches;
+//    private static List<Switch> switches;
     public static long interval = 800;
     @Getter
     private static Map<String, Double> statsMap;
@@ -128,10 +130,9 @@ public class SDNSweep implements Runnable {
     }
 
     private void init() {
+        getAllSwitches();
         getAllNetworkEntites();
         getAllSwitchLinks();
-        getAllSwitches();
-
         if (!flowPushed) {
             pushFlowIntoOnePort();
         }
@@ -358,14 +359,27 @@ public class SDNSweep implements Runnable {
             List<NetworkEntity> neList = res.get(new GenericType<List<NetworkEntity>>() {
             });
             for (NetworkEntity ne : neList) {
-                String ipKey = null;
+                String ipKey = ne.getIpv4().get(0);
                 for (String ip : ne.getIpv4()) {
                     if (!ip.startsWith("0")) {
                         ipKey = ip;
                         break;
                     }
                 }
+                String swIPFromFlukes = null;
                 if (!ne.getIpv4().isEmpty() && !networkEntitesCache.containsKey(ipKey)) {
+                    if (flukesTopology != null) {
+                        swIPFromFlukes = findAttachedSwitch(ipKey);
+                        String swDPI = switches.get(swIPFromFlukes).dpid;
+                        List<AttachmentPoint> ap = new ArrayList<>();
+                        for (AttachmentPoint p : ne.getAttachmentPoint()) {
+                            if (p.getSwitchDPID().equals(swDPI)) {
+                                ap.add(p);
+                                break;
+                            }
+                        }
+                        ne.setAttachmentPoint(ap);
+                    }
                     networkEntitesCache.put(ipKey, ne);
                 }
             }
@@ -373,9 +387,70 @@ public class SDNSweep implements Runnable {
         return networkEntitesCache.values();
     }
 
-    public static void doSomething(Node node) {
-        // do something with the current node instead of System.out
-        Logger.getLogger(SDNSweep.class.getName()).log(Level.INFO, node.getNodeName());
+    private String findAttachedSwitch(String ipKey) {
+        NodeList desc = flukesTopology.getElementsByTagName("rdf:Description");
+        String ipForTop = ipKey.replaceAll("\\.", "-");
+        String linkNum = null;
+        String swName = null;
+        String swIP = null;
+
+        for (int i = 0; i < desc.getLength(); i++) {
+            Node n = desc.item(i);
+            NamedNodeMap att = n.getAttributes();
+            for (int j = 0; j < att.getLength(); j++) {
+                Node n2 = att.item(j);
+                if (n2.getNodeValue().contains(ipForTop) && n2.getNodeValue().contains("Link")) {
+                    linkNum = n2.getNodeValue().substring(n2.getNodeValue().lastIndexOf("#Link") + 1);
+                    linkNum = linkNum.substring(0, linkNum.indexOf("-"));
+                    break;
+                }
+            }
+            if (linkNum != null) {
+                break;
+            }
+        }
+        if (linkNum != null) {
+            for (int i = 0; i < desc.getLength(); i++) {
+                Node n = desc.item(i);
+                NamedNodeMap att = n.getAttributes();
+                for (int j = 0; j < att.getLength(); j++) {
+                    Node n2 = att.item(j);
+                    if (n2.getNodeValue().contains(linkNum) && n2.getNodeValue().contains("Switch")) {
+                        swName = n2.getNodeValue().substring(n2.getNodeValue().lastIndexOf(linkNum) + linkNum.length() + 1);
+//                        Logger.getLogger(SDNSweep.class.getName()).log(Level.INFO, " swName: " + swName);
+                        break;
+                    }
+                }
+                if (swName != null) {
+                    break;
+                }
+            }
+        }
+        if (swName != null) {
+            for (int i = 0; i < desc.getLength(); i++) {
+                Node n = desc.item(i);
+                NamedNodeMap att = n.getAttributes();
+                for (int j = 0; j < att.getLength(); j++) {
+                    Node n2 = att.item(j);
+
+                    if (n2.getNodeValue().contains(swName + "-ip")) {
+                        swIP = n2.getNodeValue().substring(n2.getNodeValue().lastIndexOf(swName + "-ip") + 1 + (swName + "ip-").length());
+//                        Logger.getLogger(SDNSweep.class.getName()).log(Level.INFO, " swIP: " + swIP);
+                        break;
+                    }
+                }
+                if (swIP != null) {
+                    break;
+                }
+            }
+        }
+        if (swIP != null) {
+            return swIP.replaceAll("-", "\\.");
+        }
+        return null;
+    }
+
+    public void doSomething(Node node) {
         NodeList nodeList = node.getChildNodes();
         for (int i = 0; i < nodeList.getLength(); i++) {
             Node currentNode = nodeList.item(i);
@@ -384,7 +459,6 @@ public class SDNSweep implements Runnable {
                 doSomething(currentNode);
             }
         }
-
     }
 
     public void pushFlows(List<String> rules) {
@@ -412,20 +486,29 @@ public class SDNSweep implements Runnable {
         return switchLinks;
     }
 
-    private List<Switch> getAllSwitches() {
+    private Collection<Switch> getAllSwitches() {
         if (switches == null) {
+            switches = new HashMap<>();
             WebResource webResource = client.resource(uri + ":" + floodlightPort);
             WebResource res = webResource.path("wm").path("core").path("controller").path("switches").path("json");
-            switches = res.get(new GenericType<List<Switch>>() {
+            List<Switch> switchesList = res.get(new GenericType<List<Switch>>() {
             });
+            for (Switch s : switchesList) {
+                String swIP = s.inetAddress.substring(1, s.inetAddress.lastIndexOf(":"));
+                switches.put(swIP, s);
+            }
         }
-        return switches;
+        return switches.values();
+    }
+
+    public static Collection<Switch> getSwitches() {
+        return switches.values();
     }
 
     private void pushFlowIntoOnePort() {
 
-        String s1 = getAllSwitches().get(0).dpid;
-        String s2 = getAllSwitches().get(1).dpid;
+        String s1 = getAllSwitches().iterator().next().dpid;// get(0).dpid;
+        String s2 = getAllSwitches().iterator().next().dpid; //get(1).dpid;
         Number s1ToS2Port = 0;
         Number s2ToS1Port = 0;
         for (Link l : getAllSwitchLinks()) {
@@ -584,6 +667,7 @@ public class SDNSweep implements Runnable {
     @XmlRootElement
     @XmlAccessorType(XmlAccessType.FIELD)
     public static class Switch {
+
         @XmlElement(name = "actions")
         public int actions;
         @XmlElement(name = "attributes")
