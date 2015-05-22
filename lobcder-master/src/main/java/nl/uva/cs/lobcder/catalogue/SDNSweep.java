@@ -23,6 +23,7 @@ import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.json.JSONConfiguration;
 import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -31,11 +32,13 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.sql.DataSource;
-import javax.ws.rs.core.MediaType;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import lombok.Getter;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.rest.wrappers.Link;
@@ -45,6 +48,12 @@ import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.jgrapht.graph.DefaultWeightedEdge;
 import org.jgrapht.graph.SimpleWeightedGraph;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 /**
  *
@@ -101,13 +110,21 @@ public class SDNSweep implements Runnable {
     private static Map<String, Double> averageLinkUsageMap = new HashMap<>();
     private long iterations = 1;
     private static boolean flowPushed = true;
+    private static String topologyURL;
+    private static Document flukesTopology;
 
-    public SDNSweep(DataSource datasource) throws IOException {
+    public SDNSweep(DataSource datasource) throws IOException, ParserConfigurationException, SAXException {
         this.datasource = datasource;
         uri = PropertiesHelper.getSDNControllerURL();
         ClientConfig clientConfig = new DefaultClientConfig();
         clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
         client = Client.create(clientConfig);
+        topologyURL = PropertiesHelper.getTopologyURL();
+        if (topologyURL != null) {
+            DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+            DocumentBuilder db = dbf.newDocumentBuilder();
+            flukesTopology = db.parse(new URL(topologyURL).openStream());
+        }
     }
 
     private void init() {
@@ -247,8 +264,8 @@ public class SDNSweep implements Runnable {
                 newValue = Double.valueOf(stats2.get(i).receivePackets - stats1.get(i).receivePackets);
                 val = ((newValue > oldValue) ? newValue : oldValue);
                 receivePacketsMap.put(key, val);
-                
-                
+
+
                 val = transmitDroppedMap.get(key);
                 oldValue = ((val == null) ? 1.0 : val);
                 newValue = Double.valueOf(stats2.get(i).transmitDropped - stats1.get(i).transmitDropped);
@@ -315,7 +332,7 @@ public class SDNSweep implements Runnable {
         WebResource res = webResource.path("wm").path("core").path("switch").path(dpi).path("port").path("json");
         String output = res.get(String.class);
 //        String out = output.substring(27, output.length() - 1);
-          String out = output.substring(output.indexOf("[{"), output.length() - 1);
+        String out = output.substring(output.indexOf("[{"), output.length() - 1);
         ObjectMapper mapper = new ObjectMapper();
         return mapper.readValue(out, mapper.getTypeFactory().constructCollectionType(List.class, FloodlightStats.class));
     }
@@ -336,18 +353,38 @@ public class SDNSweep implements Runnable {
         if (networkEntitesCache.isEmpty() || iterations % 5 == 0) {
             WebResource webResource = client.resource(uri + ":" + floodlightPort);
             WebResource res = null;
-            // http://145.100.133.131:8080/wm/device/?getIpv4()=192.168.100.1
+            // http://145.100.133.131:8080/wm/device/?getIpv4=192.168.100.1
             res = webResource.path("wm").path("device/");
             List<NetworkEntity> neList = res.get(new GenericType<List<NetworkEntity>>() {
             });
-
             for (NetworkEntity ne : neList) {
-                if (!ne.getIpv4().isEmpty() && !networkEntitesCache.containsKey(ne.getIpv4().get(0))) {
-                    networkEntitesCache.put(ne.getIpv4().get(0), ne);
+                String ipKey = null;
+                for (String ip : ne.getIpv4()) {
+                    if (!ip.startsWith("0")) {
+                        ipKey = ip;
+                        break;
+                    }
+                }
+                if (!ne.getIpv4().isEmpty() && !networkEntitesCache.containsKey(ipKey)) {
+                    networkEntitesCache.put(ipKey, ne);
                 }
             }
         }
         return networkEntitesCache.values();
+    }
+
+    public static void doSomething(Node node) {
+        // do something with the current node instead of System.out
+        Logger.getLogger(SDNSweep.class.getName()).log(Level.INFO, node.getNodeName());
+        NodeList nodeList = node.getChildNodes();
+        for (int i = 0; i < nodeList.getLength(); i++) {
+            Node currentNode = nodeList.item(i);
+            if (currentNode.getNodeType() == Node.ELEMENT_NODE) {
+                //calls this method for all the children which is Element
+                doSomething(currentNode);
+            }
+        }
+
     }
 
     public void pushFlows(List<String> rules) {
@@ -368,6 +405,9 @@ public class SDNSweep implements Runnable {
             WebResource res = webResource.path("wm").path("topology").path("links").path("json");
             switchLinks = res.get(new GenericType<List<Link>>() {
             });
+            res = webResource.path("wm").path("topology").path("external-links").path("json");
+            switchLinks.addAll(res.get(new GenericType<List<Link>>() {
+            }));
         }
         return switchLinks;
     }
@@ -430,7 +470,7 @@ public class SDNSweep implements Runnable {
         for (String h1 : s2Hosts) {
             for (String h2 : s1Hosts) {
                 String rule2To1 = "{\"switch\": \"" + s2 + "\", \"name\":\"" + h1 + "To" + h2 + "\", \"cookie\":\"0\", \"priority\":\"10\", "
-                        + "\"src-mac\":\"" +networkEntitesCache.get(h1).getMac().get(0)+ "\", \"ingress-port\":\"" + networkEntitesCache.get(h1).getAttachmentPoint().get(0).getPort() + "\", "
+                        + "\"src-mac\":\"" + networkEntitesCache.get(h1).getMac().get(0) + "\", \"ingress-port\":\"" + networkEntitesCache.get(h1).getAttachmentPoint().get(0).getPort() + "\", "
                         + "\"dst-mac\": \"" + networkEntitesCache.get(h2).getMac().get(0) + "\", \"active\":\"true\","
                         + "\"actions\":\"output=" + s2ToS1Port + "\"}";
 
@@ -541,7 +581,6 @@ public class SDNSweep implements Runnable {
 //        @XmlElement(name = "direction")
 //        public String direction;
 //    }
-
     @XmlRootElement
     @XmlAccessorType(XmlAccessType.FIELD)
     public static class Switch {
@@ -561,7 +600,7 @@ public class SDNSweep implements Runnable {
         public String inetAddress;
         @XmlElement(name = "connectedSince")
         public long connectedSince;
-        @XmlElement(name = "switchDPID")
+        @XmlElement(name = "dpid")
         public String dpid;
         @XmlElement(name = "harole")
         public String harole;
@@ -624,6 +663,7 @@ public class SDNSweep implements Runnable {
     @XmlRootElement
     @XmlAccessorType(XmlAccessType.FIELD)
     public static class FloodlightStats {
+
         @JsonProperty("portNumber")
         public String portNumber;
         @JsonProperty("receivePackets")

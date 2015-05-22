@@ -26,7 +26,6 @@ public class PropertiesHelper {
 //    public static final String cachePropertiesPath = "cache.properties";
 
 
-
     public static enum PREDICTION_TYPE {
 
         method,
@@ -188,6 +187,10 @@ public class PropertiesHelper {
     public static String getSDNControllerURL() throws IOException {
         return getProperties().getProperty("sdn.controller.url");
     }
+        public static String getTopologyURL() throws IOException {
+         return getProperties().getProperty("sdn.topology.url");
+    }
+
 
     public static HashMap<Integer, String> getPortWorkerMap() {
         HashMap<Integer, String> ipMap = new HashMap<>();

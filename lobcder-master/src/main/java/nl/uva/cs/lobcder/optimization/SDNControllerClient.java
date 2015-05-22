@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.xml.parsers.ParserConfigurationException;
 import nl.uva.cs.lobcder.catalogue.SDNSweep;
 import nl.uva.cs.lobcder.catalogue.SDNSweep.Port;
 import nl.uva.cs.lobcder.rest.wrappers.AttachmentPoint;
@@ -18,6 +19,7 @@ import nl.uva.cs.lobcder.rest.wrappers.NetworkEntity;
 import org.jgrapht.alg.DijkstraShortestPath;
 import org.jgrapht.graph.DefaultWeightedEdge;
 import org.jgrapht.graph.SimpleWeightedGraph;
+import org.xml.sax.SAXException;
 
 /**
  *
@@ -47,28 +49,30 @@ public class SDNControllerClient {
         if (graph == null) {
             graph = new SimpleWeightedGraph<>(DefaultWeightedEdge.class);
         }
-        List<SDNSweep.Switch> sw = SDNSweep.getSwitches();
-        for (int i = 0; i < sw.size(); i++) {
-            List<Port> ports = sw.get(i).ports;
-            for (int j = 0; j < ports.size(); j++) {
-                for (int k = 0; k < ports.size(); k++) {
-                    if (ports.get(j).state == 0 && ports.get(k).state == 0 && j != k) {
-                        String vertex1 = sw.get(i).dpid + "-" + ports.get(j).portNumber;
-                        String vertex2 = sw.get(i).dpid + "-" + ports.get(k).portNumber;
-//                        Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, "From: {0} to: {1}", new Object[]{vertex1, vertex2});
-                        if (!graph.containsVertex(vertex1)) {
-                            graph.addVertex(vertex1);
+        List<SDNSweep.Switch> switches = SDNSweep.getSwitches();
+        for (int i = 0; i < switches.size(); i++) {
+            List<Port> ports = switches.get(i).ports;
+            if (ports != null) {
+                for (int j = 0; j < ports.size(); j++) {
+                    for (int k = 0; k < ports.size(); k++) {
+                        if (ports.get(j).state == 0 && ports.get(k).state == 0 && j != k) {
+                            String vertex1 = switches.get(i).dpid + "-" + ports.get(j).portNumber;
+                            String vertex2 = switches.get(i).dpid + "-" + ports.get(k).portNumber;
+//                            Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, "From: {0} to: {1}", new Object[]{vertex1, vertex2});
+                            if (!graph.containsVertex(vertex1)) {
+                                graph.addVertex(vertex1);
+                            }
+                            if (!graph.containsVertex(vertex2)) {
+                                graph.addVertex(vertex2);
+                            }
+                            DefaultWeightedEdge e1;
+                            if (!graph.containsEdge(vertex1, vertex2)) {
+                                e1 = graph.addEdge(vertex1, vertex2);
+                            } else {
+                                e1 = graph.getEdge(vertex1, vertex2);
+                            }
+                            graph.setEdgeWeight(e1, 1);
                         }
-                        if (!graph.containsVertex(vertex2)) {
-                            graph.addVertex(vertex2);
-                        }
-                        DefaultWeightedEdge e1;
-                        if (!graph.containsEdge(vertex1, vertex2)) {
-                            e1 = graph.addEdge(vertex1, vertex2);
-                        } else {
-                            e1 = graph.getEdge(vertex1, vertex2);
-                        }
-                        graph.setEdgeWeight(e1, 1);
                     }
                 }
             }
@@ -130,7 +134,7 @@ public class SDNControllerClient {
 
         List<Link> links = SDNSweep.getSwitchLinks();
         for (Link l : links) {
-            String srcVertex = l.srcSwitch+ "-" + l.srcPort;
+            String srcVertex = l.srcSwitch + "-" + l.srcPort;
             if (!graph.containsVertex(srcVertex)) {
                 graph.addVertex(srcVertex);
             }
@@ -342,6 +346,10 @@ public class SDNControllerClient {
                         new SDNSweep(null).pushFlows(rules);
                     } catch (IOException ex) {
                         Logger.getLogger(SDNControllerClient.class.getName()).log(Level.SEVERE, null, ex);
+                    } catch (ParserConfigurationException ex) {
+                        Logger.getLogger(SDNControllerClient.class.getName()).log(Level.SEVERE, null, ex);
+                    } catch (SAXException ex) {
+                        Logger.getLogger(SDNControllerClient.class.getName()).log(Level.SEVERE, null, ex);
                     }
                 } catch (IOException ex) {
                     Logger.getLogger(SDNControllerClient.class.getName()).log(Level.SEVERE, null, ex);
@@ -438,8 +446,8 @@ public class SDNControllerClient {
 //
 //    private Map<String, Integer> getifNameOpenFlowPortNumberMap(String dpi) {
 //        HashMap<String, Integer> ifNamePortMap = new HashMap<>();
-//        List<Switch> sw = getSwitches();
-//        for (Switch s : sw) {
+//        List<Switch> switches = getSwitches();
+//        for (Switch s : switches) {
 //            if (s.dpid.equals(dpi)) {
 //                List<Port> ports = s.ports;
 //                for (Port p : ports) {
@@ -530,9 +538,9 @@ public class SDNControllerClient {
 //        if (!networkEntitySwitchMap.containsKey(address)) {
 //            List<NetworkEntity> ne = getNetworkEntity(address);
 //            String dpi = ne.get(0).getAttachmentPoint().get(0).getSwitchDPID();
-//            for (Switch sw : getSwitches()) {
-//                if (sw.dpid.equals(dpi)) {
-//                    String ip = sw.inetAddress.split(":")[0].substring(1);
+//            for (Switch switches : getSwitches()) {
+//                if (switches.dpid.equals(dpi)) {
+//                    String ip = switches.inetAddress.split(":")[0].substring(1);
 //                    networkEntitySwitchMap.put(address, ip);
 //                    break;
 //                }

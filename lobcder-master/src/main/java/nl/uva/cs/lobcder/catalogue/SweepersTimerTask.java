@@ -16,6 +16,8 @@ import java.util.Set;
 import java.util.TimerTask;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.logging.Level;
+import javax.xml.parsers.ParserConfigurationException;
+import org.xml.sax.SAXException;
 
 /**
  *
@@ -36,7 +38,7 @@ class SweepersTimerTask extends TimerTask {
     private final Boolean useBulckRepo;
     private WP4SweepOLD wp4SweepOld;
 
-    SweepersTimerTask(DataSource datasource) throws IOException, NamingException, ClassNotFoundException {
+    SweepersTimerTask(DataSource datasource) throws IOException, NamingException, ClassNotFoundException, ParserConfigurationException, SAXException {
         deleteSweep = new DeleteSweep(new ConnectorJDBC(datasource, 10));
         replicateSweep = new ReplicateSweep(datasource);
         useRepo = PropertiesHelper.useMetadataRepository();

@@ -76,7 +76,9 @@ cp -r lobcder/lobcder-worker/target/lobcder-worker apache-tomcat-6.0.36/webapps/
 
 
 sleep 70 
-for i in {1..6}; do ping -c 1 192.168.100.$i; done
+for i in {1..6}; do ping -c 10 192.168.100.$i; done
+ apt-get install screen
+screen -d -m sh -c "for i in {1..60}; do ping -c 30 192.168.100.$i; done"
 
 
 for i in {1..7}; do wget http://localhost:8080/lobcder-worker/2/1; ./apache-tomcat-6.0.36/bin/shutdown.sh; ./apache-tomcat-6.0.36/bin/startup.sh;  done
