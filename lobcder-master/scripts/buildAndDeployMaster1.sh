@@ -3,8 +3,15 @@
 echo "deb http://ppa.launchpad.net/webupd8team/java/ubuntu precise main" | tee -a /etc/apt/sources.list
 echo "deb-src http://ppa.launchpad.net/webupd8team/java/ubuntu precise main" | tee -a /etc/apt/sources.list
 apt-key adv --keyserver keyserver.ubuntu.com --recv-keys EEA14886
-apt-get update
-apt-get upgrade
+
+echo "deb http://packages.dotdeb.org squeeze all" | tee -a /etc/apt/sources.list
+echo "deb-src http://packages.dotdeb.org squeeze all" | tee -a /etc/apt/sources.list
+echo "deb http://packages.dotdeb.org squeeze-php54 all"  | tee -a /etc/apt/sources.list
+echo "deb-src http://packages.dotdeb.org squeeze-php54 all" | tee -a /etc/apt/sources.list
+wget http://www.dotdeb.org/dotdeb.gpg | apt-key add -
+
+apt-get update --force-yes
+apt-get upgrade --force-yes
 
 export DEBIAN_FRONTEND=noninteractive
 echo debconf shared/accepted-oracle-license-v1-1 select true | sudo debconf-set-selections
