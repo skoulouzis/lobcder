@@ -358,12 +358,15 @@ public class SDNSweep implements Runnable {
             res = webResource.path("wm").path("device/");
             List<NetworkEntity> neList = res.get(new GenericType<List<NetworkEntity>>() {
             });
+            String ipKey = null;
             for (NetworkEntity ne : neList) {
-                String ipKey = ne.getIpv4().get(0);
-                for (String ip : ne.getIpv4()) {
-                    if (!ip.startsWith("0")) {
-                        ipKey = ip;
-                        break;
+                if (!ne.getIpv4().isEmpty()) {
+                    ipKey = ne.getIpv4().get(0);
+                    for (String ip : ne.getIpv4()) {
+                        if (!ip.startsWith("0")) {
+                            ipKey = ip;
+                            break;
+                        }
                     }
                 }
                 String swIPFromFlukes = null;
