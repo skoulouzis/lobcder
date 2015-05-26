@@ -134,7 +134,7 @@ public class SDNSweep implements Runnable {
         sdnCC = new SDNControllerClient(uri);
     }
 
-    private void init() throws InterruptedException, IOException {
+    private void init() throws InterruptedException {
         getAllSwitches();
         getAllNetworkEntites();
         getAllSwitchLinks();
@@ -506,14 +506,10 @@ public class SDNSweep implements Runnable {
         return switches.values();
     }
 
-    private void pushARPFlow() throws InterruptedException, IOException {
+    private void pushARPFlow() throws InterruptedException {
         Iterator<Switch> swIter = getAllSwitches().iterator();
         List<String> arpFlows = new ArrayList<>();
-        String dst = null;
-        Set<String> sources = new HashSet<>();
-        int count = 0;
         while (swIter.hasNext()) {
-            count++;
             Switch sw = swIter.next();
             String flow = "{\"switch\":\"" + sw.dpid + "\", "
                     + "\"name\":\"arp" + sw.dpid + "\", "
@@ -524,7 +520,6 @@ public class SDNSweep implements Runnable {
             Iterator<NetworkEntity> neIter = nes.iterator();
             while (neIter.hasNext()) {
                 NetworkEntity ne = neIter.next();
-                
                 for (String mac : ne.getMac()) {
                     for (AttachmentPoint ap : ne.getAttachmentPoint()) {
                         flow = "{\"switch\": \"" + sw.dpid + "\", "
@@ -540,8 +535,49 @@ public class SDNSweep implements Runnable {
                 }
             }
         }
-        List<DefaultWeightedEdge> path = sdnCC.getShortestPath(dst, sources);
-        sdnCC.pushFlow(path);
+        List<Link> links = getAllSwitchLinks();
+        StringBuilder sb = new StringBuilder();
+        for (Link l : links) {
+
+            Collection<NetworkEntity> nes = getNetworkEntitiesForSwDPI(l.dstSwitch);
+            for (NetworkEntity neDst : nes) {
+                for (String mac : neDst.getMac()) {
+                    sb.append("{\"switch\": \"").
+                            append(l.srcSwitch).
+                            append("\"," + "\"name\":\"").
+                            append(l.srcSwitch).
+                            append("-to-").
+                            append(mac).
+                            append("\", " + "\"cookie\":\"0\", " + "\"priority\":\"32768\", " + "\"dst-mac\":\"").
+                            append(mac).
+                            append("\"," + "\"active\":\"true\"," + "\"actions\":\"output=").
+                            append(l.srcPort).
+                            append("\"}\"");
+                    arpFlows.add(sb.toString());
+                    Logger.getLogger(SDNSweep.class.getName()).log(Level.INFO, sb.toString());
+                    sb.setLength(0);
+                }
+            }
+            nes = getNetworkEntitiesForSwDPI(l.srcSwitch);
+            for (NetworkEntity neDst : nes) {
+                for (String mac : neDst.getMac()) {
+                    sb.append("{\"switch\": \"").
+                            append(l.dstSwitch).
+                            append("\"," + "\"name\":\"").
+                            append(l.dstSwitch).
+                            append("-to-").
+                            append(mac).
+                            append("\", " + "\"cookie\":\"0\", " + "\"priority\":\"32768\", " + "\"dst-mac\":\"").
+                            append(mac).
+                            append("\"," + "\"active\":\"true\"," + "\"actions\":\"output=").
+                            append(l.dstPort).
+                            append("\"}\"");
+                    arpFlows.add(sb.toString());
+                    Logger.getLogger(SDNSweep.class.getName()).log(Level.INFO, sb.toString());
+                    sb.setLength(0);
+                }
+            }
+        }
         pushFlows(arpFlows);
     }
 
