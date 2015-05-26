@@ -327,25 +327,25 @@ public class SDNControllerClient {
 //                            + "\"actions\":\"output=" + dstOutput + "\"}";
 
                     String rule11 = "{\"switch\": \"" + srcSwitch + "\", \"name\":\"tmp1-1\", \"cookie\":\"0\", \"priority\":\"5\", "
-                            + "\"src-getMac()\":\"" + srcMac + "\", \"ingress-getPort()\":\"" + srcIngressPort + "\", "
-                            + "\"dst-getMac()\": \"" + dstMac + "\", \"active\":\"true\",\"vlan-id\":\"-1\", "
+                            + "\"src-mac\":\"" + srcMac + "\", \"ingress-getPort()\":\"" + srcIngressPort + "\", "
+                            + "\"dst-mac\": \"" + dstMac + "\", \"active\":\"true\",\"vlan-id\":\"-1\", "
                             + "\"actions\":\"output=" + srcOutput + "\"}";
 
 
                     String rule12 = "{\"switch\": \"" + srcSwitch + "\", \"name\":\"tmp1-2\", \"cookie\":\"0\", \"priority\":\"5\", "
-                            + "\"src-getMac()\":\"" + dstMac + "\", \"ingress-getPort()\":\"" + srcOutput + "\", "
-                            + "\"dst-getMac()\": \"" + srcMac + "\", \"active\":\"true\",\"vlan-id\":\"-1\", "
+                            + "\"src-mac\":\"" + dstMac + "\", \"ingress-getPort()\":\"" + srcOutput + "\", "
+                            + "\"dst-mac\": \"" + srcMac + "\", \"active\":\"true\",\"vlan-id\":\"-1\", "
                             + "\"actions\":\"output=" + srcIngressPort + "\"}";
 
                     String rule21 = "{\"switch\": \"" + dstSwitch + "\", \"name\":\"tmp2-1\", \"cookie\":\"0\", \"priority\":\"5\", "
-                            + "\"src-getMac()\":\"" + srcMac + "\", \"ingress-getPort()\":\"" + dstIngressPort + "\", "
-                            + "\"dst-getMac()\": \"" + dstMac + "\", \"active\":\"true\",\"vlan-id\":\"-1\", "
+                            + "\"src-mac\":\"" + srcMac + "\", \"ingress-getPort()\":\"" + dstIngressPort + "\", "
+                            + "\"dst-mac\": \"" + dstMac + "\", \"active\":\"true\",\"vlan-id\":\"-1\", "
                             + "\"actions\":\"output=" + dstOutput + "\"}";
 
 
                     String rule22 = "{\"switch\": \"" + dstSwitch + "\", \"name\":\"tmp2-2\", \"cookie\":\"0\", \"priority\":\"5\", "
-                            + "\"src-getMac()\":\"" + dstMac + "\", \"ingress-getPort()\":\"" + dstOutput + "\", "
-                            + "\"dst-getMac()\": \"" + srcMac + "\", \"active\":\"true\",\"vlan-id\":\"-1\", "
+                            + "\"src-mac\":\"" + dstMac + "\", \"ingress-getPort()\":\"" + dstOutput + "\", "
+                            + "\"dst-mac\": \"" + srcMac + "\", \"active\":\"true\",\"vlan-id\":\"-1\", "
                             + "\"actions\":\"output=" + dstIngressPort + "\"}";
 
 
