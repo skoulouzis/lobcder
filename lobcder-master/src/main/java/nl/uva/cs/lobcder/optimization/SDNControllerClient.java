@@ -87,7 +87,7 @@ public class SDNControllerClient {
             }
         }
 
-        dest = "192.168.100.1";
+//        dest = "192.168.100.1";
 //        Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, "Destination: {0}", new Object[]{dest});
         if (!graph.containsVertex(dest)) {
             graph.addVertex(dest);
