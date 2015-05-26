@@ -24,12 +24,14 @@ import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.json.JSONConfiguration;
 import java.io.IOException;
 import java.net.URL;
-import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.sql.DataSource;
@@ -42,6 +44,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import lombok.Getter;
 import lombok.extern.java.Log;
+import nl.uva.cs.lobcder.optimization.SDNControllerClient;
 import nl.uva.cs.lobcder.rest.wrappers.AttachmentPoint;
 import nl.uva.cs.lobcder.rest.wrappers.Link;
 import nl.uva.cs.lobcder.rest.wrappers.NetworkEntity;
@@ -51,7 +54,6 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.jgrapht.graph.DefaultWeightedEdge;
 import org.jgrapht.graph.SimpleWeightedGraph;
 import org.w3c.dom.Document;
-import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -112,8 +114,10 @@ public class SDNSweep implements Runnable {
     private static Map<String, Double> averageLinkUsageMap = new HashMap<>();
     private long iterations = 1;
     private static boolean flowPushed = true;
+    private static boolean arpFlowPushed = false;
     private static String topologyURL;
     private static Document flukesTopology;
+    private final SDNControllerClient sdnCC;
 
     public SDNSweep(DataSource datasource) throws IOException, ParserConfigurationException, SAXException {
         this.datasource = datasource;
@@ -127,14 +131,19 @@ public class SDNSweep implements Runnable {
             DocumentBuilder db = dbf.newDocumentBuilder();
             flukesTopology = db.parse(new URL(topologyURL).openStream());
         }
+        sdnCC = new SDNControllerClient(uri);
     }
 
-    private void init() {
+    private void init() throws InterruptedException, IOException {
         getAllSwitches();
         getAllNetworkEntites();
         getAllSwitchLinks();
         if (!flowPushed) {
-            pushFlowIntoOnePort();
+//            pushFlowIntoOnePort();
+        }
+        if (!arpFlowPushed) {
+            pushARPFlow();
+            arpFlowPushed = true;
         }
     }
 
@@ -453,17 +462,6 @@ public class SDNSweep implements Runnable {
         return null;
     }
 
-    public void doSomething(Node node) {
-        NodeList nodeList = node.getChildNodes();
-        for (int i = 0; i < nodeList.getLength(); i++) {
-            Node currentNode = nodeList.item(i);
-            if (currentNode.getNodeType() == Node.ELEMENT_NODE) {
-                //calls this method for all the children which is Element
-                doSomething(currentNode);
-            }
-        }
-    }
-
     public void pushFlows(List<String> rules) {
         WebResource webResource = client.resource(uri + ":" + floodlightPort).path("wm").path("staticflowentrypusher").path("json");
         for (String r : rules) {
@@ -506,6 +504,45 @@ public class SDNSweep implements Runnable {
 
     public static Collection<Switch> getSwitches() {
         return switches.values();
+    }
+
+    private void pushARPFlow() throws InterruptedException, IOException {
+        Iterator<Switch> swIter = getAllSwitches().iterator();
+        List<String> arpFlows = new ArrayList<>();
+        String dst = null;
+        Set<String> sources = new HashSet<>();
+        int count = 0;
+        while (swIter.hasNext()) {
+            count++;
+            Switch sw = swIter.next();
+            String flow = "{\"switch\":\"" + sw.dpid + "\", "
+                    + "\"name\":\"arp" + sw.dpid + "\", "
+                    + "\"ether-type\":\"0x0806\", "
+                    + "\"actions\":\"output=flood\"}";
+            arpFlows.add(flow);
+            Collection<NetworkEntity> nes = getNetworkEntitiesForSwDPI(sw.dpid);
+            Iterator<NetworkEntity> neIter = nes.iterator();
+            while (neIter.hasNext()) {
+                NetworkEntity ne = neIter.next();
+                
+                for (String mac : ne.getMac()) {
+                    for (AttachmentPoint ap : ne.getAttachmentPoint()) {
+                        flow = "{\"switch\": \"" + sw.dpid + "\", "
+                                + "\"name\":\"flow-to-" + mac + "\", "
+                                + "\"cookie\":\"0\", "
+                                + "\"priority\":\"32768\", "
+                                + "\"dst-mac\":\"" + mac + "\","
+                                + "\"active\":\"true\", "
+                                + "\"actions\":"
+                                + "\"output=" + ap.getPort() + "\"}";
+                        arpFlows.add(flow);
+                    }
+                }
+            }
+        }
+        List<DefaultWeightedEdge> path = sdnCC.getShortestPath(dst, sources);
+        sdnCC.pushFlow(path);
+        pushFlows(arpFlows);
     }
 
     private void pushFlowIntoOnePort() {
@@ -566,6 +603,20 @@ public class SDNSweep implements Runnable {
         }
         pushFlows(rules);
         flowPushed = true;
+    }
+
+    private Collection<NetworkEntity> getNetworkEntitiesForSwDPI(String dpid) {
+        Iterator<NetworkEntity> iter = getAllNetworkEntites().iterator();
+        Collection<NetworkEntity> nes = new ArrayList<>();
+        while (iter.hasNext()) {
+            NetworkEntity ne = iter.next();
+            for (AttachmentPoint ap : ne.getAttachmentPoint()) {
+                if (ap.getSwitchDPID().equals(dpid)) {
+                    nes.add(ne);
+                }
+            }
+        }
+        return nes;
     }
 
     @XmlRootElement

@@ -199,7 +199,12 @@ public class SDNControllerClient {
         //        SDNSweep.FloodlightStats[] stats = getFloodlightPortStats(dpi, getPort());
         Double rpps = SDNSweep.getReceivePacketsMap().get(dpi);
         Double tpps = SDNSweep.getTransmitPacketsMap().get(dpi);
-
+        if (rpps == null) {
+            rpps = Double.valueOf(1);
+        }
+        if (tpps == null) {
+            tpps = Double.valueOf(1);
+        }
 //        double rrrt = (interval / rpps);
 //        double trrt = (interval / tpps);
 
@@ -208,7 +213,13 @@ public class SDNControllerClient {
             tpp = 1;
         }
         Double rbytes = SDNSweep.getReceiveBytesMap().get(dpi);
+        if(rbytes==null){
+            rbytes = Double.valueOf(1);
+        }
         Double tbytes = SDNSweep.getTransmitBytesMap().get(dpi);
+        if(tbytes==null){
+            tbytes = Double.valueOf(1);
+        }
         double rbps = rbytes / SDNSweep.interval;
         double tbps = tbytes / SDNSweep.interval;
         double cost = 1.0 / ((rbps + tbps) / 2.0);
@@ -250,7 +261,7 @@ public class SDNControllerClient {
             //For each sec of usage how much extra time we get ? 
             //We asume a liner ralationship 
             //The longer the usage it means either more transfers per flow or larger files or both
-//            ett += averageLinkUsage * factor;
+            ett += averageLinkUsage * factor;
         }
 
         Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, "From: {0} to: {1} tt: {2}", new Object[]{v1, v2, ett});
@@ -326,11 +337,6 @@ public class SDNControllerClient {
                             + "\"src-getMac()\":\"" + dstMac + "\", \"ingress-getPort()\":\"" + srcOutput + "\", "
                             + "\"dst-getMac()\": \"" + srcMac + "\", \"active\":\"true\",\"vlan-id\":\"-1\", "
                             + "\"actions\":\"output=" + srcIngressPort + "\"}";
-
-
-
-
-
 
                     String rule21 = "{\"switch\": \"" + dstSwitch + "\", \"name\":\"tmp2-1\", \"cookie\":\"0\", \"priority\":\"5\", "
                             + "\"src-getMac()\":\"" + srcMac + "\", \"ingress-getPort()\":\"" + dstIngressPort + "\", "

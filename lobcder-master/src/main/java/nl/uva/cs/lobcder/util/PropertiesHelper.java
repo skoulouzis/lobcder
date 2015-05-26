@@ -185,7 +185,8 @@ public class PropertiesHelper {
     }
 
     public static String getSDNControllerURL() throws IOException {
-        return getProperties().getProperty("sdn.controller.url");
+        String url = getProperties().getProperty("sdn.controller.url");
+        return url.replaceAll(" ", "");
     }
         public static String getTopologyURL() throws IOException {
          return getProperties().getProperty("sdn.topology.url");
