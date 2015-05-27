@@ -25,9 +25,9 @@
     xmlns:collections="http://geni-orca.renci.org/owl/collections.owl#"
     xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#" > 
   <rdf:Description rdf:about="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Controller">
-    <topology:hasInterface rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link2-Controller"/>
-    <topology:hasInterface rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link3-Controller"/>
     <topology:hasInterface rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link6-Controller"/>
+    <topology:hasInterface rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link3-Controller"/>
+    <topology:hasInterface rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link2-Controller"/>
     <request-schema:postBootScript rdf:datatype="http://www.w3.org/2001/XMLSchema#string">echo "deb http://ppa.launchpad.net/webupd8team/java/ubuntu precise main" | tee -a /etc/apt/sources.list
 echo "deb-src http://ppa.launchpad.net/webupd8team/java/ubuntu precise main" | tee -a /etc/apt/sources.list
 apt-key adv --keyserver keyserver.ubuntu.com --recv-keys EEA14886
@@ -126,8 +126,8 @@ chmod +x buildAndDeployWorker.sh
     <collections:element rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link0"/>
     <collections:element rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link6"/>
     <collections:element rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Master-2"/>
-    <collections:element rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Worker2-5"/>
     <collections:element rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Controller"/>
+    <collections:element rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Worker2-5"/>
     <collections:element rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link12"/>
   </rdf:Description>
   <rdf:Description rdf:about="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link4">
@@ -216,10 +216,10 @@ chmod +x buildAndDeployWorker.sh</request-schema:postBootScript>
     <rdf:type rdf:resource="http://geni-orca.renci.org/owl/topology.owl#Interface"/>
   </rdf:Description>
   <rdf:Description rdf:about="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Switch1">
-    <topology:hasInterface rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link2-Switch1"/>
-    <topology:hasInterface rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link1-Switch1"/>
     <topology:hasInterface rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link5-Switch1"/>
+    <topology:hasInterface rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link1-Switch1"/>
     <topology:hasInterface rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link22-Switch1"/>
+    <topology:hasInterface rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link2-Switch1"/>
     <request-schema:postBootScript rdf:datatype="http://www.w3.org/2001/XMLSchema#string">#!/bin/bash
 
 # Wait for interfaces to be configured. This value should be tweaked.
@@ -263,6 +263,7 @@ chmod +x buildAndDeployMaster1.sh
     <rdf:type rdf:resource="http://geni-orca.renci.org/owl/compute.owl#ComputeElement"/>
   </rdf:Description>
   <rdf:Description rdf:about="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link6-Controller">
+    <ip4:localIPAddress rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link6-Controller-ip-192-168-4-1"/>
     <rdf:type rdf:resource="http://geni-orca.renci.org/owl/topology.owl#Interface"/>
   </rdf:Description>
   <rdf:Description rdf:about="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link2-Controller">
@@ -327,13 +328,18 @@ chmod +x buildAndDeployMaster1.sh
     <layer:label_ID>192.168.100.1</layer:label_ID>
     <rdf:type rdf:resource="http://geni-orca.renci.org/owl/ip4.owl#IPAddress"/>
   </rdf:Description>
+  <rdf:Description rdf:about="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link6-Controller-ip-192-168-4-1">
+    <ip4:netmask>255.255.255.0</ip4:netmask>
+    <layer:label_ID>192.168.4.1</layer:label_ID>
+    <rdf:type rdf:resource="http://geni-orca.renci.org/owl/ip4.owl#IPAddress"/>
+  </rdf:Description>
   <rdf:Description rdf:about="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link2-Switch1">
     <ip4:localIPAddress rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link2-Switch1-ip-192-168-2-2"/>
     <rdf:type rdf:resource="http://geni-orca.renci.org/owl/topology.owl#Interface"/>
   </rdf:Description>
   <rdf:Description rdf:about="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Switch3">
-    <topology:hasInterface rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link0-Switch3"/>
     <topology:hasInterface rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link6-Switch3"/>
+    <topology:hasInterface rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link0-Switch3"/>
     <topology:hasInterface rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link7-Switch3"/>
     <request-schema:postBootScript rdf:datatype="http://www.w3.org/2001/XMLSchema#string"># Wait for interfaces to be configured. This value should be tweaked.
 sleep 480
