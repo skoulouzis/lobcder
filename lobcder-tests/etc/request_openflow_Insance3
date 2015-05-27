@@ -29,9 +29,9 @@
     <rdf:type rdf:resource="http://geni-orca.renci.org/owl/topology.owl#Interface"/>
   </rdf:Description>
   <rdf:Description rdf:about="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Controller">
-    <topology:hasInterface rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link2-Controller"/>
-    <topology:hasInterface rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link3-Controller"/>
     <topology:hasInterface rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link9-Controller"/>
+    <topology:hasInterface rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link3-Controller"/>
+    <topology:hasInterface rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link2-Controller"/>
     <request-schema:postBootScript rdf:datatype="http://www.w3.org/2001/XMLSchema#string">echo "deb http://ppa.launchpad.net/webupd8team/java/ubuntu precise main" | tee -a /etc/apt/sources.list
 echo "deb-src http://ppa.launchpad.net/webupd8team/java/ubuntu precise main" | tee -a /etc/apt/sources.list
 apt-key adv --keyserver keyserver.ubuntu.com --recv-keys EEA14886
@@ -42,8 +42,8 @@ echo debconf shared/accepted-oracle-license-v1-1 select true | sudo debconf-set-
 echo debconf shared/accepted-oracle-license-v1-1 seen true | sudo debconf-set-selections
 
 
-apt-get -y install oracle-java7-installer ant git screen &gt;&gt; /var/log/post-boot.log
-git clone git://github.com/floodlight/floodlight.git /opt/floodlight &gt;&gt; /var/log/post-boot.log
+apt-get -y install oracle-java6-installer ant git screen &gt;&gt; /var/log/post-boot.log
+git clone git://github.com/floodlight/floodlight.git --branch v0.91 /opt/floodlight &gt;&gt; /var/log/post-boot.log
 cd /opt/floodlight
 ant &gt;&gt; /var/log/post-boot.log
 screen -d -m sh -c "java -jar /opt/floodlight/target/floodlight.jar"
@@ -79,8 +79,8 @@ screen -d -m sh -c "/opt/sflow-rt/start.sh"</request-schema:postBootScript>
     <rdf:type rdf:resource="http://geni-orca.renci.org/owl/ip4.owl#IPAddress"/>
   </rdf:Description>
   <rdf:Description rdf:about="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#">
-    <request-schema:hasTerm rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Term"/>
     <collections:element rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Node-1"/>
+    <request-schema:hasTerm rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Term"/>
     <collections:element rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link250"/>
     <collections:element rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link1"/>
     <collections:element rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link20"/>
@@ -97,15 +97,15 @@ screen -d -m sh -c "/opt/sflow-rt/start.sh"</request-schema:postBootScript>
     <collections:element rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link2"/>
     <collections:element rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Node-4"/>
     <collections:element rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Switch1-2"/>
-    <collections:element rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link7"/>
     <collections:element rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link18"/>
+    <collections:element rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link7"/>
     <collections:element rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Storage1"/>
     <collections:element rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link3"/>
     <collections:element rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Node-12"/>
     <collections:element rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Node-11"/>
     <collections:element rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link8"/>
-    <collections:element rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Node-33"/>
     <collections:element rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Node-2"/>
+    <collections:element rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Node-33"/>
     <rdf:type rdf:resource="http://geni-orca.renci.org/owl/request.owl#Reservation"/>
     <collections:element rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link246"/>
     <collections:element rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Node-30"/>
@@ -300,16 +300,10 @@ ovs-vsctl -- --id=@sflow create sflow agent=${AGENT} target=\"${COLLECTOR_IP}:${
     <rdf:type rdf:resource="http://geni-orca.renci.org/owl/topology.owl#Interface"/>
   </rdf:Description>
   <rdf:Description rdf:about="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Switch3-4">
-    <topology:hasInterface rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link15-Switch3-4"/>
     <topology:hasInterface rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link6-Switch3-4"/>
+    <topology:hasInterface rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link15-Switch3-4"/>
     <topology:hasInterface rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link4-Switch3-4"/>
     <topology:hasInterface rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link19-Switch3-4"/>
-    <topology:hasInterface rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link0-Switch3-4"/>
-    <domain:hasResourceType rdf:resource="http://geni-orca.renci.org/owl/compute.owl#VM"/>
-    <topology:hasInterface rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link9-Switch3-4"/>
-    <topology:hasInterface rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link247-Switch3-4"/>
-    <compute:diskImage rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#OVS"/>
-    <rdf:type rdf:resource="http://geni-orca.renci.org/owl/compute.owl#ComputeElement"/>
     <request-schema:postBootScript rdf:datatype="http://www.w3.org/2001/XMLSchema#string">#!/bin/bash
 
 # Wait for interfaces to be configured. This value should be tweaked.
@@ -331,7 +325,24 @@ if ! ifconfig eth9 | grep -q 'inet addr'; then ovs-vsctl add-port br0 eth9; ifco
 if ! ifconfig eth10 | grep -q 'inet addr'; then ovs-vsctl add-port br0 eth10; ifconfig eth10 up; else AGENT=eth10; fi
 
 # Configure controller
-ovs-vsctl set-controller br0 tcp:192.168.4.1:6653</request-schema:postBootScript>
+ovs-vsctl set-controller br0 tcp:192.168.4.1:6653
+
+
+
+COLLECTOR_IP=192.168.4.1
+COLLECTOR_PORT=6343
+HEADER=128
+SAMPLING=100
+POLLING=1
+
+ovs-vsctl -- --id=@sflow create sflow agent=${AGENT} target=\"${COLLECTOR_IP}:${COLLECTOR_PORT}\" header=${HEADER} sampling=${SAMPLING} polling=${POLLING} -- set bridge br0 sflow=@sflow
+</request-schema:postBootScript>
+    <topology:hasInterface rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link0-Switch3-4"/>
+    <domain:hasResourceType rdf:resource="http://geni-orca.renci.org/owl/compute.owl#VM"/>
+    <topology:hasInterface rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link9-Switch3-4"/>
+    <topology:hasInterface rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link247-Switch3-4"/>
+    <compute:diskImage rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#OVS"/>
+    <rdf:type rdf:resource="http://geni-orca.renci.org/owl/compute.owl#ComputeElement"/>
   </rdf:Description>
   <rdf:Description rdf:about="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link1-Switch1-2">
     <rdf:type rdf:resource="http://geni-orca.renci.org/owl/topology.owl#Interface"/>
@@ -423,15 +434,15 @@ ovs-vsctl set-controller br0 tcp:192.168.4.1:6653</request-schema:postBootScript
     <layer:label_ID>192.168.100.12</layer:label_ID>
     <rdf:type rdf:resource="http://geni-orca.renci.org/owl/ip4.owl#IPAddress"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link6-Switch3-4">
-    <rdf:type rdf:resource="http://geni-orca.renci.org/owl/topology.owl#Interface"/>
-  </rdf:Description>
   <rdf:Description rdf:about="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link2">
     <topology:hasInterface rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link2-Switch1-2"/>
     <topology:hasInterface rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link2-Controller"/>
     <layer:atLayer rdf:resource="http://geni-orca.renci.org/owl/ethernet.owl#EthernetNetworkElement"/>
     <layer:bandwidth rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">20000000</layer:bandwidth>
     <rdf:type rdf:resource="http://geni-orca.renci.org/owl/topology.owl#NetworkConnection"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link6-Switch3-4">
+    <rdf:type rdf:resource="http://geni-orca.renci.org/owl/topology.owl#Interface"/>
   </rdf:Description>
   <rdf:Description rdf:about="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link10-Node-3-ip-192-168-100-3">
     <ip4:netmask>255.255.255.0</ip4:netmask>
@@ -488,8 +499,8 @@ ovs-vsctl -- --id=@sflow create sflow agent=${AGENT} target=\"${COLLECTOR_IP}:${
     <topology:hasInterface rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link5-Switch1-2"/>
     <domain:hasResourceType rdf:resource="http://geni-orca.renci.org/owl/compute.owl#VM"/>
     <topology:hasInterface rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link1-Switch1-2"/>
-    <topology:hasInterface rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link2-Switch1-2"/>
     <topology:hasInterface rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link246-Switch1-2"/>
+    <topology:hasInterface rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link2-Switch1-2"/>
     <topology:hasInterface rdf:resource="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link18-Switch1-2"/>
   </rdf:Description>
   <rdf:Description rdf:about="http://geni-orca.renci.org/owl/3d041461-155b-467e-88aa-4024d4f6d9c8#Link246">
