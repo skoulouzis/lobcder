@@ -1,7 +1,7 @@
 sqlUser=user
-sqlPass=password
+sqlPass=pass
 dbName=DB
-CATALINA_HOME=$HOME/apache-tomcat-6.0.36
+CATALINA_HOME=./apache-tomcat-6.0.36
 
 #mysql -u$sqlUser -p$sqlPass -s -N -e  "UPDATE $dbName.requests_table SET userAgent = 'unknown' WHERE userAgent = '' OR userAgent is NULL"
 
@@ -42,18 +42,18 @@ requestURL NOT LIKE '%lobcder/dav/' and
   methodName = 'POST' or
   methodName = 'MKCOL' or 
   --  (M)odified
-  methodName = 'LOCK' or 
-  methodName = 'UNLOCK' or 
-  methodName = 'PROPPATCH' or
-  methodName = 'MOVE' or
-  methodName = 'PROPFIND' or
-  methodName = 'COPY' or
-  methodName = 'OPTIONS' or
-  methodName = 'GET' or
-  methodName = 'HEAD' or
-  methodName = 'TRACE' or
-  methodName = 'CONNECT' or  
-  -- (D)eleted. 
+ -- methodName = 'LOCK' or 
+ -- methodName = 'UNLOCK' or 
+ -- methodName = 'PROPPATCH' or
+ -- methodName = 'MOVE' or
+ -- methodName = 'PROPFIND' or
+ -- methodName = 'COPY' or
+ -- methodName = 'OPTIONS' or
+ -- methodName = 'GET' or
+ -- methodName = 'HEAD' or
+ -- methodName = 'TRACE' or
+ -- methodName = 'CONNECT' or  
+ -- (D)eleted. 
   methodName = 'DELETE')
 ORDER BY timeStamp;" > /tmp/result.csv
 
@@ -135,11 +135,27 @@ sed -i "s/Benchmark*/Benchmark/g" /tmp/result.csv
 
 
 sed -i '/1395853038\tjuanarenas\tD\tdav\//d' /tmp/result.csv
-sed -i 's/\t/|/g' /tmp/result.csv
+
+rm /tmp/deleteTimeStamps
+prevLine="";
+while IFS=$'\t' read timestamp userName AMD requestURL
+do
+  line=$userName$IFS$AMD$IFS$requestURL
+    #   echo $line
+  if [ "$line" == "$prevLine" ]; then
+    echo $timestamp >> /tmp/deleteTimeStamps
+  fi
+
+  prevLine=$line
+done < /tmp/result.csv
 
 
+grep -vwF -f /tmp/deleteTimeStamps /tmp/result.csv > /tmp/result1.csv
 
-cp /tmp/result.csv $CATALINA_HOME/logs/gourceResult.csv
+sed -i 's/\t/|/g' /tmp/result1.csv
 
 
- #xvfb-run -a -s "-screen 0 1280x720x24" gource --log-format custom ~/Documents/logs/lobcder.production/gourceResult.csv --stop-at-end  -key -auto-skip-seconds 0.5 --file-idle-time 0.1 --max-file-lag 0.1 --title "LOBCDER Users Activity Visualisation" --time-scale 4 --seconds-per-day 0.25 --bloom-intensity 0.2 --user-scale 6 --multi-sampling -1024x768 --max-files 0 --hide filenames,usernames --dir-name-depth 1 --highlight-dirs  --output-ppm-stream - | avconv -an -threads 4 -y -f image2pipe -vcodec ppm -i - -b 65536K -r 30.000 -vb 8000000  Videos/lobcder-user-activity0.mp4
+cp /tmp/result1.csv $CATALINA_HOME/logs/gourceResult.csv
+
+
+ #xvfb-run -a -s "-screen 0 1280x720x24" gource --log-format custom gourceResult.csv --stop-at-end  -key -auto-skip-seconds 0.5 --file-idle-time 0.1 --max-file-lag 0.1 --title "LOBCDER Users Activity Visualisation" --time-scale 4 --seconds-per-day 0.25 --bloom-intensity 0.2 --user-scale 6 --multi-sampling -1024x768 --max-files 0 --hide filenames,usernames --dir-name-depth 2 -e 0.001  --highlight-dirs  --output-ppm-stream - | avconv -an -threads 4 -y -f image2pipe -vcodec ppm -i - -b 65536K -r 30.000 -vb 8000000  Videos/lobcder-user-activity0.mp4
