@@ -382,10 +382,14 @@ public class SDNSweep implements Runnable {
                 if (!ne.getIpv4().isEmpty() && !networkEntitesCache.containsKey(ipKey)) {
                     if (flukesTopology != null) {
                         swIPFromFlukes = findAttachedSwitch(ipKey);
-                        String swDPI = switches.get(swIPFromFlukes).dpid;
+                        String swDPI = null;//switches.get(swIPFromFlukes).dpid;
+                        Switch sw = switches.get(swIPFromFlukes);
+                        if (sw != null) {
+                            swDPI = sw.dpid;
+                        }
                         List<AttachmentPoint> ap = new ArrayList<>();
                         for (AttachmentPoint p : ne.getAttachmentPoint()) {
-                            if (p.getSwitchDPID().equals(swDPI)) {
+                            if (swDPI != null && p.getSwitchDPID().equals(swDPI)) {
                                 ap.add(p);
                                 break;
                             }
@@ -466,8 +470,11 @@ public class SDNSweep implements Runnable {
         WebResource webResource = client.resource(uri + ":" + floodlightPort).path("wm").path("staticflowentrypusher").path("json");
         for (String r : rules) {
             ClientResponse response = webResource.post(ClientResponse.class, r);
-            Logger.getLogger(SDNSweep.class.getName()).log(Level.INFO, r);
-            Logger.getLogger(SDNSweep.class.getName()).log(Level.INFO, response.toString());
+            if (response.getStatus() != 200) {
+                Logger.getLogger(SDNSweep.class.getName()).log(Level.WARNING, "Failed to push: " + r);
+            }
+//            Logger.getLogger(SDNSweep.class.getName()).log(Level.INFO, r);
+//            Logger.getLogger(SDNSweep.class.getName()).log(Level.INFO, response.toString());
         }
     }
 
@@ -538,7 +545,6 @@ public class SDNSweep implements Runnable {
         List<Link> links = getAllSwitchLinks();
         StringBuilder sb = new StringBuilder();
         for (Link l : links) {
-
             Collection<NetworkEntity> nes = getNetworkEntitiesForSwDPI(l.dstSwitch);
             for (NetworkEntity neDst : nes) {
                 for (String mac : neDst.getMac()) {
@@ -554,7 +560,7 @@ public class SDNSweep implements Runnable {
                             append(l.srcPort).
                             append("\"}\"");
                     arpFlows.add(sb.toString());
-                    Logger.getLogger(SDNSweep.class.getName()).log(Level.INFO, sb.toString());
+//                    Logger.getLogger(SDNSweep.class.getName()).log(Level.INFO, sb.toString());
                     sb.setLength(0);
                 }
             }
@@ -573,7 +579,7 @@ public class SDNSweep implements Runnable {
                             append(l.dstPort).
                             append("\"}\"");
                     arpFlows.add(sb.toString());
-                    Logger.getLogger(SDNSweep.class.getName()).log(Level.INFO, sb.toString());
+//                    Logger.getLogger(SDNSweep.class.getName()).log(Level.INFO, sb.toString());
                     sb.setLength(0);
                 }
             }

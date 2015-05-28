@@ -86,8 +86,6 @@ public class SDNControllerClient {
                 }
             }
         }
-
-//        dest = "192.168.100.1";
 //        Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, "Destination: {0}", new Object[]{dest});
         if (!graph.containsVertex(dest)) {
             graph.addVertex(dest);
@@ -95,47 +93,52 @@ public class SDNControllerClient {
         NetworkEntity destinationEntityArray = SDNSweep.getNetworkEntity(dest);
 //        List<NetworkEntity> destinationEntityArray = getNetworkEntity(dest);
 //        for (SDNSweep.NetworkEntity ne : destinationEntityArray) {
-        for (AttachmentPoint ap : destinationEntityArray.getAttachmentPoint()) {
-            String vertex = ap.getSwitchDPID() + "-" + ap.getPort();
+        if (destinationEntityArray != null) {
+            for (AttachmentPoint ap : destinationEntityArray.getAttachmentPoint()) {
+                String vertex = ap.getSwitchDPID() + "-" + ap.getPort();
 //            Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, "vertex: {0}", new Object[]{vertex});
-            if (!graph.containsVertex(vertex)) {
-                graph.addVertex(vertex);
-            }
+                if (!graph.containsVertex(vertex)) {
+                    graph.addVertex(vertex);
+                }
 
-            DefaultWeightedEdge e1;
-            if (!graph.containsEdge(dest, vertex)) {
-                e1 = graph.addEdge(dest, vertex);
-            } else {
-                e1 = graph.getEdge(dest, vertex);
-            }
-            //Don't calculate the cost from the destination to the switch. 
-            //There is nothing we can do about it so why waste cycles ?
+                DefaultWeightedEdge e1;
+                if (!graph.containsEdge(dest, vertex)) {
+                    e1 = graph.addEdge(dest, vertex);
+                } else {
+                    e1 = graph.getEdge(dest, vertex);
+                }
+                //Don't calculate the cost from the destination to the switch. 
+                //There is nothing we can do about it so why waste cycles ?
 //            graph.setEdgeWeight(e1, 2);
-            graph.setEdgeWeight(e1, getCost(dest, vertex));
+                graph.setEdgeWeight(e1, getCost(dest, vertex));
+            }
         }
+
 //        }
 
 //        List<NetworkEntity> sourceEntityArray = getNetworkEntity(sources);
         for (String s : sources) {
             NetworkEntity ne = SDNSweep.getNetworkEntity(s);
-            for (String ip : ne.getIpv4()) {
-                if (!graph.containsVertex(ip)) {
-                    graph.addVertex(ip);
-                }
+            if (ne != null) {
+                for (String ip : ne.getIpv4()) {
+                    if (!graph.containsVertex(ip)) {
+                        graph.addVertex(ip);
+                    }
 
-                for (AttachmentPoint ap : ne.getAttachmentPoint()) {
-                    String vertex = ap.getSwitchDPID() + "-" + ap.getPort();
-                    if (!graph.containsVertex(vertex)) {
-                        graph.addVertex(vertex);
+                    for (AttachmentPoint ap : ne.getAttachmentPoint()) {
+                        String vertex = ap.getSwitchDPID() + "-" + ap.getPort();
+                        if (!graph.containsVertex(vertex)) {
+                            graph.addVertex(vertex);
+                        }
+                        DefaultWeightedEdge e2;
+                        if (!graph.containsEdge(ip, vertex)) {
+                            e2 = graph.addEdge(ip, vertex);
+                        } else {
+                            e2 = graph.getEdge(ip, vertex);
+                        }
+                        Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, "vertex: {0}", new Object[]{vertex});
+                        graph.setEdgeWeight(e2, getCost(ip, vertex));
                     }
-                    DefaultWeightedEdge e2;
-                    if (!graph.containsEdge(ip, vertex)) {
-                        e2 = graph.addEdge(ip, vertex);
-                    } else {
-                        e2 = graph.getEdge(ip, vertex);
-                    }
-                    Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, "vertex: {0}", new Object[]{vertex});
-                    graph.setEdgeWeight(e2, getCost(ip, vertex));
                 }
             }
         }
@@ -212,11 +215,11 @@ public class SDNControllerClient {
             tpp = 1;
         }
         Double rbytes = SDNSweep.getReceiveBytesMap().get(dpi);
-        if(rbytes==null){
+        if (rbytes == null) {
             rbytes = Double.valueOf(1);
         }
         Double tbytes = SDNSweep.getTransmitBytesMap().get(dpi);
-        if(tbytes==null){
+        if (tbytes == null) {
             tbytes = Double.valueOf(1);
         }
         double rbps = rbytes / SDNSweep.interval;
@@ -268,50 +271,50 @@ public class SDNControllerClient {
     }
 
     public void pushFlow(final List<DefaultWeightedEdge> shortestPath) throws IOException {
+        if (shortestPath != null && !shortestPath.isEmpty()) {
+            Thread thread = new Thread() {
+                public void run() {
+                    try {
+                        DefaultWeightedEdge e = shortestPath.get(0);
+                        String pair = e.toString().substring(1, e.toString().length() - 1);
+                        String[] workerSwitch = pair.toString().split(" : ");
+                        String srcIP = workerSwitch[0];
+                        String srcMac = SDNSweep.getNetworkEntity(srcIP).getMac().get(0);
+                        String srcSwitchAndPort = workerSwitch[1];
+                        String srcSwitch = srcSwitchAndPort.split("-")[0];
+                        String srcIngressPort = String.valueOf(SDNSweep.getNetworkEntity(srcIP).getAttachmentPoint().get(0).getPort());
+                        String srcOutput;
 
-        Thread thread = new Thread() {
-            public void run() {
-                try {
-                    DefaultWeightedEdge e = shortestPath.get(0);
-                    String pair = e.toString().substring(1, e.toString().length() - 1);
-                    String[] workerSwitch = pair.toString().split(" : ");
-                    String srcIP = workerSwitch[0];
-                    String srcMac = SDNSweep.getNetworkEntity(srcIP).getMac().get(0);
-                    String srcSwitchAndPort = workerSwitch[1];
-                    String srcSwitch = srcSwitchAndPort.split("-")[0];
-                    String srcIngressPort = String.valueOf(SDNSweep.getNetworkEntity(srcIP).getAttachmentPoint().get(0).getPort());
-                    String srcOutput;
+                        e = shortestPath.get(1);
+                        pair = e.toString().substring(1, e.toString().length() - 1);
+                        workerSwitch = pair.split(" : ");
+                        if (workerSwitch[0].equals(srcSwitch + "-" + srcIngressPort)) {
+                            srcOutput = workerSwitch[1].split("-")[1];
+                        } else {
+                            srcOutput = workerSwitch[0].split("-")[1];
+                        }
 
-                    e = shortestPath.get(1);
-                    pair = e.toString().substring(1, e.toString().length() - 1);
-                    workerSwitch = pair.split(" : ");
-                    if (workerSwitch[0].equals(srcSwitch + "-" + srcIngressPort)) {
-                        srcOutput = workerSwitch[1].split("-")[1];
-                    } else {
-                        srcOutput = workerSwitch[0].split("-")[1];
-                    }
-
-                    e = shortestPath.get(shortestPath.size() - 1);
-                    pair = e.toString().substring(1, e.toString().length() - 1);
-                    workerSwitch = pair.toString().split(" : ");
-                    String dstIP = workerSwitch[0];
-                    String dstMac = SDNSweep.getNetworkEntity(dstIP).getMac().get(0);
-                    String dstSwitchAndPort = workerSwitch[1];
-                    String dstSwitch = dstSwitchAndPort.split("-")[0];
-                    String dstOutput = String.valueOf(SDNSweep.getNetworkEntity(dstIP).getAttachmentPoint().get(0).getPort());
+                        e = shortestPath.get(shortestPath.size() - 1);
+                        pair = e.toString().substring(1, e.toString().length() - 1);
+                        workerSwitch = pair.toString().split(" : ");
+                        String dstIP = workerSwitch[0];
+                        String dstMac = SDNSweep.getNetworkEntity(dstIP).getMac().get(0);
+                        String dstSwitchAndPort = workerSwitch[1];
+                        String dstSwitch = dstSwitchAndPort.split("-")[0];
+                        String dstOutput = String.valueOf(SDNSweep.getNetworkEntity(dstIP).getAttachmentPoint().get(0).getPort());
 
 
-                    e = shortestPath.get(shortestPath.size() - 2);
-                    pair = e.toString().substring(1, e.toString().length() - 1);
-                    workerSwitch = pair.toString().split(" : ");
-                    String node1 = workerSwitch[0];
-                    String node2 = workerSwitch[1];
-                    String dstIngressPort = "";
-                    if (node1.equals(dstSwitch + "-" + dstOutput)) {
-                        dstIngressPort = node2.split("-")[1];
-                    } else {
-                        dstIngressPort = node1.split("-")[1];
-                    }
+                        e = shortestPath.get(shortestPath.size() - 2);
+                        pair = e.toString().substring(1, e.toString().length() - 1);
+                        workerSwitch = pair.toString().split(" : ");
+                        String node1 = workerSwitch[0];
+                        String node2 = workerSwitch[1];
+                        String dstIngressPort = "";
+                        if (node1.equals(dstSwitch + "-" + dstOutput)) {
+                            dstIngressPort = node2.split("-")[1];
+                        } else {
+                            dstIngressPort = node1.split("-")[1];
+                        }
 
 
 
@@ -326,53 +329,53 @@ public class SDNControllerClient {
 //                            + "\"dst-ip\": \"" + dstIP + "\", \"active\":\"true\",\"ether-type\":\"0x0800\", "
 //                            + "\"actions\":\"output=" + dstOutput + "\"}";
 
-                    String rule11 = "{\"switch\": \"" + srcSwitch + "\", \"name\":\"tmp1-1\", \"cookie\":\"0\", \"priority\":\"5\", "
-                            + "\"src-mac\":\"" + srcMac + "\", \"ingress-getPort()\":\"" + srcIngressPort + "\", "
-                            + "\"dst-mac\": \"" + dstMac + "\", \"active\":\"true\",\"vlan-id\":\"-1\", "
-                            + "\"actions\":\"output=" + srcOutput + "\"}";
+                        String rule11 = "{\"switch\": \"" + srcSwitch + "\", \"name\":\"tmp1-1\", \"cookie\":\"0\", \"priority\":\"5\", "
+                                + "\"src-mac\":\"" + srcMac + "\", \"ingress-getPort()\":\"" + srcIngressPort + "\", "
+                                + "\"dst-mac\": \"" + dstMac + "\", \"active\":\"true\",\"vlan-id\":\"-1\", "
+                                + "\"actions\":\"output=" + srcOutput + "\"}";
 
 
-                    String rule12 = "{\"switch\": \"" + srcSwitch + "\", \"name\":\"tmp1-2\", \"cookie\":\"0\", \"priority\":\"5\", "
-                            + "\"src-mac\":\"" + dstMac + "\", \"ingress-getPort()\":\"" + srcOutput + "\", "
-                            + "\"dst-mac\": \"" + srcMac + "\", \"active\":\"true\",\"vlan-id\":\"-1\", "
-                            + "\"actions\":\"output=" + srcIngressPort + "\"}";
+                        String rule12 = "{\"switch\": \"" + srcSwitch + "\", \"name\":\"tmp1-2\", \"cookie\":\"0\", \"priority\":\"5\", "
+                                + "\"src-mac\":\"" + dstMac + "\", \"ingress-getPort()\":\"" + srcOutput + "\", "
+                                + "\"dst-mac\": \"" + srcMac + "\", \"active\":\"true\",\"vlan-id\":\"-1\", "
+                                + "\"actions\":\"output=" + srcIngressPort + "\"}";
 
-                    String rule21 = "{\"switch\": \"" + dstSwitch + "\", \"name\":\"tmp2-1\", \"cookie\":\"0\", \"priority\":\"5\", "
-                            + "\"src-mac\":\"" + srcMac + "\", \"ingress-getPort()\":\"" + dstIngressPort + "\", "
-                            + "\"dst-mac\": \"" + dstMac + "\", \"active\":\"true\",\"vlan-id\":\"-1\", "
-                            + "\"actions\":\"output=" + dstOutput + "\"}";
-
-
-                    String rule22 = "{\"switch\": \"" + dstSwitch + "\", \"name\":\"tmp2-2\", \"cookie\":\"0\", \"priority\":\"5\", "
-                            + "\"src-mac\":\"" + dstMac + "\", \"ingress-getPort()\":\"" + dstOutput + "\", "
-                            + "\"dst-mac\": \"" + srcMac + "\", \"active\":\"true\",\"vlan-id\":\"-1\", "
-                            + "\"actions\":\"output=" + dstIngressPort + "\"}";
+                        String rule21 = "{\"switch\": \"" + dstSwitch + "\", \"name\":\"tmp2-1\", \"cookie\":\"0\", \"priority\":\"5\", "
+                                + "\"src-mac\":\"" + srcMac + "\", \"ingress-getPort()\":\"" + dstIngressPort + "\", "
+                                + "\"dst-mac\": \"" + dstMac + "\", \"active\":\"true\",\"vlan-id\":\"-1\", "
+                                + "\"actions\":\"output=" + dstOutput + "\"}";
 
 
+                        String rule22 = "{\"switch\": \"" + dstSwitch + "\", \"name\":\"tmp2-2\", \"cookie\":\"0\", \"priority\":\"5\", "
+                                + "\"src-mac\":\"" + dstMac + "\", \"ingress-getPort()\":\"" + dstOutput + "\", "
+                                + "\"dst-mac\": \"" + srcMac + "\", \"active\":\"true\",\"vlan-id\":\"-1\", "
+                                + "\"actions\":\"output=" + dstIngressPort + "\"}";
 
 
-                    List<String> rules = new ArrayList<>();
-                    rules.add(rule11);
-                    rules.add(rule12);
-                    rules.add(rule21);
-                    rules.add(rule22);
-                    try {
-                        new SDNSweep(null).pushFlows(rules);
+
+
+                        List<String> rules = new ArrayList<>();
+                        rules.add(rule11);
+                        rules.add(rule12);
+                        rules.add(rule21);
+                        rules.add(rule22);
+                        try {
+                            new SDNSweep(null).pushFlows(rules);
+                        } catch (IOException ex) {
+                            Logger.getLogger(SDNControllerClient.class.getName()).log(Level.SEVERE, null, ex);
+                        } catch (ParserConfigurationException ex) {
+                            Logger.getLogger(SDNControllerClient.class.getName()).log(Level.SEVERE, null, ex);
+                        } catch (SAXException ex) {
+                            Logger.getLogger(SDNControllerClient.class.getName()).log(Level.SEVERE, null, ex);
+                        }
                     } catch (IOException ex) {
                         Logger.getLogger(SDNControllerClient.class.getName()).log(Level.SEVERE, null, ex);
-                    } catch (ParserConfigurationException ex) {
-                        Logger.getLogger(SDNControllerClient.class.getName()).log(Level.SEVERE, null, ex);
-                    } catch (SAXException ex) {
-                        Logger.getLogger(SDNControllerClient.class.getName()).log(Level.SEVERE, null, ex);
                     }
-                } catch (IOException ex) {
-                    Logger.getLogger(SDNControllerClient.class.getName()).log(Level.SEVERE, null, ex);
                 }
-            }
-        };
+            };
 
-        thread.start();
-
+            thread.start();
+        }
     }
 //    private SDNSweep.FloodlightStats[] getFloodlightPortStats(String dpi, int getPort()) throws IOException, InterruptedException {
 //        SDNSweep.FloodlightStats stats1 = null;

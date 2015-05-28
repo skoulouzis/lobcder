@@ -480,7 +480,7 @@ public class WebDataFileResource extends WebDataResource implements
         Iterator<PDRIDescr> it;
         try {
             List<PDRIDescr> pdris = getCatalogue().getPdriDescrByGroupId(getLogicalData().getPdriGroupId());
-            if(pdris.size()<=0){
+            if (pdris.size() <= 0) {
                 throw new NotFoundException("File inconsistency! Could not find physical file!");
             }
 //            it = getCatalogue().getPdriDescrByGroupId(getLogicalData().getPdriGroupId()).iterator();
@@ -708,6 +708,13 @@ public class WebDataFileResource extends WebDataResource implements
     }
 
     private String getLowestCostWorker(String reqSource) throws IOException, URISyntaxException, InterruptedException {
+        if (workersMap.containsKey(reqSource)) {
+            String worker = workersMap.get(reqSource);
+            String w = worker + "/" + getLogicalData().getUid();
+            String token = UUID.randomUUID().toString();
+            AuthLobcderComponents.setTicket(worker, token);
+            return w + "/" + token;
+        }
         if (sdnClient == null) {
             String uri = PropertiesHelper.getSDNControllerURL();
             sdnClient = new SDNControllerClient(uri);
