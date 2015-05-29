@@ -606,6 +606,13 @@ public class WebDataFileResource extends WebDataResource implements
 
     private String getBestWorker(String reuSource) throws IOException, URISyntaxException, InterruptedException {
         if (doRedirect) {
+            if (workersMap.containsKey(reuSource)) {
+                String worker = workersMap.get(reuSource);
+                String w = worker + "/" + getLogicalData().getUid();
+                String token = UUID.randomUUID().toString();
+                AuthLobcderComponents.setTicket(worker, token);
+                return w + "/" + token;
+            }
 //            if (uri != null) {
             if (PropertiesHelper.getSchedulingAlg().equals("traffic") && PropertiesHelper.useSDN()) {
 //                return getWorkerWithLessTraffic(reuSource);
@@ -708,14 +715,6 @@ public class WebDataFileResource extends WebDataResource implements
     }
 
     private String getLowestCostWorker(String reqSource) throws IOException, URISyntaxException, InterruptedException {
-//        reqSource = "192.168.100.4";
-        if (workersMap.containsKey(reqSource)) {
-            String worker = workersMap.get(reqSource);
-            String w = worker + "/" + getLogicalData().getUid();
-            String token = UUID.randomUUID().toString();
-            AuthLobcderComponents.setTicket(worker, token);
-            return w + "/" + token;
-        }
         if (sdnClient == null) {
             String uri = PropertiesHelper.getSDNControllerURL();
             sdnClient = new SDNControllerClient(uri);
