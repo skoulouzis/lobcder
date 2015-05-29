@@ -708,6 +708,7 @@ public class WebDataFileResource extends WebDataResource implements
     }
 
     private String getLowestCostWorker(String reqSource) throws IOException, URISyntaxException, InterruptedException {
+//        reqSource = "192.168.100.4";
         if (workersMap.containsKey(reqSource)) {
             String worker = workersMap.get(reqSource);
             String w = worker + "/" + getLogicalData().getUid();

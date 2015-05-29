@@ -400,6 +400,9 @@ public class SDNSweep implements Runnable {
                 }
             }
         }
+//        for (NetworkEntity ne : networkEntitesCache.values()) {
+//            Logger.getLogger(SDNSweep.class.getName()).log(Level.INFO, "ne: " + ne.getIpv4().get(0) + "/"+ ne.getMac().get(0)+"-> " + ne.getAttachmentPoint().get(0).getSwitchDPID() + "-" + ne.getAttachmentPoint().get(0).getPort());
+//        }
         return networkEntitesCache.values();
     }
 
