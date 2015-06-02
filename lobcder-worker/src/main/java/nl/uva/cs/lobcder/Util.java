@@ -57,9 +57,13 @@ class Util extends PropertiesHelper {
             NetworkInterface intf = en.nextElement();
             for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements();) {
                 InetAddress next = enumIpAddr.nextElement();
-                String ip = next.getHostAddress();
+                if (next != null) {
+                    String ip = next.getHostAddress();
+                    if (ip != null) {
+                        ips.add(ip);
+                    }
+                }
 //                Logger.getLogger(Util.class.getName()).log(Level.FINE, "ip: {0}", ip);
-                ips.add(ip);
             }
         }
         return ips;

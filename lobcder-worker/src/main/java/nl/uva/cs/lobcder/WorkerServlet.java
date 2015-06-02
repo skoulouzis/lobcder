@@ -979,7 +979,7 @@ public final class WorkerServlet extends HttpServlet {
 
     private LogicalDataWrapped removeFilePDRIs(LogicalDataWrapped logicalData) throws IOException, URISyntaxException {
         List<PDRIDescr> pdris = logicalData.getPdriList();
-        if (logicalData != null) {
+        if (logicalData != null && pdris != null) {
             List<PDRIDescr> removeIt = new ArrayList<>();
             if (pdris != null && !pdris.isEmpty()) {
                 //Remove masters's cache pdris 
