@@ -989,9 +989,12 @@ public final class WorkerServlet extends HttpServlet {
                     List<String> ips = Util.getAllIPs();
                     if (ips != null) {
                         for (String h : ips) {
-                            if (h != null && uri.getHost().equals(h)) {
-                                isCache = true;
-                                break;
+                            String host = uri.getHost();
+                            if (h != null) {
+                                if (host == null || host.equals(h)) {
+                                    isCache = true;
+                                    break;
+                                }
                             }
                         }
                     }
