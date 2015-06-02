@@ -2,45 +2,49 @@
 
 
 sqlUser=root
-sqlPass=rootPass
-dbName=dbName
+sqlPass=pass
+dbName=DB
 lobUser=admin
 lobPass=admin
+requestsFile=$1
 
 basePath=$HOME/Downloads/
 CATALINA_HOME=servers/apache-tomcat-6.0.36
 
-#t0=`mysql -u$sqlUser -p$sqlPass -s -N -e "select unix_timestamp(timeStamp) from $dbName.requests_table limit 1"`
-#mysql -u$sqlUser -p$sqlPass -s -N -e  "select methodName, requestURL, unix_timestamp(timeStamp)-$t0, userAgent, contentLen from $dbName.requests_table" > /tmp/result.csv
+# t0=`mysql -u$sqlUser -p$sqlPass -s -N -e "select unix_timestamp(timeStamp) from $dbName.requests_table limit 1"`
+# mysql -u$sqlUser -p$sqlPass -s -N -e  "select methodName, requestURL, unix_timestamp(timeStamp)-$t0, userAgent, contentLen from $dbName.requests_table " > /tmp/result.csv
 
-
-numOfReq=`wc -l < /tmp/result.csv`
-#prepere files 
-while IFS=$'\t' read method url timestamp userAgent contentLen
-do
- #if [ $method = 'GET' ] || [ $method = 'PUT' ] ; then  
- if [ $method = 'PUT' ] ; then  
-    xpath=${url%/*}
-    path=`echo $xpath | sed "s/^http:\/\///g"`
-    fileName=${url##*/}
-    relativePath=${path:27}
-    absPath=$basePath/$relativePath
-    if [[ ! -f $absPath/$fileName ]]; then
-      echo "mkdir -p $absPath"
-      mkdir -p $absPath
-      echo "dd if=/dev/urandom of=$absPath/$fileName bs=1 count=$(($contentLen/10))"
-      dd if=/dev/urandom of=$absPath/$fileName bs=1 count=$(($contentLen))
-    fi
-  fi
-     counter=$(( $counter + 1 ))
-     tmp=$((100 *  $counter))
-     progress=$(($tmp/$numOfReq))
-     echo "File: $counter / $numOfReq  Progress: $progress %"
-done < /tmp/result.csv
+# cp /tmp/result.csv $requestsFile
+numOfReq=`wc -l < $requestsFile`
 
 
 
-
+# #prepere files 
+# while IFS=$'\t' read method url timestamp userAgent contentLen
+# do
+#  #if [ $method = 'GET' ] || [ $method = 'PUT' ] ; then  
+#  if [ $method = 'PUT' ] ; then  
+#     xpath=${url%/*}
+#     path=`echo $xpath | sed "s/^http:\/\///g"`
+#     fileName=${url##*/}
+#     relativePath=${path:27}
+#     absPath=$basePath/$relativePath
+#     if [[ ! -f $absPath/$fileName ]]; then
+#       echo "mkdir -p $absPath"
+#       mkdir -p $absPath
+#       echo "dd if=/dev/urandom of=$absPath/$fileName bs=1 count=$(($contentLen/10))"
+#       dd if=/dev/urandom of=$absPath/$fileName bs=1 count=$(($contentLen))
+#     fi
+#   fi
+#      counter=$(( $counter + 1 ))
+#      tmp=$((100 *  $counter))
+#      progress=$(($tmp/$numOfReq))
+#      echo "File: $counter / $numOfReq  Progress: $progress %"
+# done < $requestsFile
+# 
+# 
+# 
+# 
 tn=0
 counter=0
 echo "Method,ContentLen,Elapsed" > report.csv
@@ -92,7 +96,7 @@ do
      elasped=$((($(date +%s%N) - $start)/1000000))     
      echo "$method,$contentLen,$elasped" >> report.csv
      
-done < /tmp/result.csv
+done < $requestsFile
 
 
 
