@@ -150,6 +150,8 @@ public final class WorkerServlet extends HttpServlet {
             getPDRIs();
         } catch (IOException ex) {
             Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (URISyntaxException ex) {
+            Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -487,7 +489,7 @@ public final class WorkerServlet extends HttpServlet {
             String speedMsg = "Source: " + request.getLocalAddr() + " Destination: " + request.getRemoteAddr() + " Tx_Speed: " + speed + " Kbites/sec Tx_Size: " + this.logicalDataCache.get(fileUID).getLogicalData().getLength() + " bytes";
             Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, speedMsg);
             String averageSpeedMsg = "Average speed: Source: " + pdri.getHost() + " Destination: " + request.getLocalAddr() + " Rx_Speed: " + averagre + " Kbites/sec Rx_Size: " + this.logicalDataCache.get(fileUID).getLogicalData().getLength() + " bytes";
-            if (Util.sendStats() ) {
+            if (Util.sendStats()) {
                 stats.setSource(request.getLocalAddr());
                 stats.setDestination(request.getRemoteAddr());
                 stats.setSpeed(speed);
@@ -940,7 +942,7 @@ public final class WorkerServlet extends HttpServlet {
         fileAccessMap.remove(key);
     }
 
-    private LogicalDataWrapped addCacheToPDRIDescr(LogicalDataWrapped logicalData) throws IOException {
+    private LogicalDataWrapped addCacheToPDRIDescr(LogicalDataWrapped logicalData) throws IOException, URISyntaxException {
         List<PDRIDescr> pdris = logicalData.getPdriList();
         cacheFile = new File(cacheDir, pdris.get(0).getName());
         logicalData = removeFilePDRIs(logicalData);
@@ -975,14 +977,22 @@ public final class WorkerServlet extends HttpServlet {
         return logicalData;
     }
 
-    private LogicalDataWrapped removeFilePDRIs(LogicalDataWrapped logicalData) throws IOException {
+    private LogicalDataWrapped removeFilePDRIs(LogicalDataWrapped logicalData) throws IOException, URISyntaxException {
         List<PDRIDescr> pdris = logicalData.getPdriList();
         if (logicalData != null) {
             List<PDRIDescr> removeIt = new ArrayList<>();
             if (pdris != null && !pdris.isEmpty()) {
                 //Remove masters's cache pdris 
                 for (PDRIDescr p : pdris) {
-                    if (p.getResourceUrl().startsWith("file")) {
+                    URI uri = new URI(p.getResourceUrl());
+                    boolean isCache = false;
+                    for (String h : Util.getAllIPs()) {
+                        if(uri.getHost().equals(h)){
+                            isCache = true;
+                            break;
+                        }
+                    }
+                    if (uri.getScheme().startsWith("file") && !isCache) {
                         removeIt.add(p);
                     }
                 }
@@ -1050,7 +1060,7 @@ public final class WorkerServlet extends HttpServlet {
         httpResponse.sendError(HttpServletResponse.SC_UNAUTHORIZED);
     }
 
-    private void getPDRIs() throws IOException {
+    private void getPDRIs() throws IOException, URISyntaxException {
         if (restClient == null) {
             restClient = Client.create(clientConfig);
             restClient.removeAllFilters();
