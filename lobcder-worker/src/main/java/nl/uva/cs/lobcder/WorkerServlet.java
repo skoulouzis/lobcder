@@ -989,18 +989,17 @@ public final class WorkerServlet extends HttpServlet {
                     List<String> ips = Util.getAllIPs();
                     if (ips != null) {
                         for (String h : ips) {
-                            Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, "uri: " + uri);
-                            Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, "uri.getHost(): " + uri.getHost());
-                            String host = uri.getHost();
-                            if (h != null) {
-                                if (host == null || host.equals(h)) {
-                                    isCache = true;
-                                    break;
+                            if (uri != null) {
+                                String host = uri.getHost();
+                                if (h != null) {
+                                    if (host == null || host.equals(h)) {
+                                        isCache = true;
+                                        break;
+                                    }
                                 }
                             }
                         }
                     }
-
                     if (uri.getScheme().startsWith("file") && !isCache) {
                         removeIt.add(p);
                     }
