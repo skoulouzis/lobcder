@@ -986,12 +986,16 @@ public final class WorkerServlet extends HttpServlet {
                 for (PDRIDescr p : pdris) {
                     URI uri = new URI(p.getResourceUrl());
                     boolean isCache = false;
-                    for (String h : Util.getAllIPs()) {
-                        if(uri.getHost().equals(h)){
-                            isCache = true;
-                            break;
+                    List<String> ips = Util.getAllIPs();
+                    if (ips != null) {
+                        for (String h : ips) {
+                            if (h != null && uri.getHost().equals(h)) {
+                                isCache = true;
+                                break;
+                            }
                         }
                     }
+
                     if (uri.getScheme().startsWith("file") && !isCache) {
                         removeIt.add(p);
                     }
