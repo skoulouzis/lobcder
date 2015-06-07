@@ -1,1 +1,4 @@
-http://localhost:8080/lobcder-worker/
+http://192.168.100.3:8080/lobcder-worker/
+http://192.168.100.4:8080/lobcder-worker/
+http://192.168.100.5:8080/lobcder-worker/
+http://192.168.100.6:8080/lobcder-worker/

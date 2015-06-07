@@ -1,10 +1,11 @@
 #!/bin/bash
 
+dbName=lobcderDB2
 replicaLocation=/home/alogo/Downloads/STORAGE/LOBCDER-REPLICA-SANDBOX
 
 ls $replicaLocation > fileNamesToReplcate
 
-echo "CREATE TEMPORARY TABLE tmptable_1 SELECT * FROM $dbName.pdri_table where" > tmpQuery
+echo "CREATE TEMPORARY TABLE $dbName.tmptable_1 SELECT * FROM $dbName.pdri_table where" > tmpQuery
 #echo "SELECT * FROM pdri_table where" > tmpQuery
 
 while read p; do
