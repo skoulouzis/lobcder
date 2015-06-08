@@ -148,9 +148,7 @@ public final class WorkerServlet extends HttpServlet {
                 cacheDir.mkdirs();
             }
             getPDRIs();
-        } catch (IOException ex) {
-            Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (URISyntaxException ex) {
+        } catch (IOException | URISyntaxException ex) {
             Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
@@ -223,8 +221,8 @@ public final class WorkerServlet extends HttpServlet {
         }
         Path pathAndToken = Path.path(requestedFile);
 //            token = pathAndToken.getName();
-        fileUID = pathAndToken.getParent().toString();
-        Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "token: {0} fileUID: {1}", new Object[]{token, fileUID});
+        fileUID = pathAndToken.getParent().toString().replaceAll("/", "");
+//        Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "token: {0} fileUID: {1}", new Object[]{token, fileUID});
 
         long startGetPDRI = System.currentTimeMillis();
         Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "start getPDRI at:{0}", startGetPDRI);
@@ -558,23 +556,25 @@ public final class WorkerServlet extends HttpServlet {
      * @throws IOException If something fails at I/O level.
      */
     private void copy(PDRI input, OutputStream output, long start, long length, HttpServletRequest request)
-            throws IOException, VlException, JAXBException {
+            throws IOException, VlException, JAXBException, URISyntaxException {
         OutputStream tos = null;
         try {
             if (input.getLength() == length) {
                 // Write full range.
                 in = input.getData();
                 byte[] buffer = new byte[bufferSize];
-                cacheFile = new File(cacheDir, input.getFileName());
-                if (!cacheFile.exists() || input.getLength() != cacheFile.length()) {
-                    cacheDir = new File(System.getProperty("java.io.tmpdir") + File.separator + Util.getBackendWorkingFolderName());
-                    if (!cacheDir.exists()) {
-                        cacheDir.mkdirs();
-                    }
-                    tos = new TeeOutputStream(new FileOutputStream(cacheFile), output);
-                    File file = new File(System.getProperty("user.home"));
-                    while (file.getUsableSpace() < Util.getCacheFreeSpaceLimit()) {
-                        evictCache();
+                if (!isPDRIOnWorker(new URI(input.getURI()))) {
+                    cacheFile = new File(cacheDir, input.getFileName());
+                    if (!cacheFile.exists() || input.getLength() != cacheFile.length()) {
+                        cacheDir = new File(System.getProperty("java.io.tmpdir") + File.separator + Util.getBackendWorkingFolderName());
+                        if (!cacheDir.exists()) {
+                            cacheDir.mkdirs();
+                        }
+                        tos = new TeeOutputStream(new FileOutputStream(cacheFile), output);
+                        File file = new File(System.getProperty("user.home"));
+                        while (file.getUsableSpace() < Util.getCacheFreeSpaceLimit()) {
+                            evictCache();
+                        }
                     }
                 } else {
                     tos = output;
@@ -721,7 +721,6 @@ public final class WorkerServlet extends HttpServlet {
     private PDRI getPDRI(String fileUID) throws InterruptedException, IOException, URISyntaxException {
         PDRIDescr pdriDesc = null;//new PDRIDescr();
         LogicalDataWrapped logicalData = null;
-
         logicalData = logicalDataCache.get(fileUID);
         if (logicalData == null) {
             if (restClient == null) {
@@ -729,19 +728,17 @@ public final class WorkerServlet extends HttpServlet {
                 restClient.removeAllFilters();
                 restClient.addFilter(new com.sun.jersey.api.client.filter.HTTPBasicAuthFilter("worker-", token));
                 webResource = restClient.resource(restURL);
-
             }
+
             Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "Asking master. Token: {0}", token);
             WebResource res = webResource.path("item").path("query").path(fileUID);
             logicalData = res.accept(MediaType.APPLICATION_XML).
                     get(new GenericType<LogicalDataWrapped>() {
             });
-
-
-            logicalData = removeFilePDRIs(logicalData);
+            logicalData = removeUnreachablePDRIs(logicalData);
         }
 
-        logicalData = addCacheToPDRIDescr(logicalData);
+        logicalData = addCacheFileToPDRIDescr(logicalData);
 
 
         pdriDesc = selectBestPDRI(logicalData.getPdriList());
@@ -756,37 +753,14 @@ public final class WorkerServlet extends HttpServlet {
         if (!pdris.isEmpty()) {
             PDRIDescr p = pdris.iterator().next();
             URI uri = new URI(p.getResourceUrl());
-            String resourceIP = Util.getIP(uri.getHost());
-            List<String> ips = Util.getAllIPs();
-            for (String i : ips) {
-//                Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "resourceIP: {0} localIP: {1}", new Object[]{resourceIP, i});
-                if (resourceIP != null && resourceIP.equals(i)
-                        || uri.getHost().equals("localhost")
-                        || uri.getHost().equals("127.0.0.1")) {
-                    String resURL = p.getResourceUrl().replaceFirst(uri.getScheme(), "file");
-                    p.setResourceUrl(resURL);
-                    return p;
-                }
-            }
-
-        }
-
-        for (PDRIDescr p : pdris) {
-            URI uri = new URI(p.getResourceUrl());
             if (uri.getScheme().equals("file")) {
                 return p;
             }
-            String resourceIP = Util.getIP(uri.getHost());
-            List<String> ips = Util.getAllIPs();
-            for (String i : ips) {
-//                Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, "Checking IP: {0}", i);
-                if (resourceIP.equals(i)) {
-                    String resURL = p.getResourceUrl().replaceFirst(uri.getScheme(), "file");
-                    p.setResourceUrl(resURL);
-                    return p;
-                }
+            if (isPDRIOnWorker(uri)) {
+                String resURL = p.getResourceUrl().replaceFirst(uri.getScheme(), "file");
+                p.setResourceUrl(resURL);
+                return p;
             }
-
         }
         if (weightPDRIMap.isEmpty() || weightPDRIMap.size() < pdris.size()) {
             //Just return one at random;
@@ -942,11 +916,10 @@ public final class WorkerServlet extends HttpServlet {
         fileAccessMap.remove(key);
     }
 
-    private LogicalDataWrapped addCacheToPDRIDescr(LogicalDataWrapped logicalData) throws IOException, URISyntaxException {
+    private LogicalDataWrapped addCacheFileToPDRIDescr(LogicalDataWrapped logicalData) throws IOException, URISyntaxException {
         List<PDRIDescr> pdris = logicalData.getPdriList();
         cacheFile = new File(cacheDir, pdris.get(0).getName());
-        logicalData = removeFilePDRIs(logicalData);
-        if (cacheFile.exists()) {
+        if (!isFileOnWorker(logicalData) && cacheFile.exists() && !isCacheInPdriList(cacheFile, logicalData)) {
             String fileName = cacheFile.getName();
             long ssID = -1;
             String resourceURI = "file:///" + cacheFile.getAbsoluteFile().getParentFile().getParent();
@@ -977,43 +950,29 @@ public final class WorkerServlet extends HttpServlet {
         return logicalData;
     }
 
-    private LogicalDataWrapped removeFilePDRIs(LogicalDataWrapped logicalData) throws IOException, URISyntaxException {
+    private LogicalDataWrapped removeUnreachablePDRIs(LogicalDataWrapped logicalData) throws IOException, URISyntaxException {
         List<PDRIDescr> pdris = logicalData.getPdriList();
-        if (logicalData != null && pdris != null) {
+        if (pdris != null) {
             List<PDRIDescr> removeIt = new ArrayList<>();
-            if (pdris != null && !pdris.isEmpty()) {
-                //Remove masters's cache pdris 
-                for (PDRIDescr p : pdris) {
-                    URI uri = new URI(p.getResourceUrl());
-                    boolean isCache = false;
-                    List<String> ips = Util.getAllIPs();
-                    if (ips != null) {
-                        for (String h : ips) {
-                            if (uri != null) {
-                                String host = uri.getHost();
-                                if (h != null) {
-                                    if (host == null || host.equals(h)) {
-                                        isCache = true;
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    if (uri.getScheme().startsWith("file") && !isCache) {
-                        removeIt.add(p);
-                    }
-                }
-                if (!removeIt.isEmpty()) {
-                    pdris.removeAll(removeIt);
-                    if (pdris.isEmpty()) {
-                        Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, "PDRIS from master is either empty or contains unreachable files");
-                        logicalDataCache.remove(fileUID);
-                        throw new IOException("PDRIS from master is either empty or contains unreachable files");
-                    }
+            for (PDRIDescr p : pdris) {
+                URI uri = new URI(p.getResourceUrl());
+                String pdriHost = uri.getHost();
+                String pdriScheme = uri.getScheme();
+                if (pdriHost == null || pdriHost.equals("localhost") || pdriHost.startsWith("127.0.")) {
+                    removeIt.add(p);
+                } else if (pdriScheme.equals("file") && !isPDRIOnWorker(new URI(p.getResourceUrl()))) {
+                    removeIt.add(p);
                 }
             }
-            logicalDataCache.put(fileUID, logicalData);
+            if (!removeIt.isEmpty()) {
+                pdris.removeAll(removeIt);
+                if (pdris.isEmpty()) {
+                    Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, "PDRIS from master is either empty or contains unreachable files");
+                    logicalDataCache.remove(fileUID);
+                    throw new IOException("PDRIS from master is either empty or contains unreachable files");
+                }
+                logicalDataCache.put(fileUID, logicalData);
+            }
         }
         return logicalData;
     }
@@ -1084,11 +1043,51 @@ public final class WorkerServlet extends HttpServlet {
             });
             for (LogicalDataWrapped ldw : logicalDataList) {
                 if (!ldw.getLogicalData().isFolder()) {
-                    LogicalDataWrapped ld = removeFilePDRIs(ldw);
+                    LogicalDataWrapped ld = removeUnreachablePDRIs(ldw);
                     this.logicalDataCache.put(String.valueOf(ld.getLogicalData().getUid()), ld);
                 }
             }
         }
+    }
+
+    private boolean isFileOnWorker(LogicalDataWrapped logicalData) throws URISyntaxException, UnknownHostException, SocketException {
+        List<PDRIDescr> pdris = logicalData.getPdriList();
+        for (PDRIDescr p : pdris) {
+            if (isPDRIOnWorker(new URI(p.getResourceUrl()))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isPDRIOnWorker(URI pdriURI) throws URISyntaxException, UnknownHostException, SocketException {
+        String pdriHost = pdriURI.getHost();
+        if (pdriHost == null || pdriHost.equals("localhost") || pdriHost.startsWith("127.")) {
+            return false;
+        }
+        List<String> workerIPs = Util.getAllIPs();
+        String resourceIP = Util.getIP(pdriURI.getHost());
+        for (String ip : workerIPs) {
+            if (ip != null) {
+                if (ip.equals(pdriHost) || ip.equals(resourceIP)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private boolean isCacheInPdriList(File cacheFile, LogicalDataWrapped logicalData) {
+        String resourceURI = "file:///" + cacheFile.getAbsoluteFile().getParentFile().getParent();
+        List<PDRIDescr> pdris = logicalData.getPdriList();
+        if (pdris != null) {
+            for (PDRIDescr p : pdris) {
+                if (p.getResourceUrl().equals(resourceURI)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     /**

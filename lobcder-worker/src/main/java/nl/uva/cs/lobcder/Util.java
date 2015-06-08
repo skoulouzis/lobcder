@@ -50,8 +50,10 @@ class Util extends PropertiesHelper {
     }
 
     public static List<String> getAllIPs() throws UnknownHostException, SocketException {
-//        InetAddress localhost = InetAddress.getLocalHost();
-//        InetAddress[] allMyIps = InetAddress.getAllByName(localhost.getCanonicalHostName());
+        //        InetAddress localhost = InetAddress.getLocalHost();
+        //        InetAddress[] allMyIps = InetAddress.getAllByName(localhost.getCanonicalHostName());
+        
+
         List<String> ips = new ArrayList<>();
         for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements();) {
             NetworkInterface intf = en.nextElement();
@@ -66,6 +68,7 @@ class Util extends PropertiesHelper {
 //                Logger.getLogger(Util.class.getName()).log(Level.FINE, "ip: {0}", ip);
             }
         }
+        ips.add(InetAddress.getLocalHost().getHostName());
         return ips;
     }
 
