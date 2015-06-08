@@ -23,15 +23,14 @@ import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.json.JSONConfiguration;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.sql.DataSource;
@@ -129,7 +128,10 @@ public class SDNSweep implements Runnable {
         if (topologyURL != null) {
             DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
             DocumentBuilder db = dbf.newDocumentBuilder();
-            flukesTopology = db.parse(new URL(topologyURL).openStream());
+            URL url = new URL(topologyURL);
+            try (InputStream stream = url.openStream()) {
+                flukesTopology = db.parse(stream);
+            }
         }
         sdnCC = new SDNControllerClient(uri);
     }

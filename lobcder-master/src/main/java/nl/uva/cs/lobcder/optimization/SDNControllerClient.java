@@ -136,7 +136,6 @@ public class SDNControllerClient {
                         } else {
                             e2 = graph.getEdge(ip, vertex);
                         }
-                        Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, "vertex: {0}", new Object[]{vertex});
                         graph.setEdgeWeight(e2, getCost(ip, vertex));
                     }
                 }
@@ -175,6 +174,9 @@ public class SDNControllerClient {
                     for (DefaultWeightedEdge e : shorPath) {
                         w += graph.getEdgeWeight(e);
                     }
+                    DefaultWeightedEdge p = shorPath.get(0);
+                    String e = graph.getEdgeSource(p);
+                    Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, "cost: {0} path: {1}", new Object[]{w, e});
                     if (w <= cost) {
                         cost = w;
                         shortestPath = shorPath;
@@ -259,14 +261,14 @@ public class SDNControllerClient {
 //        }
         Double averageLinkUsage = SDNSweep.getAverageLinkUsageMap().get(dpi);
         if (averageLinkUsage != null) {
-            Double factor = 0.1;
+            Double factor = 1.5;
             //For each sec of usage how much extra time we get ? 
             //We asume a liner ralationship 
             //The longer the usage it means either more transfers per flow or larger files or both
             ett += averageLinkUsage * factor;
         }
 
-        Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, "From: {0} to: {1} tt: {2}", new Object[]{v1, v2, ett});
+//        Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, "From: {0} to: {1} tt: {2}", new Object[]{v1, v2, ett});
         return ett;
     }
 
