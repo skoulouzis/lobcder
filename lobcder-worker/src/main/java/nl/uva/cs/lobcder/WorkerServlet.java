@@ -577,7 +577,8 @@ public final class WorkerServlet extends HttpServlet {
                             evictCache();
                         }
                     }
-                } else {
+                } 
+                if(tos==null){
                     tos = output;
                 }
                 if (!qosCopy) {
