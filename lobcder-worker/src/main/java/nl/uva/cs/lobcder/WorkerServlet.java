@@ -65,6 +65,7 @@ import static nl.uva.cs.lobcder.Util.ChacheEvictionAlgorithm.LRU;
 import static nl.uva.cs.lobcder.Util.ChacheEvictionAlgorithm.MRU;
 import nl.uva.cs.lobcder.auth.AuthTicket;
 import nl.uva.cs.lobcder.auth.MyPrincipal;
+import nl.uva.cs.lobcder.resources.LogicalData;
 import nl.uva.cs.lobcder.resources.PDRI;
 import nl.uva.cs.lobcder.resources.PDRIDescr;
 import nl.uva.cs.lobcder.resources.VPDRI;
@@ -241,7 +242,9 @@ public final class WorkerServlet extends HttpServlet {
 
         // Prepare some variables. The ETag is an unique identifier of the file.
         long length = pdri.getLength();
-        long lastModified = logicalDataCache.get(fileUID).getLogicalData().getModifiedDate();
+        LogicalDataWrapped ldw = logicalDataCache.get(fileUID);
+        LogicalData ld = ldw.getLogicalData();
+        long lastModified = ld.getModifiedDate();
         String eTag = fileLogicalName + "_" + length + "_" + lastModified;
         long expires = System.currentTimeMillis() + DEFAULT_EXPIRE_TIME;
 
@@ -577,8 +580,8 @@ public final class WorkerServlet extends HttpServlet {
                             evictCache();
                         }
                     }
-                } 
-                if(tos==null){
+                }
+                if (tos == null) {
                     tos = output;
                 }
                 if (!qosCopy) {
