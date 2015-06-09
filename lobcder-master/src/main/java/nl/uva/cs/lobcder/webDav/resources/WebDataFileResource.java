@@ -738,7 +738,7 @@ public class WebDataFileResource extends WebDataResource implements
         workers = PropertiesHelper.getWorkers();
         if (workerIndex >= workers.size()) {
             workerIndex = 0;
-            return null;
+//            return null;
         }
         String worker = workers.get(workerIndex++);
         String w = worker + "/" + getLogicalData().getUid();
