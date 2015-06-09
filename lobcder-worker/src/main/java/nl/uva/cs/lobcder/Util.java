@@ -52,7 +52,7 @@ class Util extends PropertiesHelper {
     public static List<String> getAllIPs() throws UnknownHostException, SocketException {
         //        InetAddress localhost = InetAddress.getLocalHost();
         //        InetAddress[] allMyIps = InetAddress.getAllByName(localhost.getCanonicalHostName());
-        
+
 
         List<String> ips = new ArrayList<>();
         for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements();) {
@@ -68,7 +68,11 @@ class Util extends PropertiesHelper {
 //                Logger.getLogger(Util.class.getName()).log(Level.FINE, "ip: {0}", ip);
             }
         }
-        ips.add(InetAddress.getLocalHost().getHostName());
+        try {
+            ips.add(InetAddress.getLocalHost().getHostName());
+        } catch (Exception ex) {
+            //ignore
+        }
         return ips;
     }
 
