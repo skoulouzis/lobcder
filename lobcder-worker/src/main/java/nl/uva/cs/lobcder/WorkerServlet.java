@@ -75,6 +75,7 @@ import nl.uva.vlet.data.StringUtil;
 import nl.uva.vlet.exception.VlException;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.output.TeeOutputStream;
+import org.globus.tools.ui.util.UITools;
 
 /**
  * A file servlet supporting resume of downloads and client-side caching and
@@ -773,12 +774,22 @@ public final class WorkerServlet extends HttpServlet {
         long sumOfSpeed = 0;
         for (PDRIDescr p : pdris) {
             URI uri = new URI(p.getResourceUrl());
-            String host;
+            String host = null;
             if (uri.getScheme().equals("file")
                     || StringUtil.isEmpty(uri.getHost())
                     || uri.getHost().equals("localhost")
                     || uri.getHost().equals("127.0.0.1")) {
-                host = InetAddress.getLocalHost().getHostName();
+                try {
+                    host = InetAddress.getLocalHost().getHostName();
+                } catch (Exception ex) {
+                    List<String> ips = Util.getAllIPs();
+                    for (String ip : ips) {
+                        if (ip.contains(".")) {
+                            host = ip;
+                            break;
+                        }
+                    }
+                }
             } else {
                 host = uri.getHost();
             }
