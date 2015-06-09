@@ -1,3 +1,1 @@
-sftp://w@192.168.100.3/mnt/target w pass
-sftp://w@192.168.100.4/mnt/target w pass
 sftp://w@192.168.100.5/mnt/target w pass
