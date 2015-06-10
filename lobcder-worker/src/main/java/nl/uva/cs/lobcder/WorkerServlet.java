@@ -351,8 +351,11 @@ public final class WorkerServlet extends HttpServlet {
         // Prepare and initialize response --------------------------------------------------------
         // Get content type by file name and set default GZIP support and content disposition.
         String contentType = getServletContext().getMimeType(fileLogicalName);
-        if (contentType == null) {
-            contentType = this.logicalDataCache.get(fileUID).getLogicalData().getContentTypesAsString();
+        ldw = logicalDataCache.get(fileUID);
+        if (contentType == null && ldw != null) {
+            contentType = ldw.getLogicalData().getContentTypesAsString();
+        } else {
+            contentType = "application/octet-stream";
         }
         boolean acceptsGzip = false;
         String disposition = "inline";
@@ -388,8 +391,11 @@ public final class WorkerServlet extends HttpServlet {
         response.setHeader("ETag", eTag);
         response.setDateHeader("Last-Modified", lastModified);
         response.setDateHeader("Expires", expires);
+        ldw = logicalDataCache.get(fileUID);
+        if (ldw != null) {
+            response.setContentLength(safeLongToInt(ldw.getLogicalData().getLength()));
+        }
 
-        response.setContentLength(safeLongToInt(logicalDataCache.get(fileUID).getLogicalData().getLength()));
 
         // Send requested file (part(s)) to client ------------------------------------------------
         // Prepare streams.
