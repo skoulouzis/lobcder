@@ -37,6 +37,7 @@ import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -756,16 +757,20 @@ public final class WorkerServlet extends HttpServlet {
 
     private PDRIDescr selectBestPDRI(List<PDRIDescr> pdris) throws URISyntaxException, UnknownHostException, SocketException {
         if (!pdris.isEmpty()) {
-            PDRIDescr p = pdris.iterator().next();
-            URI uri = new URI(p.getResourceUrl());
-            if (uri.getScheme().equals("file")) {
-                return p;
+            Iterator<PDRIDescr> iter = pdris.iterator();
+            while (iter.hasNext()) {
+                PDRIDescr p = iter.next();
+                URI uri = new URI(p.getResourceUrl());
+                if (uri.getScheme().equals("file")) {
+                    return p;
+                }
+                if (isPDRIOnWorker(uri)) {
+                    String resURL = p.getResourceUrl().replaceFirst(uri.getScheme(), "file");
+                    p.setResourceUrl(resURL);
+                    return p;
+                }
             }
-            if (isPDRIOnWorker(uri)) {
-                String resURL = p.getResourceUrl().replaceFirst(uri.getScheme(), "file");
-                p.setResourceUrl(resURL);
-                return p;
-            }
+
         }
         if (weightPDRIMap.isEmpty() || weightPDRIMap.size() < pdris.size()) {
             //Just return one at random;
