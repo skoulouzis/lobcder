@@ -244,8 +244,14 @@ public final class WorkerServlet extends HttpServlet {
         // Prepare some variables. The ETag is an unique identifier of the file.
         long length = pdri.getLength();
         LogicalDataWrapped ldw = logicalDataCache.get(fileUID);
-        LogicalData ld = ldw.getLogicalData();
-        long lastModified = ld.getModifiedDate();
+        long lastModified;
+        if (ldw != null) {
+            LogicalData ld = ldw.getLogicalData();
+            lastModified = ld.getModifiedDate();
+
+        } else {
+            lastModified = System.currentTimeMillis();
+        }
         String eTag = fileLogicalName + "_" + length + "_" + lastModified;
         long expires = System.currentTimeMillis() + DEFAULT_EXPIRE_TIME;
 
