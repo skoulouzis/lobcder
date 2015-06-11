@@ -227,8 +227,7 @@ public final class WorkerServlet extends HttpServlet {
 //            token = pathAndToken.getName();
         fileUID = pathAndToken.getParent().toString().replaceAll("/", "");
 //        Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "token: {0} fileUID: {1}", new Object[]{token, fileUID});
-
-        long startGetPDRI = System.currentTimeMillis();
+        
         pdri = getPDRI(fileUID);
 
         // URL-decode the file name (might contain spaces and on) and prepare file object.
