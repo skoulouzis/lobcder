@@ -482,36 +482,38 @@ public final class WorkerServlet extends HttpServlet {
             if (elapsed <= 0) {
                 elapsed = 1;
             }
-            double speed = ((this.logicalDataCache.get(fileUID).getLogicalData().getLength() * 8.0) * 1000.0) / (elapsed * 1000.0);
-            Double oldSpeed = weightPDRIMap.get(pdri.getHost());
-            if (oldSpeed == null) {
-                oldSpeed = speed;
-            }
-            Integer numOfGets = numOfGetsMap.get(pdri.getHost());
-            if (numOfGets == null) {
-                numOfGets = 1;
-            }
-            double averagre = (speed + oldSpeed) / (double) numOfGets;
-            numOfGetsMap.put(pdri.getHost(), numOfGets++);
-            weightPDRIMap.put(pdri.getHost(), averagre);
-            Stats stats = new Stats();
-            stats.setSource(request.getLocalAddr());
-            stats.setDestination(request.getRemoteAddr());
-            stats.setSpeed(speed);
-            stats.setSize(this.logicalDataCache.get(fileUID).getLogicalData().getLength());
-            setSpeed(stats);
-
-            String speedMsg = "Source: " + request.getLocalAddr() + " Destination: " + request.getRemoteAddr() + " Tx_Speed: " + speed + " Kbites/sec Tx_Size: " + this.logicalDataCache.get(fileUID).getLogicalData().getLength() + " bytes";
-            Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, speedMsg);
-            String averageSpeedMsg = "Average speed: Source: " + pdri.getHost() + " Destination: " + request.getLocalAddr() + " Rx_Speed: " + averagre + " Kbites/sec Rx_Size: " + this.logicalDataCache.get(fileUID).getLogicalData().getLength() + " bytes";
-            if (Util.sendStats()) {
+            LogicalDataWrapped lwd = this.logicalDataCache.get(fileUID);
+            if (lwd != null) {
+                double speed = ((lwd.getLogicalData().getLength() * 8.0) * 1000.0) / (elapsed * 1000.0);
+                Double oldSpeed = weightPDRIMap.get(pdri.getHost());
+                if (oldSpeed == null) {
+                    oldSpeed = speed;
+                }
+                Integer numOfGets = numOfGetsMap.get(pdri.getHost());
+                if (numOfGets == null) {
+                    numOfGets = 1;
+                }
+                double averagre = (speed + oldSpeed) / (double) numOfGets;
+                numOfGetsMap.put(pdri.getHost(), numOfGets++);
+                weightPDRIMap.put(pdri.getHost(), averagre);
+                Stats stats = new Stats();
                 stats.setSource(request.getLocalAddr());
                 stats.setDestination(request.getRemoteAddr());
                 stats.setSpeed(speed);
                 stats.setSize(this.logicalDataCache.get(fileUID).getLogicalData().getLength());
                 setSpeed(stats);
+                String speedMsg = "Source: " + request.getLocalAddr() + " Destination: " + request.getRemoteAddr() + " Tx_Speed: " + speed + " Kbites/sec Tx_Size: " + this.logicalDataCache.get(fileUID).getLogicalData().getLength() + " bytes";
+                Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, speedMsg);
+                String averageSpeedMsg = "Average speed: Source: " + pdri.getHost() + " Destination: " + request.getLocalAddr() + " Rx_Speed: " + averagre + " Kbites/sec Rx_Size: " + this.logicalDataCache.get(fileUID).getLogicalData().getLength() + " bytes";
+                if (Util.sendStats()) {
+                    stats.setSource(request.getLocalAddr());
+                    stats.setDestination(request.getRemoteAddr());
+                    stats.setSpeed(speed);
+                    stats.setSize(this.logicalDataCache.get(fileUID).getLogicalData().getLength());
+                    setSpeed(stats);
+                }
+                Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, averageSpeedMsg);
             }
-            Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, averageSpeedMsg);
         }
     }
 
