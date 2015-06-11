@@ -946,7 +946,10 @@ public final class WorkerServlet extends HttpServlet {
                 break;
 
         }
-        new File(key).delete();
+        File deleteIt = new File(key);
+        if (deleteIt != null) {
+            deleteIt.delete();
+        }
         fileAccessMap.remove(key);
     }
 
