@@ -1079,7 +1079,9 @@ public final class WorkerServlet extends HttpServlet {
             for (LogicalDataWrapped ldw : logicalDataList) {
                 if (!ldw.getLogicalData().isFolder()) {
                     LogicalDataWrapped ld = removeUnreachablePDRIs(ldw);
-                    this.logicalDataCache.put(String.valueOf(ld.getLogicalData().getUid()), ld);
+                    String uid = String.valueOf(ld.getLogicalData().getUid());
+                    Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, "Adding uid: {0}", uid);
+                    this.logicalDataCache.put(uid, ld);
                 }
             }
         }
