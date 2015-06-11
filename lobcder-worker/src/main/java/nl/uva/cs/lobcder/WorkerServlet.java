@@ -751,7 +751,7 @@ public final class WorkerServlet extends HttpServlet {
                 webResource = restClient.resource(restURL);
             }
 
-            Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "Asking master. Token: {0} fileID: " + fileUID, token);
+            Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "Asking master. Token: {0} fileID: " + fileUID + " logicalDataCache.size: " + logicalDataCache.size(), token);
             WebResource res = webResource.path("item").path("query").path(fileUID);
             logicalData = res.accept(MediaType.APPLICATION_XML).
                     get(new GenericType<LogicalDataWrapped>() {
