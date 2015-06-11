@@ -187,7 +187,8 @@ public final class WorkerServlet extends HttpServlet {
 //            authenticate(request, response);
             processRequest(request, response, true);
         } catch (IOException | InterruptedException | URISyntaxException | VlException | JAXBException ex) {
-            Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, ex);
+            String fname = this.cacheFile.getAbsolutePath();
+            Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, "cacheFile: " + cacheFile.getAbsolutePath() + " fileLogicalName: " + fileLogicalName + " fileUID: " + this.fileUID, ex);
             handleError(ex, response);
 //        } catch (NoSuchAlgorithmException ex) {
 //            Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, ex);
@@ -750,7 +751,7 @@ public final class WorkerServlet extends HttpServlet {
                 webResource = restClient.resource(restURL);
             }
 
-            Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "Asking master. Token: {0}", token);
+            Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "Asking master. Token: {0} fileID: " + fileUID, token);
             WebResource res = webResource.path("item").path("query").path(fileUID);
             logicalData = res.accept(MediaType.APPLICATION_XML).
                     get(new GenericType<LogicalDataWrapped>() {
