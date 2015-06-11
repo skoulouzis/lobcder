@@ -743,6 +743,7 @@ public final class WorkerServlet extends HttpServlet {
         PDRIDescr pdriDesc = null;//new PDRIDescr();
         LogicalDataWrapped logicalData = null;
         logicalData = logicalDataCache.get(fileUID);
+        Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "Looking in cache for: {0}", fileUID);
         if (logicalData == null) {
             if (restClient == null) {
                 restClient = Client.create(clientConfig);
