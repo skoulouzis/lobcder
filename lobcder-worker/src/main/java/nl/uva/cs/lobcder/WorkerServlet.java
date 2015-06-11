@@ -189,6 +189,7 @@ public final class WorkerServlet extends HttpServlet {
         } catch (IOException | InterruptedException | URISyntaxException | VlException | JAXBException ex) {
             String fname = this.cacheFile.getAbsolutePath();
             Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, "cacheFile: " + cacheFile.getAbsolutePath() + " fileLogicalName: " + fileLogicalName + " fileUID: " + this.fileUID, ex);
+            logicalDataCache.remove(fileUID);
             handleError(ex, response);
 //        } catch (NoSuchAlgorithmException ex) {
 //            Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, ex);
