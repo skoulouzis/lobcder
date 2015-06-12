@@ -605,6 +605,7 @@ public class WebDataFileResource extends WebDataResource implements
     }
 
     private String getBestWorker(String reuSource) throws IOException, URISyntaxException, InterruptedException {
+//        reuSource = "192.168.100.1";
         if (doRedirect) {
             if (workersMap.containsKey(reuSource)) {
                 String worker = workersMap.get(reuSource);

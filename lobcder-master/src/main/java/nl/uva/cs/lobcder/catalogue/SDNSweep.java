@@ -125,7 +125,7 @@ public class SDNSweep implements Runnable {
         clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
         client = Client.create(clientConfig);
         topologyURL = PropertiesHelper.getTopologyURL();
-        if (topologyURL != null) {
+        if (topologyURL != null && flukesTopology != null) {
             DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
             DocumentBuilder db = dbf.newDocumentBuilder();
             URL url = new URL(topologyURL);

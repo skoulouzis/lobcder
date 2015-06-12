@@ -25,7 +25,6 @@ public class PropertiesHelper {
     public static final String propertiesPath = "lobcder.properties";
 //    public static final String cachePropertiesPath = "cache.properties";
 
-
     public static enum PREDICTION_TYPE {
 
         method,
@@ -132,8 +131,8 @@ public class PropertiesHelper {
     public static Boolean useBulckMetadataRepository() throws IOException {
         return Boolean.valueOf(getProperties().getProperty("metadata.repository.bulck", "true"));
     }
-    
-        public static int getMetadataRepositoryNumOfElem() throws IOException {
+
+    public static int getMetadataRepositoryNumOfElem() throws IOException {
         return Integer.valueOf(getProperties().getProperty("metadata.repository.num.of.elements", "500"));
     }
 
@@ -188,10 +187,10 @@ public class PropertiesHelper {
         String url = getProperties().getProperty("sdn.controller.url");
         return url.replaceAll(" ", "");
     }
-        public static String getTopologyURL() throws IOException {
-         return getProperties().getProperty("sdn.topology.url");
-    }
 
+    public static String getTopologyURL() throws IOException {
+        return getProperties().getProperty("sdn.topology.url");
+    }
 
     public static HashMap<Integer, String> getPortWorkerMap() {
         HashMap<Integer, String> ipMap = new HashMap<>();
@@ -222,7 +221,7 @@ public class PropertiesHelper {
     }
 
     public static String getSchedulingAlg() throws IOException {
-        return getProperties().getProperty("worker.selection.algorithm");
+        return getProperties().getProperty("worker.selection.algorithm", "round-robin");
     }
 
     public static Boolean useSDN() throws IOException {
