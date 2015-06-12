@@ -117,6 +117,7 @@ public class SDNSweep implements Runnable {
     private static String topologyURL;
     private static Document flukesTopology;
     private final SDNControllerClient sdnCC;
+    private static final Object lock = new Object();
 
     public SDNSweep(DataSource datasource) throws IOException, ParserConfigurationException, SAXException {
         this.datasource = datasource;
@@ -124,13 +125,15 @@ public class SDNSweep implements Runnable {
         ClientConfig clientConfig = new DefaultClientConfig();
         clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
         client = Client.create(clientConfig);
-        topologyURL = PropertiesHelper.getTopologyURL();
-        if (topologyURL != null && flukesTopology != null) {
-            DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-            DocumentBuilder db = dbf.newDocumentBuilder();
-            URL url = new URL(topologyURL);
-            try (InputStream stream = url.openStream()) {
-                flukesTopology = db.parse(stream);
+        synchronized (lock) {
+            topologyURL = PropertiesHelper.getTopologyURL();
+            if (topologyURL != null && flukesTopology != null) {
+                DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+                DocumentBuilder db = dbf.newDocumentBuilder();
+                URL url = new URL(topologyURL);
+                try (InputStream stream = url.openStream()) {
+                    flukesTopology = db.parse(stream);
+                }
             }
         }
         sdnCC = new SDNControllerClient(uri);
