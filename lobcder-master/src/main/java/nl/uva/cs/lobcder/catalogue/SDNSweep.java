@@ -139,14 +139,14 @@ public class SDNSweep implements Runnable {
         sdnCC = new SDNControllerClient(uri);
     }
 
-    private void init() throws InterruptedException {
+    private void init() throws InterruptedException, IOException {
         getAllSwitches();
         getAllNetworkEntites();
         getAllSwitchLinks();
         if (!flowPushed) {
 //            pushFlowIntoOnePort();
         }
-        if (!arpFlowPushed) {
+        if (!arpFlowPushed && PropertiesHelper.pushARPFlow()) {
             pushARPFlow();
             arpFlowPushed = true;
         }

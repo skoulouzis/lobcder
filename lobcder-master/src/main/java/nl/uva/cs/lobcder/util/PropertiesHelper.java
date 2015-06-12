@@ -188,6 +188,16 @@ public class PropertiesHelper {
         return url.replaceAll(" ", "");
     }
 
+    public static boolean pushFlow() throws IOException {
+        return Boolean.valueOf(getProperties().getProperty("sdn.push.flow", "false"));
+    }
+    
+        public static boolean pushARPFlow() throws IOException {
+        return Boolean.valueOf(getProperties().getProperty("sdn.push.ARP.flow", "false"));
+    }
+        
+    
+
     public static String getTopologyURL() throws IOException {
         return getProperties().getProperty("sdn.topology.url");
     }
