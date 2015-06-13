@@ -125,21 +125,12 @@ public class SDNSweep implements Runnable {
         ClientConfig clientConfig = new DefaultClientConfig();
         clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
         client = Client.create(clientConfig);
-        synchronized (lock) {
-            topologyURL = PropertiesHelper.getTopologyURL();
-            if (topologyURL != null && flukesTopology != null) {
-                DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-                DocumentBuilder db = dbf.newDocumentBuilder();
-                URL url = new URL(topologyURL);
-                try (InputStream stream = url.openStream()) {
-                    flukesTopology = db.parse(stream);
-                }
-            }
-        }
+        initFlukesTopology();
+
         sdnCC = new SDNControllerClient(uri);
     }
 
-    private void init() throws InterruptedException, IOException {
+    private void init() throws InterruptedException, IOException, ParserConfigurationException, SAXException {
         getAllSwitches();
         getAllNetworkEntites();
         getAllSwitchLinks();
@@ -165,6 +156,10 @@ public class SDNSweep implements Runnable {
         } catch (IOException ex) {
             Logger.getLogger(SDNSweep.class.getName()).log(Level.SEVERE, null, ex);
         } catch (InterruptedException ex) {
+            Logger.getLogger(SDNSweep.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (ParserConfigurationException ex) {
+            Logger.getLogger(SDNSweep.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (SAXException ex) {
             Logger.getLogger(SDNSweep.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
@@ -227,7 +222,7 @@ public class SDNSweep implements Runnable {
                         //being the new sample, d_{old} the current metric value 
                         //and d_{new} the newly calculated value. In fact, 
                         //this calculation implements a discrete low pass filter
-                        double a = 0.5;
+                        double a = 0.7;
                         averageLinkUsage = a * averageLinkUsage + (1 - a) * durationSeconds;
 //                        averageLinkUsage = (averageLinkUsage + durationSeconds) / 2.0;
                         averageLinkUsageMap.put(key, averageLinkUsage);
@@ -302,42 +297,6 @@ public class SDNSweep implements Runnable {
 
             }
         }
-//        for (Switch sw : getAllSwitches()) {
-//            List<OFlow> flows = getOflow(sw.dpid);
-//            for (OFlow f : flows) {
-//                if (f != null) {
-//                    String key = sw.dpid + "-" + f.match.inputPort;
-//                    f.timeStamp = System.currentTimeMillis();
-//                    oFlowsMap.put(key, f);
-//
-//                    Double val = receiveBytesMap.get(key);
-//                    double oldValue = (val == null) ? 1.0 : val;
-//                    Double newValue = Double.valueOf(f.byteCount / f.durationSeconds * 1.0);
-//                    val = ((newValue > oldValue) ? newValue : oldValue);
-//                    receiveBytesMap.put(key, val);
-//
-//                    val = receivePacketsMap.get(key);
-//                    oldValue = (val == null) ? 1.0 : val;
-//                    newValue = Double.valueOf(f.packetCount / f.durationSeconds * 1.0);
-//                    val = ((newValue > oldValue) ? newValue : oldValue);
-//                    receivePacketsMap.put(key, val);
-//                    Double averageLinkUsage = averageLinkUsageMap.get(key);
-//                    if (averageLinkUsage == null) {
-//                        averageLinkUsageMap.put(key, Double.valueOf(f.durationSeconds));
-//                    } else {
-//                        //$d_{new} = α ∗ d_{old} + (1 - α ) ∗ d_{sample}$ 
-//                        //with α ∈ [0 , 1] being the weighting factor, d_{sample} 
-//                        //being the new sample, d_{old} the current metric value 
-//                        //and d_{new} the newly calculated value. In fact, 
-//                        //this calculation implements a discrete low pass filter
-//                        double a = 0.5;
-//                        averageLinkUsage = a * averageLinkUsage + (1 - a) * f.durationSeconds;
-//                        averageLinkUsage = (averageLinkUsage + f.durationSeconds) / 2.0;
-//                        averageLinkUsageMap.put(key, averageLinkUsage);
-//                    }
-//                }
-//            }
-//        }
 
     }
 
@@ -361,7 +320,7 @@ public class SDNSweep implements Runnable {
         return mapper.readValue(out, mapper.getTypeFactory().constructCollectionType(List.class, OFlow.class));
     }
 
-    private Collection<NetworkEntity> getAllNetworkEntites() {
+    private Collection<NetworkEntity> getAllNetworkEntites() throws IOException, ParserConfigurationException, SAXException {
         if (networkEntitesCache == null) {
             networkEntitesCache = new HashMap<>();
         }
@@ -385,6 +344,9 @@ public class SDNSweep implements Runnable {
                 }
                 String swIPFromFlukes = null;
                 if (!ne.getIpv4().isEmpty() && !networkEntitesCache.containsKey(ipKey)) {
+                    if (flukesTopology == null) {
+                        initFlukesTopology();
+                    }
                     if (flukesTopology != null) {
                         swIPFromFlukes = findAttachedSwitch(ipKey);
                         String swDPI = null;//switches.get(swIPFromFlukes).dpid;
@@ -406,14 +368,14 @@ public class SDNSweep implements Runnable {
             }
         }
 //        for (NetworkEntity ne : networkEntitesCache.values()) {
-//            Logger.getLogger(SDNSweep.class.getName()).log(Level.INFO, "ne: " + ne.getIpv4().get(0) + "/"+ ne.getMac().get(0)+"-> " + ne.getAttachmentPoint().get(0).getSwitchDPID() + "-" + ne.getAttachmentPoint().get(0).getPort());
+//            Logger.getLogger(SDNSweep.class.getName()).log(Level.INFO, "ne: {0}/{1}-> {2}-{3}", new Object[]{ne.getIpv4().get(0), ne.getMac().get(0), ne.getAttachmentPoint().get(0).getSwitchDPID(), ne.getAttachmentPoint().get(0).getPort()});
 //        }
         return networkEntitesCache.values();
     }
 
     private String findAttachedSwitch(String ipKey) {
         NodeList desc = flukesTopology.getElementsByTagName("rdf:Description");
-        String ipForTop = ipKey.replaceAll("\\.", "-");
+        String ipForTopology = ipKey.replaceAll("\\.", "-");
         String linkNum = null;
         String swName = null;
         String swIP = null;
@@ -423,7 +385,7 @@ public class SDNSweep implements Runnable {
             NamedNodeMap att = n.getAttributes();
             for (int j = 0; j < att.getLength(); j++) {
                 Node n2 = att.item(j);
-                if (n2.getNodeValue().contains(ipForTop) && n2.getNodeValue().contains("Link")) {
+                if (n2.getNodeValue().contains(ipForTopology) && n2.getNodeValue().contains("Link")) {
                     linkNum = n2.getNodeValue().substring(n2.getNodeValue().lastIndexOf("#Link") + 1);
                     linkNum = linkNum.substring(0, linkNum.indexOf("-"));
                     break;
@@ -441,7 +403,6 @@ public class SDNSweep implements Runnable {
                     Node n2 = att.item(j);
                     if (n2.getNodeValue().contains(linkNum) && n2.getNodeValue().contains("Switch")) {
                         swName = n2.getNodeValue().substring(n2.getNodeValue().lastIndexOf(linkNum) + linkNum.length() + 1);
-//                        Logger.getLogger(SDNSweep.class.getName()).log(Level.INFO, " swName: " + swName);
                         break;
                     }
                 }
@@ -459,7 +420,6 @@ public class SDNSweep implements Runnable {
 
                     if (n2.getNodeValue().contains(swName + "-ip")) {
                         swIP = n2.getNodeValue().substring(n2.getNodeValue().lastIndexOf(swName + "-ip") + 1 + (swName + "ip-").length());
-//                        Logger.getLogger(SDNSweep.class.getName()).log(Level.INFO, " swIP: " + swIP);
                         break;
                     }
                 }
@@ -521,7 +481,7 @@ public class SDNSweep implements Runnable {
         return switches.values();
     }
 
-    private void pushARPFlow() throws InterruptedException {
+    private void pushARPFlow() throws InterruptedException, IOException, ParserConfigurationException, SAXException {
         Iterator<Switch> swIter = getAllSwitches().iterator();
         List<String> arpFlows = new ArrayList<>();
         while (swIter.hasNext()) {
@@ -595,7 +555,7 @@ public class SDNSweep implements Runnable {
         pushFlows(arpFlows);
     }
 
-    private void pushFlowIntoOnePort() {
+    private void pushFlowIntoOnePort() throws IOException, ParserConfigurationException, SAXException {
 
         String s1 = getAllSwitches().iterator().next().dpid;// get(0).dpid;
         String s2 = getAllSwitches().iterator().next().dpid; //get(1).dpid;
@@ -635,7 +595,7 @@ public class SDNSweep implements Runnable {
                         + "\"dst-mac\": \"" + networkEntitesCache.get(h2).getMac().get(0) + "\", \"active\":\"true\","
                         + "\"actions\":\"output=" + s1ToS2Port + "\"}";
                 rules.add(rule1To2);
-                Logger.getLogger(SDNSweep.class.getName()).log(Level.INFO, rule1To2);
+//                Logger.getLogger(SDNSweep.class.getName()).log(Level.INFO, rule1To2);
             }
         }
 
@@ -648,14 +608,14 @@ public class SDNSweep implements Runnable {
                         + "\"actions\":\"output=" + s2ToS1Port + "\"}";
 
                 rules.add(rule2To1);
-                Logger.getLogger(SDNSweep.class.getName()).log(Level.INFO, rule2To1);
+//                Logger.getLogger(SDNSweep.class.getName()).log(Level.INFO, rule2To1);
             }
         }
         pushFlows(rules);
         flowPushed = true;
     }
 
-    private Collection<NetworkEntity> getNetworkEntitiesForSwDPI(String dpid) {
+    private Collection<NetworkEntity> getNetworkEntitiesForSwDPI(String dpid) throws IOException, ParserConfigurationException, SAXException {
         Iterator<NetworkEntity> iter = getAllNetworkEntites().iterator();
         Collection<NetworkEntity> nes = new ArrayList<>();
         while (iter.hasNext()) {
@@ -667,6 +627,20 @@ public class SDNSweep implements Runnable {
             }
         }
         return nes;
+    }
+
+    private void initFlukesTopology() throws IOException, ParserConfigurationException, SAXException {
+        //        synchronized (lock) {
+        topologyURL = PropertiesHelper.getTopologyURL();
+        if (topologyURL != null) {
+            DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+            DocumentBuilder db = dbf.newDocumentBuilder();
+            URL url = new URL(topologyURL);
+            try (InputStream stream = url.openStream()) {
+                flukesTopology = db.parse(stream);
+            }
+        }
+//        }
     }
 
     @XmlRootElement

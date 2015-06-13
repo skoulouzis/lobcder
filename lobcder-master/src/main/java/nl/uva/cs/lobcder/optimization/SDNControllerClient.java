@@ -4,6 +4,8 @@
  */
 package nl.uva.cs.lobcder.optimization;
 
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -19,6 +21,10 @@ import nl.uva.cs.lobcder.rest.wrappers.AttachmentPoint;
 import nl.uva.cs.lobcder.rest.wrappers.Link;
 import nl.uva.cs.lobcder.rest.wrappers.NetworkEntity;
 import org.jgrapht.alg.DijkstraShortestPath;
+import org.jgrapht.ext.DOTExporter;
+import org.jgrapht.ext.EdgeNameProvider;
+import org.jgrapht.ext.IntegerNameProvider;
+import org.jgrapht.ext.VertexNameProvider;
 import org.jgrapht.graph.DefaultWeightedEdge;
 import org.jgrapht.graph.SimpleWeightedGraph;
 import org.xml.sax.SAXException;
@@ -39,6 +45,7 @@ public class SDNControllerClient {
 //    private static Map<String, List<NetworkEntity>> networkEntityCache;
     private static SimpleWeightedGraph<String, DefaultWeightedEdge> graph;
 //    private static List<Link> linkCache;
+    private DOTExporter dot;
 
     public SDNControllerClient(String uri) throws IOException {
 //        ClientConfig clientConfig = new DefaultClientConfig();
@@ -50,7 +57,27 @@ public class SDNControllerClient {
     public List<DefaultWeightedEdge> getShortestPath(String dest, Set<String> sources) throws InterruptedException, IOException {
         if (graph == null) {
             graph = new SimpleWeightedGraph<>(DefaultWeightedEdge.class);
+
+            dot = new DOTExporter(new IntegerNameProvider(), new VertexNameProvider() {
+                public String getVertexName(Object object) {
+                    if (object == null) {
+                        return "none";
+                    }
+                    return object.toString().replaceAll("\"", "\'");
+                }
+            }, new EdgeNameProvider<Object>() {
+                public String getEdgeName(Object object) {
+                    if (object == null) {
+                        return "none";
+                    }
+
+                    DefaultWeightedEdge e1 = (DefaultWeightedEdge) object;
+//                Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, object.getClass().getName());
+                    return String.valueOf(graph.getEdgeWeight(e1)); //object.toString().replaceAll("\"", "\'");
+                }
+            });
         }
+
         Collection<SDNSweep.Switch> switchesColl = SDNSweep.getSwitches();
 
         List<SDNSweep.Switch> switches;
@@ -113,7 +140,6 @@ public class SDNControllerClient {
                 graph.setEdgeWeight(e1, getCost(dest, vertex));
             }
         }
-
 //        }
 
 //        List<NetworkEntity> sourceEntityArray = getNetworkEntity(sources);
@@ -141,7 +167,6 @@ public class SDNControllerClient {
                 }
             }
         }
-
         List<Link> links = SDNSweep.getSwitchLinks();
         for (Link l : links) {
             String srcVertex = l.srcSwitch + "-" + l.srcPort;
@@ -162,7 +187,6 @@ public class SDNControllerClient {
 //            Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, "dstVertex: {0}", new Object[]{dstVertex});
             graph.setEdgeWeight(e3, getCost(srcVertex, dstVertex));
         }
-
         double cost = Double.MAX_VALUE;
         List<DefaultWeightedEdge> shortestPath = null;
 
@@ -187,6 +211,7 @@ public class SDNControllerClient {
                 }
             }
         }
+//                dot.export(new FileWriter(targetDirectory + "getSwitchLinks_graph.dot"), graph);
         return shortestPath;
     }
 
