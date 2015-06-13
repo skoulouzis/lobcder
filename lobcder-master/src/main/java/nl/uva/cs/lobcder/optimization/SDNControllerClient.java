@@ -261,7 +261,7 @@ public class SDNControllerClient {
 //        }
         Double averageLinkUsage = SDNSweep.getAverageLinkUsageMap().get(dpi);
         if (averageLinkUsage != null) {
-            Double factor = 1.5;
+            Double factor = 1.1;
             //For each sec of usage how much extra time we get ? 
             //We asume a liner ralationship 
             //The longer the usage it means either more transfers per flow or larger files or both
