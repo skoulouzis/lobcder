@@ -203,6 +203,13 @@ public class PropertiesHelper {
     public static Double getDelayFactor() throws IOException {
         return Double.valueOf(getProperties().getProperty("sdn.delay.factor", "1.0"));
     }
+    
+    
+    
+    public static double getAlphaforAverageLinkUsage() throws IOException {
+        return Double.valueOf(getProperties().getProperty("sdn.alpha.weighting", "5.0"));
+    }
+    
 
     public static HashMap<Integer, String> getPortWorkerMap() {
         HashMap<Integer, String> ipMap = new HashMap<>();

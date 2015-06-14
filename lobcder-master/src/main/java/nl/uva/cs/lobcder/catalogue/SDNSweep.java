@@ -199,7 +199,7 @@ public class SDNSweep implements Runnable {
                         //being the new sample, d_{old} the current metric value 
                         //and d_{new} the newly calculated value. In fact, 
                         //this calculation implements a discrete low pass filter
-                        double a = 0.7;
+                        double a = PropertiesHelper.getAlphaforAverageLinkUsage() ;
                         averageLinkUsage = a * averageLinkUsage + (1 - a) * durationSeconds;
 //                        averageLinkUsage = (averageLinkUsage + durationSeconds) / 2.0;
                         averageLinkUsageMap.put(key, averageLinkUsage);
@@ -222,7 +222,7 @@ public class SDNSweep implements Runnable {
                         //being the new sample, d_{old} the current metric value 
                         //and d_{new} the newly calculated value. In fact, 
                         //this calculation implements a discrete low pass filter
-                        double a = 0.7;
+                         double a = PropertiesHelper.getAlphaforAverageLinkUsage() ;
                         averageLinkUsage = a * averageLinkUsage + (1 - a) * durationSeconds;
 //                        averageLinkUsage = (averageLinkUsage + durationSeconds) / 2.0;
                         averageLinkUsageMap.put(key, averageLinkUsage);

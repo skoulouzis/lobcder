@@ -294,7 +294,7 @@ public class SDNControllerClient {
 //        For each sec of usage how much extra time we get ? 
 //        We asume a liner ralationship 
 //        The longer the usage it means either more transfers per flow or larger files or both
-            mtt += averageLinkUsage * PropertiesHelper.getDelayFactor();
+            mtt += averageLinkUsage + PropertiesHelper.getDelayFactor();
 //            Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, "dpi: " + dpi + " averageLinkUsage: " + averageLinkUsage);
         }
 
