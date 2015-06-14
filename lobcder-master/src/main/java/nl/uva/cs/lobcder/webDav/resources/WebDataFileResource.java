@@ -722,10 +722,10 @@ public class WebDataFileResource extends WebDataResource implements
         }
         List<DefaultWeightedEdge> shortestPath = sdnClient.getShortestPath(reqSource, workersMap.keySet());
         WebDataFileResource.log.log(Level.INFO, "getShortestPath: {0}", shortestPath);
-        if(PropertiesHelper.pushFlow()){
-             sdnClient.pushFlow(shortestPath);
+        if (PropertiesHelper.pushFlow()) {
+            sdnClient.pushFlow(shortestPath);
         }
-       
+
         DefaultWeightedEdge e = shortestPath.get(0);
         String[] workerSwitch = e.toString().split(" : ");
         String workerIP = workerSwitch[0].substring(1);
