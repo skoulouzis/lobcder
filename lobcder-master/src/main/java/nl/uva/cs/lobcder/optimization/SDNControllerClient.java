@@ -47,12 +47,14 @@ public class SDNControllerClient {
     private static SimpleWeightedGraph<String, DefaultWeightedEdge> graph;
 //    private static List<Link> linkCache;
     private DOTExporter dot;
+    private final Double factor;
 
     public SDNControllerClient(String uri) throws IOException {
 //        ClientConfig clientConfig = new DefaultClientConfig();
 //        clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
 //        client = Client.create(clientConfig);
 //        this.uri = uri;
+        factor = PropertiesHelper.getDelayFactor();
     }
 
     public List<DefaultWeightedEdge> getShortestPath(String dest, Set<String> sources) throws InterruptedException, IOException {
@@ -273,7 +275,7 @@ public class SDNControllerClient {
 //        }
         Double averageLinkUsage = SDNSweep.getAverageLinkUsageMap().get(dpi);
         if (averageLinkUsage != null) {
-            Double factor = PropertiesHelper.getDelayFactor();
+            
             if (factor > -1) {
                 mtt += averageLinkUsage * factor;
             }
@@ -283,7 +285,7 @@ public class SDNControllerClient {
 
 //            Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, "dpi: " + dpi + " averageLinkUsage: " + averageLinkUsage);
         } else {
-            mtt--;
+            mtt-=factor;
         }
 
 //        Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, "From: {0} to: {1} tt: {2}", new Object[]{v1, v2, mtt});
