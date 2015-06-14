@@ -191,15 +191,17 @@ public class PropertiesHelper {
     public static boolean pushFlow() throws IOException {
         return Boolean.valueOf(getProperties().getProperty("sdn.push.flow", "false"));
     }
-    
-        public static boolean pushARPFlow() throws IOException {
+
+    public static boolean pushARPFlow() throws IOException {
         return Boolean.valueOf(getProperties().getProperty("sdn.push.ARP.flow", "false"));
     }
-        
-    
 
     public static String getTopologyURL() throws IOException {
         return getProperties().getProperty("sdn.topology.url");
+    }
+
+    public static Double getDelayFactor() throws IOException {
+        return Double.valueOf(getProperties().getProperty("sdn.delay.factor", "1.0"));
     }
 
     public static HashMap<Integer, String> getPortWorkerMap() {

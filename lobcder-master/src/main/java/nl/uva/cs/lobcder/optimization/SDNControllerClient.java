@@ -20,6 +20,7 @@ import nl.uva.cs.lobcder.catalogue.SDNSweep.Port;
 import nl.uva.cs.lobcder.rest.wrappers.AttachmentPoint;
 import nl.uva.cs.lobcder.rest.wrappers.Link;
 import nl.uva.cs.lobcder.rest.wrappers.NetworkEntity;
+import nl.uva.cs.lobcder.util.PropertiesHelper;
 import org.jgrapht.alg.DijkstraShortestPath;
 import org.jgrapht.ext.DOTExporter;
 import org.jgrapht.ext.EdgeNameProvider;
@@ -288,15 +289,14 @@ public class SDNControllerClient {
 //                mtt = tmp * nop;
 //            }
 //        }
-//        Double averageLinkUsage = SDNSweep.getAverageLinkUsageMap().get(dpi);
-//        if (averageLinkUsage != null) {
-//            Double factor = 1.1;
-        //For each sec of usage how much extra time we get ? 
-        //We asume a liner ralationship 
-        //The longer the usage it means either more transfers per flow or larger files or both
-//            mtt += averageLinkUsage * factor;
+        Double averageLinkUsage = SDNSweep.getAverageLinkUsageMap().get(dpi);
+        if (averageLinkUsage != null) {
+//        For each sec of usage how much extra time we get ? 
+//        We asume a liner ralationship 
+//        The longer the usage it means either more transfers per flow or larger files or both
+            mtt += averageLinkUsage * PropertiesHelper.getDelayFactor();
 //            Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, "dpi: " + dpi + " averageLinkUsage: " + averageLinkUsage);
-//        }
+        }
 
 //        Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, "From: {0} to: {1} tt: {2}", new Object[]{v1, v2, mtt});
         return mtt;
