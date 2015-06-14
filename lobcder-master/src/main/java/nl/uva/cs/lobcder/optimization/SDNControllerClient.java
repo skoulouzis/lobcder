@@ -189,8 +189,8 @@ public class SDNControllerClient {
         double cost = Double.MAX_VALUE;
         List<DefaultWeightedEdge> shortestPath = null;
 
-//        StringBuilder msg = new StringBuilder();
-//        msg.append("\n");
+        StringBuilder msg = new StringBuilder();
+        msg.append("\n");
         for (String s : sources) {
             if (graph.containsVertex(dest) && graph.containsVertex(s)) {
                 List<DefaultWeightedEdge> shorPath = DijkstraShortestPath.findPathBetween(graph, s, dest);
@@ -201,7 +201,7 @@ public class SDNControllerClient {
                     }
                     DefaultWeightedEdge p = shorPath.get(0);
                     String e = graph.getEdgeSource(p);
-//                    msg.append("source: ").append(e).append(" cost: ").append(w).append("\n");
+                    msg.append("source: ").append(e).append(" cost: ").append(w).append("\n");
                     if (w <= cost) {
                         cost = w;
                         shortestPath = shorPath;
@@ -212,7 +212,7 @@ public class SDNControllerClient {
                 }
             }
         }
-//        Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, msg.toString());
+        Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, msg.toString());
 //        File f = new File("/home/alogo/Downloads/sdn_graph.dot");
 //        f.delete();
 //        dot.export(new FileWriter(f), graph);
@@ -288,15 +288,15 @@ public class SDNControllerClient {
 //                mtt = tmp * nop;
 //            }
 //        }
-        Double averageLinkUsage = SDNSweep.getAverageLinkUsageMap().get(dpi);
-        if (averageLinkUsage != null) {
+//        Double averageLinkUsage = SDNSweep.getAverageLinkUsageMap().get(dpi);
+//        if (averageLinkUsage != null) {
 //            Double factor = 1.1;
-            //For each sec of usage how much extra time we get ? 
-            //We asume a liner ralationship 
-            //The longer the usage it means either more transfers per flow or larger files or both
+        //For each sec of usage how much extra time we get ? 
+        //We asume a liner ralationship 
+        //The longer the usage it means either more transfers per flow or larger files or both
 //            mtt += averageLinkUsage * factor;
 //            Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, "dpi: " + dpi + " averageLinkUsage: " + averageLinkUsage);
-        }
+//        }
 
 //        Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, "From: {0} to: {1} tt: {2}", new Object[]{v1, v2, mtt});
         return mtt;
