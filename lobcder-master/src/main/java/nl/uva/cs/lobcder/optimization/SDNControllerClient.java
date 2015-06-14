@@ -223,8 +223,16 @@ public class SDNControllerClient {
         }
         double bps = (rbytes + tbytes) / SDNSweep.interval;
         double cost = 1.0 / bps;
-        cost = (cost > 0) ? cost : 1.2;
-        return cost;
+
+
+
+        Double averageLinkUsage = SDNSweep.getAverageLinkUsageMap().get(dpi);
+        if (averageLinkUsage != null) {
+            if (factor > -1) {
+                cost += averageLinkUsage * factor;
+            }
+        } 
+        return (cost > 0) ? cost : 1.2;
     }
 
 //    private double getCost(String v1, String v2) throws InterruptedException, IOException {

@@ -76,7 +76,7 @@ public class SDNSweep implements Runnable {
     private static List<Link> switchLinks;
     private static Map<String, Switch> switches;
 //    private static List<Switch> switches;
-    public static long interval = 800;
+    public static long interval = 1000;
     @Getter
     private static Map<String, Double> statsMap;
     public static final String[] METRIC_NAMES = new String[]{"collisions",
@@ -129,7 +129,7 @@ public class SDNSweep implements Runnable {
         initFlukesTopology();
 
         sdnCC = new SDNControllerClient(uri);
-        
+
         aplha = PropertiesHelper.getAlphaforAverageLinkUsage();
     }
 
@@ -202,10 +202,17 @@ public class SDNSweep implements Runnable {
                         //being the new sample, d_{old} the current metric value 
                         //and d_{new} the newly calculated value. In fact, 
                         //this calculation implements aplha discrete low pass filter
-                        
+
                         averageLinkUsage = aplha * averageLinkUsage + (1 - aplha) * durationSeconds;
 //                        averageLinkUsage = (averageLinkUsage + durationSeconds) / 2.0;
                         averageLinkUsageMap.put(key, averageLinkUsage);
+                    }
+                } else {
+                    if (averageLinkUsage != null) {
+                        averageLinkUsage--;
+//                        averageLinkUsage = aplha * averageLinkUsage + (1 - aplha) * durationSeconds;
+//                        averageLinkUsage = (averageLinkUsage + durationSeconds) / 2.0;
+                        averageLinkUsageMap.put(key, (averageLinkUsage > 0) ? averageLinkUsage : 1.0);
                     }
                 }
                 val = ((newValue > oldValue) ? newValue : oldValue);
@@ -229,7 +236,15 @@ public class SDNSweep implements Runnable {
 //                        averageLinkUsage = (averageLinkUsage + durationSeconds) / 2.0;
                         averageLinkUsageMap.put(key, averageLinkUsage);
                     }
+                } else {
+                    if (averageLinkUsage != null) {
+                        averageLinkUsage--;
+//                        averageLinkUsage = aplha * averageLinkUsage + (1 - aplha) * durationSeconds;
+//                        averageLinkUsage = (averageLinkUsage + durationSeconds) / 2.0;
+                        averageLinkUsageMap.put(key, (averageLinkUsage > 0) ? averageLinkUsage : 1.0);
+                    }
                 }
+
 
                 val = ((newValue > oldValue) ? newValue : oldValue);
                 transmitBytesMap.put(key, val);
@@ -299,7 +314,6 @@ public class SDNSweep implements Runnable {
 
             }
         }
-
     }
 
     private List<FloodlightStats> getFloodlightPortStats(String dpi) throws IOException {
@@ -310,6 +324,7 @@ public class SDNSweep implements Runnable {
 //        String out = output.substring(27, output.length() - 1);
         String out = output.substring(output.indexOf("[{"), output.length() - 1);
         ObjectMapper mapper = new ObjectMapper();
+
         return mapper.readValue(out, mapper.getTypeFactory().constructCollectionType(List.class, FloodlightStats.class));
     }
 
