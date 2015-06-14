@@ -174,7 +174,7 @@ public class SDNControllerClient {
         double cost = Double.MAX_VALUE;
         List<DefaultWeightedEdge> shortestPath = null;
 
-//        exportGraph();
+        exportGraph();
 
         StringBuilder msg = new StringBuilder();
         msg.append("\n");
@@ -213,23 +213,6 @@ public class SDNControllerClient {
         } else {
             dpi = v2;
         }
-
-        //        SDNSweep.FloodlightStats[] stats = getFloodlightPortStats(dpi, getPort());
-        Double rpps = SDNSweep.getReceivePacketsMap().get(dpi);
-        Double tpps = SDNSweep.getTransmitPacketsMap().get(dpi);
-        if (rpps == null) {
-            rpps = Double.valueOf(1);
-        }
-        if (tpps == null) {
-            tpps = Double.valueOf(1);
-        }
-//        double rrrt = (interval / rpps);
-//        double trrt = (interval / tpps);
-
-        double tpp = (rpps > tpps) ? rpps : tpps;
-        if (tpp <= 0) {
-            tpp = 1;
-        }
         Double rbytes = SDNSweep.getReceiveBytesMap().get(dpi);
         if (rbytes == null) {
             rbytes = Double.valueOf(1);
@@ -238,60 +221,99 @@ public class SDNControllerClient {
         if (tbytes == null) {
             tbytes = Double.valueOf(1);
         }
-        double rbps = rbytes / SDNSweep.interval;
-        double tbps = tbytes / SDNSweep.interval;
-//        double cost = 1.0 / ((rbps + tbps) / 2.0);
-
-
-        if (rbytes <= 0) {
-            rbytes = Double.valueOf(1);
-        }
-        if (tbytes <= 0) {
-            tbytes = Double.valueOf(1);
-        }
-
-        double rMTU = rbytes / rpps * 1.0;
-        double tMTU = tbytes / tpps * 1.0;
-        double mtu = (rMTU > tMTU) ? rMTU : tMTU;
-//        if (mtu <= 500) {
-//            mtu = 1500;
-//        }
-
-        //TT=TpP * NoP
-        //NoP = {MTU}/{FS}
-        //TpP =[({MTU} / {bps}) + RTT] // is the time it takes to transmit one packet or time per packet
-        //TT = [({MTU} / {bps}) + RTT] * [ {MTU}/{FS}]
-        double nop = mtu / 1024.0;
-        double mtt = tpp * nop;
-
-//        SDNSweep.OFlow f = SDNSweep.getOFlowsMap().get(dpi);
-//        double bps = -1;
-//        if (f != null) {
-//            bps = f.byteCount / f.durationSeconds * 1.0;
-//            double tmp = f.packetCount / f.durationSeconds * 1.0;
-//            if (tpp <= 1 && tmp > tpp) {
-//                mtt = tmp * nop;
-//            }
-//        }
-        Double averageLinkUsage = SDNSweep.getAverageLinkUsageMap().get(dpi);
-        if (averageLinkUsage != null) {
-            
-            if (factor > -1) {
-                mtt += averageLinkUsage * factor;
-            }
-//        For each sec of usage how much extra time we get ? 
-//        We asume a liner ralationship 
-//        The longer the usage it means either more transfers per flow or larger files or both
-
-//            Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, "dpi: " + dpi + " averageLinkUsage: " + averageLinkUsage);
-        } else {
-            mtt-=factor;
-        }
-
-//        Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, "From: {0} to: {1} tt: {2}", new Object[]{v1, v2, mtt});
-        return (mtt > 0) ? mtt : 1.0;
+        double bps = (rbytes + tbytes) / SDNSweep.interval;
+        double cost = 1.0 / bps;
+        cost = (cost > 0) ? cost : 1.2;
+        return cost;
     }
 
+//    private double getCost(String v1, String v2) throws InterruptedException, IOException {
+////        String[] agentPort = getsFlowPort(v1, v2);
+////        double tpp = getTimePerPacket(agentPort[0], Integer.valueOf(agentPort[1]));
+//        String dpi;
+//        if (v1.contains(":")) {
+//            dpi = v1;
+//        } else {
+//            dpi = v2;
+//        }
+//
+//        //        SDNSweep.FloodlightStats[] stats = getFloodlightPortStats(dpi, getPort());
+//        Double rpps = SDNSweep.getReceivePacketsMap().get(dpi);
+//        Double tpps = SDNSweep.getTransmitPacketsMap().get(dpi);
+//        if (rpps == null) {
+//            rpps = Double.valueOf(1);
+//        }
+//        if (tpps == null) {
+//            tpps = Double.valueOf(1);
+//        }
+////        double rrrt = (interval / rpps);
+////        double trrt = (interval / tpps);
+//
+//        double tpp = (rpps > tpps) ? rpps : tpps;
+//        if (tpp <= 0) {
+//            tpp = 1;
+//        }
+//        Double rbytes = SDNSweep.getReceiveBytesMap().get(dpi);
+//        if (rbytes == null) {
+//            rbytes = Double.valueOf(1);
+//        }
+//        Double tbytes = SDNSweep.getTransmitBytesMap().get(dpi);
+//        if (tbytes == null) {
+//            tbytes = Double.valueOf(1);
+//        }
+//        double rbps = rbytes / SDNSweep.interval;
+//        double tbps = tbytes / SDNSweep.interval;
+//        double cost = 1.0 / ((rbps + tbps) / 2.0);
+//
+//
+//        if (rbytes <= 0) {
+//            rbytes = Double.valueOf(1);
+//        }
+//        if (tbytes <= 0) {
+//            tbytes = Double.valueOf(1);
+//        }
+//
+//        double rMTU = rbytes / rpps * 1.0;
+//        double tMTU = tbytes / tpps * 1.0;
+//        double mtu = (rMTU > tMTU) ? rMTU : tMTU;
+////        if (mtu <= 500) {
+////            mtu = 1500;
+////        }
+//
+//        //TT=TpP * NoP
+//        //NoP = {MTU}/{FS}
+//        //TpP =[({MTU} / {bps}) + RTT] // is the time it takes to transmit one packet or time per packet
+//        //TT = [({MTU} / {bps}) + RTT] * [ {MTU}/{FS}]
+//        double nop = mtu / 1024.0;
+//        double mtt = tpp * nop;
+//
+////        SDNSweep.OFlow f = SDNSweep.getOFlowsMap().get(dpi);
+////        double bps = -1;
+////        if (f != null) {
+////            bps = f.byteCount / f.durationSeconds * 1.0;
+////            double tmp = f.packetCount / f.durationSeconds * 1.0;
+////            if (tpp <= 1 && tmp > tpp) {
+////                mtt = tmp * nop;
+////            }
+////        }
+////        Double averageLinkUsage = SDNSweep.getAverageLinkUsageMap().get(dpi);
+////        if (averageLinkUsage != null) {
+////            
+////            if (factor > -1) {
+////                mtt += averageLinkUsage * factor;
+////            }
+//////        For each sec of usage how much extra time we get ? 
+//////        We asume a liner ralationship 
+//////        The longer the usage it means either more transfers per flow or larger files or both
+////
+//////            Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, "dpi: " + dpi + " averageLinkUsage: " + averageLinkUsage);
+////        } else {
+////            mtt-=factor;
+////        }
+//
+////        Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, "From: {0} to: {1} tt: {2}", new Object[]{v1, v2, mtt});
+//        return (mtt > 0) ? mtt : 1.2;
+//    }
     public void pushFlow(final List<DefaultWeightedEdge> shortestPath) throws IOException {
         if (shortestPath != null && !shortestPath.isEmpty()) {
             Thread thread = new Thread() {
