@@ -119,6 +119,7 @@ public class SDNSweep implements Runnable {
     private final SDNControllerClient sdnCC;
 //    private static final Object lock = new Object();
     private final double aplha;
+    private final Double factor;
 
     public SDNSweep(DataSource datasource) throws IOException, ParserConfigurationException, SAXException {
         this.datasource = datasource;
@@ -131,6 +132,7 @@ public class SDNSweep implements Runnable {
         sdnCC = new SDNControllerClient(uri);
 
         aplha = PropertiesHelper.getAlphaforAverageLinkUsage();
+        factor = PropertiesHelper.getDelayFactor();
     }
 
     private void init() throws InterruptedException, IOException, ParserConfigurationException, SAXException {
@@ -209,7 +211,7 @@ public class SDNSweep implements Runnable {
                     }
                 } else {
                     if (averageLinkUsage != null) {
-                        averageLinkUsage--;
+                       averageLinkUsage = averageLinkUsage - factor;
 //                        averageLinkUsage = aplha * averageLinkUsage + (1 - aplha) * durationSeconds;
 //                        averageLinkUsage = (averageLinkUsage + durationSeconds) / 2.0;
                         averageLinkUsageMap.put(key, (averageLinkUsage > 0) ? averageLinkUsage : 1.0);
@@ -238,7 +240,7 @@ public class SDNSweep implements Runnable {
                     }
                 } else {
                     if (averageLinkUsage != null) {
-                        averageLinkUsage--;
+                        averageLinkUsage = averageLinkUsage - factor;
 //                        averageLinkUsage = aplha * averageLinkUsage + (1 - aplha) * durationSeconds;
 //                        averageLinkUsage = (averageLinkUsage + durationSeconds) / 2.0;
                         averageLinkUsageMap.put(key, (averageLinkUsage > 0) ? averageLinkUsage : 1.0);
