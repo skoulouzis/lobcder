@@ -58,24 +58,6 @@ public class SDNControllerClient {
     public List<DefaultWeightedEdge> getShortestPath(String dest, Set<String> sources) throws InterruptedException, IOException {
         if (graph == null) {
             graph = new SimpleWeightedGraph<>(DefaultWeightedEdge.class);
-//            dot = new DOTExporter(new IntegerNameProvider(), new VertexNameProvider() {
-//                public String getVertexName(Object object) {
-//                    if (object == null) {
-//                        return "none";
-//                    }
-//                    return object.toString().replaceAll("\"", "\'");
-//                }
-//            }, new EdgeNameProvider<Object>() {
-//                public String getEdgeName(Object object) {
-//                    if (object == null) {
-//                        return "none";
-//                    }
-//
-//                    DefaultWeightedEdge e1 = (DefaultWeightedEdge) object;
-////                Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, object.getClass().getName());
-//                    return String.valueOf(graph.getEdgeWeight(e1)); //object.toString().replaceAll("\"", "\'");
-//                }
-//            });
         }
 
         Collection<SDNSweep.Switch> switchesColl = SDNSweep.getSwitches();
@@ -190,11 +172,14 @@ public class SDNControllerClient {
         double cost = Double.MAX_VALUE;
         List<DefaultWeightedEdge> shortestPath = null;
 
+        exportGraph();
+
         StringBuilder msg = new StringBuilder();
         msg.append("\n");
         for (String s : sources) {
             if (graph.containsVertex(dest) && graph.containsVertex(s)) {
-                List<DefaultWeightedEdge> shorPath = DijkstraShortestPath.findPathBetween(graph, s, dest);
+                List<DefaultWeightedEdge> shorPath = null;
+                shorPath = DijkstraShortestPath.findPathBetween(graph, s, dest);
                 double w = 0;
                 if (shorPath != null) {
                     for (DefaultWeightedEdge e : shorPath) {
@@ -206,7 +191,7 @@ public class SDNControllerClient {
                     if (w <= cost) {
                         cost = w;
                         shortestPath = shorPath;
-                        if (cost <= 2) {
+                        if (cost <= sources.size() + 1) {
                             break;
                         }
                     }
@@ -214,9 +199,6 @@ public class SDNControllerClient {
             }
         }
         Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, msg.toString());
-//        File f = new File("/home/alogo/Downloads/sdn_graph.dot");
-//        f.delete();
-//        dot.export(new FileWriter(f), graph);
         return shortestPath;
     }
 
@@ -291,15 +273,21 @@ public class SDNControllerClient {
 //        }
         Double averageLinkUsage = SDNSweep.getAverageLinkUsageMap().get(dpi);
         if (averageLinkUsage != null) {
+            Double factor = PropertiesHelper.getDelayFactor();
+            if (factor > -1) {
+                mtt += averageLinkUsage * factor;
+            }
 //        For each sec of usage how much extra time we get ? 
 //        We asume a liner ralationship 
 //        The longer the usage it means either more transfers per flow or larger files or both
-            mtt += averageLinkUsage + PropertiesHelper.getDelayFactor();
+
 //            Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, "dpi: " + dpi + " averageLinkUsage: " + averageLinkUsage);
+        } else {
+            mtt--;
         }
 
 //        Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, "From: {0} to: {1} tt: {2}", new Object[]{v1, v2, mtt});
-        return mtt;
+        return (mtt > 0) ? mtt : 1.0;
     }
 
     public void pushFlow(final List<DefaultWeightedEdge> shortestPath) throws IOException {
@@ -857,4 +845,30 @@ public class SDNControllerClient {
 //        @JsonProperty("collisions")
 //        long collisions;
 //    }
+
+    private void exportGraph() throws IOException {
+        if (dot == null) {
+            dot = new DOTExporter(new IntegerNameProvider(), new VertexNameProvider() {
+                public String getVertexName(Object object) {
+                    if (object == null) {
+                        return "none";
+                    }
+                    return object.toString().replaceAll("\"", "\'");
+                }
+            }, new EdgeNameProvider<Object>() {
+                public String getEdgeName(Object object) {
+                    if (object == null) {
+                        return "none";
+                    }
+
+                    DefaultWeightedEdge e1 = (DefaultWeightedEdge) object;
+//                Logger.getLogger(SDNControllerClient.class.getName()).log(Level.INFO, object.getClass().getName());
+                    return String.valueOf(graph.getEdgeWeight(e1)); //object.toString().replaceAll("\"", "\'");
+                }
+            });
+        }
+        File f = new File("/home/alogo/Downloads/sdn_graph.dot");
+        f.delete();
+        dot.export(new FileWriter(f), graph);
+    }
 }

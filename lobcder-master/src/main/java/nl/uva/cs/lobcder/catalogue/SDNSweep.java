@@ -3,7 +3,7 @@
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * You may obtain aplha copy of the License at
  *
  *      http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -117,7 +117,8 @@ public class SDNSweep implements Runnable {
     private static String topologyURL;
     private static Document flukesTopology;
     private final SDNControllerClient sdnCC;
-    private static final Object lock = new Object();
+//    private static final Object lock = new Object();
+    private final double aplha;
 
     public SDNSweep(DataSource datasource) throws IOException, ParserConfigurationException, SAXException {
         this.datasource = datasource;
@@ -128,6 +129,8 @@ public class SDNSweep implements Runnable {
         initFlukesTopology();
 
         sdnCC = new SDNControllerClient(uri);
+        
+        aplha = PropertiesHelper.getAlphaforAverageLinkUsage();
     }
 
     private void init() throws InterruptedException, IOException, ParserConfigurationException, SAXException {
@@ -198,9 +201,9 @@ public class SDNSweep implements Runnable {
                         //with α ∈ [0 , 1] being the weighting factor, d_{sample} 
                         //being the new sample, d_{old} the current metric value 
                         //and d_{new} the newly calculated value. In fact, 
-                        //this calculation implements a discrete low pass filter
-                        double a = PropertiesHelper.getAlphaforAverageLinkUsage() ;
-                        averageLinkUsage = a * averageLinkUsage + (1 - a) * durationSeconds;
+                        //this calculation implements aplha discrete low pass filter
+                        
+                        averageLinkUsage = aplha * averageLinkUsage + (1 - aplha) * durationSeconds;
 //                        averageLinkUsage = (averageLinkUsage + durationSeconds) / 2.0;
                         averageLinkUsageMap.put(key, averageLinkUsage);
                     }
@@ -221,9 +224,8 @@ public class SDNSweep implements Runnable {
                         //with α ∈ [0 , 1] being the weighting factor, d_{sample} 
                         //being the new sample, d_{old} the current metric value 
                         //and d_{new} the newly calculated value. In fact, 
-                        //this calculation implements a discrete low pass filter
-                         double a = PropertiesHelper.getAlphaforAverageLinkUsage() ;
-                        averageLinkUsage = a * averageLinkUsage + (1 - a) * durationSeconds;
+                        //this calculation implements aplha discrete low pass filter
+                        averageLinkUsage = aplha * averageLinkUsage + (1 - aplha) * durationSeconds;
 //                        averageLinkUsage = (averageLinkUsage + durationSeconds) / 2.0;
                         averageLinkUsageMap.put(key, averageLinkUsage);
                     }
