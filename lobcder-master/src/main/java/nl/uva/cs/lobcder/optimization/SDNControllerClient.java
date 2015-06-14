@@ -174,7 +174,7 @@ public class SDNControllerClient {
         double cost = Double.MAX_VALUE;
         List<DefaultWeightedEdge> shortestPath = null;
 
-        exportGraph();
+//        exportGraph();
 
         StringBuilder msg = new StringBuilder();
         msg.append("\n");
