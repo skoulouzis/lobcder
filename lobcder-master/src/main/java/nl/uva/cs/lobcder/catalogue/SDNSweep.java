@@ -211,7 +211,7 @@ public class SDNSweep implements Runnable {
                     }
                 } else {
                     if (averageLinkUsage != null) {
-                       averageLinkUsage = averageLinkUsage - factor;
+                        averageLinkUsage = averageLinkUsage - (factor * 2);
 //                        averageLinkUsage = aplha * averageLinkUsage + (1 - aplha) * durationSeconds;
 //                        averageLinkUsage = (averageLinkUsage + durationSeconds) / 2.0;
                         averageLinkUsageMap.put(key, (averageLinkUsage > 0) ? averageLinkUsage : 1.0);
@@ -240,7 +240,7 @@ public class SDNSweep implements Runnable {
                     }
                 } else {
                     if (averageLinkUsage != null) {
-                        averageLinkUsage = averageLinkUsage - factor;
+                        averageLinkUsage = averageLinkUsage - (factor * 2);
 //                        averageLinkUsage = aplha * averageLinkUsage + (1 - aplha) * durationSeconds;
 //                        averageLinkUsage = (averageLinkUsage + durationSeconds) / 2.0;
                         averageLinkUsageMap.put(key, (averageLinkUsage > 0) ? averageLinkUsage : 1.0);
