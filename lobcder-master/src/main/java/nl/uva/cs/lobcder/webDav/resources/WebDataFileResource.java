@@ -605,15 +605,15 @@ public class WebDataFileResource extends WebDataResource implements
     }
 
     private String getBestWorker(String reuSource) throws IOException, URISyntaxException, InterruptedException {
-        reuSource = "192.168.100.1";
+//        reuSource = "192.168.100.1";
         if (doRedirect) {
-//            if (workersMap.containsKey(reuSource)) {
-//                String worker = workersMap.get(reuSource);
-//                String w = worker + "/" + getLogicalData().getUid();
-//                String token = UUID.randomUUID().toString();
-//                AuthLobcderComponents.setTicket(worker, token);
-//                return w + "/" + token;
-//            }
+            if (workersMap.containsKey(reuSource)) {
+                String worker = workersMap.get(reuSource);
+                String w = worker + "/" + getLogicalData().getUid();
+                String token = UUID.randomUUID().toString();
+                AuthLobcderComponents.setTicket(worker, token);
+                return w + "/" + token;
+            }
 //            if (uri != null) {
             if (PropertiesHelper.getSchedulingAlg().equals("traffic") && PropertiesHelper.useSDN()) {
 //                return getWorkerWithLessTraffic(reuSource);
