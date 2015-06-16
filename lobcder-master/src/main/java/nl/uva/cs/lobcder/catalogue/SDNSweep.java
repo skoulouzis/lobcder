@@ -465,7 +465,7 @@ public class SDNSweep implements Runnable {
         }
     }
 
-    private List<Link> getAllSwitchLinks() {
+    private List<Link> getAllSwitchLinks() throws IOException, ParserConfigurationException, SAXException {
         if (switchLinks == null) {
             switchLinks = new ArrayList<>();
         }
@@ -477,6 +477,65 @@ public class SDNSweep implements Runnable {
             res = webResource.path("wm").path("topology").path("external-links").path("json");
             switchLinks.addAll(res.get(new GenericType<List<Link>>() {
             }));
+            
+            
+            
+            
+            for (Switch sw : getAllSwitches()) {
+                String srcSWIP = sw.inetAddress.replaceAll("/", "").substring(0, sw.inetAddress.indexOf(":") - 1);
+                String dstSWIP = findAttachedSwitch(srcSWIP);
+                if (!srcSWIP.equals(dstSWIP)) {
+                    Switch dstSW = switches.get(dstSWIP);
+                    Switch srcSW = switches.get(srcSWIP);
+                    ArrayList<Integer> srcPossiblePorts = new ArrayList<>();
+                    ArrayList<Integer> dstPossiblePorts = new ArrayList<>();
+
+//                    for (Link l : switchLinks) {
+//                        if (srcSW.dpid.equals(l.srcSwitch)) {
+//                            for (Port p : srcSW.ports) {
+//                                if (p.portNumber != l.srcPort) {
+//                                    srcPossiblePorts.add(p.portNumber);
+//                                }
+//                            }
+//                        }
+//                        if (srcSW.dpid.equals(l.dstSwitch)) {
+//                            for (Port p : srcSW.ports) {
+//                                if (p.portNumber != l.dstPort) {
+//                                    srcPossiblePorts.add(p.portNumber);
+//                                }
+//                            }
+//                        }
+//
+//
+//                        if (dstSW.dpid.equals(l.srcSwitch)) {
+//                            for (Port p : dstSW.ports) {
+//                                if (p.portNumber != l.srcPort) {
+//                                    dstPossiblePorts.add(p.portNumber);
+//                                }
+//                            }
+//                        }
+//                        if (dstSW.dpid.equals(l.dstSwitch)) {
+//                            for (Port p : dstSW.ports) {
+//                                if (p.portNumber != l.dstPort) {
+//                                    dstPossiblePorts.add(p.portNumber);
+//                                }
+//                            }
+//                        }
+//                    }
+
+//                    for (Integer p : srcPossiblePorts) {
+//                        Logger.getLogger(SDNSweep.class.getName()).log(Level.INFO, "{0}-{1} ???", new Object[]{srcSW.dpid, p});
+////                        for (NetworkEntity ne : getNetworkEntitiesForSwDPI(srcSW.dpid)) {
+////                            for (AttachmentPoint ap : ne.getAttachmentPoint()) {
+////                                if (p != ap.getPort()) {
+////                                    
+////                                }
+////                            }
+////                        }
+//                    }
+                }
+
+            }
         }
         return switchLinks;
     }

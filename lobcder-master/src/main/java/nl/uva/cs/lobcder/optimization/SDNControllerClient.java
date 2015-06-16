@@ -174,7 +174,7 @@ public class SDNControllerClient {
         double cost = Double.MAX_VALUE;
         List<DefaultWeightedEdge> shortestPath = null;
 
-//        exportGraph();
+        exportGraph();
 
         StringBuilder msg = new StringBuilder();
         msg.append("\n");
@@ -231,7 +231,7 @@ public class SDNControllerClient {
             if (factor > -1) {
                 cost += averageLinkUsage * factor;
             }
-        } 
+        }
         return (cost > 0) ? cost : 1.2;
     }
 
