@@ -177,7 +177,7 @@ public class SDNSweep implements Runnable {
 
             for (int i = 0; i < stats1.size(); i++) {
 //                for(String mn  : METRIC_NAMES){
-//                    String key = mn+"-"+sw.dpid + "-" + stats1.get(i).portNumber;
+//                    String key = mn+"-"+srcSW.dpid + "-" + stats1.get(i).portNumber;
 //                }
                 String key = sw.dpid + "-" + stats1.get(i).portNumber;
 
@@ -463,7 +463,7 @@ public class SDNSweep implements Runnable {
             NamedNodeMap att = n.getAttributes();
             for (int j = 0; j < att.getLength(); j++) {
                 Node n2 = att.item(j);
-                //Get the sw name 
+                //Get the srcSW name 
                 if (n2.getNodeValue().contains(ipForTopology)) {
                     switchName = n2.getNodeValue().substring(n2.getNodeValue().lastIndexOf("Switch"));
                     switchName = switchName.substring(0, switchName.indexOf("-"));
@@ -478,7 +478,7 @@ public class SDNSweep implements Runnable {
                 NamedNodeMap att = n.getAttributes();
                 for (int j = 0; j < att.getLength(); j++) {
                     Node n2 = att.item(j);
-                    //Get the sw links
+                    //Get the srcSW links
                     if (n2.getNodeValue().contains(switchName) && n2.getNodeValue().contains("Link")) {
                         String linkNum = n2.getNodeValue().substring(n2.getNodeValue().lastIndexOf("#Link") + 1);
                         linkNum = linkNum.substring(0, linkNum.indexOf("-"));
@@ -497,7 +497,7 @@ public class SDNSweep implements Runnable {
                 NamedNodeMap att = n.getAttributes();
                 for (int j = 0; j < att.getLength(); j++) {
                     Node n2 = att.item(j);
-                    //Get the sw the links connect
+                    //Get the srcSW the links connect
                     for (String ln : linkNames) {
                         if (n2.getNodeValue().contains(ln) && n2.getNodeValue().contains("Switch") && !n2.getNodeValue().contains(switchName)) {
                             String dstSwName = n2.getNodeValue().substring(n2.getNodeValue().lastIndexOf("#Link") + 1);
@@ -519,7 +519,7 @@ public class SDNSweep implements Runnable {
                 NamedNodeMap att = n.getAttributes();
                 for (int j = 0; j < att.getLength(); j++) {
                     Node n2 = att.item(j);
-                    //Get the sw the links connect
+                    //Get the srcSW the links connect
                     for (String sw : dstSWNames) {
                         if (n2.getNodeValue().contains(sw + "-ip-")) {
                             String swIP = n2.getNodeValue().substring(n2.getNodeValue().lastIndexOf(sw + "-ip") + 1 + (sw + "ip-").length());
@@ -560,11 +560,64 @@ public class SDNSweep implements Runnable {
             switchLinks.addAll(res.get(new GenericType<List<Link>>() {
             }));
 
-            for (Switch sw : getAllSwitches()) {
-                String srcSWIP = sw.inetAddress.replaceAll("/", "").substring(0, sw.inetAddress.indexOf(":") - 1);
-                ArrayList<String> dstSWIP = findConnectedSwitches(srcSWIP);
+            ArrayList<Link> possibleLinks = new ArrayList<>();
+
+            for (Switch srcSW : getAllSwitches()) {
+                String srcSWIP = srcSW.inetAddress.replaceAll("/", "").substring(0, srcSW.inetAddress.indexOf(":") - 1);
+                int srcPort = 0;
+                for (NetworkEntity ne : getNetworkEntitiesForSwDPI(srcSW.dpid)) {
+                    for (AttachmentPoint ap : ne.getAttachmentPoint()) {
+                        for (Port p : srcSW.ports) {
+                            if (ap.getPort() != p.portNumber) {
+                                srcPort = p.portNumber;
+                                break;
+                            }
+                        }
+                    }
+                }
+                int dstPort;
+                for (String dstSWIP : findConnectedSwitches(srcSWIP)) {
+                    Switch dstSW = switches.get(dstSWIP);
+                    for (NetworkEntity ne : getNetworkEntitiesForSwDPI(dstSW.dpid)) {
+                        for (AttachmentPoint ap : ne.getAttachmentPoint()) {
+                            for (Port p : dstSW.ports) {
+                                if (ap.getPort() != p.portNumber) {
+                                    dstPort = p.portNumber;
+                                    Link l = new Link();
+                                    l.srcSwitch = srcSW.dpid;
+                                    l.srcPort = srcPort;
+                                    l.dstSwitch = dstSW.dpid;
+                                    l.dstPort = dstPort;
+                                    possibleLinks.add(l);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                }
             }
+
+            ArrayList<Link> addedLinks = new ArrayList<>();
+            for (Link l1 : switchLinks) {
+                for (Link l2 : possibleLinks) {
+                    String src1 = l1.srcSwitch + "-" + l1.srcPort;
+                    String dst1 = l1.dstSwitch + "-" + l1.dstPort;
+                    
+                    String src2 = l2.srcSwitch + "-" + l2.srcPort;
+                    String dst2 = l2.dstSwitch + "-" + l2.dstPort;
+                    
+                    if (!src1.equals(src2) && !dst1.equals(dst2)) {
+                        addedLinks.add(l2);
+                    }
+
+                }
+            }
+            switchLinks.addAll(addedLinks);
+            Logger.getLogger(SDNSweep.class.getName()).log(Level.INFO, switchLinks.toString());
+
         }
+
         return switchLinks;
     }
 
