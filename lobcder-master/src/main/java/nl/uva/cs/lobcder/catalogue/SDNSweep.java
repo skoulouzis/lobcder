@@ -568,28 +568,34 @@ public class SDNSweep implements Runnable {
                 for (NetworkEntity ne : getNetworkEntitiesForSwDPI(srcSW.dpid)) {
                     for (AttachmentPoint ap : ne.getAttachmentPoint()) {
                         for (Port p : srcSW.ports) {
-                            if (ap.getPort() != p.portNumber) {
-                                srcPort = p.portNumber;
-                                break;
+                            for (Link existingLink : switchLinks) {
+                                if (ap.getPort() != p.portNumber && p.portNumber != existingLink.srcPort) {
+                                    srcPort = p.portNumber;
+                                    break;
+                                }
                             }
+
                         }
                     }
                 }
                 int dstPort;
+                Link l = null;
                 for (String dstSWIP : findConnectedSwitches(srcSWIP)) {
                     Switch dstSW = switches.get(dstSWIP);
                     for (NetworkEntity ne : getNetworkEntitiesForSwDPI(dstSW.dpid)) {
                         for (AttachmentPoint ap : ne.getAttachmentPoint()) {
                             for (Port p : dstSW.ports) {
-                                if (ap.getPort() != p.portNumber) {
-                                    dstPort = p.portNumber;
-                                    Link l = new Link();
-                                    l.srcSwitch = srcSW.dpid;
-                                    l.srcPort = srcPort;
-                                    l.dstSwitch = dstSW.dpid;
-                                    l.dstPort = dstPort;
-                                    possibleLinks.add(l);
-                                    break;
+                                for (Link existingLink : switchLinks) {
+                                    if (ap.getPort() != p.portNumber && existingLink.dstPort != p.portNumber) {
+                                        dstPort = p.portNumber;
+                                        l = new Link();
+                                        l.srcSwitch = srcSW.dpid;
+                                        l.srcPort = srcPort;
+                                        l.dstSwitch = dstSW.dpid;
+                                        l.dstPort = dstPort;
+                                        possibleLinks.add(l);
+                                        break;
+                                    }
                                 }
                             }
                         }
@@ -603,10 +609,10 @@ public class SDNSweep implements Runnable {
                 for (Link l2 : possibleLinks) {
                     String src1 = l1.srcSwitch + "-" + l1.srcPort;
                     String dst1 = l1.dstSwitch + "-" + l1.dstPort;
-                    
+
                     String src2 = l2.srcSwitch + "-" + l2.srcPort;
                     String dst2 = l2.dstSwitch + "-" + l2.dstPort;
-                    
+
                     if (!src1.equals(src2) && !dst1.equals(dst2)) {
                         addedLinks.add(l2);
                     }
