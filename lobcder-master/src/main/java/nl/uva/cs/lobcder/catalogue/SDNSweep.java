@@ -453,6 +453,88 @@ public class SDNSweep implements Runnable {
         return null;
     }
 
+    private ArrayList<String> findConnectedSwitches(String ipKey) {
+        NodeList desc = flukesTopology.getElementsByTagName("rdf:Description");
+        String ipForTopology = ipKey.replaceAll("\\.", "-");
+        String switchName = null;
+
+        for (int i = 0; i < desc.getLength(); i++) {
+            Node n = desc.item(i);
+            NamedNodeMap att = n.getAttributes();
+            for (int j = 0; j < att.getLength(); j++) {
+                Node n2 = att.item(j);
+                //Get the sw name 
+                if (n2.getNodeValue().contains(ipForTopology)) {
+                    switchName = n2.getNodeValue().substring(n2.getNodeValue().lastIndexOf("Switch"));
+                    switchName = switchName.substring(0, switchName.indexOf("-"));
+                    break;
+                }
+            }
+        }
+        ArrayList<String> linkNames = new ArrayList<>();
+        if (switchName != null) {
+            for (int i = 0; i < desc.getLength(); i++) {
+                Node n = desc.item(i);
+                NamedNodeMap att = n.getAttributes();
+                for (int j = 0; j < att.getLength(); j++) {
+                    Node n2 = att.item(j);
+                    //Get the sw links
+                    if (n2.getNodeValue().contains(switchName) && n2.getNodeValue().contains("Link")) {
+                        String linkNum = n2.getNodeValue().substring(n2.getNodeValue().lastIndexOf("#Link") + 1);
+                        linkNum = linkNum.substring(0, linkNum.indexOf("-"));
+                        if (!linkNames.contains(linkNum)) {
+                            linkNames.add(linkNum);
+                        }
+                    }
+                }
+            }
+        }
+
+        ArrayList<String> dstSWNames = new ArrayList<>();
+        if (!linkNames.isEmpty()) {
+            for (int i = 0; i < desc.getLength(); i++) {
+                Node n = desc.item(i);
+                NamedNodeMap att = n.getAttributes();
+                for (int j = 0; j < att.getLength(); j++) {
+                    Node n2 = att.item(j);
+                    //Get the sw the links connect
+                    for (String ln : linkNames) {
+                        if (n2.getNodeValue().contains(ln) && n2.getNodeValue().contains("Switch") && !n2.getNodeValue().contains(switchName)) {
+                            String dstSwName = n2.getNodeValue().substring(n2.getNodeValue().lastIndexOf("#Link") + 1);
+                            dstSwName = dstSwName.split("-")[1];
+                            if (!dstSWNames.contains(dstSwName)) {
+                                dstSWNames.add(dstSwName);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+
+        ArrayList<String> dstSWIP = new ArrayList<>();
+        if (!dstSWNames.isEmpty()) {
+            for (int i = 0; i < desc.getLength(); i++) {
+                Node n = desc.item(i);
+                NamedNodeMap att = n.getAttributes();
+                for (int j = 0; j < att.getLength(); j++) {
+                    Node n2 = att.item(j);
+                    //Get the sw the links connect
+                    for (String sw : dstSWNames) {
+                        if (n2.getNodeValue().contains(sw + "-ip-")) {
+                            String swIP = n2.getNodeValue().substring(n2.getNodeValue().lastIndexOf(sw + "-ip") + 1 + (sw + "ip-").length());
+                            if (!dstSWIP.contains(swIP)) {
+                                dstSWIP.add(swIP.replaceAll("-", "\\."));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return dstSWIP;
+    }
+
     public void pushFlows(List<String> rules) {
         WebResource webResource = client.resource(uri + ":" + floodlightPort).path("wm").path("staticflowentrypusher").path("json");
         for (String r : rules) {
@@ -477,64 +559,10 @@ public class SDNSweep implements Runnable {
             res = webResource.path("wm").path("topology").path("external-links").path("json");
             switchLinks.addAll(res.get(new GenericType<List<Link>>() {
             }));
-            
-            
-            
-            
+
             for (Switch sw : getAllSwitches()) {
                 String srcSWIP = sw.inetAddress.replaceAll("/", "").substring(0, sw.inetAddress.indexOf(":") - 1);
-                String dstSWIP = findAttachedSwitch(srcSWIP);
-                if (!srcSWIP.equals(dstSWIP)) {
-                    Switch dstSW = switches.get(dstSWIP);
-                    Switch srcSW = switches.get(srcSWIP);
-                    ArrayList<Integer> srcPossiblePorts = new ArrayList<>();
-                    ArrayList<Integer> dstPossiblePorts = new ArrayList<>();
-
-//                    for (Link l : switchLinks) {
-//                        if (srcSW.dpid.equals(l.srcSwitch)) {
-//                            for (Port p : srcSW.ports) {
-//                                if (p.portNumber != l.srcPort) {
-//                                    srcPossiblePorts.add(p.portNumber);
-//                                }
-//                            }
-//                        }
-//                        if (srcSW.dpid.equals(l.dstSwitch)) {
-//                            for (Port p : srcSW.ports) {
-//                                if (p.portNumber != l.dstPort) {
-//                                    srcPossiblePorts.add(p.portNumber);
-//                                }
-//                            }
-//                        }
-//
-//
-//                        if (dstSW.dpid.equals(l.srcSwitch)) {
-//                            for (Port p : dstSW.ports) {
-//                                if (p.portNumber != l.srcPort) {
-//                                    dstPossiblePorts.add(p.portNumber);
-//                                }
-//                            }
-//                        }
-//                        if (dstSW.dpid.equals(l.dstSwitch)) {
-//                            for (Port p : dstSW.ports) {
-//                                if (p.portNumber != l.dstPort) {
-//                                    dstPossiblePorts.add(p.portNumber);
-//                                }
-//                            }
-//                        }
-//                    }
-
-//                    for (Integer p : srcPossiblePorts) {
-//                        Logger.getLogger(SDNSweep.class.getName()).log(Level.INFO, "{0}-{1} ???", new Object[]{srcSW.dpid, p});
-////                        for (NetworkEntity ne : getNetworkEntitiesForSwDPI(srcSW.dpid)) {
-////                            for (AttachmentPoint ap : ne.getAttachmentPoint()) {
-////                                if (p != ap.getPort()) {
-////                                    
-////                                }
-////                            }
-////                        }
-//                    }
-                }
-
+                ArrayList<String> dstSWIP = findConnectedSwitches(srcSWIP);
             }
         }
         return switchLinks;
