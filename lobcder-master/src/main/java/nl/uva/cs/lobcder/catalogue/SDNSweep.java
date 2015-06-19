@@ -560,67 +560,10 @@ public class SDNSweep implements Runnable {
             switchLinks.addAll(res.get(new GenericType<List<Link>>() {
             }));
 
-            ArrayList<Link> possibleLinks = new ArrayList<>();
 
-            for (Switch srcSW : getAllSwitches()) {
-                String srcSWIP = srcSW.inetAddress.replaceAll("/", "").substring(0, srcSW.inetAddress.indexOf(":") - 1);
-                int srcPort = 0;
-                for (NetworkEntity ne : getNetworkEntitiesForSwDPI(srcSW.dpid)) {
-                    for (AttachmentPoint ap : ne.getAttachmentPoint()) {
-                        for (Port p : srcSW.ports) {
-                            for (Link existingLink : switchLinks) {
-                                if (ap.getPort() != p.portNumber && p.portNumber != existingLink.srcPort) {
-                                    srcPort = p.portNumber;
-                                    break;
-                                }
-                            }
-
-                        }
-                    }
-                }
-                int dstPort;
-                Link l = null;
-                for (String dstSWIP : findConnectedSwitches(srcSWIP)) {
-                    Switch dstSW = switches.get(dstSWIP);
-                    for (NetworkEntity ne : getNetworkEntitiesForSwDPI(dstSW.dpid)) {
-                        for (AttachmentPoint ap : ne.getAttachmentPoint()) {
-                            for (Port p : dstSW.ports) {
-                                for (Link existingLink : switchLinks) {
-                                    if (ap.getPort() != p.portNumber && existingLink.dstPort != p.portNumber) {
-                                        dstPort = p.portNumber;
-                                        l = new Link();
-                                        l.srcSwitch = srcSW.dpid;
-                                        l.srcPort = srcPort;
-                                        l.dstSwitch = dstSW.dpid;
-                                        l.dstPort = dstPort;
-                                        possibleLinks.add(l);
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                }
-            }
-
-            ArrayList<Link> addedLinks = new ArrayList<>();
-            for (Link l1 : switchLinks) {
-                for (Link l2 : possibleLinks) {
-                    String src1 = l1.srcSwitch + "-" + l1.srcPort;
-                    String dst1 = l1.dstSwitch + "-" + l1.dstPort;
-
-                    String src2 = l2.srcSwitch + "-" + l2.srcPort;
-                    String dst2 = l2.dstSwitch + "-" + l2.dstPort;
-
-                    if (!src1.equals(src2) && !dst1.equals(dst2)) {
-                        addedLinks.add(l2);
-                    }
-
-                }
-            }
-            switchLinks.addAll(addedLinks);
-            Logger.getLogger(SDNSweep.class.getName()).log(Level.INFO, switchLinks.toString());
+//            ArrayList<Link> addedLinks = fillInLinkGaps(switchLinks);
+//            switchLinks.addAll(addedLinks);
+//            Logger.getLogger(SDNSweep.class.getName()).log(Level.INFO, switchLinks.toString());
 
         }
 
@@ -806,6 +749,95 @@ public class SDNSweep implements Runnable {
             }
         }
 //        }
+    }
+
+    private ArrayList<Link> fillInLinkGaps(List<Link> switchLinks) throws IOException, ParserConfigurationException, SAXException {
+        ArrayList<Link> possibleLinks = new ArrayList<>();
+
+        for (Switch srcSW : getAllSwitches()) {
+            String srcSWIP = srcSW.inetAddress.replaceAll("/", "").substring(0, srcSW.inetAddress.indexOf(":") - 1);
+            int srcPort = 0;
+            for (NetworkEntity ne : getNetworkEntitiesForSwDPI(srcSW.dpid)) {
+                for (AttachmentPoint ap : ne.getAttachmentPoint()) {
+                    for (Port p : srcSW.ports) {
+                        for (Link existingLink : switchLinks) {
+                            if (ap.getPort() != p.portNumber
+                                    && p.portNumber != existingLink.srcPort
+                                    && ap.getPort().intValue() <= 500
+                                    && p.portNumber <= 500) {
+                                srcPort = p.portNumber;
+                                break;
+                            }
+                        }
+
+                    }
+                }
+            }
+            int dstPort;
+            Link l = null;
+            for (String dstSWIP : findConnectedSwitches(srcSWIP)) {
+                Switch dstSW = switches.get(dstSWIP);
+                for (NetworkEntity ne : getNetworkEntitiesForSwDPI(dstSW.dpid)) {
+                    for (AttachmentPoint ap : ne.getAttachmentPoint()) {
+                        for (Port p : dstSW.ports) {
+                            for (Link existingLink : switchLinks) {
+                                if (ap.getPort() != p.portNumber
+                                        && existingLink.dstPort != p.portNumber
+                                        && ap.getPort().intValue() <= 500
+                                        && p.portNumber <= 500
+                                        && srcPort <= 500) {
+                                    dstPort = p.portNumber;
+                                    l = new Link();
+                                    l.srcSwitch = srcSW.dpid;
+                                    l.srcPort = srcPort;
+                                    l.dstSwitch = dstSW.dpid;
+                                    l.dstPort = dstPort;
+                                    possibleLinks.add(l);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+
+            }
+        }
+
+
+        for (Link possible : possibleLinks) {
+            String possibleSRC = possible.srcSwitch + "-" + possible.srcPort;
+            String possibleDST = possible.dstSwitch + "-" + possible.dstPort;
+
+            for (Link existing : switchLinks) {
+                String existingSRC = existing.srcSwitch + "-" + existing.srcPort;
+                String existingDST = existing.dstSwitch + "-" + existing.dstPort;
+
+                if (!possibleSRC.equals(existingSRC)
+                        && !possibleDST.equals(existingDST)
+                        && !possibleSRC.equals(existingDST)
+                        && !possibleDST.equals(existingSRC)) {
+                    Logger.getLogger(SDNSweep.class.getName()).log(Level.INFO, "{0}-{1} -> {2}-{3}", new Object[]{possible.srcSwitch, possible.srcPort, possible.dstSwitch, possible.dstPort});
+                }
+            }
+
+        }
+
+        ArrayList<Link> addedLinks = new ArrayList<>();
+//        for (Link possible : switchLinks) {
+//            for (Link existing : possibleLinks) {
+//                String src1 = possible.srcSwitch + "-" + possible.srcPort;
+//                String dst1 = possible.dstSwitch + "-" + possible.dstPort;
+//
+//                String src2 = existing.srcSwitch + "-" + existing.srcPort;
+//                String dst2 = existing.dstSwitch + "-" + existing.dstPort;
+//
+//                if (!src1.equals(src2) && !dst1.equals(dst2)) {
+//                    addedLinks.add(existing);
+//                }
+//
+//            }
+//        }
+        return addedLinks;
     }
 
     @XmlRootElement

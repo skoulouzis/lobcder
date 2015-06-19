@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -174,7 +173,7 @@ public class SDNControllerClient {
         double cost = Double.MAX_VALUE;
         List<DefaultWeightedEdge> shortestPath = null;
 
-        exportGraph();
+//        exportGraph();
 
         StringBuilder msg = new StringBuilder();
         msg.append("\n");
