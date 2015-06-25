@@ -380,18 +380,7 @@ FROM   lobStats.tx_stats
 GROUP  BY bucket;
 
 ----------------------------Update pref table-----------------------
-INSERT INTO pref_table (ld_uid, storageSiteRef) SELECT uid, 3 AS prefblabla 
-FROM (select 
-  ld.uid
-, pr.ld_uid
-, pr.storageSiteRef
-FROM ldata_table AS ld
-LEFT JOIN pref_table AS pr ON pr.ld_uid = ld.uid
-WHERE 1 = 1
-AND ld.ownerid = 'mp1smw'
-AND pr.ld_uid is null) AS a
-;
-
+INSERT INTO pref_table (ld_uid, storageSiteRef) SELECT uid, 3 AS prefblabla FROM (select ld.uid, pr.ld_uid, pr.storageSiteRef FROM ldata_table AS ld LEFT JOIN pref_table AS pr ON pr.ld_uid = ld.uid WHERE 1 = 1 AND ld.ownerid = 'mp1smw' AND pr.ld_uid is null) AS a; 
 ---------------------Usare agents-------------------------------
 
 sed -i 's/Jakarta\ Commons-HttpClient.*/Jakarta\ Commons-HttpClient/' req.csv
