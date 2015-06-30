@@ -282,7 +282,7 @@ public class WebDataFileResource extends WebDataResource implements
                 index++;
             }
         }
-        Logger.getLogger(WebDataFileResource.class.getName()).log(Level.FINEST, "Selecting: " + array[index].getResourceUrl());
+        Logger.getLogger(WebDataFileResource.class.getName()).log(Level.FINEST, "Selecting: {0}", array[index].getResourceUrl());
         return array[index];
     }
 
@@ -290,11 +290,11 @@ public class WebDataFileResource extends WebDataResource implements
         InputStream in = null;
         PDRI pdri = null;
         double start = 0;
-        WebDataFileResource.log.log(Level.INFO, "Start for " + getLogicalData().getName());
+        WebDataFileResource.log.log(Level.INFO, "Start for {0}", getLogicalData().getName());
         try {
             PDRIDescr pdriDescr = selectBestPDRI(pdris);
             pdri = PDRIFactory.getFactory().createInstance(pdriDescr, false);
-            WebDataFileResource.log.log(Level.INFO, "pdri: " + pdri.getURI());
+            WebDataFileResource.log.log(Level.INFO, "pdri: {0}", pdri.getURI());
             if (pdri != null) {
                 start = System.currentTimeMillis();
                 in = pdri.getData();

@@ -13,7 +13,6 @@ import com.sun.jersey.api.json.JSONConfiguration;
 import com.sun.jersey.client.urlconnection.HTTPSProperties;
 import io.milton.http.Range;
 import java.io.*;
-import java.lang.reflect.InvocationTargetException;
 import java.math.BigInteger;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -130,6 +129,7 @@ public class VPDRI implements PDRI {
 
         if (StringUtil.equals(authScheme, ServerInfo.GSI_AUTH)) {
             GridHelper.initGridProxy(username, password, context, destroyCert);
+            context.setProperty(GlobalConfig.PROP_PASSIVE_MODE, false);
         }
 
         if (StringUtil.equals(authScheme, ServerInfo.PASSWORD_AUTH)
