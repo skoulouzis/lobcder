@@ -60,6 +60,7 @@ public class GridHelper {
             GlobalConfig.setSystemProperty("grid.proxy.lifetime", "100");
 //        GlobalConfig.setUsePersistantUserConfiguration(false);
             GlobalConfig.setCACertificateLocations(Constants.CERT_LOCATION);
+            Global.setDebug(false);
 
             // user configuration 
 //        GlobalConfig.setUsePersistantUserConfiguration(false);
