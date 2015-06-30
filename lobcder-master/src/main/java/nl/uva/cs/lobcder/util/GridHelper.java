@@ -115,7 +115,7 @@ public class GridHelper {
             gridProxy.destroy();
             gridProxy = null;
         }
-        if (gridProxy == null || gridProxy.isValid() == false) {
+        if (gridProxy == null ){ //|| gridProxy.isValid() == false) {
 //            context.setProperty("grid.proxy.location", Constants.PROXY_FILE);
 //            context.setProperty("grid.certificate.location", Global.getUserHome() + "/.globus");
 //            context.setProperty("grid.proxy.lifetime", "100");
