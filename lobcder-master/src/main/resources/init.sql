@@ -292,12 +292,6 @@ INSERT INTO storage_site_table(resourceUri, credentialRef, currentNum, currentSi
             VALUES('file:///tmp/', @credRef, -1, -1, -1, -1, TRUE);
 SET @ssRef = LAST_INSERT_ID();
 
--- INSERT INTO  credential_table(username, password) VALUES ('dvasunin', 'my-secretpwd');
--- SET @credRef = LAST_INSERT_ID();
--- INSERT INTO storage_site_table(resourceUri, credentialRef, currentNum, currentSize, quotaNum, quotaSize)
---             VALUES('sftp://dvasunin@elab.lab.uvalight.net/home/dvasunin/tmp/lobcder/', @credRef, -1, -1, -1, -1);
--- SET @ssRef = LAST_INSERT_ID();
-
 # Here we createtables for built-in user IDs/roles
 
 CREATE TABLE auth_usernames_table (
