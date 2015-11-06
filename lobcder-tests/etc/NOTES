@@ -114,10 +114,30 @@ sudo apt-get update && sudo apt-get install globus-gridftp globus-simple-ca
 ls /etc/grid-security/certificates/*.0
 /etc/grid-security/certificates/*.signing_policy
 
-grid-cert-request
+grid-cert-request -ip 192.168.100.6 -host 192.168.100.6
 sudo grid-ca-sign -in ~/.globus/usercert_request.pem -out ~/.globus/usercert.pem
 
 grid-proxy-init
 
 sudo /etc/init.d/globus-gridftp-server stop
+
+
+Could not load your certificate: [JGLOBUS-22] Algorithm not supported
+
+
+openssl rsa -des3 -in userkey.pem -out userkey2.pem
+
+
+wget https://raw.githubusercontent.com/skoulouzis/lobcder/dev/lobcder-tests/etc/globusCert/usercert.pem
+wget https://raw.githubusercontent.com/skoulouzis/lobcder/dev/lobcder-tests/etc/globusCert/userkey.pem
+
+
+grid-mapfile-add-entry -dn /O=Grid/OU=GlobusTest/OU=simpleCA-ubuntu/OU=local/CN=alogo -ln user
+grid-mapfile-add-entry -dn /O=Grid/OU=GlobusTest/OU=simpleCA-ubuntu/CN=host/ubuntu -ln user
+
 globus-url-copy -v file:/etc/group gsiftp://127.0.0.1/tmp/group
+
+
+
+-----------------------------Geo IP-------------------------------------------------
+http://www.psce.com/blog/2012/06/01/implementing-efficient-geo-ip-location-system-in-mysql/

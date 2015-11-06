@@ -1,0 +1,105 @@
+<rdf:RDF
+    xmlns:kansei="http://geni-orca.renci.org/owl/kansei.owl#"
+    xmlns:compute="http://geni-orca.renci.org/owl/compute.owl#"
+    xmlns:app-color="http://geni-orca.renci.org/owl/app-color.owl#"
+    xmlns:ethernet="http://geni-orca.renci.org/owl/ethernet.owl#"
+    xmlns:dtn="http://geni-orca.renci.org/owl/dtn.owl#"
+    xmlns:time="http://www.w3.org/2006/time#"
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:openflow="http://geni-orca.renci.org/owl/openflow.owl#"
+    xmlns:modify-schema="http://geni-orca.renci.org/owl/modify.owl#"
+    xmlns:planetlab="http://geni-orca.renci.org/owl/planetlab.owl#"
+    xmlns:geni="http://geni-orca.renci.org/owl/geni.owl#"
+    xmlns:layer="http://geni-orca.renci.org/owl/layer.owl#"
+    xmlns:request-schema="http://geni-orca.renci.org/owl/request.owl#"
+    xmlns:ip4="http://geni-orca.renci.org/owl/ip4.owl#"
+    xmlns:orca="http://geni-orca.renci.org/owl/orca.owl#"
+    xmlns:owl="http://www.w3.org/2002/07/owl#"
+    xmlns:eucalyptus="http://geni-orca.renci.org/owl/eucalyptus.owl#"
+    xmlns:domain="http://geni-orca.renci.org/owl/domain.owl#"
+    xmlns:collections="http://geni-orca.renci.org/owl/collections.owl#"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+    xmlns:ec2="http://geni-orca.renci.org/owl/ec2.owl#"
+    xmlns:topology="http://geni-orca.renci.org/owl/topology.owl#"
+    xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+    xmlns:request="http://geni-orca.renci.org/owl/e14dd744-d379-4f2a-8ea5-27d6a3a3ba77#" > 
+  <rdf:Description rdf:about="http://geni-orca.renci.org/owl/e14dd744-d379-4f2a-8ea5-27d6a3a3ba77#Term">
+    <time:hasDurationDescription rdf:resource="http://geni-orca.renci.org/owl/e14dd744-d379-4f2a-8ea5-27d6a3a3ba77#TermDuration"/>
+    <rdf:type rdf:resource="http://www.w3.org/2006/time#Interval"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://geni-orca.renci.org/owl/e14dd744-d379-4f2a-8ea5-27d6a3a3ba77#">
+    <collections:element rdf:resource="http://geni-orca.renci.org/owl/e14dd744-d379-4f2a-8ea5-27d6a3a3ba77#NodeGroup0"/>
+    <request-schema:hasTerm rdf:resource="http://geni-orca.renci.org/owl/e14dd744-d379-4f2a-8ea5-27d6a3a3ba77#Term"/>
+    <rdf:type rdf:resource="http://geni-orca.renci.org/owl/request.owl#Reservation"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://geni-orca.renci.org/owl/e14dd744-d379-4f2a-8ea5-27d6a3a3ba77#TermDuration">
+    <time:days rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">1</time:days>
+    <rdf:type rdf:resource="http://www.w3.org/2006/time#DurationDescription"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://geni-orca.renci.org/owl/e14dd744-d379-4f2a-8ea5-27d6a3a3ba77#NodeGroup0">
+    <request-schema:postBootScript rdf:datatype="http://www.w3.org/2001/XMLSchema#string">#!/bin/bash
+
+if [ $HOSTNAME != NodeGroup0-0 ]; then sleep 15m; fi
+
+sudo apt-get install --yes --force-yes geoip-bin davfs2
+echo "sudo apt-get install geoip-bin davfs2" &gt;&gt; ~/postboot
+wget http://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz
+wget http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz
+wget http://download.maxmind.com/download/geoip/database/asnum/GeoIPASNum.dat.gz
+gunzip GeoIP.dat.gz
+gunzip GeoIPASNum.dat.gz
+gunzip GeoLiteCity.dat.gz
+sudo cp GeoIP.dat GeoIPASNum.dat GeoLiteCity.dat /usr/share/GeoIP/
+echo "sudo apt-get install geoip-bin davfs2" &gt;&gt; ~/postboot
+geoiplookup -f /usr/share/GeoIP/GeoLiteCity.dat 23.66.166.151 &gt;&gt; ~/postboot
+
+
+sudo openssl s_client -connect  lobcder.vph.cyfronet.pl:443 -showcerts &lt;/dev/null 2&gt;/dev/null | openssl x509 -outform PEM &gt; /root/certificate.pem
+echo "sudo openssl s_client -connect  lobcder.vph.cyfronet.pl:443 -showcerts &lt;/dev/null 2&gt;/dev/null | openssl x509 -outform PEM &gt; /root/certificate.pem" &gt;&gt; ~/postboot
+
+sudo cp /root/certificate.pem /etc/davfs2/certs/
+echo "sudo cp /root/certificate.pem /etc/davfs2/certs/" &gt;&gt; ~/postboot
+
+sudo bash -c 'echo "servercert /etc/davfs2/certs/certificate.pem" &gt;&gt; /etc/davfs2/davfs2.conf'
+
+echo "servercert /etc/davfs2/certs/certificate.pem" &gt;&gt; ~/postboot
+
+sudo bash -c 'echo "https://lobcder.vph.cyfronet.pl/lobcder/dav skoulouz gamiseta" &gt;&gt; /etc/davfs2/secrets'
+echo "https://lobcder.vph.cyfronet.pl/lobcder/dav skoulouz gamiseta" &gt;&gt; ~/postboot
+
+sudo mkdir /media/lobcder
+sudo mount -t davfs https://lobcder.vph.cyfronet.pl/lobcder/dav /media/lobcder -o rw,uid=root
+echo "mount -t davfs https://lobcder.vph.cyfronet.pl/lobcder/dav /media/lobcder -o rw,uid=root" &gt;&gt; ~/postboot
+
+echo "Done!!!!" &gt;&gt; ~/postboot
+
+if [ $HOSTNAME = NodeGroup0-0 ]; then cp /media/lobcder/skoulouz/ip.csv /root/; fi
+if [ $HOSTNAME = NodeGroup0-0 ]; then split -d -l 275233 /root/ip.csv /root/x; fi
+if [ $HOSTNAME = NodeGroup0-0 ]; then cp /root/x* /media/lobcder/skoulouz; fi
+
+NODE=`echo $HOSTNAME | cut -c12-13`
+if [ $NODE -lt 10 ]; then cp /media/lobcder/skoulouz/x0$NODE /root; fi
+cp /media/lobcder/skoulouz/x$NODE /root
+
+
+if [ $NODE -lt 10 ]; then cat /root/x0$NODE | xargs -n 1 geoiplookup -f /usr/share/GeoIP/GeoLiteCity.dat {} &gt; /root/coordinates$NODE; fi
+if [ $NODE -gt 9 ]; then cat /root/x$NODE | xargs -n 1 geoiplookup -f /usr/share/GeoIP/GeoLiteCity.dat {} &gt; /root/coordinates$NODE; fi
+
+sed -i -- 's/GeoIP City Edition, Rev 1: //g' /root/coordinates*
+sed -i -- 's/City of, London/London/g' /root/coordinates*
+
+cp /root/coordinates* /media/lobcder/skoulouz
+
+</request-schema:postBootScript>
+    <compute:diskImage rdf:resource="http://geni-orca.renci.org/owl/e14dd744-d379-4f2a-8ea5-27d6a3a3ba77#ubuntu14"/>
+    <domain:hasResourceType rdf:resource="http://geni-orca.renci.org/owl/compute.owl#VM"/>
+    <layer:numCE rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">20</layer:numCE>
+    <request-schema:groupName>NodeGroup0</request-schema:groupName>
+    <rdf:type rdf:resource="http://geni-orca.renci.org/owl/compute.owl#ServerCloud"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://geni-orca.renci.org/owl/e14dd744-d379-4f2a-8ea5-27d6a3a3ba77#ubuntu14">
+    <topology:hasURL>http://elab.lab.uvalight.net/~lobcder/images/ubuntu14.xml</topology:hasURL>
+    <topology:hasGUID>a96d205fc0e3fe3e16a8594dbf59224b7ffb10b4</topology:hasGUID>
+    <rdf:type rdf:resource="http://geni-orca.renci.org/owl/compute.owl#DiskImage"/>
+  </rdf:Description>
+</rdf:RDF>
