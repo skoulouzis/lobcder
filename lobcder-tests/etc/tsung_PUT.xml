@@ -21,8 +21,8 @@
 
   
     <load>
-        <arrivalphase phase="1" duration="120" unit="second">
-            <users maxnumber="100" arrivalrate="8" unit="second"/>
+        <arrivalphase phase="1" duration="30" unit="second">
+            <users maxnumber="10" arrivalrate="0.5" unit="second"/>
         </arrivalphase>
     </load>
 
@@ -40,12 +40,12 @@
     <sessions> 
         <session name="http-example" probability="100" type="ts_http">
             <setdynvars sourcetype="random_number" start="1" end="10000">
-                <var name="room"/>
+                <var name="id"/>
             </setdynvars>
         
-            <request subst="true">
-                <http url="/lobcder/dav/%%_room%%" method="PUT" version="1.1" 
-                      contents_from_file='/home/alogo/Downloads/tmp.csv' >
+            <request subst='all_except_body'>
+                <http url="/lobcder/dav/%%_id%%" method="PUT" version="1.1" 
+                      contents_from_file='/path/Downloads/file' >
                     <www_authenticate userid="user" passwd="pass"/>
                 </http> 
             </request>
