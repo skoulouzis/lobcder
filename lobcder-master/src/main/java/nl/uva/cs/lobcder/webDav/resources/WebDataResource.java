@@ -598,7 +598,7 @@ public class WebDataResource implements PropFindableResource, Resource,
             case PUT:
             case POST:
 
-//                String redirect = "http://njdsndcij:8080/" + request.getAbsolutePath();
+//                String redirect = "http://localhost:8080/lobcder-worker" + request.getAbsolutePath();
 //                WebDataResource.log.log(Level.FINE, "Redirect? " + request.getAbsolutePath());
                 return null;
             default:

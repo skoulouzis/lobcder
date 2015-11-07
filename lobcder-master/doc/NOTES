@@ -738,3 +738,42 @@ where userName != 'skoulouz'
  and userName != 'Katscher'
 and userName !='asagli'
  limit 10;
+
+
+
+--------------------------Check if next get is from same folder ---------------------
+
+SELECT 
+keyVal, 
+lobStateID, 
+dd,
+keyvalFull,
+lobstateIdFull
+-- sum(count) AS weight
+FROM (
+select 
+    rt.uid,
+    SUBSTRING_INDEX(requestURL, '/', LENGTH(requestURL) - LENGTH(REPLACE(requestURL, '/', ''))) AS keyval,
+    requestURL as keyvalFull,
+    rtn.lobStateId,
+    rtn.previousuid,
+    1 AS count, 
+    timeStamp as dd
+FROM requests_table AS rt
+-- where rt.methodName = 'GET'
+JOIN
+(
+select uid, uid-1 AS previousuid, 
+SUBSTRING_INDEX(requestURL, '/', LENGTH(requestURL) - LENGTH(REPLACE(requestURL, '/', ''))) AS lobstateId, 
+requestURL as lobstateIdFull
+from requests_table AS rt
+where methodName = 'GET' and userName != 'tester' and remoteAddr like '149.156.10.%'
+) AS rtn
+ON rt.uid = rtn.previousuid
+where rt.methodName = 'GET' and  methodName = 'GET' and userName != 'tester' and remoteAddr like '149.156.10.%'
+
+) AS bla
+-- GROUP BY 
+-- keyval, 
+-- lobstateId;
+-- ORDER BY weight DESC;

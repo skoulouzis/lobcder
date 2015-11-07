@@ -142,7 +142,7 @@ CREATE TABLE requests_table (
  elapsedTime DOUBLE,
  userName TEXT(5240),
  userAgent VARCHAR(1024),
- timeStamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+ timeStamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP, INDEX(timeStamp),
 ) ENGINE=InnoDB;
 
 
