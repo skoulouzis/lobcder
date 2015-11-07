@@ -14,6 +14,7 @@ import com.sun.jersey.api.json.JSONConfiguration;
 import com.sun.jersey.client.urlconnection.HTTPSProperties;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 import io.milton.common.Path;
+import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.File;
@@ -36,6 +37,7 @@ import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -153,6 +155,41 @@ public final class WorkerServlet extends HttpServlet {
             getPDRIs();
         } catch (IOException | URISyntaxException ex) {
             Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    @Override
+    public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        System.err.println("getMethod: " + request.getMethod());
+        System.err.println("getContentType: " + request.getContentType());
+        System.err.println("getRequestedSessionId: " + request.getRequestedSessionId());
+        Enumeration names = request.getAttributeNames();
+
+       
+        while (names.hasMoreElements()) {
+            System.err.println("name: " +  names.nextElement());
+        }
+        System.err.println("getContentLength: " + request.getContentLength());
+
+        Enumeration headerNames = request.getHeaderNames();
+        while (headerNames.hasMoreElements()) {
+            String headerName = (String) headerNames.nextElement();
+            System.err.println(headerName + " : " + request.getHeader(headerName));
+        }
+
+        Enumeration params = request.getParameterNames();
+        while (params.hasMoreElements()) {
+            String paramName = (String) params.nextElement();
+            System.err.println(paramName + " : " + request.getParameter(paramName));
+        }
+
+
+
+        
+        BufferedReader reader = request.getReader();
+        String line;
+        while ((line = reader.readLine()) != null) {
+            System.err.println("line: " + line);
         }
     }
 
@@ -298,7 +335,6 @@ public final class WorkerServlet extends HttpServlet {
         // Validate and process Range and If-Range headers.
         String range = request.getHeader("Range");
         if (range != null) {
-
             // Range header should match format "bytes=n-n,n-n,n-n...". If not, then return 416.
             if (!range.matches("^bytes=\\d*-\\d*(,\\d*-\\d*)*$")) {
                 response.setHeader("Content-Range", "bytes */" + length); // Required in 416.
