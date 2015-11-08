@@ -22,6 +22,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.net.InetAddress;
@@ -78,6 +79,10 @@ import nl.uva.cs.lobcder.rest.wrappers.Stats;
 import nl.uva.vlet.data.StringUtil;
 import nl.uva.vlet.exception.VlException;
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload.FileUploadException;
+import org.apache.commons.fileupload.disk.DiskFileItemFactory;
+import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.io.output.TeeOutputStream;
 import org.globus.tools.ui.util.UITools;
 
@@ -160,37 +165,51 @@ public final class WorkerServlet extends HttpServlet {
 
     @Override
     public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        System.err.println("getMethod: " + request.getMethod());
-        System.err.println("getContentType: " + request.getContentType());
-        System.err.println("getRequestedSessionId: " + request.getRequestedSessionId());
-        Enumeration names = request.getAttributeNames();
+        try {
+            //        curl -viks  --post302 -L -u user:pass -X POST -F key1=value1 -F upload=@file http://localhost:8080/lobcder/dav/
 
-       
-        while (names.hasMoreElements()) {
-            System.err.println("name: " +  names.nextElement());
+            // checks if the request actually contains upload file
+            if (!ServletFileUpload.isMultipartContent(request)) {
+                // if not, we stop here
+                PrintWriter writer = response.getWriter();
+                writer.println("Error: Form must has enctype=multipart/form-data.");
+                writer.flush();
+                return;
+            }
+
+            // configures upload settings
+            DiskFileItemFactory factory = new DiskFileItemFactory();
+            // sets memory threshold - beyond which files are stored in disk
+            factory.setSizeThreshold(this.bufferSize);
+            // sets temporary location to store files
+            factory.setRepository(cacheDir);
+
+            ServletFileUpload upload = new ServletFileUpload(factory);
+            // sets maximum size of upload file
+            //        upload.setFileSizeMax(MAX_FILE_SIZE);
+            // sets maximum size of request (include file + form data)
+            //        upload.setSizeMax(MAX_REQUEST_SIZE);
+            List<FileItem> formItems = upload.parseRequest(request);
+            Iterator<FileItem> iter = formItems.iterator();
+            FileItem item;
+
+            while (iter.hasNext()) {
+                item = iter.next();
+                if (item.getName() == null) {
+                    continue;
+                }
+                String fileName = item.getName();
+                String filePath = cacheDir + File.separator + fileName;
+                File storeFile = new File(filePath);
+                item.write(storeFile);
+            }
+
+        } catch (FileUploadException ex) {
+            Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (Exception ex) {
+            Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, ex);
         }
-        System.err.println("getContentLength: " + request.getContentLength());
 
-        Enumeration headerNames = request.getHeaderNames();
-        while (headerNames.hasMoreElements()) {
-            String headerName = (String) headerNames.nextElement();
-            System.err.println(headerName + " : " + request.getHeader(headerName));
-        }
-
-        Enumeration params = request.getParameterNames();
-        while (params.hasMoreElements()) {
-            String paramName = (String) params.nextElement();
-            System.err.println(paramName + " : " + request.getParameter(paramName));
-        }
-
-
-
-        
-        BufferedReader reader = request.getReader();
-        String line;
-        while ((line = reader.readLine()) != null) {
-            System.err.println("line: " + line);
-        }
     }
 
 //    /**
