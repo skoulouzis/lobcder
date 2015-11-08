@@ -27,7 +27,6 @@ import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
 import nl.uva.cs.lobcder.resources.*;
 import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.cs.lobcder.util.DesEncrypter;
-import org.apache.commons.codec.binary.Base64;
 
 import javax.annotation.Nonnull;
 import javax.xml.namespace.QName;
@@ -611,11 +610,26 @@ public class WebDataResource implements PropFindableResource, Resource,
             case POST:
                 String redirect = null;
 //                try {
-//                    lockForRedirect(request);
+//                    List<String> uids = lockForRedirect(request);
+//                    StringBuilder sb = new StringBuilder();
+//
+//                    String prefix = "file_uid=";
+//                    for (String id : uids) {
+//                        sb.append(prefix);
+//                        sb.append(id);
+//                        prefix = "&file_uid=";
+//
+//                    }
+//                    String folder = request.getAbsolutePath();
+//                    if (!folder.endsWith("/")) {
+//                        folder += "/";
+//                    }
+//                    redirect = "http://localhost:8080/lobcder-worker" + folder + "?" + sb.toString();
+//
 //                } catch (SQLException | UnsupportedEncodingException | PreConditionFailedException | LockedException ex) {
 //                    Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
 //                }
-//                redirect = "http://localhost:8080/lobcder-worker" + request.getAbsolutePath();
+
 //                WebDataResource.log.log(Level.FINE, "Redirect? " + request.getAbsolutePath());
                 return redirect;
             default:
@@ -868,14 +882,16 @@ public class WebDataResource implements PropFindableResource, Resource,
         return String.valueOf(getCatalogue().getReplicationQueueSize());
     }
 
-    private void lockForRedirect(Request request) throws SQLException, UnsupportedEncodingException, NotAuthorizedException, PreConditionFailedException, LockedException {
+    private List<String> lockForRedirect(Request request) throws SQLException, UnsupportedEncodingException, NotAuthorizedException, PreConditionFailedException, LockedException {
+        List uids = null;
         try (Connection connection = getCatalogue().getConnection()) {
-
             Map<String, FileItem> files = request.getFiles();
             Set<String> keys = files.keySet();
+            uids = new ArrayList(keys.size());
             for (String s : keys) {
                 Path newPath = Path.path(getPath(), s);
                 LogicalData fileLogicalData = getCatalogue().getLogicalDataByPath(newPath, connection);
+                String contentType = mimeTypeMap.get(FilenameUtils.getExtension(s));
                 if (fileLogicalData != null) {
                     Permissions p = getCatalogue().getPermissions(fileLogicalData.getUid(), fileLogicalData.getOwner(), connection);
                     if (!getPrincipal().canWrite(p)) {
@@ -884,24 +900,52 @@ public class WebDataResource implements PropFindableResource, Resource,
                     fileLogicalData.setLength(request.getContentLengthHeader());
                     fileLogicalData.setModifiedDate(System.currentTimeMillis());
                     fileLogicalData.setLastAccessDate(fileLogicalData.getModifiedDate());
-                    String contentType = mimeTypeMap.get(FilenameUtils.getExtension(s));
+
                     fileLogicalData.addContentType(contentType);
                     WebDataFileResource resource = new WebDataFileResource(fileLogicalData, Path.path(getPath(), s), getCatalogue(), authList);
                     LockToken tocken = resource.getCurrentLock();
-                    if (tocken == null || tocken.isExpired()) {
-                        LockTimeout timeout = new LockTimeout(System.currentTimeMillis() + Constants.LOCK_TIME);
-                        LockInfo info = new LockInfo(LockInfo.LockScope.EXCLUSIVE,
-                                LockInfo.LockType.WRITE, getPrincipal().getUserId(),
-                                LockInfo.LockDepth.INFINITY);
-                        LockResult lockResult = resource.lock(timeout, info);
-                    }
+//                    if (tocken == null || tocken.isExpired()) {
+//                        LockTimeout timeout = new LockTimeout(System.currentTimeMillis() + Constants.LOCK_TIME);
+//                        LockInfo info = new LockInfo(LockInfo.LockScope.EXCLUSIVE,
+//                                LockInfo.LockType.WRITE, getPrincipal().getUserId(),
+//                                LockInfo.LockDepth.INFINITY);
+//                        LockResult lockResult = resource.lock(timeout, info);
+//                    }
+                    uids.add(resource.getUniqueId());
                 }
+//                else {
+//                    fileLogicalData = new LogicalData();
+//                    fileLogicalData.setName(s);
+//                    fileLogicalData.setParentRef(getLogicalData().getUid());
+//                    fileLogicalData.setType(Constants.LOGICAL_FILE);
+//                    fileLogicalData.setOwner(getPrincipal().getUserId());
+//                    fileLogicalData.setLength(request.getContentLengthHeader());
+//                    fileLogicalData.setCreateDate(System.currentTimeMillis());
+//                    fileLogicalData.setModifiedDate(System.currentTimeMillis());
+//                    fileLogicalData.setLastAccessDate(System.currentTimeMillis());
+//                    fileLogicalData.setTtlSec(getLogicalData().getTtlSec());
+//                    fileLogicalData.addContentType(contentType);
+//                    fileLogicalData = getCatalogue().registerDirLogicalData(fileLogicalData, connection);
+//                    getCatalogue().setPermissions(fileLogicalData.getUid(), new Permissions(getPrincipal(), getPermissions()), connection);
+//                    
+//                    WebDataFileResource resource = new WebDataFileResource(fileLogicalData, Path.path(getPath(), s), getCatalogue(), authList);
+//                    LockToken tocken = resource.getCurrentLock();
+//                    if (tocken == null || tocken.isExpired()) {
+//                        LockTimeout timeout = new LockTimeout(System.currentTimeMillis() + Constants.LOCK_TIME);
+//                        LockInfo info = new LockInfo(LockInfo.LockScope.EXCLUSIVE,
+//                                LockInfo.LockType.WRITE, getPrincipal().getUserId(),
+//                                LockInfo.LockDepth.INFINITY);
+//                        LockResult lockResult = resource.lock(timeout, info);
+//                    }
+//                    uids.add(resource.getUniqueId());
+//                }
             }
 
 //                if (contentType == null || contentType.equals("application/octet-stream")) {
 //                    contentType = mimeTypeMap.get(FilenameUtils.getExtension(newName));
 //                }
         }
+        return uids;
     }
 //        public LockResult lock(LockTimeout lt, LockInfo li) throws NotAuthorizedException, PreConditionFailedException, LockedException{
 //        return null;
