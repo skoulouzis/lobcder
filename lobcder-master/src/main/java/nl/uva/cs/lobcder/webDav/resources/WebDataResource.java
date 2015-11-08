@@ -32,11 +32,14 @@ import org.apache.commons.codec.binary.Base64;
 import javax.annotation.Nonnull;
 import javax.xml.namespace.QName;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
 import java.sql.*;
 import java.util.*;
 import java.util.Date;
 import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.apache.commons.io.FilenameUtils;
 
 /**
  * @author S. Koulouzis
@@ -55,6 +58,7 @@ public class WebDataResource implements PropFindableResource, Resource,
 //    protected final AuthI auth2;
     private static final ThreadLocal<MyPrincipal> principalHolder = new ThreadLocal<>();
     protected String fromAddress;
+    protected Map<String, String> mimeTypeMap = new HashMap<>();
 
     public WebDataResource(@Nonnull LogicalData logicalData, Path path, @Nonnull JDBCatalogue catalogue, @Nonnull List<AuthI> authList) {
         this.authList = authList;
@@ -62,6 +66,14 @@ public class WebDataResource implements PropFindableResource, Resource,
         this.logicalData = logicalData;
         this.catalogue = catalogue;
         this.path = path;
+        mimeTypeMap.put("mp4", "video/mp4");
+        mimeTypeMap.put("pdf", "application/pdf");
+        mimeTypeMap.put("tex", "application/x-tex");
+        mimeTypeMap.put("log", "text/plain");
+        mimeTypeMap.put("png", "image/png");
+        mimeTypeMap.put("aux", "text/plain");
+        mimeTypeMap.put("bbl", "text/plain");
+        mimeTypeMap.put("blg", "text/plain");
     }
 
     @Override
@@ -597,10 +609,15 @@ public class WebDataResource implements PropFindableResource, Resource,
         switch (request.getMethod()) {
             case PUT:
             case POST:
-
-//                String redirect = "http://localhost:8080/lobcder-worker" + request.getAbsolutePath();
+                String redirect = null;
+//                try {
+//                    lockForRedirect(request);
+//                } catch (SQLException | UnsupportedEncodingException | PreConditionFailedException | LockedException ex) {
+//                    Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
+//                }
+//                redirect = "http://localhost:8080/lobcder-worker" + request.getAbsolutePath();
 //                WebDataResource.log.log(Level.FINE, "Redirect? " + request.getAbsolutePath());
-                return null;
+                return redirect;
             default:
                 return null;
         }
@@ -850,4 +867,56 @@ public class WebDataResource implements PropFindableResource, Resource,
     private String getReplicationQueueSize() throws SQLException {
         return String.valueOf(getCatalogue().getReplicationQueueSize());
     }
+
+    private void lockForRedirect(Request request) throws SQLException, UnsupportedEncodingException, NotAuthorizedException, PreConditionFailedException, LockedException {
+        try (Connection connection = getCatalogue().getConnection()) {
+
+            Map<String, FileItem> files = request.getFiles();
+            Set<String> keys = files.keySet();
+            for (String s : keys) {
+                Path newPath = Path.path(getPath(), s);
+                LogicalData fileLogicalData = getCatalogue().getLogicalDataByPath(newPath, connection);
+                if (fileLogicalData != null) {
+                    Permissions p = getCatalogue().getPermissions(fileLogicalData.getUid(), fileLogicalData.getOwner(), connection);
+                    if (!getPrincipal().canWrite(p)) {
+                        throw new NotAuthorizedException(this);
+                    }
+                    fileLogicalData.setLength(request.getContentLengthHeader());
+                    fileLogicalData.setModifiedDate(System.currentTimeMillis());
+                    fileLogicalData.setLastAccessDate(fileLogicalData.getModifiedDate());
+                    String contentType = mimeTypeMap.get(FilenameUtils.getExtension(s));
+                    fileLogicalData.addContentType(contentType);
+                    WebDataFileResource resource = new WebDataFileResource(fileLogicalData, Path.path(getPath(), s), getCatalogue(), authList);
+                    LockToken tocken = resource.getCurrentLock();
+                    if (tocken == null || tocken.isExpired()) {
+                        LockTimeout timeout = new LockTimeout(System.currentTimeMillis() + Constants.LOCK_TIME);
+                        LockInfo info = new LockInfo(LockInfo.LockScope.EXCLUSIVE,
+                                LockInfo.LockType.WRITE, getPrincipal().getUserId(),
+                                LockInfo.LockDepth.INFINITY);
+                        LockResult lockResult = resource.lock(timeout, info);
+                    }
+                }
+            }
+
+//                if (contentType == null || contentType.equals("application/octet-stream")) {
+//                    contentType = mimeTypeMap.get(FilenameUtils.getExtension(newName));
+//                }
+        }
+    }
+//        public LockResult lock(LockTimeout lt, LockInfo li) throws NotAuthorizedException, PreConditionFailedException, LockedException{
+//        return null;
+//            
+//        }
+//
+//    public LockResult refreshLock(String string) throws NotAuthorizedException, PreConditionFailedException{
+//        
+//    }
+//
+//    public void unlock(String string) throws NotAuthorizedException, PreConditionFailedException{
+//        
+//    }
+//
+//    public LockToken getCurrentLock(){
+//        
+//    }
 }

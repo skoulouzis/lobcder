@@ -45,19 +45,10 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
         CollectionResource, DeletableCollectionResource, LockingCollectionResource, PostableResource {
 
     private int attempts = 0;
-    private Map<String, String> mimeTypeMap = new HashMap<>();
 
     public WebDataDirResource(@Nonnull LogicalData logicalData, Path path, @Nonnull JDBCatalogue catalogue, @Nonnull List<AuthI> authList) {
         super(logicalData, path, catalogue, authList);
 //        WebDataDirResource.log.log(Level.FINEST, "Init. WebDataDirResource:  {0}", getPath());
-        mimeTypeMap.put("mp4", "video/mp4");
-        mimeTypeMap.put("pdf", "application/pdf");
-        mimeTypeMap.put("tex", "application/x-tex");
-        mimeTypeMap.put("log", "text/plain");
-        mimeTypeMap.put("png", "image/png");
-        mimeTypeMap.put("aux", "text/plain");
-        mimeTypeMap.put("bbl", "text/plain");
-        mimeTypeMap.put("blg", "text/plain");
     }
 
     @Override
@@ -203,7 +194,8 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
     }
 
     @Override
-    public Resource createNew(String newName, InputStream inputStream, Long length, String contentType) throws IOException,
+    public Resource createNew(String newName, InputStream inputStream, Long length, String contentType) throws
+            IOException,
             ConflictException, NotAuthorizedException, BadRequestException, InternalError {
         WebDataDirResource.log.log(Level.FINEST, "createNew. for {0}\n\t newName:\t{1}\n\t length:\t{2}\n\t contentType:\t{3}", new Object[]{getPath(), newName, length, contentType});
         LogicalData fileLogicalData;
@@ -220,7 +212,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                     contentType = mimeTypeMap.get(FilenameUtils.getExtension(newName));
                 }
                 if (fileLogicalData != null) {  // Resource exists, update
-//                    throw new ConflictException(this, newName);
+                    //                    throw new ConflictException(this, newName);
                     Permissions p = getCatalogue().getPermissions(fileLogicalData.getUid(), fileLogicalData.getOwner(), connection);
                     if (!getPrincipal().canWrite(p)) {
                         throw new NotAuthorizedException(this);
@@ -232,6 +224,11 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                         contentType = mimeTypeMap.get(FilenameUtils.getExtension(newName));
                     }
                     fileLogicalData.addContentType(contentType);
+                    resource = new WebDataFileResource(fileLogicalData, Path.path(getPath(), newName), getCatalogue(), authList);
+                    LockToken tocken = resource.getCurrentLock();
+                    if (tocken != null && !tocken.isExpired()) {
+                        throw new ConflictException(resource, "The resource is locked");
+                    }
                     //Create new
                     pdri = createPDRI(fileLogicalData.getLength(), newName, connection);
                     pdri.setLength(length);
@@ -244,7 +241,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
 //                    if (md5 != null) {
 //                        fileLogicalData.setChecksum(md5);
 //                    }
-                    resource = new WebDataFileResource(fileLogicalData, Path.path(getPath(), newName), getCatalogue(), authList);
+
 //                    return new WebDataFileResource(fileLogicalData, Path.path(getPath(), newName), getCatalogue(), authList);
                 } else { // Resource does not exists, create a new one
                     // new need write prmissions for current collection
@@ -486,7 +483,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
 
     @Override
     public Date getCreateDate() {
-        Date date = new Date(getLogicalData().getCreateDate());
+//        Date date = new Date(getLogicalData().getCreateDate());
 //        WebDataDirResource.log.log(Level.FINEST, "getCreateDate() for {0} date: " + date, getPath());
         return new Date(getLogicalData().getCreateDate());
     }
