@@ -203,7 +203,6 @@ public final class WorkerServlet extends HttpServlet {
                 File storeFile = new File(filePath);
                 item.write(storeFile);
             }
-
         } catch (FileUploadException ex) {
             Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, ex);
         } catch (Exception ex) {
