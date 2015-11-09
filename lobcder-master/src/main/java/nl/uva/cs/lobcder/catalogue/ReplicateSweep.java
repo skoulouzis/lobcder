@@ -60,7 +60,7 @@ public class ReplicateSweep implements Runnable {
                         }
                     }
                     if (pdriDescrs.isEmpty()) {
-                        Collection<Long> ss = getReplicationPolicy().getSitesToReplicate(connection);
+//                        Collection<Long> ss = getReplicationPolicy().getSitesToReplicate(connection);
                         successFlag &= replicate(pdriGroup, getReplicationPolicy().getSitesToReplicate(connection), connection);
                     }
                     if (successFlag) {
