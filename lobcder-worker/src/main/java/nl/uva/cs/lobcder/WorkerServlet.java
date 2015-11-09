@@ -14,7 +14,6 @@ import com.sun.jersey.api.json.JSONConfiguration;
 import com.sun.jersey.client.urlconnection.HTTPSProperties;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 import io.milton.common.Path;
-import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.File;
@@ -38,9 +37,9 @@ import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -84,7 +83,6 @@ import org.apache.commons.fileupload.FileUploadException;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.io.output.TeeOutputStream;
-import org.globus.tools.ui.util.UITools;
 
 /**
  * A file servlet supporting resume of downloads and client-side caching and
@@ -203,6 +201,9 @@ public final class WorkerServlet extends HttpServlet {
                 File storeFile = new File(filePath);
                 item.write(storeFile);
             }
+            Map<String, String[]> storagwMap = parseQuery(request.getQueryString());
+            Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, storagwMap.toString());
+
         } catch (FileUploadException ex) {
             Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, ex);
         } catch (Exception ex) {
@@ -1185,6 +1186,25 @@ public final class WorkerServlet extends HttpServlet {
             }
         }
         return false;
+    }
+
+    public static Map<String, String[]> parseQuery(String query) throws UnsupportedEncodingException {
+//        file_id=9&ss_id=8&file_id=3&ss_id=8
+        final Map<String, String[]> query_pairs = new LinkedHashMap<>();
+        final String[] files = query.split("file_id=");
+        for (String file : files) {
+            if (file != null && file.length() > 0) {
+//                4&ss_id=41&ss_id=42&ss_id=43
+                String[] rest = file.split("&");
+                String key = rest[0];
+                String[] ssids = new String[rest.length - 1];
+                for (int i = 1; i < rest.length; i++) {
+                    ssids[i - 1] = rest[i].replaceAll("ss_id=", "");
+                }
+                query_pairs.put(key, ssids);
+            }
+        }
+        return query_pairs;
     }
 
     /**
