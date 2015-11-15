@@ -536,10 +536,10 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
         //        }
         Set<String> keys = files.keySet();
         for (String s : keys) {
-            WebDataDirResource.log.log(Level.INFO, "{0} : {1}", new Object[]{s, files.get(s).getFieldName()});
+            WebDataDirResource.log.log(Level.INFO, "{0} : {1}: {2}", new Object[]{s, files.get(s).getFieldName(), files.get(s).getName()});
             try {
                 //         public Resource createNew(String newName, InputStream inputStream, Long length, String contentType) throws IOException,
-                createNew(files.get(s).getFieldName(), files.get(s).getInputStream(), files.get(s).getSize(), files.get(s).getContentType());
+                createNew(files.get(s).getName(), files.get(s).getInputStream(), files.get(s).getSize(), files.get(s).getContentType());
             } catch (IOException ex) {
                 throw new BadRequestException(this, ex.getMessage());
             }

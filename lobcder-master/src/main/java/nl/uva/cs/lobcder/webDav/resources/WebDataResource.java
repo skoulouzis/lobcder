@@ -42,6 +42,8 @@ import lombok.SneakyThrows;
 import nl.uva.cs.lobcder.replication.policy.ReplicationPolicy;
 import nl.uva.cs.lobcder.util.PropertiesHelper;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.tuple.MutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 
 /**
  * @author S. Koulouzis
@@ -616,34 +618,33 @@ public class WebDataResource implements PropFindableResource, Resource,
 
                     List<WebDataFileResource> resources = createResouses(request);
                     lockResources(resources);
+                    Map<String, Pair<Long, Collection<Long>>> storageMap = getStorageMap(resources);
 
-                    Map<Long, Collection<Long>> storageMap = getStorageMap(resources);
-//
                     StringBuilder sb = new StringBuilder();
-                    Set<Long> keys = storageMap.keySet();
-                    for (Long k : keys) {
-                        sb.append("file_id=").append(k).append("&");
-                        Collection<Long> ssids = storageMap.get(k);
-                        if (ssids != null && !ssids.isEmpty()) {
-                            for (Long ssId : ssids) {
-                                sb.append("ss_id=").append(ssId).append("&");
-                            }
+                    Set<String> keys = storageMap.keySet();
+                    for (String k : keys) {
+                        sb.append("file_name=").append(k).append("/");
+                        Pair pair = storageMap.get(k);
+                        Long uid = (Long) pair.getLeft();
+                        sb.append("file_uid=").append(uid).append("/");
+                        Collection<Long> ssids = (Collection<Long>) pair.getRight();
+                        for (Long ssid : ssids) {
+                            sb.append("ss_id=").append(ssid).append("/");
                         }
+                        sb.append("&");
                     }
-//                    sb.deleteCharAt(sb.length() - 1);
-                    sb.append("file_id=4&ss_id=41&ss_id=42&ss_id=43");
-//
+                    sb.deleteCharAt(sb.length() - 1);
+
                     String folder = request.getAbsolutePath();
                     if (!folder.endsWith("/")) {
                         folder += "/";
                     }
                     redirect = "http://localhost:8080/lobcder-worker" + folder + "?" + sb.toString();
-
                 } catch (Exception ex) {
                     Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
                 }
 
-                redirect = null;
+
                 return redirect;
             default:
                 return null;
@@ -925,13 +926,15 @@ public class WebDataResource implements PropFindableResource, Resource,
         List<WebDataFileResource> resources = null;
         try (Connection connection = getCatalogue().getConnection()) {
             Map<String, FileItem> files = request.getFiles();
-            Set<String> keys = files.keySet();
-            resources = new ArrayList<>(keys.size());
+            Collection<FileItem> fileItems = files.values();
+
+            resources = new ArrayList<>(fileItems.size());
             WebDataFileResource resource = null;
-            for (String s : keys) {
-                Path newPath = Path.path(getPath(), s);
+            for (FileItem fi : fileItems) {
+
+                Path newPath = Path.path(getPath(), fi.getName());
                 LogicalData fileLogicalData = getCatalogue().getLogicalDataByPath(newPath, connection);
-                String contentType = mimeTypeMap.get(FilenameUtils.getExtension(s));
+                String contentType = mimeTypeMap.get(FilenameUtils.getExtension(fi.getName()));
                 if (fileLogicalData != null) {
                     Permissions p = getCatalogue().getPermissions(fileLogicalData.getUid(), fileLogicalData.getOwner(), connection);
                     if (!getPrincipal().canWrite(p)) {
@@ -942,11 +945,11 @@ public class WebDataResource implements PropFindableResource, Resource,
                     fileLogicalData.setLastAccessDate(fileLogicalData.getModifiedDate());
 
                     fileLogicalData.addContentType(contentType);
-                    resource = new WebDataFileResource(fileLogicalData, Path.path(getPath(), s), getCatalogue(), authList);
+                    resource = new WebDataFileResource(fileLogicalData, Path.path(getPath(), fi.getName()), getCatalogue(), authList);
 
                 } else {
                     fileLogicalData = new LogicalData();
-                    fileLogicalData.setName(s);
+                    fileLogicalData.setName(fi.getName());
                     fileLogicalData.setParentRef(getLogicalData().getUid());
                     fileLogicalData.setType(Constants.LOGICAL_FILE);
                     fileLogicalData.setOwner(getPrincipal().getUserId());
@@ -958,7 +961,7 @@ public class WebDataResource implements PropFindableResource, Resource,
                     fileLogicalData.addContentType(contentType);
                     fileLogicalData = getCatalogue().registerDirLogicalData(fileLogicalData, connection);
                     getCatalogue().setPermissions(fileLogicalData.getUid(), new Permissions(getPrincipal(), getPermissions()), connection);
-                    resource = new WebDataFileResource(fileLogicalData, Path.path(getPath(), s), getCatalogue(), authList);
+                    resource = new WebDataFileResource(fileLogicalData, Path.path(getPath(), fi.getName()), getCatalogue(), authList);
                 }
                 resources.add(resource);
             }
@@ -967,17 +970,23 @@ public class WebDataResource implements PropFindableResource, Resource,
 
     }
 
-    private Map<Long, Collection<Long>> getStorageMap(List<WebDataFileResource> resources) throws SQLException, Exception {
-        Map<Long, Collection<Long>> storageMap = new HashMap<>(resources.size());
+    private Map<String, Pair<Long, Collection<Long>>> getStorageMap(List<WebDataFileResource> resources) throws SQLException, Exception {
+        Map<String, Pair<Long, Collection<Long>>> storageMap = new HashMap<>(resources.size());
+        MutablePair<Long, Collection<Long>> pair;
         try (Connection connection = getCatalogue().getConnection()) {
             for (WebDataFileResource r : resources) {
                 Long uid = Long.valueOf(r.getUniqueId());
                 Collection<Long> pref = getPreferencesForFile(uid, connection);
+                pair = new MutablePair<>();
                 if (pref != null && !pref.isEmpty()) {
-                    storageMap.put(uid, pref);
+                    pair.setLeft(uid);
+                    pair.setRight(pref);
+                    storageMap.put(r.getName(), pair);
                 } else {
                     Collection<Long> sites = getReplicationPolicy().getSitesToReplicate(connection);
-                    storageMap.put(uid, sites);
+                    pair.setLeft(uid);
+                    pair.setRight(sites);
+                    storageMap.put(r.getName(), pair);
                 }
             }
         }

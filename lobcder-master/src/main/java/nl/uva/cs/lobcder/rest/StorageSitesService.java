@@ -58,24 +58,24 @@ public class StorageSitesService extends CatalogueHelper {
     public StorageSitesService() throws NamingException {
     }
 
-//    @Path("query/")
-//    @GET
-//    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-//    public StorageSiteWrapperList getXml() throws FileNotFoundException, VlException, URISyntaxException, IOException, MalformedURLException, Exception {
-//        MyPrincipal mp = (MyPrincipal) request.getAttribute("myprincipal");
-//        if (mp.isAdmin()) {
-//            try (Connection cn = getCatalogue().getConnection()) {
-//                List<StorageSiteWrapper> res = queryStorageSites(cn, mp.isAdmin());
-//                StorageSiteWrapperList sswl = new StorageSiteWrapperList();
-//                sswl.setSites(res);
-//                return sswl;
-//            } catch (SQLException ex) {
-//                log.log(Level.SEVERE, null, ex);
-//                throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
-//            }
-//        }
-//        return null;
-//    }
+    @Path("/")
+    @GET
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public StorageSiteWrapperList getXml() throws FileNotFoundException, VlException, URISyntaxException, IOException, MalformedURLException, Exception {
+        MyPrincipal mp = (MyPrincipal) request.getAttribute("myprincipal");
+        if (mp.isAdmin()) {
+            try (Connection cn = getCatalogue().getConnection()) {
+                List<StorageSiteWrapper> res = queryStorageSites(cn, mp.isAdmin());
+                StorageSiteWrapperList sswl = new StorageSiteWrapperList();
+                sswl.setSites(res);
+                return sswl;
+            } catch (SQLException ex) {
+                log.log(Level.SEVERE, null, ex);
+                throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
+            }
+        }
+        return null;
+    }
 //
 //    @Path("set/")
 //    @PUT
@@ -132,49 +132,50 @@ public class StorageSitesService extends CatalogueHelper {
 //        }
 //    }
 //
-//    private List<StorageSiteWrapper> queryStorageSites(@Nonnull Connection cn, Boolean includePrivate) throws SQLException {
-//        MultivaluedMap<String, String> queryParameters = info.getQueryParameters();
-//        List<String> ids = queryParameters.get("id");
-//        if (ids != null && ids.size() > 0 && ids.get(0).equals("all")) {
-//            Collection<StorageSite> sites = getCatalogue().getStorageSites(cn, Boolean.FALSE, includePrivate);
-//            Collection<StorageSite> cachesites = getCatalogue().getStorageSites(cn, Boolean.TRUE, includePrivate);
-//            List<StorageSiteWrapper> sitesWarpper = new ArrayList<>();
-//            for (StorageSite s : sites) {
-//                StorageSiteWrapper sw = new StorageSiteWrapper();
-//                CredentialWrapped cw = new CredentialWrapped();
-//                cw.setStorageSitePassword(s.getCredential().getStorageSitePassword());
-////                cw.setStorageSitePassword("************");
-//                cw.setStorageSiteUsername(s.getCredential().getStorageSiteUsername());
-//                sw.setCredential(cw);
-//                sw.setCurrentNum(s.getCurrentNum());
-//                sw.setEncrypt(s.isEncrypt());
-//                sw.setQuotaNum(s.getQuotaNum());
-//                sw.setQuotaSize(s.getQuotaSize());
-//                sw.setResourceURI(s.getResourceURI());
-//                sw.setStorageSiteId(s.getStorageSiteId());
-//                sw.setCache(false);
-//                sw.setCurrentSize(s.getCurrentSize());
-//                sitesWarpper.add(sw);
-//            }
-//            for (StorageSite s : cachesites) {
-//                StorageSiteWrapper sw = new StorageSiteWrapper();
-//                CredentialWrapped cw = new CredentialWrapped();
-//                cw.setStorageSitePassword(s.getCredential().getStorageSitePassword());
-////                cw.setStorageSitePassword("************");
-//                cw.setStorageSiteUsername(s.getCredential().getStorageSiteUsername());
-//                sw.setCredential(cw);
-//                sw.setCurrentNum(s.getCurrentNum());
-//                sw.setEncrypt(s.isEncrypt());
-//                sw.setQuotaNum(s.getQuotaNum());
-//                sw.setQuotaSize(s.getQuotaSize());
-//                sw.setResourceURI(s.getResourceURI());
-//                sw.setStorageSiteId(s.getStorageSiteId());
-//                sw.setCache(true);
-//                sw.setCurrentSize(s.getCurrentSize());
-//                sitesWarpper.add(sw);
-//            }
-//            return sitesWarpper;
-//        }
-//        return null;
-//    }
+
+    private List<StorageSiteWrapper> queryStorageSites(@Nonnull Connection cn, Boolean includePrivate) throws SQLException {
+        MultivaluedMap<String, String> queryParameters = info.getQueryParameters();
+        List<String> ids = queryParameters.get("id");
+        if (ids != null && ids.size() > 0 && ids.get(0).equals("all")) {
+            Collection<StorageSite> sites = getCatalogue().getStorageSites(cn, Boolean.FALSE, includePrivate);
+            Collection<StorageSite> cachesites = getCatalogue().getStorageSites(cn, Boolean.TRUE, includePrivate);
+            List<StorageSiteWrapper> sitesWarpper = new ArrayList<>();
+            for (StorageSite s : sites) {
+                StorageSiteWrapper sw = new StorageSiteWrapper();
+                CredentialWrapped cw = new CredentialWrapped();
+                cw.setStorageSitePassword(s.getCredential().getStorageSitePassword());
+//                cw.setStorageSitePassword("************");
+                cw.setStorageSiteUsername(s.getCredential().getStorageSiteUsername());
+                sw.setCredential(cw);
+                sw.setCurrentNum(s.getCurrentNum());
+                sw.setEncrypt(s.isEncrypt());
+                sw.setQuotaNum(s.getQuotaNum());
+                sw.setQuotaSize(s.getQuotaSize());
+                sw.setResourceURI(s.getResourceURI());
+                sw.setStorageSiteId(s.getStorageSiteId());
+                sw.setCache(false);
+                sw.setCurrentSize(s.getCurrentSize());
+                sitesWarpper.add(sw);
+            }
+            for (StorageSite s : cachesites) {
+                StorageSiteWrapper sw = new StorageSiteWrapper();
+                CredentialWrapped cw = new CredentialWrapped();
+                cw.setStorageSitePassword(s.getCredential().getStorageSitePassword());
+//                cw.setStorageSitePassword("************");
+                cw.setStorageSiteUsername(s.getCredential().getStorageSiteUsername());
+                sw.setCredential(cw);
+                sw.setCurrentNum(s.getCurrentNum());
+                sw.setEncrypt(s.isEncrypt());
+                sw.setQuotaNum(s.getQuotaNum());
+                sw.setQuotaSize(s.getQuotaSize());
+                sw.setResourceURI(s.getResourceURI());
+                sw.setStorageSiteId(s.getStorageSiteId());
+                sw.setCache(true);
+                sw.setCurrentSize(s.getCurrentSize());
+                sitesWarpper.add(sw);
+            }
+            return sitesWarpper;
+        }
+        return null;
+    }
 }
