@@ -37,9 +37,9 @@ import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -75,6 +75,7 @@ import nl.uva.cs.lobcder.resources.VPDRI;
 import nl.uva.cs.lobcder.rest.Endpoints;
 import nl.uva.cs.lobcder.rest.wrappers.LogicalDataWrapped;
 import nl.uva.cs.lobcder.rest.wrappers.Stats;
+import nl.uva.cs.lobcder.rest.wrappers.StorageSiteWrapper;
 import nl.uva.vlet.data.StringUtil;
 import nl.uva.vlet.exception.VlException;
 import org.apache.commons.codec.binary.Base64;
@@ -83,6 +84,8 @@ import org.apache.commons.fileupload.FileUploadException;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.io.output.TeeOutputStream;
+import org.apache.commons.lang3.tuple.MutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 
 /**
  * A file servlet supporting resume of downloads and client-side caching and
@@ -123,9 +126,11 @@ public final class WorkerServlet extends HttpServlet {
     private double coefficient;
     private String fileLogicalName;
     private File cacheDir;
+    private File uploadDir;
     private File cacheFile;
     private boolean sendStats;
     private WebResource webResource;
+    private final Map<Long, StorageSiteWrapper> lstorageSiteCache = new HashMap<>();
 
     // Actions ------------------------------------------------------------------------------------
     /**
@@ -155,7 +160,14 @@ public final class WorkerServlet extends HttpServlet {
             if (!cacheDir.exists()) {
                 cacheDir.mkdirs();
             }
+
+            uploadDir = new File(cacheDir.getAbsolutePath() + File.separator + "uploads");
+            if (!uploadDir.exists()) {
+                uploadDir.mkdirs();
+            }
+
             getPDRIs();
+            getStorageSites();
         } catch (IOException | URISyntaxException ex) {
             Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -180,13 +192,16 @@ public final class WorkerServlet extends HttpServlet {
             // sets memory threshold - beyond which files are stored in disk
             factory.setSizeThreshold(this.bufferSize);
             // sets temporary location to store files
-            factory.setRepository(cacheDir);
+            factory.setRepository(uploadDir);
 
             ServletFileUpload upload = new ServletFileUpload(factory);
             // sets maximum size of upload file
             //        upload.setFileSizeMax(MAX_FILE_SIZE);
             // sets maximum size of request (include file + form data)
             //        upload.setSizeMax(MAX_REQUEST_SIZE);
+
+            Map<String, Pair<Long, Collection<Long>>> storagMap = parseQuery(request.getQueryString());
+
             List<FileItem> formItems = upload.parseRequest(request);
             Iterator<FileItem> iter = formItems.iterator();
             FileItem item;
@@ -197,12 +212,19 @@ public final class WorkerServlet extends HttpServlet {
                     continue;
                 }
                 String fileName = item.getName();
-                String filePath = cacheDir + File.separator + fileName;
+
+                Pair<Long, Collection<Long>> pair = storagMap.get(fileName);
+                StringBuilder storeName = new StringBuilder();
+                storeName.append(pair.getLeft()).append("-");
+                for (Long l : pair.getRight()) {
+                    storeName.append(l).append("-");
+                }
+                storeName.deleteCharAt(storeName.length() - 1);
+                String filePath = uploadDir + File.separator + fileName + "-" + storeName.toString();
                 File storeFile = new File(filePath);
                 item.write(storeFile);
             }
-            Map<String, String[]> storagwMap = parseQuery(request.getQueryString());
-            Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, storagwMap.toString());
+
 
         } catch (FileUploadException ex) {
             Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, ex);
@@ -1148,6 +1170,27 @@ public final class WorkerServlet extends HttpServlet {
         }
     }
 
+    private void getStorageSites() {
+        if (restClient == null) {
+            restClient = Client.create(clientConfig);
+            restClient.removeAllFilters();
+            restClient.addFilter(new com.sun.jersey.api.client.filter.HTTPBasicAuthFilter("worker-", token));
+            webResource = restClient.resource(restURL);
+
+            MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+            params.add("id", "all");
+
+            WebResource res = webResource.path("storage_sites").queryParams(params);
+
+            List<StorageSiteWrapper> storageSiteList = res.accept(MediaType.APPLICATION_XML).
+                    get(new GenericType<List<StorageSiteWrapper>>() {
+            });
+            for (StorageSiteWrapper ssw : storageSiteList) {
+                lstorageSiteCache.put(ssw.getStorageSiteId(), ssw);
+            }
+        }
+    }
+
     private boolean isFileOnWorker(LogicalDataWrapped logicalData) throws URISyntaxException, UnknownHostException, SocketException {
         List<PDRIDescr> pdris = logicalData.getPdriList();
         for (PDRIDescr p : pdris) {
@@ -1188,23 +1231,35 @@ public final class WorkerServlet extends HttpServlet {
         return false;
     }
 
-    public static Map<String, String[]> parseQuery(String query) throws UnsupportedEncodingException {
+    Map<String, Pair<Long, Collection<Long>>> parseQuery(String query) throws UnsupportedEncodingException {
 //        file_id=9&ss_id=8&file_id=3&ss_id=8
-        final Map<String, String[]> query_pairs = new LinkedHashMap<>();
-        final String[] files = query.split("file_id=");
+        Map<String, org.apache.commons.lang3.tuple.Pair<Long, Collection<Long>>> storageMap = new HashMap<>();
+        Collection<Long> ssids = new ArrayList<>();
+        MutablePair<Long, Collection<Long>> pair;
+        final String[] files = query.split("&");
         for (String file : files) {
             if (file != null && file.length() > 0) {
-//                4&ss_id=41&ss_id=42&ss_id=43
-                String[] rest = file.split("&");
-                String key = rest[0];
-                String[] ssids = new String[rest.length - 1];
-                for (int i = 1; i < rest.length; i++) {
-                    ssids[i - 1] = rest[i].replaceAll("ss_id=", "");
+                String[] parts = file.split("/");
+                pair = new MutablePair<>();
+                String fileName = null;
+                Long fileUid = null;
+                String ssid;
+                for (String part : parts) {
+                    if (part.startsWith("file_name=")) {
+                        fileName = part.split("=")[1];
+                    } else if (part.startsWith("file_uid=")) {
+                        fileUid = Long.valueOf(part.split("=")[1]);
+                    } else if (part.startsWith("ss_id=")) {
+                        ssid = part.split("=")[1];
+                        ssids.add(Long.valueOf(ssid));
+                    }
                 }
-                query_pairs.put(key, ssids);
+                pair.setLeft(fileUid);
+                pair.setRight(ssids);
+                storageMap.put(fileName, pair);
             }
         }
-        return query_pairs;
+        return storageMap;
     }
 
     /**
