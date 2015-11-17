@@ -12,7 +12,6 @@ import nl.uva.cs.lobcder.util.PropertiesHelper;
 import javax.naming.NamingException;
 import javax.sql.DataSource;
 import java.io.IOException;
-import java.util.Set;
 import java.util.TimerTask;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.logging.Level;

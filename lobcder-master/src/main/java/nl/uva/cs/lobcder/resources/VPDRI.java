@@ -266,7 +266,7 @@ public class VPDRI implements PDRI {
                 while (totalBytesRead < len || read != -1) {
                     long startT = System.currentTimeMillis();
                     read = ra.readBytes(start, buff, 0, buff.length);
-                    VPDRI.log.log(Level.INFO, "speed: {0} kb/s", (read / 1024.0) / ((System.currentTimeMillis() - startT) / 1000.0));
+                    VPDRI.log.log(Level.FINEST , "speed: {0} kb/s", (read / 1024.0) / ((System.currentTimeMillis() - startT) / 1000.0));
                     if (read == -1 || totalBytesRead == len) {
                         break;
                     }

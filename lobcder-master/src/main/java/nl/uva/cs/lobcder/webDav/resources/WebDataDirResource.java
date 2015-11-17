@@ -61,7 +61,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
             switch (method) {
                 case MKCOL:
                     String msg = "From: " + fromAddress + " User: " + getPrincipal().getUserId() + " Method: " + method;
-                    WebDataDirResource.log.log(Level.INFO, msg);
+                    WebDataDirResource.log.log(Level.FINEST , msg);
                     attempts = 0;
                     return getPrincipal().canWrite(getPermissions());
                 default:

@@ -287,7 +287,7 @@ public class JDBCatalogue extends MyDataSource {
         long pdriId;
         try (PreparedStatement ps = connection.prepareStatement(""
                 + "SELECT fileName, storageSiteRef, storage_site_table.resourceUri, "
-                + "username, password, isEncrypted, encryptionKey, pdri_table.pdriId, pdriGroupRef "
+                + "username, password, isEncrypted, encryptionKey, pdri_table.pdriId, pdriGroupRef, storage_site_table.isCache "
                 + "FROM pdri_table "
                 + "JOIN storage_site_table ON storageSiteRef = storageSiteId "
                 + "JOIN credential_table ON credentialRef = credintialId "
@@ -303,6 +303,7 @@ public class JDBCatalogue extends MyDataSource {
                 boolean encrypt = rs.getBoolean(6);
                 long key = rs.getLong(7);
                 pdriId = rs.getLong(8);
+                boolean isCache = rs.getBoolean(9);
                 //                if (resourceURI.startsWith("lfc") || resourceURI.startsWith("srm")
                 //                        || resourceURI.startsWith("gftp")) {
                 //                    try {
@@ -314,7 +315,7 @@ public class JDBCatalogue extends MyDataSource {
                 //                    }
                 //                }
                 long groupId = rs.getLong(9);
-                res.add(new PDRIDescr(fileName, ssID, resourceURI, uName, passwd, encrypt, BigInteger.valueOf(key), groupId, Long.valueOf(pdriId)));
+                res.add(new PDRIDescr(fileName, ssID, resourceURI, uName, passwd, encrypt, BigInteger.valueOf(key), groupId, Long.valueOf(pdriId), isCache));
             }
             return res;
         }
@@ -324,8 +325,9 @@ public class JDBCatalogue extends MyDataSource {
         List<PDRIDescr> res = new ArrayList<>();
         long pdriGroupRef;
         long pdriId;
-        try (PreparedStatement ps = connection.prepareStatement("SELECT fileName, storageSiteRef, storage_site_table.resourceUri, "
-                + "username, password, isEncrypted, encryptionKey, pdri_table.pdriId  "
+        try (PreparedStatement ps = connection.prepareStatement("SELECT fileName, "
+                + "storageSiteRef, storage_site_table.resourceUri, "
+                + "username, password, isEncrypted, encryptionKey, pdri_table.pdriId, storage_site_table.isCache "
                 + "FROM pdri_table "
                 + "JOIN storage_site_table ON storageSiteRef = storageSiteId "
                 + "JOIN credential_table ON credentialRef = credintialId "
@@ -341,6 +343,7 @@ public class JDBCatalogue extends MyDataSource {
                 boolean encrypt = rs.getBoolean(6);
                 long key = rs.getLong(7);
                 pdriId = rs.getLong(8);
+                boolean isCache = rs.getBoolean(9);
 //                if (resourceURI.startsWith("lfc") || resourceURI.startsWith("srm")
 //                        || resourceURI.startsWith("gftp")) {
 //                    try {
@@ -351,7 +354,7 @@ public class JDBCatalogue extends MyDataSource {
 //                        Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, ex);
 //                    }
 //                }
-                res.add(new PDRIDescr(fileName, ssID, resourceURI, uName, passwd, encrypt, BigInteger.valueOf(key), Long.valueOf(groupId), Long.valueOf(pdriId)));
+                res.add(new PDRIDescr(fileName, ssID, resourceURI, uName, passwd, encrypt, BigInteger.valueOf(key), Long.valueOf(groupId), Long.valueOf(pdriId), isCache));
             }
 //            PDRIDescrCache.put(groupId, res);
             return res;

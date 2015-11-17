@@ -26,6 +26,7 @@ public class PDRIDescr {
     private BigInteger key;
     private Long pdriGroupRef;
     private Long id;
+    private boolean isCashe;
 
     @XmlTransient
     public Long getStorageSiteId() {

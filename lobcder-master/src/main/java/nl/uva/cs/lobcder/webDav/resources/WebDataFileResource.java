@@ -108,7 +108,7 @@ public class WebDataFileResource extends WebDataResource implements
         switch (method) {
             case MKCOL:
                 String msg = "From: " + fromAddress + " User: " + getPrincipal().getUserId() + " Method: " + method;
-                WebDataFileResource.log.log(Level.INFO, msg);
+                WebDataFileResource.log.log(Level.FINEST, msg);
                 return false;
             default:
                 return super.authorise(request, method, auth);
@@ -290,11 +290,11 @@ public class WebDataFileResource extends WebDataResource implements
         InputStream in = null;
         PDRI pdri = null;
         double start = 0;
-        WebDataFileResource.log.log(Level.INFO, "Start for {0}", getLogicalData().getName());
+        WebDataFileResource.log.log(Level.FINEST, "Start for {0}", getLogicalData().getName());
         try {
             PDRIDescr pdriDescr = selectBestPDRI(pdris);
             pdri = PDRIFactory.getFactory().createInstance(pdriDescr, false);
-            WebDataFileResource.log.log(Level.INFO, "pdri: {0}", pdri.getURI());
+            WebDataFileResource.log.log(Level.FINEST, "pdri: {0}", pdri.getURI());
             if (pdri != null) {
                 start = System.currentTimeMillis();
                 in = pdri.getData();
@@ -589,7 +589,7 @@ public class WebDataFileResource extends WebDataResource implements
                         String from = request.getRemoteAddr();
                         redirect = getBestWorker(from);
                     }
-                    WebDataFileResource.log.log(Level.INFO, "Redirecting to: {0}", redirect);
+                    WebDataFileResource.log.log(Level.FINEST, "Redirecting to: {0}", redirect);
                     return redirect;
                 default:
                     return null;
@@ -648,61 +648,9 @@ public class WebDataFileResource extends WebDataResource implements
         }
     }
 
-    private boolean isInCache() throws SQLException, URISyntaxException, IOException {
-        List<PDRIDescr> pdriDescr = getCatalogue().getPdriDescrByGroupId(getLogicalData().getPdriGroupId());
-        for (PDRIDescr pdri : pdriDescr) {
-            if (pdri.getResourceUrl().startsWith("file")) {
-                return true;
-            }
-        }
+   
 
-//        try (Connection cn = getCatalogue().getConnection()) {
-//            List<PDRIDescr> pdriDescr = getCatalogue().getPdriDescrByGroupId(getLogicalData().getPdriGroupId(), cn);
-//            for (PDRIDescr pdri : pdriDescr) {
-//                if (pdri.getResourceUrl().startsWith("file")) {
-//                    return true;
-//                }
-//            }
-//        }
-        return false;
-    }
-
-    private boolean canRedirect(Request request) throws SQLException, UnsupportedEncodingException, URISyntaxException, IOException {
-        if (isInCache()) {
-            return false;
-        }
-        Auth auth = request.getAuthorization();
-        if (auth == null) {
-            return false;
-        }
-        final String autheader = request.getHeaders().get("authorization");
-        if (autheader != null) {
-            final int index = autheader.indexOf(' ');
-            if (index > 0) {
-                final String credentials = new String(Base64.decodeBase64(autheader.substring(index).getBytes()), "UTF8");
-                final String uname = credentials.substring(0, credentials.indexOf(":"));
-                final String token = credentials.substring(credentials.indexOf(":") + 1);
-                if (authenticate(uname, token) == null) {
-                    return false;
-                }
-                if (!authorise(request, Request.Method.GET, auth)) {
-                    return false;
-                }
-            }
-        }
-        String userAgent = request.getHeaders().get("user-agent");
-        if (userAgent == null || userAgent.length() <= 1) {
-            return false;
-        }
-//        WebDataFileResource.log.log(Level.FINE, "userAgent: {0}", userAgent);
-        List<String> nonRedirectableUserAgents = PropertiesHelper.getNonRedirectableUserAgents();
-        for (String s : nonRedirectableUserAgents) {
-            if (userAgent.contains(s)) {
-                return false;
-            }
-        }
-        return true;
-    }
+   
 
     @Override
     public Boolean isBufferingRequired() {
@@ -721,7 +669,7 @@ public class WebDataFileResource extends WebDataResource implements
             sdnClient = new SDNControllerClient(uri);
         }
         List<DefaultWeightedEdge> shortestPath = sdnClient.getShortestPath(reqSource, workersMap.keySet());
-        WebDataFileResource.log.log(Level.INFO, "getShortestPath: {0}", shortestPath);
+        WebDataFileResource.log.log(Level.FINEST, "getShortestPath: {0}", shortestPath);
         if (PropertiesHelper.pushFlow()) {
             sdnClient.pushFlow(shortestPath);
         }
@@ -777,7 +725,7 @@ public class WebDataFileResource extends WebDataResource implements
             if (reuSourceLocation != null && workerLocation != null && reuSourceLocation.distance(workerLocation) < dist) {
                 dist = reuSourceLocation.distance(workerLocation);
                 worker = workersMap.get(wip);
-                log.log(Level.INFO, "Src loc: {0} Dst loc: {1} dist: {2}", new Object[]{reuSourceLocation.city, workerLocation.city, dist});
+                log.log(Level.FINEST, "Src loc: {0} Dst loc: {1} dist: {2}", new Object[]{reuSourceLocation.city, workerLocation.city, dist});
             }
         }
 
@@ -785,7 +733,7 @@ public class WebDataFileResource extends WebDataResource implements
             Location masterLocation = lookupService.getLocation(s);
             if (reuSourceLocation != null && masterLocation != null && reuSourceLocation.distance(masterLocation) < dist) {
                 dist = reuSourceLocation.distance(masterLocation);
-                log.log(Level.INFO, "Src loc: {0} Dst loc: {1} dist: {2}", new Object[]{reuSourceLocation.city, masterLocation.city, dist});
+                log.log(Level.FINEST, "Src loc: {0} Dst loc: {1} dist: {2}", new Object[]{reuSourceLocation.city, masterLocation.city, dist});
                 worker = null;
             }
         }

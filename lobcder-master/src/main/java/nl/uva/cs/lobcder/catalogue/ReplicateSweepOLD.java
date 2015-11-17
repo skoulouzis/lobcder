@@ -235,7 +235,7 @@ class ReplicateSweepOLD implements Runnable {
                         pdriGroupRef = rs.getLong(8);
                         pdriId = rs.getLong(9);
                         locationPerMap.put(pdriGroupRef, rs.getString(10));
-                        PDRIDescr cd = new PDRIDescr(name, ssID, resourceURL, username, password, encrypt, key, pdriGroupRef, pdriId);
+                        PDRIDescr cd = new PDRIDescr(name, ssID, resourceURL, username, password, encrypt, key, pdriGroupRef, pdriId,false);
                         toReplicate.add(cd);
                     }
 
@@ -261,7 +261,7 @@ class ReplicateSweepOLD implements Runnable {
                                         destinationSite.getStorageSiteId(),
                                         destinationSite.getResourceURI(),
                                         destinationSite.getCredential().getStorageSiteUsername(),
-                                        destinationSite.getCredential().getStorageSitePassword(), destinationSite.isEncrypt(), pdriKey, sourceDescr.getPdriGroupRef(), null);
+                                        destinationSite.getCredential().getStorageSitePassword(), destinationSite.isEncrypt(), pdriKey, sourceDescr.getPdriGroupRef(), null,destinationSite.isCache());
                                 try {
                                     replicate(sourceDescr, destinationDescr, preparedStatement, pdriKey, connection);
                                 } catch (IOException ex) {
@@ -284,7 +284,7 @@ class ReplicateSweepOLD implements Runnable {
                                     destinationSite.getStorageSiteId(),
                                     destinationSite.getResourceURI(),
                                     destinationSite.getCredential().getStorageSiteUsername(),
-                                    destinationSite.getCredential().getStorageSitePassword(), destinationSite.isEncrypt(), pdriKey, sourceDescr.getPdriGroupRef(), null);
+                                    destinationSite.getCredential().getStorageSitePassword(), destinationSite.isEncrypt(), pdriKey, sourceDescr.getPdriGroupRef(), null,destinationSite.isCache());
 
                             try {
                                 replicate(sourceDescr, destinationDescr, preparedStatement, pdriKey, connection);

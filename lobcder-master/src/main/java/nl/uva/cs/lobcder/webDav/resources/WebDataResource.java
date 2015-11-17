@@ -32,6 +32,7 @@ import javax.annotation.Nonnull;
 import javax.xml.namespace.QName;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.URISyntaxException;
 import java.security.NoSuchAlgorithmException;
 import java.sql.*;
 import java.util.*;
@@ -41,6 +42,7 @@ import java.util.logging.Logger;
 import lombok.SneakyThrows;
 import nl.uva.cs.lobcder.replication.policy.ReplicationPolicy;
 import nl.uva.cs.lobcder.util.PropertiesHelper;
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -359,7 +361,7 @@ public class WebDataResource implements PropFindableResource, Resource,
                     ss.getStorageSiteId(),
                     ss.getResourceURI(),
                     ss.getCredential().getStorageSiteUsername(),
-                    ss.getCredential().getStorageSitePassword(), ss.isEncrypt(), DesEncrypter.generateKey(), null, null);
+                    ss.getCredential().getStorageSitePassword(), ss.isEncrypt(), DesEncrypter.generateKey(), null, null, ss.isCache());
             return PDRIFactory.getFactory().createInstance(pdriDescr, true);
         }
     }
@@ -615,7 +617,9 @@ public class WebDataResource implements PropFindableResource, Resource,
             case POST:
                 String redirect = null;
                 try {
-
+                    if (!canRedirect(request)) {
+                        return null;
+                    }
                     List<WebDataFileResource> resources = createResouses(request);
                     lockResources(resources);
                     Map<String, Pair<Long, Collection<Long>>> storageMap = getStorageMap(resources);
@@ -997,5 +1001,61 @@ public class WebDataResource implements PropFindableResource, Resource,
     private ReplicationPolicy getReplicationPolicy() {
         Class<? extends ReplicationPolicy> replicationPolicyClass = Class.forName(PropertiesHelper.getReplicationPolicy()).asSubclass(ReplicationPolicy.class);
         return replicationPolicyClass.newInstance();
+    }
+
+    protected boolean canRedirect(Request request) throws SQLException, UnsupportedEncodingException, URISyntaxException, IOException {
+        if (isInCache()) {
+            return false;
+        }
+        Auth auth = request.getAuthorization();
+        if (auth == null) {
+            return false;
+        }
+        final String autheader = request.getHeaders().get("authorization");
+        if (autheader != null) {
+            final int index = autheader.indexOf(' ');
+            if (index > 0) {
+                final String credentials = new String(Base64.decodeBase64(autheader.substring(index).getBytes()), "UTF8");
+                final String uname = credentials.substring(0, credentials.indexOf(":"));
+                final String token = credentials.substring(credentials.indexOf(":") + 1);
+                if (authenticate(uname, token) == null) {
+                    return false;
+                }
+                if (!authorise(request, Request.Method.GET, auth)) {
+                    return false;
+                }
+            }
+        }
+        String userAgent = request.getHeaders().get("user-agent");
+        if (userAgent == null || userAgent.length() <= 1) {
+            return false;
+        }
+//        WebDataFileResource.log.log(Level.FINE, "userAgent: {0}", userAgent);
+        List<String> nonRedirectableUserAgents = PropertiesHelper.getNonRedirectableUserAgents();
+        for (String s : nonRedirectableUserAgents) {
+            if (userAgent.contains(s)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    protected boolean isInCache() throws SQLException, URISyntaxException, IOException {
+        List<PDRIDescr> pdriDescr = getCatalogue().getPdriDescrByGroupId(getLogicalData().getPdriGroupId());
+        for (PDRIDescr pdri : pdriDescr) {
+            if (pdri.getResourceUrl().startsWith("file")) {
+                return true;
+            }
+        }
+
+//        try (Connection cn = getCatalogue().getConnection()) {
+//            List<PDRIDescr> pdriDescr = getCatalogue().getPdriDescrByGroupId(getLogicalData().getPdriGroupId(), cn);
+//            for (PDRIDescr pdri : pdriDescr) {
+//                if (pdri.getResourceUrl().startsWith("file")) {
+//                    return true;
+//                }
+//            }
+//        }
+        return false;
     }
 }
