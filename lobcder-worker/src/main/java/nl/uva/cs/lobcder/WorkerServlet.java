@@ -4,17 +4,7 @@
  */
 package nl.uva.cs.lobcder;
 
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.GenericType;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.config.ClientConfig;
-import com.sun.jersey.api.client.config.DefaultClientConfig;
-import com.sun.jersey.api.json.JSONConfiguration;
-import com.sun.jersey.client.urlconnection.HTTPSProperties;
-import com.sun.jersey.core.util.MultivaluedMapImpl;
 import io.milton.common.Path;
-import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -23,17 +13,10 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
-import java.math.BigInteger;
-import java.net.InetAddress;
-import java.net.SocketException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.UnknownHostException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -44,25 +27,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.GZIPOutputStream;
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSession;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
 import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
 import lombok.extern.java.Log;
 import static nl.uva.cs.lobcder.Util.ChacheEvictionAlgorithm.LRU;
 import static nl.uva.cs.lobcder.Util.ChacheEvictionAlgorithm.MRU;
@@ -70,13 +45,8 @@ import nl.uva.cs.lobcder.auth.AuthTicket;
 import nl.uva.cs.lobcder.auth.MyPrincipal;
 import nl.uva.cs.lobcder.resources.LogicalData;
 import nl.uva.cs.lobcder.resources.PDRI;
-import nl.uva.cs.lobcder.resources.PDRIDescr;
-import nl.uva.cs.lobcder.resources.VPDRI;
-import nl.uva.cs.lobcder.rest.Endpoints;
 import nl.uva.cs.lobcder.rest.wrappers.LogicalDataWrapped;
 import nl.uva.cs.lobcder.rest.wrappers.Stats;
-import nl.uva.cs.lobcder.rest.wrappers.StorageSiteWrapper;
-import nl.uva.vlet.data.StringUtil;
 import nl.uva.vlet.exception.VlException;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.fileupload.FileItem;
@@ -85,7 +55,9 @@ import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.io.output.TeeOutputStream;
 import org.apache.commons.lang3.tuple.MutablePair;
+import org.apache.commons.lang3.tuple.MutableTriple;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
 
 /**
  * A file servlet supporting resume of downloads and client-side caching and
@@ -106,31 +78,16 @@ public final class WorkerServlet extends HttpServlet {
     // Properties ---------------------------------------------------------------------------------
     private Integer bufferSize;
     private Boolean setResponseBufferSize;
-//    private Boolean useCircularBuffer;
-    private String restURL;
-    private String token;
-    private ClientConfig clientConfig;
     private String fileUID;
-    private final Map<String, LogicalDataWrapped> logicalDataCache = new HashMap<>();
-    private final Map<String, Long> fileAccessMap = new HashMap<>();
-    private Client restClient;
-//    private long sleepTime = 2;
-    private static final Map<String, Double> weightPDRIMap = new HashMap<>();
     private static final HashMap<String, Integer> numOfGetsMap = new HashMap<>();
     private InputStream in;
-    private int responseBufferSize;
-//    private double lim = 4;
     private boolean qosCopy;
     private int warnings;
     private double progressThresshold;
     private double coefficient;
     private String fileLogicalName;
-    private File cacheDir;
-    private File uploadDir;
     private File cacheFile;
-    private boolean sendStats;
-    private WebResource webResource;
-    private final Map<Long, StorageSiteWrapper> lstorageSiteCache = new HashMap<>();
+    private Catalogue cat;
 
     // Actions ------------------------------------------------------------------------------------
     /**
@@ -146,28 +103,18 @@ public final class WorkerServlet extends HttpServlet {
             qosCopy = Util.doQosCopy();
             bufferSize = Util.getBufferSize();
 
-            restURL = Util.getRestURL();
-            token = Util.getRestPassword();
-            sendStats = Util.sendStats();
-//            lim = Util.getRateOfChangeLim();
-            //        uname = prop.getProperty(("rest.uname"));
-            clientConfig = configureClient();
-            clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
+
             warnings = Util.getNumOfWarnings();
             progressThresshold = Util.getProgressThresshold();
             coefficient = Util.getProgressThressholdCoefficient();
-            cacheDir = new File(System.getProperty("java.io.tmpdir") + File.separator + Util.getBackendWorkingFolderName());
-            if (!cacheDir.exists()) {
-                cacheDir.mkdirs();
-            }
 
-            uploadDir = new File(cacheDir.getAbsolutePath() + File.separator + "uploads");
-            if (!uploadDir.exists()) {
-                uploadDir.mkdirs();
-            }
 
-            getPDRIs();
-            getStorageSites();
+            this.cat = new Catalogue();
+            TimerTask gcTask = new SweepersTimerTask(cat);
+            Timer timer = new Timer(true);
+            timer.schedule(gcTask, 1000, 1000);
+
+            cat.getPDRIs(fileUID);
         } catch (IOException | URISyntaxException ex) {
             Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -192,7 +139,7 @@ public final class WorkerServlet extends HttpServlet {
             // sets memory threshold - beyond which files are stored in disk
             factory.setSizeThreshold(this.bufferSize);
             // sets temporary location to store files
-            factory.setRepository(uploadDir);
+            factory.setRepository(Util.getUploadDir());
 
             ServletFileUpload upload = new ServletFileUpload(factory);
             // sets maximum size of upload file
@@ -200,34 +147,30 @@ public final class WorkerServlet extends HttpServlet {
             // sets maximum size of request (include file + form data)
             //        upload.setSizeMax(MAX_REQUEST_SIZE);
 
-            Map<String, Pair<Long, Collection<Long>>> storagMap = parseQuery(request.getQueryString());
+            Map<String, Triple<Long, Long, Collection<Long>>> storagMap = parseQuery(request.getQueryString());
 
             List<FileItem> formItems = upload.parseRequest(request);
             Iterator<FileItem> iter = formItems.iterator();
             FileItem item;
-
+//
             while (iter.hasNext()) {
                 item = iter.next();
                 if (item.getName() == null) {
                     continue;
                 }
                 String fileName = item.getName();
-
-                Pair<Long, Collection<Long>> pair = storagMap.get(fileName);
+                Triple<Long, Long, Collection<Long>> triple = storagMap.get(fileName);
                 StringBuilder storeName = new StringBuilder();
-                storeName.append(pair.getLeft()).append("-");
-                for (Long l : pair.getRight()) {
+                storeName.append(triple.getLeft()).append("-");
+                storeName.append(triple.getMiddle()).append("-");
+                for (Long l : triple.getRight()) {
                     storeName.append(l).append("-");
                 }
                 storeName.deleteCharAt(storeName.length() - 1);
-                String filePath = uploadDir + File.separator + fileName + "-" + storeName.toString();
+                String filePath = Util.getUploadDir() + File.separator + fileName + "_" + storeName.toString();
                 File storeFile = new File(filePath);
                 item.write(storeFile);
             }
-
-
-        } catch (FileUploadException ex) {
-            Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, ex);
         } catch (Exception ex) {
             Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -267,7 +210,7 @@ public final class WorkerServlet extends HttpServlet {
         } catch (IOException | InterruptedException | URISyntaxException | VlException | JAXBException ex) {
             String fname = this.cacheFile.getAbsolutePath();
             Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, "cacheFile: " + cacheFile.getAbsolutePath() + " fileLogicalName: " + fileLogicalName + " fileUID: " + this.fileUID, ex);
-            logicalDataCache.remove(fileUID);
+            this.cat.logicalDataCache.remove(fileUID);
             handleError(ex, response);
 //        } catch (NoSuchAlgorithmException ex) {
 //            Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, ex);
@@ -307,8 +250,8 @@ public final class WorkerServlet extends HttpServlet {
         fileUID = pathAndToken.getParent().toString().replaceAll("/", "");
 //        Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "token: {0} fileUID: {1}", new Object[]{token, fileUID});
 
-        pdri = getPDRI(fileUID);
-
+        pdri = cat.getPDRI(fileUID);
+        fileLogicalName = cat.getLogicalDataWrapped(fileUID).getLogicalData().getName();
         // URL-decode the file name (might contain spaces and on) and prepare file object.
 //        File file = new File("", URLDecoder.decode(requestedFile, "UTF-8"));
         // Check if file actually exists in filesystem.
@@ -321,7 +264,7 @@ public final class WorkerServlet extends HttpServlet {
 
         // Prepare some variables. The ETag is an unique identifier of the file.
         long length = pdri.getLength();
-        LogicalDataWrapped ldw = logicalDataCache.get(fileUID);
+        LogicalDataWrapped ldw = Catalogue.logicalDataCache.get(fileUID);
         long lastModified;
         if (ldw != null) {
             LogicalData ld = ldw.getLogicalData();
@@ -428,7 +371,7 @@ public final class WorkerServlet extends HttpServlet {
         // Prepare and initialize response --------------------------------------------------------
         // Get content type by file name and set default GZIP support and content disposition.
         String contentType = getServletContext().getMimeType(fileLogicalName);
-        ldw = logicalDataCache.get(fileUID);
+        ldw = Catalogue.logicalDataCache.get(fileUID);
         if (contentType == null && ldw != null) {
             contentType = ldw.getLogicalData().getContentTypesAsString();
         } else {
@@ -462,13 +405,12 @@ public final class WorkerServlet extends HttpServlet {
         if (setResponseBufferSize) {
             response.setBufferSize(bufferSize);
         }
-        responseBufferSize = response.getBufferSize();
         response.setHeader("Content-Disposition", disposition + ";filename=\"" + fileLogicalName + "\"");
         response.setHeader("Accept-Ranges", "bytes");
         response.setHeader("ETag", eTag);
         response.setDateHeader("Last-Modified", lastModified);
         response.setDateHeader("Expires", expires);
-        ldw = logicalDataCache.get(fileUID);
+        ldw = Catalogue.logicalDataCache.get(fileUID);
         if (ldw != null) {
             response.setContentLength(safeLongToInt(ldw.getLogicalData().getLength()));
         }
@@ -559,10 +501,10 @@ public final class WorkerServlet extends HttpServlet {
             if (elapsed <= 0) {
                 elapsed = 1;
             }
-            LogicalDataWrapped lwd = this.logicalDataCache.get(fileUID);
+            LogicalDataWrapped lwd = Catalogue.logicalDataCache.get(fileUID);
             if (lwd != null) {
                 double speed = ((lwd.getLogicalData().getLength() * 8.0) * 1000.0) / (elapsed * 1000.0);
-                Double oldSpeed = weightPDRIMap.get(pdri.getHost());
+                Double oldSpeed = Catalogue.weightPDRIMap.get(pdri.getHost());
                 if (oldSpeed == null) {
                     oldSpeed = speed;
                 }
@@ -572,22 +514,22 @@ public final class WorkerServlet extends HttpServlet {
                 }
                 double averagre = (speed + oldSpeed) / (double) numOfGets;
                 numOfGetsMap.put(pdri.getHost(), numOfGets++);
-                weightPDRIMap.put(pdri.getHost(), averagre);
+                Catalogue.weightPDRIMap.put(pdri.getHost(), averagre);
                 Stats stats = new Stats();
                 stats.setSource(request.getLocalAddr());
                 stats.setDestination(request.getRemoteAddr());
                 stats.setSpeed(speed);
-                stats.setSize(this.logicalDataCache.get(fileUID).getLogicalData().getLength());
-                setSpeed(stats);
-                String speedMsg = "Source: " + request.getLocalAddr() + " Destination: " + request.getRemoteAddr() + " Tx_Speed: " + speed + " Kbites/sec Tx_Size: " + this.logicalDataCache.get(fileUID).getLogicalData().getLength() + " bytes";
+                stats.setSize(Catalogue.logicalDataCache.get(fileUID).getLogicalData().getLength());
+                cat.setSpeed(stats);
+                String speedMsg = "Source: " + request.getLocalAddr() + " Destination: " + request.getRemoteAddr() + " Tx_Speed: " + speed + " Kbites/sec Tx_Size: " + Catalogue.logicalDataCache.get(fileUID).getLogicalData().getLength() + " bytes";
                 Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, speedMsg);
-                String averageSpeedMsg = "Average speed: Source: " + pdri.getHost() + " Destination: " + request.getLocalAddr() + " Rx_Speed: " + averagre + " Kbites/sec Rx_Size: " + this.logicalDataCache.get(fileUID).getLogicalData().getLength() + " bytes";
+                String averageSpeedMsg = "Average speed: Source: " + pdri.getHost() + " Destination: " + request.getLocalAddr() + " Rx_Speed: " + averagre + " Kbites/sec Rx_Size: " + Catalogue.logicalDataCache.get(fileUID).getLogicalData().getLength() + " bytes";
                 if (Util.sendStats()) {
                     stats.setSource(request.getLocalAddr());
                     stats.setDestination(request.getRemoteAddr());
                     stats.setSpeed(speed);
-                    stats.setSize(this.logicalDataCache.get(fileUID).getLogicalData().getLength());
-                    setSpeed(stats);
+                    stats.setSize(Catalogue.logicalDataCache.get(fileUID).getLogicalData().getLength());
+                    cat.setSpeed(stats);
                 }
                 Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, averageSpeedMsg);
             }
@@ -659,13 +601,9 @@ public final class WorkerServlet extends HttpServlet {
                 // Write full range.
                 in = input.getData();
                 byte[] buffer = new byte[bufferSize];
-                if (!isPDRIOnWorker(new URI(input.getURI()))) {
-                    cacheFile = new File(cacheDir, input.getFileName());
+                if (!Catalogue.isPDRIOnWorker(new URI(input.getURI()))) {
+                    cacheFile = new File(Util.getCacheDir(), input.getFileName());
                     if (!cacheFile.exists() || input.getLength() != cacheFile.length()) {
-                        cacheDir = new File(System.getProperty("java.io.tmpdir") + File.separator + Util.getBackendWorkingFolderName());
-                        if (!cacheDir.exists()) {
-                            cacheDir.mkdirs();
-                        }
                         tos = new TeeOutputStream(new FileOutputStream(cacheFile), output);
                         File file = new File(System.getProperty("user.home"));
                         while (file.getUsableSpace() < Util.getCacheFreeSpaceLimit()) {
@@ -741,7 +679,7 @@ public final class WorkerServlet extends HttpServlet {
                     count++;
                     Logger.getLogger(WorkerServlet.class.getName()).log(Level.WARNING, "We will not tolarate this !!!! Next time line is off");
                     if (Util.getOptimizeFlow()) {
-                        optimizeFlow(request);
+                        cat.optimizeFlow(request);
                         maxSpeed = averageSpeed;
                         Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, "optimizeFlow: {0}", request);
                     }
@@ -774,158 +712,6 @@ public final class WorkerServlet extends HttpServlet {
         }
     }
 
-    private ClientConfig configureClient() {
-        TrustManager[] certs = new TrustManager[]{
-            new X509TrustManager() {
-                @Override
-                public X509Certificate[] getAcceptedIssuers() {
-                    return null;
-                }
-
-                @Override
-                public void checkServerTrusted(X509Certificate[] chain, String authType)
-                        throws CertificateException {
-                }
-
-                @Override
-                public void checkClientTrusted(X509Certificate[] chain, String authType)
-                        throws CertificateException {
-                }
-            }
-        };
-        SSLContext ctx = null;
-        try {
-            ctx = SSLContext.getInstance("TLS");
-            ctx.init(null, certs, new SecureRandom());
-        } catch (java.security.GeneralSecurityException ex) {
-        }
-        HttpsURLConnection.setDefaultSSLSocketFactory(ctx.getSocketFactory());
-        ClientConfig config = new DefaultClientConfig();
-        try {
-            config.getProperties().put(HTTPSProperties.PROPERTY_HTTPS_PROPERTIES, new HTTPSProperties(
-                    new HostnameVerifier() {
-                @Override
-                public boolean verify(String hostname, SSLSession session) {
-                    return true;
-                }
-            },
-                    ctx));
-        } catch (Exception e) {
-        }
-        return config;
-    }
-
-    private PDRI getPDRI(String fileUID) throws InterruptedException, IOException, URISyntaxException {
-        PDRIDescr pdriDesc = null;//new PDRIDescr();
-        LogicalDataWrapped logicalData = null;
-        logicalData = logicalDataCache.get(fileUID);
-        Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "Looking in cache for: {0}", fileUID);
-        if (logicalData == null) {
-            if (restClient == null) {
-                restClient = Client.create(clientConfig);
-                restClient.removeAllFilters();
-                restClient.addFilter(new com.sun.jersey.api.client.filter.HTTPBasicAuthFilter("worker-", token));
-                webResource = restClient.resource(restURL);
-            }
-
-            Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "Asking master. Token: {0} fileID: " + fileUID + " logicalDataCache.size: " + logicalDataCache.size(), token);
-            WebResource res = webResource.path("item").path("query").path(fileUID);
-            logicalData = res.accept(MediaType.APPLICATION_XML).
-                    get(new GenericType<LogicalDataWrapped>() {
-            });
-            logicalData = removeUnreachablePDRIs(logicalData);
-        }
-
-        logicalData = addCacheFileToPDRIDescr(logicalData);
-        logicalDataCache.put(fileUID, logicalData);
-
-        pdriDesc = selectBestPDRI(logicalData.getPdriList());
-
-        Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "Selected pdri: {0}", pdriDesc.getResourceUrl());
-        fileLogicalName = logicalData.getLogicalData().getName();
-        return new VPDRI(pdriDesc.getName(), pdriDesc.getId(), pdriDesc.getResourceUrl(), pdriDesc.getUsername(),
-                pdriDesc.getPassword(), pdriDesc.getEncrypt(), pdriDesc.getKey(), false);
-    }
-
-    private PDRIDescr selectBestPDRI(List<PDRIDescr> pdris) throws URISyntaxException, UnknownHostException, SocketException {
-        if (!pdris.isEmpty()) {
-            Iterator<PDRIDescr> iter = pdris.iterator();
-            while (iter.hasNext()) {
-                PDRIDescr p = iter.next();
-                URI uri = new URI(p.getResourceUrl());
-                if (uri.getScheme().equals("file")) {
-                    return p;
-                }
-                if (isPDRIOnWorker(uri)) {
-                    String resURL = p.getResourceUrl().replaceFirst(uri.getScheme(), "file");
-                    p.setResourceUrl(resURL);
-                    return p;
-                }
-            }
-
-        }
-        if (weightPDRIMap.isEmpty() || weightPDRIMap.size() < pdris.size()) {
-            //Just return one at random;
-            int index = new Random().nextInt(pdris.size());
-            PDRIDescr[] array = pdris.toArray(new PDRIDescr[pdris.size()]);
-            Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "Selecting Random: {0}", array[index].getResourceUrl());
-            return array[index];
-        }
-
-        long sumOfSpeed = 0;
-        for (PDRIDescr p : pdris) {
-            URI uri = new URI(p.getResourceUrl());
-            String host = null;
-            if (uri.getScheme().equals("file")
-                    || StringUtil.isEmpty(uri.getHost())
-                    || uri.getHost().equals("localhost")
-                    || uri.getHost().equals("127.0.0.1")) {
-                try {
-                    host = InetAddress.getLocalHost().getHostName();
-                } catch (Exception ex) {
-                    List<String> ips = Util.getAllIPs();
-                    for (String ip : ips) {
-                        if (ip.contains(".")) {
-                            host = ip;
-                            break;
-                        }
-                    }
-                }
-            } else {
-                host = uri.getHost();
-            }
-            Double speed = weightPDRIMap.get(host);
-            if (speed == null) {
-                speed = Double.valueOf(0);
-            }
-            Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "Speed: {0}", speed);
-            sumOfSpeed += speed;
-        }
-        if (sumOfSpeed <= 0) {
-            int index = new Random().nextInt(pdris.size());
-            PDRIDescr[] array = pdris.toArray(new PDRIDescr[pdris.size()]);
-            return array[index];
-        }
-        int itemIndex = new Random().nextInt((int) sumOfSpeed);
-
-        for (PDRIDescr p : pdris) {
-            Double speed = weightPDRIMap.get(new URI(p.getResourceUrl()).getHost());
-            if (speed == null) {
-                speed = Double.valueOf(0);
-            }
-            if (itemIndex < speed) {
-                Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "Selecting:{0}  with speed: {1}", new Object[]{p.getResourceUrl(), speed});
-                return p;
-            }
-            itemIndex -= speed;
-        }
-
-        int index = new Random().nextInt(pdris.size());
-        PDRIDescr[] array = pdris.toArray(new PDRIDescr[pdris.size()]);
-        PDRIDescr res = array[index];
-        return res;
-    }
-
     private void handleError(java.lang.Exception ex, HttpServletResponse response) throws IOException {
         if (ex instanceof IOException) {
             if (ex.getMessage().contains("PDRIS from master is either empty or contains unreachable files")) {
@@ -942,48 +728,6 @@ public final class WorkerServlet extends HttpServlet {
         Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, null, ex);
     }
 
-    private void setSpeed(Stats stats) throws JAXBException {
-        if (sendStats) {
-            JAXBContext context = JAXBContext.newInstance(Stats.class);
-            Marshaller m = context.createMarshaller();
-            m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
-            OutputStream out = new ByteArrayOutputStream();
-            m.marshal(stats, out);
-
-            String stringStats = String.valueOf(out);
-
-            if (restClient == null) {
-                restClient = Client.create(clientConfig);
-                restClient.removeAllFilters();
-                restClient.addFilter(new com.sun.jersey.api.client.filter.HTTPBasicAuthFilter("worker-", token));
-                webResource = restClient.resource(restURL);
-            }
-
-            ClientResponse response = webResource.path("lob_statistics").path("set")
-                    .type(MediaType.APPLICATION_XML).put(ClientResponse.class, stringStats);
-        }
-    }
-
-    private void optimizeFlow(HttpServletRequest request) throws JAXBException {
-        Endpoints endpoints = new Endpoints();
-        endpoints.setDestination(request.getRemoteAddr());
-        endpoints.setSource(request.getLocalAddr());
-
-        JAXBContext context = JAXBContext.newInstance(Endpoints.class);
-        Marshaller m = context.createMarshaller();
-        m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
-        OutputStream out = new ByteArrayOutputStream();
-        m.marshal(endpoints, out);
-
-        WebResource webResource = restClient.resource(restURL);
-        String stringStats = String.valueOf(out);
-
-        ClientResponse response = webResource.path("sdn").path("optimizeFlow")
-                .type(MediaType.APPLICATION_XML).put(ClientResponse.class, stringStats);
-
-        Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, "response: {0}", response);
-    }
-
     private static int safeLongToInt(long l) {
         if (l < Integer.MIN_VALUE || l > Integer.MAX_VALUE) {
             throw new IllegalArgumentException(l + " cannot be cast to int without changing its value.");
@@ -996,7 +740,7 @@ public final class WorkerServlet extends HttpServlet {
         switch (Util.getCacheEvictionPolicy()) {
             case LRU:
             case LFU:
-                Set<Map.Entry<String, Long>> set = fileAccessMap.entrySet();
+                Set<Map.Entry<String, Long>> set = Catalogue.fileAccessMap.entrySet();
                 Long min = Long.MAX_VALUE;
                 for (Map.Entry<String, Long> e : set) {
                     if (e.getValue() < min) {
@@ -1007,7 +751,7 @@ public final class WorkerServlet extends HttpServlet {
                 break;
             case MRU:
             case MFU:
-                set = fileAccessMap.entrySet();
+                set = Catalogue.fileAccessMap.entrySet();
                 Long max = Long.MIN_VALUE;
                 for (Map.Entry<String, Long> e : set) {
                     if (e.getValue() > max) {
@@ -1019,7 +763,7 @@ public final class WorkerServlet extends HttpServlet {
             case RR:
             default:
                 Random random = new Random();
-                List<String> keys = new ArrayList(fileAccessMap.keySet());
+                List<String> keys = new ArrayList(Catalogue.fileAccessMap.keySet());
                 key = keys.get(random.nextInt(keys.size()));
                 break;
 
@@ -1031,68 +775,7 @@ public final class WorkerServlet extends HttpServlet {
         if (deleteIt != null) {
             deleteIt.delete();
         }
-        fileAccessMap.remove(key);
-    }
-
-    private LogicalDataWrapped addCacheFileToPDRIDescr(LogicalDataWrapped logicalData) throws IOException, URISyntaxException {
-        List<PDRIDescr> pdris = logicalData.getPdriList();
-        cacheFile = new File(cacheDir, pdris.get(0).getName());
-        if (!isFileOnWorker(logicalData) && cacheFile.exists() && !isCacheInPdriList(cacheFile, logicalData)) {
-            String fileName = cacheFile.getName();
-            long ssID = -1;
-            String resourceURI = "file:///" + cacheFile.getAbsoluteFile().getParentFile().getParent();
-            String uName = "fake";
-            String passwd = "fake";
-            boolean encrypt = false;
-            long key = -1;
-            long pdriId = -1;
-            Long groupId = Long.valueOf(-1);
-            pdris.add(new PDRIDescr(fileName, ssID, resourceURI, uName, passwd, encrypt, BigInteger.valueOf(key), groupId, pdriId));
-            switch (Util.getCacheEvictionPolicy()) {
-                case LRU:
-                case MRU:
-                case RR:
-                    fileAccessMap.put(cacheFile.getAbsolutePath(), System.currentTimeMillis());
-                    break;
-                case LFU:
-                case MFU:
-                    Long count = fileAccessMap.get(cacheFile.getAbsolutePath());
-                    if (count == null) {
-                        count = Long.valueOf(0);
-                    }
-                    fileAccessMap.put(cacheFile.getAbsolutePath(), count++);
-                    break;
-            }
-            logicalData.setPdriList(pdris);
-        }
-        return logicalData;
-    }
-
-    private LogicalDataWrapped removeUnreachablePDRIs(LogicalDataWrapped logicalData) throws IOException, URISyntaxException {
-        List<PDRIDescr> pdris = logicalData.getPdriList();
-        if (pdris != null) {
-            List<PDRIDescr> removeIt = new ArrayList<>();
-            for (PDRIDescr p : pdris) {
-                URI uri = new URI(p.getResourceUrl());
-                String pdriHost = uri.getHost();
-                String pdriScheme = uri.getScheme();
-                if (pdriHost == null || pdriHost.equals("localhost") || pdriHost.startsWith("127.0.")) {
-                    removeIt.add(p);
-                } else if (pdriScheme.equals("file") && !isPDRIOnWorker(new URI(p.getResourceUrl()))) {
-                    removeIt.add(p);
-                }
-            }
-            if (!removeIt.isEmpty()) {
-                pdris.removeAll(removeIt);
-                if (pdris.isEmpty()) {
-                    Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, "PDRIS from master is either empty or contains unreachable files");
-                    logicalDataCache.remove(fileUID);
-                    throw new IOException("PDRIS from master is either empty or contains unreachable files");
-                }
-                logicalDataCache.put(fileUID, logicalData);
-            }
-        }
-        return logicalData;
+        Catalogue.fileAccessMap.remove(key);
     }
 
     private void authenticate(HttpServletRequest request, HttpServletResponse response) throws UnsupportedEncodingException, IOException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException {
@@ -1145,118 +828,36 @@ public final class WorkerServlet extends HttpServlet {
         httpResponse.sendError(HttpServletResponse.SC_UNAUTHORIZED);
     }
 
-    private void getPDRIs() throws IOException, URISyntaxException {
-        if (restClient == null) {
-            restClient = Client.create(clientConfig);
-            restClient.removeAllFilters();
-            restClient.addFilter(new com.sun.jersey.api.client.filter.HTTPBasicAuthFilter("worker-", token));
-            webResource = restClient.resource(restURL);
-
-            MultivaluedMap<String, String> params = new MultivaluedMapImpl();
-            params.add("path", "/");
-            WebResource res = webResource.path("items").path("query").queryParams(params);
-
-            List<LogicalDataWrapped> logicalDataList = res.accept(MediaType.APPLICATION_XML).
-                    get(new GenericType<List<LogicalDataWrapped>>() {
-            });
-            for (LogicalDataWrapped ldw : logicalDataList) {
-                if (!ldw.getLogicalData().isFolder()) {
-                    LogicalDataWrapped ld = removeUnreachablePDRIs(ldw);
-                    String uid = String.valueOf(ld.getLogicalData().getUid());
-                    Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, "Adding uid: {0}", uid);
-                    this.logicalDataCache.put(uid, ld);
-                }
-            }
-        }
-    }
-
-    private void getStorageSites() {
-        if (restClient == null) {
-            restClient = Client.create(clientConfig);
-            restClient.removeAllFilters();
-            restClient.addFilter(new com.sun.jersey.api.client.filter.HTTPBasicAuthFilter("worker-", token));
-            webResource = restClient.resource(restURL);
-
-            MultivaluedMap<String, String> params = new MultivaluedMapImpl();
-            params.add("id", "all");
-
-            WebResource res = webResource.path("storage_sites").queryParams(params);
-
-            List<StorageSiteWrapper> storageSiteList = res.accept(MediaType.APPLICATION_XML).
-                    get(new GenericType<List<StorageSiteWrapper>>() {
-            });
-            for (StorageSiteWrapper ssw : storageSiteList) {
-                lstorageSiteCache.put(ssw.getStorageSiteId(), ssw);
-            }
-        }
-    }
-
-    private boolean isFileOnWorker(LogicalDataWrapped logicalData) throws URISyntaxException, UnknownHostException, SocketException {
-        List<PDRIDescr> pdris = logicalData.getPdriList();
-        for (PDRIDescr p : pdris) {
-            if (isPDRIOnWorker(new URI(p.getResourceUrl()))) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private boolean isPDRIOnWorker(URI pdriURI) throws URISyntaxException, UnknownHostException, SocketException {
-        String pdriHost = pdriURI.getHost();
-        if (pdriHost == null || pdriHost.equals("localhost") || pdriHost.startsWith("127.")) {
-            return false;
-        }
-        List<String> workerIPs = Util.getAllIPs();
-        String resourceIP = Util.getIP(pdriURI.getHost());
-        for (String ip : workerIPs) {
-            if (ip != null) {
-                if (ip.equals(pdriHost) || ip.equals(resourceIP)) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    private boolean isCacheInPdriList(File cacheFile, LogicalDataWrapped logicalData) {
-        String resourceURI = "file:///" + cacheFile.getAbsoluteFile().getParentFile().getParent();
-        List<PDRIDescr> pdris = logicalData.getPdriList();
-        if (pdris != null) {
-            for (PDRIDescr p : pdris) {
-                if (p.getResourceUrl().equals(resourceURI)) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    Map<String, Pair<Long, Collection<Long>>> parseQuery(String query) throws UnsupportedEncodingException {
+    Map<String, Triple<Long, Long, Collection<Long>>> parseQuery(String query) throws UnsupportedEncodingException {
 //        file_id=9&ss_id=8&file_id=3&ss_id=8
-        Map<String, org.apache.commons.lang3.tuple.Pair<Long, Collection<Long>>> storageMap = new HashMap<>();
-        Collection<Long> ssids = new ArrayList<>();
-        MutablePair<Long, Collection<Long>> pair;
+        Map<String, org.apache.commons.lang3.tuple.Triple<Long, Long, Collection<Long>>> storageMap = new HashMap<>();
+        MutableTriple<Long, Long, Collection<Long>> triple;
         final String[] files = query.split("&");
         for (String file : files) {
             if (file != null && file.length() > 0) {
                 String[] parts = file.split("/");
-                pair = new MutablePair<>();
+                triple = new MutableTriple<>();
                 String fileName = null;
                 Long fileUid = null;
+                Long pdrigroupUid = null;
                 String ssid;
+                Collection<Long> ssids = new ArrayList<>();
                 for (String part : parts) {
                     if (part.startsWith("file_name=")) {
                         fileName = part.split("=")[1];
                     } else if (part.startsWith("file_uid=")) {
                         fileUid = Long.valueOf(part.split("=")[1]);
+                    } else if (part.startsWith("pdrigroup_uid=")) {
+                        pdrigroupUid = Long.valueOf(part.split("=")[1]);
                     } else if (part.startsWith("ss_id=")) {
                         ssid = part.split("=")[1];
                         ssids.add(Long.valueOf(ssid));
                     }
                 }
-                pair.setLeft(fileUid);
-                pair.setRight(ssids);
-                storageMap.put(fileName, pair);
+                triple.setLeft(fileUid);
+                triple.setMiddle(pdrigroupUid);
+                triple.setRight(ssids);
+                storageMap.put(fileName, triple);
             }
         }
         return storageMap;

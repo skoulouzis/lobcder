@@ -4,6 +4,7 @@
  */
 package nl.uva.cs.lobcder;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
@@ -134,5 +135,25 @@ class Util extends PropertiesHelper {
 
     public static long getCacheFreeSpaceLimit() throws IOException {
         return Long.valueOf(getProperties().getProperty("cache.size.limit", "2000000000"));
+    }
+
+    public static String getWorkingFolderName() throws IOException {
+        return getProperties().getProperty(("backend.working.folder.name"), "LOBCDER-REPLICA-vTEST");
+    }
+
+    public static File getCacheDir() throws IOException {
+        File cacheDir = new File(System.getProperty("java.io.tmpdir") + File.separator + Util.getBackendWorkingFolderName());
+        if (!cacheDir.exists()) {
+            cacheDir.mkdirs();
+        }
+        return cacheDir;
+    }
+
+    public static File getUploadDir() throws IOException {
+        File up = new File(System.getProperty("java.io.tmpdir")  + File.separator + "uploads"+File.separator + getWorkingFolderName());
+        if (!up.exists()) {
+            up.mkdirs();
+        }
+        return up;
     }
 }

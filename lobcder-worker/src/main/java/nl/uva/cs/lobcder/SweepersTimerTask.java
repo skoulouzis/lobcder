@@ -7,7 +7,6 @@ package nl.uva.cs.lobcder;
 import java.io.IOException;
 import java.util.TimerTask;
 import lombok.extern.java.Log;
-import nl.uva.cs.lobcder.catalogue.ReplicateSweep;
 
 /**
  *
@@ -17,13 +16,13 @@ import nl.uva.cs.lobcder.catalogue.ReplicateSweep;
 class SweepersTimerTask extends TimerTask {
      private final WorkerReplicateSweep replicateSweep;
     
-    public SweepersTimerTask() throws IOException{
-        replicateSweep = new WorkerReplicateSweep();
+    public SweepersTimerTask(Catalogue cat) throws IOException{
+        replicateSweep = new WorkerReplicateSweep(cat);
     }
 
     @Override
     public void run() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        replicateSweep.run();
     }
     
 }
