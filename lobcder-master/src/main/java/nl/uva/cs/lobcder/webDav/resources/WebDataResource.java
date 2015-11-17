@@ -620,8 +620,8 @@ public class WebDataResource implements PropFindableResource, Resource,
                     if (!canRedirect(request)) {
                         return null;
                     }
-                    List<WebDataFileResource> resources = createResouses(request);
-                    lockResources(resources);
+                    Map<Long, Pair<WebDataFileResource, Long>> resources = createResouses(request);
+//                    lockResources(resources);
                     Map<String, Pair<Long, Collection<Long>>> storageMap = getStorageMap(resources);
 
                     StringBuilder sb = new StringBuilder();
@@ -629,8 +629,12 @@ public class WebDataResource implements PropFindableResource, Resource,
                     for (String k : keys) {
                         sb.append("file_name=").append(k).append("/");
                         Pair pair = storageMap.get(k);
-                        Long uid = (Long) pair.getLeft();
-                        sb.append("file_uid=").append(uid).append("/");
+                        Long fileUid = (Long) pair.getLeft();
+                        sb.append("file_uid=").append(fileUid).append("/");
+
+                        Long pdriGroupUid = resources.get(fileUid).getRight();
+                        sb.append("pdrigroup_uid=").append(pdriGroupUid).append("/");
+
                         Collection<Long> ssids = (Collection<Long>) pair.getRight();
                         for (Long ssid : ssids) {
                             sb.append("ss_id=").append(ssid).append("/");
@@ -926,16 +930,16 @@ public class WebDataResource implements PropFindableResource, Resource,
         }
     }
 
-    private List<WebDataFileResource> createResouses(Request request) throws SQLException, UnsupportedEncodingException, NotAuthorizedException {
-        List<WebDataFileResource> resources = null;
+    private Map<Long, Pair<WebDataFileResource, Long>> createResouses(Request request) throws SQLException, UnsupportedEncodingException, NotAuthorizedException, NoSuchAlgorithmException, IOException {
+        Map<Long, Pair<WebDataFileResource, Long>> resources = null;
         try (Connection connection = getCatalogue().getConnection()) {
             Map<String, FileItem> files = request.getFiles();
             Collection<FileItem> fileItems = files.values();
 
-            resources = new ArrayList<>(fileItems.size());
+            resources = new HashMap<>();
             WebDataFileResource resource = null;
             for (FileItem fi : fileItems) {
-
+                Long pdriGroupid;
                 Path newPath = Path.path(getPath(), fi.getName());
                 LogicalData fileLogicalData = getCatalogue().getLogicalDataByPath(newPath, connection);
                 String contentType = mimeTypeMap.get(FilenameUtils.getExtension(fi.getName()));
@@ -947,8 +951,9 @@ public class WebDataResource implements PropFindableResource, Resource,
                     fileLogicalData.setLength(request.getContentLengthHeader());
                     fileLogicalData.setModifiedDate(System.currentTimeMillis());
                     fileLogicalData.setLastAccessDate(fileLogicalData.getModifiedDate());
-
                     fileLogicalData.addContentType(contentType);
+                    pdriGroupid = fileLogicalData.getPdriGroupId();
+                    
                     resource = new WebDataFileResource(fileLogicalData, Path.path(getPath(), fi.getName()), getCatalogue(), authList);
 
                 } else {
@@ -963,34 +968,45 @@ public class WebDataResource implements PropFindableResource, Resource,
                     fileLogicalData.setLastAccessDate(System.currentTimeMillis());
                     fileLogicalData.setTtlSec(getLogicalData().getTtlSec());
                     fileLogicalData.addContentType(contentType);
-                    fileLogicalData = getCatalogue().registerDirLogicalData(fileLogicalData, connection);
-                    getCatalogue().setPermissions(fileLogicalData.getUid(), new Permissions(getPrincipal(), getPermissions()), connection);
+
+
+                    pdriGroupid = getCatalogue().associateLogicalDataAndPdriGroup(fileLogicalData, connection);
+
+                    getCatalogue().setPreferencesOn(fileLogicalData.getUid(), getLogicalData().getUid(), connection);
+                    List<String> pref = getLogicalData().getDataLocationPreferences();
+                    fileLogicalData.setDataLocationPreferences(pref);
+
                     resource = new WebDataFileResource(fileLogicalData, Path.path(getPath(), fi.getName()), getCatalogue(), authList);
                 }
-                resources.add(resource);
+                MutablePair<WebDataFileResource, Long> pair = new MutablePair<>();
+                pair.setRight(pdriGroupid);
+                pair.setLeft(resource);
+                resources.put(Long.valueOf(resource.getUniqueId()), pair);
             }
+            connection.commit();
+            connection.close();
         }
         return resources;
-
     }
 
-    private Map<String, Pair<Long, Collection<Long>>> getStorageMap(List<WebDataFileResource> resources) throws SQLException, Exception {
+    private Map<String, Pair<Long, Collection<Long>>> getStorageMap(Map<Long, Pair<WebDataFileResource, Long>> resources) throws SQLException, Exception {
         Map<String, Pair<Long, Collection<Long>>> storageMap = new HashMap<>(resources.size());
         MutablePair<Long, Collection<Long>> pair;
+        Collection<Pair<WebDataFileResource, Long>> val = resources.values();
         try (Connection connection = getCatalogue().getConnection()) {
-            for (WebDataFileResource r : resources) {
-                Long uid = Long.valueOf(r.getUniqueId());
+            for (Pair<WebDataFileResource, Long> r : val) {
+                Long uid = Long.valueOf(r.getLeft().getUniqueId());
                 Collection<Long> pref = getPreferencesForFile(uid, connection);
                 pair = new MutablePair<>();
                 if (pref != null && !pref.isEmpty()) {
                     pair.setLeft(uid);
                     pair.setRight(pref);
-                    storageMap.put(r.getName(), pair);
+                    storageMap.put(r.getLeft().getName(), pair);
                 } else {
                     Collection<Long> sites = getReplicationPolicy().getSitesToReplicate(connection);
                     pair.setLeft(uid);
                     pair.setRight(sites);
-                    storageMap.put(r.getName(), pair);
+                    storageMap.put(r.getLeft().getName(), pair);
                 }
             }
         }

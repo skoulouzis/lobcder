@@ -267,7 +267,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                     fileLogicalData = getCatalogue().associateLogicalDataAndPdri(fileLogicalData, pdri, connection);
                     getCatalogue().setPermissions(fileLogicalData.getUid(), new Permissions(getPrincipal(), getPermissions()), connection);
                     //fileLogicalData = inheritProperties(fileLogicalData, connection);
-                    setPreferencesOn(fileLogicalData.getUid(), getLogicalData().getUid(), connection);
+                    getCatalogue().setPreferencesOn(fileLogicalData.getUid(), getLogicalData().getUid(), connection);
                     List<String> pref = getLogicalData().getDataLocationPreferences();
                     fileLogicalData.setDataLocationPreferences(pref);
                     connection.commit();
@@ -559,22 +559,5 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
             //trigger 
         }
         return newLogicalData;
-    }
-
-    private void setPreferencesOn(Long uidTo, Long uidFrom, Connection connection) throws SQLException {
-        try (PreparedStatement psDel = connection.prepareStatement("DELETE FROM pref_table WHERE ld_uid = ?");
-                PreparedStatement psIns = connection.prepareStatement("INSERT "
-                + "INTO pref_table (ld_uid, storageSiteRef) "
-                + "SELECT ?, storageSiteRef FROM pref_table WHERE ld_uid=?")) {
-            psDel.setLong(1, uidTo);
-            psIns.setLong(1, uidTo);
-            psIns.setLong(2, uidFrom);
-            psDel.executeUpdate();
-            psIns.executeUpdate();
-        }
-    }
-
-    private Connection checkConnection(Connection connection) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }

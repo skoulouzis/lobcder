@@ -139,7 +139,7 @@ public class JDBCatalogue extends MyDataSource {
             rs.next();
             entry.setUid(rs.getLong(1));
 
-            String path = getPathforLogicalData(entry, connection);
+//            String path = getPathforLogicalData(entry, connection);
 //            entry.setDataLocationPreferences(getDataLocationPreferace(connection, entry.getUid()));
 
             return entry;
@@ -270,6 +270,19 @@ public class JDBCatalogue extends MyDataSource {
                 return registerLogicalData(logicalData, connection);
             }
         }
+    }
+
+    public Long associateLogicalDataAndPdriGroup(LogicalData logicalData, @Nonnull Connection connection) throws SQLException {
+        connection = checkConnection(connection);
+        Long newGroupId;
+        try (Statement statement = connection.createStatement(java.sql.ResultSet.TYPE_FORWARD_ONLY, java.sql.ResultSet.CONCUR_UPDATABLE)) {
+            statement.executeUpdate("INSERT INTO pdrigroup_table (refCount) VALUES(1)", Statement.RETURN_GENERATED_KEYS);
+            ResultSet rs = statement.getGeneratedKeys();
+            rs.next();
+            newGroupId = rs.getLong(1);
+        }
+        registerLogicalData(logicalData, connection);
+        return newGroupId;
     }
 
     public List<PDRIDescr> getPdriDescrByGroupId(Long groupId) throws SQLException, IOException {
@@ -1790,6 +1803,19 @@ public class JDBCatalogue extends MyDataSource {
     public String getGlobalID(Long uid) throws SQLException {
         try (Connection connection = getConnection()) {
             return getGlobalID(uid, connection);
+        }
+    }
+
+    public void setPreferencesOn(Long uidTo, Long uidFrom, Connection connection) throws SQLException {
+        try (PreparedStatement psDel = connection.prepareStatement("DELETE FROM pref_table WHERE ld_uid = ?");
+                PreparedStatement psIns = connection.prepareStatement("INSERT "
+                + "INTO pref_table (ld_uid, storageSiteRef) "
+                + "SELECT ?, storageSiteRef FROM pref_table WHERE ld_uid=?")) {
+            psDel.setLong(1, uidTo);
+            psIns.setLong(1, uidTo);
+            psIns.setLong(2, uidFrom);
+            psDel.executeUpdate();
+            psIns.executeUpdate();
         }
     }
 }
