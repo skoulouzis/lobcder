@@ -647,7 +647,7 @@ public class WebDataResource implements PropFindableResource, Resource,
                     if (!folder.endsWith("/")) {
                         folder += "/";
                     }
-                    redirect = "http://localhost:8080/lobcder-worker" + folder + "?" + sb.toString();
+//                    redirect = "http://localhost:8080/lobcder-worker" + folder + "?" + sb.toString();
                 } catch (Exception ex) {
                     Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
                 }
