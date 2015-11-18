@@ -94,7 +94,7 @@ public class ReplicateSweep implements Runnable {
                 + "JOIN credential_table ON credentialRef = credintialId WHERE pdri_table.pdriGroupRef=? AND isCache=TRUE");
                 PreparedStatement preparedStatementDel = connection.prepareStatement("DELETE FROM pdri_table WHERE pdriId=?")) {
             preparedStatementSelect.setLong(1, pdriGroup);
-            Collection<PDRIDescr> cachePdris = new ArrayList<>();
+            List<PDRIDescr> cachePdris = new ArrayList<>();
             ResultSet rs = preparedStatementSelect.executeQuery();
             while (rs.next()) {
                 String fileName = rs.getString(1);
@@ -106,8 +106,9 @@ public class ReplicateSweep implements Runnable {
                 long key = rs.getLong(7);
                 long pdriId = rs.getLong(8);
                 boolean isCache = rs.getBoolean(9);
-                cachePdris.add(new PDRIDescr(fileName, ssID, resourceURI, uName, passwd, encrypt, BigInteger.valueOf(key), pdriGroup, pdriId,isCache));
+                cachePdris.add(new PDRIDescr(fileName, ssID, resourceURI, uName, passwd, encrypt, BigInteger.valueOf(key), pdriGroup, pdriId, isCache));
             }
+            JDBCatalogue.putToPDRIDescrCache(pdriGroup, cachePdris);
             for (PDRIDescr pdriDescr : cachePdris) {
                 try {
                     PDRI pdri = PDRIFactory.getFactory().createInstance(pdriDescr);
@@ -142,6 +143,7 @@ public class ReplicateSweep implements Runnable {
                     preparedStatement.setLong(1, pdriDescr.getId());
                     preparedStatement.executeUpdate();
                     log.log(Level.FINE, "DELETE: {0}", pdri.getURI());
+                    JDBCatalogue.removeFromPDRIDescrCache(pdriDescr.getId());
                 } catch (Exception e) {
                     log.log(Level.SEVERE, null, e);
                     result = false;
@@ -221,8 +223,12 @@ public class ReplicateSweep implements Runnable {
         }
     }
 
-    private Collection<PDRIDescr> getPdriDescrForGroup(Long groupId, Connection connection) throws SQLException {
-        Collection<PDRIDescr> res = new ArrayList<>();
+    private List<PDRIDescr> getPdriDescrForGroup(Long groupId, Connection connection) throws SQLException {
+        List<PDRIDescr> res = JDBCatalogue.getFromPDRIDescrCache(groupId);
+        if (res != null) {
+            return res;
+        }
+        res = new ArrayList<>();
         try (PreparedStatement ps = connection.prepareStatement(
                 "SELECT fileName, storageSiteRef, storage_site_table.resourceUri, "
                 + "username, password, isEncrypted, encryptionKey, pdri_table.pdriId, storage_site_table.isCache "
@@ -243,8 +249,9 @@ public class ReplicateSweep implements Runnable {
                 long key = rs.getLong(7);
                 long pdriId = rs.getLong(8);
                 boolean isCache = rs.getBoolean(9);
-                res.add(new PDRIDescr(fileName, ssID, resourceURI, uName, passwd, encrypt, BigInteger.valueOf(key), groupId, pdriId,isCache));
+                res.add(new PDRIDescr(fileName, ssID, resourceURI, uName, passwd, encrypt, BigInteger.valueOf(key), groupId, pdriId, isCache));
             }
+            JDBCatalogue.putToPDRIDescrCache(groupId, res);
             return res;
         }
     }
@@ -268,7 +275,7 @@ public class ReplicateSweep implements Runnable {
                 long key = rs.getLong(7);
                 long pdriId = rs.getLong(8);
                 boolean isCache = rs.getBoolean(9);
-                return new PDRIDescr(fileName, ssID, resourceURI, uName, passwd, encrypt, BigInteger.valueOf(key), groupId, pdriId,isCache);
+                return new PDRIDescr(fileName, ssID, resourceURI, uName, passwd, encrypt, BigInteger.valueOf(key), groupId, pdriId, isCache);
             } else {     // for optimization we better to use a smarter algorithm to pick up better source
                 Collection<PDRIDescr> var = getPdriDescrForGroup(groupId, connection);
                 PDRIDescr[] pdriDescrs = var.toArray(new PDRIDescr[var.size()]);
@@ -331,7 +338,7 @@ public class ReplicateSweep implements Runnable {
                             ss.isEncrypt(),
                             pdriKey,
                             pdriGroupId,
-                            null,ss.isCache());
+                            null, ss.isCache());
                     PDRI destinationPdri = PDRIFactory.getFactory().createInstance(destinationDescr);
                     destinationPdri.replicate(sourcePdri);
                     result = destinationPdri.exists(destinationPdri.getFileName());

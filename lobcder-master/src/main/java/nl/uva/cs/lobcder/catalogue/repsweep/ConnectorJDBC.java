@@ -1,13 +1,10 @@
 package nl.uva.cs.lobcder.catalogue.repsweep;
 
 import nl.uva.cs.lobcder.catalogue.beans.*;
-import nl.uva.cs.lobcder.resources.PDRIDescr;
 
 import javax.sql.DataSource;
 import java.math.BigInteger;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 

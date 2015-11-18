@@ -60,7 +60,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
             switch (method) {
                 case MKCOL:
                     String msg = "From: " + fromAddress + " User: " + getPrincipal().getUserId() + " Method: " + method;
-                    WebDataDirResource.log.log(Level.FINEST , msg);
+                    WebDataDirResource.log.log(Level.FINEST, msg);
                     attempts = 0;
                     return getPrincipal().canWrite(getPermissions());
                 default:
@@ -224,10 +224,13 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                     }
                     fileLogicalData.addContentType(contentType);
                     resource = new WebDataFileResource(fileLogicalData, Path.path(getPath(), newName), getCatalogue(), authList);
-                    LockToken tocken = resource.getCurrentLock();
-                    if (tocken != null && !tocken.isExpired()) {
-                        throw new ConflictException(resource, "The resource is locked");
-                    }
+//                    LockToken tocken = resource.getCurrentLock();
+//                    System.err.println("tokenId: "+tocken.tokenId+" lockedByUser: "+tocken.info.lockedByUser+" timeout: "+tocken.timeout.toString()+" getOtherSeconds: "+tocken.timeout.getOtherSeconds()+" getSeconds: "+tocken.timeout.getSeconds());
+//                    if (tocken != null) {
+//                        if (tocken.getFrom().after(new Date(System.currentTimeMillis()))) {
+//                            throw new ConflictException(resource, "The resource is locked");
+//                        }
+//                    }
                     //Create new
                     pdri = createPDRI(fileLogicalData.getLength(), newName, connection);
                     pdri.setLength(length);

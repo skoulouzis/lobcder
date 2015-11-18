@@ -960,23 +960,19 @@ public class WebDataResource implements PropFindableResource, Resource,
                     fileLogicalData.setLastAccessDate(fileLogicalData.getModifiedDate());
                     fileLogicalData.addContentType(contentType);
                     pdriGroupid = fileLogicalData.getPdriGroupId();
-
                     resource = new WebDataFileResource(fileLogicalData, Path.path(getPath(), fi.getName()), getCatalogue(), authList);
-
                 } else {
                     fileLogicalData = new LogicalData();
                     fileLogicalData.setName(fi.getName());
                     fileLogicalData.setParentRef(getLogicalData().getUid());
                     fileLogicalData.setType(Constants.LOGICAL_FILE);
                     fileLogicalData.setOwner(getPrincipal().getUserId());
-                    fileLogicalData.setLength(request.getContentLengthHeader());
+                    fileLogicalData.setLength(fi.getSize());
                     fileLogicalData.setCreateDate(System.currentTimeMillis());
                     fileLogicalData.setModifiedDate(System.currentTimeMillis());
                     fileLogicalData.setLastAccessDate(System.currentTimeMillis());
                     fileLogicalData.setTtlSec(getLogicalData().getTtlSec());
                     fileLogicalData.addContentType(contentType);
-
-
                     pdriGroupid = getCatalogue().associateLogicalDataAndPdriGroup(fileLogicalData, connection);
 
                     getCatalogue().setPreferencesOn(fileLogicalData.getUid(), getLogicalData().getUid(), connection);

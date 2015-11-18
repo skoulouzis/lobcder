@@ -12,6 +12,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.*;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
@@ -47,6 +48,9 @@ import nl.uva.vlet.vrl.VRL;
 public class JDBCatalogue extends MyDataSource {
 
     private Timer timer;
+//    private static Map<Long, List<PDRIDescr>> PDRIDescrCache = new ConcurrentHashMap<>();
+    private static Map<Long, LogicalData> LogicalDataCache = new ConcurrentHashMap<>();
+    private static int cacheSize = 1000;
 
     public JDBCatalogue() throws NamingException {
     }
@@ -303,18 +307,22 @@ public class JDBCatalogue extends MyDataSource {
     }
 
     public List<PDRIDescr> getPdriDescrByGroupId(Long groupId) throws SQLException, IOException {
-//        List<PDRIDescr> res = PDRIDescrCache.get(groupId);
-//        if (res != null) {
-//            return res;
-//        }
+        List<PDRIDescr> res = getFromPDRIDescrCache(groupId);
+        if (res != null) {
+            return res;
+        }
         try (Connection connection = getConnection()) {
             return getPdriDescrByGroupId(groupId, connection);
         }
     }
 
     public List<PDRIDescr> getPdriStorageSiteID(Long StorageSiteId, @Nonnull Connection connection) throws SQLException {
-        ArrayList<PDRIDescr> res = new ArrayList<>();
-        long pdriId;
+        List<PDRIDescr> res = getFromPDRIDescrCache(StorageSiteId);
+        if (res != null) {
+            return res;
+        }
+        res = new ArrayList<>();
+        long pdriId = -1;
         try (PreparedStatement ps = connection.prepareStatement(""
                 + "SELECT fileName, storageSiteRef, storage_site_table.resourceUri, "
                 + "username, password, isEncrypted, encryptionKey, pdri_table.pdriId, pdriGroupRef, storage_site_table.isCache "
@@ -347,12 +355,19 @@ public class JDBCatalogue extends MyDataSource {
                 long groupId = rs.getLong(9);
                 res.add(new PDRIDescr(fileName, ssID, resourceURI, uName, passwd, encrypt, BigInteger.valueOf(key), groupId, Long.valueOf(pdriId), isCache));
             }
+            if (pdriId > -1) {
+                putToPDRIDescrCache(pdriId, res);
+            }
             return res;
         }
     }
 
     public List<PDRIDescr> getPdriDescrByGroupId(Long groupId, @Nonnull Connection connection) throws SQLException {
-        List<PDRIDescr> res = new ArrayList<>();
+        List<PDRIDescr> res = getFromPDRIDescrCache(groupId);
+        if(res !=null){
+            return res;
+        }
+        res = new ArrayList<>();
         long pdriGroupRef;
         long pdriId;
         try (PreparedStatement ps = connection.prepareStatement("SELECT fileName, "
@@ -386,7 +401,7 @@ public class JDBCatalogue extends MyDataSource {
 //                }
                 res.add(new PDRIDescr(fileName, ssID, resourceURI, uName, passwd, encrypt, BigInteger.valueOf(key), Long.valueOf(groupId), Long.valueOf(pdriId), isCache));
             }
-//            PDRIDescrCache.put(groupId, res);
+            putToPDRIDescrCache(groupId, res);
             return res;
         }
     }
@@ -1204,7 +1219,7 @@ public class JDBCatalogue extends MyDataSource {
                 ps.setLong(3, d.getId());
                 ps.executeUpdate();
                 List<PDRIDescr> res = getPdriDescrByGroupId(d.getPdriGroupRef(), connection);
-//                PDRIDescrCache.put(d.getPdriGroupRef(), res);
+                putToPDRIDescrCache(d.getPdriGroupRef(), res);
             }
         }
     }
@@ -1709,6 +1724,25 @@ public class JDBCatalogue extends MyDataSource {
         } else {
             return connection;
         }
+    }
+
+    public static List<PDRIDescr> getFromPDRIDescrCache(Long groupId) {
+//        List<PDRIDescr> pdr = PDRIDescrCache.get(groupId);
+//        if (PDRIDescrCache.size() > cacheSize) {
+//            PDRIDescrCache.remove(PDRIDescrCache.keySet().iterator().next());
+//        }
+        return null;
+    }
+
+    public static void putToPDRIDescrCache(long pdriId, List<PDRIDescr> res) {
+//        if (PDRIDescrCache.size() > cacheSize) {
+//            PDRIDescrCache.remove(PDRIDescrCache.keySet().iterator().next());
+//        }
+//        PDRIDescrCache.put(pdriId, res);
+    }
+
+    public static void removeFromPDRIDescrCache(Long id) {
+//        PDRIDescrCache.remove(id);
     }
 
     @Data
