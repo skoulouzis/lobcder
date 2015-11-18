@@ -26,10 +26,7 @@ import java.net.UnknownHostException;
 import java.security.SecureRandom;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -47,22 +44,23 @@ import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
+import javax.xml.namespace.QName;
 import static nl.uva.cs.lobcder.Util.ChacheEvictionAlgorithm.LRU;
 import nl.uva.cs.lobcder.resources.PDRI;
 import nl.uva.cs.lobcder.resources.PDRIDescr;
 import nl.uva.cs.lobcder.resources.PDRIFactory;
-import nl.uva.cs.lobcder.resources.StorageSite;
 import nl.uva.cs.lobcder.resources.VPDRI;
 import nl.uva.cs.lobcder.rest.Endpoints;
 import nl.uva.cs.lobcder.rest.wrappers.LogicalDataWrapped;
+import nl.uva.cs.lobcder.rest.wrappers.PDRIDescrWrapperList;
 import nl.uva.cs.lobcder.rest.wrappers.Stats;
 import nl.uva.cs.lobcder.rest.wrappers.StorageSiteWrapper;
 import nl.uva.cs.lobcder.rest.wrappers.StorageSiteWrapperList;
 import nl.uva.vlet.data.StringUtil;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.commons.lang3.tuple.Triple;
 
 /**
  *
@@ -134,7 +132,7 @@ public class Catalogue {
             if (!removeIt.isEmpty()) {
                 ssites.removeAll(removeIt);
                 if (ssites.isEmpty()) {
-                    Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, "PDRIS from master is either empty or contains unreachable files");
+                    Logger.getLogger(Catalogue.class.getName()).log(Level.SEVERE, "PDRIS from master is either empty or contains unreachable files");
                     throw new IOException("PDRIS from master is either empty or contains unreachable files");
                 }
             }
@@ -160,7 +158,7 @@ public class Catalogue {
                 if (!ldw.getLogicalData().isFolder()) {
                     LogicalDataWrapped ld = removeUnreachablePDRIs(ldw, fileUID);
                     String uid = String.valueOf(ld.getLogicalData().getUid());
-                    Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, "Adding uid: {0}", uid);
+                    Logger.getLogger(Catalogue.class.getName()).log(Level.INFO, "Adding uid: {0}", uid);
                     Catalogue.logicalDataCache.put(uid, ld);
 //                    for (PDRIDescr pdridecr : ld.getPdriList()) {
 //                        storageSiteCache.put(pdridecr.getId(), pdridecr);
@@ -177,7 +175,7 @@ public class Catalogue {
         LogicalDataWrapped logicalData = getLogicalDataWrapped(fileUID);
         PDRIDescr pdriDesc = null;//new PDRIDescr();
         pdriDesc = selectBestPDRI(logicalData.getPdriList());
-        Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "Selected pdri: {0}", pdriDesc.getResourceUrl());
+        Logger.getLogger(Catalogue.class.getName()).log(Level.FINE, "Selected pdri: {0}", pdriDesc.getResourceUrl());
 
         return new VPDRI(pdriDesc.getName(), pdriDesc.getId(), pdriDesc.getResourceUrl(), pdriDesc.getUsername(),
                 pdriDesc.getPassword(), pdriDesc.getEncrypt(), pdriDesc.getKey(), false);
@@ -223,7 +221,7 @@ public class Catalogue {
             if (!removeIt.isEmpty()) {
                 pdris.removeAll(removeIt);
                 if (pdris.isEmpty()) {
-                    Logger.getLogger(WorkerServlet.class.getName()).log(Level.SEVERE, "PDRIS from master is either empty or contains unreachable files");
+                    Logger.getLogger(Catalogue.class.getName()).log(Level.SEVERE, "PDRIS from master is either empty or contains unreachable files");
                     Catalogue.logicalDataCache.remove(fileUID);
                     throw new IOException("PDRIS from master is either empty or contains unreachable files");
                 }
@@ -271,7 +269,7 @@ public class Catalogue {
             //Just return one at random;
             int index = new Random().nextInt(pdris.size());
             PDRIDescr[] array = pdris.toArray(new PDRIDescr[pdris.size()]);
-            Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "Selecting Random: {0}", array[index].getResourceUrl());
+            Logger.getLogger(Catalogue.class.getName()).log(Level.FINE, "Selecting Random: {0}", array[index].getResourceUrl());
             return array[index];
         }
 
@@ -301,7 +299,7 @@ public class Catalogue {
             if (speed == null) {
                 speed = Double.valueOf(0);
             }
-            Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "Speed: {0}", speed);
+            Logger.getLogger(Catalogue.class.getName()).log(Level.FINE, "Speed: {0}", speed);
             sumOfSpeed += speed;
         }
         if (sumOfSpeed <= 0) {
@@ -317,7 +315,7 @@ public class Catalogue {
                 speed = Double.valueOf(0);
             }
             if (itemIndex < speed) {
-                Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "Selecting:{0}  with speed: {1}", new Object[]{p.getResourceUrl(), speed});
+                Logger.getLogger(Catalogue.class.getName()).log(Level.FINE, "Selecting:{0}  with speed: {1}", new Object[]{p.getResourceUrl(), speed});
                 return p;
             }
             itemIndex -= speed;
@@ -346,7 +344,7 @@ public class Catalogue {
         ClientResponse response = webResource.path("sdn").path("optimizeFlow")
                 .type(MediaType.APPLICATION_XML).put(ClientResponse.class, stringStats);
 
-        Logger.getLogger(WorkerServlet.class.getName()).log(Level.INFO, "response: {0}", response);
+        Logger.getLogger(Catalogue.class.getName()).log(Level.INFO, "response: {0}", response);
     }
 
     private LogicalDataWrapped addCacheFileToPDRIDescr(LogicalDataWrapped logicalData) throws IOException, URISyntaxException {
@@ -450,7 +448,7 @@ public class Catalogue {
 
     public LogicalDataWrapped getLogicalDataWrapped(String fileUID) throws IOException, URISyntaxException {
         LogicalDataWrapped logicalData = logicalDataCache.get(fileUID);
-        Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "Looking in cache for: {0}", fileUID);
+        Logger.getLogger(Catalogue.class.getName()).log(Level.FINE, "Looking in cache for: {0}", fileUID);
         if (logicalData == null) {
             if (restClient == null) {
                 restClient = Client.create(clientConfig);
@@ -459,7 +457,7 @@ public class Catalogue {
                 webResource = restClient.resource(restURL);
             }
 
-            Logger.getLogger(WorkerServlet.class.getName()).log(Level.FINE, "Asking master. Token: {0} fileID: " + fileUID + " logicalDataCache.size: " + logicalDataCache.size(), token);
+            Logger.getLogger(Catalogue.class.getName()).log(Level.FINE, "Asking master. Token: {0} fileID: " + fileUID + " logicalDataCache.size: " + logicalDataCache.size(), token);
             WebResource res = webResource.path("item").path("query").path(fileUID);
             logicalData = res.accept(MediaType.APPLICATION_XML).
                     get(new GenericType<LogicalDataWrapped>() {
@@ -472,61 +470,6 @@ public class Catalogue {
         return logicalData;
     }
 
-//    protected boolean replicate(Long pdriGroupId, Collection<Long> toReplicate) {
-//        if (toReplicate.isEmpty()) {
-////            log.log(Level.FINE, "toReplicate.isEmpty()");
-//            return true;
-//        }
-//        boolean result = true;
-//        try (PreparedStatement preparedStatement = connection.prepareStatement(
-//                "INSERT INTO pdri_table (fileName, storageSiteRef, pdriGroupRef, "
-//                + "isEncrypted, encryptionKey) VALUES (?,?,?,?,?)")) {
-//            
-//            PDRIDescr sourceDescr = getSourcePdriDescrForGroup(pdriGroupId);
-//            PDRI sourcePdri = PDRIFactory.getFactory().createInstance(sourceDescr);
-//
-//            for (Long site : toReplicate) {
-//                try {
-//                    StorageSite ss = getStorageSiteById(site, connection);
-//                    BigInteger pdriKey = nl.uva.cs.lobcder.util.DesEncrypter.generateKey();
-//                    PDRIDescr destinationDescr = new PDRIDescr(
-//                            generateFileName(sourceDescr),
-//                            ss.getStorageSiteId(),
-//                            ss.getResourceURI(),
-//                            ss.getCredential().getStorageSiteUsername(),
-//                            ss.getCredential().getStorageSitePassword(),
-//                            ss.isEncrypt(),
-//                            pdriKey,
-//                            pdriGroupId,
-//                            null, ss.isCache());
-//                    PDRI destinationPdri = PDRIFactory.getFactory().createInstance(destinationDescr);
-//                    destinationPdri.replicate(sourcePdri);
-//                    result = destinationPdri.exists(destinationPdri.getFileName());
-//                    long srcLen = sourcePdri.getLength();
-//                    if (result == false || destinationPdri.getLength() != srcLen) {
-//                        log.log(Level.WARNING, "Failed to replicate {0}/{1} to {2}/{3}", new Object[]{sourcePdri.getURI(), sourcePdri.getFileName(), destinationPdri.getURI(), destinationPdri.getFileName()});
-//                        result = false;
-//                    }
-////                    else {
-//                    preparedStatement.setString(1, destinationDescr.getName());
-//                    preparedStatement.setLong(2, destinationDescr.getStorageSiteId());
-//                    preparedStatement.setLong(3, destinationDescr.getPdriGroupRef());
-//                    preparedStatement.setBoolean(4, destinationDescr.getEncrypt());
-//                    preparedStatement.setLong(5, destinationDescr.getKey().longValue());
-//                    preparedStatement.executeUpdate();
-////                    }
-//
-//                } catch (Exception e) {
-//                    result = false;
-//                } catch (Throwable e) {
-//                    result = false;
-//                }
-//            }
-//            return result;
-//        } catch (Exception e) {
-//            return false;
-//        }
-//    }
     boolean replicate(Pair<File, String> p) throws IOException {
         boolean result = true;
 
@@ -535,6 +478,7 @@ public class Catalogue {
         String[] sites = p.getRight().split("-");
         Long fileUID = Long.valueOf(sites[0]);
         Long pdriGroupId = Long.valueOf(sites[1]);
+        List<PDRIDescr> destinationDescrList = new ArrayList<>();
         for (int i = 2; i < sites.length; i++) {
             try {
                 StorageSiteWrapper ss = storageSiteCache.get(Long.valueOf(sites[i]));
@@ -561,13 +505,15 @@ public class Catalogue {
                 if (result == false || destinationPdri.getLength() != srcLen) {
                     result = false;
                 }
-                result = updateMaster(destinationDescr);
+
+                destinationDescrList.add(destinationDescr);
             } catch (Exception e) {
                 result = false;
             } catch (Throwable e) {
                 result = false;
             }
         }
+        result = updateMaster(destinationDescrList, fileUID);
         return result;
     }
 
@@ -584,14 +530,23 @@ public class Catalogue {
         return pDRIDescr;
     }
 
-    private boolean updateMaster(PDRIDescr destinationDescr) {
+    private boolean updateMaster(List<PDRIDescr> destinationDescr, Long fileUID) {
         if (restClient == null) {
             restClient = Client.create(clientConfig);
             restClient.removeAllFilters();
             restClient.addFilter(new com.sun.jersey.api.client.filter.HTTPBasicAuthFilter("worker-", token));
             webResource = restClient.resource(restURL);
         }
-        MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+
+
+        PDRIDescrWrapperList list = new PDRIDescrWrapperList();
+        list.setPdris(destinationDescr);
+        ClientResponse response = webResource.path("storage_sites").path("update_pdri").path(fileUID.toString())
+                .type(MediaType.APPLICATION_XML).put(ClientResponse.class, list);
+
+
+        Logger.getLogger(Catalogue.class.getName()).log(Level.FINE, " response.getStatus(): {0}", response.getStatus());
+
         return true;
     }
 }
