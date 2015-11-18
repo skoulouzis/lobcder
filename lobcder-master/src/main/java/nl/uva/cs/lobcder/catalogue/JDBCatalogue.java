@@ -49,8 +49,8 @@ public class JDBCatalogue extends MyDataSource {
 
     private Timer timer;
 //    private static Map<Long, List<PDRIDescr>> PDRIDescrCache = new ConcurrentHashMap<>();
-    private static Map<Long, LogicalData> LogicalDataCache = new ConcurrentHashMap<>();
-    private static int cacheSize = 1000;
+//    private static Map<Long, LogicalData> LogicalDataCache = new ConcurrentHashMap<>();
+//    private static int cacheSize = 1000;
 
     public JDBCatalogue() throws NamingException {
     }
