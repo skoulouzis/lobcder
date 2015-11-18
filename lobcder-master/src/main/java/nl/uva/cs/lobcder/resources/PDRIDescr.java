@@ -4,7 +4,6 @@ import java.math.BigInteger;
 import lombok.*;
 
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
 
 /**
  * User: dvasunin Date: 01.03.13 Time: 13:57 To change this template use File |
@@ -17,23 +16,21 @@ import javax.xml.bind.annotation.XmlTransient;
 public class PDRIDescr {
 
     private String name;
-    @Getter(AccessLevel.NONE)
+    @Getter(AccessLevel.PUBLIC)
     private Long storageSiteId;
     private String resourceUrl;
     private String username;
     private String password;
-    private boolean encrypt;
+    private Boolean encrypt;
     private BigInteger key;
     private Long pdriGroupRef;
     private Long id;
     private boolean isCashe;
-
-    @XmlTransient
-    public Long getStorageSiteId() {
-        return storageSiteId;
-    }
-
-    public boolean getEncrypt() {
-        return encrypt;
-    }
+//    @XmlTransient
+//    public Long getStorageSiteId() {
+//        return storageSiteId;
+//    }
+//    public boolean getEncrypt() {
+//        return encrypt;
+//    }
 }

@@ -22,6 +22,7 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
@@ -32,9 +33,13 @@ import javax.ws.rs.core.UriInfo;
 import javax.xml.bind.JAXBElement;
 import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.auth.MyPrincipal;
-import nl.uva.cs.lobcder.resources.Credential;
+import nl.uva.cs.lobcder.resources.LogicalData;
+import nl.uva.cs.lobcder.resources.PDRI;
+import nl.uva.cs.lobcder.resources.PDRIDescr;
+import nl.uva.cs.lobcder.resources.PDRIFactory;
 import nl.uva.cs.lobcder.resources.StorageSite;
 import nl.uva.cs.lobcder.rest.wrappers.CredentialWrapped;
+import nl.uva.cs.lobcder.rest.wrappers.PDRIDescrWrapperList;
 import nl.uva.cs.lobcder.rest.wrappers.StorageSiteWrapper;
 import nl.uva.cs.lobcder.rest.wrappers.StorageSiteWrapperList;
 import nl.uva.cs.lobcder.util.CatalogueHelper;
@@ -58,7 +63,25 @@ public class StorageSitesService extends CatalogueHelper {
     public StorageSitesService() throws NamingException {
     }
 
-    @Path("/")
+    @PUT
+    @Path("update_pdri/{uid}")
+    @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public void updateLogicalDataAndPdri(PDRIDescrWrapperList pdris, @PathParam("uid") Long uid) throws SQLException, IOException {
+        MyPrincipal mp = (MyPrincipal) request.getAttribute("myprincipal");
+        if (mp.isAdmin()) {
+            try (Connection cn = getCatalogue().getConnection()) {
+                for (PDRIDescr pdriDescr : pdris.getPdris()) {
+                    LogicalData logicalData = getCatalogue().getLogicalDataByUid(uid, cn);
+                    PDRI pdri = PDRIFactory.getFactory().createInstance(pdriDescr, false);
+                    logicalData.setLength(pdri.getLength());
+                    getCatalogue().updatePdri(logicalData, pdri, cn);
+                }
+                cn.commit();
+                cn.close();
+            }
+        }
+    }
+
     @GET
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public StorageSiteWrapperList getXml() throws FileNotFoundException, VlException, URISyntaxException, IOException, MalformedURLException, Exception {

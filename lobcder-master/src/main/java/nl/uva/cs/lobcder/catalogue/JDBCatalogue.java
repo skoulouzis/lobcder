@@ -223,6 +223,22 @@ public class JDBCatalogue extends MyDataSource {
         }
     }
 
+    public void updatePdri(LogicalData logicalData, PDRI pdri, @Nonnull Connection connection) throws SQLException {
+        String sqlQuery;
+        sqlQuery = "INSERT INTO pdri_table "
+                + "(fileName, storageSiteRef, pdriGroupRef, isEncrypted) VALUES(?, ?, ?, ?)";
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery)) {
+            preparedStatement.setString(1, pdri.getFileName());
+            preparedStatement.setLong(2, pdri.getStorageSiteId());
+            preparedStatement.setLong(3, logicalData.getPdriGroupId());
+            preparedStatement.setBoolean(4, pdri.getEncrypted());
+            preparedStatement.executeUpdate();
+//                logicalData.setPdriGroupId(logicalData.getPdriGroupId());
+//                return updateLogicalData(logicalData, connection);
+            updateLogicalData(logicalData, connection);
+        }
+    }
+
     public LogicalData updateLogicalDataAndPdri(LogicalData logicalData, PDRI pdri, @Nonnull Connection connection) throws SQLException {
         try (Statement statement = connection.createStatement(java.sql.ResultSet.TYPE_FORWARD_ONLY, java.sql.ResultSet.CONCUR_UPDATABLE)) {
             statement.executeUpdate("INSERT INTO pdrigroup_table (refCount) VALUES(0)", Statement.RETURN_GENERATED_KEYS);
@@ -281,6 +297,7 @@ public class JDBCatalogue extends MyDataSource {
             rs.next();
             newGroupId = rs.getLong(1);
         }
+        logicalData.setPdriGroupId(newGroupId);
         registerLogicalData(logicalData, connection);
         return newGroupId;
     }

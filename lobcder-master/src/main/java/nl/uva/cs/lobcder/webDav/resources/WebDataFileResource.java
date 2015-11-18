@@ -34,7 +34,6 @@ import nl.uva.cs.lobcder.util.DesEncrypter;
 import nl.uva.cs.lobcder.util.PropertiesHelper;
 import nl.uva.vlet.data.StringUtil;
 import nl.uva.vlet.io.CircularStreamBufferTransferer;
-import org.apache.commons.codec.binary.Base64;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
@@ -65,25 +64,25 @@ public class WebDataFileResource extends WebDataResource implements
     private int sleepTime = 5;
     private List<String> workers;
     private HashMap<String, String> workersMap;
-    private boolean doRedirect = true;
+    private static boolean redirectGets = false;
     private static int workerIndex = 0;
     private static final Map<String, Double> weightPDRIMap = new HashMap<>();
     private static final Map<String, Integer> numOfGetsMap = new HashMap<>();
-    private static final Map<String, Integer> numOfWorkerTransfersMap = new HashMap<>();
+//    private static final Map<String, Integer> numOfWorkerTransfersMap = new HashMap<>();
     private SDNControllerClient sdnClient;
     private LookupService lookupService;
 
     public WebDataFileResource(@Nonnull LogicalData logicalData, Path path, @Nonnull JDBCatalogue catalogue, @Nonnull List<AuthI> authList) {
         super(logicalData, path, catalogue, authList);
         try {
-            doRedirect = PropertiesHelper.doRedirectGets();
+            redirectGets = PropertiesHelper.doRedirectGets();
         } catch (IOException ex) {
             Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, ex);
         }
-        if (doRedirect) {
+        if (redirectGets) {
             List<String> workersURLs = PropertiesHelper.getWorkers();
             if (workersURLs == null || workersURLs.isEmpty()) {
-                doRedirect = false;
+                redirectGets = false;
             } else {
                 workersMap = new HashMap<>();
                 for (String s : workersURLs) {
@@ -579,7 +578,7 @@ public class WebDataFileResource extends WebDataResource implements
                 case GET:
                     String redirect = null;
 
-                    if (doRedirect) {
+                    if (redirectGets) {
 
                         if (!canRedirect(request)) {
                             return null;
@@ -606,7 +605,7 @@ public class WebDataFileResource extends WebDataResource implements
 
     private String getBestWorker(String reuSource) throws IOException, URISyntaxException, InterruptedException {
 //        reuSource = "192.168.100.1";
-        if (doRedirect) {
+        if (redirectGets) {
             if (workersMap.containsKey(reuSource)) {
                 String worker = workersMap.get(reuSource);
                 String w = worker + "/" + getLogicalData().getUid();
@@ -647,10 +646,6 @@ public class WebDataFileResource extends WebDataResource implements
             return null;
         }
     }
-
-   
-
-   
 
     @Override
     public Boolean isBufferingRequired() {

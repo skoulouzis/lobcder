@@ -65,6 +65,7 @@ public class WebDataResource implements PropFindableResource, Resource,
     private static final ThreadLocal<MyPrincipal> principalHolder = new ThreadLocal<>();
     protected String fromAddress;
     protected Map<String, String> mimeTypeMap = new HashMap<>();
+    private static boolean redirectPosts = false;
 
     public WebDataResource(@Nonnull LogicalData logicalData, Path path, @Nonnull JDBCatalogue catalogue, @Nonnull List<AuthI> authList) {
         this.authList = authList;
@@ -80,6 +81,11 @@ public class WebDataResource implements PropFindableResource, Resource,
         mimeTypeMap.put("aux", "text/plain");
         mimeTypeMap.put("bbl", "text/plain");
         mimeTypeMap.put("blg", "text/plain");
+        try {
+            redirectPosts = PropertiesHelper.doRedirectPosts();
+        } catch (IOException ex) {
+            Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     @Override
@@ -615,6 +621,9 @@ public class WebDataResource implements PropFindableResource, Resource,
         switch (request.getMethod()) {
             case PUT:
             case POST:
+                if (!redirectPosts) {
+                    return null;
+                }
                 String redirect = null;
                 try {
                     if (!canRedirect(request)) {
@@ -647,12 +656,10 @@ public class WebDataResource implements PropFindableResource, Resource,
                     if (!folder.endsWith("/")) {
                         folder += "/";
                     }
-//                    redirect = "http://localhost:8080/lobcder-worker" + folder + "?" + sb.toString();
+                    redirect = "http://localhost:8080/lobcder-worker" + folder + "?" + sb.toString();
                 } catch (Exception ex) {
                     Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
                 }
-
-
                 return redirect;
             default:
                 return null;
@@ -948,12 +955,12 @@ public class WebDataResource implements PropFindableResource, Resource,
                     if (!getPrincipal().canWrite(p)) {
                         throw new NotAuthorizedException(this);
                     }
-                    fileLogicalData.setLength(request.getContentLengthHeader());
+                    fileLogicalData.setLength(fi.getSize());
                     fileLogicalData.setModifiedDate(System.currentTimeMillis());
                     fileLogicalData.setLastAccessDate(fileLogicalData.getModifiedDate());
                     fileLogicalData.addContentType(contentType);
                     pdriGroupid = fileLogicalData.getPdriGroupId();
-                    
+
                     resource = new WebDataFileResource(fileLogicalData, Path.path(getPath(), fi.getName()), getCatalogue(), authList);
 
                 } else {
