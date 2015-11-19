@@ -51,7 +51,7 @@ public class WebDataResourceFactory implements ResourceFactory {
 //                ,    '_', '\_' )
 //                ,    '[', '\[' )
 
-                
+
 //        try (Connection cn = catalogue.getConnection()) {
         try {
             WebDataResourceFactory.log.log(Level.FINER, "getResource:  strPath: {0} path: {1} ldri: {2}" + "\n" + "\tgetResource:  host: {3} path: {4}", new Object[]{strPath, Path.path(strPath), ldri, host, ldri});
@@ -61,7 +61,6 @@ public class WebDataResourceFactory implements ResourceFactory {
             if (entry == null) {
                 return null;
             }
-            catalogue.updateAccessTime(entry.getUid());
 
 
             if (entry.getType().equals(Constants.LOGICAL_FOLDER)) {

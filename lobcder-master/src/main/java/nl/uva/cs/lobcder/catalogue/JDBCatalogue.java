@@ -47,10 +47,11 @@ import nl.uva.vlet.vrl.VRL;
 @Log
 public class JDBCatalogue extends MyDataSource {
 
+    private static boolean usePDRIDescrCache = false;
     private Timer timer;
-//    private static Map<Long, List<PDRIDescr>> PDRIDescrCache = new ConcurrentHashMap<>();
-//    private static Map<Long, LogicalData> LogicalDataCache = new ConcurrentHashMap<>();
-//    private static int cacheSize = 1000;
+    private static Map<Long, List<PDRIDescr>> PDRIDescrCache = new ConcurrentHashMap<>();
+    private static Map<Long, LogicalData> LogicalDataCache = new ConcurrentHashMap<>();
+    private static int cacheSize = 1000;
 
     public JDBCatalogue() throws NamingException {
     }
@@ -364,7 +365,7 @@ public class JDBCatalogue extends MyDataSource {
 
     public List<PDRIDescr> getPdriDescrByGroupId(Long groupId, @Nonnull Connection connection) throws SQLException {
         List<PDRIDescr> res = getFromPDRIDescrCache(groupId);
-        if(res !=null){
+        if (res != null) {
             return res;
         }
         res = new ArrayList<>();
@@ -1727,22 +1728,30 @@ public class JDBCatalogue extends MyDataSource {
     }
 
     public static List<PDRIDescr> getFromPDRIDescrCache(Long groupId) {
-//        List<PDRIDescr> pdr = PDRIDescrCache.get(groupId);
-//        if (PDRIDescrCache.size() > cacheSize) {
-//            PDRIDescrCache.remove(PDRIDescrCache.keySet().iterator().next());
-//        }
+        if (usePDRIDescrCache) {
+            List<PDRIDescr> pdr = PDRIDescrCache.get(groupId);
+            if (PDRIDescrCache.size() > cacheSize) {
+                PDRIDescrCache.remove(PDRIDescrCache.keySet().iterator().next());
+            }
+            return pdr;
+        }
         return null;
     }
 
     public static void putToPDRIDescrCache(long pdriId, List<PDRIDescr> res) {
-//        if (PDRIDescrCache.size() > cacheSize) {
-//            PDRIDescrCache.remove(PDRIDescrCache.keySet().iterator().next());
-//        }
-//        PDRIDescrCache.put(pdriId, res);
+        if (usePDRIDescrCache) {
+            if (PDRIDescrCache.size() > cacheSize) {
+                PDRIDescrCache.remove(PDRIDescrCache.keySet().iterator().next());
+            }
+            PDRIDescrCache.put(pdriId, res);
+        }
     }
 
     public static void removeFromPDRIDescrCache(Long id) {
-//        PDRIDescrCache.remove(id);
+        if (usePDRIDescrCache) {
+            PDRIDescrCache.remove(id);
+        }
+
     }
 
     @Data
@@ -1805,6 +1814,7 @@ public class JDBCatalogue extends MyDataSource {
                 ps.setLong(2, uid);
                 ps.executeUpdate();
                 connection.commit();
+                connection.close();
             } catch (SQLException e) {
                 connection.rollback();
                 throw e;

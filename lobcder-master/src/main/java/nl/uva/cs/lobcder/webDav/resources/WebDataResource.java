@@ -128,6 +128,11 @@ public class WebDataResource implements PropFindableResource, Resource,
             String msg = "From: " + fromAddress + " user: " + principal.getUserId() + " password: XXXX";
             WebDataResource.log.log(Level.INFO, msg);
         }
+        try {
+            catalogue.updateAccessTime(getLogicalData().getUid());
+        } catch (SQLException ex) {
+            Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
+        }
         return principal;
     }
 
