@@ -20,7 +20,7 @@ echo debconf shared/accepted-oracle-license-v1-1 seen true | sudo debconf-set-se
 apt-get -q -y --force-yes  install mysql-server mysql-client oracle-java7-installer git maven2 erlang wget makepasswd nmap bwm-ng
 
 cd 
-
+/etc/init.d/mysql restart
 
 wget --no-check-certificate http://apache.mirror.triple-it.nl/tomcat/tomcat-6/v6.0.44/bin/apache-tomcat-6.0.44.tar.gz
 tar -xavf apache-tomcat-6.0.44.tar.gz
