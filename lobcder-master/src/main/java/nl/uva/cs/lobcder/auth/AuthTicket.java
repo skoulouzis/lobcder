@@ -5,8 +5,6 @@
 package nl.uva.cs.lobcder.auth;
 
 import java.io.IOException;
-import lombok.Setter;
-import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.util.PropertiesHelper;
 import org.apache.commons.codec.binary.Base64;
 
@@ -27,18 +25,44 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Properties;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
  * @author dvasunin
  */
-@Log
 public class AuthTicket implements AuthI {
 
-    @Setter
     private PrincipalCacheI principalCache = null;
-    @Setter
     private DataSource dataSource;
+
+    /**
+     * @return the principalCache
+     */
+    public PrincipalCacheI getPrincipalCache() {
+        return principalCache;
+    }
+
+    /**
+     * @param principalCache the principalCache to set
+     */
+    public void setPrincipalCache(PrincipalCacheI principalCache) {
+        this.principalCache = principalCache;
+    }
+
+    /**
+     * @return the dataSource
+     */
+    public DataSource getDataSource() {
+        return dataSource;
+    }
+
+    /**
+     * @param dataSource the dataSource to set
+     */
+    public void setDataSource(DataSource dataSource) {
+        this.dataSource = dataSource;
+    }
 
     public static class User {
 
@@ -51,11 +75,11 @@ public class AuthTicket implements AuthI {
     public MyPrincipal checkToken(String uname, String token) {
         MyPrincipal res = null;
         try {
-            if (principalCache != null) {
-                res = principalCache.getPrincipal(token);
+            if (getPrincipalCache() != null) {
+                res = getPrincipalCache().getPrincipal(token);
             }
             if (token.length() == 12) {
-                try (Connection cn = dataSource.getConnection()) {
+                try (Connection cn = getDataSource().getConnection()) {
                     try (PreparedStatement ps = cn.prepareStatement("SELECT long_tkt FROM tokens_table WHERE short_tkt = ?")) {
                         ps.setString(1, token);
                         try (ResultSet rs = ps.executeQuery()) {
@@ -73,8 +97,8 @@ public class AuthTicket implements AuthI {
                 res.getRoles().add("other");
                 res.getRoles().add(u.username);
                 res.setValidUntil(u.validuntil);
-                if (principalCache != null) {
-                    principalCache.putPrincipal(token, res, u.validuntil * 1000);
+                if (getPrincipalCache() != null) {
+                    getPrincipalCache().putPrincipal(token, res, u.validuntil * 1000);
                 }
             }
 
@@ -120,7 +144,6 @@ public class AuthTicket implements AuthI {
             User u = null;
 
             // check errors
-
             Integer posSign = ticket.lastIndexOf(";sig=");
 
             if (posSign < 0) {
@@ -152,16 +175,16 @@ public class AuthTicket implements AuthI {
                 }
                 long now = new Date().getTime() / 1000;
                 if (u.validuntil < now) {
-                    AuthTicket.log.log(Level.FINE, "Certificate Expired");
+                    Logger.getLogger(AuthTicket.class.getName()).log(Level.FINE, "Certificate Expired");
                     return null;
                 }
             } else {
-                AuthTicket.log.log(Level.FINE, "Can't verify");
+                Logger.getLogger(AuthTicket.class.getName()).log(Level.FINE, "Can't verify");
                 return null;
             }
             return u;
         } catch (Exception e) {
-            AuthTicket.log.log(Level.FINE, "Could not authenticate ticket", e);
+            Logger.getLogger(AuthTicket.class.getName()).log(Level.FINE, "Could not authenticate ticket", e);
             return null;
         }
     }

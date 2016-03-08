@@ -4,7 +4,7 @@
  */
 package nl.uva.cs.lobcder.rest;
 
-import lombok.extern.java.Log;
+
 import nl.uva.cs.lobcder.auth.MyPrincipal;
 import nl.uva.cs.lobcder.auth.Permissions;
 import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
@@ -20,12 +20,14 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Date;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
- * Used by the DRI service to supervise resources for corrupted files etc.  
+ * Used by the DRI service to supervise resources for corrupted files etc.
+ *
  * @author dvasunin
  */
-@Log
+
 public class DRIDataResource {
 
     private JDBCatalogue catalogue = null;
@@ -36,11 +38,11 @@ public class DRIDataResource {
         this.request = request;
     }
 
-    
     /**
-     * Sets supervised flag for a resource. 
-     * @param uid the resource's id 
-     * @param flag the flag 
+     * Sets supervised flag for a resource.
+     *
+     * @param uid the resource's id
+     * @param flag the flag
      */
     @Path("{uid}/supervised/{flag}/")
     @PUT
@@ -59,20 +61,21 @@ public class DRIDataResource {
                 catalogue.setLogicalDataSupervised(uid, flag, cn);
                 cn.commit();
             } catch (SQLException ex) {
-                log.log(Level.SEVERE, null, ex);
+                Logger.getLogger(DRIDataResource.class.getName()).log(Level.SEVERE, null, ex);
                 cn.rollback();
                 throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
             }
         } catch (SQLException ex) {
-            log.log(Level.SEVERE, null, ex);
+            Logger.getLogger(DRIDataResource.class.getName()).log(Level.SEVERE, null, ex);
             throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
 
     /**
-     * Gets supervised flag for a resource. 
-     * @param uid the resource's id 
-     * @return the supervised flag for a resource. 
+     * Gets supervised flag for a resource.
+     *
+     * @param uid the resource's id
+     * @return the supervised flag for a resource.
      */
     @Path("{uid}/supervised/")
     @GET
@@ -90,15 +93,17 @@ public class DRIDataResource {
             }
             return new JAXBElement<Boolean>(new QName("supervised"), Boolean.class, res.getSupervised());
         } catch (SQLException ex) {
-            log.log(Level.SEVERE, null, ex);
+            Logger.getLogger(DRIDataResource.class.getName()).log(Level.SEVERE, null, ex);
             throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
 
     /**
      * Sets checksum property for an item
-     * @param uid the resource's id  
-     * @param checksum the checksum. This value is not check if it's correct by lobcder 
+     *
+     * @param uid the resource's id
+     * @param checksum the checksum. This value is not check if it's correct by
+     * lobcder
      */
     @Path("{uid}/checksum/{checksum}/")
     @PUT
@@ -117,19 +122,20 @@ public class DRIDataResource {
                 catalogue.setFileChecksum(uid, checksum, cn);
                 cn.commit();
             } catch (SQLException ex) {
-                log.log(Level.SEVERE, null, ex);
+                Logger.getLogger(DRIDataResource.class.getName()).log(Level.SEVERE, null, ex);
                 cn.rollback();
                 throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
             }
         } catch (SQLException ex) {
-            log.log(Level.SEVERE, null, ex);
+            Logger.getLogger(DRIDataResource.class.getName()).log(Level.SEVERE, null, ex);
             throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
 
     /**
-     * Gets checksum property for an item. 
-     * @param uid the resource's id  
+     * Gets checksum property for an item.
+     *
+     * @param uid the resource's id
      * @return the checksum. This value is not check if it's correct by lobcder
      */
     @Path("{uid}/checksum/")
@@ -148,15 +154,15 @@ public class DRIDataResource {
             }
             return new JAXBElement<String>(new QName("checksum"), String.class, res.getChecksum());
         } catch (SQLException ex) {
-            log.log(Level.SEVERE, null, ex);
+            Logger.getLogger(DRIDataResource.class.getName()).log(Level.SEVERE, null, ex);
             throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
 
-    
     /**
      * Sets lastvalidationdate property for a resource
-     * @param uid the resource's id  
+     *
+     * @param uid the resource's id
      * @param lastValidationDate the date last validated
      */
     @Path("{uid}/lastValidationDate/{lastValidationDate}/")
@@ -176,19 +182,20 @@ public class DRIDataResource {
                 catalogue.setLastValidationDate(uid, lastValidationDate, cn);
                 cn.commit();
             } catch (SQLException ex) {
-                log.log(Level.SEVERE, null, ex);
+                Logger.getLogger(DRIDataResource.class.getName()).log(Level.SEVERE, null, ex);
                 cn.rollback();
                 throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
             }
         } catch (SQLException ex) {
-            log.log(Level.SEVERE, null, ex);
+            Logger.getLogger(DRIDataResource.class.getName()).log(Level.SEVERE, null, ex);
             throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
 
     /**
      * Gets lastvalidationdate property for a resource
-     * @param uid the resource's id  
+     *
+     * @param uid the resource's id
      * @return the date last validated
      */
     @Path("{uid}/lastValidationDate/")
@@ -207,15 +214,16 @@ public class DRIDataResource {
             }
             return new JAXBElement<Long>(new QName("lastValidationDate"), Long.class, res.getLastValidationDate());
         } catch (SQLException ex) {
-            log.log(Level.SEVERE, null, ex);
+            Logger.getLogger(DRIDataResource.class.getName()).log(Level.SEVERE, null, ex);
             throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
 
     /**
-     * Gets lastvalidationdate property for a resource in text format 
-     * @param uid  the resource's id  
-     * @return the date last validated in text format 
+     * Gets lastvalidationdate property for a resource in text format
+     *
+     * @param uid the resource's id
+     * @return the date last validated in text format
      */
     @Path("{uid}/lastValidationDate/")
     @GET
@@ -233,7 +241,7 @@ public class DRIDataResource {
             }
             return new Date(res.getLastValidationDate() * 1000).toString();
         } catch (SQLException ex) {
-            log.log(Level.SEVERE, null, ex);
+            Logger.getLogger(DRIDataResource.class.getName()).log(Level.SEVERE, null, ex);
             throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
         }
     }

@@ -5,14 +5,11 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.logging.Level;
-import lombok.extern.java.Log;
 
 /**
  * User: dvasunin Date: 04.02.2015 Time: 18:24 To change this template use File
  * | Settings | File Templates.
  */
-@Log
 public class FullRedundancyReplicationPolicy implements ReplicationPolicy {
 
     private ArrayList<Long> queryResult = new ArrayList<>();

@@ -14,7 +14,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 import javax.xml.bind.JAXBElement;
-import lombok.extern.java.Log;
+
 import nl.uva.cs.lobcder.auth.MyPrincipal;
 import nl.uva.cs.lobcder.optimization.SDNControllerClient;
 import nl.uva.cs.lobcder.util.CatalogueHelper;
@@ -26,7 +26,7 @@ import org.jgrapht.graph.DefaultWeightedEdge;
  *
  * @author S. Koulouzis
  */
-@Log
+
 @Path("sdn/")
 public class SDNService extends CatalogueHelper {
 

@@ -2,11 +2,6 @@ package nl.uva.cs.lobcder.catalogue;
 
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
-import lombok.Data;
-import lombok.Delegate;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.util.PropertiesHelper;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -43,7 +38,6 @@ import java.util.logging.Logger;
  * User: dvasunin Date: 13.02.2015 Time: 14:24 To change this template use File
  * | Settings | File Templates.
  */
-@Log
 public class WP4Sweep implements Runnable {
 
     private final DataSource datasource;
@@ -61,7 +55,6 @@ public class WP4Sweep implements Runnable {
         File, Folder
     }
 
-    @Data
     @XmlAccessorType(XmlAccessType.FIELD)
     static class FileWP4 {
 
@@ -80,6 +73,216 @@ public class WP4Sweep implements Runnable {
         private Integer views;
         private FileType fileType;
         private String subjectID;
+
+        /**
+         * @return the author
+         */
+        public String getAuthor() {
+            return author;
+        }
+
+        /**
+         * @param author the author to set
+         */
+        public void setAuthor(String author) {
+            this.author = author;
+        }
+
+        /**
+         * @return the globalID
+         */
+        public String getGlobalID() {
+            return globalID;
+        }
+
+        /**
+         * @param globalID the globalID to set
+         */
+        public void setGlobalID(String globalID) {
+            this.globalID = globalID;
+        }
+
+        /**
+         * @return the category
+         */
+        public String getCategory() {
+            return category;
+        }
+
+        /**
+         * @param category the category to set
+         */
+        public void setCategory(String category) {
+            this.category = category;
+        }
+
+        /**
+         * @return the description
+         */
+        public String getDescription() {
+            return description;
+        }
+
+        /**
+         * @param description the description to set
+         */
+        public void setDescription(String description) {
+            this.description = description;
+        }
+
+        /**
+         * @return the linkedTo
+         */
+        public String getLinkedTo() {
+            return linkedTo;
+        }
+
+        /**
+         * @param linkedTo the linkedTo to set
+         */
+        public void setLinkedTo(String linkedTo) {
+            this.linkedTo = linkedTo;
+        }
+
+        /**
+         * @return the localID
+         */
+        public Long getLocalID() {
+            return localID;
+        }
+
+        /**
+         * @param localID the localID to set
+         */
+        public void setLocalID(Long localID) {
+            this.localID = localID;
+        }
+
+        /**
+         * @return the name
+         */
+        public String getName() {
+            return name;
+        }
+
+        /**
+         * @param name the name to set
+         */
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        /**
+         * @return the rating
+         */
+        public Long getRating() {
+            return rating;
+        }
+
+        /**
+         * @param rating the rating to set
+         */
+        public void setRating(Long rating) {
+            this.rating = rating;
+        }
+
+        /**
+         * @return the relatedResources
+         */
+        public String getRelatedResources() {
+            return relatedResources;
+        }
+
+        /**
+         * @param relatedResources the relatedResources to set
+         */
+        public void setRelatedResources(String relatedResources) {
+            this.relatedResources = relatedResources;
+        }
+
+        /**
+         * @return the semanticAnnotations
+         */
+        public String getSemanticAnnotations() {
+            return semanticAnnotations;
+        }
+
+        /**
+         * @param semanticAnnotations the semanticAnnotations to set
+         */
+        public void setSemanticAnnotations(String semanticAnnotations) {
+            this.semanticAnnotations = semanticAnnotations;
+        }
+
+        /**
+         * @return the status
+         */
+        public String getStatus() {
+            return status;
+        }
+
+        /**
+         * @param status the status to set
+         */
+        public void setStatus(String status) {
+            this.status = status;
+        }
+
+        /**
+         * @return the type
+         */
+        public String getType() {
+            return type;
+        }
+
+        /**
+         * @param type the type to set
+         */
+        public void setType(String type) {
+            this.type = type;
+        }
+
+        /**
+         * @return the views
+         */
+        public Integer getViews() {
+            return views;
+        }
+
+        /**
+         * @param views the views to set
+         */
+        public void setViews(Integer views) {
+            this.views = views;
+        }
+
+        /**
+         * @return the fileType
+         */
+        public FileType getFileType() {
+            return fileType;
+        }
+
+        /**
+         * @param fileType the fileType to set
+         */
+        public void setFileType(FileType fileType) {
+            this.fileType = fileType;
+        }
+
+        /**
+         * @return the subjectID
+         */
+        public String getSubjectID() {
+            return subjectID;
+        }
+
+        /**
+         * @param subjectID the subjectID to set
+         */
+        public void setSubjectID(String subjectID) {
+            this.subjectID = subjectID;
+        }
     }
 
     @XmlRootElement(name = "resource_metadata")
@@ -87,8 +290,21 @@ public class WP4Sweep implements Runnable {
     static class ResourceMetadata {
 
         @XmlElement(name = "file")
-        @Delegate
         private FileWP4 file = new FileWP4();
+
+        /**
+         * @return the file
+         */
+        public FileWP4 getFile() {
+            return file;
+        }
+
+        /**
+         * @param file the file to set
+         */
+        public void setFile(FileWP4 file) {
+            this.file = file;
+        }
     }
 
     @XmlRootElement(name = "resource_metadata_list")
@@ -96,9 +312,21 @@ public class WP4Sweep implements Runnable {
     static class ResourceMetadataList {
 
         @XmlElement(name = "resource_metadata")
-        @Getter
-        @Setter
         private Collection<ResourceMetadata> resourceMetadataList;
+
+        /**
+         * @return the resourceMetadataList
+         */
+        public Collection<ResourceMetadata> getResourceMetadataList() {
+            return resourceMetadataList;
+        }
+
+        /**
+         * @param resourceMetadataList the resourceMetadataList to set
+         */
+        public void setResourceMetadataList(Collection<ResourceMetadata> resourceMetadataList) {
+            this.resourceMetadataList = resourceMetadataList;
+        }
     }
 
     private static String getGlobalIdForDelete(Collection<String> globalIdCollection) {
@@ -165,7 +393,7 @@ public class WP4Sweep implements Runnable {
             if (response.getClientResponseStatus() != ClientResponse.Status.OK) {
                 throw new HTTPException(response.getStatus());
             }
-            log.log(Level.FINE, "Send metadata to uri: {0}", new Object[]{uri});
+            Logger.getLogger(WP4Sweep.class.getName()).log(Level.FINE, "Send metadata to uri: {0}", new Object[]{uri});
             return response.getEntity(ResourceMetadataList.class);
         }
 
@@ -195,7 +423,7 @@ public class WP4Sweep implements Runnable {
 //                log.log(Level.SEVERE, sb.toString());
                 throw new HTTPException(response.getStatus());
             }
-            log.log(Level.FINE, "Send metadata to uri: {0}", new Object[]{uri});
+            Logger.getLogger(WP4Sweep.class.getName()).log(Level.FINE, "Send metadata to uri: {0}", new Object[]{uri});
             return response.getEntity(ResourceMetadataList.class);
         }
 
@@ -250,7 +478,6 @@ public class WP4Sweep implements Runnable {
              connection.setRequestProperty("Content-Type", "application/xml");
              connection.setDoOutput(true);
              */
-
             if (globalIdCollection == null || globalIdCollection.isEmpty()) {
                 return null;
             }
@@ -262,7 +489,6 @@ public class WP4Sweep implements Runnable {
 
             HttpResponse response = httpClient.execute(request);
 
-
 // Send request
             /*
              OutputStreamWriter wr = new OutputStreamWriter(
@@ -271,11 +497,10 @@ public class WP4Sweep implements Runnable {
              wr.flush();
              */
 // Get Response
-
             if (response.getStatusLine().getStatusCode() != 200) {
                 throw new HTTPException(response.getStatusLine().getStatusCode());
             }
-            log.log(Level.FINE, "Send metadata to uri: {0}", new Object[]{uri});
+            Logger.getLogger(WP4Sweep.class.getName()).log(Level.FINE, "Send metadata to uri: {0}", new Object[]{uri});
             HttpEntity entity = response.getEntity();
             if (entity != null) {
                 BufferedReader rd = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
@@ -298,12 +523,13 @@ public class WP4Sweep implements Runnable {
             ResultSet rs = s1.executeQuery("SELECT uid, ownerId, datatype, ldName, id, views "
                     + "FROM ldata_table "
                     + "JOIN wp4_table ON uid=local_id "
-                    + "WHERE need_create=TRUE LIMIT "+limit);
+                    + "WHERE need_create=TRUE LIMIT " + limit);
             int size = rs.getFetchSize();
             resourceMetadataList = new ArrayList<>(size);
             resourceMetadataMap = new HashMap<>(size);
             while (rs.next()) {
-                ResourceMetadata rm = new ResourceMetadata();
+                ResourceMetadata md = new ResourceMetadata();
+                FileWP4 rm = md.getFile();
                 Long localId = rs.getLong(1);
                 rm.setLocalID(localId);
                 rm.setAuthor(rs.getString(2));
@@ -321,7 +547,7 @@ public class WP4Sweep implements Runnable {
                 rm.setType("File");
 
                 resourceMetadataMap.put(localId, rs.getLong(5));
-                resourceMetadataList.add(rm);
+                resourceMetadataList.add(md);
             }
         }
         try (PreparedStatement s2 = connection.prepareStatement("UPDATE wp4_table SET need_create=FALSE, global_id=? WHERE id=?")) {
@@ -329,7 +555,8 @@ public class WP4Sweep implements Runnable {
             param.setResourceMetadataList(resourceMetadataList);
             ResourceMetadataList rml = wp4Connector.create(param);
             if (rml != null && rml.getResourceMetadataList() != null) {
-                for (ResourceMetadata rm : rml.getResourceMetadataList()) {
+                for (ResourceMetadata md : rml.getResourceMetadataList()) {
+                    FileWP4 rm = md.getFile();
                     s2.setString(1, rm.getGlobalID());
                     s2.setLong(2, resourceMetadataMap.get(rm.getLocalID()));
                     s2.addBatch();
@@ -346,12 +573,13 @@ public class WP4Sweep implements Runnable {
         Map<Long, Long> resourceMetadataMap;
         try (Statement s1 = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY)) {
             ResultSet rs = s1.executeQuery("SELECT ownerId, ldName, global_id, views, local_id, id FROM ldata_table "
-                    + "JOIN wp4_table ON uid=local_id WHERE need_update=TRUE AND global_id IS NOT NULL LIMIT "+limit);
+                    + "JOIN wp4_table ON uid=local_id WHERE need_update=TRUE AND global_id IS NOT NULL LIMIT " + limit);
             int size = rs.getFetchSize();
             resourceMetadataList = new ArrayList<>(size);
             resourceMetadataMap = new HashMap<>(size);
             while (rs.next()) {
-                ResourceMetadata rm = new ResourceMetadata();
+                ResourceMetadata md = new ResourceMetadata();
+                FileWP4 rm = md.getFile();
                 rm.setAuthor(rs.getString(1));
                 rm.setName(rs.getString(2));
                 rm.setGlobalID(rs.getString(3));
@@ -364,7 +592,7 @@ public class WP4Sweep implements Runnable {
                 rm.setSubjectID("");
                 rm.setType("File");
                 resourceMetadataMap.put(localId, rs.getLong(6));
-                resourceMetadataList.add(rm);
+                resourceMetadataList.add(md);
             }
         }
         try (PreparedStatement s2 = connection.prepareStatement("UPDATE wp4_table SET need_update=FALSE WHERE id=?")) {
@@ -372,7 +600,8 @@ public class WP4Sweep implements Runnable {
             param.setResourceMetadataList(resourceMetadataList);
             ResourceMetadataList rml = wp4Connector.update(param);
             if (rml != null && rml.getResourceMetadataList() != null) {
-                for (ResourceMetadata rm : rml.getResourceMetadataList()) {
+                for (ResourceMetadata md : rml.getResourceMetadataList()) {
+                    FileWP4 rm = md.getFile();
                     s2.setLong(1, resourceMetadataMap.get(rm.getLocalID()));
                     s2.addBatch();
                 }
@@ -386,7 +615,7 @@ public class WP4Sweep implements Runnable {
         Map<String, Long> deleteMetadataMap = new HashMap<>();
         Set<Long> deleteMetadataSet = new HashSet<>();
         try (Statement s1 = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY)) {
-            ResultSet rs = s1.executeQuery("SELECT global_id, id FROM wp4_table WHERE local_id IS NULL LIMIT  "+limit);
+            ResultSet rs = s1.executeQuery("SELECT global_id, id FROM wp4_table WHERE local_id IS NULL LIMIT  " + limit);
             while (rs.next()) {
                 String globalId = rs.getString(1);
                 if (globalId == null) {
@@ -456,10 +685,8 @@ public class WP4Sweep implements Runnable {
         JAXBContext jaxbContext = JAXBContext.newInstance(ResourceMetadataList.class);
         Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
 
-
         //We had written this file in marshalling example
         return (ResourceMetadataList) jaxbUnmarshaller.unmarshal(new File("/tmp/test.xml"));
-
 
     }
 
@@ -468,7 +695,8 @@ public class WP4Sweep implements Runnable {
             WP4Sweep wp4 = new WP4Sweep(null);
 
             Collection<ResourceMetadata> rml = new ArrayList<>();
-            ResourceMetadata rm = new ResourceMetadata();
+            ResourceMetadata md = new ResourceMetadata();
+            FileWP4 rm = md.getFile();
             Long localId = 123L;
             rm.setLocalID(localId);
             rm.setAuthor("dmitry");
@@ -486,10 +714,10 @@ public class WP4Sweep implements Runnable {
             rm.setSubjectID("");
             rm.setType("File");
 
+            rml.add(md);
 
-            rml.add(rm);
-
-            rm = new ResourceMetadata();
+            md = new ResourceMetadata();
+            rm = md.getFile();
             localId = 456L;
             rm.setLocalID(localId);
             rm.setAuthor("Spiros");
@@ -507,8 +735,7 @@ public class WP4Sweep implements Runnable {
             rm.setSubjectID("");
             rm.setType("File");
 
-
-            rml.add(rm);
+            rml.add(md);
 
             ResourceMetadataList param = new ResourceMetadataList();
             param.setResourceMetadataList(rml);
@@ -521,7 +748,8 @@ public class WP4Sweep implements Runnable {
 
             wp4.serialize(res);
             Collection<String> globalIdCollection = new HashSet<>();
-            for (ResourceMetadata rm1 : res.getResourceMetadataList()) {
+            for (ResourceMetadata md1 : res.getResourceMetadataList()) {
+                FileWP4 rm1 = md1.getFile();
                 globalIdCollection.add(rm1.getGlobalID());
                 System.out.println(rm1.getGlobalID());
 
@@ -544,12 +772,7 @@ public class WP4Sweep implements Runnable {
             wp4.serialize(res);
             res = wp4Connector.update(res);
 
-
             wp4.serialize(wp4Connector.delete(globalIdCollection));
-
-
-
-
 
         } catch (Exception e) {
             e.printStackTrace();

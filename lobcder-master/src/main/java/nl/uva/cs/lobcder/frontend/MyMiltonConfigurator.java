@@ -1,7 +1,7 @@
 package nl.uva.cs.lobcder.frontend;
 
 import io.milton.servlet.DefaultMiltonConfigurator;
-import lombok.extern.java.Log;
+
 import nl.uva.cs.lobcder.auth.AuthI;
 import nl.uva.cs.lobcder.auth.AuthLobcderComponents;
 import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
@@ -16,9 +16,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import nl.uva.vlet.vrs.VRS;
 
-@Log
 public class MyMiltonConfigurator extends DefaultMiltonConfigurator {
 
     private JDBCatalogue catalogue;
@@ -63,7 +61,6 @@ public class MyMiltonConfigurator extends DefaultMiltonConfigurator {
                 workerAuth = new AuthLobcderComponents();
             }
 
-
             webDataResourceFactory = (WebDataResourceFactory) builder.getMainResourceFactory();
             webDataResourceFactory.setCatalogue(catalogue);
             List<AuthI> authList = SingletonesHelper.getInstance().getAuth();
@@ -76,10 +73,9 @@ public class MyMiltonConfigurator extends DefaultMiltonConfigurator {
 //            webDataResourceFactory.setAuth2(localDbAuth);
 //            webDataResourceFactory.setAuth3(workerAuth);
 
-
 //            loadOptimizers(envContext);
         } catch (Exception e) {
-            MyMiltonConfigurator.log.log(Level.SEVERE, null, e);
+            Logger.getLogger(MyMiltonConfigurator.class.getName()).log(Level.SEVERE, null, e);
         }
     }
 

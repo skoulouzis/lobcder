@@ -4,37 +4,18 @@
  */
 package nl.uva.cs.lobcder.rest;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URISyntaxException;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.List;
-import java.util.logging.Level;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.GET;
 import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
-import lombok.extern.java.Log;
-import nl.uva.cs.lobcder.auth.MyPrincipal;
-import nl.uva.cs.lobcder.rest.wrappers.UsersWrapper;
-import nl.uva.cs.lobcder.rest.wrappers.UsersWrapperList;
 import nl.uva.cs.lobcder.util.CatalogueHelper;
-import nl.uva.vlet.exception.VlException;
 
 /**
  *
  * @author S. Koulouzis
  */
-@Log
+
 @Path("users/")
 public class UsersService extends CatalogueHelper {
 

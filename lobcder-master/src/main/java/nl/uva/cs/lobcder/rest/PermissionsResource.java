@@ -4,7 +4,6 @@
  */
 package nl.uva.cs.lobcder.rest;
 
-import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.auth.MyPrincipal;
 import nl.uva.cs.lobcder.auth.Permissions;
 import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
@@ -29,12 +28,14 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.Stack;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
- * Sets and gets permissions for a resource 
+ * Sets and gets permissions for a resource
+ *
  * @author dvasunin
  */
-@Log
+
 public class PermissionsResource {
 
     private JDBCatalogue catalogue;
@@ -67,7 +68,7 @@ public class PermissionsResource {
             }
             return p;
         } catch (SQLException ex) {
-            log.log(Level.SEVERE, null, ex);
+            Logger.getLogger(PermissionsResource.class.getName()).log(Level.SEVERE, null, ex);
             throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
@@ -98,21 +99,21 @@ public class PermissionsResource {
                 catalogue.setPermissions(uid, permissions, cn);
                 cn.commit();
             } catch (SQLException ex) {
-                log.log(Level.SEVERE, null, ex);
+                Logger.getLogger(PermissionsResource.class.getName()).log(Level.SEVERE, null, ex);
                 cn.rollback();
                 throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
             }
         } catch (SQLException ex) {
-            log.log(Level.SEVERE, null, ex);
+            Logger.getLogger(PermissionsResource.class.getName()).log(Level.SEVERE, null, ex);
             throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
 
-
     @XmlRootElement
     @XmlAccessorType(XmlAccessType.FIELD)
     public static class UIDS {
-        @XmlElement(name="guid")
+
+        @XmlElement(name = "guid")
         private Set<String> uids = new HashSet<>();
     }
 
@@ -131,31 +132,31 @@ public class PermissionsResource {
                 ArrayList<Long> elements = new ArrayList<>();
                 ArrayList<Long> changeOwner = new ArrayList<>();
                 Permissions p = catalogue.getPermissions(ld.getUid(), ld.getOwner(), connection);
-                if(ld.isFolder() && principal.canRead(p)) {
+                if (ld.isFolder() && principal.canRead(p)) {
                     folders.add(ld.getUid());
                 }
-                if(principal.canWrite(p)){
+                if (principal.canWrite(p)) {
                     elements.add(ld.getUid());
-                    if(permissions.getOwner() != null && !ld.getOwner().equals(permissions.getOwner())){
+                    if (permissions.getOwner() != null && !ld.getOwner().equals(permissions.getOwner())) {
                         changeOwner.add(ld.getUid());
                     }
                 }
-                try(PreparedStatement ps = connection.prepareStatement("SELECT uid, ownerId, datatype FROM ldata_table WHERE parentRef = ?")){
-                    while(!folders.isEmpty()){
+                try (PreparedStatement ps = connection.prepareStatement("SELECT uid, ownerId, datatype FROM ldata_table WHERE parentRef = ?")) {
+                    while (!folders.isEmpty()) {
                         Long curUid = folders.pop();
                         ps.setLong(1, curUid);
-                        try(ResultSet resultSet = ps.executeQuery()){
-                            while(resultSet.next()) {
+                        try (ResultSet resultSet = ps.executeQuery()) {
+                            while (resultSet.next()) {
                                 Long entry_uid = resultSet.getLong(1);
                                 String entry_owner = resultSet.getString(2);
                                 String entry_datatype = resultSet.getString(3);
                                 Permissions entry_p = catalogue.getPermissions(entry_uid, entry_owner, connection);
-                                if(entry_datatype.equals(Constants.LOGICAL_FOLDER) && principal.canRead(entry_p)){
+                                if (entry_datatype.equals(Constants.LOGICAL_FOLDER) && principal.canRead(entry_p)) {
                                     folders.push(entry_uid);
                                 }
-                                if(principal.canWrite(entry_p)){
+                                if (principal.canWrite(entry_p)) {
                                     elements.add(entry_uid);
-                                    if(permissions.getOwner() != null && !entry_owner.equals(permissions.getOwner())) {
+                                    if (permissions.getOwner() != null && !entry_owner.equals(permissions.getOwner())) {
                                         changeOwner.add(entry_uid);
                                     }
                                 }
@@ -164,7 +165,7 @@ public class PermissionsResource {
                     }
                 }
 
-                try(PreparedStatement ps = connection.prepareStatement("SELECT permType, roleName, ldUidRef, id  FROM permission_table WHERE permission_table.ldUidRef = ?",
+                try (PreparedStatement ps = connection.prepareStatement("SELECT permType, roleName, ldUidRef, id  FROM permission_table WHERE permission_table.ldUidRef = ?",
                         java.sql.ResultSet.TYPE_FORWARD_ONLY,
                         java.sql.ResultSet.CONCUR_UPDATABLE)) {
                     for (Long uid : elements) {
@@ -177,12 +178,12 @@ public class PermissionsResource {
                             String permType = rs.getString(1);
                             String roleName = rs.getString(2);
                             if (permType.equals("read")) {
-                                if(!read.remove(roleName)) {
+                                if (!read.remove(roleName)) {
                                     rs.deleteRow();
                                     updateFlag = true;
                                 }
                             } else if (permType.equals("write")) {
-                                if(!write.remove(roleName)) {
+                                if (!write.remove(roleName)) {
                                     rs.deleteRow();
                                     updateFlag = true;
                                 }
@@ -210,7 +211,7 @@ public class PermissionsResource {
                         }
                     }
                 }
-                if(permissions.getOwner() != null && !permissions.getOwner().isEmpty()) {
+                if (permissions.getOwner() != null && !permissions.getOwner().isEmpty()) {
                     try (PreparedStatement ps = connection.prepareStatement("SELECT ownerId, uid from ldata_table WHERE uid = ?",
                             java.sql.ResultSet.TYPE_FORWARD_ONLY,
                             java.sql.ResultSet.CONCUR_UPDATABLE)) {
@@ -220,7 +221,7 @@ public class PermissionsResource {
                             if (rs.next()) {
                                 rs.updateString(1, permissions.getOwner());
                                 rs.updateRow();
-                                if(!getall) {
+                                if (!getall) {
                                     result.uids.add(catalogue.getGlobalID(uid, connection));
                                 }
                             }
@@ -230,12 +231,12 @@ public class PermissionsResource {
                 connection.commit();
                 return result;
             } catch (SQLException ex) {
-                log.log(Level.SEVERE, null, ex);
+                Logger.getLogger(PermissionsResource.class.getName()).log(Level.SEVERE, null, ex);
                 connection.rollback();
                 throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
             }
         } catch (SQLException ex) {
-            log.log(Level.SEVERE, null, ex);
+            Logger.getLogger(PermissionsResource.class.getName()).log(Level.SEVERE, null, ex);
             throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
@@ -255,31 +256,31 @@ public class PermissionsResource {
                 ArrayList<Long> elements = new ArrayList<>();
                 ArrayList<Long> changeOwner = new ArrayList<>();
                 Permissions p = catalogue.getPermissions(ld.getUid(), ld.getOwner(), connection);
-                if(ld.isFolder() && principal.canRead(p)) {
+                if (ld.isFolder() && principal.canRead(p)) {
                     folders.add(ld.getUid());
                 }
-                if(principal.canWrite(p)){
+                if (principal.canWrite(p)) {
                     elements.add(ld.getUid());
-                    if(permissions.getOwner() != null && !ld.getOwner().equals(permissions.getOwner())){
+                    if (permissions.getOwner() != null && !ld.getOwner().equals(permissions.getOwner())) {
                         changeOwner.add(ld.getUid());
                     }
                 }
-                try(PreparedStatement ps = connection.prepareStatement("SELECT uid, ownerId, datatype FROM ldata_table WHERE parentRef = ?")){
-                    while(!folders.isEmpty()){
+                try (PreparedStatement ps = connection.prepareStatement("SELECT uid, ownerId, datatype FROM ldata_table WHERE parentRef = ?")) {
+                    while (!folders.isEmpty()) {
                         Long curUid = folders.pop();
                         ps.setLong(1, curUid);
-                        try(ResultSet resultSet = ps.executeQuery()){
-                            while(resultSet.next()) {
+                        try (ResultSet resultSet = ps.executeQuery()) {
+                            while (resultSet.next()) {
                                 Long entry_uid = resultSet.getLong(1);
                                 String entry_owner = resultSet.getString(2);
                                 String entry_datatype = resultSet.getString(3);
                                 Permissions entry_p = catalogue.getPermissions(entry_uid, entry_owner, connection);
-                                if(entry_datatype.equals(Constants.LOGICAL_FOLDER) && principal.canRead(entry_p)){
+                                if (entry_datatype.equals(Constants.LOGICAL_FOLDER) && principal.canRead(entry_p)) {
                                     folders.push(entry_uid);
                                 }
-                                if(principal.canWrite(entry_p)){
+                                if (principal.canWrite(entry_p)) {
                                     elements.add(entry_uid);
-                                    if(permissions.getOwner() != null && !entry_owner.equals(permissions.getOwner())) {
+                                    if (permissions.getOwner() != null && !entry_owner.equals(permissions.getOwner())) {
                                         changeOwner.add(entry_uid);
                                     }
                                 }
@@ -287,7 +288,7 @@ public class PermissionsResource {
                         }
                     }
                 }
-                try(PreparedStatement ps = connection.prepareStatement("SELECT permType, roleName, ldUidRef, id  FROM permission_table WHERE permission_table.ldUidRef = ?",
+                try (PreparedStatement ps = connection.prepareStatement("SELECT permType, roleName, ldUidRef, id  FROM permission_table WHERE permission_table.ldUidRef = ?",
                         java.sql.ResultSet.TYPE_FORWARD_ONLY,
                         java.sql.ResultSet.CONCUR_UPDATABLE)) {
                     for (Long uid : elements) {
@@ -326,7 +327,7 @@ public class PermissionsResource {
                         }
                     }
                 }
-                if(permissions.getOwner() != null && !permissions.getOwner().isEmpty()) {
+                if (permissions.getOwner() != null && !permissions.getOwner().isEmpty()) {
                     try (PreparedStatement ps = connection.prepareStatement("SELECT ownerId, uid from ldata_table WHERE uid = ?",
                             java.sql.ResultSet.TYPE_FORWARD_ONLY,
                             java.sql.ResultSet.CONCUR_UPDATABLE)) {
@@ -336,7 +337,7 @@ public class PermissionsResource {
                             if (rs.next()) {
                                 rs.updateString(1, permissions.getOwner());
                                 rs.updateRow();
-                                if(!getall) {
+                                if (!getall) {
                                     result.uids.add(catalogue.getGlobalID(uid, connection));
                                 }
                             }
@@ -346,12 +347,12 @@ public class PermissionsResource {
                 connection.commit();
                 return result;
             } catch (SQLException ex) {
-                log.log(Level.SEVERE, null, ex);
+                Logger.getLogger(PermissionsResource.class.getName()).log(Level.SEVERE, null, ex);
                 connection.rollback();
                 throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
             }
         } catch (SQLException ex) {
-            log.log(Level.SEVERE, null, ex);
+            Logger.getLogger(PermissionsResource.class.getName()).log(Level.SEVERE, null, ex);
             throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
@@ -370,34 +371,34 @@ public class PermissionsResource {
                 Stack<Long> folders = new Stack<>();
                 ArrayList<Long> elements = new ArrayList<>();
                 Permissions p = catalogue.getPermissions(ld.getUid(), ld.getOwner(), connection);
-                if(ld.isFolder() && principal.canRead(p)) {
+                if (ld.isFolder() && principal.canRead(p)) {
                     folders.add(ld.getUid());
                 }
-                if(principal.canWrite(p)){
+                if (principal.canWrite(p)) {
                     elements.add(ld.getUid());
                 }
-                try(PreparedStatement ps = connection.prepareStatement("SELECT uid, ownerId, datatype FROM ldata_table WHERE parentRef = ?")){
-                    while(!folders.isEmpty()){
+                try (PreparedStatement ps = connection.prepareStatement("SELECT uid, ownerId, datatype FROM ldata_table WHERE parentRef = ?")) {
+                    while (!folders.isEmpty()) {
                         Long curUid = folders.pop();
                         ps.setLong(1, curUid);
-                        try(ResultSet resultSet = ps.executeQuery()){
-                            while(resultSet.next()) {
+                        try (ResultSet resultSet = ps.executeQuery()) {
+                            while (resultSet.next()) {
                                 Long entry_uid = resultSet.getLong(1);
                                 String entry_owner = resultSet.getString(2);
                                 String entry_datatype = resultSet.getString(3);
                                 Permissions entry_p = catalogue.getPermissions(entry_uid, entry_owner, connection);
-                                if(entry_datatype.equals(Constants.LOGICAL_FOLDER) && principal.canRead(entry_p)){
+                                if (entry_datatype.equals(Constants.LOGICAL_FOLDER) && principal.canRead(entry_p)) {
                                     folders.push(entry_uid);
                                 }
-                                if(principal.canWrite(entry_p)){
+                                if (principal.canWrite(entry_p)) {
                                     elements.add(entry_uid);
                                 }
                             }
                         }
                     }
                 }
-                try(PreparedStatement ps = connection.prepareStatement("DELETE FROM permission_table WHERE permType = ? AND ldUidRef = ? AND roleName=?")) {
-                    for(Long uid : elements) {
+                try (PreparedStatement ps = connection.prepareStatement("DELETE FROM permission_table WHERE permType = ? AND ldUidRef = ? AND roleName=?")) {
+                    for (Long uid : elements) {
                         for (String cr : permissions.getRead()) {
                             ps.setString(1, "read");
                             ps.setLong(2, uid);
@@ -410,8 +411,8 @@ public class PermissionsResource {
                             ps.setString(3, cw);
                             ps.addBatch();
                         }
-                        for(int i : ps.executeBatch()) {
-                            if(getall || (i > 0)) {
+                        for (int i : ps.executeBatch()) {
+                            if (getall || (i > 0)) {
                                 String myuid = catalogue.getGlobalID(uid, connection);
                                 if (myuid != null) {
                                     result.uids.add(myuid);
@@ -424,12 +425,12 @@ public class PermissionsResource {
                 connection.commit();
                 return result;
             } catch (SQLException ex) {
-                log.log(Level.SEVERE, null, ex);
+                Logger.getLogger(PermissionsResource.class.getName()).log(Level.SEVERE, null, ex);
                 connection.rollback();
                 throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
             }
         } catch (SQLException ex) {
-            log.log(Level.SEVERE, null, ex);
+            Logger.getLogger(PermissionsResource.class.getName()).log(Level.SEVERE, null, ex);
             throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
         }
     }

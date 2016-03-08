@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.annotation.Nonnull;
 import javax.naming.NamingException;
 import javax.servlet.http.HttpServletRequest;
@@ -30,8 +31,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
-import javax.xml.bind.JAXBElement;
-import lombok.extern.java.Log;
+
 import nl.uva.cs.lobcder.auth.MyPrincipal;
 import nl.uva.cs.lobcder.resources.LogicalData;
 import nl.uva.cs.lobcder.resources.PDRI;
@@ -49,7 +49,7 @@ import nl.uva.vlet.exception.VlException;
  *
  * @author S. Koulouzis
  */
-@Log
+
 @Path("storage_sites/")
 public class StorageSitesService extends CatalogueHelper {
 
@@ -93,7 +93,7 @@ public class StorageSitesService extends CatalogueHelper {
                 sswl.setSites(res);
                 return sswl;
             } catch (SQLException ex) {
-                log.log(Level.SEVERE, null, ex);
+                Logger.getLogger(StorageSitesService.class.getName()).log(Level.SEVERE, null, ex);
                 throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
             }
         }
@@ -176,7 +176,7 @@ public class StorageSitesService extends CatalogueHelper {
                 sw.setQuotaSize(s.getQuotaSize());
                 sw.setResourceURI(s.getResourceURI());
                 sw.setStorageSiteId(s.getStorageSiteId());
-                sw.setCache(false);
+                sw.setIsCache(false);
                 sw.setCurrentSize(s.getCurrentSize());
                 sitesWarpper.add(sw);
             }
@@ -193,7 +193,7 @@ public class StorageSitesService extends CatalogueHelper {
                 sw.setQuotaSize(s.getQuotaSize());
                 sw.setResourceURI(s.getResourceURI());
                 sw.setStorageSiteId(s.getStorageSiteId());
-                sw.setCache(true);
+                sw.setIsCache(true);
                 sw.setCurrentSize(s.getCurrentSize());
                 sitesWarpper.add(sw);
             }

@@ -18,8 +18,6 @@ import io.milton.principal.DavPrincipals;
 import io.milton.principal.Principal;
 import io.milton.property.PropertySource;
 import io.milton.resource.*;
-import lombok.Getter;
-import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.auth.AuthI;
 import nl.uva.cs.lobcder.auth.MyPrincipal;
 import nl.uva.cs.lobcder.auth.Permissions;
@@ -39,7 +37,6 @@ import java.util.*;
 import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import lombok.SneakyThrows;
 import nl.uva.cs.lobcder.replication.policy.ReplicationPolicy;
 import nl.uva.cs.lobcder.util.PropertiesHelper;
 import org.apache.commons.codec.binary.Base64;
@@ -50,15 +47,11 @@ import org.apache.commons.lang3.tuple.Pair;
 /**
  * @author S. Koulouzis
  */
-@Log
 public class WebDataResource implements PropFindableResource, Resource,
         AccessControlledResource, MultiNamespaceCustomPropertyResource, LockableResource {
 
-    @Getter
     private final LogicalData logicalData;
-    @Getter
     private final JDBCatalogue catalogue;
-    @Getter
     private final Path path;
     protected final List<AuthI> authList;
 //    protected final AuthI auth2;
@@ -100,7 +93,7 @@ public class WebDataResource implements PropFindableResource, Resource,
 
     @Override
     public String getName() {
-        return logicalData.getName();
+        return getLogicalData().getName();
     }
 
     @Override
@@ -123,13 +116,14 @@ public class WebDataResource implements PropFindableResource, Resource,
 //        }
         if (principal != null) {
             principalHolder.set(principal);
-//            WebDataResource.log.log(Level.FINE, "getUserId: {0}", principal.getUserId());
-//            WebDataResource.log.log(Level.FINE, "getRolesStr: {0}", principal.getRolesStr());
+//            Logger.getLogger(WebDataResource.class.getName()).log(Level.FINE, "getUserId: {0}", principal.getUserId());
+//            Logger.getLogger(WebDataResource.class.getName()).log(Level.FINE, "getRolesStr: {0}", principal.getRolesStr());
             String msg = "From: " + fromAddress + " user: " + principal.getUserId() + " password: XXXX";
-            WebDataResource.log.log(Level.INFO, msg);
+            Logger.getLogger(WebDataResource.class.getName()).log(Level.INFO, msg);
+
         }
         try {
-            catalogue.updateAccessTime(getLogicalData().getUid());
+            getCatalogue().updateAccessTime(getLogicalData().getUid());
         } catch (SQLException ex) {
             Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -153,7 +147,7 @@ public class WebDataResource implements PropFindableResource, Resource,
             }
             fromAddress = request.getFromAddress();
             String msg = "From: " + fromAddress + " User: " + getPrincipal().getUserId() + " Method: " + method;
-            WebDataResource.log.log(Level.INFO, msg);
+            Logger.getLogger(WebDataResource.class.getName()).log(Level.INFO, msg);
             LogicalData parentLD;
             Permissions p;
             switch (method) {
@@ -176,7 +170,7 @@ public class WebDataResource implements PropFindableResource, Resource,
                 case UNLOCK:
                     return getPrincipal().canWrite(getPermissions());
                 case DELETE:
-                    parentLD = getCatalogue().getLogicalDataByUid(logicalData.getParentRef());
+                    parentLD = getCatalogue().getLogicalDataByUid(getLogicalData().getParentRef());
                     p = getCatalogue().getPermissions(parentLD.getUid(), parentLD.getOwner());
                     return getPrincipal().canWrite(p);
                 case GET:
@@ -197,7 +191,7 @@ public class WebDataResource implements PropFindableResource, Resource,
                     return true;
             }
         } catch (Throwable th) {
-            WebDataResource.log.log(Level.SEVERE, "Exception in authorize for a resource " + getPath(), th);
+            Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, "Exception in authorize for a resource " + getPath(), th);
             return false;
         }
 //        return false;
@@ -224,7 +218,7 @@ public class WebDataResource implements PropFindableResource, Resource,
     @Override
     public String getPrincipalURL() {
         String principalURL = getUserlUrlPrefix() + getPrincipal().getUserId();
-        WebDataResource.log.log(Level.FINE, "getPrincipalURL for {0}: {1}", new Object[]{getPath(), principalURL});
+        Logger.getLogger(WebDataResource.class.getName()).log(Level.FINE, "getPrincipalURL for {0}: {1}", new Object[]{getPath(), principalURL});
         return principalURL;
     }
 
@@ -242,7 +236,7 @@ public class WebDataResource implements PropFindableResource, Resource,
         try {
             p = getPermissions();
         } catch (SQLException e) {
-            WebDataResource.log.log(Level.SEVERE, "Could not get Permissions for resource " + getPath(), e);
+            Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, "Could not get Permissions for resource " + getPath(), e);
             return perm;
         }
         Set<String> readRoles = p.getRead();
@@ -270,7 +264,7 @@ public class WebDataResource implements PropFindableResource, Resource,
 
     @Override
     public Map<Principal, List<Priviledge>> getAccessControlList() {
-        WebDataResource.log.log(Level.FINE, "getAccessControlList for {0}", getPath());
+        Logger.getLogger(WebDataResource.class.getName()).log(Level.FINE, "getAccessControlList for {0}", getPath());
         Permissions resourcePermission;
         HashMap<Principal, List<Priviledge>> acl = new HashMap<>();
         try {
@@ -333,19 +327,19 @@ public class WebDataResource implements PropFindableResource, Resource,
                 acl.put(p, perm);
             }
         } catch (SQLException e) {
-            WebDataResource.log.log(Level.SEVERE, "Cannot read permissions for resource " + getPath(), e);
+            Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, "Cannot read permissions for resource " + getPath(), e);
         }
         return acl;
     }
 
     @Override
     public void setAccessControlList(Map<Principal, List<Priviledge>> map) {
-        WebDataResource.log.log(Level.FINE, "PLACEHOLDER setAccessControlList() for {0}", getPath());
+        Logger.getLogger(WebDataResource.class.getName()).log(Level.FINE, "PLACEHOLDER setAccessControlList() for {0}", getPath());
 
         for (Map.Entry<Principal, List<Priviledge>> me : map.entrySet()) {
             Principal principal = me.getKey();
             for (Priviledge priviledge : me.getValue()) {
-                WebDataResource.log.log(Level.FINE, "Set priveledges {0} for {1}", new Object[]{priviledge, principal});
+                Logger.getLogger(WebDataResource.class.getName()).log(Level.FINE, "Set priveledges {0} for {1}", new Object[]{priviledge, principal});
                 //String id = principal.getIdenitifer().getValue();
                 //id = id.substring(id.lastIndexOf("/") + 1);
             }
@@ -421,14 +415,14 @@ public class WebDataResource implements PropFindableResource, Resource,
             }
             return PropertySource.PropertyMetaData.UNKNOWN;
         } catch (Throwable th) {
-            WebDataResource.log.log(Level.SEVERE, "Exception in getProperty() for resource " + getPath(), th);
+            Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, "Exception in getProperty() for resource " + getPath(), th);
             return PropertySource.PropertyMetaData.UNKNOWN;
         }
     }
 
     @Override
     public void setProperty(QName qname, Object o) throws PropertySource.PropertySetException, NotAuthorizedException {
-        WebDataResource.log.log(Level.FINE, "setProperty for resource {0} : {1} = {2}", new Object[]{getPath(), qname, o});
+        Logger.getLogger(WebDataResource.class.getName()).log(Level.FINE, "setProperty for resource {0} : {1} = {2}", new Object[]{getPath(), qname, o});
         try (Connection connection = getCatalogue().getConnection()) {
             try {
                 if (o != null) {
@@ -436,21 +430,21 @@ public class WebDataResource implements PropFindableResource, Resource,
                     if (qname.equals(Constants.DRI_SUPERVISED_PROP_NAME)) {
                         Boolean v = Boolean.valueOf(value);
                         getLogicalData().setSupervised(v);
-                        catalogue.setLogicalDataSupervised(getLogicalData().getUid(), v, connection);
+                        getCatalogue().setLogicalDataSupervised(getLogicalData().getUid(), v, connection);
                     } else if (qname.equals(Constants.DRI_CHECKSUM_PROP_NAME)) {
                         getLogicalData().setChecksum(value);
-                        catalogue.setFileChecksum(getLogicalData().getUid(), value, connection);
+                        getCatalogue().setFileChecksum(getLogicalData().getUid(), value, connection);
                     } else if (qname.equals(Constants.DRI_LAST_VALIDATION_DATE_PROP_NAME)) {
                         Long v = Long.valueOf(value);
                         getLogicalData().setLastValidationDate(v);
-                        catalogue.setLastValidationDate(getLogicalData().getUid(), v, connection);
+                        getCatalogue().setLastValidationDate(getLogicalData().getUid(), v, connection);
                     } else if (qname.equals(Constants.DRI_STATUS_PROP_NANE)) {
                         getLogicalData().setStatus(value);
-                        catalogue.setDriStatus(getLogicalData().getUid(), value, connection);
+                        getCatalogue().setDriStatus(getLogicalData().getUid(), value, connection);
                     } else if (qname.equals(Constants.DESCRIPTION_PROP_NAME)) {
                         String v = value;
                         getLogicalData().setDescription(v);
-                        catalogue.setDescription(getLogicalData().getUid(), v, connection);
+                        getCatalogue().setDescription(getLogicalData().getUid(), v, connection);
                     } else if (qname.equals(Constants.DATA_LOC_PREF_NAME)) {
                         setDataLocationPref(value, connection);
                     } else if (qname.equals(Constants.ENCRYPT_PROP_NAME)) {
@@ -458,7 +452,7 @@ public class WebDataResource implements PropFindableResource, Resource,
                     } else if (qname.equals(Constants.TTL)) {
                         String v = value;
                         getLogicalData().setTtlSec(Integer.valueOf(v));
-                        catalogue.setTTL(getLogicalData().getUid(), Integer.valueOf(v), connection);
+                        getCatalogue().setTTL(getLogicalData().getUid(), Integer.valueOf(v), connection);
                     }
                     connection.commit();
                 }
@@ -524,12 +518,12 @@ public class WebDataResource implements PropFindableResource, Resource,
                 connection.commit();
                 return LockResult.success(lockToken);
             } catch (Exception ex) {
-                log.log(Level.SEVERE, null, ex);
+                Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
                 connection.rollback();
                 throw new PreConditionFailedException(this);
             }
         } catch (SQLException e) {
-            log.log(Level.SEVERE, null, e);
+            Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, e);
             throw new PreConditionFailedException(this);
         }
 
@@ -541,10 +535,8 @@ public class WebDataResource implements PropFindableResource, Resource,
             try {
                 if (getLogicalData().getLockTokenID() == null) {
                     throw new RuntimeException("not locked");
-                } else {
-                    if (!getLogicalData().getLockTokenID().equals(token)) {
-                        throw new RuntimeException("invalid lock id");
-                    }
+                } else if (!getLogicalData().getLockTokenID().equals(token)) {
+                    throw new RuntimeException("invalid lock id");
                 }
                 getLogicalData().setLockTimeout(System.currentTimeMillis() + Constants.LOCK_TIME);
 
@@ -557,12 +549,12 @@ public class WebDataResource implements PropFindableResource, Resource,
                 connection.commit();
                 return LockResult.success(lockToken);
             } catch (Exception ex) {
-                log.log(Level.SEVERE, null, ex);
+                Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
                 connection.rollback();
                 throw new PreConditionFailedException(this);
             }
         } catch (SQLException e) {
-            log.log(Level.SEVERE, null, e);
+            Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, e);
             throw new PreConditionFailedException(this);
         }
     }
@@ -598,12 +590,12 @@ public class WebDataResource implements PropFindableResource, Resource,
                 getLogicalData().setLockDepth(null);
                 getLogicalData().setLockTimeout(null);
             } catch (Exception ex) {
-                log.log(Level.SEVERE, null, ex);
+                Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
                 connection.rollback();
                 throw new PreConditionFailedException(this);
             }
         } catch (SQLException e) {
-            log.log(Level.SEVERE, null, e);
+            Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, e);
             throw new PreConditionFailedException(this);
         }
     }
@@ -784,7 +776,7 @@ public class WebDataResource implements PropFindableResource, Resource,
 ///                        HashMap<String, Boolean> hostEncryptMap = new HashMap<>();
 //                        String[] parts = v.split("[\\[\\]]");
 //                        for (String p : parts) {
-//                            log.log(Level.FINE, "Parts: {0}", p);
+//                            Logger.getLogger(WebDataResource.class.getName()).log(Level.FINE, "Parts: {0}", p);
 //                            if (!p.isEmpty()) {
 //                                String[] hostEncryptValue = p.split(",");
 //                                if (hostEncryptValue.length == 2) {
@@ -887,7 +879,7 @@ public class WebDataResource implements PropFindableResource, Resource,
 
     private void setDataLocationPref(String value, Connection connection) throws SQLException {
         List<String> list = property2List(value);
-        catalogue.setLocationPreferences(connection, getLogicalData().getUid(), list, getPrincipal().isAdmin());
+        getCatalogue().setLocationPreferences(connection, getLogicalData().getUid(), list, getPrincipal().isAdmin());
         List<String> sites = property2List(getDataLocationPreferencesString());
         getLogicalData().setDataLocationPreferences(sites);
     }
@@ -1021,8 +1013,7 @@ public class WebDataResource implements PropFindableResource, Resource,
         return storageMap;
     }
 
-    @SneakyThrows
-    private ReplicationPolicy getReplicationPolicy() {
+    private ReplicationPolicy getReplicationPolicy() throws ClassNotFoundException, IOException, InstantiationException, IllegalAccessException {
         Class<? extends ReplicationPolicy> replicationPolicyClass = Class.forName(PropertiesHelper.getReplicationPolicy()).asSubclass(ReplicationPolicy.class);
         return replicationPolicyClass.newInstance();
     }
@@ -1054,7 +1045,7 @@ public class WebDataResource implements PropFindableResource, Resource,
         if (userAgent == null || userAgent.length() <= 1) {
             return false;
         }
-//        WebDataFileResource.log.log(Level.FINE, "userAgent: {0}", userAgent);
+//        WebDataFileResource.Logger.getLogger(WebDataResource.class.getName()).log(Level.FINE, "userAgent: {0}", userAgent);
         List<String> nonRedirectableUserAgents = PropertiesHelper.getNonRedirectableUserAgents();
         for (String s : nonRedirectableUserAgents) {
             if (userAgent.contains(s)) {
@@ -1081,5 +1072,26 @@ public class WebDataResource implements PropFindableResource, Resource,
 //            }
 //        }
         return false;
+    }
+
+    /**
+     * @return the logicalData
+     */
+    public LogicalData getLogicalData() {
+        return logicalData;
+    }
+
+    /**
+     * @return the catalogue
+     */
+    public JDBCatalogue getCatalogue() {
+        return catalogue;
+    }
+
+    /**
+     * @return the path
+     */
+    public Path getPath() {
+        return path;
     }
 }

@@ -13,7 +13,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 import javax.xml.bind.JAXBElement;
-import lombok.extern.java.Log;
+
 import nl.uva.cs.lobcder.auth.MyPrincipal;
 import nl.uva.cs.lobcder.rest.wrappers.Stats;
 import nl.uva.cs.lobcder.util.CatalogueHelper;
@@ -23,7 +23,7 @@ import nl.uva.cs.lobcder.util.CatalogueHelper;
  *
  * @author S. Koulouzis
  */
-@Log
+
 @Path("lob_statistics/")
 public class StatsService extends CatalogueHelper {
 

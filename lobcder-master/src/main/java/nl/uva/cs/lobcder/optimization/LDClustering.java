@@ -25,7 +25,6 @@ import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import javax.naming.NamingException;
-import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.predictors.DBMapPredictor;
 import nl.uva.cs.lobcder.resources.LogicalData;
 import nl.uva.cs.lobcder.util.PropertiesHelper;
@@ -43,7 +42,6 @@ import static nl.uva.cs.lobcder.util.PropertiesHelper.PREDICTION_TYPE.state;
  *
  * @author S. Koulouzis
  */
-@Log
 public class LDClustering extends DBMapPredictor implements Runnable {
 
     private FastVector metdataAttributes;
@@ -91,7 +89,6 @@ public class LDClustering extends DBMapPredictor implements Runnable {
         supervisedVector.addElement("false");
         Attribute supervisedAttribute = new Attribute("supervised", supervisedVector, index++);
         Attribute ownerAttribute = new Attribute("owner", (FastVector) null, index++);
-
 
         // Declare the feature vector
         metdataAttributes = new FastVector();
@@ -381,7 +378,7 @@ public class LDClustering extends DBMapPredictor implements Runnable {
             while (rs.next()) {
                 String path = getPathforLogicalData(getLogicalDataByUid(rs.getLong(1), connection), connection);
                 Vertex state = new Vertex(Method.valueOf(rs.getString(2)), path);
-                log.log(Level.INFO, "State: {0}", state.getID());
+                Logger.getLogger(LDClustering.class.getName()).log(Level.INFO, "State: {0}", state.getID());
             }
         }
         return null;
@@ -401,7 +398,7 @@ public class LDClustering extends DBMapPredictor implements Runnable {
             while (rs.next()) {
                 String path = getPathforLogicalData(getLogicalDataByUid(rs.getLong(1), connection), connection);
                 Vertex state = new Vertex(Method.valueOf(rs.getString(2)), path);
-                log.log(Level.INFO, "State: {0}", state.getID());
+                Logger.getLogger(LDClustering.class.getName()).log(Level.INFO, "State: {0}", state.getID());
             }
         }
         return null;
@@ -452,7 +449,7 @@ public class LDClustering extends DBMapPredictor implements Runnable {
                         break;
                 }
                 Vertex state = new Vertex(rquestMethod, path);
-                log.log(Level.INFO, "State: {0}", state.getID());
+                Logger.getLogger(LDClustering.class.getName()).log(Level.INFO, "State: {0}", state.getID());
             }
         }
         return null;

@@ -21,9 +21,6 @@ import javax.annotation.Nonnull;
 import javax.naming.NamingException;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.auth.MyPrincipal;
 import nl.uva.cs.lobcder.auth.Permissions;
 import nl.uva.cs.lobcder.frontend.RequestWapper;
@@ -44,7 +41,6 @@ import nl.uva.vlet.vrl.VRL;
  *
  * @author dvasunin
  */
-@Log
 public class JDBCatalogue extends MyDataSource {
 
     private static boolean usePDRIDescrCache = false;
@@ -138,7 +134,6 @@ public class JDBCatalogue extends MyDataSource {
             }
 
 //            preparedStatement.setString(9, entry.getDataLocationPreference());
-
             preparedStatement.executeUpdate();
             ResultSet rs = preparedStatement.getGeneratedKeys();
             rs.next();
@@ -146,7 +141,6 @@ public class JDBCatalogue extends MyDataSource {
 
 //            String path = getPathforLogicalData(entry, connection);
 //            entry.setDataLocationPreferences(getDataLocationPreferace(connection, entry.getUid()));
-
             return entry;
         }
     }
@@ -182,7 +176,6 @@ public class JDBCatalogue extends MyDataSource {
             preparedStatement.setString(18, entry.getDescription());
 
 //            preparedStatement.setString(19, entry.getDataLocationPreference());
-
             preparedStatement.setString(19, entry.getName());
             preparedStatement.setTimestamp(20, new Timestamp(entry.getLastAccessDate()));
             if (entry.getTtlSec() == null) {
@@ -354,7 +347,7 @@ public class JDBCatalogue extends MyDataSource {
                 //                    }
                 //                }
                 long groupId = rs.getLong(9);
-                res.add(new PDRIDescr(fileName, ssID, resourceURI, uName, passwd, encrypt, BigInteger.valueOf(key), groupId, Long.valueOf(pdriId), isCache));
+                res.add(new PDRIDescr(fileName, ssID, resourceURI, uName, passwd, encrypt, BigInteger.valueOf(key), groupId, (pdriId), isCache));
             }
             if (pdriId > -1) {
                 putToPDRIDescrCache(pdriId, res);
@@ -491,13 +484,11 @@ public class JDBCatalogue extends MyDataSource {
                 res.setDescription(rs.getString(18));
 
 //                res.setDataLocationPreference(rs.getString(19));
-
                 Timestamp ts = rs.getTimestamp(19);
                 res.setLastAccessDate(ts != null ? ts.getTime() : null);
                 int ttl = rs.getInt(20);
                 res.setTtlSec(rs.wasNull() ? null : ttl);
 //                Array array = rs.getArray(21);
-
 
                 return res;
             } else {
@@ -556,7 +547,6 @@ public class JDBCatalogue extends MyDataSource {
                             res.setDescription(rs.getString(18));
 
 //                            res.setDataLocationPreference(rs.getString(19));
-
                             res.setStatus(rs.getString(20));
                             Timestamp ts = rs.getTimestamp(21);
                             //Object ts = rs.getObject(21);
@@ -629,7 +619,6 @@ public class JDBCatalogue extends MyDataSource {
                 res.setDescription(rs.getString(19));
 
 //                res.setDataLocationPreference(rs.getString(20));
-
                 res.setStatus(rs.getString(20));
                 res.setLastAccessDate(rs.getTimestamp(21) != null ? rs.getTimestamp(21).getTime() : null);
                 int ttl = rs.getInt(22);
@@ -745,7 +734,6 @@ public class JDBCatalogue extends MyDataSource {
                 element.setDescription(rs.getString(19));
 
 //                element.setDataLocationPreference(rs.getString(20));
-
                 element.setLastAccessDate(rs.getTimestamp(21) != null ? rs.getTimestamp(21).getTime() : null);
                 int ttl = rs.getInt(22);
                 element.setTtlSec(rs.wasNull() ? null : ttl);
@@ -1328,7 +1316,6 @@ public class JDBCatalogue extends MyDataSource {
                 }
             }
 
-
             for (StorageSite es : existingSites) {
                 if (es.getResourceURI().equals(s.getResourceURI())) {
 //                    Long id = es.getStorageSiteId();
@@ -1754,12 +1741,29 @@ public class JDBCatalogue extends MyDataSource {
 
     }
 
-    @Data
-    @AllArgsConstructor
     public class PathInfo {
 
         private String name;
         private Long parentRef;
+
+        private PathInfo(String name, Long parentRef) {
+            this.name = name;
+            this.parentRef = parentRef;
+        }
+
+        /**
+         * @return the name
+         */
+        public String getName() {
+            return name;
+        }
+
+        /**
+         * @return the parentRef
+         */
+        public Long getParentRef() {
+            return parentRef;
+        }
     }
 
     private void getPathforLogicalData(PathInfo pi, List<PathInfo> pil, PreparedStatement ps) throws SQLException {
@@ -1841,7 +1845,7 @@ public class JDBCatalogue extends MyDataSource {
                 }
             }
         } catch (Exception e) {
-            log.log(Level.SEVERE, null, e);
+            Logger.getLogger(JDBCatalogue.class.getName()).log(Level.SEVERE, null, e);
         }
     }
 
@@ -1870,8 +1874,8 @@ public class JDBCatalogue extends MyDataSource {
     public void setPreferencesOn(Long uidTo, Long uidFrom, Connection connection) throws SQLException {
         try (PreparedStatement psDel = connection.prepareStatement("DELETE FROM pref_table WHERE ld_uid = ?");
                 PreparedStatement psIns = connection.prepareStatement("INSERT "
-                + "INTO pref_table (ld_uid, storageSiteRef) "
-                + "SELECT ?, storageSiteRef FROM pref_table WHERE ld_uid=?")) {
+                        + "INTO pref_table (ld_uid, storageSiteRef) "
+                        + "SELECT ?, storageSiteRef FROM pref_table WHERE ld_uid=?")) {
             psDel.setLong(1, uidTo);
             psIns.setLong(1, uidTo);
             psIns.setLong(2, uidFrom);

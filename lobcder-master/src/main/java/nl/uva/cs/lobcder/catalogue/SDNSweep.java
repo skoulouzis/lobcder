@@ -41,8 +41,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import lombok.Getter;
-import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.optimization.SDNControllerClient;
 import nl.uva.cs.lobcder.rest.wrappers.AttachmentPoint;
 import nl.uva.cs.lobcder.rest.wrappers.Link;
@@ -62,54 +60,230 @@ import org.xml.sax.SAXException;
  *
  * @author S. Koulouzis
  */
-@Log
 public class SDNSweep implements Runnable {
 
     private static SimpleWeightedGraph<String, DefaultWeightedEdge> graph;
+
+    /**
+     * @return the graph
+     */
+    public static SimpleWeightedGraph<String, DefaultWeightedEdge> getGraph() {
+        return graph;
+    }
+
+    /**
+     * @return the networkEntitesCache
+     */
+    public static Map<String, NetworkEntity> getNetworkEntitesCache() {
+        return networkEntitesCache;
+    }
+
+    /**
+     * @return the switchLinks
+     */
+    public static List<Link> getSwitchLinks() {
+        return switchLinks;
+    }
+
+    /**
+     * @return the interval
+     */
+    public static long getInterval() {
+        return interval;
+    }
+
+    /**
+     * @return the statsMap
+     */
+    public static Map<String, Double> getStatsMap() {
+        return statsMap;
+    }
+
+    /**
+     * @return the METRIC_NAMES
+     */
+    public static String[] getMETRIC_NAMES() {
+        return METRIC_NAMES;
+    }
+
+    /**
+     * @return the collisionsMap
+     */
+    public static Map<String, Double> getCollisionsMap() {
+        return collisionsMap;
+    }
+
+    /**
+     * @return the receiveBytesMap
+     */
+    public static Map<String, Double> getReceiveBytesMap() {
+        return receiveBytesMap;
+    }
+
+    /**
+     * @return the receiveCRCErrorsMap
+     */
+    public static Map<String, Double> getReceiveCRCErrorsMap() {
+        return receiveCRCErrorsMap;
+    }
+
+    /**
+     * @return the receiveDroppedMap
+     */
+    public static Map<String, Double> getReceiveDroppedMap() {
+        return receiveDroppedMap;
+    }
+
+    /**
+     * @return the receiveErrorsMap
+     */
+    public static Map<String, Double> getReceiveErrorsMap() {
+        return receiveErrorsMap;
+    }
+
+    /**
+     * @return the receiveFrameErrorsMap
+     */
+    public static Map<String, Double> getReceiveFrameErrorsMap() {
+        return receiveFrameErrorsMap;
+    }
+
+    /**
+     * @return the receiveOverrunErrorsMap
+     */
+    public static Map<String, Double> getReceiveOverrunErrorsMap() {
+        return receiveOverrunErrorsMap;
+    }
+
+    /**
+     * @return the receivePacketsMap
+     */
+    public static Map<String, Double> getReceivePacketsMap() {
+        return receivePacketsMap;
+    }
+
+    /**
+     * @return the transmitBytesMap
+     */
+    public static Map<String, Double> getTransmitBytesMap() {
+        return transmitBytesMap;
+    }
+
+    /**
+     * @return the transmitDroppedMap
+     */
+    public static Map<String, Double> getTransmitDroppedMap() {
+        return transmitDroppedMap;
+    }
+
+    /**
+     * @return the transmitErrorsMap
+     */
+    public static Map<String, Double> getTransmitErrorsMap() {
+        return transmitErrorsMap;
+    }
+
+    /**
+     * @return the transmitPacketsMap
+     */
+    public static Map<String, Double> getTransmitPacketsMap() {
+        return transmitPacketsMap;
+    }
+
+    /**
+     * @return the oFlowsMap
+     */
+    public static Map<String, OFlow> getoFlowsMap() {
+        return oFlowsMap;
+    }
+
+    /**
+     * @return the averageLinkUsageMap
+     */
+    public static Map<String, Double> getAverageLinkUsageMap() {
+        return averageLinkUsageMap;
+    }
+
+    /**
+     * @return the flowPushed
+     */
+    public static boolean isFlowPushed() {
+        return flowPushed;
+    }
+
+    /**
+     * @return the arpFlowPushed
+     */
+    public static boolean isArpFlowPushed() {
+        return arpFlowPushed;
+    }
+
+    /**
+     * @return the topologyURL
+     */
+    public static String getTopologyURL() {
+        return topologyURL;
+    }
+
+    /**
+     * @return the flukesTopology
+     */
+    public static Document getFlukesTopology() {
+        return flukesTopology;
+    }
+
+    /**
+     * @return the switches
+     */
+    public static Map<String, Switch> getSwitches() {
+        return switches;
+    }
+
+
     private final DataSource datasource;
     private final String uri;
     private final int floodlightPort = 8080;
     private final int sflowRTPrt = 8008;
     private final Client client;
     private static Map<String, NetworkEntity> networkEntitesCache;
-    @Getter
+
     private static List<Link> switchLinks;
     private static Map<String, Switch> switches;
 //    private static List<Switch> switches;
-    public static long interval = 1000;
-    @Getter
+    private static long interval = 1000;
+
     private static Map<String, Double> statsMap;
-    public static final String[] METRIC_NAMES = new String[]{"collisions",
+    private static final String[] METRIC_NAMES = new String[]{"collisions",
         "receiveBytes", "receiveCRCErrors", "receiveDropped", "receiveErrors",
         "receiveFrameErrors", "receiveOverrunErrors", "receivePackets",
         "transmitBytes", "transmitDropped", "transmitErrors", "transmitPackets"};
-    @Getter
+
     private static Map<String, Double> collisionsMap = new HashMap<>();
-    @Getter
+
     private static Map<String, Double> receiveBytesMap = new HashMap<>();
-    @Getter
+
     private static Map<String, Double> receiveCRCErrorsMap = new HashMap<>();
-    @Getter
+
     private static Map<String, Double> receiveDroppedMap = new HashMap<>();
-    @Getter
+
     private static Map<String, Double> receiveErrorsMap = new HashMap<>();
-    @Getter
+
     private static Map<String, Double> receiveFrameErrorsMap = new HashMap<>();
-    @Getter
+
     private static Map<String, Double> receiveOverrunErrorsMap = new HashMap<>();
-    @Getter
+
     private static Map<String, Double> receivePacketsMap = new HashMap<>();
-    @Getter
+
     private static Map<String, Double> transmitBytesMap = new HashMap<>();
-    @Getter
+
     private static Map<String, Double> transmitDroppedMap = new HashMap<>();
-    @Getter
+
     private static Map<String, Double> transmitErrorsMap = new HashMap<>();
-    @Getter
+
     private static Map<String, Double> transmitPacketsMap = new HashMap<>();
-    @Getter
+
     private static Map<String, OFlow> oFlowsMap = new HashMap<>();
-    @Getter
+
     private static Map<String, Double> averageLinkUsageMap = new HashMap<>();
     private long iterations = 1;
     private static boolean flowPushed = true;
@@ -129,7 +303,7 @@ public class SDNSweep implements Runnable {
         client = Client.create(clientConfig);
         initFlukesTopology();
 
-        sdnCC = new SDNControllerClient(uri);
+        sdnCC = new SDNControllerClient(getUri());
 
         aplha = PropertiesHelper.getAlphaforAverageLinkUsage();
         factor = PropertiesHelper.getDelayFactor();
@@ -139,17 +313,17 @@ public class SDNSweep implements Runnable {
         getAllSwitches();
         getAllNetworkEntites();
         getAllSwitchLinks();
-        if (!flowPushed) {
+        if (!isFlowPushed()) {
 //            pushFlowIntoOnePort();
         }
-        if (!arpFlowPushed && PropertiesHelper.pushARPFlow()) {
+        if (!isArpFlowPushed() && PropertiesHelper.pushARPFlow()) {
             pushARPFlow();
             arpFlowPushed = true;
         }
     }
 
     public static NetworkEntity getNetworkEntity(String dest) throws IOException {
-        return networkEntitesCache.get(dest);
+        return getNetworkEntitesCache().get(dest);
     }
 
     @Override
@@ -172,7 +346,7 @@ public class SDNSweep implements Runnable {
     private void updateMetrics() throws IOException, InterruptedException {
         for (Switch sw : getAllSwitches()) {
             List<FloodlightStats> stats1 = getFloodlightPortStats(sw.dpid);
-            Thread.sleep(interval);
+            Thread.sleep(getInterval());
             List<FloodlightStats> stats2 = getFloodlightPortStats(sw.dpid);
 
             for (int i = 0; i < stats1.size(); i++) {
@@ -181,23 +355,22 @@ public class SDNSweep implements Runnable {
 //                }
                 String key = sw.dpid + "-" + stats1.get(i).portNumber;
 
-
-                Double val = collisionsMap.get(key);
+                Double val = getCollisionsMap().get(key);
                 Double oldValue = ((val == null) ? 1.0 : val);
                 Double newValue = Double.valueOf(stats2.get(i).collisions - stats1.get(i).collisions);
                 newValue = (newValue + oldValue) / 2.0;
-                collisionsMap.put(key, newValue);
+                getCollisionsMap().put(key, newValue);
 
-                val = receiveBytesMap.get(key);
+                val = getReceiveBytesMap().get(key);
                 oldValue = ((val == null) ? 1.0 : val);
                 newValue = Double.valueOf(stats2.get(i).receiveBytes - stats1.get(i).receiveBytes);
-                Double averageLinkUsage = averageLinkUsageMap.get(key);
+                Double averageLinkUsage = getAverageLinkUsageMap().get(key);
 
-                if ((newValue / interval) > 200) {
-                    long durationSeconds = interval * iterations;
+                if ((newValue / getInterval()) > 200) {
+                    long durationSeconds = getInterval() * getIterations();
 
                     if (averageLinkUsage == null) {
-                        averageLinkUsageMap.put(key, Double.valueOf(durationSeconds));
+                        getAverageLinkUsageMap().put(key, Double.valueOf(durationSeconds));
                     } else {
                         //$d_{new} = α ∗ d_{old} + (1 - α ) ∗ d_{sample}$ 
                         //with α ∈ [0 , 1] being the weighting factor, d_{sample} 
@@ -205,114 +378,99 @@ public class SDNSweep implements Runnable {
                         //and d_{new} the newly calculated value. In fact, 
                         //this calculation implements aplha discrete low pass filter
 
-                        averageLinkUsage = aplha * averageLinkUsage + (1 - aplha) * durationSeconds;
+                        averageLinkUsage = getAplha() * averageLinkUsage + (1 - getAplha()) * durationSeconds;
 //                        averageLinkUsage = (averageLinkUsage + durationSeconds) / 2.0;
-                        averageLinkUsageMap.put(key, averageLinkUsage);
+                        getAverageLinkUsageMap().put(key, averageLinkUsage);
                     }
-                } else {
-                    if (averageLinkUsage != null) {
-                        averageLinkUsage = averageLinkUsage / (factor * 200);
+                } else if (averageLinkUsage != null) {
+                    averageLinkUsage = averageLinkUsage / (getFactor() * 200);
 //                        averageLinkUsage = aplha * averageLinkUsage + (1 - aplha) * durationSeconds;
 //                        averageLinkUsage = (averageLinkUsage + durationSeconds) / 2.0;
-                        averageLinkUsageMap.put(key, (averageLinkUsage > 0) ? averageLinkUsage : 1.0);
-                    }
+                    getAverageLinkUsageMap().put(key, (averageLinkUsage > 0) ? averageLinkUsage : 1.0);
                 }
                 val = ((newValue > oldValue) ? newValue : oldValue);
-                receiveBytesMap.put(key, val);
+                getReceiveBytesMap().put(key, val);
 
-
-                val = transmitBytesMap.get(key);
+                val = getTransmitBytesMap().get(key);
                 oldValue = ((val == null) ? 1.0 : val);
                 newValue = Double.valueOf(stats2.get(i).transmitBytes - stats1.get(i).transmitBytes);
-                if ((newValue / interval) > 200) {
-                    long durationSeconds = interval * iterations;
+                if ((newValue / getInterval()) > 200) {
+                    long durationSeconds = getInterval() * getIterations();
                     if (averageLinkUsage == null) {
-                        averageLinkUsageMap.put(key, Double.valueOf(durationSeconds));
+                        getAverageLinkUsageMap().put(key, Double.valueOf(durationSeconds));
                     } else {
                         //$d_{new} = α ∗ d_{old} + (1 - α ) ∗ d_{sample}$ 
                         //with α ∈ [0 , 1] being the weighting factor, d_{sample} 
                         //being the new sample, d_{old} the current metric value 
                         //and d_{new} the newly calculated value. In fact, 
                         //this calculation implements aplha discrete low pass filter
-                        averageLinkUsage = aplha * averageLinkUsage + (1 - aplha) * durationSeconds;
+                        averageLinkUsage = getAplha() * averageLinkUsage + (1 - getAplha()) * durationSeconds;
 //                        averageLinkUsage = (averageLinkUsage + durationSeconds) / 2.0;
-                        averageLinkUsageMap.put(key, averageLinkUsage);
+                        getAverageLinkUsageMap().put(key, averageLinkUsage);
                     }
-                } else {
-                    if (averageLinkUsage != null) {
-                        averageLinkUsage = averageLinkUsage / (factor * 200);
+                } else if (averageLinkUsage != null) {
+                    averageLinkUsage = averageLinkUsage / (getFactor() * 200);
 //                        averageLinkUsage = aplha * averageLinkUsage + (1 - aplha) * durationSeconds;
 //                        averageLinkUsage = (averageLinkUsage + durationSeconds) / 2.0;
-                        averageLinkUsageMap.put(key, (averageLinkUsage > 0) ? averageLinkUsage : 1.0);
-                    }
+                    getAverageLinkUsageMap().put(key, (averageLinkUsage > 0) ? averageLinkUsage : 1.0);
                 }
 
-
                 val = ((newValue > oldValue) ? newValue : oldValue);
-                transmitBytesMap.put(key, val);
+                getTransmitBytesMap().put(key, val);
 
-
-                val = receiveCRCErrorsMap.get(key);
+                val = getReceiveCRCErrorsMap().get(key);
                 oldValue = ((val == null) ? 1.0 : val);
                 newValue = Double.valueOf(stats2.get(i).receiveCRCErrors - stats1.get(i).receiveCRCErrors);
                 newValue = (newValue + oldValue) / 2.0;
-                receiveCRCErrorsMap.put(key, newValue);
+                getReceiveCRCErrorsMap().put(key, newValue);
 
-
-                val = receiveDroppedMap.get(key);
+                val = getReceiveDroppedMap().get(key);
                 oldValue = ((val == null) ? 1.0 : val);
                 newValue = Double.valueOf(stats2.get(i).receiveDropped - stats1.get(i).receiveDropped);
                 newValue = (newValue + oldValue) / 2.0;
-                receiveDroppedMap.put(key, newValue);
+                getReceiveDroppedMap().put(key, newValue);
 
-
-
-                val = receiveErrorsMap.get(key);
+                val = getReceiveErrorsMap().get(key);
                 oldValue = ((val == null) ? 1.0 : val);
                 newValue = Double.valueOf(stats2.get(i).receiveErrors - stats1.get(i).receiveErrors);
                 newValue = (newValue + oldValue) / 2.0;
-                receiveErrorsMap.put(key, newValue);
+                getReceiveErrorsMap().put(key, newValue);
 
-
-                val = receiveFrameErrorsMap.get(key);
+                val = getReceiveFrameErrorsMap().get(key);
                 oldValue = ((val == null) ? 1.0 : val);
                 newValue = Double.valueOf(stats2.get(i).receiveFrameErrors - stats1.get(i).receiveFrameErrors);
                 newValue = (newValue + oldValue) / 2.0;
-                receiveErrorsMap.put(key, newValue);
+                getReceiveErrorsMap().put(key, newValue);
 
-                val = receiveOverrunErrorsMap.get(key);
+                val = getReceiveOverrunErrorsMap().get(key);
                 oldValue = ((val == null) ? 1.0 : val);
                 newValue = Double.valueOf(stats2.get(i).receiveOverrunErrors - stats1.get(i).receiveOverrunErrors);
                 newValue = (newValue + oldValue) / 2.0;
-                receiveOverrunErrorsMap.put(key, newValue);
+                getReceiveOverrunErrorsMap().put(key, newValue);
 
-
-
-                val = receivePacketsMap.get(key);
+                val = getReceivePacketsMap().get(key);
                 oldValue = ((val == null) ? 1.0 : val);
                 newValue = Double.valueOf(stats2.get(i).receivePackets - stats1.get(i).receivePackets);
                 val = ((newValue > oldValue) ? newValue : oldValue);
-                receivePacketsMap.put(key, val);
+                getReceivePacketsMap().put(key, val);
 
-
-                val = transmitDroppedMap.get(key);
+                val = getTransmitDroppedMap().get(key);
                 oldValue = ((val == null) ? 1.0 : val);
                 newValue = Double.valueOf(stats2.get(i).transmitDropped - stats1.get(i).transmitDropped);
                 newValue = (newValue + oldValue) / 2.0;
-                transmitDroppedMap.put(key, newValue);
+                getTransmitDroppedMap().put(key, newValue);
 
-
-                val = transmitErrorsMap.get(key);
+                val = getTransmitErrorsMap().get(key);
                 oldValue = ((val == null) ? 1.0 : val);
                 newValue = Double.valueOf(stats2.get(i).transmitErrors - stats1.get(i).transmitErrors);
                 newValue = (newValue + oldValue) / 2.0;
-                transmitErrorsMap.put(key, newValue);
+                getTransmitErrorsMap().put(key, newValue);
 
-                val = transmitPacketsMap.get(key);
+                val = getTransmitPacketsMap().get(key);
                 oldValue = ((val == null) ? 1.0 : val);
                 newValue = Double.valueOf(stats2.get(i).transmitPackets - stats1.get(i).transmitPackets);
                 val = ((newValue > oldValue) ? newValue : oldValue);
-                transmitPacketsMap.put(key, val);
+                getTransmitPacketsMap().put(key, val);
 
             }
         }
@@ -320,7 +478,7 @@ public class SDNSweep implements Runnable {
 
     private List<FloodlightStats> getFloodlightPortStats(String dpi) throws IOException {
         //http://145.100.133.130:8080/wm/core/switch/00:00:4e:cd:a6:8d:c9:44/port/json
-        WebResource webResource = client.resource(uri + ":" + floodlightPort);
+        WebResource webResource = getClient().resource(getUri() + ":" + getFloodlightPort());
         WebResource res = webResource.path("wm").path("core").path("switch").path(dpi).path("port").path("json");
         String output = res.get(String.class);
 //        String out = output.substring(27, output.length() - 1);
@@ -331,7 +489,7 @@ public class SDNSweep implements Runnable {
     }
 
     private List<OFlow> getOflow(String dpi) throws IOException {
-        WebResource webResource = client.resource(uri + ":" + floodlightPort);
+        WebResource webResource = getClient().resource(getUri() + ":" + getFloodlightPort());
         WebResource res = webResource.path("wm").path("core").path("switch").path(dpi).path("flow").path("json");
         String output = res.get(String.class);
         String out = output.substring(27, output.length() - 1);
@@ -340,11 +498,11 @@ public class SDNSweep implements Runnable {
     }
 
     private Collection<NetworkEntity> getAllNetworkEntites() throws IOException, ParserConfigurationException, SAXException {
-        if (networkEntitesCache == null) {
+        if (getNetworkEntitesCache() == null) {
             networkEntitesCache = new HashMap<>();
         }
-        if (networkEntitesCache.isEmpty() || iterations % 5 == 0) {
-            WebResource webResource = client.resource(uri + ":" + floodlightPort);
+        if (getNetworkEntitesCache().isEmpty() || getIterations() % 5 == 0) {
+            WebResource webResource = getClient().resource(getUri() + ":" + getFloodlightPort());
             WebResource res = null;
             // http://145.100.133.131:8080/wm/device/?getIpv4=192.168.100.1
             res = webResource.path("wm").path("device/");
@@ -363,13 +521,13 @@ public class SDNSweep implements Runnable {
                 }
                 String swIPFromFlukes = null;
                 if (!ne.getIpv4().isEmpty() && !networkEntitesCache.containsKey(ipKey)) {
-                    if (flukesTopology == null) {
+                    if (getFlukesTopology() == null) {
                         initFlukesTopology();
                     }
-                    if (flukesTopology != null) {
+                    if (getFlukesTopology() != null) {
                         swIPFromFlukes = findAttachedSwitch(ipKey);
                         String swDPI = null;//switches.get(swIPFromFlukes).dpid;
-                        Switch sw = switches.get(swIPFromFlukes);
+                        Switch sw = getSwitches().get(swIPFromFlukes);
                         if (sw != null) {
                             swDPI = sw.dpid;
                         }
@@ -382,18 +540,18 @@ public class SDNSweep implements Runnable {
                         }
                         ne.setAttachmentPoint(ap);
                     }
-                    networkEntitesCache.put(ipKey, ne);
+                    getNetworkEntitesCache().put(ipKey, ne);
                 }
             }
         }
 //        for (NetworkEntity ne : networkEntitesCache.values()) {
 //            Logger.getLogger(SDNSweep.class.getName()).log(Level.INFO, "ne: {0}/{1}-> {2}-{3}", new Object[]{ne.getIpv4().get(0), ne.getMac().get(0), ne.getAttachmentPoint().get(0).getSwitchDPID(), ne.getAttachmentPoint().get(0).getPort()});
 //        }
-        return networkEntitesCache.values();
+        return getNetworkEntitesCache().values();
     }
 
     private String findAttachedSwitch(String ipKey) {
-        NodeList desc = flukesTopology.getElementsByTagName("rdf:Description");
+        NodeList desc = getFlukesTopology().getElementsByTagName("rdf:Description");
         String ipForTopology = ipKey.replaceAll("\\.", "-");
         String linkNum = null;
         String swName = null;
@@ -454,7 +612,7 @@ public class SDNSweep implements Runnable {
     }
 
     private ArrayList<String> findConnectedSwitches(String ipKey) {
-        NodeList desc = flukesTopology.getElementsByTagName("rdf:Description");
+        NodeList desc = getFlukesTopology().getElementsByTagName("rdf:Description");
         String ipForTopology = ipKey.replaceAll("\\.", "-");
         String switchName = null;
 
@@ -511,7 +669,6 @@ public class SDNSweep implements Runnable {
             }
         }
 
-
         ArrayList<String> dstSWIP = new ArrayList<>();
         if (!dstSWNames.isEmpty()) {
             for (int i = 0; i < desc.getLength(); i++) {
@@ -536,7 +693,7 @@ public class SDNSweep implements Runnable {
     }
 
     public void pushFlows(List<String> rules) {
-        WebResource webResource = client.resource(uri + ":" + floodlightPort).path("wm").path("staticflowentrypusher").path("json");
+        WebResource webResource = getClient().resource(getUri() + ":" + getFloodlightPort()).path("wm").path("staticflowentrypusher").path("json");
         for (String r : rules) {
             ClientResponse response = webResource.post(ClientResponse.class, r);
             if (response.getStatus() != 200) {
@@ -548,45 +705,39 @@ public class SDNSweep implements Runnable {
     }
 
     private List<Link> getAllSwitchLinks() throws IOException, ParserConfigurationException, SAXException {
-        if (switchLinks == null) {
+        if (getSwitchLinks() == null) {
             switchLinks = new ArrayList<>();
         }
-        if (switchLinks.isEmpty() || iterations % 5 == 0) {
-            WebResource webResource = client.resource(uri + ":" + floodlightPort);
+        if (getSwitchLinks().isEmpty() || getIterations() % 5 == 0) {
+            WebResource webResource = getClient().resource(getUri() + ":" + getFloodlightPort());
             WebResource res = webResource.path("wm").path("topology").path("links").path("json");
             switchLinks = res.get(new GenericType<List<Link>>() {
             });
             res = webResource.path("wm").path("topology").path("external-links").path("json");
-            switchLinks.addAll(res.get(new GenericType<List<Link>>() {
+            getSwitchLinks().addAll(res.get(new GenericType<List<Link>>() {
             }));
-
 
 //            ArrayList<Link> addedLinks = fillInLinkGaps(switchLinks);
 //            switchLinks.addAll(addedLinks);
 //            Logger.getLogger(SDNSweep.class.getName()).log(Level.INFO, switchLinks.toString());
-
         }
 
-        return switchLinks;
+        return getSwitchLinks();
     }
 
     private Collection<Switch> getAllSwitches() {
-        if (switches == null) {
+        if (getSwitches() == null) {
             switches = new HashMap<>();
-            WebResource webResource = client.resource(uri + ":" + floodlightPort);
+            WebResource webResource = getClient().resource(getUri() + ":" + getFloodlightPort());
             WebResource res = webResource.path("wm").path("core").path("controller").path("switches").path("json");
             List<Switch> switchesList = res.get(new GenericType<List<Switch>>() {
             });
             for (Switch s : switchesList) {
                 String swIP = s.inetAddress.substring(1, s.inetAddress.lastIndexOf(":"));
-                switches.put(swIP, s);
+                getSwitches().put(swIP, s);
             }
         }
-        return switches.values();
-    }
-
-    public static Collection<Switch> getSwitches() {
-        return switches.values();
+        return getSwitches().values();
     }
 
     private void pushARPFlow() throws InterruptedException, IOException, ParserConfigurationException, SAXException {
@@ -692,15 +843,13 @@ public class SDNSweep implements Runnable {
             }
         }
 
-
-
         List<String> rules = new ArrayList<>();
         //s1 to s2
         for (String h1 : s1Hosts) {
             for (String h2 : s2Hosts) {
                 String rule1To2 = "{\"switch\": \"" + s1 + "\", \"name\":\"" + h1 + "To" + h2 + "\", \"cookie\":\"0\", \"priority\":\"10\", "
-                        + "\"src-mac\":\"" + networkEntitesCache.get(h1).getMac().get(0) + "\", \"ingress-port\":\"" + networkEntitesCache.get(h1).getAttachmentPoint().get(0).getPort() + "\", "
-                        + "\"dst-mac\": \"" + networkEntitesCache.get(h2).getMac().get(0) + "\", \"active\":\"true\","
+                        + "\"src-mac\":\"" + getNetworkEntitesCache().get(h1).getMac().get(0) + "\", \"ingress-port\":\"" + getNetworkEntitesCache().get(h1).getAttachmentPoint().get(0).getPort() + "\", "
+                        + "\"dst-mac\": \"" + getNetworkEntitesCache().get(h2).getMac().get(0) + "\", \"active\":\"true\","
                         + "\"actions\":\"output=" + s1ToS2Port + "\"}";
                 rules.add(rule1To2);
 //                Logger.getLogger(SDNSweep.class.getName()).log(Level.INFO, rule1To2);
@@ -711,8 +860,8 @@ public class SDNSweep implements Runnable {
         for (String h1 : s2Hosts) {
             for (String h2 : s1Hosts) {
                 String rule2To1 = "{\"switch\": \"" + s2 + "\", \"name\":\"" + h1 + "To" + h2 + "\", \"cookie\":\"0\", \"priority\":\"10\", "
-                        + "\"src-mac\":\"" + networkEntitesCache.get(h1).getMac().get(0) + "\", \"ingress-port\":\"" + networkEntitesCache.get(h1).getAttachmentPoint().get(0).getPort() + "\", "
-                        + "\"dst-mac\": \"" + networkEntitesCache.get(h2).getMac().get(0) + "\", \"active\":\"true\","
+                        + "\"src-mac\":\"" + getNetworkEntitesCache().get(h1).getMac().get(0) + "\", \"ingress-port\":\"" + getNetworkEntitesCache().get(h1).getAttachmentPoint().get(0).getPort() + "\", "
+                        + "\"dst-mac\": \"" + getNetworkEntitesCache().get(h2).getMac().get(0) + "\", \"active\":\"true\","
                         + "\"actions\":\"output=" + s2ToS1Port + "\"}";
 
                 rules.add(rule2To1);
@@ -740,10 +889,10 @@ public class SDNSweep implements Runnable {
     private void initFlukesTopology() throws IOException, ParserConfigurationException, SAXException {
         //        synchronized (lock) {
         topologyURL = PropertiesHelper.getTopologyURL();
-        if (topologyURL != null) {
+        if (getTopologyURL() != null) {
             DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
             DocumentBuilder db = dbf.newDocumentBuilder();
-            URL url = new URL(topologyURL);
+            URL url = new URL(getTopologyURL());
             try (InputStream stream = url.openStream()) {
                 flukesTopology = db.parse(stream);
             }
@@ -761,7 +910,7 @@ public class SDNSweep implements Runnable {
                 for (AttachmentPoint ap : ne.getAttachmentPoint()) {
                     for (Port p : srcSW.ports) {
                         for (Link existingLink : switchLinks) {
-                            if (ap.getPort() != p.portNumber
+                            if (ap.getPort() != (Number) p.portNumber
                                     && p.portNumber != existingLink.srcPort
                                     && ap.getPort().intValue() <= 500
                                     && p.portNumber <= 500) {
@@ -776,12 +925,12 @@ public class SDNSweep implements Runnable {
             int dstPort;
             Link l = null;
             for (String dstSWIP : findConnectedSwitches(srcSWIP)) {
-                Switch dstSW = switches.get(dstSWIP);
+                Switch dstSW = getSwitches().get(dstSWIP);
                 for (NetworkEntity ne : getNetworkEntitiesForSwDPI(dstSW.dpid)) {
                     for (AttachmentPoint ap : ne.getAttachmentPoint()) {
                         for (Port p : dstSW.ports) {
                             for (Link existingLink : switchLinks) {
-                                if (ap.getPort() != p.portNumber
+                                if (ap.getPort() != (Number) p.portNumber
                                         && existingLink.dstPort != p.portNumber
                                         && ap.getPort().intValue() <= 500
                                         && p.portNumber <= 500
@@ -802,7 +951,6 @@ public class SDNSweep implements Runnable {
 
             }
         }
-
 
         for (Link possible : possibleLinks) {
             String possibleSRC = possible.srcSwitch + "-" + possible.srcPort;
@@ -838,6 +986,69 @@ public class SDNSweep implements Runnable {
 //            }
 //        }
         return addedLinks;
+    }
+
+    /**
+     * @return the datasource
+     */
+    public DataSource getDatasource() {
+        return datasource;
+    }
+
+    /**
+     * @return the uri
+     */
+    public String getUri() {
+        return uri;
+    }
+
+    /**
+     * @return the floodlightPort
+     */
+    public int getFloodlightPort() {
+        return floodlightPort;
+    }
+
+    /**
+     * @return the sflowRTPrt
+     */
+    public int getSflowRTPrt() {
+        return sflowRTPrt;
+    }
+
+    /**
+     * @return the client
+     */
+    public Client getClient() {
+        return client;
+    }
+
+    /**
+     * @return the iterations
+     */
+    public long getIterations() {
+        return iterations;
+    }
+
+    /**
+     * @return the sdnCC
+     */
+    public SDNControllerClient getSdnCC() {
+        return sdnCC;
+    }
+
+    /**
+     * @return the aplha
+     */
+    public double getAplha() {
+        return aplha;
+    }
+
+    /**
+     * @return the factor
+     */
+    public Double getFactor() {
+        return factor;
     }
 
     @XmlRootElement

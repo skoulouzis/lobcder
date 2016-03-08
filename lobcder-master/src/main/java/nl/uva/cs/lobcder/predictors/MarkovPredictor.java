@@ -26,7 +26,7 @@ import nl.uva.cs.lobcder.optimization.Vertex;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.naming.NamingException;
-import lombok.extern.java.Log;
+
 import static nl.uva.cs.lobcder.predictors.DBMapPredictor.type;
 import nl.uva.cs.lobcder.util.MyDataSource;
 import nl.uva.cs.lobcder.util.PropertiesHelper;
@@ -38,7 +38,6 @@ import static nl.uva.cs.lobcder.util.PropertiesHelper.PREDICTION_TYPE.state;
  *
  * @author S. Koulouzis
  */
-@Log
 public class MarkovPredictor extends MyDataSource implements Predictor {
 
     Graph graph = null;
@@ -94,7 +93,6 @@ public class MarkovPredictor extends MyDataSource implements Predictor {
         }
 
         void addTransision(Vertex from, Vertex to) throws SQLException {
-
 
             String toID = null;
             String fromID = null;

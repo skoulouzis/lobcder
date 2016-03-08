@@ -8,14 +8,13 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.util.PropertiesHelper;
 
 /**
  *
  * @author S. Koulouzis
  */
-@Log
+
 public class AuthLobcderComponents implements AuthI {
 
     private static String theToken;

@@ -17,7 +17,6 @@ package nl.uva.cs.lobcder.rest.wrappers;
 
 import java.util.List;
 import javax.xml.bind.annotation.XmlRootElement;
-import lombok.Data;
 import nl.uva.cs.lobcder.resources.PDRIDescr;
 
 /**
@@ -25,7 +24,20 @@ import nl.uva.cs.lobcder.resources.PDRIDescr;
  * @author S. Koulouzis
  */
 @XmlRootElement
-@Data
 public class PDRIDescrWrapperList {
-     List<PDRIDescr> pdris;
+     private List<PDRIDescr> pdris;
+
+    /**
+     * @return the pdris
+     */
+    public List<PDRIDescr> getPdris() {
+        return pdris;
+    }
+
+    /**
+     * @param pdris the pdris to set
+     */
+    public void setPdris(List<PDRIDescr> pdris) {
+        this.pdris = pdris;
+    }
 }

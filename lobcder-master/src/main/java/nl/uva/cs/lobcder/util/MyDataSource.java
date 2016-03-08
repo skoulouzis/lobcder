@@ -1,6 +1,5 @@
 package nl.uva.cs.lobcder.util;
 
-import lombok.Getter;
 
 import javax.naming.Context;
 import javax.naming.InitialContext;
@@ -17,7 +16,7 @@ import java.sql.SQLException;
  */
 public class MyDataSource {
 
-    @Getter
+    
     private DataSource datasource;
 
     public MyDataSource() throws NamingException {
@@ -29,8 +28,15 @@ public class MyDataSource {
 
 
     public Connection getConnection() throws SQLException {
-        Connection cn = datasource.getConnection();
+        Connection cn = getDatasource().getConnection();
         cn.setAutoCommit(false);
         return cn;
+    }
+
+    /**
+     * @return the datasource
+     */
+    public DataSource getDatasource() {
+        return datasource;
     }
 }

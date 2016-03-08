@@ -4,9 +4,7 @@
  */
 package nl.uva.cs.lobcder.rest;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.extern.java.Log;
+
 import nl.uva.cs.lobcder.auth.MyPrincipal;
 import nl.uva.cs.lobcder.auth.Permissions;
 import nl.uva.cs.lobcder.resources.LogicalData;
@@ -36,13 +34,13 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Gets resource properties like length owner physical location etc.
  *
  * @author dvasunin
  */
-@Log
 @Path("items/")
 public class Items extends CatalogueHelper {
 
@@ -58,12 +56,43 @@ public class Items extends CatalogueHelper {
         defaultRowLimit = PropertiesHelper.getDefaultRowLimit();
     }
 
-    @Data
-    @AllArgsConstructor
     class MyData {
 
-        Long uid;
-        String path;
+        private Long uid;
+        private String path;
+
+        private MyData(Long uid, String path) {
+            this.uid = uid;
+            this.path = path;
+        }
+
+        /**
+         * @return the uid
+         */
+        public Long getUid() {
+            return uid;
+        }
+
+        /**
+         * @param uid the uid to set
+         */
+        public void setUid(Long uid) {
+            this.uid = uid;
+        }
+
+        /**
+         * @return the path
+         */
+        public String getPath() {
+            return path;
+        }
+
+        /**
+         * @param path the path to set
+         */
+        public void setPath(String path) {
+            this.path = path;
+        }
     }
 
     private List<LogicalDataWrapped> queryLogicalData(MyData myData, int limit, PreparedStatement ps1, PreparedStatement ps2, MyPrincipal mp, Connection cn) throws Exception {
@@ -193,10 +222,10 @@ public class Items extends CatalogueHelper {
                     + "AND (? OR (ldName LIKE CONCAT('%', ? , '%')))"
                     + "LIMIT ?");
                     PreparedStatement ps2 = cn.prepareStatement("SELECT uid, ownerId, "
-                    + "ldName FROM ldata_table WHERE parentRef = ? AND datatype = '" + Constants.LOGICAL_FOLDER + "'")) {
+                            + "ldName FROM ldata_table WHERE parentRef = ? AND datatype = '" + Constants.LOGICAL_FOLDER + "'")) {
                 {
-                    if (queryParameters.containsKey("name") && 
-                            queryParameters.get("name").iterator().hasNext()) {
+                    if (queryParameters.containsKey("name")
+                            && queryParameters.get("name").iterator().hasNext()) {
                         String name = queryParameters.get("name").iterator().next();
                         ps1.setBoolean(18, false);
                         ps1.setString(19, name);
@@ -206,10 +235,10 @@ public class Items extends CatalogueHelper {
                         ps1.setString(19, "");
                     }
 
-                    if (queryParameters.containsKey("cStartDate") && 
-                            queryParameters.get("cStartDate").iterator().hasNext() && 
-                            queryParameters.containsKey("cEndDate") && 
-                            queryParameters.get("cEndDate").iterator().hasNext()) {
+                    if (queryParameters.containsKey("cStartDate")
+                            && queryParameters.get("cStartDate").iterator().hasNext()
+                            && queryParameters.containsKey("cEndDate")
+                            && queryParameters.get("cEndDate").iterator().hasNext()) {
                         long cStartDate = Long.valueOf(queryParameters.get("cStartDate").iterator().next());
                         long cEndDate = Long.valueOf(queryParameters.get("cEndDate").iterator().next());
                         ps1.setBoolean(4, false);
@@ -220,8 +249,8 @@ public class Items extends CatalogueHelper {
                         ps1.setLong(8, 0);
                         ps1.setLong(10, 0);
                         addFlag &= (ld.getCreateDate() >= cStartDate * 1000) && (ld.getCreateDate() <= cEndDate * 1000);
-                    } else if (queryParameters.containsKey("cStartDate") && 
-                            queryParameters.get("cStartDate").iterator().hasNext()) {
+                    } else if (queryParameters.containsKey("cStartDate")
+                            && queryParameters.get("cStartDate").iterator().hasNext()) {
                         long cStartDate = Long.valueOf(queryParameters.get("cStartDate").iterator().next());
                         ps1.setBoolean(4, true);
                         ps1.setBoolean(7, false);
@@ -231,8 +260,8 @@ public class Items extends CatalogueHelper {
                         ps1.setLong(8, cStartDate);
                         ps1.setLong(10, 0);
                         addFlag &= (ld.getCreateDate() >= cStartDate * 1000);
-                    } else if (queryParameters.containsKey("cEndDate") && 
-                            queryParameters.get("cEndDate").iterator().hasNext()) {
+                    } else if (queryParameters.containsKey("cEndDate")
+                            && queryParameters.get("cEndDate").iterator().hasNext()) {
                         long cEndDate = Long.valueOf(queryParameters.get("cEndDate").iterator().next());
                         ps1.setBoolean(4, true);
                         ps1.setBoolean(7, true);
@@ -252,10 +281,10 @@ public class Items extends CatalogueHelper {
                         ps1.setLong(10, 0);
                     }
 
-                    if (queryParameters.containsKey("mStartDate") && 
-                            queryParameters.get("mStartDate").iterator().hasNext() && 
-                            queryParameters.containsKey("mEndDate") && 
-                            queryParameters.get("mEndDate").iterator().hasNext()) {
+                    if (queryParameters.containsKey("mStartDate")
+                            && queryParameters.get("mStartDate").iterator().hasNext()
+                            && queryParameters.containsKey("mEndDate")
+                            && queryParameters.get("mEndDate").iterator().hasNext()) {
                         long mStartDate = Long.valueOf(queryParameters.get("mStartDate").iterator().next());
                         long mEndDate = Long.valueOf(queryParameters.get("mEndDate").iterator().next());
                         ps1.setBoolean(11, false);
@@ -266,8 +295,8 @@ public class Items extends CatalogueHelper {
                         ps1.setLong(15, 0);
                         ps1.setLong(17, 0);
                         addFlag &= (ld.getModifiedDate() >= mStartDate * 1000) && (ld.getModifiedDate() <= mEndDate * 1000);
-                    } else if (queryParameters.containsKey("mStartDate") && 
-                            queryParameters.get("mStartDate").iterator().hasNext()) {
+                    } else if (queryParameters.containsKey("mStartDate")
+                            && queryParameters.get("mStartDate").iterator().hasNext()) {
                         long mStartDate = Long.valueOf(queryParameters.get("mStartDate").iterator().next());
                         ps1.setBoolean(11, true);
                         ps1.setBoolean(14, false);
@@ -277,8 +306,8 @@ public class Items extends CatalogueHelper {
                         ps1.setLong(15, mStartDate);
                         ps1.setLong(17, 0);
                         addFlag &= (ld.getModifiedDate() >= mStartDate * 1000);
-                    } else if (queryParameters.containsKey("mEndDate") && 
-                            queryParameters.get("mEndDate").iterator().hasNext()) {
+                    } else if (queryParameters.containsKey("mEndDate")
+                            && queryParameters.get("mEndDate").iterator().hasNext()) {
                         long mEndDate = Long.valueOf(queryParameters.get("mEndDate").iterator().next());
                         ps1.setBoolean(11, true);
                         ps1.setBoolean(14, true);
@@ -298,8 +327,8 @@ public class Items extends CatalogueHelper {
                         ps1.setLong(17, 0);
                     }
 
-                    if (queryParameters.containsKey("isSupervised") && 
-                            queryParameters.get("isSupervised").iterator().hasNext()) {
+                    if (queryParameters.containsKey("isSupervised")
+                            && queryParameters.get("isSupervised").iterator().hasNext()) {
                         boolean isSupervised = Boolean.valueOf(queryParameters.get("isSupervised").iterator().next());
                         ps1.setBoolean(2, false);
                         ps1.setBoolean(3, isSupervised);
@@ -367,7 +396,7 @@ public class Items extends CatalogueHelper {
             List<LogicalDataWrapped> res = queryLogicalData(mp, cn);
             return res;
         } catch (SQLException ex) {
-            log.log(Level.SEVERE, null, ex);
+            Logger.getLogger(Items.class.getName()).log(Level.SEVERE, null, ex);
             throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
         }
     }

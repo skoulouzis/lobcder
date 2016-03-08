@@ -4,7 +4,6 @@
  */
 package nl.uva.cs.lobcder.catalogue;
 
-import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.catalogue.delsweep.ConnectorJDBC;
 import nl.uva.cs.lobcder.catalogue.delsweep.DeleteSweep;
 import nl.uva.cs.lobcder.util.PropertiesHelper;
@@ -15,6 +14,7 @@ import java.io.IOException;
 import java.util.TimerTask;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.xml.parsers.ParserConfigurationException;
 import org.xml.sax.SAXException;
 
@@ -22,7 +22,6 @@ import org.xml.sax.SAXException;
  *
  * @author S. Koulouzis
  */
-@Log
 class SweepersTimerTask extends TimerTask {
 
     private final DeleteSweep deleteSweep;
@@ -35,7 +34,7 @@ class SweepersTimerTask extends TimerTask {
     private ArrayBlockingQueue<Runnable> queue;
     private int maxThreads = 5;
     private final Boolean useBulckRepo;
-    private WP4SweepOLD wp4SweepOld;
+//    private WP4SweepOLD wp4SweepOld;
 
     SweepersTimerTask(DataSource datasource) throws IOException, NamingException, ClassNotFoundException, ParserConfigurationException, SAXException {
         deleteSweep = new DeleteSweep(new ConnectorJDBC(datasource, 10));
@@ -46,7 +45,7 @@ class SweepersTimerTask extends TimerTask {
         if (useRepo && useBulckRepo) {
             wp4Sweep = new WP4Sweep(datasource);
         } else if (useRepo && !useBulckRepo) {
-            wp4SweepOld = new WP4SweepOLD(datasource);
+//            wp4SweepOld = new WP4SweepOLD(datasource);
         }
         if (useSDN) {
             sdnSweep = new SDNSweep(datasource);
@@ -59,20 +58,19 @@ class SweepersTimerTask extends TimerTask {
 //            log.log(Level.FINE, "Start deleteSweep");
             deleteSweep.run();
         } catch (RuntimeException e) {
-            log.log(Level.SEVERE, deleteSweep.getClass().getName() + " encountered and error.", e);
+            Logger.getLogger(SweepersTimerTask.class.getName()).log(Level.SEVERE, deleteSweep.getClass().getName() + " encountered and error.", e);
         } catch (Throwable e) {
-            log.log(Level.SEVERE, deleteSweep.getClass().getName() + " encountered and error.", e);
+            Logger.getLogger(SweepersTimerTask.class.getName()).log(Level.SEVERE, deleteSweep.getClass().getName() + " encountered and error.", e);
         }
 
         try {
 //            log.log(Level.FINE, "Start replicateSweep");
             replicateSweep.run();
         } catch (RuntimeException e) {
-            log.log(Level.SEVERE, replicateSweep.getClass().getName() + " encountered and error.", e);
+            Logger.getLogger(SweepersTimerTask.class.getName()).log(Level.SEVERE, replicateSweep.getClass().getName() + " encountered and error.", e);
         } catch (Throwable e) {
-            log.log(Level.SEVERE, replicateSweep.getClass().getName() + " encountered and error.", e);
+            Logger.getLogger(SweepersTimerTask.class.getName()).log(Level.SEVERE, replicateSweep.getClass().getName() + " encountered and error.", e);
         }
-
 
         try {
             if (wp4Sweep != null) {
@@ -80,13 +78,14 @@ class SweepersTimerTask extends TimerTask {
                 wp4Sweep.run();
 //                initExecutor();
 //                executorService.submit(wp4Sweep);
-            } else if (wp4SweepOld != null) {
-                wp4SweepOld.run();
-            }
+            } 
+//            else if (wp4SweepOld != null) {
+//                wp4SweepOld.run();
+//            }
         } catch (RuntimeException e) {
-            log.log(Level.SEVERE, wp4Sweep.getClass().getName() + " encountered and error.", e);
+            Logger.getLogger(SweepersTimerTask.class.getName()).log(Level.SEVERE, wp4Sweep.getClass().getName() + " encountered and error.", e);
         } catch (Throwable e) {
-            log.log(Level.SEVERE, wp4Sweep.getClass().getName() + " encountered and error.", e);
+            Logger.getLogger(SweepersTimerTask.class.getName()).log(Level.SEVERE, wp4Sweep.getClass().getName() + " encountered and error.", e);
         }
 
         try {
@@ -94,9 +93,9 @@ class SweepersTimerTask extends TimerTask {
                 sdnSweep.run();
             }
         } catch (RuntimeException e) {
-            log.log(Level.SEVERE, sdnSweep.getClass().getName() + " encountered and error.", e);
+            Logger.getLogger(SweepersTimerTask.class.getName()).log(Level.SEVERE, sdnSweep.getClass().getName() + " encountered and error.", e);
         } catch (Throwable e) {
-            log.log(Level.SEVERE, sdnSweep.getClass().getName() + " encountered and error.", e);
+            Logger.getLogger(SweepersTimerTask.class.getName()).log(Level.SEVERE, sdnSweep.getClass().getName() + " encountered and error.", e);
         }
 
     }

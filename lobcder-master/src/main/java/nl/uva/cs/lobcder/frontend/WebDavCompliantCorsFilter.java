@@ -13,6 +13,8 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -21,23 +23,23 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import lombok.extern.java.Log;
 import org.apache.tomcat.util.res.StringManager;
 
 /**
- * <p> A {@link Filter} that enable client-side cross-origin requests by
+ * <p>
+ * A {@link Filter} that enable client-side cross-origin requests by
  * implementing W3C's CORS (<b>C</b>ross-<b>O</b>rigin <b>R</b>esource
  * <b>S</b>haring) specification for resources. Each {@link HttpServletRequest}
  * request is inspected as per specification, and appropriate response headers
  * are added to {@link HttpServletResponse}. </p>
  *
- * <p> By default, it also sets following request attributes, that help to
- * determine the nature of the request downstream. <ul>
+ * <p>
+ * By default, it also sets following request attributes, that help to determine
+ * the nature of the request downstream. <ul>
  * <li><b>cors.isCorsRequest:</b> Flag to determine if the request is a CORS
- * request. Set to
- * <code>true</code> if a CORS request;
- * <code>false</code> otherwise.</li> <li><b>cors.request.origin:</b> The Origin
- * URL, i.e. the URL of the page from where the request is originated.</li> <li>
+ * request. Set to <code>true</code> if a CORS request; <code>false</code>
+ * otherwise.</li> <li><b>cors.request.origin:</b> The Origin URL, i.e. the URL
+ * of the page from where the request is originated.</li> <li>
  * <b>cors.request.type:</b> Type of request. Possible values: <ul> <li>SIMPLE:
  * A request which is not preceded by a pre-flight request.</li> <li>ACTUAL: A
  * request which is preceded by a pre-flight request.</li> <li>PRE_FLIGHT: A
@@ -50,11 +52,11 @@ import org.apache.tomcat.util.res.StringManager;
  * @see <a href="http://www.w3.org/TR/cors/">CORS specification</a>
  *
  */
-@Log
+
 public final class WebDavCompliantCorsFilter implements Filter {
 
-    private static final StringManager sm =
-            StringManager.getManager(org.apache.catalina.filters.Constants.Package);
+    private static final StringManager sm
+            = StringManager.getManager(org.apache.catalina.filters.Constants.Package);
     /**
      * A {@link Collection} of origins consisting of zero or more origins that
      * are allowed access to the resource.
@@ -198,8 +200,8 @@ public final class WebDavCompliantCorsFilter implements Filter {
                 || requestType == WebDavCompliantCorsFilter.CORSRequestType.ACTUAL)) {
             throw new IllegalArgumentException(
                     sm.getString("corsFilter.wrongType2",
-                    WebDavCompliantCorsFilter.CORSRequestType.SIMPLE,
-                    WebDavCompliantCorsFilter.CORSRequestType.ACTUAL));
+                            WebDavCompliantCorsFilter.CORSRequestType.SIMPLE,
+                            WebDavCompliantCorsFilter.CORSRequestType.ACTUAL));
         }
 
         final String origin = request
@@ -277,7 +279,7 @@ public final class WebDavCompliantCorsFilter implements Filter {
         if (requestType != CORSRequestType.PRE_FLIGHT) {
             throw new IllegalArgumentException(
                     sm.getString("corsFilter.wrongType1",
-                    CORSRequestType.PRE_FLIGHT.name().toLowerCase()));
+                            CORSRequestType.PRE_FLIGHT.name().toLowerCase()));
         }
 
         final String origin = request
@@ -337,16 +339,14 @@ public final class WebDavCompliantCorsFilter implements Filter {
             response.addHeader(
                     WebDavCompliantCorsFilter.RESPONSE_HEADER_ACCESS_CONTROL_ALLOW_CREDENTIALS,
                     "true");
+        } else if (anyOriginAllowed) {
+            response.addHeader(
+                    WebDavCompliantCorsFilter.RESPONSE_HEADER_ACCESS_CONTROL_ALLOW_ORIGIN,
+                    "*");
         } else {
-            if (anyOriginAllowed) {
-                response.addHeader(
-                        WebDavCompliantCorsFilter.RESPONSE_HEADER_ACCESS_CONTROL_ALLOW_ORIGIN,
-                        "*");
-            } else {
-                response.addHeader(
-                        WebDavCompliantCorsFilter.RESPONSE_HEADER_ACCESS_CONTROL_ALLOW_ORIGIN,
-                        origin);
-            }
+            response.addHeader(
+                    WebDavCompliantCorsFilter.RESPONSE_HEADER_ACCESS_CONTROL_ALLOW_ORIGIN,
+                    origin);
         }
 
         // Section 6.2.8
@@ -410,8 +410,8 @@ public final class WebDavCompliantCorsFilter implements Filter {
 //        if (log.getLevel() == Level.FINEST) {
         if (false) {
             // Debug so no need for i18n
-            StringBuilder message =
-                    new StringBuilder("Invalid CORS request; Origin=");
+            StringBuilder message
+                    = new StringBuilder("Invalid CORS request; Origin=");
             message.append(origin);
             message.append(";Method=");
             message.append(method);
@@ -419,7 +419,7 @@ public final class WebDavCompliantCorsFilter implements Filter {
                 message.append(";Access-Control-Request-Headers=");
                 message.append(accessControlRequestHeaders);
             }
-            log.finer(message.toString());
+            Logger.getLogger(WebDavCompliantCorsFilter.class.getName()).log(Level.FINER, message.toString());
         }
     }
 
@@ -431,13 +431,10 @@ public final class WebDavCompliantCorsFilter implements Filter {
     /**
      * Decorates the {@link HttpServletRequest}, with CORS attributes. <ul>
      * <li><b>cors.isCorsRequest:</b> Flag to determine if request is a CORS
-     * request. Set to
-     * <code>true</code> if CORS request;
-     * <code>false</code> otherwise.</li> <li><b>cors.request.origin:</b> The
-     * Origin URL.</li> <li><b>cors.request.type:</b> Type of request. Values:
-     * <code>simple</code> or
-     * <code>preflight</code> or
-     * <code>not_cors</code> or
+     * request. Set to <code>true</code> if CORS request; <code>false</code>
+     * otherwise.</li> <li><b>cors.request.origin:</b> The Origin URL.</li>
+     * <li><b>cors.request.type:</b> Type of request. Values:
+     * <code>simple</code> or <code>preflight</code> or <code>not_cors</code> or
      * <code>invalid_cors</code></li> <li><b>cors.request.headers:</b> Request
      * headers sent as 'Access-Control-Request-Headers' header, for pre-flight
      * request.</li> </ul>
@@ -564,9 +561,9 @@ public final class WebDavCompliantCorsFilter implements Filter {
                 String method = request.getMethod();
                 if (method != null && HTTP_METHODS.contains(method)) {
                     if ("OPTIONS".equals(method)) {
-                        String accessControlRequestMethodHeader =
-                                request.getHeader(
-                                REQUEST_HEADER_ACCESS_CONTROL_REQUEST_METHOD);
+                        String accessControlRequestMethodHeader
+                                = request.getHeader(
+                                        REQUEST_HEADER_ACCESS_CONTROL_REQUEST_METHOD);
                         if (accessControlRequestMethodHeader != null
                                 && !accessControlRequestMethodHeader.isEmpty()) {
                             requestType = CORSRequestType.PRE_FLIGHT;
@@ -645,23 +642,23 @@ public final class WebDavCompliantCorsFilter implements Filter {
                 this.anyOriginAllowed = true;
             } else {
                 this.anyOriginAllowed = false;
-                Set<String> setAllowedOrigins =
-                        parseStringToSet(allowedOrigins);
+                Set<String> setAllowedOrigins
+                        = parseStringToSet(allowedOrigins);
                 this.allowedOrigins.clear();
                 this.allowedOrigins.addAll(setAllowedOrigins);
             }
         }
 
         if (allowedHttpMethods != null) {
-            Set<String> setAllowedHttpMethods =
-                    parseStringToSet(allowedHttpMethods);
+            Set<String> setAllowedHttpMethods
+                    = parseStringToSet(allowedHttpMethods);
             this.allowedHttpMethods.clear();
             this.allowedHttpMethods.addAll(setAllowedHttpMethods);
         }
 
         if (allowedHttpHeaders != null) {
-            Set<String> setAllowedHttpHeaders =
-                    parseStringToSet(allowedHttpHeaders);
+            Set<String> setAllowedHttpHeaders
+                    = parseStringToSet(allowedHttpHeaders);
             Set<String> lowerCaseHeaders = new HashSet<>();
             for (String header : setAllowedHttpHeaders) {
                 String lowerCase = header.toLowerCase();
@@ -818,42 +815,42 @@ public final class WebDavCompliantCorsFilter implements Filter {
      * be shared based by returning the value of the Origin request header in
      * the response.
      */
-    public static final String RESPONSE_HEADER_ACCESS_CONTROL_ALLOW_ORIGIN =
-            "Access-Control-Allow-Origin";
+    public static final String RESPONSE_HEADER_ACCESS_CONTROL_ALLOW_ORIGIN
+            = "Access-Control-Allow-Origin";
     /**
      * The Access-Control-Allow-Credentials header indicates whether the
      * response to request can be exposed when the omit credentials flag is
      * unset. When part of the response to a preflight request it indicates that
      * the actual request can include user credentials.
      */
-    public static final String RESPONSE_HEADER_ACCESS_CONTROL_ALLOW_CREDENTIALS =
-            "Access-Control-Allow-Credentials";
+    public static final String RESPONSE_HEADER_ACCESS_CONTROL_ALLOW_CREDENTIALS
+            = "Access-Control-Allow-Credentials";
     /**
      * The Access-Control-Expose-Headers header indicates which headers are safe
      * to expose to the API of a CORS API specification
      */
-    public static final String RESPONSE_HEADER_ACCESS_CONTROL_EXPOSE_HEADERS =
-            "Access-Control-Expose-Headers";
+    public static final String RESPONSE_HEADER_ACCESS_CONTROL_EXPOSE_HEADERS
+            = "Access-Control-Expose-Headers";
     /**
      * The Access-Control-Max-Age header indicates how long the results of a
      * preflight request can be cached in a preflight result cache.
      */
-    public static final String RESPONSE_HEADER_ACCESS_CONTROL_MAX_AGE =
-            "Access-Control-Max-Age";
+    public static final String RESPONSE_HEADER_ACCESS_CONTROL_MAX_AGE
+            = "Access-Control-Max-Age";
     /**
      * The Access-Control-Allow-Methods header indicates, as part of the
      * response to a preflight request, which methods can be used during the
      * actual request.
      */
-    public static final String RESPONSE_HEADER_ACCESS_CONTROL_ALLOW_METHODS =
-            "Access-Control-Allow-Methods";
+    public static final String RESPONSE_HEADER_ACCESS_CONTROL_ALLOW_METHODS
+            = "Access-Control-Allow-Methods";
     /**
      * The Access-Control-Allow-Headers header indicates, as part of the
      * response to a preflight request, which header field names can be used
      * during the actual request.
      */
-    public static final String RESPONSE_HEADER_ACCESS_CONTROL_ALLOW_HEADERS =
-            "Access-Control-Allow-Headers";
+    public static final String RESPONSE_HEADER_ACCESS_CONTROL_ALLOW_HEADERS
+            = "Access-Control-Allow-Headers";
     // -------------------------------------------------- CORS Request Headers
     /**
      * The Origin header indicates where the cross-origin request or preflight
@@ -864,14 +861,14 @@ public final class WebDavCompliantCorsFilter implements Filter {
      * The Access-Control-Request-Method header indicates which method will be
      * used in the actual request as part of the preflight request.
      */
-    public static final String REQUEST_HEADER_ACCESS_CONTROL_REQUEST_METHOD =
-            "Access-Control-Request-Method";
+    public static final String REQUEST_HEADER_ACCESS_CONTROL_REQUEST_METHOD
+            = "Access-Control-Request-Method";
     /**
      * The Access-Control-Request-Headers header indicates which headers will be
      * used in the actual request as part of the preflight request.
      */
-    public static final String REQUEST_HEADER_ACCESS_CONTROL_REQUEST_HEADERS =
-            "Access-Control-Request-Headers";
+    public static final String REQUEST_HEADER_ACCESS_CONTROL_REQUEST_HEADERS
+            = "Access-Control-Request-Headers";
     // ----------------------------------------------------- Request attributes
     /**
      * The prefix to a CORS request attribute.
@@ -880,24 +877,24 @@ public final class WebDavCompliantCorsFilter implements Filter {
     /**
      * Attribute that contains the origin of the request.
      */
-    public static final String HTTP_REQUEST_ATTRIBUTE_ORIGIN =
-            HTTP_REQUEST_ATTRIBUTE_PREFIX + "request.origin";
+    public static final String HTTP_REQUEST_ATTRIBUTE_ORIGIN
+            = HTTP_REQUEST_ATTRIBUTE_PREFIX + "request.origin";
     /**
      * Boolean value, suggesting if the request is a CORS request or not.
      */
-    public static final String HTTP_REQUEST_ATTRIBUTE_IS_CORS_REQUEST =
-            HTTP_REQUEST_ATTRIBUTE_PREFIX + "isCorsRequest";
+    public static final String HTTP_REQUEST_ATTRIBUTE_IS_CORS_REQUEST
+            = HTTP_REQUEST_ATTRIBUTE_PREFIX + "isCorsRequest";
     /**
      * Type of CORS request, of type {@link CORSRequestType}.
      */
-    public static final String HTTP_REQUEST_ATTRIBUTE_REQUEST_TYPE =
-            HTTP_REQUEST_ATTRIBUTE_PREFIX + "request.type";
+    public static final String HTTP_REQUEST_ATTRIBUTE_REQUEST_TYPE
+            = HTTP_REQUEST_ATTRIBUTE_PREFIX + "request.type";
     /**
      * Request headers sent as 'Access-Control-Request-Headers' header, for
      * pre-flight request.
      */
-    public static final String HTTP_REQUEST_ATTRIBUTE_REQUEST_HEADERS =
-            HTTP_REQUEST_ATTRIBUTE_PREFIX + "request.headers";
+    public static final String HTTP_REQUEST_ATTRIBUTE_REQUEST_HEADERS
+            = HTTP_REQUEST_ATTRIBUTE_PREFIX + "request.headers";
 
     // -------------------------------------------------------------- Constants
     /**
@@ -936,54 +933,54 @@ public final class WebDavCompliantCorsFilter implements Filter {
      * >http://tools.ietf.org/html/rfc2616#section-5.1.1</a>
      *
      */
-    public static final Collection<String> HTTP_METHODS =
-            new HashSet<>(Arrays.asList("OPTIONS", "GET", "HEAD", "POST",
-            "PUT", "DELETE", "TRACE", "CONNECT",
-            "PROPFIND", "PROPPATCH", "MKCOL", "LOCK", "MOVE", "LOCK", "UNLOCK", "COPY"));
+    public static final Collection<String> HTTP_METHODS
+            = new HashSet<>(Arrays.asList("OPTIONS", "GET", "HEAD", "POST",
+                    "PUT", "DELETE", "TRACE", "CONNECT",
+                    "PROPFIND", "PROPPATCH", "MKCOL", "LOCK", "MOVE", "LOCK", "UNLOCK", "COPY"));
     /**
      * {@link Collection} of non-simple HTTP methods. Case sensitive.
      */
-    public static final Collection<String> COMPLEX_HTTP_METHODS =
-            new HashSet<>(Arrays.asList("PUT", "DELETE", "TRACE",
-            "CONNECT",
-            "PROPFIND", "PROPPATCH", "MKCOL", "LOCK", "MOVE", "LOCK", "UNLOCK", "COPY"));
+    public static final Collection<String> COMPLEX_HTTP_METHODS
+            = new HashSet<>(Arrays.asList("PUT", "DELETE", "TRACE",
+                    "CONNECT",
+                    "PROPFIND", "PROPPATCH", "MKCOL", "LOCK", "MOVE", "LOCK", "UNLOCK", "COPY"));
     /**
      * {@link Collection} of Simple HTTP methods. Case sensitive.
      *
      * @see <a href="http://www.w3.org/TR/cors/#terminology"
      * >http://www.w3.org/TR/cors/#terminology</a>
      */
-    public static final Collection<String> SIMPLE_HTTP_METHODS =
-            new HashSet<>(Arrays.asList("GET", "POST", "HEAD"));
+    public static final Collection<String> SIMPLE_HTTP_METHODS
+            = new HashSet<>(Arrays.asList("GET", "POST", "HEAD"));
     /**
      * {@link Collection} of Simple HTTP request headers. Case in-sensitive.
      *
      * @see <a href="http://www.w3.org/TR/cors/#terminology"
      * >http://www.w3.org/TR/cors/#terminology</a>
      */
-    public static final Collection<String> SIMPLE_HTTP_REQUEST_HEADERS =
-            new HashSet<>(Arrays.asList("Accept", "Accept-Language",
-            "Content-Language"));
+    public static final Collection<String> SIMPLE_HTTP_REQUEST_HEADERS
+            = new HashSet<>(Arrays.asList("Accept", "Accept-Language",
+                    "Content-Language"));
     /**
      * {@link Collection} of Simple HTTP request headers. Case in-sensitive.
      *
      * @see <a href="http://www.w3.org/TR/cors/#terminology"
      * >http://www.w3.org/TR/cors/#terminology</a>
      */
-    public static final Collection<String> SIMPLE_HTTP_RESPONSE_HEADERS =
-            new HashSet<>(Arrays.asList("Cache-Control",
-            "Content-Language", "Content-Type", "Expires",
-            "Last-Modified", "Pragma"));
+    public static final Collection<String> SIMPLE_HTTP_RESPONSE_HEADERS
+            = new HashSet<>(Arrays.asList("Cache-Control",
+                    "Content-Language", "Content-Type", "Expires",
+                    "Last-Modified", "Pragma"));
     /**
      * {@link Collection} of Simple HTTP request headers. Case in-sensitive.
      *
      * @see <a href="http://www.w3.org/TR/cors/#terminology"
      * >http://www.w3.org/TR/cors/#terminology</a>
      */
-    public static final Collection<String> SIMPLE_HTTP_REQUEST_CONTENT_TYPE_VALUES =
-            new HashSet<>(Arrays.asList(
-            "application/x-www-form-urlencoded",
-            "multipart/form-data", "text/plain"));
+    public static final Collection<String> SIMPLE_HTTP_REQUEST_CONTENT_TYPE_VALUES
+            = new HashSet<>(Arrays.asList(
+                    "application/x-www-form-urlencoded",
+                    "multipart/form-data", "text/plain"));
     // ------------------------------------------------ Configuration Defaults
     /**
      * By default, all origins are allowed to make requests.
@@ -992,8 +989,8 @@ public final class WebDavCompliantCorsFilter implements Filter {
     /**
      * By default, following methods are supported: GET, POST, HEAD and OPTIONS.
      */
-    public static final String DEFAULT_ALLOWED_HTTP_METHODS =
-            "GET,POST,HEAD,OPTIONS";
+    public static final String DEFAULT_ALLOWED_HTTP_METHODS
+            = "GET,POST,HEAD,OPTIONS";
     /**
      * By default, time duration to cache pre-flight response is 30 mins.
      */
@@ -1007,8 +1004,8 @@ public final class WebDavCompliantCorsFilter implements Filter {
      * Origin,Accept,X-Requested-With, Content-Type,
      * Access-Control-Request-Method, and Access-Control-Request-Headers.
      */
-    public static final String DEFAULT_ALLOWED_HTTP_HEADERS =
-            "Origin,Accept,X-Requested-With,Content-Type,"
+    public static final String DEFAULT_ALLOWED_HTTP_HEADERS
+            = "Origin,Accept,X-Requested-With,Content-Type,"
             + "Access-Control-Request-Method,Access-Control-Request-Headers";
     /**
      * By default, none of the headers are exposed in response.
@@ -1022,36 +1019,36 @@ public final class WebDavCompliantCorsFilter implements Filter {
     /**
      * Key to retrieve allowed origins from {@link FilterConfig}.
      */
-    public static final String PARAM_CORS_ALLOWED_ORIGINS =
-            "cors.allowed.origins";
+    public static final String PARAM_CORS_ALLOWED_ORIGINS
+            = "cors.allowed.origins";
     /**
      * Key to retrieve support credentials from {@link FilterConfig}.
      */
-    public static final String PARAM_CORS_SUPPORT_CREDENTIALS =
-            "cors.support.credentials";
+    public static final String PARAM_CORS_SUPPORT_CREDENTIALS
+            = "cors.support.credentials";
     /**
      * Key to retrieve exposed headers from {@link FilterConfig}.
      */
-    public static final String PARAM_CORS_EXPOSED_HEADERS =
-            "cors.exposed.headers";
+    public static final String PARAM_CORS_EXPOSED_HEADERS
+            = "cors.exposed.headers";
     /**
      * Key to retrieve allowed headers from {@link FilterConfig}.
      */
-    public static final String PARAM_CORS_ALLOWED_HEADERS =
-            "cors.allowed.headers";
+    public static final String PARAM_CORS_ALLOWED_HEADERS
+            = "cors.allowed.headers";
     /**
      * Key to retrieve allowed methods from {@link FilterConfig}.
      */
-    public static final String PARAM_CORS_ALLOWED_METHODS =
-            "cors.allowed.methods";
+    public static final String PARAM_CORS_ALLOWED_METHODS
+            = "cors.allowed.methods";
     /**
      * Key to retrieve preflight max age from {@link FilterConfig}.
      */
-    public static final String PARAM_CORS_PREFLIGHT_MAXAGE =
-            "cors.preflight.maxage";
+    public static final String PARAM_CORS_PREFLIGHT_MAXAGE
+            = "cors.preflight.maxage";
     /**
      * Key to determine if request should be decorated.
      */
-    public static final String PARAM_CORS_REQUEST_DECORATE =
-            "cors.request.decorate";
+    public static final String PARAM_CORS_REQUEST_DECORATE
+            = "cors.request.decorate";
 }

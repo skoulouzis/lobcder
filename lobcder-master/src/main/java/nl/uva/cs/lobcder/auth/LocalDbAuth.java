@@ -4,8 +4,6 @@
  */
 package nl.uva.cs.lobcder.auth;
 
-import lombok.Setter;
-import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.util.Constants;
 
 import javax.sql.DataSource;
@@ -17,17 +15,15 @@ import java.sql.Statement;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
  * @author skoulouz
  */
-@Log
 public class LocalDbAuth implements AuthI {
 
-    @Setter
     private DataSource datasource = null;
-    @Setter
     private PrincipalCacheI principalCache = null;
     private int attempts = 0;
 
@@ -44,7 +40,7 @@ public class LocalDbAuth implements AuthI {
             if (res == null) {
 
                 int id;
-                try (Connection connection = datasource.getConnection()) {
+                try (Connection connection = getDatasource().getConnection()) {
                     try (Statement s = connection.createStatement()) {
                         HashSet<String> roles = new HashSet<>();
                         try (PreparedStatement authStatement = connection.prepareStatement(
@@ -88,7 +84,7 @@ public class LocalDbAuth implements AuthI {
                 attempts++;
                 checkToken(uname, token);
             } else {
-                LocalDbAuth.log.log(Level.SEVERE, null, ex);
+                Logger.getLogger(LocalDbAuth.class.getName()).log(Level.SEVERE, null, ex);
                 return null;
             }
         } finally {
@@ -101,5 +97,26 @@ public class LocalDbAuth implements AuthI {
 //            }
         }
         return null;
+    }
+
+    /**
+     * @param principalCache the principalCache to set
+     */
+    public void setPrincipalCache(PrincipalCacheI principalCache) {
+        this.principalCache = principalCache;
+    }
+
+    /**
+     * @return the datasource
+     */
+    public DataSource getDatasource() {
+        return datasource;
+    }
+
+    /**
+     * @param datasource the datasource to set
+     */
+    public void setDatasource(DataSource datasource) {
+        this.datasource = datasource;
     }
 }

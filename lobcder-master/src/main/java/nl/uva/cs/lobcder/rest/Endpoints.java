@@ -16,14 +16,12 @@
 package nl.uva.cs.lobcder.rest;
 
 import javax.xml.bind.annotation.XmlRootElement;
-import lombok.Data;
 
 /**
  *
  * @author S. Koulouzis
  */
 @XmlRootElement
-@Data
 public class Endpoints {
 
     String source;

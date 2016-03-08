@@ -4,8 +4,7 @@
  */
 package nl.uva.cs.lobcder.rest;
 
-import lombok.AllArgsConstructor;
-import lombok.extern.java.Log;
+
 import nl.uva.cs.lobcder.auth.MyPrincipal;
 import nl.uva.cs.lobcder.auth.Permissions;
 import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
@@ -40,9 +39,9 @@ import nl.uva.cs.lobcder.rest.wrappers.Stats;
 /**
  * Generates archives given a folder path. Each file and folder is added at
  * runtime from the backend to the archive
+ *
  * @author S. Koulouzis, D. Vasyunin
  */
-@Log
 @Path("compress/")
 public class Archive extends CatalogueHelper {
 
@@ -51,17 +50,51 @@ public class Archive extends CatalogueHelper {
 
     /**
      * Generates a zip archive of folder
+     *
      * @param path the folder name
      * @return the stream of the archive
      */
     @GET
     @Path("/getzip/{name:.+}")
     public Response getZip(@PathParam("name") String path) {
-        @AllArgsConstructor
+
         class Folder {
 
-            String path;
-            LogicalData logicalData;
+            private String path;
+            private LogicalData logicalData;
+
+            private Folder(String path, LogicalData logicalData) {
+                this.path = path;
+                this.logicalData = logicalData;
+            }
+
+            /**
+             * @return the path
+             */
+            public String getPath() {
+                return path;
+            }
+
+            /**
+             * @param path the path to set
+             */
+            public void setPath(String path) {
+                this.path = path;
+            }
+
+            /**
+             * @return the logicalData
+             */
+            public LogicalData getLogicalData() {
+                return logicalData;
+            }
+
+            /**
+             * @param logicalData the logicalData to set
+             */
+            public void setLogicalData(LogicalData logicalData) {
+                this.logicalData = logicalData;
+            }
         }
 
         final String rootPath;
@@ -86,7 +119,6 @@ public class Archive extends CatalogueHelper {
         StreamingOutput result = new StreamingOutput() {
             @Override
             public void write(OutputStream out) throws IOException, WebApplicationException {
-
 
                 Stack<Folder> folders;
                 try (Connection connection = catalogue.getConnection()) {
@@ -113,17 +145,17 @@ public class Archive extends CatalogueHelper {
 
                         while (!folders.isEmpty()) {
                             Folder folder = folders.pop();
-                            ze = new ZipEntry(folder.path + "/");
-                            ze.setTime(folder.logicalData.getModifiedDate());
+                            ze = new ZipEntry(folder.getPath() + "/");
+                            ze.setTime(folder.getLogicalData().getModifiedDate());
                             zip.putNextEntry(ze);
-                            getCatalogue().addViewForRes(folder.logicalData.getUid());
-                            for (LogicalData ld : catalogue.getChildrenByParentRef(folder.logicalData.getUid(), connection)) {
+                            getCatalogue().addViewForRes(folder.getLogicalData().getUid());
+                            for (LogicalData ld : catalogue.getChildrenByParentRef(folder.getLogicalData().getUid(), connection)) {
                                 Permissions entry_p = catalogue.getPermissions(ld.getUid(), ld.getOwner(), connection);
                                 if (principal.canRead(entry_p)) {
                                     if (ld.isFolder()) {
-                                        folders.push(new Folder(folder.path + "/" + ld.getName(), ld));
+                                        folders.push(new Folder(folder.getPath() + "/" + ld.getName(), ld));
                                     } else {
-                                        ze = new ZipEntry(folder.path + "/" + ld.getName());
+                                        ze = new ZipEntry(folder.getPath() + "/" + ld.getName());
                                         ze.setTime(ld.getModifiedDate());
                                         zip.putNextEntry(ze);
                                         copyStream(catalogue.getPdriDescrByGroupId(ld.getPdriGroupId()), zip);
@@ -144,10 +176,6 @@ public class Archive extends CatalogueHelper {
 
             }
         };
-
-
-
-
 
         Response.ResponseBuilder response = Response.ok(result, "application/zip");
         return response.header("Content-Disposition", "attachment; filename=" + rootName + ".zip").build();
@@ -170,7 +198,6 @@ public class Archive extends CatalogueHelper {
                     }
                 }
 
-
                 double elapsed = System.currentTimeMillis() - start;
                 double speed = ((total * 8.0) * 1000.0) / (elapsed * 1000.0);
 
@@ -187,7 +214,7 @@ public class Archive extends CatalogueHelper {
                 } catch (SQLException ex) {
                     Logger.getLogger(Archive.class.getName()).log(Level.SEVERE, null, ex);
                 }
-                Archive.log.log(Level.INFO, msg);
+                Logger.getLogger(Archive.class.getName()).log(Level.INFO, msg);
                 return;
             } catch (Throwable th) {
                 Logger.getLogger(Archive.class.getName()).log(Level.SEVERE, null, th);

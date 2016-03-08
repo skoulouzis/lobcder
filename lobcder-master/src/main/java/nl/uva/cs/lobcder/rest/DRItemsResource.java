@@ -5,11 +5,12 @@
 package nl.uva.cs.lobcder.rest;
 
 import java.io.UnsupportedEncodingException;
-import lombok.extern.java.Log;
+
 import nl.uva.cs.lobcder.auth.MyPrincipal;
 import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
 import nl.uva.cs.lobcder.resources.LogicalData;
 import nl.uva.cs.lobcder.util.Constants;
+import java.util.logging.Logger;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -24,11 +25,10 @@ import java.util.ArrayList;
 import java.util.logging.Level;
 
 /**
- * Used by the DRI service to supervise resources for corrupted files etc.  
+ * Used by the DRI service to supervise resources for corrupted files etc.
  *
  * @author dvasunin
  */
-@Log
 public class DRItemsResource {
 
     JDBCatalogue catalogue = null;
@@ -64,12 +64,11 @@ public class DRItemsResource {
         }
     }
 
-    
-   
     /**
-     * Sets supervised flag for a resource. 
+     * Sets supervised flag for a resource.
+     *
      * @param flag the flag
-     * @param path  the resource's path
+     * @param path the resource's path
      */
     @Path("supervised/{flag}")
     @PUT
@@ -93,14 +92,14 @@ public class DRItemsResource {
                     }
                     cn.commit();
                 } catch (SQLException e) {
-                    DRItemsResource.log.log(Level.SEVERE, null, e);
+                    Logger.getLogger(DRItemsResource.class.getName()).log(Level.SEVERE, null, e);
                     cn.rollback();
                 }
             } else {
-                log.warning("NOT a superuser: want change DRI flag for " + path);
+                Logger.getLogger(DRItemsResource.class.getName()).log(Level.WARNING, "NOT a superuser: want change DRI flag for {0}", path);
             }
         } catch (SQLException e) {
-            log.log(Level.SEVERE, null, e);
+            Logger.getLogger(DRItemsResource.class.getName()).log(Level.SEVERE, null, e);
             throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
         }
     }

@@ -1,7 +1,5 @@
 package nl.uva.cs.lobcder.catalogue;
 
-import lombok.SneakyThrows;
-import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.replication.policy.ReplicationPolicy;
 import nl.uva.cs.lobcder.resources.*;
 import nl.uva.cs.lobcder.util.DesEncrypter;
@@ -13,11 +11,11 @@ import java.math.BigInteger;
 import java.sql.*;
 import java.util.*;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Created by dvasunin on 14.01.15.
  */
-@Log
 public class ReplicateSweep implements Runnable {
 
     private final DataSource datasource;
@@ -80,7 +78,7 @@ public class ReplicateSweep implements Runnable {
 
             }
         } catch (Exception e) {
-            ReplicateSweep.log.log(Level.SEVERE, null, e);
+            Logger.getLogger(ReplicateSweep.class.getName()).log(Level.SEVERE, null, e);
         }
     }
 
@@ -116,15 +114,15 @@ public class ReplicateSweep implements Runnable {
                     pdri.delete();
                     preparedStatementDel.setLong(1, pdriDescr.getId());
                     preparedStatementDel.executeUpdate();
-                    log.log(Level.FINE, "DELETE: {0}", pdri.getURI());
+                    Logger.getLogger(ReplicateSweep.class.getName()).log(Level.FINE, "DELETE: {0}", pdri.getURI());
                 } catch (Exception e) {
-                    log.log(Level.WARNING, null, e);
+                    Logger.getLogger(ReplicateSweep.class.getName()).log(Level.WARNING, null, e);
                     result = false;
                 }
             }
             return result;
         } catch (Exception e) {
-            log.log(Level.SEVERE, null, e);
+            Logger.getLogger(ReplicateSweep.class.getName()).log(Level.SEVERE, null, e);
             return false;
         }
     }
@@ -142,16 +140,16 @@ public class ReplicateSweep implements Runnable {
                     pdri.delete();
                     preparedStatement.setLong(1, pdriDescr.getId());
                     preparedStatement.executeUpdate();
-                    log.log(Level.FINE, "DELETE: {0}", pdri.getURI());
+                    Logger.getLogger(ReplicateSweep.class.getName()).log(Level.FINE, "DELETE: {0}", pdri.getURI());
                     JDBCatalogue.removeFromPDRIDescrCache(pdriDescr.getId());
                 } catch (Exception e) {
-                    log.log(Level.SEVERE, null, e);
+                    Logger.getLogger(ReplicateSweep.class.getName()).log(Level.SEVERE, null, e);
                     result = false;
                 }
             }
             return result;
         } catch (Exception e) {
-            log.log(Level.SEVERE, null, e);
+            Logger.getLogger(ReplicateSweep.class.getName()).log(Level.SEVERE, null, e);
             return false;
         }
     }
@@ -193,8 +191,7 @@ public class ReplicateSweep implements Runnable {
         }
     }
 
-    @SneakyThrows
-    private ReplicationPolicy getReplicationPolicy() {
+    private ReplicationPolicy getReplicationPolicy() throws InstantiationException, IllegalAccessException {
         return replicationPolicyClass.newInstance();
     }
 
@@ -344,7 +341,7 @@ public class ReplicateSweep implements Runnable {
                     result = destinationPdri.exists(destinationPdri.getFileName());
                     long srcLen = sourcePdri.getLength();
                     if (result == false || destinationPdri.getLength() != srcLen) {
-                        log.log(Level.WARNING, "Failed to replicate {0}/{1} to {2}/{3}", new Object[]{sourcePdri.getURI(), sourcePdri.getFileName(), destinationPdri.getURI(), destinationPdri.getFileName()});
+                        Logger.getLogger(ReplicateSweep.class.getName()).log(Level.WARNING, "Failed to replicate {0}/{1} to {2}/{3}", new Object[]{sourcePdri.getURI(), sourcePdri.getFileName(), destinationPdri.getURI(), destinationPdri.getFileName()});
                         result = false;
                     }
 //                    else {
@@ -357,16 +354,16 @@ public class ReplicateSweep implements Runnable {
 //                    }
 
                 } catch (Exception e) {
-                    log.log(Level.WARNING, null, e);
+                    Logger.getLogger(ReplicateSweep.class.getName()).log(Level.WARNING, null, e);
                     result = false;
                 } catch (Throwable e) {
-                    log.log(Level.WARNING, null, e);
+                    Logger.getLogger(ReplicateSweep.class.getName()).log(Level.WARNING, null, e);
                     result = false;
                 }
             }
             return result;
         } catch (Exception e) {
-            log.log(Level.SEVERE, null, e);
+            Logger.getLogger(ReplicateSweep.class.getName()).log(Level.SEVERE, null, e);
             return false;
         }
     }

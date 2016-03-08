@@ -1,6 +1,6 @@
 package nl.uva.cs.lobcder.catalogue.repsweep;
 
-import lombok.extern.java.Log;
+
 import nl.uva.cs.lobcder.catalogue.beans.ItemBean;
 import nl.uva.cs.lobcder.catalogue.beans.PdriBean;
 import nl.uva.cs.lobcder.catalogue.beans.PdriGroupBean;
@@ -19,12 +19,13 @@ import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Created by dvasunin on 28.02.15.
  */
 
-@Log
+
 public class ReplicateSweep implements Runnable {
 
     private final ConnectorI connector;
@@ -95,13 +96,13 @@ public class ReplicateSweep implements Runnable {
                             connector.reportPdriGroupRelease(pdriGroupBean);
                         }
                     } catch (Exception e) {
-                        log.log(Level.SEVERE, null, e);
+                        Logger.getLogger(ReplicateSweep.class.getName()).log(Level.SEVERE, null, e);
                         connector.reportPdriGroupRelease(pdriGroupBean);
                     }
                 }
             }
         } catch(Exception e) {
-            log.log(Level.SEVERE, null, e);
+            Logger.getLogger(ReplicateSweep.class.getName()).log(Level.SEVERE, null, e);
         }
     }
 
@@ -139,8 +140,7 @@ public class ReplicateSweep implements Runnable {
         try {
             for (StorageSiteBean storageSiteBean : toReplicate) {
                 BigInteger pdriKey = DesEncrypter.generateKey();
-                PdriBean destinationPdriBean= new PdriBean(
-                        null,
+                PdriBean destinationPdriBean= new PdriBean(null,
                         generateFileName(sourcePdriBean),
                         pdriKey,
                         storageSiteBean
@@ -153,7 +153,7 @@ public class ReplicateSweep implements Runnable {
                 destinationPdri = null;
             }
         } catch (Exception e) {
-            log.log(Level.WARNING, null, e);
+            Logger.getLogger(ReplicateSweep.class.getName()).log(Level.WARNING, null, e);
             if(destinationPdri != null) {
                 destinationPdri.delete();
             }

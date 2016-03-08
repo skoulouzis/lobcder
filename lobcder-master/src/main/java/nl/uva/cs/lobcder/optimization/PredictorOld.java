@@ -4,23 +4,18 @@
  */
 package nl.uva.cs.lobcder.optimization;
 
-import io.milton.common.Path;
-import io.milton.http.Request;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.naming.NamingException;
-import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.util.MyDataSource;
 
 /**
  *
  * @author S. Koulouzis
  */
-@Log
 public class PredictorOld extends MyDataSource {
 
     private Timer timer;
@@ -40,7 +35,6 @@ public class PredictorOld extends MyDataSource {
 //    public LobState predictNextState(LobState state) throws MalformedURLException {
 //        return predictNextState(state.getMethod(), state.getResourceName());
 //    }
-
     public Vertex predictNextState(Vertex state) {
         Graph graph = graphPopulator.getGraph();
         if (graph == null) {
@@ -49,12 +43,11 @@ public class PredictorOld extends MyDataSource {
 
         List<Vertex> set = graphPopulator.getGraph().vertexSet();
 
-
         // Compute the total weight of all items together
         double totalWeight = 0.0d;
         for (Vertex i : set) {
             totalWeight += graphPopulator.getGraph().getWeight(state, i);
-            log.log(Level.INFO, "totalWeight: {0}", totalWeight);
+            Logger.getLogger(PredictorOld.class.getName()).log(Level.INFO, "totalWeight: {0}", totalWeight);
         }
 
         // Now choose a random item

@@ -61,7 +61,7 @@ public class SDNControllerClient {
             graph = new SimpleWeightedGraph<>(DefaultWeightedEdge.class);
         }
 
-        Collection<SDNSweep.Switch> switchesColl = SDNSweep.getSwitches();
+        Collection<SDNSweep.Switch> switchesColl = SDNSweep.getSwitches().values();
 
         List<SDNSweep.Switch> switches;
         if (switchesColl instanceof List) {
@@ -174,7 +174,6 @@ public class SDNControllerClient {
         List<DefaultWeightedEdge> shortestPath = null;
 
 //        exportGraph();
-
         StringBuilder msg = new StringBuilder();
         msg.append("\n");
         for (String s : sources) {
@@ -220,10 +219,8 @@ public class SDNControllerClient {
         if (tbytes == null) {
             tbytes = Double.valueOf(1);
         }
-        double bps = (rbytes + tbytes) / SDNSweep.interval;
+        double bps = (rbytes + tbytes) / SDNSweep.getInterval();
         double cost = 1.0 / bps;
-
-
 
         Double averageLinkUsage = SDNSweep.getAverageLinkUsageMap().get(dpi);
         if (averageLinkUsage != null) {
@@ -354,7 +351,6 @@ public class SDNControllerClient {
                         String dstSwitch = dstSwitchAndPort.split("-")[0];
                         String dstOutput = String.valueOf(SDNSweep.getNetworkEntity(dstIP).getAttachmentPoint().get(0).getPort());
 
-
                         e = shortestPath.get(shortestPath.size() - 2);
                         pair = e.toString().substring(1, e.toString().length() - 1);
                         workerSwitch = pair.toString().split(" : ");
@@ -367,8 +363,6 @@ public class SDNControllerClient {
                             dstIngressPort = node1.split("-")[1];
                         }
 
-
-
 //                    String rulesrcToSw = "{\"switch\": \"" + srcSwitch + "\", \"name\":\"tmp\", \"cookie\":\"0\", \"priority\":\"5\", "
 //                            + "\"src-ip\":\"" + srcIP + "\", \"ingress-getPort()\":\"" + srcIngressPort + "\", "
 //                            + "\"dst-ip\": \"" + dstIP + "\", \"active\":\"true\",\"ether-type\":\"0x0800\", "
@@ -379,12 +373,10 @@ public class SDNControllerClient {
 //                            + "\"src-ip\":\"" + srcIP + "\", \"ingress-getPort()\":\"" + dstIngressPort + "\", "
 //                            + "\"dst-ip\": \"" + dstIP + "\", \"active\":\"true\",\"ether-type\":\"0x0800\", "
 //                            + "\"actions\":\"output=" + dstOutput + "\"}";
-
                         String rule11 = "{\"switch\": \"" + srcSwitch + "\", \"name\":\"tmp1-1\", \"cookie\":\"0\", \"priority\":\"5\", "
                                 + "\"src-mac\":\"" + srcMac + "\", \"ingress-getPort()\":\"" + srcIngressPort + "\", "
                                 + "\"dst-mac\": \"" + dstMac + "\", \"active\":\"true\",\"vlan-id\":\"-1\", "
                                 + "\"actions\":\"output=" + srcOutput + "\"}";
-
 
                         String rule12 = "{\"switch\": \"" + srcSwitch + "\", \"name\":\"tmp1-2\", \"cookie\":\"0\", \"priority\":\"5\", "
                                 + "\"src-mac\":\"" + dstMac + "\", \"ingress-getPort()\":\"" + srcOutput + "\", "
@@ -396,14 +388,10 @@ public class SDNControllerClient {
                                 + "\"dst-mac\": \"" + dstMac + "\", \"active\":\"true\",\"vlan-id\":\"-1\", "
                                 + "\"actions\":\"output=" + dstOutput + "\"}";
 
-
                         String rule22 = "{\"switch\": \"" + dstSwitch + "\", \"name\":\"tmp2-2\", \"cookie\":\"0\", \"priority\":\"5\", "
                                 + "\"src-mac\":\"" + dstMac + "\", \"ingress-getPort()\":\"" + dstOutput + "\", "
                                 + "\"dst-mac\": \"" + srcMac + "\", \"active\":\"true\",\"vlan-id\":\"-1\", "
                                 + "\"actions\":\"output=" + dstIngressPort + "\"}";
-
-
-
 
                         List<String> rules = new ArrayList<>();
                         rules.add(rule11);

@@ -1,19 +1,16 @@
 package nl.uva.cs.lobcder.catalogue.delsweep;
 
-import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import lombok.extern.java.Log;
+
 import nl.uva.cs.lobcder.catalogue.beans.PdriBean;
 import nl.uva.cs.lobcder.catalogue.beans.PdriGroupBean;
-import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.cs.lobcder.util.DeleteHelper;
 
 /**
  * User: dvasunin Date: 25.02.13 Time: 16:31 To change this template use File |
  * Settings | File Templates.
  */
-@Log
 public class DeleteSweep implements Runnable {
 
     private final ConnectorI connector;
@@ -36,14 +33,13 @@ public class DeleteSweep implements Runnable {
             }
 //            sleeTime = 10;
         } catch (Exception e) {
-            DeleteSweep.log.log(Level.SEVERE, null, e);
+            Logger.getLogger(DeleteSweep.class.getName()).log(Level.SEVERE, null, e);
+
 //            try {
 //                sleeTime = sleeTime * 2;
 //                Thread.sleep(sleeTime);
 //            } catch (InterruptedException ex2) {
 //            }
-
-
         }
     }
 }

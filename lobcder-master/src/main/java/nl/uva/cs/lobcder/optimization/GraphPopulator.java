@@ -20,14 +20,13 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Nonnull;
 import javax.sql.DataSource;
-import lombok.extern.java.Log;
+
 import nl.uva.cs.lobcder.resources.LogicalData;
 
 /**
  *
  * @author S. Koulouzis
  */
-@Log
 class GraphPopulator implements Runnable {
 
     private final DataSource datasource;
@@ -49,7 +48,6 @@ class GraphPopulator implements Runnable {
 //                msg += d + "\n";
 //            }
 //            log.log(Level.INFO, "Nodes: {0}", msg);
-
             Graph graph = populateGraph(nodes);
             ArrayList<Vertex> transitions = getTransitions(connection, nodes);
 
@@ -64,11 +62,11 @@ class GraphPopulator implements Runnable {
 
     public Collection<LogicalData> getChildrenByParentRef(Long parentRef, @Nonnull Connection connection) throws SQLException {
         try (PreparedStatement preparedStatement = connection.prepareStatement(
-                        "SELECT uid, ownerId, datatype, ldName, createDate, modifiedDate, ldLength, "
-                        + "contentTypesStr, pdriGroupRef, isSupervised, checksum, lastValidationDate, "
-                        + "lockTokenID, lockScope, lockType, lockedByUser, lockDepth, lockTimeout, "
-                        + "description, locationPreference "
-                        + "FROM ldata_table WHERE ldata_table.parentRef = ?")) {
+                "SELECT uid, ownerId, datatype, ldName, createDate, modifiedDate, ldLength, "
+                + "contentTypesStr, pdriGroupRef, isSupervised, checksum, lastValidationDate, "
+                + "lockTokenID, lockScope, lockType, lockedByUser, lockDepth, lockTimeout, "
+                + "description, locationPreference "
+                + "FROM ldata_table WHERE ldata_table.parentRef = ?")) {
             preparedStatement.setLong(1, parentRef);
             ResultSet rs = preparedStatement.executeQuery();
             LinkedList<LogicalData> res = new LinkedList<>();
@@ -104,10 +102,10 @@ class GraphPopulator implements Runnable {
     public LogicalData getLogicalDataByUid(Long UID, @Nonnull Connection connection) throws SQLException {
 
         try (PreparedStatement ps = connection.prepareStatement("SELECT parentRef, ownerId, datatype, ldName, "
-                        + "createDate, modifiedDate, ldLength, contentTypesStr, pdriGroupRef, "
-                        + "isSupervised, checksum, lastValidationDate, lockTokenID, lockScope, "
-                        + "lockType, lockedByUser, lockDepth, lockTimeout, description, locationPreference, status "
-                        + "FROM ldata_table WHERE ldata_table.uid = ?")) {
+                + "createDate, modifiedDate, ldLength, contentTypesStr, pdriGroupRef, "
+                + "isSupervised, checksum, lastValidationDate, lockTokenID, lockScope, "
+                + "lockType, lockedByUser, lockDepth, lockTimeout, description, locationPreference, status "
+                + "FROM ldata_table WHERE ldata_table.uid = ?")) {
             ps.setLong(1, UID);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {

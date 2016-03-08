@@ -1,8 +1,6 @@
 package nl.uva.cs.lobcder.catalogue.beans;
 
 import io.milton.http.LockInfo;
-import io.milton.http.LockToken;
-import lombok.Data;
 import nl.uva.cs.lobcder.auth.Permissions;
 import nl.uva.cs.lobcder.resources.PDRIDescr;
 
@@ -17,17 +15,210 @@ import javax.xml.datatype.XMLGregorianCalendar;
 import java.util.*;
 
 /**
- * User: dvasunin
- * Date: 24.02.14
- * Time: 17:28
- * To change this template use File | Settings | File Templates.
+ * User: dvasunin Date: 24.02.14 Time: 17:28 To change this template use File |
+ * Settings | File Templates.
  */
-@Data
 @XmlRootElement(name = "item")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class ItemBean {
 
-    public static enum Type{
+    /**
+     * @return the uid
+     */
+    public Long getUid() {
+        return uid;
+    }
+
+    /**
+     * @param uid the uid to set
+     */
+    public void setUid(Long uid) {
+        this.uid = uid;
+    }
+
+    /**
+     * @return the type
+     */
+    public Type getType() {
+        return type;
+    }
+
+    /**
+     * @param type the type to set
+     */
+    public void setType(Type type) {
+        this.type = type;
+    }
+
+    /**
+     * @return the name
+     */
+    public String getName() {
+        return name;
+    }
+
+    /**
+     * @param name the name to set
+     */
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    /**
+     * @return the parentRef
+     */
+    public Long getParentRef() {
+        return parentRef;
+    }
+
+    /**
+     * @param parentRef the parentRef to set
+     */
+    public void setParentRef(Long parentRef) {
+        this.parentRef = parentRef;
+    }
+
+    /**
+     * @return the createDate
+     */
+    public XMLGregorianCalendar getCreateDate() {
+        return createDate;
+    }
+
+    /**
+     * @param createDate the createDate to set
+     */
+    public void setCreateDate(XMLGregorianCalendar createDate) {
+        this.createDate = createDate;
+    }
+
+    /**
+     * @return the modifiedDate
+     */
+    public XMLGregorianCalendar getModifiedDate() {
+        return modifiedDate;
+    }
+
+    /**
+     * @param modifiedDate the modifiedDate to set
+     */
+    public void setModifiedDate(XMLGregorianCalendar modifiedDate) {
+        this.modifiedDate = modifiedDate;
+    }
+
+    /**
+     * @return the length
+     */
+    public Long getLength() {
+        return length;
+    }
+
+    /**
+     * @param length the length to set
+     */
+    public void setLength(Long length) {
+        this.length = length;
+    }
+
+    /**
+     * @return the contentTypesAsString
+     */
+    public String getContentTypesAsString() {
+        return contentTypesAsString;
+    }
+
+    /**
+     * @param contentTypesAsString the contentTypesAsString to set
+     */
+    public void setContentTypesAsString(String contentTypesAsString) {
+        this.contentTypesAsString = contentTypesAsString;
+    }
+
+    /**
+     * @return the description
+     */
+    public String getDescription() {
+        return description;
+    }
+
+    /**
+     * @param description the description to set
+     */
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    /**
+     * @return the lock
+     */
+    public LockTokenBean getLock() {
+        return lock;
+    }
+
+    /**
+     * @param lock the lock to set
+     */
+    public void setLock(LockTokenBean lock) {
+        this.lock = lock;
+    }
+
+    /**
+     * @return the preference
+     */
+    public Collection<StorageSiteBean> getPreference() {
+        return preference;
+    }
+
+    /**
+     * @param preference the preference to set
+     */
+    public void setPreference(Collection<StorageSiteBean> preference) {
+        this.preference = preference;
+    }
+
+    /**
+     * @return the permissions
+     */
+    public Permissions getPermissions() {
+        return permissions;
+    }
+
+    /**
+     * @param permissions the permissions to set
+     */
+    public void setPermissions(Permissions permissions) {
+        this.permissions = permissions;
+    }
+
+    /**
+     * @return the path
+     */
+    public String getPath() {
+        return path;
+    }
+
+    /**
+     * @param path the path to set
+     */
+    public void setPath(String path) {
+        this.path = path;
+    }
+
+    /**
+     * @return the dri
+     */
+    public DriBean getDri() {
+        return dri;
+    }
+
+    /**
+     * @param dri the dri to set
+     */
+    public void setDri(DriBean dri) {
+        this.dri = dri;
+    }
+
+    public static enum Type {
         FILE, FOLDER, NULLOCKED
     };
     private Long uid;
@@ -47,35 +238,48 @@ public class ItemBean {
     private String path;
     private DriBean dri;
 
-
     public void addContentType(String contentType) {
         if (contentType == null) {
             contentType = "application/octet-stream";
         }
-        if (contentTypesAsString == null) {
-            contentTypesAsString = new String();
+        if (getContentTypesAsString() == null) {
+            setContentTypesAsString(new String());
         }
-        String ct[] = contentTypesAsString.split(",");
+        String ct[] = getContentTypesAsString().split(",");
         if (!Arrays.asList(ct).contains(contentType)) {
-            contentTypesAsString += contentTypesAsString.isEmpty() ? contentType : ("," + contentType);
+            String cont;
+            if (getContentTypesAsString().isEmpty()) {
+                cont = "," + contentType;
+            } else {
+                cont = getContentTypesAsString();
+            }
+            setContentTypesAsString(cont);
         }
     }
 
     public boolean isFolder() {
-        return type.equals(Type.FOLDER);
+        return getType().equals(Type.FOLDER);
     }
 
     @Override
     public boolean equals(Object o) {
-        if (o == this) return true;
-        if (!(o instanceof ItemBean)) return false;
+        if (o == this) {
+            return true;
+        }
+        if (!(o instanceof ItemBean)) {
+            return false;
+        }
         ItemBean other = (ItemBean) o;
-        if (other.uid.equals(uid)) return true;
-        else return false;
+        if (other.getUid().equals(getUid())) {
+            return true;
+        } else {
+            return false;
+        }
     }
+
     @Override
     public int hashCode() {
-        return uid.hashCode();
+        return getUid().hashCode();
     }
 
     /// test
@@ -102,7 +306,6 @@ public class ItemBean {
 
             //pdril.getPdriList().add(new PdriBean("name", "url", "username", "password", false, null, false));
             //pdril.getPdriList().add(new PdriBean("name2","url", "username", "password", false, null, false));
-
             //ldb.setPdriList(pdril);
             LockInfo lockInfo = new LockInfo(LockInfo.LockScope.EXCLUSIVE,
                     LockInfo.LockType.WRITE, "user",

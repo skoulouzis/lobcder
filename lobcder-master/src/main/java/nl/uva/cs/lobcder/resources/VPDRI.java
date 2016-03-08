@@ -38,7 +38,7 @@ import javax.ws.rs.core.MediaType;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
-import lombok.extern.java.Log;
+
 import nl.uva.cs.lobcder.rest.wrappers.Stats;
 import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.cs.lobcder.util.DesEncrypter;
@@ -64,7 +64,6 @@ import nl.uva.vlet.vrs.io.VRandomReadable;
  *
  * @author S. koulouzis
  */
-@Log
 public class VPDRI implements PDRI {
 
     static {
@@ -113,7 +112,7 @@ public class VPDRI implements PDRI {
             this.doChunked = doChunkUpload;
             initVFS();
 //            initRESTClient();
-//            VPDRI.log.log(Level.FINE, "Done init. fileName: {0}, storageSiteId: {1}, username: {2}, password: {3}, VRL: {4}", new Object[]{fileName, storageSiteId, "username", "password", vrl});
+//            Logger.getLogger(VPDRI.class.getName()).log(Level.FINE, "Done init. fileName: {0}, storageSiteId: {1}, username: {2}, password: {3}, VRL: {4}", new Object[]{fileName, storageSiteId, "username", "password", vrl});
         } catch (Exception ex) {
             throw new IOException(ex);
         }
@@ -162,7 +161,7 @@ public class VPDRI implements PDRI {
     @Override
     public void delete() throws IOException {
         try {
-            VPDRI.log.log(Level.INFO, "Start deleting {0}", new Object[]{vrl});
+            Logger.getLogger(VPDRI.class.getName()).log(Level.INFO, "Start deleting {0}", new Object[]{vrl});
 //            getVfsClient().openLocation(vrl).delete();
             getVfsClient().getFile(vrl).delete();
             reconnectAttemts = 0;
@@ -179,14 +178,11 @@ public class VPDRI implements PDRI {
                 } catch (IOException | VlException ex1) {
                     Logger.getLogger(VPDRI.class.getName()).log(Level.SEVERE, null, ex1);
                 }
+            } else if (reconnectAttemts < Constants.RECONNECT_NTRY) {
+                reconnect();
+                delete();
             } else {
-                if (reconnectAttemts < Constants.RECONNECT_NTRY) {
-                    reconnect();
-                    delete();
-                } else {
-                    Logger.getLogger(VPDRI.class.getName()).log(Level.SEVERE, null, ex);
-                }
-
+                Logger.getLogger(VPDRI.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
     }
@@ -266,7 +262,7 @@ public class VPDRI implements PDRI {
                 while (totalBytesRead < len || read != -1) {
                     long startT = System.currentTimeMillis();
                     read = ra.readBytes(start, buff, 0, buff.length);
-                    VPDRI.log.log(Level.FINEST , "speed: {0} kb/s", (read / 1024.0) / ((System.currentTimeMillis() - startT) / 1000.0));
+                    Logger.getLogger(VPDRI.class.getName()).log(Level.FINEST, "speed: {0} kb/s", (read / 1024.0) / ((System.currentTimeMillis() - startT) / 1000.0));
                     if (read == -1 || totalBytesRead == len) {
                         break;
                     }
@@ -410,10 +406,10 @@ public class VPDRI implements PDRI {
             throw new IOException(ex);
         } catch (VlException ex) {
             if (ex.getMessage() != null) {
-                VPDRI.log.log(Level.FINE, "\tVlException {0}", ex.getMessage());
+                Logger.getLogger(VPDRI.class.getName()).log(Level.FINE, "\tVlException {0}", ex.getMessage());
             }
             if (reconnectAttemts <= 2) {
-                VPDRI.log.log(Level.FINE, "\treconnectAttemts {0}", reconnectAttemts);
+                Logger.getLogger(VPDRI.class.getName()).log(Level.FINE, "\treconnectAttemts {0}", reconnectAttemts);
                 reconnect();
                 putData(in);
             } else {
@@ -444,7 +440,7 @@ public class VPDRI implements PDRI {
         double speed = ((getLength() * 8.0) * 1000.0) / (elapsed * 1000.0);
         try {
             String msg = "File: " + this.getFileName() + " Destination: " + new URI(getURI()).getScheme() + "://" + getHost() + " Rx_Speed: " + speed + " Kbites/sec Rx_Size: " + (getLength()) + " bytes Elapsed_Time: " + elapsed + " ms";
-            VPDRI.log.log(Level.INFO, msg);
+            Logger.getLogger(VPDRI.class.getName()).log(Level.INFO, msg);
         } catch (URISyntaxException ex) {
         }
 
@@ -587,7 +583,7 @@ public class VPDRI implements PDRI {
             VRL sourceVRL = new VRL(source.getURI());
             String sourceScheme = sourceVRL.getScheme();
             String desteScheme = vrl.getScheme();
-            VPDRI.log.log(Level.INFO, "Start replicating {0} to {1}", new Object[]{source.getURI(), getURI()});
+            Logger.getLogger(VPDRI.class.getName()).log(Level.INFO, "Start replicating {0} to {1}", new Object[]{source.getURI(), getURI()});
             double start = System.currentTimeMillis();
             if (!vfsClient.existsDir(vrl.getParent())) {
                 VDir remoteDir = vfsClient.mkdirs(vrl.getParent(), true);
@@ -614,13 +610,10 @@ public class VPDRI implements PDRI {
                 Logger.getLogger(VPDRI.class.getName()).log(Level.WARNING, null, ex);
             }
 
-
             String msg = "Source: " + source.getHost() + " Destination: " + vrl.getScheme() + "://" + getHost() + " Replication_Speed: " + speed + " Kbites/sec Repl_Size: " + (getLength()) + " bytes";
-            VPDRI.log.log(Level.INFO, msg);
-
+            Logger.getLogger(VPDRI.class.getName()).log(Level.INFO, msg);
 
 //            getAsyncDelete(getVfsClient(), vrl).run();
-
         } catch (VlException ex) {
             throw new IOException(ex);
         }
