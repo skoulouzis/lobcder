@@ -90,9 +90,8 @@ public class AuthTicket implements AuthI {
                     }
                 }
             }
-            User u = null;
             if (res == null) {
-                u = validateTicket(token);
+                User u = validateTicket(token);
                 res = new MyPrincipal(u.username, new HashSet(Arrays.asList(u.roles)), token);
                 res.getRoles().add("other");
                 res.getRoles().add(u.username);
@@ -141,7 +140,7 @@ public class AuthTicket implements AuthI {
         try {
             String ticket = new String(Base64.decodeBase64(token));
             byte[] signBytes;
-            User u = null;
+            User u;
 
             // check errors
             Integer posSign = ticket.lastIndexOf(";sig=");
@@ -163,8 +162,8 @@ public class AuthTicket implements AuthI {
                     return null;
                 }
                 u = new User();
-                for (int i = 0; i < parts.length; i++) {
-                    String fields[] = parts[i].split("=");
+                for (String part : parts) {
+                    String[] fields = part.split("=");
                     if (fields[0].compareTo("uid") == 0) {
                         u.username = fields[1];
                     } else if (fields[0].compareTo("validuntil") == 0) {
