@@ -301,13 +301,7 @@
             <artifactId>commons-math</artifactId>
             <version>2.2</version>
         </dependency>
-        
-        <dependency> 
-            <groupId>org.codehaus.enunciate</groupId> 
-            <artifactId>enunciate-rt</artifactId> 
-            <version>1.28</version> 
-        </dependency>
-        
+                
         
         <!-- javamelody-core -->
         <dependency>
@@ -432,7 +426,7 @@
                 <version>2.3</version>
             </plugin>
             
-            <plugin> 
+<!--            <plugin> 
                 <groupId>org.codehaus.enunciate</groupId> 
                 <artifactId>maven-enunciate-plugin</artifactId> 
                 <configuration> 
@@ -449,7 +443,7 @@
                     </execution> 
                 </executions>
                 <version>1.28</version>
-            </plugin>
+            </plugin>-->
 
         </plugins>
 
