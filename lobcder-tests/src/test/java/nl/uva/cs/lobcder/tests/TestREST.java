@@ -25,17 +25,16 @@ import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.contrib.ssl.EasySSLProtocolSocketFactory;
-import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.methods.PutMethod;
-import org.apache.commons.httpclient.methods.StringRequestEntity;
 import org.apache.commons.httpclient.protocol.Protocol;
 import org.apache.commons.httpclient.protocol.ProtocolSocketFactory;
-import org.apache.jackrabbit.webdav.client.methods.DeleteMethod;
-import org.apache.jackrabbit.webdav.client.methods.MkColMethod;
 import org.junit.After;
 import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Test;
+
+
+import javax.xml.bind.*;
+import javax.xml.namespace.QName;
 
 
 import java.security.SecureRandom;
@@ -55,16 +54,15 @@ import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.client.urlconnection.HTTPSProperties;
 import java.io.ByteArrayOutputStream;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.security.NoSuchAlgorithmException;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
+import java.util.HashSet;
+import java.util.Iterator;
 import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
+import javax.xml.namespace.QName;
 import org.apache.jackrabbit.webdav.DavException;
 
 /**
@@ -79,10 +77,10 @@ public class TestREST {
     private HttpClient client;
     private String testres1;
     private String testres2;
-    private String testcol;
+//    private String testcol;
     private String restURL;
     private Client restClient;
-    private String testResourceId;
+//    private String testResourceId;
     private String translatorURL;
     private String mrURL;
     private Utils utils;
@@ -130,8 +128,8 @@ public class TestREST {
                 new UsernamePasswordCredentials(this.username, this.password));
 
         restURL = prop.getProperty(("rest.test.url"), "http://localhost:8080/lobcder/rest/");
-        testResourceId = "testResourceId";
-        testcol = this.root + testResourceId + "/";
+//        testResourceId = "testResourceId";
+//        testcol = this.root + testResourceId + "/";
 
         translatorURL = prop.getProperty(("translator.test.url"), "http://localhost:8080/lobcder/urest/");
 
@@ -158,15 +156,231 @@ public class TestREST {
     }
 
     @Test
-    public void testQueryItems() throws IOException {
-        System.err.println("testQueryItems");
+    public void testPermissionsManyOwners() throws IOException, DavException {
+        System.err.println("testPermissionsManyOwners");
+        String testcolName = "testPermissionsManyOwners";
+        String rootcol = root + testcolName + "/";
+        String owner1col = rootcol + "owner1";
+        String owner2col = rootcol + "owner2";
+
+        String owner1Subcol = owner1col + "/sub";
+        String owner2Subcol = owner2col + "/sub";
+
+        String owner1SubSub = owner1Subcol + "/sub";
+        String owner2SubSub = owner2Subcol + "/sub";
+        try {
+            utils.createCollection(rootcol, true);
+            utils.createCollection(owner1col, true);
+            utils.createCollection(owner2col, true);
+            utils.createCollection(owner1Subcol, true);
+            utils.createCollection(owner2Subcol, true);
+            utils.createCollection(owner1SubSub, true);
+            utils.createCollection(owner2SubSub, true);
+
+            utils.createFile(owner1col + "file", true);
+            utils.createFile(owner2col + "/file", true);
+            utils.createFile(owner1Subcol + "/file", true);
+            utils.createFile(owner2Subcol + "/file", true);
+            utils.createFile(owner1SubSub + "/file", true);
+            utils.createFile(owner2SubSub + "/file", true);
+
+
+
+            WebResource webResource = restClient.resource(restURL);
+            Long uid = utils.getResourceUID(rootcol);
+            WebResource res = webResource.path("item").path("permissions").path(String.valueOf(uid));
+            Permissions perm = res.accept(MediaType.APPLICATION_XML).
+                    get(new GenericType<Permissions>() {
+            });
+            assertNotNull(perm);
+            assertNotNull(perm.read);
+            assertNotNull(perm.write);
+
+            MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+            params.add("path", "/" + testcolName);
+
+            res = webResource.path("items").path("query").queryParams(params);
+
+            List<LogicalDataWrapped> list = res.accept(MediaType.APPLICATION_XML).
+                    get(new GenericType<List<LogicalDataWrapped>>() {
+            });
+
+            utils.checkPermissions(list, perm);
+
+
+
+
+
+            Permissions owner1 = new Permissions();
+            owner1.owner = "owner1";
+            Set<String> canRead = new HashSet();
+            canRead.add(owner1.owner);
+            Set<String> canWrite = new HashSet();
+            canWrite.add(owner1.owner);
+            owner1.read = canRead;
+            owner1.write = canWrite;
+
+            params = new MultivaluedMapImpl();
+            params.add("path", "/" + testcolName + "/owner1");
+            res = webResource.path("items").path("permissions").queryParams(params);
+
+            ClientResponse response = res.put(ClientResponse.class, owner1);
+            assertEquals(response.getStatus(), HttpStatus.SC_NO_CONTENT);
+
+
+
+
+
+            Permissions owner2 = new Permissions();
+            owner2.owner = "owner2";
+            canRead = new HashSet();
+            canRead.add(owner2.owner);
+            canWrite = new HashSet();
+            canWrite.add(owner2.owner);
+            owner2.read = canRead;
+            owner2.write = canWrite;
+
+            params = new MultivaluedMapImpl();
+            params.add("path", "/" + testcolName + "/owner2");
+            res = webResource.path("items").path("permissions").queryParams(params);
+            response = res.put(ClientResponse.class, owner2);
+            assertEquals(response.getStatus(), HttpStatus.SC_NO_CONTENT);
+
+
+            params = new MultivaluedMapImpl();
+            params.add("path", "/" + testcolName + "/owner1");
+            res = webResource.path("items").path("query").queryParams(params);
+
+
+            List<LogicalDataWrapped> listOwner1 = res.accept(MediaType.APPLICATION_XML).
+                    get(new GenericType<List<LogicalDataWrapped>>() {
+            });
+
+            utils.checkPermissions(listOwner1, owner1);
+
+
+
+            params = new MultivaluedMapImpl();
+            params.add("path", "/" + testcolName + "/owner2");
+            res = webResource.path("items").path("query").queryParams(params);
+
+
+            List<LogicalDataWrapped> listOwner2 = res.accept(MediaType.APPLICATION_XML).
+                    get(new GenericType<List<LogicalDataWrapped>>() {
+            });
+
+            utils.checkPermissions(listOwner2, owner2);
+
+
+        } finally {
+            utils.deleteResource(rootcol, false);
+        }
+    }
+
+    @Test
+    public void testPermissions() throws IOException, DavException {
+        System.err.println("testPermissions");
+        String testcolName = "testResourceForPermissions";
+        String testcol = root + testcolName + "/";
+        String testcol1 = testcol + "sub1";
+        String testcol2 = testcol + "sub2";
+        String testcol3 = testcol2 + "/sub1";
+        String testcol4 = testcol3 + "/sub3";
+
         try {
             utils.createCollection(testcol, true);
-            utils.createFile(this.root + testResourceId + "/file1", true);
+            utils.createCollection(testcol1, true);
+            utils.createCollection(testcol2, true);
+            utils.createCollection(testcol3, true);
+            utils.createCollection(testcol4, true);
+
+            utils.createFile(testcol + "file", true);
+            utils.createFile(testcol1 + "/file", true);
+            utils.createFile(testcol2 + "/file", true);
+            utils.createFile(testcol3 + "/file", true);
+            utils.createFile(testcol4 + "/file", true);
+
+
+            WebResource webResource = restClient.resource(restURL);
+            Long uid = utils.getResourceUID(testcol);
+            WebResource res = webResource.path("item").path("permissions").path(String.valueOf(uid));
+            Permissions perm = res.accept(MediaType.APPLICATION_XML).
+                    get(new GenericType<Permissions>() {
+            });
+            assertNotNull(perm);
+            assertNotNull(perm.read);
+            assertNotNull(perm.write);
+            String initialOwner = perm.owner;
+            Set<String> initialRead = perm.read;
+            String[] initialReadArray = initialRead.toArray(new String[initialRead.size()]);
+            Set<String> initialWrite = perm.write;
+            String[] initialWriteArray = initialWrite.toArray(new String[initialWrite.size()]);
+
+            MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+            params.add("path", "/" + testcolName);
+
+            res = webResource.path("items").path("query").queryParams(params);
+
+            List<LogicalDataWrapped> list = res.accept(MediaType.APPLICATION_XML).
+                    get(new GenericType<List<LogicalDataWrapped>>() {
+            });
+
+            utils.checkPermissions(list, perm);
+
+//            http://host.com/lobcder/rest/items/permissions?path={path}
+            params = new MultivaluedMapImpl();
+            params.add("path", "/" + testcolName);
+
+            res = webResource.path("items").path("permissions").queryParams(params);
+
+
+            params = new MultivaluedMapImpl();
+            params.add("path", "/" + testcolName);
+
+            Permissions newPerm = new Permissions();
+            newPerm.owner = "someNewOnwer";
+            Set<String> canRead = new HashSet();
+            canRead.add(newPerm.owner);
+            Set<String> canWrite = new HashSet();
+            canWrite.add(newPerm.owner);
+            newPerm.read = canRead;
+            newPerm.write = canWrite;
+
+            String[] newPermReadArray = newPerm.read.toArray(new String[newPerm.read.size()]);
+            String[] newPermWriteArray = newPerm.write.toArray(new String[newPerm.write.size()]);
+
+            ClientResponse response = res.put(ClientResponse.class, newPerm);
+            assertEquals(response.getStatus(), HttpStatus.SC_NO_CONTENT);
+
+            params = null;
+            params = new MultivaluedMapImpl();
+            params.add("path", "/" + testcolName);
+            res = webResource.path("items").path("query").queryParams(params);
+
+            list = null;
+            list = res.accept(MediaType.APPLICATION_XML).
+                    get(new GenericType<List<LogicalDataWrapped>>() {
+            });
+
+            utils.checkPermissions(list, newPerm);
+
+        } finally {
+            utils.deleteResource(testcol, false);
+        }
+
+    }
+
+    @Test
+    public void testQueryItems() throws IOException {
+        System.err.println("testQueryItems");
+        String testcol = root + "testResourceForQueryItems/";
+        try {
+            utils.createCollection(testcol, true);
+            utils.createFile(this.root + "testResourceForQueryItems" + "/file1", true);
             WebResource webResource = restClient.resource(restURL);
 
             MultivaluedMap<String, String> params = new MultivaluedMapImpl();
-            params.add("path", "/" + testResourceId);
+            params.add("path", "/testResourceForQueryItems");
 
             WebResource res = webResource.path("items").path("query").queryParams(params);
 //            ClientResponse response = res.put(ClientResponse.class);
@@ -181,7 +395,7 @@ public class TestREST {
             LogicalDataWrapped logicalDataWrapped = null;
             for (LogicalDataWrapped ldw : list) {
                 utils.checkLogicalDataWrapped(ldw);
-                if (ldw.path.equals("/" + testResourceId) && ldw.logicalData.type.equals("logical.folder")) {
+                if (ldw.path.equals("/testResourceForQueryItems") && ldw.logicalData.type.equals("logical.folder")) {
                     logicalDataWrapped = ldw;
                     break;
                 }
@@ -207,15 +421,17 @@ public class TestREST {
     @Test
     public void testQueryItem() throws IOException {
         System.err.println("testQueryItem");
+        String testcol = root + "testResourceForQueryItem/";
+        String testURI1 = testcol + "file1";
         try {
 
             utils.createCollection(testcol, true);
-            utils.createFile(this.root + testResourceId + "/file1", true);
+            utils.createFile(this.root + testURI1, true);
 
             WebResource webResource = restClient.resource(restURL);
 
             MultivaluedMap<String, String> params = new MultivaluedMapImpl();
-            params.add("path", "/testResourceId");
+            params.add("path", "/testResourceForQueryItem");
 
             WebResource res = webResource.path("items").path("query").queryParams(params);
             List<LogicalDataWrapped> list = res.accept(MediaType.APPLICATION_XML).
@@ -271,13 +487,15 @@ public class TestREST {
     @Test
     public void testDataItem() throws IOException {
         System.err.println("testDataItem");
+        String testcol = root + "testResourceForDataItem/";
+        String testURI1 = testcol + "file1";
         try {
             utils.createCollection(testcol, true);
-            utils.createFile(this.root + testResourceId + "/file1", true);
+            utils.createFile(this.root + testURI1, true);
             WebResource webResource = restClient.resource(restURL);
 
             MultivaluedMap<String, String> params = new MultivaluedMapImpl();
-            params.add("path", "/testResourceId");
+            params.add("path", "/testResourceForDataItem");
 
             WebResource res = webResource.path("items").path("query").queryParams(params);
             List<LogicalDataWrapped> list = res.accept(MediaType.APPLICATION_XML).
@@ -455,9 +673,11 @@ public class TestREST {
     @Test
     public void testTicketTranslator() throws IOException {
         System.err.println("testTicketTranslator");
+        String testcol = root + "testResourceForTicketTranslator/";
+        String testURI1 = testcol + "file1";
         try {
             utils.createCollection(testcol, true);
-            utils.createFile(this.root + testResourceId + "/file1", true);
+            utils.createFile(this.root + testURI1, true);
 
             ClientConfig clientConfig = new DefaultClientConfig();
             clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
@@ -479,7 +699,7 @@ public class TestREST {
             webResource = shortAuthRestClient.resource(restURL);
 
             MultivaluedMap<String, String> params = new MultivaluedMapImpl();
-            params.add("path", "/testResourceId");
+            params.add("path", "/testResourceForTicketTranslator");
 
             res = webResource.path("items").path("query").queryParams(params);
             List<LogicalDataWrapped> list = res.accept(MediaType.APPLICATION_XML).
@@ -496,17 +716,20 @@ public class TestREST {
 
     @Test
     public void testMetadataService() throws IOException, JAXBException {
-        if (quckTest) {
-            return;
-        }
+//        if (quckTest) {
+//            return;
+//        }
         System.err.println("testMetadataService");
+        String testcol = root + "testResourceForMetadataService/";
+        String testURI1 = testcol + "file1";
         try {
+            utils.deleteResource(testcol, false);
             utils.createCollection(testcol, true);
-            utils.createFile(this.root + testResourceId + "/file1", true);
+            utils.createFile(this.root + testURI1, true);
             WebResource webResource = restClient.resource(restURL);
 
             MultivaluedMap<String, String> params = new MultivaluedMapImpl();
-            params.add("path", "/testResourceId");
+            params.add("path", "/testResourceForMetadataService");
 
             WebResource res = webResource.path("items").path("query").queryParams(params);
             List<LogicalDataWrapped> list = res.accept(MediaType.APPLICATION_XML).
@@ -575,6 +798,7 @@ public class TestREST {
     @Test
     public void testArchiveService() throws JAXBException, IOException, DavException, NoSuchAlgorithmException {
         System.err.println("testArchiveService");
+        String testcol = root + "testResourceForArchiveService/";
         String testFileURI1 = testcol + TestSettings.TEST_FILE_NAME1;
         List<File> unzipedFiles = null;
         File randomFile = null;
@@ -583,13 +807,13 @@ public class TestREST {
             utils.createCollection(testcol, true);
             randomFile = utils.createRandomFile("/tmp/" + TestSettings.TEST_FILE_NAME1, 1);
             //If the destination is set to this.root+testResourceId + "/file1" someone is asking for /login.html ???!!!!
-            utils.postFile(randomFile, this.root + testResourceId);
+            utils.postFile(randomFile, testcol);
 
             String localFileChecksum = utils.getChecksum(randomFile, "SHA1");
             utils.waitForReplication(testFileURI1);
 
 
-            File zipFile = utils.DownloadFile(restURL + "/compress/getzip/" + testResourceId, "/tmp/" + testResourceId + ".zip", true);
+            File zipFile = utils.DownloadFile(restURL + "/compress/getzip/testResourceForArchiveService", "/tmp/testResourceForArchiveService.zip", true);
             unzipedFiles = utils.unzipFile(zipFile);
             for (File f : unzipedFiles) {
                 String checksumFromDownloaded = utils.getChecksum(f, "SHA1");
@@ -602,11 +826,14 @@ public class TestREST {
             Logger.getLogger(TestREST.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
             utils.deleteResource(testcol, false);
-            for (File f : unzipedFiles) {
-                if (f != null) {
-                    f.delete();
+            if (unzipedFiles != null && !unzipedFiles.isEmpty()) {
+                for (File f : unzipedFiles) {
+                    if (f != null) {
+                        f.delete();
+                    }
                 }
             }
+
             if (randomFile != null) {
                 randomFile.delete();
             }
@@ -619,6 +846,7 @@ public class TestREST {
             return;
         }
         System.err.println("testTTLService");
+        String testcol = root + "testResourceForTTLService/";
         try {
             utils.createCollection(testcol, true);
 
@@ -644,7 +872,7 @@ public class TestREST {
             webResource = restClient.resource(restURL);
             //PUT https://lobcder.vph.cyfronet.pl/lobcder/rest/ttl/{ttl}?path=/path/to/entry
             MultivaluedMap<String, String> params = new MultivaluedMapImpl();
-            params.add("path", "/" + testResourceId);
+            params.add("path", "/testResourceForTTLService");
             res = webResource.path("ttl").path(String.valueOf("3")).queryParams(params);
             response = res.put(ClientResponse.class);
             assertTrue("status: " + response.getStatus(), response.getStatus() == HttpStatus.SC_OK || response.getStatus() == HttpStatus.SC_NO_CONTENT);

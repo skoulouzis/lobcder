@@ -74,7 +74,7 @@
         <dependency>
             <groupId>nl.uva.vlet</groupId>
             <artifactId>vlet-vfs.cloud</artifactId>
-            <version>2.2</version>
+            <version>2.3</version>
         </dependency>
         
         
@@ -96,7 +96,7 @@
         <dependency>
             <groupId>nl.uva.vlet</groupId>
             <artifactId>vlet-vfs.webdav</artifactId>
-            <version>2.0</version>
+            <version>2.4</version>
         </dependency>   
         
         <dependency>
@@ -221,26 +221,89 @@
         </dependency>
         
         
-        <!--        <dependency>
+        <dependency>
             <groupId>com.mycompany</groupId>
-            <artifactId>lobcder</artifactId>
-            <classifier>classes</classifier>
-            <version>2.3_jdk1.6</version>
-        </dependency>  -->
-        <!--        <dependency>
-            <groupId>com.mycompany</groupId>
-            <artifactId>lobcder</artifactId>
-            <version>2.4</version>
-            <type>war</type>
-        </dependency>-->
+            <artifactId>lobcder-master-classes</artifactId>
+            <version>2.5</version>
+        </dependency>  
+        
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>1.4</version>
+        </dependency>
+        
+        
+          <!-- javamelody-core -->
+        <dependency>
+            <groupId>net.bull.javamelody</groupId>
+            <artifactId>javamelody-core</artifactId>
+            <version>1.50.0</version>
+        </dependency>
+        <!-- itext, option to add PDF export -->
+        <dependency>
+            <groupId>com.lowagie</groupId>
+            <artifactId>itext</artifactId>
+            <version>2.1.7</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>bcmail-jdk14</artifactId>
+                    <groupId>bouncycastle</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>bcprov-jdk14</artifactId>
+                    <groupId>bouncycastle</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>bctsp-jdk14</artifactId>
+                    <groupId>bouncycastle</groupId>
+                </exclusion>
+            </exclusions>            
+        </dependency>
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+            <version>3.0.1</version>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.3.1</version>
+            <type>jar</type>
+        </dependency>
     </dependencies>
     
     <repositories>
+        
         <repository>
-            <id>elab.lab.uvalight.net</id>
-            <name>elab.lab.uvalight.net-releases</name>
-            <url>>http://elab.lab.uvalight.net/artifactory/local</url>
+            <snapshots />
+            <id>skoulouzis-snapshots</id>
+            <url>https://raw.github.com/skoulouzis/mvn-repo/master/snapshots</url>
         </repository>
+                
+                
+        <repository>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+            <id>releases</id>
+            <url>https://raw.github.com/skoulouzis/mvn-repo/master/releases</url>
+        </repository>
+                
+        
+        
+        <!--        <repository>
+            <id>skoulouzis-releases</id>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+            <url>https://raw.github.com/skoulouzis/mvn-repo/master/releases</url>
+        </repository>-->
+        
     </repositories>
 
     <build>

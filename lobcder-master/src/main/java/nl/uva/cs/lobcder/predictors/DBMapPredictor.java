@@ -29,13 +29,8 @@ import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nonnull;
 import javax.naming.NamingException;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.Getter;
 import nl.uva.cs.lobcder.optimization.Vertex;
 import nl.uva.cs.lobcder.util.MyDataSource;
-import lombok.extern.java.Log;
-import nl.uva.cs.lobcder.optimization.LDClustering;
 import nl.uva.cs.lobcder.resources.LogicalData;
 import nl.uva.cs.lobcder.util.PropertiesHelper;
 import static nl.uva.cs.lobcder.util.PropertiesHelper.PREDICTION_TYPE.method;
@@ -48,7 +43,6 @@ import static nl.uva.cs.lobcder.util.PropertiesHelper.PREDICTION_TYPE.state;
  *
  * @author S. Koulouzis
  */
-@Log
 public class DBMapPredictor extends MyDataSource implements Predictor {
 
     public static PropertiesHelper.PREDICTION_TYPE type;
@@ -246,7 +240,7 @@ public class DBMapPredictor extends MyDataSource implements Predictor {
                             res.setLockDepth(rs.getString(16));
                             res.setLockTimeout(rs.getLong(17));
                             res.setDescription(rs.getString(18));
-                            res.setDataLocationPreference(rs.getString(19));
+//                            res.setDataLocationPreference(rs.getString(19));
                             res.setStatus(rs.getString(20));
                             return res;
                         } else {
@@ -302,7 +296,7 @@ public class DBMapPredictor extends MyDataSource implements Predictor {
                 res.setLockDepth(rs.getString(17));
                 res.setLockTimeout(rs.getLong(18));
                 res.setDescription(rs.getString(19));
-                res.setDataLocationPreference(rs.getString(20));
+//                res.setDataLocationPreference(rs.getString(20));
                 res.setStatus(rs.getString(21));
                 return res;
             } else {
@@ -353,11 +347,42 @@ public class DBMapPredictor extends MyDataSource implements Predictor {
     public void setPreviousStateForCurrent(Vertex prevState, Vertex currentState) {
     }
 
-    @Data
-    @AllArgsConstructor
     public class PathInfo {
 
         private String name;
         private Long parentRef;
+
+        private PathInfo(String name, Long parentRef) {
+            this.name = name;
+            this.parentRef = parentRef;
+        }
+
+        /**
+         * @return the name
+         */
+        public String getName() {
+            return name;
+        }
+
+        /**
+         * @param name the name to set
+         */
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        /**
+         * @return the parentRef
+         */
+        public Long getParentRef() {
+            return parentRef;
+        }
+
+        /**
+         * @param parentRef the parentRef to set
+         */
+        public void setParentRef(Long parentRef) {
+            this.parentRef = parentRef;
+        }
     }
 }

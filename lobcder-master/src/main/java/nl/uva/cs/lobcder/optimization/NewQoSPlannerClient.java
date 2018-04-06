@@ -9,9 +9,7 @@ import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.GenericType;
 import com.sun.jersey.api.client.WebResource;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ws.rs.core.MediaType;
@@ -19,9 +17,6 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
-import lombok.Data;
-import nl.uva.cs.lobcder.util.PropertiesHelper;
 
 /**
  *
@@ -46,7 +41,7 @@ public class NewQoSPlannerClient {
 
             List<FloodlightStats> stats = res.accept(MediaType.APPLICATION_JSON).
                     get(new GenericType<List<FloodlightStats>>() {
-            });
+                    });
             return stats;
         } catch (Exception ex) {
             Logger.getLogger(NewQoSPlannerClient.class.getName()).log(Level.SEVERE, null, ex);
@@ -57,7 +52,7 @@ public class NewQoSPlannerClient {
     public void pushFlow(String switchID, int srcPort, int destPort) {
         WebResource webResource = client.resource(uri);
         WebResource res = webResource.path("wm").path("staticflowentrypusher").path("json");
-        
+
         String input = "{\"switch\": \"" + switchID + "\", \"name\":\"static-flow-p" + srcPort + "-p" + destPort + "\", \"cookie\":\"0\", \"priority\":\"32768\", \"ingress-port\":\"" + srcPort + "\", \"active\":\"true\", \"actions\":\"output=" + destPort + "\"}";
 
         ClientResponse response = res.type("application/json")

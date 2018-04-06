@@ -1,6 +1,5 @@
 package nl.uva.cs.lobcder.catalogue;
 
-import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.util.PropertiesHelper;
 
 import javax.sql.DataSource;
@@ -10,14 +9,13 @@ import java.sql.Connection;
 import java.sql.Statement;
 import java.util.Properties;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
- * User: dvasunin
- * Date: 18.11.13
- * Time: 18:16
- * To change this template use File | Settings | File Templates.
+ * User: dvasunin Date: 18.11.13 Time: 18:16 To change this template use File |
+ * Settings | File Templates.
  */
-@Log
+
 public class TokensDeleteSweep implements Runnable {
 
     private final int loopsToSkip;
@@ -36,19 +34,19 @@ public class TokensDeleteSweep implements Runnable {
 
     @Override
     public void run() {
-        try{
-            if(++count == loopsToSkip){
+        try {
+            if (++count == loopsToSkip) {
                 count = 0;
-                try(Connection cn = dataSource.getConnection()){
+                try (Connection cn = dataSource.getConnection()) {
                     cn.setAutoCommit(true);
-                    try(Statement stmt = cn.createStatement()){
+                    try (Statement stmt = cn.createStatement()) {
                         int res = stmt.executeUpdate("DELETE FROM tokens_table WHERE exp_date < NOW()");
-                        TokensDeleteSweep.log.log(Level.FINE, "{0} items expired in the tokens_table, deleted", new Object[]{Integer.valueOf(res)});
+                        Logger.getLogger(TokensDeleteSweep.class.getName()).log(Level.FINE, "{0} items expired in the tokens_table, deleted", new Object[]{res});
                     }
                 }
             }
         } catch (Exception e) {
-            TokensDeleteSweep.log.log(Level.SEVERE, null, e);
+            Logger.getLogger(TokensDeleteSweep.class.getName()).log(Level.SEVERE, null, e);
         }
     }
 }

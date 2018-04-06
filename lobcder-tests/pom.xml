@@ -40,6 +40,14 @@
         </dependency>
         
         
+        <dependency>
+            <groupId>nl.uva.vlet</groupId>
+            <artifactId>vlet-vfs.webdav</artifactId>
+            <version>2.4</version>
+        </dependency>
+        
+        
+        
         <!-- The JCR API --> 
         <dependency> 
             <groupId>javax.jcr</groupId> 
@@ -77,7 +85,7 @@
         <dependency>
             <groupId>nl.uva.vlet</groupId>
             <artifactId>vlet-vfs.cloud</artifactId>
-            <version>2.2</version>
+            <version>2.3</version>
         </dependency>
 
         
@@ -164,10 +172,20 @@
     
     
     <repositories>
+        
         <repository>
-            <id>elab.lab.uvalight.net</id>
-            <name>elab.lab.uvalight.net-releases</name>
-            <url>http://elab.lab.uvalight.net/artifactory/repo</url>
+            <snapshots />
+            <id>skoulouzis-snapshots</id>
+            <url>https://raw.github.com/skoulouzis/mvn-repo/master/snapshots</url>
+        </repository>
+                
+                
+        <repository>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+            <id>releases</id>
+            <url>https://raw.github.com/skoulouzis/mvn-repo/master/releases</url>
         </repository>
         
     </repositories>

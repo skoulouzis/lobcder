@@ -1,5 +1,6 @@
-DROP TABLE IF EXISTS permission_table, wp4_table, ldata_table, pdri_table, pdrigroup_table, 
-storage_site_table, credential_table, requests_table, successor_table, occurrences_table, features_table, speed_table;
+-- DROP TABLE IF EXISTS permission_table, wp4_table, ldata_table, pdri_table, pdrigroup_table, 
+-- storage_site_table, credential_table, requests_table, successor_table, occurrences_table, features_table, speed_table, 
+-- auth_roles_tables, auth_usernames_table, myroles, myuid;
 
 CREATE TABLE pdrigroup_table (
   pdriGroupId SERIAL PRIMARY KEY,
@@ -8,6 +9,43 @@ CREATE TABLE pdrigroup_table (
   bound BOOLEAN NOT NULL DEFAULT FALSE,
   INDEX(needCheck,bound)
 ) ENGINE=InnoDB;
+
+CREATE TABLE delete_table (
+  id BIGINT UNSIGNED, key(id),
+  pdriGroupRef BIGINT UNSIGNED PRIMARY KEY, FOREIGN KEY(pdriGroupRef) REFERENCES pdrigroup_table(pdriGroupId) ON DELETE CASCADE,
+  selTimestamp DATETIME, INDEX(selTimestamp)
+) ENGINE=InnoDB;
+
+DELIMITER |
+CREATE PROCEDURE GET_PDRI_GROUPS_FOR_DELETE (IN lim INT UNSIGNED)
+  BEGIN
+    DECLARE myid BIGINT UNSIGNED;
+    SET myid = UUID_SHORT();
+    INSERT INTO delete_table (id, pdriGroupRef, selTimestamp) SELECT myid, pdriGroupId, now() FROM pdrigroup_table LEFT OUTER JOIN delete_table ON pdrigroup_table.pdriGroupId = delete_table.pdriGroupRef WHERE delete_table.pdriGroupRef IS NULL AND pdrigroup_table.refCount = 0 LIMIT lim;
+    SELECT pdriGroupRef FROM delete_table WHERE id=myid;
+  END
+|
+DELIMITER ;
+
+
+CREATE TABLE replicate_table (
+  id BIGINT UNSIGNED, key(id),
+  pdriGroupRef BIGINT UNSIGNED PRIMARY KEY, FOREIGN KEY(pdriGroupRef) REFERENCES pdrigroup_table(pdriGroupId) ON DELETE CASCADE,
+  selTimestamp DATETIME, INDEX(selTimestamp)
+) ENGINE=InnoDB;
+
+DELIMITER |
+CREATE PROCEDURE GET_PDRI_GROUPS_FOR_REPLICATE (IN cacheId BIGINT UNSIGNED, IN lim INT UNSIGNED)
+  BEGIN
+    DECLARE myid BIGINT UNSIGNED;
+    DECLARE mynow DATETIME;
+    SET myid = UUID_SHORT();
+    SET mynow = now();
+    INSERT INTO replicate_table (id, pdriGroupRef, selTimestamp) SELECT DISTINCT myid, pdriGroupId, mynow FROM pdrigroup_table WHERE bound=FALSE AND refCount>0 AND (EXISTS(SELECT * FROM pdri_table WHERE pdri_table.pdriGroupRef=pdrigroup_table.pdriGroupId AND pdri_table.storageSiteRef=cacheId) OR NOT EXISTS(SELECT * FROM pdri_table JOIN storage_site_table ON pdri_table.storageSiteRef=storage_site_table.storageSiteId WHERE pdri_table.pdriGroupRef=pdrigroup_table.pdriGroupId AND storage_site_table.isCache=TRUE)) LIMIT lim;
+    SELECT pdriGroupRef FROM replicate_table WHERE id=myid;
+  END
+|
+DELIMITER ;
 
 CREATE TABLE credential_table (
   credintialId SERIAL PRIMARY KEY,
@@ -28,9 +66,9 @@ CREATE TABLE storage_site_table (
   isCache BOOLEAN NOT NULL DEFAULT FALSE, INDEX(isCache),
   extra VARCHAR(512),
   encrypt BOOLEAN NOT NULL DEFAULT FALSE, INDEX(encrypt),
-  private BOOLEAN NOT NULL DEFAULT FALSE,
+  private BOOLEAN NOT NULL DEFAULT FALSE, INDEX (private),
   removing BOOLEAN NOT NULL DEFAULT FALSE, INDEX(removing),
-  INDEX (private,removing)
+  readOnly BOOLEAN NOT NULL DEFAULT FALSE, INDEX(readOnly)
 ) ENGINE=InnoDB;
 
 CREATE TABLE pdri_table (
@@ -104,7 +142,7 @@ CREATE TABLE requests_table (
  elapsedTime DOUBLE,
  userName TEXT(5240),
  userAgent VARCHAR(1024),
- timeStamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+ timeStamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP, INDEX(timeStamp),
 ) ENGINE=InnoDB;
 
 
@@ -158,8 +196,8 @@ CREATE TABLE features_table (
 
 CREATE TABLE speed_table (
   id SERIAL PRIMARY KEY,
-  src VARCHAR(1024),INDEX(src),
-  dst VARCHAR(1024),INDEX(dst),
+  src VARCHAR(1024), INDEX(src),
+  dst VARCHAR(1024), INDEX(dst),
   fSize ENUM('S', 'M','L','XL'), INDEX(fSize),
   averageSpeed DOUBLE,
   minSpeed DOUBLE,
@@ -222,14 +260,14 @@ DROP TRIGGER IF EXISTS on_pref_insert |
 CREATE TRIGGER on_pref_insert
 AFTER INSERT ON pref_table
 FOR EACH ROW BEGIN
-    UPDATE pdrigroup_table SET needCheck=TRUE WHERE pdriGroupId IN (SELECT pdriGroupRef FROM ldata_table WHERE ld_uid=new.ld_uid);
+  UPDATE pdrigroup_table a JOIN ldata_table ON pdriGroupId=pdriGroupRef SET needCheck=TRUE WHERE uid=new.ld_uid;
 END|
 
 DROP TRIGGER IF EXISTS on_pref_delete |
 CREATE TRIGGER on_pref_delete
 AFTER DELETE ON pref_table
 FOR EACH ROW BEGIN
-  UPDATE pdrigroup_table SET needCheck=TRUE WHERE pdriGroupId IN (SELECT pdriGroupRef FROM ldata_table WHERE ld_uid=old.ld_uid);
+  UPDATE pdrigroup_table a JOIN ldata_table ON pdriGroupId=pdriGroupRef SET needCheck=TRUE WHERE uid=old.ld_uid;
 END|
 
 -- DROP TRIGGER IF EXISTS on_pdri_incert |
@@ -254,14 +292,8 @@ INSERT INTO storage_site_table(resourceUri, credentialRef, currentNum, currentSi
             VALUES('file:///tmp/', @credRef, -1, -1, -1, -1, TRUE);
 SET @ssRef = LAST_INSERT_ID();
 
--- INSERT INTO  credential_table(username, password) VALUES ('dvasunin', 'my-secretpwd');
--- SET @credRef = LAST_INSERT_ID();
--- INSERT INTO storage_site_table(resourceUri, credentialRef, currentNum, currentSize, quotaNum, quotaSize)
---             VALUES('sftp://dvasunin@elab.lab.uvalight.net/home/dvasunin/tmp/lobcder/', @credRef, -1, -1, -1, -1);
--- SET @ssRef = LAST_INSERT_ID();
-
 # Here we createtables for built-in user IDs/roles
-DROP TABLE IF EXISTS auth_roles_tables, auth_usernames_table;
+
 CREATE TABLE auth_usernames_table (
     id SERIAL PRIMARY KEY,
     token VARCHAR(1024), INDEX(token),
@@ -403,12 +435,12 @@ MAIN_BLOCK: BEGIN
   DECLARE isadmin INT DEFAULT 0;
   DECLARE str VARCHAR(255);
 
-  DROP TABLE IF EXISTS myroles;
+  
   CREATE TEMPORARY TABLE myroles (
     mrole VARCHAR(255)
   );
 
-  DROP TABLE IF EXISTS myuid;
+
   CREATE TEMPORARY TABLE myuid (
     muid BIGINT UNSIGNED
   );
@@ -479,11 +511,19 @@ CREATE TABLE IF NOT EXISTS tokens_table (
   exp_date DATETIME, INDEX(exp_date)
 ) ENGINE=InnoDB;
 
+
+DELIMITER |
 CREATE EVENT IF NOT EXISTS e_tokens_sweep
   ON SCHEDULE
     EVERY 600 SECOND
 DO
-  DELETE FROM tokens_table WHERE exp_date < NOW();
+  BEGIN
+    DELETE FROM tokens_table WHERE exp_date < NOW();
+    DELETE FROM delete_table WHERE timestampdiff(MINUTE, selTimestamp, now()) > 15;
+    DELETE FROM replicate_table WHERE timestampdiff(MINUTE, selTimestamp, now()) > 30;
+  END
+|
+DELIMITER ;
 
 
 DROP EVENT IF EXISTS ttl_sweep;
@@ -514,4 +554,5 @@ END
 |
 DELIMITER ;
 
-#SET GLOBAL event_scheduler = ON;
+SET GLOBAL event_scheduler = ON;
+

@@ -4,6 +4,7 @@
  */
 package nl.uva.cs.lobcder;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
@@ -14,23 +15,27 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Properties;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import lombok.extern.java.Log;
+import nl.uva.cs.lobcder.util.PropertiesHelper;
 
 /**
  *
  * @author S. Koulouzis
  */
 @Log
-class Util {
+class Util extends PropertiesHelper {
+
+    static enum ChacheEvictionAlgorithm {
+
+        LRU, MRU, RR, LFU, MFU
+    }
 
     public static Properties getProperties()
             throws IOException {
 
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         Properties prop;
-        try (InputStream in = classLoader.getResourceAsStream("/lobcder-worker.properties")) {
+        try (InputStream in = classLoader.getResourceAsStream("/lobcder.properties")) {
             prop = new Properties();
             prop.load(in);
         }
@@ -46,17 +51,28 @@ class Util {
     }
 
     public static List<String> getAllIPs() throws UnknownHostException, SocketException {
-//        InetAddress localhost = InetAddress.getLocalHost();
-//        InetAddress[] allMyIps = InetAddress.getAllByName(localhost.getCanonicalHostName());
+        //        InetAddress localhost = InetAddress.getLocalHost();
+        //        InetAddress[] allMyIps = InetAddress.getAllByName(localhost.getCanonicalHostName());
+
+
         List<String> ips = new ArrayList<>();
         for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements();) {
             NetworkInterface intf = en.nextElement();
             for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements();) {
                 InetAddress next = enumIpAddr.nextElement();
-                String ip = next.getHostAddress();
+                if (next != null) {
+                    String ip = next.getHostAddress();
+                    if (ip != null) {
+                        ips.add(ip);
+                    }
+                }
 //                Logger.getLogger(Util.class.getName()).log(Level.FINE, "ip: {0}", ip);
-                ips.add(ip);
             }
+        }
+        try {
+            ips.add(InetAddress.getLocalHost().getHostName());
+        } catch (Exception ex) {
+            //ignore
         }
         return ips;
     }
@@ -101,15 +117,43 @@ class Util {
         return Double.valueOf(getProperties().getProperty(("progress.thresshold.coefficient"), "-0.0024"));
     }
 
-    static Boolean getSendStats() throws IOException {
-        return Boolean.valueOf(getProperties().getProperty(("send.stats"), "false"));
-    }
-
     static boolean dropConnection() throws IOException {
         return Boolean.valueOf(getProperties().getProperty(("drop.connection"), "false"));
     }
 
     static boolean getOptimizeFlow() throws IOException {
         return Boolean.valueOf(getProperties().getProperty(("optimize.flow"), "true"));
+    }
+
+    static boolean sendStats() throws IOException {
+        return Boolean.valueOf(getProperties().getProperty(("stats.send"), "false"));
+    }
+
+    static ChacheEvictionAlgorithm getCacheEvictionPolicy() throws IOException {
+        return ChacheEvictionAlgorithm.valueOf(getProperties().getProperty(("cache.eviction.alg"), "LRU"));
+    }
+
+    public static long getCacheFreeSpaceLimit() throws IOException {
+        return Long.valueOf(getProperties().getProperty("cache.size.limit", "2000000000"));
+    }
+
+    public static String getWorkingFolderName() throws IOException {
+        return getProperties().getProperty(("backend.working.folder.name"), "LOBCDER-REPLICA-vTEST");
+    }
+
+    public static File getCacheDir() throws IOException {
+        File cacheDir = new File(System.getProperty("java.io.tmpdir") + File.separator + Util.getBackendWorkingFolderName());
+        if (!cacheDir.exists()) {
+            cacheDir.mkdirs();
+        }
+        return cacheDir;
+    }
+
+    public static File getUploadDir() throws IOException {
+        File up = new File(System.getProperty("java.io.tmpdir")  + File.separator + "uploads"+File.separator + getWorkingFolderName());
+        if (!up.exists()) {
+            up.mkdirs();
+        }
+        return up;
     }
 }

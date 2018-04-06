@@ -9,13 +9,11 @@ import javax.xml.bind.annotation.*;
 import java.util.HashSet;
 import java.util.Set;
 import javax.xml.bind.annotation.XmlRootElement;
-import lombok.Data;
 
 /**
  * The permissions for a resource. 
  * @author dvasunin
  */
-@Data
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)
 public class Permissions {
@@ -45,7 +43,7 @@ public class Permissions {
     public String getReadStr() {
         StringBuilder sb = new StringBuilder();
         boolean first = true;
-        for (String s : read) {
+        for (String s : getRead()) {
             if (first) {
                 sb.append(s);
                 first = false;
@@ -59,7 +57,7 @@ public class Permissions {
     public String getWriteStr() {
         StringBuilder sb = new StringBuilder();
         boolean first = true;
-        for (String s : write) {
+        for (String s : getWrite()) {
             if (first) {
                 sb.append(s);
                 first = false;
@@ -68,5 +66,61 @@ public class Permissions {
             }
         }
         return sb.toString();
+    }
+
+    /**
+     * @return the localId
+     */
+    public Long getLocalId() {
+        return localId;
+    }
+
+    /**
+     * @param localId the localId to set
+     */
+    public void setLocalId(Long localId) {
+        this.localId = localId;
+    }
+
+    /**
+     * @return the read
+     */
+    public Set<String> getRead() {
+        return read;
+    }
+
+    /**
+     * @param read the read to set
+     */
+    public void setRead(Set<String> read) {
+        this.read = read;
+    }
+
+    /**
+     * @return the write
+     */
+    public Set<String> getWrite() {
+        return write;
+    }
+
+    /**
+     * @param write the write to set
+     */
+    public void setWrite(Set<String> write) {
+        this.write = write;
+    }
+
+    /**
+     * @return the owner
+     */
+    public String getOwner() {
+        return owner;
+    }
+
+    /**
+     * @param owner the owner to set
+     */
+    public void setOwner(String owner) {
+        this.owner = owner;
     }
 }

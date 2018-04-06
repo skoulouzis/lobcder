@@ -4,21 +4,17 @@
  */
 package nl.uva.cs.lobcder.util;
 
+import nl.uva.cs.lobcder.webDav.resources.WebDataFileResource;
+
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
+import java.net.URL;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import nl.uva.cs.lobcder.webDav.resources.WebDataFileResource;
 
 /**
  *
@@ -27,22 +23,13 @@ import nl.uva.cs.lobcder.webDav.resources.WebDataFileResource;
 public class PropertiesHelper {
 
     public static final String propertiesPath = "lobcder.properties";
-    public static final String cachePropertiesPath = "cache.properties";
+//    public static final String cachePropertiesPath = "cache.properties";
 
     public static enum PREDICTION_TYPE {
 
         method,
         resource,
         state
-    }
-
-    public static enum ReplicationPolicy {
-
-        aggressive,
-        firstSite,
-        fastest,
-        random,
-        demand
     }
 
     private static Properties getProperties() throws IOException {
@@ -118,12 +105,16 @@ public class PropertiesHelper {
         return getProperties().getProperty("worker.token");
     }
 
-    public static ReplicationPolicy getReplicationPolicy() throws IOException {
-        return ReplicationPolicy.valueOf(getProperties().getProperty("replication.policy", "firstSite"));
+    public static String getReplicationPolicy() throws IOException {
+        return getProperties().getProperty("replication.policy", "nl.uva.cs.lobcder.replication.policy.FirstSiteReplicationPolicy");
     }
 
     public static boolean doRedirectGets() throws IOException {
         return Boolean.valueOf(getProperties().getProperty("redirect.get", "false"));
+    }
+
+    public static boolean doRedirectPosts() throws IOException {
+        return Boolean.valueOf(getProperties().getProperty("redirect.post", "false"));
     }
 
 //    public static boolean doRemoteAuth() throws IOException {
@@ -139,6 +130,14 @@ public class PropertiesHelper {
 
     public static Boolean useMetadataRepository() throws IOException {
         return Boolean.valueOf(getProperties().getProperty("metadata.repository.use", "true"));
+    }
+
+    public static Boolean useBulckMetadataRepository() throws IOException {
+        return Boolean.valueOf(getProperties().getProperty("metadata.repository.bulck", "true"));
+    }
+
+    public static int getMetadataRepositoryNumOfElem() throws IOException {
+        return Integer.valueOf(getProperties().getProperty("metadata.repository.num.of.elements", "500"));
     }
 
 //    public static String getAuthRemoteURL() throws IOException {
@@ -189,7 +188,28 @@ public class PropertiesHelper {
     }
 
     public static String getSDNControllerURL() throws IOException {
-        return getProperties().getProperty("sdn.controller.url");
+        String url = getProperties().getProperty("sdn.controller.url");
+        return url.replaceAll(" ", "");
+    }
+
+    public static boolean pushFlow() throws IOException {
+        return Boolean.valueOf(getProperties().getProperty("sdn.push.flow", "false"));
+    }
+
+    public static boolean pushARPFlow() throws IOException {
+        return Boolean.valueOf(getProperties().getProperty("sdn.push.ARP.flow", "false"));
+    }
+
+    public static String getTopologyURL() throws IOException {
+        return getProperties().getProperty("sdn.topology.url");
+    }
+
+    public static Double getDelayFactor() throws IOException {
+        return Double.valueOf(getProperties().getProperty("sdn.delay.factor", "1.0"));
+    }
+
+    public static double getAlphaforAverageLinkUsage() throws IOException {
+        return Double.valueOf(getProperties().getProperty("sdn.alpha.weighting", "5.0"));
     }
 
     public static HashMap<Integer, String> getPortWorkerMap() {
@@ -221,7 +241,7 @@ public class PropertiesHelper {
     }
 
     public static String getSchedulingAlg() throws IOException {
-        return getProperties().getProperty("worker.selection.algorithm");
+        return getProperties().getProperty("worker.selection.algorithm", "round-robin");
     }
 
     public static Boolean useSDN() throws IOException {
@@ -279,6 +299,28 @@ public class PropertiesHelper {
     }
 
     public static long getSweepersInterval() throws IOException {
-        return Long.valueOf(getProperties().getProperty("sweepers.interval", "10000"));
+        return Long.valueOf(getProperties().getProperty("sweepers.interval", "100"));
+    }
+
+    public static File getGeoDB() throws IOException {
+        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+//        URL url = classLoader.getResource("GeoLiteCityv6.dat");
+//                URL url = classLoader.getResource("GeoIP.dat"); 
+
+        URL url = classLoader.getResource(getProperties().getProperty("geolocation.db.file", "GeoLiteCity.dat"));
+        String dbPath = url.getPath();
+        return new File(dbPath);
+    }
+
+    public static long getCacheFreeSpaceLimit() throws IOException {
+        return Long.valueOf(getProperties().getProperty("cache.size.limit", "2000000000"));
+    }
+
+    public static Long getLocalCacheId() throws IOException {
+        return Long.valueOf(getProperties().getProperty("localcache.id"));
+    }
+
+    public static Integer getMaximumNumberOfRequests() throws IOException {
+        return Integer.valueOf(getProperties().getProperty("maximum.num.requests", "15"));
     }
 }

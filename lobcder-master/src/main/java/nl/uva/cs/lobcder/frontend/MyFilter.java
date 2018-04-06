@@ -8,6 +8,7 @@ import io.milton.common.Path;
 import io.milton.http.Request;
 import io.milton.http.Request.Method;
 import io.milton.servlet.MiltonFilter;
+import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
@@ -25,8 +26,9 @@ import java.util.logging.Logger;
 import javax.naming.InitialContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
-import lombok.extern.java.Log;
+import javax.servlet.http.HttpServletResponse;
 import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
+import nl.uva.cs.lobcder.catalogue.TokensDeleteSweep;
 import nl.uva.cs.lobcder.optimization.Vertex;
 import nl.uva.cs.lobcder.optimization.MyTask;
 import nl.uva.cs.lobcder.predictors.FirstSuccessor;
@@ -50,24 +52,32 @@ import static nl.uva.cs.lobcder.util.PropertiesHelper.PREDICTION_TYPE.state;
  *
  * @author S. Koulouzis
  */
-@Log
 public class MyFilter extends MiltonFilter {
 
     private JDBCatalogue catalogue;
     private static Predictor predictor;
     private static Vertex prevState;
-    private static final BlockingQueue queue = new ArrayBlockingQueue(3500);
+    private static final BlockingQueue queue = new ArrayBlockingQueue(7000);
     private static RequestEventRecorder recorder;
     private Timer recordertimer;
     private Vertex prevPrediction;
+    private final Object _lock = new Object();
+    private int _current = 0;
+    private int _maximum = 15;
 
     public MyFilter() throws Exception {
         type = PropertiesHelper.getPredictionType();
+        _maximum = PropertiesHelper.getMaximumNumberOfRequests();
     }
-
+    
     @Override
     public void doFilter(javax.servlet.ServletRequest req, javax.servlet.ServletResponse resp, javax.servlet.FilterChain fc) throws IOException, ServletException {
         double start = System.currentTimeMillis();
+        if (!acceptRequest(req)) {
+            HttpServletResponse response = (HttpServletResponse) resp;
+            response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+            return;
+        }
         String method = ((HttpServletRequest) req).getMethod();
         StringBuffer reqURL = ((HttpServletRequest) req).getRequestURL();
 
@@ -76,16 +86,13 @@ public class MyFilter extends MiltonFilter {
                 long startPredict = System.currentTimeMillis();
                 predict(Request.Method.valueOf(method), reqURL.toString());
                 long elapsedPredict = System.currentTimeMillis() - startPredict;
-                log.log(Level.INFO, "elapsedPredict: {0}", elapsedPredict);
+                Logger.getLogger(MyFilter.class.getName()).log(Level.INFO, "elapsedPredict: {0}", elapsedPredict);
             } catch (Exception ex) {
                 Logger.getLogger(MyFilter.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
 
-
         super.doFilter(req, resp, fc);
-
-
 
         double elapsed = System.currentTimeMillis() - start;
 
@@ -96,11 +103,11 @@ public class MyFilter extends MiltonFilter {
         String contentType = ((HttpServletRequest) req).getContentType();
 
         String authorizationHeader = ((HttpServletRequest) req).getHeader("authorization");
-        String userNpasswd = "";
-        if (authorizationHeader != null) {
-            userNpasswd = authorizationHeader.split("Basic ")[1];
-        }
-        
+//        String userNpasswd = "";
+//        if (authorizationHeader != null) {
+//            userNpasswd = authorizationHeader.split("Basic ")[1];
+//        }
+
         if (PropertiesHelper.doRequestLoging()) {
             RequestWapper my = new RequestWapper();
             my.setMethod(method);
@@ -112,11 +119,15 @@ public class MyFilter extends MiltonFilter {
             my.setRequestURL(reqURL.toString());
             my.setUserAgent(userAgent);
             my.setUserNpasswd(getUserName((HttpServletRequest) req));
-            queue.add(my);
+            if (queue.size() < 6999) {
+                queue.add(my);
+            }
+
             startRecorder();
         }
+        releaseRequest();
+        Logger.getLogger(MyFilter.class.getName()).log(Level.INFO, "Req_Source: {0} Method: {1} Content_Len: {2} Content_Type: {3} Elapsed_Time: {4} sec EncodedUser: {5} UserAgent: {6} path:{7}", new Object[]{from, method, contentLen, contentType, elapsed / 1000.0, getUserName((HttpServletRequest) req), userAgent, reqURL.toString()});
 
-        log.log(Level.INFO, "Req_Source: {0} Method: {1} Content_Len: {2} Content_Type: {3} Elapsed_Time: {4} sec EncodedUser: {5} UserAgent: {6} path:{7}", new Object[]{from, method, contentLen, contentType, elapsed / 1000.0, userNpasswd, userAgent, reqURL.toString()});
     }
 
     private String getUserName(HttpServletRequest httpServletRequest) throws UnsupportedEncodingException {
@@ -141,7 +152,6 @@ public class MyFilter extends MiltonFilter {
 //                    }
 
 //                final String credentials = new String(Base64.decodeBase64(autheader.substring(index)), "UTF8");
-
 //                final String token = credentials.substring(credentials.indexOf(":") + 1);
             }
         }
@@ -254,18 +264,20 @@ public class MyFilter extends MiltonFilter {
         Vertex nextState = null;
 
         nextState = getPredictor().getNextState(currentState);
-        log.log(Level.INFO, "Predictior: {0}", getPredictor().getClass().getName());
+
+        Logger.getLogger(MyFilter.class.getName()).log(Level.INFO, "Predictior: {0}", getPredictor().getClass().getName());
         if (prevState != null) {
             getPredictor().setPreviousStateForCurrent(prevState, currentState);
         }
         if (prevPrediction != null) {
             if (currentState.getID().equals(prevPrediction.getID())) {
-                log.log(Level.INFO, "Prediction Result: Hit");
+                Logger.getLogger(MyFilter.class.getName()).log(Level.INFO, "Prediction Result: Hit");
             } else {
-                log.log(Level.INFO, "Prediction Result: Miss");
+
+                Logger.getLogger(MyFilter.class.getName()).log(Level.INFO, "Prediction Result: Miss");
             }
         } else {
-            log.log(Level.INFO, "Prediction Result: Non");
+            Logger.getLogger(MyFilter.class.getName()).log(Level.INFO, "Prediction Result: Non");
         }
 
         prevState = currentState;
@@ -322,6 +334,39 @@ public class MyFilter extends MiltonFilter {
                     Logger.getLogger(MyFilter.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
+        }
+    }
+
+    private boolean acceptRequest(javax.servlet.ServletRequest req) throws IOException {
+        File file = new File(System.getProperty("user.home"));
+//        long totalSpace = file.getTotalSpace(); //total disk space in bytes.
+        long usableSpace = file.getUsableSpace(); ///unallocated / free disk space in bytes.
+        if (usableSpace < PropertiesHelper.getCacheFreeSpaceLimit()) {
+            if (((HttpServletRequest) req).getMethod().equals(Method.POST.toString())
+                    || ((HttpServletRequest) req).getMethod().equals(Method.PUT.toString())) {
+                Logger.getLogger(MyFilter.class.getName()).log(Level.WARNING, "Limited free space for cache: {0} bytes", usableSpace);
+                return false;
+            }
+        }
+        if (_maximum > 0) {
+            synchronized (_lock) {
+                if (_current < _maximum) {
+                    _current++;
+                    return true;
+                }
+            }
+            if (_current >= _maximum) {                
+                Logger.getLogger(MyFilter.class.getName()).log(Level.WARNING, "Reached limit of requests :{0}", _current);
+            }
+        } else {
+            return true;
+        }
+        return false;
+    }
+
+    private void releaseRequest() {
+        synchronized (_lock) {
+            _current--;
         }
     }
 }

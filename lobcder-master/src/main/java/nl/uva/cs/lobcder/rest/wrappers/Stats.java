@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 alogo.
+ * Copyright 2014 S. Koulouzis.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,17 +16,71 @@
 package nl.uva.cs.lobcder.rest.wrappers;
 
 import javax.xml.bind.annotation.XmlRootElement;
-import lombok.Data;
 
 /**
  *
  * @author S. Koulouzis
  */
 @XmlRootElement
-@Data
 public class Stats {
-    String source;
-    String destination;
-    Long size;
-    Double speed;
+    private String source;
+    private String destination;
+    private Long size;
+    private Double speed;
+
+    /**
+     * @return the source
+     */
+    public String getSource() {
+        return source;
+    }
+
+    /**
+     * @param source the source to set
+     */
+    public void setSource(String source) {
+        this.source = source;
+    }
+
+    /**
+     * @return the destination
+     */
+    public String getDestination() {
+        return destination;
+    }
+
+    /**
+     * @param destination the destination to set
+     */
+    public void setDestination(String destination) {
+        this.destination = destination;
+    }
+
+    /**
+     * @return the size
+     */
+    public Long getSize() {
+        return size;
+    }
+
+    /**
+     * @param size the size to set
+     */
+    public void setSize(Long size) {
+        this.size = size;
+    }
+
+    /**
+     * @return the speed
+     */
+    public Double getSpeed() {
+        return speed;
+    }
+
+    /**
+     * @param speed the speed to set
+     */
+    public void setSpeed(Double speed) {
+        this.speed = speed;
+    }
 }

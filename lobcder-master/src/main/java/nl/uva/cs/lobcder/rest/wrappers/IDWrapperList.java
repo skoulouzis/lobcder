@@ -6,14 +6,12 @@ package nl.uva.cs.lobcder.rest.wrappers;
 
 import java.util.List;
 import javax.xml.bind.annotation.XmlRootElement;
-import lombok.Data;
 
 /**
  *
  * @author S. Koulouzis
  */
 @XmlRootElement
-@Data
 public class IDWrapperList {
      public List<Long> ids;
 }

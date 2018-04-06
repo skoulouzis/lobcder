@@ -1,7 +1,7 @@
 <%-- 
     Document   : manage_storage_sites
     Created on : Oct 6, 2013, 4:51:01 PM
-    Author     : alogo
+    Author     : S. Koulouzis
 --%>
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>

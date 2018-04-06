@@ -216,11 +216,18 @@ public class PutHandler implements Handler {
 			return;
 		}
 
+
 		LogUtils.debug(log, "process: putting to: ", folder.getName());
 		try {
 			Long l = putHelper.getContentLength(request);
 			String ct = putHelper.findContentTypes(request, newName);
 			LogUtils.debug(log, "PutHandler: creating resource of type: ", ct);
+			String redirectUrl = folder.checkRedirect(request);
+			if (redirectUrl != null && redirectUrl.length() > 0) {
+				responseHandler.respondRedirect(response, request, redirectUrl);
+				return;
+//			return true;
+			}
 			Resource newlyCreated = folder.createNew(newName, request.getInputStream(), l, ct);
 			if (newlyCreated != null) {
 				if (newName != null && !newName.equals(newlyCreated.getName())) {
@@ -255,16 +262,16 @@ public class PutHandler implements Handler {
 				return null;
 			}
 		}
-		
+
 		CollectionResource parent = findOrCreateFolders(manager, host, path.getParent(), request);
 		if (parent == null) {
 			log.warn("couldnt find parent: " + path);
 //			return null;
-			
+
 		}
 
 		Resource r = parent.child(path.getName());
-		
+
 		if (r == null) {
 			log.info("Could not find child: " + path.getName() + " in parent: " + parent.getName() + " - " + parent.getClass());
 			if (parent instanceof MakeCollectionableResource) {

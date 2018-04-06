@@ -31,6 +31,8 @@ import org.apache.commons.codec.binary.Base64;
  */
 public class GridHelper {
 
+    static final boolean initilized = false;
+
     static {
         try {
             GridHelper.InitGlobalVFS();
@@ -40,7 +42,7 @@ public class GridHelper {
     }
 
     public static void InitGlobalVFS() throws Exception {
-        if (!GlobalConfig.isGlobalInitialized()) {
+        if (!initilized && !GlobalConfig.isGlobalInitialized()) {
             copyVomsAndCerts();
             try {
                 GlobalConfig.setBaseLocation(new URL("http://dummy/url"));
@@ -60,6 +62,7 @@ public class GridHelper {
             GlobalConfig.setSystemProperty("grid.proxy.lifetime", "100");
 //        GlobalConfig.setUsePersistantUserConfiguration(false);
             GlobalConfig.setCACertificateLocations(Constants.CERT_LOCATION);
+            Global.setDebug(false);
 
             // user configuration 
 //        GlobalConfig.setUsePersistantUserConfiguration(false);
@@ -115,15 +118,15 @@ public class GridHelper {
             gridProxy.destroy();
             gridProxy = null;
         }
-        if (gridProxy == null || gridProxy.isValid() == false) {
+        if (gridProxy == null) { //|| gridProxy.isValid() == false) {
 //            context.setProperty("grid.proxy.location", Constants.PROXY_FILE);
 //            context.setProperty("grid.certificate.location", Global.getUserHome() + "/.globus");
 //            context.setProperty("grid.proxy.lifetime", "100");
-            context.setProperty("grid.proxy.voName", vo);
+//            context.setProperty("grid.proxy.voName", vo);
             gridProxy = context.getGridProxy();
 //            if (gridProxy.isValid() == false) {
-            gridProxy.setEnableVOMS(true);
-            gridProxy.setDefaultVOName(vo);
+//            gridProxy.setEnableVOMS(true);
+//            gridProxy.setDefaultVOName(vo);
             gridProxy.createWithPassword(password);
             if (gridProxy.isValid() == false) {
                 throw new VlException("Created Proxy is not Valid!");

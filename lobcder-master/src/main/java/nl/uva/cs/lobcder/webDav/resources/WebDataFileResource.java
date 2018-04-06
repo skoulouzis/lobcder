@@ -4,6 +4,8 @@
  */
 package nl.uva.cs.lobcder.webDav.resources;
 
+import com.maxmind.geoip.Location;
+import com.maxmind.geoip.LookupService;
 import io.milton.common.ContentTypeUtils;
 import io.milton.common.Path;
 import io.milton.http.Auth;
@@ -17,7 +19,6 @@ import io.milton.http.exceptions.NotFoundException;
 import io.milton.resource.BufferingControlResource;
 import io.milton.resource.CollectionResource;
 import io.milton.resource.FileResource;
-import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.auth.AuthI;
 import nl.uva.cs.lobcder.auth.AuthLobcderComponents;
 import nl.uva.cs.lobcder.auth.Permissions;
@@ -32,7 +33,6 @@ import nl.uva.cs.lobcder.util.DesEncrypter;
 import nl.uva.cs.lobcder.util.PropertiesHelper;
 import nl.uva.vlet.data.StringUtil;
 import nl.uva.vlet.io.CircularStreamBufferTransferer;
-import org.apache.commons.codec.binary.Base64;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
@@ -48,39 +48,40 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import nl.uva.cs.lobcder.resources.VPDRI;
 import nl.uva.cs.lobcder.rest.wrappers.Stats;
+import nl.uva.cs.lobcder.util.Network;
 import org.jgrapht.graph.DefaultWeightedEdge;
 
 /**
  *
  * @author S. Koulouzis
  */
-@Log
+
 public class WebDataFileResource extends WebDataResource implements
         FileResource, BufferingControlResource {
 
     private int sleepTime = 5;
     private List<String> workers;
     private HashMap<String, String> workersMap;
-    private boolean doRedirect = true;
+    private static boolean redirectGets = false;
     private static int workerIndex = 0;
     private static final Map<String, Double> weightPDRIMap = new HashMap<>();
     private static final Map<String, Integer> numOfGetsMap = new HashMap<>();
-    private static final Map<String, Integer> numOfWorkerTransfersMap = new HashMap<>();
+//    private static final Map<String, Integer> numOfWorkerTransfersMap = new HashMap<>();
     private SDNControllerClient sdnClient;
+    private LookupService lookupService;
 
     public WebDataFileResource(@Nonnull LogicalData logicalData, Path path, @Nonnull JDBCatalogue catalogue, @Nonnull List<AuthI> authList) {
         super(logicalData, path, catalogue, authList);
         try {
-            doRedirect = PropertiesHelper.doRedirectGets();
+            redirectGets = PropertiesHelper.doRedirectGets();
         } catch (IOException ex) {
             Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, ex);
         }
-        if (doRedirect) {
+        if (redirectGets) {
             List<String> workersURLs = PropertiesHelper.getWorkers();
             if (workersURLs == null || workersURLs.isEmpty()) {
-                doRedirect = false;
+                redirectGets = false;
             } else {
                 workersMap = new HashMap<>();
                 for (String s : workersURLs) {
@@ -94,7 +95,6 @@ public class WebDataFileResource extends WebDataResource implements
             }
         }
 
-
     }
 
     @Override
@@ -105,7 +105,7 @@ public class WebDataFileResource extends WebDataResource implements
         switch (method) {
             case MKCOL:
                 String msg = "From: " + fromAddress + " User: " + getPrincipal().getUserId() + " Method: " + method;
-                WebDataFileResource.log.log(Level.INFO, msg);
+                Logger.getLogger(WebDataFileResource.class.getName()).log(Level.FINEST, msg);
                 return false;
             default:
                 return super.authorise(request, method, auth);
@@ -115,7 +115,7 @@ public class WebDataFileResource extends WebDataResource implements
     @Override
     public void copyTo(CollectionResource collectionResource, String name) throws NotAuthorizedException, BadRequestException, ConflictException {
         WebDataDirResource toWDDR = (WebDataDirResource) collectionResource;
-        log.log(Level.FINE, "copyTo(''{0}'', ''{1}'') for {2}", new Object[]{toWDDR.getPath(), name, getPath()});
+        Logger.getLogger(WebDataFileResource.class.getName()).log(Level.FINEST, "copyTo(''{0}'', ''{1}'') for {2}", new Object[]{toWDDR.getPath(), name, getPath()});
         try (Connection connection = getCatalogue().getConnection()) {
             try {
                 Permissions newParentPerm = getCatalogue().getPermissions(toWDDR.getLogicalData().getUid(), toWDDR.getLogicalData().getOwner(), connection);
@@ -125,12 +125,12 @@ public class WebDataFileResource extends WebDataResource implements
                 getCatalogue().copyFile(getLogicalData(), toWDDR.getLogicalData(), name, getPrincipal(), connection);
                 connection.commit();
             } catch (SQLException | NotAuthorizedException e) {
-                log.log(Level.SEVERE, null, e);
+                Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, e);
                 connection.rollback();
                 throw new BadRequestException(this, e.getMessage());
             }
         } catch (SQLException e) {
-            log.log(Level.SEVERE, null, e);
+            Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, e);
             throw new BadRequestException(this, e.getMessage());
         }
     }
@@ -138,7 +138,7 @@ public class WebDataFileResource extends WebDataResource implements
     @Override
     public void moveTo(CollectionResource collectionResource, String name) throws ConflictException, NotAuthorizedException, BadRequestException {
         WebDataDirResource toWDDR = (WebDataDirResource) collectionResource;
-        log.log(Level.FINE, "moveTo(''{0}'', ''{1}'') for {2}", new Object[]{toWDDR.getPath(), name, getPath()});
+        Logger.getLogger(WebDataFileResource.class.getName()).log(Level.FINEST, "moveTo(''{0}'', ''{1}'') for {2}", new Object[]{toWDDR.getPath(), name, getPath()});
         try (Connection connection = getCatalogue().getConnection()) {
             try {
                 Permissions destPerm = getCatalogue().getPermissions(toWDDR.getLogicalData().getUid(), toWDDR.getLogicalData().getOwner(), connection);
@@ -150,44 +150,44 @@ public class WebDataFileResource extends WebDataResource implements
                 getCatalogue().moveEntry(getLogicalData(), toWDDR.getLogicalData(), name, connection);
                 connection.commit();
             } catch (Exception e) {
-                log.log(Level.SEVERE, null, e);
+                Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, e);
                 connection.rollback();
                 throw new BadRequestException(this, e.getMessage());
             }
         } catch (SQLException e) {
-            log.log(Level.SEVERE, null, e);
+            Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, e);
             throw new BadRequestException(this, e.getMessage());
         }
     }
 
     @Override
     public void delete() throws NotAuthorizedException, BadRequestException, ConflictException {
-        log.log(Level.FINE, "delete() file {0}", getPath());
+        Logger.getLogger(WebDataFileResource.class.getName()).log(Level.FINEST, "delete() file {0}", getPath());
         try (Connection connection = getCatalogue().getConnection()) {
             try {
                 getCatalogue().remove(getLogicalData(), getPrincipal(), connection);
                 connection.commit();
             } catch (Exception e) {
-                log.log(Level.SEVERE, null, e);
+                Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, e);
                 connection.rollback();
                 throw new BadRequestException(this, e.getMessage());
             }
         } catch (SQLException e) {
-            log.log(Level.SEVERE, null, e);
+            Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, e);
             throw new BadRequestException(this, e.getMessage());
         }
     }
 
     @Override
     public Long getContentLength() {
-        log.log(Level.FINE, "getContentLength()" + " for {0}", getPath());
+//        Logger.getLogger(WebDataFileResource.class.getName()).log(Level.FINEST, "getContentLength()" + " for {0}", getPath());
         return getLogicalData().getLength();
     }
 
     @Override
     public String getContentType(String accepts) {
         String res = ContentTypeUtils.findAcceptableContentType(getLogicalData().getContentTypesAsString(), accepts);
-        log.log(Level.FINE, "getContentType(''accepts: {0}'') = ''{1}''  for {2}", new Object[]{accepts, res, getPath()});
+//        Logger.getLogger(WebDataFileResource.class.getName()).log(Level.FINEST, "getContentType(''accepts: {0}'') = ''{1}''  for {2}", new Object[]{accepts, res, getPath()});
         return res;
     }
 
@@ -199,7 +199,7 @@ public class WebDataFileResource extends WebDataResource implements
      *
      */
     public Long getMaxAgeSeconds(Auth auth) {
-        log.log(Level.FINE, "getMaxAgeSeconds() for {0}", getPath());
+//        Logger.getLogger(WebDataFileResource.class.getName()).log(Level.FINEST, "getMaxAgeSeconds() for {0}", getPath());
         return null;
     }
 
@@ -211,7 +211,15 @@ public class WebDataFileResource extends WebDataResource implements
             //Just return one at random;
             int index = new Random().nextInt(pdris.size());
             PDRIDescr[] array = pdris.toArray(new PDRIDescr[pdris.size()]);
-            Logger.getLogger(WebDataFileResource.class.getName()).log(Level.FINE, "Selecting Random: {0}", array[index].getResourceUrl());
+            if (weightPDRIMap.containsKey(new URI(array[index].getResourceUrl()).getHost())
+                    && weightPDRIMap.get(new URI(array[index].getResourceUrl()).getHost()) <= 1) {
+                if (index >= (pdris.size() - 1)) {
+                    index--;
+                } else {
+                    index++;
+                }
+            }
+            Logger.getLogger(WebDataFileResource.class.getName()).log(Level.FINEST, "Selecting Random: {0}", array[index].getResourceUrl());
             return array[index];
         }
 
@@ -231,12 +239,20 @@ public class WebDataFileResource extends WebDataResource implements
             if (speed == null) {
                 speed = 0.0;
             }
-            Logger.getLogger(WebDataFileResource.class.getName()).log(Level.FINE, "Speed: : {0}", speed);
             sumOfSpeed += speed;
         }
         if (sumOfSpeed <= 0) {
             int index = new Random().nextInt(pdris.size());
             PDRIDescr[] array = pdris.toArray(new PDRIDescr[pdris.size()]);
+            if (weightPDRIMap.containsKey(new URI(array[index].getResourceUrl()).getHost())
+                    && weightPDRIMap.get(new URI(array[index].getResourceUrl()).getHost()) <= 1) {
+                if (index >= (pdris.size() - 1)) {
+                    index--;
+                } else {
+                    index++;
+                }
+            }
+            Logger.getLogger(WebDataFileResource.class.getName()).log(Level.FINEST, "Selecting:{0}", new Object[]{array[index]});
             return array[index];
         }
         int itemIndex = new Random().nextInt((int) sumOfSpeed);
@@ -247,7 +263,7 @@ public class WebDataFileResource extends WebDataResource implements
                 speed = Double.valueOf(0);
             }
             if (itemIndex < speed) {
-                Logger.getLogger(WebDataFileResource.class.getName()).log(Level.FINE, "Selecting:{0}  with speed: {1}", new Object[]{p.getResourceUrl(), speed});
+                Logger.getLogger(WebDataFileResource.class.getName()).log(Level.FINEST, "Selecting:{0}  with speed: {1}", new Object[]{p.getResourceUrl(), speed});
                 return p;
             }
             itemIndex -= speed;
@@ -255,6 +271,15 @@ public class WebDataFileResource extends WebDataResource implements
 
         int index = new Random().nextInt(pdris.size());
         PDRIDescr[] array = pdris.toArray(new PDRIDescr[pdris.size()]);
+        if (weightPDRIMap.containsKey(new URI(array[index].getResourceUrl()).getHost())
+                && weightPDRIMap.get(new URI(array[index].getResourceUrl()).getHost()) <= 1) {
+            if (index >= (pdris.size() - 1)) {
+                index--;
+            } else {
+                index++;
+            }
+        }
+        Logger.getLogger(WebDataFileResource.class.getName()).log(Level.FINEST, "Selecting: {0}", array[index].getResourceUrl());
         return array[index];
     }
 
@@ -262,12 +287,15 @@ public class WebDataFileResource extends WebDataResource implements
         InputStream in = null;
         PDRI pdri = null;
         double start = 0;
+        Logger.getLogger(WebDataFileResource.class.getName()).log(Level.FINEST, "Start for {0}", getLogicalData().getName());
         try {
             PDRIDescr pdriDescr = selectBestPDRI(pdris);
             pdri = PDRIFactory.getFactory().createInstance(pdriDescr, false);
+            Logger.getLogger(WebDataFileResource.class.getName()).log(Level.FINEST, "pdri: {0}", pdri.getURI());
             if (pdri != null) {
                 start = System.currentTimeMillis();
                 in = pdri.getData();
+
                 if (!pdri.getEncrypted()) {
                     if (doCircularStreamBufferTransferer) {
                         CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((Constants.BUF_SIZE), in, out);
@@ -277,6 +305,7 @@ public class WebDataFileResource extends WebDataResource implements
                         byte[] copyBuffer = new byte[Constants.BUF_SIZE];
                         while ((read = in.read(copyBuffer, 0, copyBuffer.length)) != -1) {
                             out.write(copyBuffer, 0, read);
+//                            tos.write(copyBuffer, 0, read);
                         }
                     }
                 } else {
@@ -294,8 +323,17 @@ public class WebDataFileResource extends WebDataResource implements
             if (ex.getMessage().contains("Resource not found")) {
                 throw new NotFoundException(ex.getMessage());
             }
+            if (pdri != null) {
+                Double speed = weightPDRIMap.get(pdri.getHost());
+                if (speed != null) {
+                    speed = speed - 10;
+                } else {
+                    speed = Double.valueOf(-10);
+                }
+                weightPDRIMap.put(pdri.getHost(), speed);
+            }
             try {
-                sleepTime = sleepTime + 20;
+                sleepTime = sleepTime + 5;
                 Thread.sleep(sleepTime);
                 if (ex instanceof nl.uva.vlet.exception.VlInterruptedException && ++tryCount < Constants.RECONNECT_NTRY) {
                     transfer(pdris, out, tryCount, false);
@@ -318,7 +356,7 @@ public class WebDataFileResource extends WebDataResource implements
         double speed = ((pdri.getLength() * 8.0) * 1000.0) / (elapsed * 1000.0);
         try {
             String msg = "File: " + pdri.getFileName() + " Destination: " + new URI(pdri.getURI()).getScheme() + "://" + pdri.getHost() + " Rx_Speed: " + speed + " Kbites/sec Rx_Size: " + (pdri.getLength()) + " bytes Elapsed_Time: " + elapsed + " ms";
-            WebDataFileResource.log.log(Level.INFO, msg);
+            Logger.getLogger(WebDataFileResource.class.getName()).log(Level.INFO, msg);
         } catch (URISyntaxException ex) {
         }
         return pdri;
@@ -339,7 +377,7 @@ public class WebDataFileResource extends WebDataResource implements
 //                    pdri.reconnect();
 //                }
 //                in = pdri.getData();
-//                WebDataFileResource.log.log(Level.FINE, "sendContent() for {0}--------- {1}", new Object[]{getPath(), pdri.getFileName()});
+//                Logger.getLogger(WebDataFileResource.class.getName()).log(Level.FINE, "sendContent() for {0}--------- {1}", new Object[]{getPath(), pdri.getFileName()});
 //                if (!pdri.getEncrypted()) {
 //                    if (doCircularStreamBufferTransferer) {
 //                        CircularStreamBufferTransferer cBuff = new CircularStreamBufferTransferer((Constants.BUF_SIZE), in, out);
@@ -439,13 +477,16 @@ public class WebDataFileResource extends WebDataResource implements
         Iterator<PDRIDescr> it;
         try {
             List<PDRIDescr> pdris = getCatalogue().getPdriDescrByGroupId(getLogicalData().getPdriGroupId());
+            if (pdris.size() <= 0) {
+                throw new NotFoundException("File inconsistency! Could not find physical file!");
+            }
 //            it = getCatalogue().getPdriDescrByGroupId(getLogicalData().getPdriGroupId()).iterator();
             if (range != null) {
                 if (range.getFinish() == null) {
-                    range = new Range(range.getStart(), (getContentLength() - 1));
+                    range = new Range(range.getStart(), (getLogicalData().getLength() - 1));
                 }
                 it = pdris.iterator();
-                WebDataFileResource.log.log(Level.FINE, "Start: {0} end: {1} range: {2}", new Object[]{range.getStart(), range.getFinish(), range.getRange()});
+                Logger.getLogger(WebDataFileResource.class.getName()).log(Level.FINEST, "Start: {0} end: {1} range: {2}", new Object[]{range.getStart(), range.getFinish(), range.getRange()});
                 pdri = transfererRange(it, out, 0, null, range);
             } else {
 //                pdri = transfer(it, out, 0, null, false);
@@ -472,7 +513,7 @@ public class WebDataFileResource extends WebDataResource implements
         if (range != null) {
             len = range.getFinish() - range.getStart() + 1;
         } else {
-            len = getContentLength();
+            len = this.getLogicalData().getLength();
         }
         double speed = ((len * 8.0) * 1000.0) / (elapsed * 1000.0);
         Double oldSpeed = weightPDRIMap.get(pdri.getHost());
@@ -493,8 +534,8 @@ public class WebDataFileResource extends WebDataResource implements
         stats.setSource(pdri.getHost());
         stats.setDestination(fromAddress);
         stats.setSpeed(speed);
-        stats.setSize(getContentLength());
-        String msg = "Source: " + stats.getSource() + " Destination: " + stats.getDestination() + " Tx_Speed: " + speed + " Kbites/sec Tx_Size: " + getContentLength() + " bytes Elapsed_Time: " + elapsed + " ms";
+        stats.setSize(getLogicalData().getLength());
+        String msg = "Source: " + stats.getSource() + " Destination: " + stats.getDestination() + " Tx_Speed: " + speed + " Kbites/sec Tx_Size: " + getLogicalData().getLength() + " bytes Elapsed_Time: " + elapsed + " ms";
         try {
             if (!pdri.isCahce()) {
                 getCatalogue().setSpeed(stats);
@@ -502,7 +543,7 @@ public class WebDataFileResource extends WebDataResource implements
         } catch (SQLException ex) {
             Logger.getLogger(WebDataFileResource.class.getName()).log(Level.SEVERE, null, ex);
         }
-        WebDataFileResource.log.log(Level.INFO, msg);
+        Logger.getLogger(WebDataFileResource.class.getName()).log(Level.INFO, msg);
     }
 
     @Override
@@ -511,12 +552,12 @@ public class WebDataFileResource extends WebDataResource implements
             NotAuthorizedException {
         Set<String> keys = parameters.keySet();
 //        for (String s : keys) {
-//            WebDataFileResource.log.log(Level.INFO, "{0} : {1}", new Object[]{s, parameters.get(s)});
+//            Logger.getLogger(WebDataFileResource.class.getName()).log(Level.INFO, "{0} : {1}", new Object[]{s, parameters.get(s)});
 //        }
 //
 //        keys = files.keySet();
 //        for (String s : keys) {
-//            WebDataFileResource.log.log(Level.INFO, "{0} : {1}", new Object[]{s, files.get(s).getFieldName()});
+//            Logger.getLogger(WebDataFileResource.class.getName()).log(Level.INFO, "{0} : {1}", new Object[]{s, files.get(s).getFieldName()});
 //        }
 
         throw new BadRequestException(this, "Not implemented");
@@ -524,7 +565,7 @@ public class WebDataFileResource extends WebDataResource implements
 
     @Override
     public Date getCreateDate() {
-        WebDataFileResource.log.log(Level.FINE, "getCreateDate() for {0}", getPath());
+//        Logger.getLogger(WebDataFileResource.class.getName()).log(Level.FINE, "getCreateDate() for {0}", getPath());
         return new Date(getLogicalData().getCreateDate());
     }
 
@@ -535,7 +576,7 @@ public class WebDataFileResource extends WebDataResource implements
                 case GET:
                     String redirect = null;
 
-                    if (doRedirect) {
+                    if (redirectGets) {
 
                         if (!canRedirect(request)) {
                             return null;
@@ -545,7 +586,7 @@ public class WebDataFileResource extends WebDataResource implements
                         String from = request.getRemoteAddr();
                         redirect = getBestWorker(from);
                     }
-                    WebDataFileResource.log.log(Level.INFO, "Redirecting to: {0}", redirect);
+                    Logger.getLogger(WebDataFileResource.class.getName()).log(Level.FINEST, "Redirecting to: {0}", redirect);
                     return redirect;
                 default:
                     return null;
@@ -561,21 +602,32 @@ public class WebDataFileResource extends WebDataResource implements
     }
 
     private String getBestWorker(String reuSource) throws IOException, URISyntaxException, InterruptedException {
-        if (doRedirect) {
+//        reuSource = "192.168.100.1";
+        if (redirectGets) {
+            if (workersMap.containsKey(reuSource)) {
+                String worker = workersMap.get(reuSource);
+                String w = worker + "/" + getLogicalData().getUid();
+                String token = UUID.randomUUID().toString();
+                AuthLobcderComponents.setTicket(worker, token);
+                return w + "/" + token;
+            }
 //            if (uri != null) {
             if (PropertiesHelper.getSchedulingAlg().equals("traffic") && PropertiesHelper.useSDN()) {
 //                return getWorkerWithLessTraffic(reuSource);
-                WebDataFileResource.log.log(Level.FINE, "SchedulingAlg: traffic");
+                Logger.getLogger(WebDataFileResource.class.getName()).log(Level.FINEST, "SchedulingAlg: traffic");
                 return getLowestCostWorker(reuSource);
             }
             if (PropertiesHelper.getSchedulingAlg().equals("round-robin")) {
                 return getWorkerRoundRobin();
             }
             if (PropertiesHelper.getSchedulingAlg().equals("random")) {
-                return getWorkerRandom();
+                return getRandomWorker();
             }
-//            }
+            if (PropertiesHelper.getSchedulingAlg().equals("geolocation")) {
+                return getGeolocationWorker(reuSource);
+            }
 
+//            }
             workers = PropertiesHelper.getWorkers();
             if (workerIndex >= workers.size()) {
                 workerIndex = 0;
@@ -589,62 +641,6 @@ public class WebDataFileResource extends WebDataResource implements
         } else {
             return null;
         }
-    }
-
-    private boolean isInCache() throws SQLException, URISyntaxException, IOException {
-        List<PDRIDescr> pdriDescr = getCatalogue().getPdriDescrByGroupId(getLogicalData().getPdriGroupId());
-        for (PDRIDescr pdri : pdriDescr) {
-            if (pdri.getResourceUrl().startsWith("file")) {
-                return true;
-            }
-        }
-
-//        try (Connection cn = getCatalogue().getConnection()) {
-//            List<PDRIDescr> pdriDescr = getCatalogue().getPdriDescrByGroupId(getLogicalData().getPdriGroupId(), cn);
-//            for (PDRIDescr pdri : pdriDescr) {
-//                if (pdri.getResourceUrl().startsWith("file")) {
-//                    return true;
-//                }
-//            }
-//        }
-        return false;
-    }
-
-    private boolean canRedirect(Request request) throws SQLException, UnsupportedEncodingException, URISyntaxException, IOException {
-        if (isInCache()) {
-            return false;
-        }
-        Auth auth = request.getAuthorization();
-        if (auth == null) {
-            return false;
-        }
-        final String autheader = request.getHeaders().get("authorization");
-        if (autheader != null) {
-            final int index = autheader.indexOf(' ');
-            if (index > 0) {
-                final String credentials = new String(Base64.decodeBase64(autheader.substring(index).getBytes()), "UTF8");
-                final String uname = credentials.substring(0, credentials.indexOf(":"));
-                final String token = credentials.substring(credentials.indexOf(":") + 1);
-                if (authenticate(uname, token) == null) {
-                    return false;
-                }
-                if (!authorise(request, Request.Method.GET, auth)) {
-                    return false;
-                }
-            }
-        }
-        String userAgent = request.getHeaders().get("user-agent");
-        if (userAgent == null || userAgent.length() <= 1) {
-            return false;
-        }
-//        WebDataFileResource.log.log(Level.FINE, "userAgent: {0}", userAgent);
-        List<String> nonRedirectableUserAgents = PropertiesHelper.getNonRedirectableUserAgents();
-        for (String s : nonRedirectableUserAgents) {
-            if (userAgent.contains(s)) {
-                return false;
-            }
-        }
-        return true;
     }
 
     @Override
@@ -664,8 +660,11 @@ public class WebDataFileResource extends WebDataResource implements
             sdnClient = new SDNControllerClient(uri);
         }
         List<DefaultWeightedEdge> shortestPath = sdnClient.getShortestPath(reqSource, workersMap.keySet());
-        WebDataFileResource.log.log(Level.FINE, "getShortestPath: {0}", shortestPath);
-        sdnClient.pushFlow(shortestPath);
+        Logger.getLogger(WebDataFileResource.class.getName()).log(Level.FINEST, "getShortestPath: {0}", shortestPath);
+        if (PropertiesHelper.pushFlow()) {
+            sdnClient.pushFlow(shortestPath);
+        }
+
         DefaultWeightedEdge e = shortestPath.get(0);
         String[] workerSwitch = e.toString().split(" : ");
         String workerIP = workerSwitch[0].substring(1);
@@ -682,6 +681,7 @@ public class WebDataFileResource extends WebDataResource implements
         workers = PropertiesHelper.getWorkers();
         if (workerIndex >= workers.size()) {
             workerIndex = 0;
+//            return null;
         }
         String worker = workers.get(workerIndex++);
         String w = worker + "/" + getLogicalData().getUid();
@@ -690,7 +690,7 @@ public class WebDataFileResource extends WebDataResource implements
         return w + "/" + token;
     }
 
-    private String getWorkerRandom() throws IOException {
+    private String getRandomWorker() throws IOException {
         workers = PropertiesHelper.getWorkers();
         int randomIndex = new Random().nextInt((workers.size() - 1 - 0) + 1) + 0;
         String worker = workers.get(randomIndex);
@@ -698,5 +698,43 @@ public class WebDataFileResource extends WebDataResource implements
         String token = UUID.randomUUID().toString();
         AuthLobcderComponents.setTicket(worker, token);
         return w + "/" + token;
+    }
+
+    private String getGeolocationWorker(String reuSource) throws IOException {
+        if (lookupService == null) {
+            lookupService = new LookupService(PropertiesHelper.getGeoDB());
+        }
+//        Location reuSourceLocation = lookupService.getLocation("145.18.168.228");
+        Location reuSourceLocation = lookupService.getLocation(reuSource);
+
+        Iterator<String> iter = workersMap.keySet().iterator();
+        double dist = 9999999999.0;
+        String worker = null;
+        while (iter.hasNext()) {
+            String wip = iter.next();
+            Location workerLocation = lookupService.getLocation(wip);
+            if (reuSourceLocation != null && workerLocation != null && reuSourceLocation.distance(workerLocation) < dist) {
+                dist = reuSourceLocation.distance(workerLocation);
+                worker = workersMap.get(wip);
+                Logger.getLogger(WebDataFileResource.class.getName()).log(Level.FINEST, "Src loc: {0} Dst loc: {1} dist: {2}", new Object[]{reuSourceLocation.city, workerLocation.city, dist});
+            }
+        }
+
+        for (String s : Network.getAllLocalIP()) {
+            Location masterLocation = lookupService.getLocation(s);
+            if (reuSourceLocation != null && masterLocation != null && reuSourceLocation.distance(masterLocation) < dist) {
+                dist = reuSourceLocation.distance(masterLocation);
+                Logger.getLogger(WebDataFileResource.class.getName()).log(Level.FINEST, "Src loc: {0} Dst loc: {1} dist: {2}", new Object[]{reuSourceLocation.city, masterLocation.city, dist});
+                worker = null;
+            }
+        }
+
+        if (worker != null) {
+            String w = worker + "/" + getLogicalData().getUid();
+            String token = UUID.randomUUID().toString();
+            AuthLobcderComponents.setTicket(worker, token);
+            return w + "/" + token;
+        }
+        return null;
     }
 }

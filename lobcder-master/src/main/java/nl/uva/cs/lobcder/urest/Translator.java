@@ -1,6 +1,5 @@
 package nl.uva.cs.lobcder.urest;
 
-import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.auth.MyPrincipal;
 import nl.uva.cs.lobcder.util.SingletonesHelper;
 
@@ -17,7 +16,6 @@ import java.sql.*;
  * @author dvasunin
  */
 
-@Log
 @Path("getshort/")
 public class Translator {
 

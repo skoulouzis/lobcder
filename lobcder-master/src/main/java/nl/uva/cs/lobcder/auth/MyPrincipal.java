@@ -4,30 +4,21 @@
  */
 package nl.uva.cs.lobcder.auth;
 
-import lombok.Getter;
-import lombok.Setter;
-
 import java.util.HashSet;
 import java.util.Set;
-import lombok.extern.java.Log;
 
 /**
  *
  * @author dvasunin
  */
-@Log
+
 public class MyPrincipal {
 
-    @Getter
+    
     private final String token;
-    @Getter
     private final String userId;
-    @Getter
     private final Set<String> roles;
-    @Getter
     private final boolean admin;
-    @Getter
-    @Setter
     private Long validUntil;
 
     public MyPrincipal(String userId, Set<String> roles, String token) {
@@ -42,7 +33,7 @@ public class MyPrincipal {
     public String getRolesStr() {
         StringBuilder sb = new StringBuilder();
         boolean first = true;
-        for (String s : roles) {
+        for (String s : getRoles()) {
             if (first) {
                 sb.append(s);
                 first = false;
@@ -54,26 +45,61 @@ public class MyPrincipal {
     }
 
     public boolean canRead(Permissions p) {
-        if (p.getOwner().equals(userId)) {
+        if (p.getOwner().equals(getUserId())) {
             return true;
         }
         if (isAdmin()) {
             return true;
         }
-        Set<String> r1 = new HashSet<>(roles);
+        Set<String> r1 = new HashSet<>(getRoles());
         r1.retainAll(p.getRead());
         return !r1.isEmpty();
     }
 
     public boolean canWrite(Permissions p) {
-        if (p.getOwner().equals(userId)) {
+        if (p.getOwner().equals(getUserId())) {
             return true;
         }
         if (isAdmin()) {
             return true;
         }
-        Set<String> r1 = new HashSet<>(roles);
+        Set<String> r1 = new HashSet<>(getRoles());
         r1.retainAll(p.getWrite());
         return !r1.isEmpty();
+    }
+
+    /**
+     * @return the userId
+     */
+    public String getUserId() {
+        return userId;
+    }
+
+    /**
+     * @return the admin
+     */
+    public boolean isAdmin() {
+        return admin;
+    }
+
+    /**
+     * @return the roles
+     */
+    public Set<String> getRoles() {
+        return roles;
+    }
+
+    /**
+     * @return the validUntil
+     */
+    public Long getValidUntil() {
+        return validUntil;
+    }
+
+    /**
+     * @param validUntil the validUntil to set
+     */
+    public void setValidUntil(Long validUntil) {
+        this.validUntil = validUntil;
     }
 }

@@ -5,13 +5,10 @@
 package nl.uva.cs.lobcder.webDav.resources;
 
 import io.milton.common.Path;
-import io.milton.http.Auth;
-import io.milton.http.LockInfo;
-import io.milton.http.LockResult;
-import io.milton.http.LockTimeout;
-import io.milton.http.LockToken;
-import io.milton.http.Request;
-import io.milton.http.Response;
+import io.milton.http.*;
+import static io.milton.http.Request.Method.GET;
+import static io.milton.http.Request.Method.POST;
+import static io.milton.http.Request.Method.PUT;
 import io.milton.http.exceptions.BadRequestException;
 import io.milton.http.exceptions.LockedException;
 import io.milton.http.exceptions.NotAuthorizedException;
@@ -20,21 +17,7 @@ import io.milton.http.values.HrefList;
 import io.milton.principal.DavPrincipals;
 import io.milton.principal.Principal;
 import io.milton.property.PropertySource;
-import io.milton.resource.AccessControlledResource;
-import io.milton.resource.LockableResource;
-import io.milton.resource.MultiNamespaceCustomPropertyResource;
-import io.milton.resource.PropFindableResource;
-import io.milton.resource.Resource;
-import java.io.IOException;
-import java.security.NoSuchAlgorithmException;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.*;
-import java.util.logging.Level;
-import javax.annotation.Nonnull;
-import javax.xml.namespace.QName;
-import lombok.Getter;
-import lombok.extern.java.Log;
+import io.milton.resource.*;
 import nl.uva.cs.lobcder.auth.AuthI;
 import nl.uva.cs.lobcder.auth.MyPrincipal;
 import nl.uva.cs.lobcder.auth.Permissions;
@@ -42,25 +25,40 @@ import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
 import nl.uva.cs.lobcder.resources.*;
 import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.cs.lobcder.util.DesEncrypter;
+
+import javax.annotation.Nonnull;
+import javax.xml.namespace.QName;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URISyntaxException;
+import java.security.NoSuchAlgorithmException;
+import java.sql.*;
+import java.util.*;
+import java.util.Date;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import nl.uva.cs.lobcder.replication.policy.ReplicationPolicy;
+import nl.uva.cs.lobcder.util.PropertiesHelper;
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.tuple.MutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 
 /**
  * @author S. Koulouzis
  */
-@Log
 public class WebDataResource implements PropFindableResource, Resource,
         AccessControlledResource, MultiNamespaceCustomPropertyResource, LockableResource {
 
-    @Getter
     private final LogicalData logicalData;
-    @Getter
     private final JDBCatalogue catalogue;
-    @Getter
     private final Path path;
     protected final List<AuthI> authList;
 //    protected final AuthI auth2;
     private static final ThreadLocal<MyPrincipal> principalHolder = new ThreadLocal<>();
     protected String fromAddress;
+    protected Map<String, String> mimeTypeMap = new HashMap<>();
+    private static boolean redirectPosts = false;
 
     public WebDataResource(@Nonnull LogicalData logicalData, Path path, @Nonnull JDBCatalogue catalogue, @Nonnull List<AuthI> authList) {
         this.authList = authList;
@@ -68,6 +66,19 @@ public class WebDataResource implements PropFindableResource, Resource,
         this.logicalData = logicalData;
         this.catalogue = catalogue;
         this.path = path;
+        mimeTypeMap.put("mp4", "video/mp4");
+        mimeTypeMap.put("pdf", "application/pdf");
+        mimeTypeMap.put("tex", "application/x-tex");
+        mimeTypeMap.put("log", "text/plain");
+        mimeTypeMap.put("png", "image/png");
+        mimeTypeMap.put("aux", "text/plain");
+        mimeTypeMap.put("bbl", "text/plain");
+        mimeTypeMap.put("blg", "text/plain");
+        try {
+            redirectPosts = PropertiesHelper.doRedirectPosts();
+        } catch (IOException ex) {
+            Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     @Override
@@ -82,7 +93,7 @@ public class WebDataResource implements PropFindableResource, Resource,
 
     @Override
     public String getName() {
-        return logicalData.getName();
+        return getLogicalData().getName();
     }
 
     @Override
@@ -105,10 +116,16 @@ public class WebDataResource implements PropFindableResource, Resource,
 //        }
         if (principal != null) {
             principalHolder.set(principal);
-//            WebDataResource.log.log(Level.FINE, "getUserId: {0}", principal.getUserId());
-//            WebDataResource.log.log(Level.FINE, "getRolesStr: {0}", principal.getRolesStr());
-            String msg = "From: " + fromAddress + " user: " + principal.getUserId() + " password: " + Base64.encodeBase64String(password.getBytes()) + " roles:" + principal.getRolesStr();
-            WebDataResource.log.log(Level.INFO, msg);
+//            Logger.getLogger(WebDataResource.class.getName()).log(Level.FINE, "getUserId: {0}", principal.getUserId());
+//            Logger.getLogger(WebDataResource.class.getName()).log(Level.FINE, "getRolesStr: {0}", principal.getRolesStr());
+            String msg = "From: " + fromAddress + " user: " + principal.getUserId() + " password: XXXX";
+            Logger.getLogger(WebDataResource.class.getName()).log(Level.INFO, msg);
+
+        }
+        try {
+            getCatalogue().updateAccessTime(getLogicalData().getUid());
+        } catch (SQLException ex) {
+            Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
         }
         return principal;
     }
@@ -130,7 +147,7 @@ public class WebDataResource implements PropFindableResource, Resource,
             }
             fromAddress = request.getFromAddress();
             String msg = "From: " + fromAddress + " User: " + getPrincipal().getUserId() + " Method: " + method;
-            WebDataResource.log.log(Level.INFO, msg);
+            Logger.getLogger(WebDataResource.class.getName()).log(Level.INFO, msg);
             LogicalData parentLD;
             Permissions p;
             switch (method) {
@@ -153,7 +170,7 @@ public class WebDataResource implements PropFindableResource, Resource,
                 case UNLOCK:
                     return getPrincipal().canWrite(getPermissions());
                 case DELETE:
-                    parentLD = getCatalogue().getLogicalDataByUid(logicalData.getParentRef());
+                    parentLD = getCatalogue().getLogicalDataByUid(getLogicalData().getParentRef());
                     p = getCatalogue().getPermissions(parentLD.getUid(), parentLD.getOwner());
                     return getPrincipal().canWrite(p);
                 case GET:
@@ -174,7 +191,7 @@ public class WebDataResource implements PropFindableResource, Resource,
                     return true;
             }
         } catch (Throwable th) {
-            WebDataResource.log.log(Level.SEVERE, "Exception in authorize for a resource " + getPath(), th);
+            Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, "Exception in authorize for a resource " + getPath(), th);
             return false;
         }
 //        return false;
@@ -201,7 +218,7 @@ public class WebDataResource implements PropFindableResource, Resource,
     @Override
     public String getPrincipalURL() {
         String principalURL = getUserlUrlPrefix() + getPrincipal().getUserId();
-        WebDataResource.log.log(Level.FINE, "getPrincipalURL for {0}: {1}", new Object[]{getPath(), principalURL});
+        Logger.getLogger(WebDataResource.class.getName()).log(Level.FINE, "getPrincipalURL for {0}: {1}", new Object[]{getPath(), principalURL});
         return principalURL;
     }
 
@@ -219,7 +236,7 @@ public class WebDataResource implements PropFindableResource, Resource,
         try {
             p = getPermissions();
         } catch (SQLException e) {
-            WebDataResource.log.log(Level.SEVERE, "Could not get Permissions for resource " + getPath(), e);
+            Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, "Could not get Permissions for resource " + getPath(), e);
             return perm;
         }
         Set<String> readRoles = p.getRead();
@@ -247,7 +264,7 @@ public class WebDataResource implements PropFindableResource, Resource,
 
     @Override
     public Map<Principal, List<Priviledge>> getAccessControlList() {
-        WebDataResource.log.log(Level.FINE, "getAccessControlList for {0}", getPath());
+        Logger.getLogger(WebDataResource.class.getName()).log(Level.FINE, "getAccessControlList for {0}", getPath());
         Permissions resourcePermission;
         HashMap<Principal, List<Priviledge>> acl = new HashMap<>();
         try {
@@ -310,19 +327,19 @@ public class WebDataResource implements PropFindableResource, Resource,
                 acl.put(p, perm);
             }
         } catch (SQLException e) {
-            WebDataResource.log.log(Level.SEVERE, "Cannot read permissions for resource " + getPath(), e);
+            Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, "Cannot read permissions for resource " + getPath(), e);
         }
         return acl;
     }
 
     @Override
     public void setAccessControlList(Map<Principal, List<Priviledge>> map) {
-        WebDataResource.log.log(Level.FINE, "PLACEHOLDER setAccessControlList() for {0}", getPath());
+        Logger.getLogger(WebDataResource.class.getName()).log(Level.FINE, "PLACEHOLDER setAccessControlList() for {0}", getPath());
 
         for (Map.Entry<Principal, List<Priviledge>> me : map.entrySet()) {
             Principal principal = me.getKey();
             for (Priviledge priviledge : me.getValue()) {
-                WebDataResource.log.log(Level.FINE, "Set priveledges {0} for {1}", new Object[]{priviledge, principal});
+                Logger.getLogger(WebDataResource.class.getName()).log(Level.FINE, "Set priveledges {0} for {1}", new Object[]{priviledge, principal});
                 //String id = principal.getIdenitifer().getValue();
                 //id = id.substring(id.lastIndexOf("/") + 1);
             }
@@ -338,7 +355,7 @@ public class WebDataResource implements PropFindableResource, Resource,
 
     protected PDRI createPDRI(long fileLength, String fileName, Connection connection) throws SQLException, NoSuchAlgorithmException, IOException {
 //        Collection<StorageSite> cacheSS = getCatalogue().getCacheStorageSites(connection);
-        Collection<StorageSite> cacheSS = getCatalogue().getStorageSites(connection, Boolean.TRUE);
+        Collection<StorageSite> cacheSS = getCatalogue().getStorageSites(connection, Boolean.TRUE, getPrincipal().isAdmin());
         String nameWithoutSpace = fileName.replaceAll(" ", "_");
         if (cacheSS == null || cacheSS.isEmpty()) {
             return new CachePDRI(UUID.randomUUID().toString() + "-" + nameWithoutSpace);
@@ -349,7 +366,7 @@ public class WebDataResource implements PropFindableResource, Resource,
                     ss.getStorageSiteId(),
                     ss.getResourceURI(),
                     ss.getCredential().getStorageSiteUsername(),
-                    ss.getCredential().getStorageSitePassword(), ss.isEncrypt(), DesEncrypter.generateKey(), null, null);
+                    ss.getCredential().getStorageSitePassword(), ss.isEncrypt(), DesEncrypter.generateKey(), null, null, ss.isCache());
             return PDRIFactory.getFactory().createInstance(pdriDescr, true);
         }
     }
@@ -357,7 +374,6 @@ public class WebDataResource implements PropFindableResource, Resource,
     @Override
     public Object getProperty(QName qname) {
         try {
-            log.log(Level.FINE, "qname: {0}", qname);
             if (qname.equals(Constants.DATA_DIST_PROP_NAME)) {
                 return getDataDistString();
             } else if (qname.equals(Constants.DRI_SUPERVISED_PROP_NAME)) {
@@ -377,24 +393,36 @@ public class WebDataResource implements PropFindableResource, Resource,
             } else if (qname.equals(Constants.DESCRIPTION_PROP_NAME)) {
                 return getLogicalData().getDescription();
             } else if (qname.equals(Constants.DATA_LOC_PREF_NAME)) {
-                return getLogicalData().getDataLocationPreference();
+                return getDataLocationPreferencesString();
             } else if (qname.equals(Constants.ENCRYPT_PROP_NAME)) {
                 return getEcryptionString();
             } else if (qname.equals(Constants.AVAIL_STORAGE_SITES_PROP_NAME)) {
-                return getAvailStorageSitesString();
+                return getAvailStorageSitesString(getPrincipal().isAdmin());
             } else if (qname.equals(Constants.TTL)) {
                 return getLogicalData().getTtlSec();
+            } else if (qname.equals(Constants.REPLICATION_QUEUE)) {
+                if (getPrincipal().isAdmin()) {
+                    return getReplicationQueueString();
+                }
+            } else if (qname.equals(Constants.REPLICATION_QUEUE_LEN)) {
+//                if (getPrincipal().isAdmin()) {
+                return getReplicationQueueLen();
+//                }
+            } else if (qname.equals(Constants.REPLICATION_QUEUE_SIZE)) {
+//                if (getPrincipal().isAdmin()) {
+                return getReplicationQueueSize();
+//                }
             }
             return PropertySource.PropertyMetaData.UNKNOWN;
         } catch (Throwable th) {
-            WebDataResource.log.log(Level.SEVERE, "Exception in getProperty() for resource " + getPath(), th);
+            Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, "Exception in getProperty() for resource " + getPath(), th);
             return PropertySource.PropertyMetaData.UNKNOWN;
         }
     }
 
     @Override
     public void setProperty(QName qname, Object o) throws PropertySource.PropertySetException, NotAuthorizedException {
-        WebDataResource.log.log(Level.FINE, "setProperty for resource {0} : {1} = {2}", new Object[]{getPath(), qname, o});
+        Logger.getLogger(WebDataResource.class.getName()).log(Level.FINE, "setProperty for resource {0} : {1} = {2}", new Object[]{getPath(), qname, o});
         try (Connection connection = getCatalogue().getConnection()) {
             try {
                 if (o != null) {
@@ -402,31 +430,29 @@ public class WebDataResource implements PropFindableResource, Resource,
                     if (qname.equals(Constants.DRI_SUPERVISED_PROP_NAME)) {
                         Boolean v = Boolean.valueOf(value);
                         getLogicalData().setSupervised(v);
-                        catalogue.setLogicalDataSupervised(getLogicalData().getUid(), v, connection);
+                        getCatalogue().setLogicalDataSupervised(getLogicalData().getUid(), v, connection);
                     } else if (qname.equals(Constants.DRI_CHECKSUM_PROP_NAME)) {
                         getLogicalData().setChecksum(value);
-                        catalogue.setFileChecksum(getLogicalData().getUid(), value, connection);
+                        getCatalogue().setFileChecksum(getLogicalData().getUid(), value, connection);
                     } else if (qname.equals(Constants.DRI_LAST_VALIDATION_DATE_PROP_NAME)) {
                         Long v = Long.valueOf(value);
                         getLogicalData().setLastValidationDate(v);
-                        catalogue.setLastValidationDate(getLogicalData().getUid(), v, connection);
+                        getCatalogue().setLastValidationDate(getLogicalData().getUid(), v, connection);
                     } else if (qname.equals(Constants.DRI_STATUS_PROP_NANE)) {
                         getLogicalData().setStatus(value);
-                        catalogue.setDriStatus(getLogicalData().getUid(), value, connection);
+                        getCatalogue().setDriStatus(getLogicalData().getUid(), value, connection);
                     } else if (qname.equals(Constants.DESCRIPTION_PROP_NAME)) {
                         String v = value;
                         getLogicalData().setDescription(v);
-                        catalogue.setDescription(getLogicalData().getUid(), v, connection);
+                        getCatalogue().setDescription(getLogicalData().getUid(), v, connection);
                     } else if (qname.equals(Constants.DATA_LOC_PREF_NAME)) {
-                        String v = value;
-                        getLogicalData().setDataLocationPreference(v);
-                        catalogue.setLocationPreference(getLogicalData().getUid(), v, connection);
+                        setDataLocationPref(value, connection);
                     } else if (qname.equals(Constants.ENCRYPT_PROP_NAME)) {
-                        setEncryptionPropertyValues(value);
+                        setEncryptionPropertyValues(value, connection);
                     } else if (qname.equals(Constants.TTL)) {
                         String v = value;
                         getLogicalData().setTtlSec(Integer.valueOf(v));
-                        catalogue.setTTL(getLogicalData().getUid(), Integer.valueOf(v), connection);
+                        getCatalogue().setTTL(getLogicalData().getUid(), Integer.valueOf(v), connection);
                     }
                     connection.commit();
                 }
@@ -441,7 +467,9 @@ public class WebDataResource implements PropFindableResource, Resource,
 
     @Override
     public PropertySource.PropertyMetaData getPropertyMetaData(QName qname) {
-        if (qname.equals(Constants.DATA_DIST_PROP_NAME)) {
+        if (qname.equals(Constants.DATA_DIST_PROP_NAME)
+                || qname.equals(Constants.REPLICATION_QUEUE)
+                || qname.equals(Constants.REPLICATION_QUEUE_LEN)) {
             return new PropertySource.PropertyMetaData(PropertySource.PropertyAccessibility.READ_ONLY, String.class);
         }
 //        if (qname.equals(Constants.DRI_CHECKSUM_PROP_NAME)) {
@@ -490,12 +518,12 @@ public class WebDataResource implements PropFindableResource, Resource,
                 connection.commit();
                 return LockResult.success(lockToken);
             } catch (Exception ex) {
-                log.log(Level.SEVERE, null, ex);
+                Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
                 connection.rollback();
                 throw new PreConditionFailedException(this);
             }
         } catch (SQLException e) {
-            log.log(Level.SEVERE, null, e);
+            Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, e);
             throw new PreConditionFailedException(this);
         }
 
@@ -507,10 +535,8 @@ public class WebDataResource implements PropFindableResource, Resource,
             try {
                 if (getLogicalData().getLockTokenID() == null) {
                     throw new RuntimeException("not locked");
-                } else {
-                    if (!getLogicalData().getLockTokenID().equals(token)) {
-                        throw new RuntimeException("invalid lock id");
-                    }
+                } else if (!getLogicalData().getLockTokenID().equals(token)) {
+                    throw new RuntimeException("invalid lock id");
                 }
                 getLogicalData().setLockTimeout(System.currentTimeMillis() + Constants.LOCK_TIME);
 
@@ -523,12 +549,12 @@ public class WebDataResource implements PropFindableResource, Resource,
                 connection.commit();
                 return LockResult.success(lockToken);
             } catch (Exception ex) {
-                log.log(Level.SEVERE, null, ex);
+                Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
                 connection.rollback();
                 throw new PreConditionFailedException(this);
             }
         } catch (SQLException e) {
-            log.log(Level.SEVERE, null, e);
+            Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, e);
             throw new PreConditionFailedException(this);
         }
     }
@@ -564,12 +590,12 @@ public class WebDataResource implements PropFindableResource, Resource,
                 getLogicalData().setLockDepth(null);
                 getLogicalData().setLockTimeout(null);
             } catch (Exception ex) {
-                log.log(Level.SEVERE, null, ex);
+                Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
                 connection.rollback();
                 throw new PreConditionFailedException(this);
             }
         } catch (SQLException e) {
-            log.log(Level.SEVERE, null, e);
+            Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, e);
             throw new PreConditionFailedException(this);
         }
     }
@@ -588,8 +614,54 @@ public class WebDataResource implements PropFindableResource, Resource,
     }
 
     @Override
-    public String checkRedirect(Request rqst) throws NotAuthorizedException, BadRequestException {
-        return null;
+    public String checkRedirect(Request request) throws NotAuthorizedException, BadRequestException {
+        switch (request.getMethod()) {
+            case PUT:
+            case POST:
+                if (!redirectPosts) {
+                    return null;
+                }
+                String redirect = null;
+                try {
+                    if (!canRedirect(request)) {
+                        return null;
+                    }
+                    Map<Long, Pair<WebDataFileResource, Long>> resources = createResouses(request);
+//                    lockResources(resources);
+                    Map<String, Pair<Long, Collection<Long>>> storageMap = getStorageMap(resources);
+
+                    StringBuilder sb = new StringBuilder();
+                    Set<String> keys = storageMap.keySet();
+                    for (String k : keys) {
+                        sb.append("file_name=").append(k).append("/");
+                        Pair pair = storageMap.get(k);
+                        Long fileUid = (Long) pair.getLeft();
+                        sb.append("file_uid=").append(fileUid).append("/");
+
+                        Long pdriGroupUid = resources.get(fileUid).getRight();
+                        sb.append("pdrigroup_uid=").append(pdriGroupUid).append("/");
+
+                        Collection<Long> ssids = (Collection<Long>) pair.getRight();
+                        for (Long ssid : ssids) {
+                            sb.append("ss_id=").append(ssid).append("/");
+                        }
+                        sb.append("&");
+                    }
+                    sb.deleteCharAt(sb.length() - 1);
+
+                    String folder = request.getAbsolutePath();
+                    if (!folder.endsWith("/")) {
+                        folder += "/";
+                    }
+                    redirect = "http://localhost:8080/lobcder-worker" + folder + "?" + sb.toString();
+                } catch (Exception ex) {
+                    Logger.getLogger(WebDataResource.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                return redirect;
+            default:
+                return null;
+        }
+//        return null;
     }
 
     private String getDataDistString() throws SQLException {
@@ -599,33 +671,42 @@ public class WebDataResource implements PropFindableResource, Resource,
                 StringBuilder sb = new StringBuilder();
                 if (getLogicalData().isFolder()) {
                     List<? extends WebDataResource> children = (List<? extends WebDataResource>) ((WebDataDirResource) (this)).getChildren();
-                    sb.append("[");
-                    for (WebDataResource r : children) {
-                        if (r instanceof WebDataFileResource) {
+                    if (children != null) {
+                        sb.append("[");
+                        for (WebDataResource r : children) {
+                            if (r instanceof WebDataFileResource) {
 //                                    sb.append("'").append(r.getName()).append("' : [");
-                            sb.append(r.getName()).append(" : [");
-                            Collection<PDRIDescr> pdris = getCatalogue().getPdriDescrByGroupId(r.getLogicalData().getPdriGroupId(), connection);
-                            for (PDRIDescr p : pdris) {
+                                sb.append(r.getName()).append(" : [");
+                                Collection<PDRIDescr> pdris = getCatalogue().getPdriDescrByGroupId(r.getLogicalData().getPdriGroupId(), connection);
+                                for (PDRIDescr p : pdris) {
 //                                        sb.append("'").append(p.getResourceUrl()).append("/").append(p.getName()).append("',");
-                                sb.append(p.getResourceUrl()).append("/").append(p.getName()).append(",");
+                                    sb.append(p.getResourceUrl()).append("/").append(p.getName()).append(",");
+                                }
+                                sb.replace(sb.lastIndexOf(","), sb.length(), "").append("],");
                             }
-                            sb.replace(sb.lastIndexOf(","), sb.length(), "").append("],");
                         }
                     }
+
                 } else {
                     Collection<PDRIDescr> pdris = getCatalogue().getPdriDescrByGroupId(getLogicalData().getPdriGroupId(), connection);
-                    sb.append("[");
-                    for (PDRIDescr p : pdris) {
+                    if (pdris != null) {
+                        sb.append("[");
+                        for (PDRIDescr p : pdris) {
 //                                sb.append("'").append(p.getResourceUrl()).append("/").append(p.getName()).append("'");
-                        sb.append(p.getResourceUrl()).append("/").append(p.getName());
-                        sb.append(",");
+                            sb.append(p.getResourceUrl());
+                            if (!sb.toString().endsWith("/")) {
+                                sb.append("/");
+                            }
+                            sb.append(p.getName());
+                            sb.append(",");
+                        }
                     }
+
                 }
                 if (sb.toString().contains(",")) {
                     sb.replace(sb.lastIndexOf(","), sb.length(), "");
                 }
                 sb.append("]");
-                sb.toString();
                 return sb.toString();
             } catch (NotAuthorizedException | SQLException e) {
                 connection.rollback();
@@ -640,17 +721,19 @@ public class WebDataResource implements PropFindableResource, Resource,
             if (getLogicalData().isFolder()) {
                 List<? extends WebDataResource> children = (List<? extends WebDataResource>) ((WebDataDirResource) (this)).getChildren();
                 sb.append("[");
-                for (WebDataResource r : children) {
-                    if (r instanceof WebDataFileResource) {
-                        sb.append("'").append(r.getName()).append("' : [");
-                        Collection<PDRIDescr> pdris = getCatalogue().getPdriDescrByGroupId(r.getLogicalData().getPdriGroupId(), connection);
-                        for (PDRIDescr p : pdris) {
-                            sb.append("[");
-                            sb.append(p.getResourceUrl()).append(",");
-                            sb.append(p.getEncrypt());
-                            sb.append("],");
+                if (children != null && !children.isEmpty()) {
+                    for (WebDataResource r : children) {
+                        if (r instanceof WebDataFileResource) {
+                            sb.append("'").append(r.getName()).append("' : [");
+                            Collection<PDRIDescr> pdris = getCatalogue().getPdriDescrByGroupId(r.getLogicalData().getPdriGroupId(), connection);
+                            for (PDRIDescr p : pdris) {
+                                sb.append("[");
+                                sb.append(p.getResourceUrl()).append(",");
+                                sb.append(p.getEncrypt());
+                                sb.append("],");
+                            }
+                            sb.replace(sb.lastIndexOf(","), sb.length(), "").append("],");
                         }
-                        sb.replace(sb.lastIndexOf(","), sb.length(), "").append("],");
                     }
                 }
             } else {
@@ -675,14 +758,12 @@ public class WebDataResource implements PropFindableResource, Resource,
         }
     }
 
-    private String getAvailStorageSitesString() throws SQLException {
+    private String getAvailStorageSitesString(Boolean includePrivate) throws SQLException {
         try (Connection connection = getCatalogue().getConnection()) {
-            connection.commit();
-            Collection<StorageSite> ss = getCatalogue().getStorageSites(connection, Boolean.FALSE);
             StringBuilder sb = new StringBuilder();
             sb.append("[");
-            for (StorageSite s : ss) {
-                sb.append(s.getResourceURI()).append(",");
+            for (String s : getAvailStorageSitesStr(includePrivate, connection)) {
+                sb.append(s).append(",");
             }
             sb.replace(sb.lastIndexOf(","), sb.length(), "");
             sb.append("]");
@@ -690,13 +771,12 @@ public class WebDataResource implements PropFindableResource, Resource,
         }
     }
 
-    private void setEncryptionPropertyValues(String value) {
+    private void setEncryptionPropertyValues(String value, Connection connection) {
         String v = value;
-//                        HashMap<String, Boolean> hostEncryptMap = new HashMap<>();
-//                        log.log(Level.FINE, "Value: {0}", v);
+///                        HashMap<String, Boolean> hostEncryptMap = new HashMap<>();
 //                        String[] parts = v.split("[\\[\\]]");
 //                        for (String p : parts) {
-//                            log.log(Level.FINE, "Parts: {0}", p);
+//                            Logger.getLogger(WebDataResource.class.getName()).log(Level.FINE, "Parts: {0}", p);
 //                            if (!p.isEmpty()) {
 //                                String[] hostEncryptValue = p.split(",");
 //                                if (hostEncryptValue.length == 2) {
@@ -731,5 +811,287 @@ public class WebDataResource implements PropFindableResource, Resource,
 //                        if (!pdrisToUpdate.isEmpty()) {
 //                            getCatalogue().updatePdris(pdrisToUpdate, connection);
 //                        }
+    }
+
+    protected String getDataLocationPreferencesString() throws SQLException {
+        try (Connection connection = getCatalogue().getConnection()) {
+            StringBuilder sb = new StringBuilder();
+            sb.append("[");
+            for (String s : getLocationPrefStr(getLogicalData().getUid(), connection)) {
+                sb.append(s).append(",");
+            }
+            if (sb.length() > 1) {
+                sb.replace(sb.lastIndexOf(","), sb.length(), "");
+                sb.append("]");
+                return sb.toString();
+            }
+
+        }
+        return null;
+    }
+
+    private Collection<Long> getLocationPrefLong(Long uid, Connection connection) throws SQLException {
+        try (PreparedStatement ps = connection.prepareStatement("SELECT storageSiteRef FROM pref_table WHERE ld_uid=?")) {
+            Collection<Long> result = new ArrayList<>();
+            ps.setLong(1, uid);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                result.add(rs.getLong(1));
+            }
+            return result;
+        }
+    }
+
+    private Collection<String> getLocationPrefStr(Long uid, Connection connection) throws SQLException {
+        try (PreparedStatement ps = connection.prepareStatement("SELECT resourceUri "
+                + "FROM pref_table "
+                + "JOIN storage_site_table "
+                + "ON storageSiteRef=storageSiteId "
+                + "WHERE ld_uid=?")) {
+            Collection<String> result = new ArrayList<>();
+            ps.setLong(1, uid);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                result.add(rs.getString(1));
+            }
+            return result;
+        }
+    }
+
+    private Collection<String> getAvailStorageSitesStr(Boolean includePrivate, Connection connection) throws SQLException {
+        try (Statement statement = connection.createStatement()) {
+            Collection<String> result = new ArrayList<>();
+            ResultSet rs = includePrivate ? statement.executeQuery("SELECT resourceUri FROM storage_site_table WHERE isCache=FALSE AND removing=FALSE")
+                    : statement.executeQuery("SELECT resourceUri FROM storage_site_table WHERE isCache=FALSE AND removing=FALSE AND private=FALSE");
+            while (rs.next()) {
+                result.add(rs.getString(1));
+            }
+            return result;
+        }
+    }
+
+    protected List<String> property2List(String value) {
+        if (value.startsWith("[") && value.endsWith("]")) {
+            value = value.substring(1, value.length() - 1);
+        }
+        return Arrays.asList(value.split("\\s*,\\s*"));
+    }
+
+    private void setDataLocationPref(String value, Connection connection) throws SQLException {
+        List<String> list = property2List(value);
+        getCatalogue().setLocationPreferences(connection, getLogicalData().getUid(), list, getPrincipal().isAdmin());
+        List<String> sites = property2List(getDataLocationPreferencesString());
+        getLogicalData().setDataLocationPreferences(sites);
+    }
+
+    private String getReplicationQueueString() throws SQLException {
+        List<LogicalData> list = getCatalogue().getReplicationQueue();
+        if (list != null && !list.isEmpty()) {
+            StringBuilder sb = new StringBuilder();
+            sb.append("[");
+            for (LogicalData ld : getCatalogue().getReplicationQueue()) {
+                sb.append(ld.getName()).append(",");
+            }
+            sb.replace(sb.lastIndexOf(","), sb.length(), "").append("],");
+
+            return sb.toString();
+        }
+        return null;
+
+    }
+
+    private String getReplicationQueueLen() throws SQLException {
+        return String.valueOf(getCatalogue().getReplicationQueueLen());
+    }
+
+    private String getReplicationQueueSize() throws SQLException {
+        return String.valueOf(getCatalogue().getReplicationQueueSize());
+    }
+
+    private void lockResources(List<WebDataFileResource> resources) throws NotAuthorizedException, PreConditionFailedException, LockedException {
+        for (WebDataFileResource r : resources) {
+            LockToken tocken = r.getCurrentLock();
+            if (tocken == null || tocken.isExpired()) {
+                LockTimeout timeout = new LockTimeout(System.currentTimeMillis() + Constants.LOCK_TIME);
+                LockInfo info = new LockInfo(LockInfo.LockScope.EXCLUSIVE,
+                        LockInfo.LockType.WRITE, getPrincipal().getUserId(),
+                        LockInfo.LockDepth.INFINITY);
+                LockResult lockResult = r.lock(timeout, info);
+            }
+        }
+    }
+
+    private Collection<Long> getPreferencesForFile(Long uid, Connection connection) throws SQLException {
+        try (PreparedStatement preparedStatement = connection.prepareStatement("SELECT "
+                + "storageSiteRef FROM pref_table WHERE ld_uid=?")) {
+            Collection<Long> result = new ArrayList<>();
+            preparedStatement.setLong(1, uid);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            while (resultSet.next()) {
+                result.add(resultSet.getLong(1));
+            }
+            return result;
+        }
+    }
+
+    private Map<Long, Pair<WebDataFileResource, Long>> createResouses(Request request) throws SQLException, UnsupportedEncodingException, NotAuthorizedException, NoSuchAlgorithmException, IOException {
+        Map<Long, Pair<WebDataFileResource, Long>> resources = null;
+        try (Connection connection = getCatalogue().getConnection()) {
+            Map<String, FileItem> files = request.getFiles();
+            Collection<FileItem> fileItems = files.values();
+
+            resources = new HashMap<>();
+            WebDataFileResource resource = null;
+            for (FileItem fi : fileItems) {
+                Long pdriGroupid;
+                Path newPath = Path.path(getPath(), fi.getName());
+                LogicalData fileLogicalData = getCatalogue().getLogicalDataByPath(newPath, connection);
+                String contentType = mimeTypeMap.get(FilenameUtils.getExtension(fi.getName()));
+                if (fileLogicalData != null) {
+                    Permissions p = getCatalogue().getPermissions(fileLogicalData.getUid(), fileLogicalData.getOwner(), connection);
+                    if (!getPrincipal().canWrite(p)) {
+                        throw new NotAuthorizedException(this);
+                    }
+                    fileLogicalData.setLength(fi.getSize());
+                    fileLogicalData.setModifiedDate(System.currentTimeMillis());
+                    fileLogicalData.setLastAccessDate(fileLogicalData.getModifiedDate());
+                    fileLogicalData.addContentType(contentType);
+                    pdriGroupid = fileLogicalData.getPdriGroupId();
+                    resource = new WebDataFileResource(fileLogicalData, Path.path(getPath(), fi.getName()), getCatalogue(), authList);
+                } else {
+                    fileLogicalData = new LogicalData();
+                    fileLogicalData.setName(fi.getName());
+                    fileLogicalData.setParentRef(getLogicalData().getUid());
+                    fileLogicalData.setType(Constants.LOGICAL_FILE);
+                    fileLogicalData.setOwner(getPrincipal().getUserId());
+                    fileLogicalData.setLength(fi.getSize());
+                    fileLogicalData.setCreateDate(System.currentTimeMillis());
+                    fileLogicalData.setModifiedDate(System.currentTimeMillis());
+                    fileLogicalData.setLastAccessDate(System.currentTimeMillis());
+                    fileLogicalData.setTtlSec(getLogicalData().getTtlSec());
+                    fileLogicalData.addContentType(contentType);
+                    pdriGroupid = getCatalogue().associateLogicalDataAndPdriGroup(fileLogicalData, connection);
+
+                    getCatalogue().setPreferencesOn(fileLogicalData.getUid(), getLogicalData().getUid(), connection);
+                    List<String> pref = getLogicalData().getDataLocationPreferences();
+                    fileLogicalData.setDataLocationPreferences(pref);
+
+                    resource = new WebDataFileResource(fileLogicalData, Path.path(getPath(), fi.getName()), getCatalogue(), authList);
+                }
+                MutablePair<WebDataFileResource, Long> pair = new MutablePair<>();
+                pair.setRight(pdriGroupid);
+                pair.setLeft(resource);
+                resources.put(Long.valueOf(resource.getUniqueId()), pair);
+            }
+            connection.commit();
+            connection.close();
+        }
+        return resources;
+    }
+
+    private Map<String, Pair<Long, Collection<Long>>> getStorageMap(Map<Long, Pair<WebDataFileResource, Long>> resources) throws SQLException, Exception {
+        Map<String, Pair<Long, Collection<Long>>> storageMap = new HashMap<>(resources.size());
+        MutablePair<Long, Collection<Long>> pair;
+        Collection<Pair<WebDataFileResource, Long>> val = resources.values();
+        try (Connection connection = getCatalogue().getConnection()) {
+            for (Pair<WebDataFileResource, Long> r : val) {
+                Long uid = Long.valueOf(r.getLeft().getUniqueId());
+                Collection<Long> pref = getPreferencesForFile(uid, connection);
+                pair = new MutablePair<>();
+                if (pref != null && !pref.isEmpty()) {
+                    pair.setLeft(uid);
+                    pair.setRight(pref);
+                    storageMap.put(r.getLeft().getName(), pair);
+                } else {
+                    Collection<Long> sites = getReplicationPolicy().getSitesToReplicate(connection);
+                    pair.setLeft(uid);
+                    pair.setRight(sites);
+                    storageMap.put(r.getLeft().getName(), pair);
+                }
+            }
+        }
+        return storageMap;
+    }
+
+    private ReplicationPolicy getReplicationPolicy() throws ClassNotFoundException, IOException, InstantiationException, IllegalAccessException {
+        Class<? extends ReplicationPolicy> replicationPolicyClass = Class.forName(PropertiesHelper.getReplicationPolicy()).asSubclass(ReplicationPolicy.class);
+        return replicationPolicyClass.newInstance();
+    }
+
+    protected boolean canRedirect(Request request) throws SQLException, UnsupportedEncodingException, URISyntaxException, IOException {
+        if (isInCache()) {
+            return false;
+        }
+        Auth auth = request.getAuthorization();
+        if (auth == null) {
+            return false;
+        }
+        final String autheader = request.getHeaders().get("authorization");
+        if (autheader != null) {
+            final int index = autheader.indexOf(' ');
+            if (index > 0) {
+                final String credentials = new String(Base64.decodeBase64(autheader.substring(index).getBytes()), "UTF8");
+                final String uname = credentials.substring(0, credentials.indexOf(":"));
+                final String token = credentials.substring(credentials.indexOf(":") + 1);
+                if (authenticate(uname, token) == null) {
+                    return false;
+                }
+                if (!authorise(request, Request.Method.GET, auth)) {
+                    return false;
+                }
+            }
+        }
+        String userAgent = request.getHeaders().get("user-agent");
+        if (userAgent == null || userAgent.length() <= 1) {
+            return false;
+        }
+//        WebDataFileResource.Logger.getLogger(WebDataResource.class.getName()).log(Level.FINE, "userAgent: {0}", userAgent);
+        List<String> nonRedirectableUserAgents = PropertiesHelper.getNonRedirectableUserAgents();
+        for (String s : nonRedirectableUserAgents) {
+            if (userAgent.contains(s)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    protected boolean isInCache() throws SQLException, URISyntaxException, IOException {
+        List<PDRIDescr> pdriDescr = getCatalogue().getPdriDescrByGroupId(getLogicalData().getPdriGroupId());
+        for (PDRIDescr pdri : pdriDescr) {
+            if (pdri.getResourceUrl().startsWith("file")) {
+                return true;
+            }
+        }
+
+//        try (Connection cn = getCatalogue().getConnection()) {
+//            List<PDRIDescr> pdriDescr = getCatalogue().getPdriDescrByGroupId(getLogicalData().getPdriGroupId(), cn);
+//            for (PDRIDescr pdri : pdriDescr) {
+//                if (pdri.getResourceUrl().startsWith("file")) {
+//                    return true;
+//                }
+//            }
+//        }
+        return false;
+    }
+
+    /**
+     * @return the logicalData
+     */
+    public LogicalData getLogicalData() {
+        return logicalData;
+    }
+
+    /**
+     * @return the catalogue
+     */
+    public JDBCatalogue getCatalogue() {
+        return catalogue;
+    }
+
+    /**
+     * @return the path
+     */
+    public Path getPath() {
+        return path;
     }
 }

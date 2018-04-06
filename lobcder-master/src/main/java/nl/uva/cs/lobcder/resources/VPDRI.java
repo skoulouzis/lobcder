@@ -14,7 +14,6 @@ import com.sun.jersey.client.urlconnection.HTTPSProperties;
 import io.milton.http.Range;
 import java.io.*;
 import java.math.BigInteger;
-import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
@@ -39,11 +38,12 @@ import javax.ws.rs.core.MediaType;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
-import lombok.extern.java.Log;
+
 import nl.uva.cs.lobcder.rest.wrappers.Stats;
 import nl.uva.cs.lobcder.util.Constants;
 import nl.uva.cs.lobcder.util.DesEncrypter;
 import nl.uva.cs.lobcder.util.GridHelper;
+import nl.uva.cs.lobcder.util.Network;
 import nl.uva.cs.lobcder.util.PropertiesHelper;
 import nl.uva.vlet.GlobalConfig;
 import nl.uva.vlet.data.StringUtil;
@@ -64,7 +64,6 @@ import nl.uva.vlet.vrs.io.VRandomReadable;
  *
  * @author S. koulouzis
  */
-@Log
 public class VPDRI implements PDRI {
 
     static {
@@ -79,7 +78,7 @@ public class VPDRI implements PDRI {
     private final String username;
     private final String password;
     private final Long storageSiteId;
-    private String baseDir; //= "LOBCDER-REPLICA-vTEST";//"LOBCDER-REPLICA-v2.0";
+    private static String baseDir; //= "LOBCDER-REPLICA-vTEST";//"LOBCDER-REPLICA-v2.0";
     private final String fileName;
     private int reconnectAttemts = 0;
     private BigInteger keyInt;
@@ -101,8 +100,9 @@ public class VPDRI implements PDRI {
             this.fileName = fileName;
             this.resourceUrl = resourceUrl.replaceAll(" ", "");
             baseDir = nl.uva.cs.lobcder.util.PropertiesHelper.getBackendWorkingFolderName();
-            String encoded = VRL.encode(fileName);
-            vrl = new VRL(this.resourceUrl).appendPath(baseDir).append(encoded);
+//            String encoded = VRL.encode(fileName);
+            vrl = new VRL(this.resourceUrl).appendPath(baseDir).append(fileName);
+//            vrl= new VRL(vrl.toNormalizedString());
 //            vrl = new VRL(resourceUrl).appendPath(baseDir).append(URLEncoder.encode(fileName, "UTF-8").replace("+", "%20"));
             this.storageSiteId = storageSiteId;
             this.username = username;
@@ -110,15 +110,9 @@ public class VPDRI implements PDRI {
             this.encrypt = encrypt;
             this.keyInt = keyInt;
             this.doChunked = doChunkUpload;
-            VPDRI.log.log(Level.FINE, "fileName: {0}, storageSiteId: {1}, username: {2}, password: {3}, VRL: {4}", new Object[]{fileName, storageSiteId, "username", "password", vrl});
             initVFS();
-
-            ClientConfig clientConfig = configureClient();
-//        SSLContext ctx = SSLContext.getInstance("SSL");
-//        clientConfig.getProperties().put(HTTPSProperties.PROPERTY_HTTPS_PROPERTIES, new HTTPSProperties(hostnameVerifier, ctx));
-            clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
-            restClient = Client.create(clientConfig);
-            restClient.addFilter(new com.sun.jersey.api.client.filter.HTTPBasicAuthFilter(getClass().getName(), PropertiesHelper.getLobComponentToken()));
+//            initRESTClient();
+//            Logger.getLogger(VPDRI.class.getName()).log(Level.FINE, "Done init. fileName: {0}, storageSiteId: {1}, username: {2}, password: {3}, VRL: {4}", new Object[]{fileName, storageSiteId, "username", "password", vrl});
         } catch (Exception ex) {
             throw new IOException(ex);
         }
@@ -134,31 +128,7 @@ public class VPDRI implements PDRI {
 
         if (StringUtil.equals(authScheme, ServerInfo.GSI_AUTH)) {
             GridHelper.initGridProxy(username, password, context, destroyCert);
-//            copyVomsAndCerts();
-//            GridProxy gridProxy = context.getGridProxy();
-//            if (destroyCert) {
-//                gridProxy.destroy();
-//                gridProxy = null;
-//            }
-//            if (gridProxy == null || gridProxy.isValid() == false) {
-//                context.setProperty("grid.proxy.location", Constants.PROXY_FILE);
-//                // Default to $HOME/.globus
-//                context.setProperty("grid.certificate.location", Global.getUserHome() + "/.globus");
-//                String vo = username;
-//                context.setProperty("grid.proxy.voName", vo);
-//                context.setProperty("grid.proxy.lifetime", "200");
-//                gridProxy = context.getGridProxy();
-//                if (gridProxy.isValid() == false) {
-//                    gridProxy.setEnableVOMS(true);
-//                    gridProxy.setDefaultVOName(vo);
-//                    gridProxy.createWithPassword(password);
-//                    if (gridProxy.isValid() == false) {
-//                        throw new VlException("Created Proxy is not Valid!");
-//                    }
-//                    gridProxy.saveProxyTo(Constants.PROXY_FILE);
-////                    proxyCache.put(password, gridProxy);
-//                }
-//            }
+            context.setProperty(GlobalConfig.PROP_PASSIVE_MODE, false);
         }
 
         if (StringUtil.equals(authScheme, ServerInfo.PASSWORD_AUTH)
@@ -185,13 +155,16 @@ public class VPDRI implements PDRI {
         context.setProperty("chunk.upload", doChunked);
 //        info.setAttribute(new VAttribute("chunk.upload", true));
         info.store();
+
     }
 
     @Override
     public void delete() throws IOException {
         try {
+            Logger.getLogger(VPDRI.class.getName()).log(Level.INFO, "Start deleting {0}", new Object[]{vrl});
 //            getVfsClient().openLocation(vrl).delete();
             getVfsClient().getFile(vrl).delete();
+            reconnectAttemts = 0;
         } catch (VlException ex) {
             //Maybe it's from assimilation. We must remove the baseDir
             if (ex instanceof ResourceNotFoundException || ex.getMessage().contains("Couldn open location. Get NULL object for location")) {
@@ -205,14 +178,13 @@ public class VPDRI implements PDRI {
                 } catch (IOException | VlException ex1) {
                     Logger.getLogger(VPDRI.class.getName()).log(Level.SEVERE, null, ex1);
                 }
+            } else if (reconnectAttemts < Constants.RECONNECT_NTRY) {
+                reconnect();
+                delete();
             } else {
                 Logger.getLogger(VPDRI.class.getName()).log(Level.SEVERE, null, ex);
             }
-        } finally {
         }
-        //        //it's void so do it asynchronously
-        //        Runnable asyncDel = getAsyncDelete(this.vfsClient, vrl);
-        //        asyncDel.run();
     }
 
     @Override
@@ -290,7 +262,7 @@ public class VPDRI implements PDRI {
                 while (totalBytesRead < len || read != -1) {
                     long startT = System.currentTimeMillis();
                     read = ra.readBytes(start, buff, 0, buff.length);
-                    VPDRI.log.log(Level.INFO, "speed: {0} kb/s", (read / 1024.0) / ((System.currentTimeMillis() - startT) / 1000.0));
+                    Logger.getLogger(VPDRI.class.getName()).log(Level.FINEST, "speed: {0} kb/s", (read / 1024.0) / ((System.currentTimeMillis() - startT) / 1000.0));
                     if (read == -1 || totalBytesRead == len) {
                         break;
                     }
@@ -382,7 +354,7 @@ public class VPDRI implements PDRI {
                         throw new IOException(ex1);
                     }
                 }
-            } else if (reconnectAttemts < Constants.RECONNECT_NTRY) {
+            } else if (reconnectAttemts < Constants.RECONNECT_NTRY - 2) {
                 if (ex instanceof org.globus.common.ChainedIOException) {
                     destroyCert = true;
                 }
@@ -406,7 +378,6 @@ public class VPDRI implements PDRI {
     @Override
     public void putData(InputStream in) throws IOException {
         OutputStream out = null;
-//        VPDRI.log.log(Level.FINE, "putData:");
         double start = System.currentTimeMillis();
 //        VFile tmpFile = null;
         try {
@@ -435,10 +406,10 @@ public class VPDRI implements PDRI {
             throw new IOException(ex);
         } catch (VlException ex) {
             if (ex.getMessage() != null) {
-                VPDRI.log.log(Level.FINE, "\tVlException {0}", ex.getMessage());
+                Logger.getLogger(VPDRI.class.getName()).log(Level.FINE, "\tVlException {0}", ex.getMessage());
             }
             if (reconnectAttemts <= 2) {
-                VPDRI.log.log(Level.FINE, "\treconnectAttemts {0}", reconnectAttemts);
+                Logger.getLogger(VPDRI.class.getName()).log(Level.FINE, "\treconnectAttemts {0}", reconnectAttemts);
                 reconnect();
                 putData(in);
             } else {
@@ -468,8 +439,8 @@ public class VPDRI implements PDRI {
         double elapsed = System.currentTimeMillis() - start;
         double speed = ((getLength() * 8.0) * 1000.0) / (elapsed * 1000.0);
         try {
-            String msg = "File: "+this.getFileName()+ " Destination: " + new URI(getURI()).getScheme() + "://" + getHost() + " Rx_Speed: " + speed + " Kbites/sec Rx_Size: " + (getLength()) + " bytes Elapsed_Time: "+elapsed+" ms";
-            VPDRI.log.log(Level.INFO, msg);
+            String msg = "File: " + this.getFileName() + " Destination: " + new URI(getURI()).getScheme() + "://" + getHost() + " Rx_Speed: " + speed + " Kbites/sec Rx_Size: " + (getLength()) + " bytes Elapsed_Time: " + elapsed + " ms";
+            Logger.getLogger(VPDRI.class.getName()).log(Level.INFO, msg);
         } catch (URISyntaxException ex) {
         }
 
@@ -491,17 +462,9 @@ public class VPDRI implements PDRI {
                 || StringUtil.isEmpty(vrl.getHostname())
                 || vrl.getHostname().equals("localhost")
                 || vrl.getHostname().equals("127.0.0.1")) {
-            return getIP("localhost");
+            return Network.getIP("localhost");
         } else {
             return vrl.getHostname();
-        }
-    }
-
-    private String getIP(String hostName) {
-        try {
-            return InetAddress.getByName(hostName).getHostAddress();
-        } catch (UnknownHostException ex) {
-            return hostName;
         }
     }
 
@@ -513,6 +476,17 @@ public class VPDRI implements PDRI {
             }
             return getVfsClient().getFile(vrl).getLength();
         } catch (Exception ex) {
+            if (ex.getMessage().contains("Couldn open location.") && ex.getMessage().contains("%")) {
+                try {
+                    return getVfsClient().getFile(new VRL(vrl.toNormalizedString())).getLength();
+//                    this.vrl = new VRL(vrl.toNormalizedString());
+//                     getLength();
+                } catch (VRLSyntaxException ex1) {
+                    Logger.getLogger(VPDRI.class.getName()).log(Level.SEVERE, null, ex1);
+                } catch (VlException ex1) {
+                    Logger.getLogger(VPDRI.class.getName()).log(Level.SEVERE, null, ex1);
+                }
+            }
             if (reconnectAttemts < Constants.RECONNECT_NTRY) {
                 reconnect();
                 getLength();
@@ -573,19 +547,32 @@ public class VPDRI implements PDRI {
 //        }
 //    }
     private void upload(PDRI source) throws VlException, IOException {
-        if (getVfsClient() == null) {
-            reconnect();
-        }
         VFile file = getVfsClient().createFile(vrl, true);
-        if (file instanceof CloudFile) {
-            CloudFile uFile = (CloudFile) file;
-            VFile sourceFile = getVfsClient().openFile(new VRL(source.getURI()));
-            uFile.uploadFrom(sourceFile);
-        }
-        if (file instanceof WebdavFile) {
-            WebdavFile wFile = (WebdavFile) file;
-            VFile sourceFile = getVfsClient().openFile(new VRL(source.getURI()));
-            wFile.uploadFrom(sourceFile);
+        try {
+            if (file instanceof CloudFile) {
+                CloudFile uFile = (CloudFile) file;
+                VFile sourceFile = getVfsClient().openFile(new VRL(source.getURI()));
+                uFile.uploadFrom(sourceFile);
+            } else if (file instanceof WebdavFile) {
+                WebdavFile wFile = (WebdavFile) file;
+                VFile sourceFile = getVfsClient().openFile(new VRL(source.getURI()));
+                wFile.uploadFrom(sourceFile);
+            }
+            reconnectAttemts = 0;
+        } catch (Exception ex) {
+            if (reconnectAttemts < Constants.RECONNECT_NTRY) {
+                reconnect();
+                upload(source);
+            } else {
+                throw ex;
+            }
+        } catch (Throwable ex) {
+            if (reconnectAttemts < Constants.RECONNECT_NTRY) {
+                reconnect();
+                upload(source);
+            } else {
+                throw ex;
+            }
         }
     }
 
@@ -596,7 +583,7 @@ public class VPDRI implements PDRI {
             VRL sourceVRL = new VRL(source.getURI());
             String sourceScheme = sourceVRL.getScheme();
             String desteScheme = vrl.getScheme();
-            VPDRI.log.log(Level.INFO, "Start replicating {0} to {1}", new Object[]{source.getURI(), getURI()});
+            Logger.getLogger(VPDRI.class.getName()).log(Level.INFO, "Start replicating {0} to {1}", new Object[]{source.getURI(), getURI()});
             double start = System.currentTimeMillis();
             if (!vfsClient.existsDir(vrl.getParent())) {
                 VDir remoteDir = vfsClient.mkdirs(vrl.getParent(), true);
@@ -623,13 +610,10 @@ public class VPDRI implements PDRI {
                 Logger.getLogger(VPDRI.class.getName()).log(Level.WARNING, null, ex);
             }
 
-
             String msg = "Source: " + source.getHost() + " Destination: " + vrl.getScheme() + "://" + getHost() + " Replication_Speed: " + speed + " Kbites/sec Repl_Size: " + (getLength()) + " bytes";
-            VPDRI.log.log(Level.INFO, msg);
-
+            Logger.getLogger(VPDRI.class.getName()).log(Level.INFO, msg);
 
 //            getAsyncDelete(getVfsClient(), vrl).run();
-
         } catch (VlException ex) {
             throw new IOException(ex);
         }
@@ -703,17 +687,19 @@ public class VPDRI implements PDRI {
     }
 
     private void setSpeed(Stats stats) throws JAXBException {
-        JAXBContext context = JAXBContext.newInstance(Stats.class);
-        Marshaller m = context.createMarshaller();
-        m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
-        OutputStream out = new ByteArrayOutputStream();
-        m.marshal(stats, out);
+        if (this.restClient != null) {
+            JAXBContext context = JAXBContext.newInstance(Stats.class);
+            Marshaller m = context.createMarshaller();
+            m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+            OutputStream out = new ByteArrayOutputStream();
+            m.marshal(stats, out);
 
-        WebResource webResource = restClient.resource(restURL);
-        String stringStats = String.valueOf(out);
+            WebResource webResource = restClient.resource(restURL);
+            String stringStats = String.valueOf(out);
+            ClientResponse response = webResource.path("lob_statistics").path("set")
+                    .type(MediaType.APPLICATION_XML).put(ClientResponse.class, stringStats);
+        }
 
-        ClientResponse response = webResource.path("lob_statistics").path("set")
-                .type(MediaType.APPLICATION_XML).put(ClientResponse.class, stringStats);
     }
 
     public static ClientConfig configureClient() {
@@ -764,5 +750,20 @@ public class VPDRI implements PDRI {
 
     void setIsCahce(boolean isCache) {
         this.isCache = isCache;
+    }
+
+    private void initRESTClient() {
+        try {
+            ClientConfig clientConfig = configureClient();
+//        SSLContext ctx = SSLContext.getInstance("SSL");
+//        clientConfig.getProperties().put(HTTPSProperties.PROPERTY_HTTPS_PROPERTIES, new HTTPSProperties(hostnameVerifier, ctx));
+            clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
+            restClient = Client.create(clientConfig);
+            restClient.addFilter(new com.sun.jersey.api.client.filter.HTTPBasicAuthFilter(getClass().getName(), PropertiesHelper.getLobComponentToken()));
+        } catch (IOException ex) {
+            //Not important. Just continue 
+            Logger.getLogger(VPDRI.class.getName()).log(Level.WARNING, "Failed to initilize REST client", ex);
+            restClient = null;
+        }
     }
 }

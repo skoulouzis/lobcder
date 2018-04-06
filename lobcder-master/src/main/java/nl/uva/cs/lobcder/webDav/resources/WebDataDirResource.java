@@ -6,27 +6,11 @@ package nl.uva.cs.lobcder.webDav.resources;
 
 import io.milton.common.Path;
 import io.milton.http.*;
-import static io.milton.http.Request.Method.MKCOL;
 import io.milton.http.exceptions.BadRequestException;
 import io.milton.http.exceptions.ConflictException;
 import io.milton.http.exceptions.NotAuthorizedException;
 import io.milton.http.exceptions.PreConditionFailedException;
 import io.milton.resource.*;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.PrintStream;
-import java.io.UnsupportedEncodingException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.security.NoSuchAlgorithmException;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.annotation.Nonnull;
-import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.auth.AuthI;
 import nl.uva.cs.lobcder.auth.Permissions;
 import nl.uva.cs.lobcder.catalogue.JDBCatalogue;
@@ -35,31 +19,33 @@ import nl.uva.cs.lobcder.resources.PDRI;
 import nl.uva.cs.lobcder.rest.wrappers.Stats;
 import nl.uva.cs.lobcder.util.Constants;
 import org.apache.commons.io.FilenameUtils;
-import static org.rendersnake.HtmlAttributesFactory.*;
 import org.rendersnake.HtmlCanvas;
+
+import javax.annotation.Nonnull;
+import java.io.*;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.security.NoSuchAlgorithmException;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import static org.rendersnake.HtmlAttributesFactory.*;
 
 /**
  *
  * @author S. Koulouzis
  */
-@Log
 public class WebDataDirResource extends WebDataResource implements FolderResource,
         CollectionResource, DeletableCollectionResource, LockingCollectionResource, PostableResource {
 
     private int attempts = 0;
-    private Map<String, String> mimeTypeMap = new HashMap<>();
 
     public WebDataDirResource(@Nonnull LogicalData logicalData, Path path, @Nonnull JDBCatalogue catalogue, @Nonnull List<AuthI> authList) {
         super(logicalData, path, catalogue, authList);
-        WebDataDirResource.log.log(Level.FINE, "Init. WebDataDirResource:  {0}", getPath());
-        mimeTypeMap.put("mp4", "video/mp4");
-        mimeTypeMap.put("pdf", "application/pdf");
-        mimeTypeMap.put("tex", "application/x-tex");
-        mimeTypeMap.put("log", "text/plain");
-        mimeTypeMap.put("png", "image/png");
-        mimeTypeMap.put("aux", "text/plain");
-        mimeTypeMap.put("bbl", "text/plain");
-        mimeTypeMap.put("blg", "text/plain");
+//        Logger.getLogger(WebDataDirResource.class.getName()).log(Level.FINEST, "Init. WebDataDirResource:  {0}", getPath());
     }
 
     @Override
@@ -72,7 +58,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
             switch (method) {
                 case MKCOL:
                     String msg = "From: " + fromAddress + " User: " + getPrincipal().getUserId() + " Method: " + method;
-                    WebDataDirResource.log.log(Level.INFO, msg);
+                    Logger.getLogger(WebDataDirResource.class.getName()).log(Level.FINEST, msg);
                     attempts = 0;
                     return getPrincipal().canWrite(getPermissions());
                 default:
@@ -85,7 +71,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                 authorise(request, method, auth);
 
             } else {
-                WebDataDirResource.log.log(Level.FINER, "Exception in authorize for a resource " + getPath(), th);
+                Logger.getLogger(WebDataDirResource.class.getName()).log(Level.FINER, "Exception in authorize for a resource " + getPath(), th);
                 attempts = 0;
                 return false;
             }
@@ -96,7 +82,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
 
     @Override
     public CollectionResource createCollection(String newName) throws NotAuthorizedException, ConflictException, BadRequestException {
-        WebDataDirResource.log.log(Level.FINE, "createCollection {0} in {1}", new Object[]{newName, getPath()});
+        Logger.getLogger(WebDataDirResource.class.getName()).log(Level.FINEST, "createCollection {0} in {1}", new Object[]{newName, getPath()});
 
         try (Connection connection = getCatalogue().getConnection()) {
             try {
@@ -115,32 +101,37 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                     newFolderEntry.setLastAccessDate(System.currentTimeMillis());
                     newFolderEntry.setTtlSec(getLogicalData().getTtlSec());
                     newFolderEntry.setOwner(getPrincipal().getUserId());
-                    newFolderEntry = inheritProperties(newFolderEntry, connection);
-                    WebDataDirResource res = new WebDataDirResource(newFolderEntry, newCollectionPath, getCatalogue(), authList);
                     getCatalogue().setPermissions(
                             getCatalogue().registerDirLogicalData(newFolderEntry, connection).getUid(),
                             new Permissions(getPrincipal(), getPermissions()), connection);
+                    newFolderEntry = inheritProperties(newFolderEntry, connection);
                     connection.commit();
+                    connection.close();
+                    WebDataDirResource res = new WebDataDirResource(newFolderEntry, newCollectionPath, getCatalogue(), authList);
                     return res;
                 }
             } catch (SQLException e) {
-                WebDataDirResource.log.log(Level.SEVERE, null, e);
-                connection.rollback();
+                Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, e);
+                if (connection != null && !connection.isClosed()) {
+                    connection.rollback();
+                    connection.close();
+                }
                 throw new BadRequestException(this, e.getMessage());
             }
         } catch (SQLException e1) {
-            WebDataDirResource.log.log(Level.SEVERE, null, e1);
+            Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, e1);
             throw new BadRequestException(this, e1.getMessage());
         }
     }
 
     @Override
     public Resource child(String childName) throws NotAuthorizedException {
-        WebDataDirResource.log.log(Level.FINE, "child({0}) for {1}", new Object[]{childName, getPath()});
+        Logger.getLogger(WebDataDirResource.class.getName()).log(Level.FINEST, "child({0}) for {1}", new Object[]{childName, getPath()});
         try (Connection connection = getCatalogue().getConnection()) {
             try {
                 LogicalData childLD = getCatalogue().getLogicalDataByParentRefAndName(getLogicalData().getUid(), childName, connection);
                 connection.commit();
+                connection.close();
                 if (childLD != null) {
                     if (childLD.getType().equals(Constants.LOGICAL_FOLDER)) {
                         return new WebDataDirResource(childLD, Path.path(getPath(), childName), getCatalogue(), authList);
@@ -151,19 +142,22 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                     return null;
                 }
             } catch (SQLException e) {
-                WebDataDirResource.log.log(Level.SEVERE, null, e);
-                connection.rollback();
+                Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, e);
+                if (connection != null && !connection.isClosed()) {
+                    connection.rollback();
+                    connection.close();
+                }
                 return null;
             }
         } catch (SQLException e1) {
-            WebDataDirResource.log.log(Level.SEVERE, null, e1);
+            Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, e1);
             return null;
         }
     }
 
     @Override
     public List<? extends Resource> getChildren() throws NotAuthorizedException {
-        WebDataDirResource.log.log(Level.FINE, "getChildren() for {0}", getPath());
+//        Logger.getLogger(WebDataDirResource.class.getName()).log(Level.FINEST, "getChildren() for {0}", getPath());
         try {
             try (Connection connection = getCatalogue().getConnection()) {
                 try {
@@ -180,22 +174,27 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                     }
                     getCatalogue().addViewForRes(getLogicalData().getUid(), connection);
                     connection.commit();
+                    connection.close();
                     return children;
                 } catch (Exception e) {
-                    connection.rollback();
+                    if (connection != null && !connection.isClosed()) {
+                        connection.rollback();
+                        connection.close();
+                    }
                     throw e;
                 }
             }
         } catch (Exception e) {
-            WebDataDirResource.log.log(Level.SEVERE, null, e);
+            Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, e);
             return null;
         }
     }
 
     @Override
-    public Resource createNew(String newName, InputStream inputStream, Long length, String contentType) throws IOException,
-            ConflictException, NotAuthorizedException, BadRequestException {
-        WebDataDirResource.log.log(Level.FINE, "createNew. for {0}\n\t newName:\t{1}\n\t length:\t{2}\n\t contentType:\t{3}", new Object[]{getPath(), newName, length, contentType});
+    public Resource createNew(String newName, InputStream inputStream, Long length, String contentType) throws
+            IOException,
+            ConflictException, NotAuthorizedException, BadRequestException, InternalError {
+        Logger.getLogger(WebDataDirResource.class.getName()).log(Level.FINEST, "createNew. for {0}\n\t newName:\t{1}\n\t length:\t{2}\n\t contentType:\t{3}", new Object[]{getPath(), newName, length, contentType});
         LogicalData fileLogicalData;
 //        List<PDRIDescr> pdriDescrList;
         WebDataFileResource resource;
@@ -210,7 +209,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                     contentType = mimeTypeMap.get(FilenameUtils.getExtension(newName));
                 }
                 if (fileLogicalData != null) {  // Resource exists, update
-//                    throw new ConflictException(this, newName);
+                    //                    throw new ConflictException(this, newName);
                     Permissions p = getCatalogue().getPermissions(fileLogicalData.getUid(), fileLogicalData.getOwner(), connection);
                     if (!getPrincipal().canWrite(p)) {
                         throw new NotAuthorizedException(this);
@@ -222,18 +221,27 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                         contentType = mimeTypeMap.get(FilenameUtils.getExtension(newName));
                     }
                     fileLogicalData.addContentType(contentType);
-                    fileLogicalData = inheritProperties(fileLogicalData, connection);
+                    resource = new WebDataFileResource(fileLogicalData, Path.path(getPath(), newName), getCatalogue(), authList);
+//                    LockToken tocken = resource.getCurrentLock();
+//                    System.err.println("tokenId: "+tocken.tokenId+" lockedByUser: "+tocken.info.lockedByUser+" timeout: "+tocken.timeout.toString()+" getOtherSeconds: "+tocken.timeout.getOtherSeconds()+" getSeconds: "+tocken.timeout.getSeconds());
+//                    if (tocken != null) {
+//                        if (tocken.getFrom().after(new Date(System.currentTimeMillis()))) {
+//                            throw new ConflictException(resource, "The resource is locked");
+//                        }
+//                    }
                     //Create new
                     pdri = createPDRI(fileLogicalData.getLength(), newName, connection);
                     pdri.setLength(length);
                     pdri.putData(inputStream);
                     fileLogicalData = getCatalogue().updateLogicalDataAndPdri(fileLogicalData, pdri, connection);
+                    //fileLogicalData = inheritProperties(fileLogicalData, connection);
                     connection.commit();
+                    connection.close();
 //                    String md5 = pdri.getStringChecksum();
 //                    if (md5 != null) {
 //                        fileLogicalData.setChecksum(md5);
 //                    }
-                    resource = new WebDataFileResource(fileLogicalData, Path.path(getPath(), newName), getCatalogue(), authList);
+
 //                    return new WebDataFileResource(fileLogicalData, Path.path(getPath(), newName), getCatalogue(), authList);
                 } else { // Resource does not exists, create a new one
                     // new need write prmissions for current collection
@@ -248,7 +256,7 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                     fileLogicalData.setLastAccessDate(System.currentTimeMillis());
                     fileLogicalData.setTtlSec(getLogicalData().getTtlSec());
                     fileLogicalData.addContentType(contentType);
-                    fileLogicalData = inheritProperties(fileLogicalData, connection);
+
                     pdri = createPDRI(length, newName, connection);
                     pdri.setLength(length);
                     pdri.putData(inputStream);
@@ -258,26 +266,37 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
 //                    }
                     fileLogicalData = getCatalogue().associateLogicalDataAndPdri(fileLogicalData, pdri, connection);
                     getCatalogue().setPermissions(fileLogicalData.getUid(), new Permissions(getPrincipal(), getPermissions()), connection);
+                    //fileLogicalData = inheritProperties(fileLogicalData, connection);
+                    getCatalogue().setPreferencesOn(fileLogicalData.getUid(), getLogicalData().getUid(), connection);
+                    List<String> pref = getLogicalData().getDataLocationPreferences();
+                    fileLogicalData.setDataLocationPreferences(pref);
                     connection.commit();
+                    connection.close();
                     resource = new WebDataFileResource(fileLogicalData, Path.path(getPath(), newName), getCatalogue(), authList);
 //                    return new WebDataFileResource(fileLogicalData, Path.path(getPath(), newName), getCatalogue(), authList);
                 }
             } catch (NoSuchAlgorithmException ex) {
-                WebDataDirResource.log.log(Level.SEVERE, null, ex);
+                if (connection != null && !connection.isClosed()) {
+                    connection.rollback();
+                    connection.close();
+                }
+                Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, ex);
                 throw new InternalError(ex.getMessage());
             } catch (SQLException e) {
-                WebDataDirResource.log.log(Level.SEVERE, null, e);
-                connection.rollback();
+                Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, e);
+                if (connection != null && !connection.isClosed()) {
+                    connection.rollback();
+                    connection.close();
+                }
                 throw new BadRequestException(this, e.getMessage());
-//                throw new InternalError(e.getMessage());
             }
-        } catch (SQLException e1) {
-            WebDataDirResource.log.log(Level.SEVERE, null, e1);
+        } catch (SQLException | IOException e1) {
+            Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, e1);
             throw new BadRequestException(this, e1.getMessage());
 //            throw new InternalError(e1.getMessage());
         }
         double elapsed = System.currentTimeMillis() - start;
-        double speed = ((resource.getContentLength() * 8.0) * 1000.0) / (elapsed * 1000.0);
+        double speed = ((resource.getLogicalData().getLength() * 8.0) * 1000.0) / (elapsed * 1000.0);
         String msg = null;
         try {
 
@@ -285,22 +304,22 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
             stats.setSource(fromAddress);
             stats.setDestination(pdri.getHost());
             stats.setSpeed(speed);
-            stats.setSize(resource.getContentLength());
+            stats.setSize(resource.getLogicalData().getLength());
             if (!pdri.isCahce()) {
                 getCatalogue().setSpeed(stats);
             }
-            msg = "Source: " + fromAddress + " Destination: " + new URI(pdri.getURI()).getScheme() + "://" + pdri.getHost() + " Rx_Speed: " + speed + " Kbites/sec Rx_Size: " + (resource.getContentLength()) + " bytes Elapsed_Time: " + elapsed + " ms";
+            msg = "Source: " + fromAddress + " Destination: " + new URI(pdri.getURI()).getScheme() + "://" + pdri.getHost() + " Rx_Speed: " + speed + " Kbites/sec Rx_Size: " + (resource.getLogicalData().getLength()) + " bytes Elapsed_Time: " + elapsed + " ms";
         } catch (URISyntaxException | SQLException ex) {
             Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, ex);
         }
-        WebDataDirResource.log.log(Level.INFO, msg);
+        Logger.getLogger(WebDataDirResource.class.getName()).log(Level.INFO, msg);
         return resource;
     }
 
     @Override
     public void copyTo(CollectionResource toCollection, String name) throws NotAuthorizedException, BadRequestException, ConflictException {
         WebDataDirResource toWDDR = (WebDataDirResource) toCollection;
-        WebDataDirResource.log.log(Level.FINE, "copyTo({0}, ''{1}'') for {2}", new Object[]{toWDDR.getPath(), name, getPath()});
+        Logger.getLogger(WebDataDirResource.class.getName()).log(Level.FINEST, "copyTo({0}, ''{1}'') for {2}", new Object[]{toWDDR.getPath(), name, getPath()});
         try (Connection connection = getCatalogue().getConnection()) {
             try {
                 Permissions newParentPerm = getCatalogue().getPermissions(toWDDR.getLogicalData().getUid(), toWDDR.getLogicalData().getOwner(), connection);
@@ -309,20 +328,24 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                 }
                 getCatalogue().copyFolder(getLogicalData(), toWDDR.getLogicalData(), name, getPrincipal(), connection);
                 connection.commit();
+                connection.close();
             } catch (SQLException e) {
-                WebDataDirResource.log.log(Level.SEVERE, null, e);
-                connection.rollback();
+                Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, e);
+                if (connection != null && !connection.isClosed()) {
+                    connection.rollback();
+                    connection.close();
+                }
                 throw new BadRequestException(this, e.getMessage());
             }
         } catch (SQLException e1) {
-            WebDataDirResource.log.log(Level.SEVERE, null, e1);
+            Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, e1);
             throw new BadRequestException(this, e1.getMessage());
         }
     }
 
     @Override
     public void delete() throws NotAuthorizedException, ConflictException, BadRequestException {
-        WebDataDirResource.log.log(Level.FINE, "delete() for {0}", getPath());
+//        Logger.getLogger(WebDataDirResource.class.getName()).log(Level.FINEST, "delete() for {0}", getPath());
         if (getPath().isRoot()) {
             throw new ConflictException(this, "Cannot delete root");
         }
@@ -330,20 +353,24 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
             try {
                 getCatalogue().remove(getLogicalData(), getPrincipal(), connection);
                 connection.commit();
+                connection.close();
             } catch (SQLException e) {
-                WebDataDirResource.log.log(Level.SEVERE, null, e);
-                connection.rollback();
+                Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, e);
+                if (connection != null && !connection.isClosed()) {
+                    connection.rollback();
+                    connection.close();
+                }
                 throw new BadRequestException(this, e.getMessage());
             }
         } catch (SQLException e1) {
-            WebDataDirResource.log.log(Level.SEVERE, null, e1);
+            Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, e1);
             throw new BadRequestException(this, e1.getMessage());
         }
     }
 
     @Override
     public void sendContent(OutputStream out, Range range, Map<String, String> params, String contentType) throws IOException, NotAuthorizedException, BadRequestException {
-        WebDataDirResource.log.log(Level.FINE, "sendContent({0}) for {1}", new Object[]{contentType, getPath()});
+        Logger.getLogger(WebDataDirResource.class.getName()).log(Level.FINEST, "sendContent({0}) for {1}", new Object[]{contentType, getPath()});
 
         try (Connection connection = getCatalogue().getConnection()) {
             try (PrintStream ps = new PrintStream(out)) {
@@ -361,61 +388,20 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                         .th().content("Type")
                         .th().content("Is Supervised")
                         .th().content("Uid");
-
-
-//            html.a(href("#top").class_("toplink")).content("top");
-//            ps.println(html.toHtml());
-
-//            ps.println("<HTML>\n"
-//                    + "\n"
-//                    + "<HEAD>\n"
-//                    + "<TITLE>" + getPath() + "</TITLE>\n"
-//                    + "</HEAD>\n"
-//                    + "<BODY BGCOLOR=\"#FFFFFF\" TEXT=\"#000000\">");
-//            ps.println("<dl>");
                 String ref;
-//            Path first = getPath().getStripFirst();
-//            if(!first.equals(Path.path("/dav"))){
-//                ref= "../dav" + getPath();
-//            }else{
-//                ref= "../" + getPath();
-//            }
-//            html._tr()
-//                    .tr()
-//                    .td()
-//                    .a(href(ref))
-//                    .img(src("").alt("../"))
-//                    ._a()
-//                    ._td();
+
                 for (LogicalData ld : getCatalogue().getChildrenByParentRef(getLogicalData().getUid(), connection)) {
                     if (ld.isFolder()) {
                         ref = "../dav" + getPath() + "/" + ld.getName();
-                        if (ld.getUid() != 1) {
-//                        ps.println("<dt>\t<a href=\"../dav" + getPath() + "/" + ld.getName() + "\">" + ld.getName() + "</a><a>\t" + ld.getLength() + "</a></dt>");
-                        } else {
-//                        html._tr()
-//                                .tr()
-//                                .td().content("/")
-//                                .td().content(String.valueOf(getChildren().size()))
-//                                .td().content(new Date(ld.getModifiedDate()).toString());
-//                        html._tr()
-//                                .tr()
-//                                .td()
-//                                .a(href("../dav" + getPath() + "/" + ld.getName()))
-//                                .img(src("").alt("/"))
-//                                ._a()
-//                                ._td()
-//                                .td().content(String.valueOf(getChildren().size()))
-//                                .td().content(new Date(ld.getModifiedDate()).toString());
-                        }
+//                        if (ld.getUid() != 1) {
+//                        } else {
+//                        }
                     } else {
                         ref = "../dav" + getPath() + "/" + ld.getName();
-//                    ps.println("<dd>\t<a href=\"../dav" + getPath() + "/" + ld.getName() + "\">" + ld.getName() + "</a>\t" + ld.getLength() + "</a></dd>");
                     }
                     html._tr()
                             .tr()
                             .td()
-                            //                        .a(href("../dav" + getPath() + "/" + ld.getName()))
                             .a(href(ref))
                             .img(src("").alt(ld.getName()))
                             ._a()
@@ -429,54 +415,47 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                             .td().content(ld.getSupervised().toString())
                             .td().content(ld.getUid().toString());
                 }
-//            ps.println("</dl>");
-//            ps.println("</BODY>\n"
-//                    + "\n"
-//                    + "</HTML>");
                 html._tr()
                         ._table();
-
-
-//            html.
-//                    form()
-//                    .input();
-
-
                 ps.println(html.toHtml());
                 getCatalogue().addViewForRes(getLogicalData().getUid(), connection);
                 connection.commit();
+                connection.close();
             } catch (Exception e) {
-                connection.rollback();
+                if (connection != null && !connection.isClosed()) {
+                    connection.rollback();
+                    connection.close();
+                }
                 throw e;
             }
         } catch (Exception e) {
-            WebDataDirResource.log.log(Level.SEVERE, null, e);
+            Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, e);
             throw new BadRequestException(this);
         }
     }
 
     @Override
     public Long getMaxAgeSeconds(Auth auth) {
-        WebDataDirResource.log.log(Level.FINE, "getMaxAgeSeconds() for {0}", getPath());
+//        Logger.getLogger(WebDataDirResource.class.getName()).log(Level.FINEST, "getMaxAgeSeconds() for {0}", getPath());
         return null;
     }
 
     @Override
     public String getContentType(String accepts) {
-        WebDataDirResource.log.log(Level.FINE, "getContentType({0}) for {1}", new Object[]{accepts, getPath()});
+//        Logger.getLogger(WebDataDirResource.class.getName()).log(Level.FINEST, "getContentType({0}) for {1}", new Object[]{accepts, getPath()});
         return "text/html";
     }
 
     @Override
     public Long getContentLength() {
-        WebDataDirResource.log.log(Level.FINE, "getContentLength() for {0}", getPath());
+//        Logger.getLogger(WebDataDirResource.class.getName()).log(Level.FINEST, "getContentLength() for {0}", getPath());
         return null;
     }
 
     @Override
     public void moveTo(CollectionResource toCollection, String name) throws ConflictException, NotAuthorizedException, BadRequestException {
         WebDataDirResource toWDDR = (WebDataDirResource) toCollection;
-        WebDataDirResource.log.log(Level.FINE, "moveTo({0}, ''{1}'') for {2}", new Object[]{toWDDR.getPath(), name, getPath()});
+        Logger.getLogger(WebDataDirResource.class.getName()).log(Level.FINEST, "moveTo({0}, ''{1}'') for {2}", new Object[]{toWDDR.getPath(), name, getPath()});
         try (Connection connection = getCatalogue().getConnection()) {
             try {
                 Permissions destPerm = getCatalogue().getPermissions(toWDDR.getLogicalData().getUid(), toWDDR.getLogicalData().getOwner(), connection);
@@ -487,21 +466,25 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
                 }
                 getCatalogue().moveEntry(getLogicalData(), toWDDR.getLogicalData(), name, connection);
                 connection.commit();
+                connection.close();
             } catch (SQLException e) {
-                WebDataDirResource.log.log(Level.SEVERE, null, e);
-                connection.rollback();
+                Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, e);
+                if (connection != null && !connection.isClosed()) {
+                    connection.rollback();
+                    connection.close();
+                }
                 throw new BadRequestException(this, e.getMessage());
             }
         } catch (SQLException e1) {
-            WebDataDirResource.log.log(Level.SEVERE, null, e1);
+            Logger.getLogger(WebDataDirResource.class.getName()).log(Level.SEVERE, null, e1);
             throw new BadRequestException(this, e1.getMessage());
         }
     }
 
     @Override
     public Date getCreateDate() {
-        Date date = new Date(getLogicalData().getCreateDate());
-        WebDataDirResource.log.log(Level.FINE, "getCreateDate() for {0} date: " + date, getPath());
+//        Date date = new Date(getLogicalData().getCreateDate());
+//        Logger.getLogger(WebDataDirResource.class.getName()).log(Level.FINEST, "getCreateDate() for {0} date: " + date, getPath());
         return new Date(getLogicalData().getCreateDate());
     }
 
@@ -549,14 +532,14 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
             ConflictException {
         //        Set<String> keys = parameters.keySet();
         //        for (String s : keys) {
-        //            WebDataDirResource.log.log(Level.INFO, "{0} : {1}", new Object[]{s, parameters.get(s)});
+        //            Logger.getLogger(WebDataDirResource.class.getName()).log(Level.INFO, "{0} : {1}", new Object[]{s, parameters.get(s)});
         //        }
         Set<String> keys = files.keySet();
         for (String s : keys) {
-            WebDataDirResource.log.log(Level.INFO, "{0} : {1}", new Object[]{s, files.get(s).getFieldName()});
+            Logger.getLogger(WebDataDirResource.class.getName()).log(Level.INFO, "{0} : {1}: {2}", new Object[]{s, files.get(s).getFieldName(), files.get(s).getName()});
             try {
                 //         public Resource createNew(String newName, InputStream inputStream, Long length, String contentType) throws IOException,
-                createNew(files.get(s).getFieldName(), files.get(s).getInputStream(), files.get(s).getSize(), files.get(s).getContentType());
+                createNew(files.get(s).getName(), files.get(s).getInputStream(), files.get(s).getSize(), files.get(s).getContentType());
             } catch (IOException ex) {
                 throw new BadRequestException(this, ex.getMessage());
             }
@@ -565,12 +548,16 @@ public class WebDataDirResource extends WebDataResource implements FolderResourc
         return null;
     }
 
-    private LogicalData inheritProperties(LogicalData fileLogicalData, Connection connection) throws SQLException {
+    private LogicalData inheritProperties(LogicalData newLogicalData, Connection connection) throws SQLException {
         String value = (String) getProperty(Constants.DATA_LOC_PREF_NAME);
         if (value != null) {
-            fileLogicalData.setDataLocationPreference(value);
-            getCatalogue().setLocationPreference(fileLogicalData.getUid(), value, connection);
+            List<String> list = property2List(value);
+            getCatalogue().setLocationPreferences(connection, newLogicalData.getUid(), list, getPrincipal().isAdmin());
+            list = property2List(getDataLocationPreferencesString());
+            newLogicalData.setDataLocationPreferences(list);
+        } else {
+            //trigger 
         }
-        return fileLogicalData;
+        return newLogicalData;
     }
 }

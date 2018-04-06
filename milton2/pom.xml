@@ -40,7 +40,7 @@
         <url>http://www.mcevoysoftware.co.nz/</url>
     </organization>    	
 	<modules>
-<!--		<module>milton-api</module>-->
+		<!--<module>milton-api</module>-->
 		<module>milton-server-ce</module>
 <!--		<module>milton-server-ent</module>-->
 <!--		<module>milton-client</module>-->

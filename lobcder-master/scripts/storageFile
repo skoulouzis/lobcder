@@ -1,4 +1,1 @@
-swift://host1 userName1 password1
-webdav://host2 userName2 password2
-sftp://host3 userName3 password3
-file:///dev/null fake fake
+file:///root/ t w pass

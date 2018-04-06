@@ -2,7 +2,7 @@
             xsi:noNamespaceSchemaLocation="http://enunciate.codehaus.org/schemas/enunciate-1.26.xsd" 
             label="LOBCDER Documentation">
      
-<!--    <api-import pattern="nl.uva.cs.lobcder.rest.Item" />
+    <!--    <api-import pattern="nl.uva.cs.lobcder.rest.Item" />
     <api-import pattern="nl.uva.cs.lobcder.rest.Item" />-->
       
     <services>
@@ -14,8 +14,14 @@
 
  
     <api-classes> 
+        <include pattern="nl.uva.cs.lobcder.rest.Archive"/>
+        <include pattern="nl.uva.cs.lobcder.rest.DRIDataResource"/>
+        <include pattern="nl.uva.cs.lobcder.rest.DRItemsResource"/>
         <include pattern="nl.uva.cs.lobcder.rest.Item"/>
         <include pattern="nl.uva.cs.lobcder.rest.Items"/>
+        <include pattern="nl.uva.cs.lobcder.rest.PermissionsResource"/>
+        <include pattern="nl.uva.cs.lobcder.rest.SetBulkPermissionsResource"/>
+        <include pattern="nl.uva.cs.lobcder.rest.TTL"/>
         <include pattern="nl.uva.cs.lobcder.urest.Translator"/>
     </api-classes> 
 
@@ -25,7 +31,7 @@
         <disable-rule id="c.warnings" />
         <disable-rule id="obj-c.warnings" />
         <docs docsDir="api" title="Large OBject Cloud Data storagE fedeRation API" includeDefaultDownloads="false" includeExampleXml="true"
-                  disableRestMountpoint="true" copyright="copyright" forceExampleJson="true">
+              disableRestMountpoint="true" copyright="copyright" forceExampleJson="true">
         </docs>
 
  

@@ -6,14 +6,26 @@ package nl.uva.cs.lobcder.rest.wrappers;
 
 import java.util.List;
 import javax.xml.bind.annotation.XmlRootElement;
-import lombok.Data;
 
 /**
  *
  * @author S. Koulouzis
  */
 @XmlRootElement
-@Data
 public class StorageSiteWrapperList {
-    List<StorageSiteWrapper> sites;
+    private List<StorageSiteWrapper> sites;
+
+    /**
+     * @return the sites
+     */
+    public List<StorageSiteWrapper> getSites() {
+        return sites;
+    }
+
+    /**
+     * @param sites the sites to set
+     */
+    public void setSites(List<StorageSiteWrapper> sites) {
+        this.sites = sites;
+    }
 }

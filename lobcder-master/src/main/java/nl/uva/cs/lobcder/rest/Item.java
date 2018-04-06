@@ -8,19 +8,16 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.*;
 
-import io.milton.common.*;
-import lombok.extern.java.Log;
+
 import nl.uva.cs.lobcder.auth.MyPrincipal;
 import nl.uva.cs.lobcder.auth.Permissions;
 import nl.uva.cs.lobcder.resources.LogicalData;
@@ -35,7 +32,6 @@ import nl.uva.vlet.exception.VlException;
  *
  * @author dvasunin
  */
-@Log
 @Path("item/")
 public class Item extends CatalogueHelper {
 
@@ -108,7 +104,7 @@ public class Item extends CatalogueHelper {
             }
             return res;
         } catch (SQLException ex) {
-            log.log(Level.SEVERE, null, ex);
+            Logger.getLogger(Item.class.getName()).log(Level.SEVERE, null, ex);
             throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
         }
     }

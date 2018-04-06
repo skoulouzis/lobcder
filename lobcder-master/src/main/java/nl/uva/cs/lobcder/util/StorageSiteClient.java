@@ -20,6 +20,7 @@ import nl.uva.vlet.vfs.VFSClient;
 import nl.uva.vlet.vrl.VRL;
 import nl.uva.vlet.vrs.ServerInfo;
 import nl.uva.vlet.vrs.VRS;
+import nl.uva.vlet.vrs.VRSClient;
 import nl.uva.vlet.vrs.VRSContext;
 
 /**
@@ -56,13 +57,16 @@ public class StorageSiteClient {
 //        GlobalConfig.setUserHomeLocation(new URL("file:////" + this.tmpVPHuserHome.getAbsolutePath()));
 //        Global.setDebug(true);
         VRS.getRegistry().addVRSDriverClass(nl.uva.vlet.vfs.cloud.CloudFSFactory.class);
+        VRS.getRegistry().addVRSDriverClass(nl.uva.vlet.vfs.webdavfs.WebdavFSFactory.class);
+        VRS.getRegistry().addVRSDriverClass(nl.uva.vlet.vdriver.vrs.http.HTTPFactory.class);
         Global.init();
     }
-    private VFSClient vfsClient;
+    private VRSClient vrsClient;
     private final String username;
     private final String password;
     private final VRL vrl;
     private static final Map<String, GridProxy> proxyCache = new HashMap<>();
+    private boolean destroyCert;
 
     public StorageSiteClient(String username, String password, String resourceUrl) throws VlException, MalformedURLException, Exception {
         this.username = username;
@@ -71,43 +75,41 @@ public class StorageSiteClient {
         initVFS();
     }
 
-    private void initVFS() throws VlException, MalformedURLException, Exception {
-        this.vfsClient = new VFSClient();
-        VRSContext context = this.vfsClient.getVRSContext();
+    private void initVFS() throws Exception {
+        this.vrsClient = new VFSClient();
+        VRSContext context = vrsClient.getVRSContext();
+        context.setProperty(GlobalConfig.TCP_CONNECTION_TIMEOUT, "20000");
         //Bug in sftp: We have to put the username in the url
         ServerInfo info = context.getServerInfoFor(vrl, true);
         String authScheme = info.getAuthScheme();
 
         if (StringUtil.equals(authScheme, ServerInfo.GSI_AUTH)) {
-
-            String proxyFile = "/tmp/myProxy";
-            System.out.println("Will create grid proxy at:" + proxyFile);
-
-            context.setProperty("grid.proxy.location", proxyFile);
-            // Default to $HOME/.globus
-            context.setProperty("grid.certificate.location", Global.getUserHome() + "/.globus");
-            String vo = username;
-            context.setProperty("grid.proxy.voName", vo);
-
-            GridProxy gridProxy = context.getGridProxy();
-
-            if (gridProxy.isValid() == false) {
-                gridProxy.setEnableVOMS(true);
-                gridProxy.setDefaultVOName(vo);
-                // throw new Exception("Invalid Grid Proxy, please create first");
-//                String pwd = askPassphrase("Please enter passphrase.");
-                System.out.println("--- Creating proxy ---");
-                gridProxy.createWithPassword("pass@Amstel");
-                if (gridProxy.isValid() == false) {
-                    throw new Exception("Created Proxy is not Valid!");
-                }
-            }
-
-            System.out.println("--- Valid Grid Proxy ---");
-            System.out.println(" - proxy filename =" + gridProxy.getProxyFilename());
-            System.out.println(" - proxy timeleft =" + gridProxy.getTimeLeftString());
-            System.out.println(" - proxy VOMS enabled =" + gridProxy.getEnableVOMS());
-            System.out.println(" - proxy VO =" + gridProxy.getVOName());
+            GridHelper.initGridProxy(username, password, context, destroyCert);
+//            copyVomsAndCerts();
+//            GridProxy gridProxy = context.getGridProxy();
+//            if (destroyCert) {
+//                gridProxy.destroy();
+//                gridProxy = null;
+//            }
+//            if (gridProxy == null || gridProxy.isValid() == false) {
+//                context.setProperty("grid.proxy.location", Constants.PROXY_FILE);
+//                // Default to $HOME/.globus
+//                context.setProperty("grid.certificate.location", Global.getUserHome() + "/.globus");
+//                String vo = username;
+//                context.setProperty("grid.proxy.voName", vo);
+//                context.setProperty("grid.proxy.lifetime", "200");
+//                gridProxy = context.getGridProxy();
+//                if (gridProxy.isValid() == false) {
+//                    gridProxy.setEnableVOMS(true);
+//                    gridProxy.setDefaultVOName(vo);
+//                    gridProxy.createWithPassword(password);
+//                    if (gridProxy.isValid() == false) {
+//                        throw new VlException("Created Proxy is not Valid!");
+//                    }
+//                    gridProxy.saveProxyTo(Constants.PROXY_FILE);
+////                    proxyCache.put(password, gridProxy);
+//                }
+//            }
         }
 
         if (StringUtil.equals(authScheme, ServerInfo.PASSWORD_AUTH)
@@ -131,12 +133,13 @@ public class StorageSiteClient {
         //patch for bug with ssh driver 
         info.setAttribute("sshKnownHostsFile", System.getProperty("user.home") + "/.ssh/known_hosts");
 //        }
-        context.setProperty("chunk.upload", false);
+//        context.setProperty("chunk.upload", doChunked);
 //        info.setAttribute(new VAttribute("chunk.upload", true));
         info.store();
+
     }
 
-    public VFSClient getStorageSiteClient() {
-        return this.vfsClient;
+    public VRSClient getStorageSiteClient() {
+        return this.vrsClient;
     }
 }

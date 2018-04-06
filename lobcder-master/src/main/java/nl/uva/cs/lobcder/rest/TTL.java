@@ -1,6 +1,5 @@
 package nl.uva.cs.lobcder.rest;
 
-import lombok.extern.java.Log;
 import nl.uva.cs.lobcder.auth.MyPrincipal;
 import nl.uva.cs.lobcder.auth.Permissions;
 import nl.uva.cs.lobcder.resources.LogicalData;
@@ -19,15 +18,28 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Created by dvasunin on 09.12.14.
+ *
+ *
+ * Sets an expiring temporary directory to store data. This is to stop having
+ * unused directories lying in LOBCDER. When using this after TTL time has
+ * elapsed since the last access, the directory is automatically removed by the
+ * system.
+ *
+ * @author dvasunin
  */
-@Log
+
 @Path("ttl/")
 public class TTL extends CatalogueHelper {
 
     @Context
     HttpServletRequest request;
 
+    /**
+     * Sets the time to live for a folder
+     *
+     * @param uid the uid of the folder
+     * @param ttl the time to live in sec
+     */
     @Path("{uid}/{ttl}")
     @PUT
     public void setTTL(@PathParam("uid") Long uid, @PathParam("ttl") Integer ttl) {
@@ -63,12 +75,12 @@ public class TTL extends CatalogueHelper {
             //                    cn.commit();
             //                }
             //            } catch (SQLException ex) {
-            //                log.log(Level.SEVERE, null, ex);
+            //                Logger.getLogger(TTL.class.getName()).log(Level.SEVERE, null, ex);
             //                cn.rollback();
             //                throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
             //            }
             //        } catch (SQLException ex) {
-            //            log.log(Level.SEVERE, null, ex);
+            //            Logger.getLogger(TTL.class.getName()).log(Level.SEVERE, null, ex);
             //        }
             //        }
         } catch (SQLException ex) {
@@ -77,6 +89,12 @@ public class TTL extends CatalogueHelper {
         }
     }
 
+    /**
+     * Sets the time to live for a folder
+     *
+     * @param pathStr the path of the folder
+     * @param ttl the time to live in sec
+     */
     @Path("{ttl}")
     @PUT
     public void setTTL(@QueryParam("path") String pathStr, @PathParam("ttl") Integer ttl) {
@@ -90,7 +108,7 @@ public class TTL extends CatalogueHelper {
             }
             setTTL(uid, ttl);
         } catch (SQLException ex) {
-            log.log(Level.SEVERE, null, ex);
+            Logger.getLogger(TTL.class.getName()).log(Level.SEVERE, null, ex);
             throw new WebApplicationException(ex, Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
@@ -120,11 +138,11 @@ public class TTL extends CatalogueHelper {
                 return newFolderEntry.getName();
             } catch (Exception ex) {
                 cn.rollback();
-                log.log(Level.SEVERE, null, ex);
+                Logger.getLogger(TTL.class.getName()).log(Level.SEVERE, null, ex);
                 throw new WebApplicationException(ex, Response.Status.INTERNAL_SERVER_ERROR);
             }
         } catch (SQLException sqle) {
-            log.log(Level.SEVERE, null, sqle);
+            Logger.getLogger(TTL.class.getName()).log(Level.SEVERE, null, sqle);
             throw new WebApplicationException(sqle, Response.Status.INTERNAL_SERVER_ERROR);
         }
     }

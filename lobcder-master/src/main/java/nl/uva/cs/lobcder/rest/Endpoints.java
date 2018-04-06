@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 alogo.
+ * Copyright 2014 S. Koulouzis.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,14 +16,12 @@
 package nl.uva.cs.lobcder.rest;
 
 import javax.xml.bind.annotation.XmlRootElement;
-import lombok.Data;
 
 /**
  *
  * @author S. Koulouzis
  */
 @XmlRootElement
-@Data
 public class Endpoints {
 
     String source;
