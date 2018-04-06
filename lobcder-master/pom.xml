@@ -363,6 +363,7 @@
             <groupId>com.maxmind.geoip</groupId>
             <artifactId>geoip-api</artifactId>
             <version>1.2.14</version>
+            <type>jar</type>
         </dependency>
     
         <dependency>

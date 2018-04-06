@@ -69,7 +69,7 @@ public class MyFilter extends MiltonFilter {
         type = PropertiesHelper.getPredictionType();
         _maximum = PropertiesHelper.getMaximumNumberOfRequests();
     }
-
+    
     @Override
     public void doFilter(javax.servlet.ServletRequest req, javax.servlet.ServletResponse resp, javax.servlet.FilterChain fc) throws IOException, ServletException {
         double start = System.currentTimeMillis();
