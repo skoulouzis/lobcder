@@ -52,5 +52,3 @@ This script takes the following steps:
 8. Deploys lobcder on tomcat 
 
 After execution is over you'll need to edit the lobcder.properties file. In that file you can find explanations for each property 
-
-## Header
